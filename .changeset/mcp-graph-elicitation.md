@@ -16,12 +16,24 @@ elicitation capability is advertised per request instead of at initialization,
 so an `auto` connection that negotiates legacy never advertises it.
 
 Resuming replays the tool call from its first round, so the server is asked
-again before it is answered and remote effects must be idempotent.
+again before it is answered and remote effects must be idempotent. Because the
+server therefore issues a fresh continuation on every resume, a pause cannot
+outlive a `requestState` lifetime.
+
+Each interrupt carries a `questionId` derived from the question's content and
+the call's effective arguments, and `createMCPElicitationResume` binds the
+answer to it. If the replayed round asks something different under the same
+keys and schema — "approve $1,000" where the human approved "approve $10" — or
+`beforeToolCall` resolves different arguments, the identity no longer matches
+and the saved answer is refused rather than applied to an operation nobody
+agreed to. The refused run is rolled back, leaving the original question
+pending.
 `beforeToolCall` runs once per execution, including replays, and any header
-identity it supplies is re-derived rather than reused from the pause. Answers
-are validated against the server's requested schemas; a missing, unexpected or
-malformed answer fails the call rather than re-asking, since the caller resuming
-the graph is code and not the human who filled the form. Sampling and roots
+identity it supplies is re-derived rather than reused from the pause. A resume
+is parsed as a whole against the question it answers — exact keys, the server's
+requested schemas, and the matching `questionId` — so a missing, unexpected or
+malformed answer fails the call rather than re-asking, since the caller
+resuming the graph is code and not the human who filled the form. Sampling and roots
 requests are refused by name, state-only responses are refused instead of
 polled, and calling such a tool outside a graph — or inside one with no
 checkpointer — explains how to answer it instead of hanging. Interrupt payloads

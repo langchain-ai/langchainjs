@@ -82,27 +82,40 @@ const adapter = new MCPAdapter({
 Resume using the latest interrupt and the same thread:
 
 ```ts
-import { Command } from "@langchain/langgraph";
-import { createMCPElicitationResume } from "@langchain/mcp-adapters";
+import { Command, INTERRUPT, isInterrupted } from "@langchain/langgraph";
+import {
+  createMCPElicitationResume,
+  type MCPElicitationInterrupt,
+} from "@langchain/mcp-adapters";
 
 const paused = await agent.invoke(input, config);
-const pending = paused.__interrupt__[0];
 
-await agent.invoke(
-  new Command({
-    resume: createMCPElicitationResume(pending, {
-      confirmation: { action: "accept", content: { confirmed: true } },
+if (isInterrupted<MCPElicitationInterrupt>(paused)) {
+  const [pending] = paused[INTERRUPT];
+
+  await agent.invoke(
+    new Command({
+      resume: createMCPElicitationResume(pending, {
+        confirmation: { action: "accept", content: { confirmed: true } },
+      }),
     }),
-  }),
-  config
-);
+    config
+  );
+}
 ```
 
 Here `agent`, `input`, and `config` are application-owned; `confirmation` and
 `confirmed` must match the server's input-request key and form schema. Answers
-are validated against the server's requested schema. A missing, unexpected, or
-malformed answer fails the tool call rather than re-asking: the caller resuming
-the graph is code, not the human who filled the form.
+are parsed against the server's requested schema, and the resume carries the
+`questionId` of the question the human saw. A missing, unexpected, or malformed
+answer fails the tool call rather than re-asking: the caller resuming the graph
+is code, not the human who filled the form.
+
+`questionId` is derived from the question's content and the call's effective
+arguments, so it changes if the server asks something different on resume — the
+same keys and schema but "approve $1,000" instead of "approve $10" — or if
+`beforeToolCall` resolves different arguments. The saved answer is then refused
+rather than applied to an operation nobody agreed to.
 
 ### Resuming replays the call
 

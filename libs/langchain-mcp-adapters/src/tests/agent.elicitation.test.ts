@@ -129,7 +129,7 @@ describe("answer validation", () => {
 
     expect(mcpInterrupts(failed)).toHaveLength(0);
     expect(JSON.stringify(failed.messages)).toContain(
-      "is invalid: \u2716 data/confirm must be boolean"
+      "data/confirm must be boolean"
     );
     expect(server.completed).toEqual([]);
   });
@@ -150,7 +150,7 @@ describe("answer validation", () => {
 
     expect(mcpInterrupts(failed)).toHaveLength(0);
     expect(JSON.stringify(failed.messages)).toContain(
-      "needs an answer for every elicitation request"
+      "needs answers built by createMCPElicitationResume()"
     );
   });
 });

@@ -21,6 +21,7 @@ import {
   isGraphInterrupt,
   type Interrupt,
 } from "@langchain/langgraph";
+import { sha256 } from "@langchain/core/utils/hash";
 import { ToolException } from "./utils/errors.js";
 
 export const elicitationAnswerSchema = ElicitResultSchema;
@@ -139,11 +140,52 @@ export function configureElicitation(
   });
 }
 
+/**
+ * Identity of the consent a question asks for.
+ *
+ * Derived from content, not generated, so replaying the call reproduces it.
+ * Resuming re-issues the tool call and the server answers with a *fresh*
+ * question; the human approved the one they were shown. If the server now asks
+ * something else under the same keys and schema — "approve $10" becoming
+ * "approve $1,000" — or `beforeToolCall` resolves different effective
+ * arguments, the identity changes and the saved answer is refused instead of
+ * being applied to an operation nobody agreed to.
+ */
+function questionIdFor(
+  params: CallToolRequest["params"],
+  requests: Record<string, ModernElicitationRequest>,
+  source: MCPElicitationSource
+): string {
+  return sha256(
+    canonicalJSON({
+      server: source.server,
+      tool: source.tool,
+      arguments: params.arguments ?? {},
+      requests,
+    })
+  );
+}
+
+/** Key-order-independent serialization, so reordering cannot fake a match. */
+function canonicalJSON(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJSON).join(",")}]`;
+
+  if (value !== null && typeof value === "object")
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => (left < right ? -1 : 1))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJSON(entry)}`)
+      .join(",")}}`;
+
+  return JSON.stringify(value) ?? "null";
+}
+
 /** The interrupt payload raised while an MCP tool call waits on input. */
 const elicitationInterruptSchema = z.object({
   type: z.literal("mcp_elicitation"),
   server: z.string(),
   tool: z.string(),
+  /** Content identity of this question and the operation it belongs to. */
+  questionId: z.string(),
   requests: z.record(z.string(), modernElicitationRequestSchema),
 });
 
@@ -157,25 +199,25 @@ export type MCPElicitationResponses = Record<
   z.output<typeof modernElicitationAnswerSchema>
 >;
 
-/** Resume values target the graph task that raised the question. */
+/** Resume values target the graph task and the question they answer. */
 export type MCPElicitationResume = Record<
   string,
-  { responses: MCPElicitationResponses }
+  { questionId: string; responses: MCPElicitationResponses }
 >;
 
 const elicitationTargetSchema = z.object({
   // LangGraph derives this from the node's checkpoint namespace.
   id: z.string().regex(/^[0-9a-f]{32}$/, "Expected a LangGraph interrupt ID"),
-  value: elicitationInterruptSchema.pick({ type: true }),
+  value: elicitationInterruptSchema.pick({ type: true, questionId: true }),
 });
 
-/** Build an answer addressed to the task that raised `pending`. */
+/** Build an answer addressed to the task and question that raised `pending`. */
 export function createMCPElicitationResume(
   pending: Interrupt<unknown>,
   responses: MCPElicitationResponses
 ): MCPElicitationResume {
-  const { id } = elicitationTargetSchema.parse(pending);
-  return { [id]: { responses } };
+  const { id, value } = elicitationTargetSchema.parse(pending);
+  return { [id]: { questionId: value.questionId, responses } };
 }
 
 /** `tools/call` params plus the 2026-07-28 retry channel. */
@@ -239,7 +281,7 @@ function ask(question: MCPElicitationInterrupt): unknown {
 function elicitationRequestsOf(
   result: InputRequiredResult,
   source: MCPElicitationSource
-): Record<string, ElicitRequest["params"]> {
+): Record<string, ModernElicitationRequest> {
   const requests = Object.entries(result.inputRequests ?? {});
 
   if (requests.length === 0)
@@ -257,68 +299,36 @@ function elicitationRequestsOf(
     );
 
   return Object.fromEntries(
-    requests.map(([key, request]) => [key, (request as ElicitRequest).params])
+    requests.map(([key, request]) => [
+      key,
+      modernElicitationRequestSchema.parse(request),
+    ])
   );
 }
 
 /**
- * Turn a resumed answer into the server's responses.
+ * The exact resume this question accepts.
  *
- * A malformed or missing answer fails the call rather than re-asking: the
- * caller resuming the graph is code, not the human who filled the form, so a
- * second identical question would not fix a wrong shape.
+ * Every rule lives in the schema rather than in checks around it: the question
+ * identity is a literal, the answer keys are exactly the server's keys, and
+ * each answer is parsed against the schema that question requested. A resume
+ * that does not parse is not an answer to this question.
  */
-async function buildResponses(
-  requests: Record<string, ElicitRequest["params"]>,
-  resumed: unknown,
-  source: MCPElicitationSource
-): Promise<MCPElicitationResponses> {
-  const answers = z
-    .object({ responses: z.record(z.string(), z.unknown()) })
-    .safeParse(resumed);
-
-  if (!answers.success)
-    throw new ToolException(
-      `Resuming MCP tool "${source.tool}" needs { responses } keyed by request. Build it with createMCPElicitationResume().`
-    );
-
-  const missing = Object.keys(requests).filter(
-    (key) => !(key in answers.data.responses)
-  );
-
-  if (missing.length > 0)
-    throw new ToolException(
-      `Resuming MCP tool "${source.tool}" needs an answer for every elicitation request, but these had none: ${missing.join(", ")}.`
-    );
-
-  // An answer the server never asked for means the resume was built for a
-  // different question, so it is refused rather than quietly dropped.
-  const unexpected = Object.keys(answers.data.responses).filter(
-    (key) => !(key in requests)
-  );
-
-  if (unexpected.length > 0)
-    throw new ToolException(
-      `Resuming MCP tool "${source.tool}" answered requests the server did not make: ${unexpected.join(", ")}.`
-    );
-
-  const entries = await Promise.all(
-    Object.entries(requests).map(async ([key, request]) => {
-      const parsed = await elicitationAnswerFor(
-        request,
-        modernElicitationAnswerSchema
-      ).safeParseAsync(answers.data.responses[key]);
-
-      if (!parsed.success)
-        throw new ToolException(
-          `Elicitation answer for "${key}" on MCP tool "${source.tool}" is invalid: ${z.prettifyError(parsed.error)}`
-        );
-
-      return [key, parsed.data] as const;
-    })
-  );
-
-  return Object.fromEntries(entries);
+function resumeSchemaFor(
+  questionId: string,
+  requests: Record<string, ModernElicitationRequest>
+) {
+  return z.object({
+    questionId: z.literal(questionId),
+    responses: z.strictObject(
+      Object.fromEntries(
+        Object.entries(requests).map(([key, request]) => [
+          key,
+          elicitationAnswerFor(request, modernElicitationAnswerSchema),
+        ])
+      )
+    ),
+  });
 }
 
 /**
@@ -341,21 +351,29 @@ export async function callToolWithElicitation(
     const requests = elicitationRequestsOf(result, source);
     if (source.direct) throw noWayToAnswer();
 
-    const responses = await buildResponses(
-      requests,
+    const questionId = questionIdFor(params, requests, source);
+    const answered = await resumeSchemaFor(questionId, requests).safeParseAsync(
       ask({
         type: "mcp_elicitation",
         server: source.server,
         tool: source.tool,
+        questionId,
         requests,
-      }),
-      source
+      })
     );
+
+    // A malformed answer fails the call rather than re-asking: the caller
+    // resuming the graph is code, not the human who filled the form, so the
+    // same question would come back wrong.
+    if (!answered.success)
+      throw new ToolException(
+        `Resuming MCP tool "${source.tool}" on server "${source.server}" needs answers built by createMCPElicitationResume() from the latest interrupt: ${z.prettifyError(answered.error)}`
+      );
 
     source.signal?.throwIfAborted();
     result = await round({
       ...params,
-      inputResponses: responses,
+      inputResponses: answered.data.responses,
       requestState: result.requestState,
     });
   }
