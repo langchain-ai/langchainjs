@@ -65,3 +65,7 @@ libs/langchain-core/src/**/*.d.ts
 
 # Build info files
 *.tsbuildinfo
+
+# `tsc --build` output during typechecking. The runnable build is tsdown's
+# dist/; the checker must not write there.
+.tsc-types/
