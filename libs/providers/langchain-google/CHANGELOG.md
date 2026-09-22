@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.2.7
+
+### Patch Changes
+
+- [#11664](https://github.com/langchain-ai/langchainjs/pull/11664) [`16c5a5e`](https://github.com/langchain-ai/langchainjs/commit/16c5a5e7284b14ee81ec0140a144e097712c48bc) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Configure the required OAuth scopes when the Node.js client falls back to Application Default Credentials.
+
 ## 0.2.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.12
+
+### Patch Changes
+
+- [#11682](https://github.com/langchain-ai/langchainjs/pull/11682) [`a8c336f`](https://github.com/langchain-ai/langchainjs/commit/a8c336f3c75b76e9d94236cb4a05f2b2f414cac6) Thanks [@casparb](https://github.com/casparb)! - Preserve ReactAgent callbacks when its compiled graph is extracted, without duplicate calls through the agent.
+
 ## 1.5.11
 
 ### Patch Changes
