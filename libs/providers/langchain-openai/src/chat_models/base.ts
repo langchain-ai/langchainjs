@@ -131,6 +131,17 @@ export interface BaseChatOpenAICallOptions
   stream_options?: OpenAIClient.Chat.ChatCompletionStreamOptions;
 
   /**
+   * Whether to include token usage in the stream, overriding the value set at
+   * initialization time for this call only. `stream_options` still takes
+   * precedence over both.
+   *
+   * Declared here because `_streamResponseChunks` already reads
+   * `options.streamUsage`; without it the per-call override was unreachable
+   * from type-safe callers.
+   */
+  streamUsage?: boolean;
+
+  /**
    * The model may choose to call multiple functions in a single turn. You can
    * set parallel_tool_calls to false which ensures only one tool is called at most.
    * [Learn more](https://platform.openai.com/docs/guides/function-calling#parallel-function-calling)
