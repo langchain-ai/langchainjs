@@ -18,7 +18,10 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
-import { convertToConverseMessages } from "../utils/message_inputs.js";
+import {
+  convertToConverseMessages,
+  stripToolBlocksFromConverseMessages,
+} from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { load } from "@langchain/core/load";
@@ -2356,5 +2359,115 @@ describe("document content block conversion", () => {
     expect(name1).toBeDefined();
     expect(name2).toBeDefined();
     expect(name1).not.toBe(name2);
+  });
+});
+
+describe("stripToolBlocksFromConverseMessages", () => {
+  test("returns messages without tool blocks unchanged", () => {
+    const messages: BedrockMessage[] = [
+      {
+        role: BedrockConversationRole.USER,
+        content: [{ text: "Hello" }],
+      },
+      {
+        role: BedrockConversationRole.ASSISTANT,
+        content: [{ text: "Hi there" }],
+      },
+    ];
+    const result = stripToolBlocksFromConverseMessages(messages);
+    expect(result[0]).toBe(messages[0]);
+    expect(result[1]).toBe(messages[1]);
+  });
+
+  test("converts toolUse and toolResult blocks to text", () => {
+    const messages: BedrockMessage[] = [
+      {
+        role: BedrockConversationRole.ASSISTANT,
+        content: [
+          { text: "Let me check that for you." },
+          {
+            toolUse: {
+              toolUseId: "call_1",
+              name: "get_weather",
+              input: { city: "Berkeley" },
+            },
+          },
+        ],
+      },
+      {
+        role: BedrockConversationRole.USER,
+        content: [
+          {
+            toolResult: {
+              toolUseId: "call_1",
+              content: [{ text: "70 degrees and sunny." }],
+            },
+          },
+        ],
+      },
+    ];
+    const result = stripToolBlocksFromConverseMessages(messages);
+    expect(result).toEqual([
+      {
+        role: BedrockConversationRole.ASSISTANT,
+        content: [
+          { text: "Let me check that for you." },
+          { text: 'Called tool "get_weather" with input: {"city":"Berkeley"}' },
+        ],
+      },
+      {
+        role: BedrockConversationRole.USER,
+        content: [
+          {
+            text: 'Result of tool "get_weather": 70 degrees and sunny.',
+          },
+        ],
+      },
+    ]);
+  });
+
+  test("stringifies json tool result content and falls back to toolUseId", () => {
+    const messages: BedrockMessage[] = [
+      {
+        role: BedrockConversationRole.USER,
+        content: [
+          {
+            toolResult: {
+              toolUseId: "call_orphan",
+              content: [{ json: { temp: 70 } }],
+            },
+          },
+        ],
+      },
+    ];
+    const result = stripToolBlocksFromConverseMessages(messages);
+    expect(result).toEqual([
+      {
+        role: BedrockConversationRole.USER,
+        content: [{ text: 'Result of tool "call_orphan": {"temp":70}' }],
+      },
+    ]);
+  });
+
+  test("preserves non-tool blocks such as cache points", () => {
+    const cachePoint = { cachePoint: { type: "default" } };
+    const messages: BedrockMessage[] = [
+      {
+        role: BedrockConversationRole.ASSISTANT,
+        content: [
+          {
+            toolUse: {
+              toolUseId: "call_1",
+              name: "get_weather",
+              input: {},
+            },
+          },
+          cachePoint,
+        ],
+      },
+    ];
+    const result = stripToolBlocksFromConverseMessages(messages);
+    expect(result[0].content).toHaveLength(2);
+    expect(result[0].content![1]).toEqual(cachePoint);
   });
 });

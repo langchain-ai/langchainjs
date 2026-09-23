@@ -1,5 +1,12 @@
 import { describe, expect, test, vi } from "vitest";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod/v3";
 import { ChatBedrockConverse } from "../chat_models.js";
 import type {
   ConverseCommandInput,
@@ -525,5 +532,95 @@ describe("ChatBedrockConverse invocationParams", () => {
       const model = new ChatBedrockConverse({ ...baseConstructorArgs });
       expect(model.client.middlewareStack.add).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("tool blocks in history without bound tools", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret",
+      accessKeyId: "test-key",
+    },
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+  };
+
+  const bookFlightTool = tool(
+    async (input: { from: string; to: string }) =>
+      `Booked flight from ${input.from} to ${input.to}`,
+    {
+      name: "book_flight",
+      description: "Book a flight",
+      schema: z.object({ from: z.string(), to: z.string() }),
+    }
+  );
+
+  // Simulates message history produced by a tool-using agent, as received by
+  // a no-tools agent in a multi-agent supervisor.
+  const historyWithToolCalls = [
+    new HumanMessage("Book a flight from NYC to LAX"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "book_flight",
+          args: { from: "NYC", to: "LAX" },
+          id: "call_1",
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "call_1",
+      content: "Flight booked successfully.",
+    }),
+    new HumanMessage("What did you just do?"),
+  ];
+
+  function getLastConverseInput(): ConverseCommandInput {
+    return (ConverseCommand as unknown as { lastInput: ConverseCommandInput })
+      .lastInput;
+  }
+
+  function contentBlocksOf(input: ConverseCommandInput) {
+    return (input.messages ?? []).flatMap((message) => message.content ?? []);
+  }
+
+  test("converts tool blocks to text when no tools are bound", async () => {
+    const model = new ChatBedrockConverse(baseConstructorArgs);
+    await model.invoke(historyWithToolCalls);
+
+    const input = getLastConverseInput();
+    // No toolConfig is sent without bound tools...
+    expect(input.toolConfig).toBeUndefined();
+    const blocks = contentBlocksOf(input);
+    // ...so no toolUse/toolResult blocks may remain, or Bedrock rejects the
+    // request with a ValidationException.
+    expect(
+      blocks.some((block) => "toolUse" in block || "toolResult" in block)
+    ).toBe(false);
+    // The conversational context is preserved as plain text.
+    const text = blocks
+      .filter(
+        (block): block is { text: string } =>
+          "text" in block && typeof block.text === "string"
+      )
+      .map((block) => block.text)
+      .join("\n");
+    expect(text).toContain('Called tool "book_flight"');
+    expect(text).toContain('{"from":"NYC","to":"LAX"}');
+    expect(text).toContain('Result of tool "book_flight"');
+    expect(text).toContain("Flight booked successfully.");
+  });
+
+  test("keeps tool blocks and toolConfig when tools are bound", async () => {
+    const model = new ChatBedrockConverse(baseConstructorArgs);
+    await model.bindTools([bookFlightTool]).invoke(historyWithToolCalls);
+
+    const input = getLastConverseInput();
+    expect(input.toolConfig).toBeDefined();
+    expect(input.toolConfig?.tools).toHaveLength(1);
+    const blocks = contentBlocksOf(input);
+    expect(blocks.some((block) => "toolUse" in block)).toBe(true);
+    expect(blocks.some((block) => "toolResult" in block)).toBe(true);
   });
 });
