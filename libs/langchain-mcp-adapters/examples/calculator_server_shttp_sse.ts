@@ -4,7 +4,7 @@ import { McpServer, isInitializeRequest } from "@modelcontextprotocol/server";
 import { randomUUID } from "node:crypto";
 import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
 import { SSEServerTransport } from "@modelcontextprotocol/server-legacy/sse";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export async function main() {
   const server = new McpServer({
