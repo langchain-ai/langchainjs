@@ -1126,6 +1126,7 @@ export class MCPAdapter {
             : { serverName };
         if (this.#clientConnections.has(key)) {
           connected = true;
+          this.#failedServers.delete(this.#clientConnections.identity(key));
         }
       } catch (error) {
         lastError = error;

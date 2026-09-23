@@ -506,6 +506,53 @@ describe("MultiServerMCPClient", () => {
         }
       );
 
+      test("successful background reconnect restores discovery after an overlapping failure", async () => {
+        resetClientMock();
+        vi.mocked(Client.prototype.connect).mockResolvedValue(undefined);
+
+        const client = new MCPAdapter({
+          servers: {
+            test: {
+              mode: "legacy",
+              command: "node",
+              args: [],
+              restart: { enabled: true, maxAttempts: 1, delayMs: 100 },
+            },
+          },
+          onConnectionError: "ignore",
+        });
+
+        try {
+          await client.listTools();
+          const transport = vi.mocked(StdioClientTransport).mock.results[0]
+            ?.value as { onclose?: () => void };
+          expect(transport.onclose).toBeDefined();
+
+          vi.mocked(Client.prototype.connect).mockClear();
+          vi.mocked(Client.prototype.connect)
+            .mockRejectedValueOnce(new Error("overlapping discovery failed"))
+            .mockResolvedValueOnce(undefined);
+
+          transport.onclose?.();
+          await vi.waitFor(() =>
+            expect(Client.prototype.close).toHaveBeenCalled()
+          );
+
+          // This discovery races the reconnect backoff and marks the identity
+          // failed under the ignore policy.
+          await expect(client.listTools()).resolves.toEqual([]);
+
+          // The detached reconnect then rebuilds that exact identity.
+          await vi.waitFor(() =>
+            expect(Client.prototype.connect).toHaveBeenCalledTimes(2)
+          );
+
+          await expect(client.listTools()).resolves.toHaveLength(2);
+        } finally {
+          await client.close();
+        }
+      });
+
       test("should attempt to reconnect stdio transport when enabled", async () => {
         const client = new MultiServerMCPClient({
           "test-server": {
