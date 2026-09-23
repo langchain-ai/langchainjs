@@ -1,15 +1,14 @@
 import { randomUUID } from "node:crypto";
 
 import express, { type Express } from "express";
-
+import { SSEServerTransport } from "@modelcontextprotocol/server-legacy/sse";
+import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
 import {
   McpServer,
   ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod/v3";
+  isInitializeRequest,
+} from "@modelcontextprotocol/server";
+import { z } from "zod";
 
 export function createDummyHttpServer(
   name: string,
@@ -40,10 +39,12 @@ export function createDummyHttpServer(
     // Add tools that can inspect request details
     // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
-    server.tool(
+    server.registerTool(
       "test_tool",
-      "A test tool that echoes input and request metadata",
-      { input: z.string() },
+      {
+        description: "A test tool that echoes input and request metadata",
+        inputSchema: z.object({ input: z.string() }),
+      },
       async ({ input }, extra) => {
         // Logging message
         await server.server.notification(
@@ -55,11 +56,12 @@ export function createDummyHttpServer(
               data: `test_tool invoked with ${input}`,
             },
           },
-          { relatedRequestId: extra.requestId }
+          { relatedRequestId: extra.mcpReq.id }
         );
 
         // Progress with token if present
-        const progressToken = extra._meta?.progressToken;
+        const progressToken = extra.mcpReq._meta?.progressToken;
+
         if (progressToken !== undefined) {
           const steps = 3;
           for (let i = 1; i <= steps; i++) {
@@ -68,7 +70,7 @@ export function createDummyHttpServer(
                 method: "notifications/progress",
                 params: { progress: i, total: steps, progressToken },
               },
-              { relatedRequestId: extra.requestId }
+              { relatedRequestId: extra.mcpReq.id }
             );
           }
         }
@@ -79,7 +81,7 @@ export function createDummyHttpServer(
               type: "text",
               text: JSON.stringify({
                 input,
-                meta: extra._meta,
+                meta: extra.mcpReq._meta,
                 serverName: name,
               }),
             },
@@ -90,10 +92,13 @@ export function createDummyHttpServer(
 
     // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
-    server.tool(
+    server.registerTool(
       "sleep_tool",
-      "A test tool that sleeps for the given number of milliseconds before returning",
-      { sleepMsec: z.number().int().positive() },
+      {
+        description:
+          "A test tool that sleeps for the given number of milliseconds before returning",
+        inputSchema: z.object({ sleepMsec: z.number().int().positive() }),
+      },
       async ({ sleepMsec }) => {
         await new Promise((resolve) => {
           setTimeout(resolve, sleepMsec);
@@ -112,10 +117,12 @@ export function createDummyHttpServer(
     );
 
     if (options.testHeaders) {
-      server.tool(
+      server.registerTool(
         "check_headers",
-        "Check if specific headers were received",
-        { headerName: z.string() },
+        {
+          description: "Check if specific headers were received",
+          inputSchema: z.object({ headerName: z.string() }),
+        },
         async ({ headerName }, extra) => {
           // Get headers for this session
           const sessionId = extra.sessionId || "default";
@@ -132,12 +139,13 @@ export function createDummyHttpServer(
       );
     }
 
-    server.tool(
+    server.registerTool(
       "audio_tool",
-      "A tool that returns a dummy audio content.",
-      // Input schema: a single string 'input'
       {
-        input: z.string().describe("Some input string for the audio tool"),
+        description: "A tool that returns a dummy audio content.",
+        inputSchema: z.object({
+          input: z.string().describe("Some input string for the audio tool"),
+        }),
       },
       async ({ input }) => {
         // Static base64 encoded minimal WAV file (1-byte silent audio)
@@ -161,12 +169,13 @@ export function createDummyHttpServer(
       }
     );
 
-    server.tool(
+    server.registerTool(
       "image_tool",
-      "A tool that returns a dummy image and text content.",
-      // Input schema: a single string 'input'
       {
-        input: z.string().describe("Some input string for the image tool"),
+        description: "A tool that returns a dummy image and text content.",
+        inputSchema: z.object({
+          input: z.string().describe("Some input string for the image tool"),
+        }),
       },
       async ({ input }) => {
         // Static base64 encoded minimal PNG file (1x1 black pixel)
@@ -189,11 +198,13 @@ export function createDummyHttpServer(
       }
     );
 
-    server.tool(
+    server.registerTool(
       "resource_tool",
-      "A tool that returns a dummy resource and text content.",
       {
-        input: z.string().describe("Some input string for the resource tool"),
+        description: "A tool that returns a dummy resource and text content.",
+        inputSchema: z.object({
+          input: z.string().describe("Some input string for the resource tool"),
+        }),
       },
       async ({ input }) => {
         return {
@@ -217,11 +228,13 @@ export function createDummyHttpServer(
     );
 
     // Add a tool that returns structuredContent and _meta
-    server.tool(
+    server.registerTool(
       "structured_tool",
-      "A tool that returns structuredContent and _meta",
       {
-        input: z.string().describe("Some input string"),
+        description: "A tool that returns structuredContent and _meta",
+        inputSchema: z.object({
+          input: z.string().describe("Some input string"),
+        }),
       },
       async ({ input }) => {
         return {
@@ -319,10 +332,9 @@ export function createDummyHttpServer(
   app.use(express.json());
 
   // Store transports and metadata
-  const transports = {
-    streamable: {} as Record<string, StreamableHTTPServerTransport>,
-    sse: {} as Record<string, SSEServerTransport>,
-  };
+  const streamable: Record<string, NodeStreamableHTTPServerTransport> = {};
+  const sse: Record<string, SSEServerTransport> = {};
+  const transports = { streamable, sse };
 
   // Helper function to capture headers
   const captureHeaders = (req: express.Request, sessionId: string) => {
@@ -342,7 +354,7 @@ export function createDummyHttpServer(
   if (!options.disableStreamableHttp) {
     app.post("/mcp", async (req, res) => {
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
-      let transport: StreamableHTTPServerTransport;
+      let transport: NodeStreamableHTTPServerTransport;
 
       if (options.requireAuth) {
         const auth = req.headers.authorization;
@@ -361,7 +373,7 @@ export function createDummyHttpServer(
         // Capture headers for existing session
         captureHeaders(req, sessionId);
       } else if (!sessionId && isInitializeRequest(req.body)) {
-        transport = new StreamableHTTPServerTransport({
+        transport = new NodeStreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (newSessionId) => {
             transports.streamable[newSessionId] = transport;

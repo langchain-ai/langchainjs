@@ -1,11 +1,10 @@
 import express from "express";
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, isInitializeRequest } from "@modelcontextprotocol/server";
 import { randomUUID } from "node:crypto";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
+import { SSEServerTransport } from "@modelcontextprotocol/server-legacy/sse";
+import { z } from "zod/v4";
 
 export async function main() {
   const server = new McpServer({
@@ -13,12 +12,11 @@ export async function main() {
     version: "1.0.0",
   });
 
-  const calcSchema = { a: z.number(), b: z.number() };
+  const calcSchema = z.object({ a: z.number(), b: z.number() });
 
-  server.tool(
+  server.registerTool(
     "add",
-    "Adds two numbers together",
-    calcSchema,
+    { description: "Adds two numbers together", inputSchema: calcSchema },
     async ({ a, b }) => {
       return {
         content: [{ type: "text", text: `${a + b}` }],
@@ -26,49 +24,48 @@ export async function main() {
     }
   );
 
-  server.tool(
+  server.registerTool(
     "subtract",
-    "Subtracts two numbers",
-    calcSchema,
+    { description: "Subtracts two numbers", inputSchema: calcSchema },
     async ({ a, b }) => {
       return { content: [{ type: "text", text: `${a - b}` }] };
     }
   );
 
-  server.tool(
+  server.registerTool(
     "multiply",
-    "Multiplies two numbers",
-    calcSchema,
+    { description: "Multiplies two numbers", inputSchema: calcSchema },
     async ({ a, b }) => {
       return { content: [{ type: "text", text: `${a * b}` }] };
     }
   );
 
-  server.tool("divide", "Divides two numbers", calcSchema, async ({ a, b }) => {
-    return { content: [{ type: "text", text: `${a / b}` }] };
-  });
+  server.registerTool(
+    "divide",
+    { description: "Divides two numbers", inputSchema: calcSchema },
+    async ({ a, b }) => ({ content: [{ type: "text", text: `${a / b}` }] })
+  );
 
   const app = express();
   app.use(express.json());
 
   // Store transports for each session type
-  const transports = {
-    streamable: {} as Record<string, StreamableHTTPServerTransport>,
-    sse: {} as Record<string, SSEServerTransport>,
-  };
+  const streamable: Record<string, NodeStreamableHTTPServerTransport> = {};
+  const sse: Record<string, SSEServerTransport> = {};
+  const transports = { streamable, sse };
 
-  // Modern Streamable HTTP endpoint
+  // Streamable HTTP endpoint using legacy protocol sessions
   app.post("/mcp", async (req, res) => {
     // Check for existing session ID
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    let transport: StreamableHTTPServerTransport;
+    let transport: NodeStreamableHTTPServerTransport;
 
     if (sessionId && transports.streamable[sessionId]) {
       // Reuse existing transport
       transport = transports.streamable[sessionId];
     } else if (!sessionId && isInitializeRequest(req.body)) {
       // New initialization request
-      transport = new StreamableHTTPServerTransport({
+      transport = new NodeStreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (sessionId) => {
           // Store the transport by session ID
