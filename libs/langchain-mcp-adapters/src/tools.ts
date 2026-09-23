@@ -133,8 +133,8 @@ function createToolInvocation(
   client: MCPInstance,
   serverName: string,
   descriptor: MCPTool,
-  logLevel?: LoggingLevel,
-  elicitation = false
+  logLevel: LoggingLevel | undefined,
+  elicitation: boolean
 ): ToolInvocation {
   const modern = client.getProtocolEra() === "modern";
   // Legacy servers answer elicitation through `onElicitation`, never in band.
@@ -472,15 +472,18 @@ export async function convertMcpTools(
   mcpTools: MCPTool[],
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
+  const parsedOptions = loadMcpToolsOptionsSchema.parse(options ?? {});
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
     additionalToolNamePrefix,
     outputHandling,
     defaultToolTimeout,
+    logLevel,
+    elicitation,
   } = {
     ...defaultLoadMcpToolsOptions,
-    ...options,
+    ...parsedOptions,
   };
 
   const initialPrefix = additionalToolNamePrefix
@@ -504,8 +507,8 @@ export async function convertMcpTools(
               client,
               serverName,
               tool,
-              options?.logLevel,
-              options?.elicitation
+              logLevel,
+              elicitation
             );
 
             return new DynamicStructuredTool({
@@ -530,9 +533,9 @@ export async function convertMcpTools(
                   args,
                   config,
                   outputHandling,
-                  onProgress: options?.onProgress,
-                  beforeToolCall: options?.beforeToolCall,
-                  afterToolCall: options?.afterToolCall,
+                  onProgress: parsedOptions.onProgress,
+                  beforeToolCall: parsedOptions.beforeToolCall,
+                  afterToolCall: parsedOptions.afterToolCall,
                 });
               },
             });
