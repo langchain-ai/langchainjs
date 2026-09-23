@@ -271,7 +271,7 @@ describe("prompt cache options", () => {
   });
 });
 
-it.each(["gpt-6-sol", "gpt-6-luna"])(
+it.each(["gpt-6-astra", "gpt-6-sol", "gpt-6-luna"])(
   "routes %s through Responses with reasoning and tools",
   (model) => {
     const chat = new ChatOpenAI({
