@@ -256,7 +256,7 @@ describe("ConnectionManager", () => {
       expect(mgr.has({ serverName: "svc", headers: { A: "3" } })).toBe(false);
 
       expect(mgr.get({ serverName: "svc", headers: { A: "1" } })).toBeDefined();
-      expect(mgr.get("svc")).toBeDefined(); // ambiguous but returns one
+      expect(mgr.get("svc")).toBeUndefined(); // default identity never selects an override
     });
 
     test("getTransport returns the underlying transport", async () => {
