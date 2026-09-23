@@ -1,3 +1,8 @@
+import { z } from "zod";
+import {
+  ContentBlockSchema,
+  EmbeddedResourceSchema,
+} from "@modelcontextprotocol/core";
 import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
@@ -5,12 +10,97 @@ import type {
 import type { ContentBlock } from "@langchain/core/messages";
 
 import { ToolException } from "./utils/errors.js";
-import {
-  _resolveDetailedOutputHandling,
-  callToolResultContentTypes,
-  type CallToolResultContentType,
-  type OutputHandling,
-} from "./types.js";
+
+const callToolResultContentTypeSchema = z.enum(
+  ContentBlockSchema.options.map((schema) => schema.shape.type.value)
+);
+
+export const callToolResultContentTypes =
+  callToolResultContentTypeSchema.options;
+
+export type CallToolResultContentType = z.output<
+  typeof callToolResultContentTypeSchema
+>;
+
+const outputTypesUnion = z.enum(["content", "artifact"]);
+
+const detailedOutputHandlingSchema = z.partialRecord(
+  callToolResultContentTypeSchema,
+  outputTypesUnion.optional()
+);
+
+export type DetailedOutputHandling = z.output<
+  typeof detailedOutputHandlingSchema
+>;
+
+export const outputHandlingSchema = z.union([
+  outputTypesUnion,
+  detailedOutputHandlingSchema,
+]);
+
+/**
+ * Defines where to place each tool output type in the LangChain ToolMessage.
+ *
+ * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
+ * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
+ * to `content` or `artifact`.
+ *
+ * @default {
+ *   "text": "content",
+ *   "image": "content",
+ *   "audio": "content",
+ *   "resource": "artifact"
+ * }
+ *
+ * Items in the `content` field will be used as input context for the LLM, while the artifact field is
+ * used for capturing tool output that won't be shown to the model, to be used in some later workflow
+ * step.
+ *
+ * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
+ * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
+ * the output in a code execution environment. In this case, you would set the output handling for the
+ * `resource` type to `artifact` (its default value), and then upon initialization of your code
+ * execution environment, you would look through your message history for `ToolMessage`s with the
+ * `artifact` field set to `resource`, and use the `content` field during initialization of the
+ * environment.
+ */
+export type OutputHandling = z.output<typeof outputHandlingSchema>;
+
+// Core content blocks are extensible records, not a closed list of provider
+// formats. Preserve extension fields without claiming their format is validated.
+const contentBlockSchema = z.looseObject({
+  type: z.string(),
+  id: z.string().optional(),
+}) satisfies z.ZodType<ContentBlock>;
+
+const toolContentSchema = z.union([z.string(), z.array(contentBlockSchema)]);
+
+// MCP owns embedded resource semantics. Other artifacts include both legacy
+// data blocks and current LangChain blocks, so validate their shared boundary.
+const toolArtifactSchema = z.union([
+  EmbeddedResourceSchema.extend({
+    resource: z.union(
+      EmbeddedResourceSchema.shape.resource.options.map((schema) =>
+        schema.loose()
+      )
+    ),
+    annotations: EmbeddedResourceSchema.shape.annotations
+      .unwrap()
+      .loose()
+      .optional(),
+  }).loose(),
+  contentBlockSchema.refine((block) => block.type !== "resource", {
+    error: "Expected a valid MCP embedded resource",
+  }),
+]);
+
+/** Content and artifacts supplied to or returned from tool-result hooks. */
+export const toolResultBeforeSchema = z.tuple([
+  toolContentSchema,
+  z.array(toolArtifactSchema),
+]);
+
+export type ToolResultBefore = z.output<typeof toolResultBeforeSchema>;
 
 /** Terminal conversion never dereferences resource URIs or performs network IO. */
 function toolOutputToContentBlocks(
@@ -118,6 +208,44 @@ type ConvertCallToolResultArgs = {
   /** Routing policy for each MCP content type. */
   outputHandling?: OutputHandling;
 };
+
+/** Expand an output policy into its per-content-type representation. @internal */
+export function _resolveDetailedOutputHandling(
+  outputHandling: OutputHandling | undefined,
+  applyDefaults: boolean = false
+): DetailedOutputHandling {
+  if (outputHandling == null) return {};
+
+  if (typeof outputHandling === "string") {
+    return Object.fromEntries(
+      callToolResultContentTypes.map((contentType) => [
+        contentType,
+        outputHandling,
+      ])
+    );
+  }
+
+  const resolved: DetailedOutputHandling = {};
+  for (const contentType of callToolResultContentTypes) {
+    if (outputHandling[contentType] || applyDefaults) {
+      resolved[contentType] =
+        outputHandling[contentType] ??
+        (contentType === "resource" ? "artifact" : "content");
+    }
+  }
+  return resolved;
+}
+
+/** Apply a server-level output policy over an adapter-level policy. @internal */
+export function _resolveAndApplyOverrideHandlingOverrides(
+  base: OutputHandling | undefined,
+  override: OutputHandling | undefined
+): OutputHandling {
+  return {
+    ..._resolveDetailedOutputHandling(base),
+    ..._resolveDetailedOutputHandling(override),
+  };
+}
 
 function outputTypeForContentType(
   contentType: CallToolResultContentType,

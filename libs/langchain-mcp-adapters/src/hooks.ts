@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { isCommand, type Command } from "@langchain/langgraph";
-import { EmbeddedResourceSchema } from "@modelcontextprotocol/core";
-import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import { ToolMessage } from "@langchain/core/messages";
+import { toolResultBeforeSchema, type ToolResultBefore } from "./content.js";
 
 const toolCallRequestSchema = z.object({
   serverName: z.string(),
@@ -11,41 +10,6 @@ const toolCallRequestSchema = z.object({
   args: z.unknown(),
 });
 export type ToolCallRequest = z.output<typeof toolCallRequestSchema>;
-
-// Core content blocks are extensible records, not a closed list of provider
-// formats. Preserve extension fields without claiming their format is validated.
-const contentBlockSchema = z.looseObject({
-  type: z.string(),
-  id: z.string().optional(),
-}) satisfies z.ZodType<ContentBlock>;
-
-const toolContentSchema = z.union([z.string(), z.array(contentBlockSchema)]);
-
-// MCP owns embedded resource semantics. Other artifacts include both legacy
-// data blocks and current LangChain blocks, so validate their shared boundary.
-const toolArtifactSchema = z.union([
-  EmbeddedResourceSchema.extend({
-    resource: z.union(
-      EmbeddedResourceSchema.shape.resource.options.map((schema) =>
-        schema.loose()
-      )
-    ),
-    annotations: EmbeddedResourceSchema.shape.annotations
-      .unwrap()
-      .loose()
-      .optional(),
-  }).loose(),
-  contentBlockSchema.refine((block) => block.type !== "resource", {
-    error: "Expected a valid MCP embedded resource",
-  }),
-]);
-
-const toolResultBeforeSchema = z.tuple([
-  toolContentSchema,
-  z.array(toolArtifactSchema),
-]);
-
-type ToolResultBefore = z.output<typeof toolResultBeforeSchema>;
 
 /**
  * Tool result schema that users can return within the `afterToolCall` callback

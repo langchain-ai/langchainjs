@@ -16,6 +16,7 @@ import type {
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertMcpTools } from "./tools.js";
+import { _resolveAndApplyOverrideHandlingOverrides } from "./content.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { mergeHeaders } from "./utils/misc.js";
 import {
@@ -40,7 +41,6 @@ import {
   SSEConnectionSchema,
   customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
-  _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
 
 const toolSelectionSchema = createServerSelectionSchema(

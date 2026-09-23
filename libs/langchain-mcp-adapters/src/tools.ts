@@ -7,6 +7,7 @@ import {
   convertCallToolResult,
   type ExtendedArtifact,
   type ExtendedContent,
+  type OutputHandling,
 } from "./content.js";
 import { z } from "zod";
 import {
@@ -46,7 +47,6 @@ import type { Notifications } from "./types.js";
 import {
   loadMcpToolsOptionsSchema,
   type LoadMcpToolsOptions,
-  type OutputHandling,
 } from "./types.js";
 import type { ToolHooks, ToolCallModification } from "./hooks.js";
 import type { Client } from "./connection.js";

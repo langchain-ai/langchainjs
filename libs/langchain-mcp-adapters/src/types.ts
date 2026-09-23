@@ -1,7 +1,6 @@
 import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
 import {
-  ContentBlockSchema,
   LoggingLevelSchema,
   SubscriptionFilterSchema,
 } from "@modelcontextprotocol/core";
@@ -24,6 +23,14 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema } from "./hooks.js";
+import { outputHandlingSchema } from "./content.js";
+export {
+  callToolResultContentTypes,
+  outputHandlingSchema,
+  type CallToolResultContentType,
+  type DetailedOutputHandling,
+  type OutputHandling,
+} from "./content.js";
 import { getSdkHeaderCase } from "./utils/misc.js";
 
 export type {
@@ -34,72 +41,6 @@ export type {
   RunnableConfig,
   CommandParams,
 };
-
-const callToolResultContentTypeSchema = z.enum(
-  ContentBlockSchema.options.map((schema) => schema.shape.type.value)
-);
-
-export const callToolResultContentTypes =
-  callToolResultContentTypeSchema.options;
-
-export type CallToolResultContentType = z.output<
-  typeof callToolResultContentTypeSchema
->;
-
-const outputTypesUnion = z.enum(["content", "artifact"]);
-
-const detailedOutputHandlingSchema = z.partialRecord(
-  callToolResultContentTypeSchema,
-  outputTypesUnion.optional()
-);
-
-export type DetailedOutputHandling = z.output<
-  typeof detailedOutputHandlingSchema
->;
-
-export const outputHandlingSchema = z
-  .union([outputTypesUnion, detailedOutputHandlingSchema])
-  .describe(
-    "Defines where to place each tool output type in the LangChain ToolMessage.\n\n" +
-      "Items in the `content` field will be used as input context for the LLM, while the artifact field is\n" +
-      "used for capturing tool output that won't be shown to the model, to be used in some later workflow\n" +
-      "step.\n\n" +
-      "For example, imagine that you have a SQL query tool that can return huge result sets. Rather than\n" +
-      "sending these large outputs directly to the model, perhaps you want the model to be able to inspect\n" +
-      "the output in a code execution environment. In this case, you would set the output handling for the\n" +
-      "`resource` type to `artifact` (it's default value), and then upon initialization of your code\n" +
-      "execution environment, you would look through your message history for `ToolMessage`s with the\n" +
-      "`artifact` field set to `resource`, and use the `content` field during initialization of the\n" +
-      "environment."
-  );
-
-/**
- * Defines where to place each tool output type in the LangChain ToolMessage.
- *
- * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
- * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
- * to `content` or `artifact`.
- *
- * @default {
- *   "text": "content",
- *   "image": "content",
- *   "audio": "content",
- *   "resource": "artifact"
- * }
- *
- * Items in the `content` field will be used as input context for the LLM, while the artifact field is
- * used for capturing tool output that won't be shown to the model, to be used in some later workflow
- * step.
- *
- * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
- * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
- * the output in a code execution environment. In this case, you would set the output handling for the
- * `resource` type to `artifact` (its default value), and then upon initialization of your code
- * execution environment, you would look through your message history for `ToolMessage`s with the
- * `artifact` field set to `resource`, and use the `content` field during initialization of the
- * environment.
- */
-export type OutputHandling = z.output<typeof outputHandlingSchema>;
 
 /**
  * Preserve the SDK-owned service and its prototype. Property checks validate
@@ -1045,57 +986,6 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
-
-/**
- * Helper function that expands a string literal OutputHandling to an object with all content types.
- * Used when applying server-level overrides to the top-level config.
- *
- * @internal
- */
-export function _resolveDetailedOutputHandling(
-  outputHandling: OutputHandling | undefined,
-  applyDefaults: boolean = false
-): DetailedOutputHandling {
-  if (outputHandling == null) {
-    return {};
-  }
-  if (typeof outputHandling === "string") {
-    return Object.fromEntries(
-      callToolResultContentTypes.map((contentType) => [
-        contentType,
-        outputHandling,
-      ])
-    );
-  }
-
-  const resolved: DetailedOutputHandling = {};
-  for (const contentType of callToolResultContentTypes) {
-    if (outputHandling[contentType] || applyDefaults) {
-      resolved[contentType] =
-        outputHandling[contentType] ??
-        (contentType === "resource" ? "artifact" : "content");
-    }
-  }
-  return resolved;
-}
-
-/**
- * Given a base {@link OutputHandling}, apply any overrides from the override {@link OutputHandling}.
- *
- * @internal
- */
-export function _resolveAndApplyOverrideHandlingOverrides(
-  base: OutputHandling | undefined,
-  override: OutputHandling | undefined
-): OutputHandling {
-  const expandedBase = _resolveDetailedOutputHandling(base);
-  const expandedOverride = _resolveDetailedOutputHandling(override);
-
-  return {
-    ...expandedBase,
-    ...expandedOverride,
-  };
-}
 
 export const customHTTPTransportOptionsSchema = httpOptionsSchema
   .pick({ authProvider: true, headers: true })
