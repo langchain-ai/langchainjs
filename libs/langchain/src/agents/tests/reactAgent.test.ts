@@ -407,6 +407,104 @@ describe("createAgent", () => {
     expect((result.messages[3] as AIMessage).tool_calls?.length).toBe(0);
   });
 
+  describe("returnDirect tool errors", () => {
+    const renderCall = (id: string, ui: string) => [
+      { name: "render", args: { ui }, id },
+    ];
+
+    it("returns a tool that throws to the model instead of ending the run", async () => {
+      let attempts = 0;
+      const render = tool(
+        async (input: { ui: string }) => {
+          attempts += 1;
+          if (attempts === 1) throw new Error(`invalid_ui: ${input.ui}`);
+          return `rendered ${input.ui}`;
+        },
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.string() }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+      });
+      const agent = createAgent({ model, tools: [render] });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      // Two model calls: the failed call went back to the model, and the
+      // successful retry ended the run.
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+      const last = result.messages.at(-1) as ToolMessage;
+      expect(ToolMessage.isInstance(last)).toBe(true);
+      expect(last.content).toBe("rendered Table");
+    });
+
+    it("returns invalid tool arguments to the model instead of ending the run", async () => {
+      const render = tool(
+        async (input: { ui: "Table" | "Chart" }) => `rendered ${input.ui}`,
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.enum(["Table", "Chart"]) }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+      });
+      const agent = createAgent({ model, tools: [render] });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+      expect((result.messages.at(-1) as ToolMessage).content).toBe(
+        "rendered Table"
+      );
+    });
+
+    it("calls the model after a failed returnDirect tool when a response format is set", async () => {
+      const render = tool(
+        async (input: { ui: "Table" | "Chart" }) => `rendered ${input.ui}`,
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.enum(["Table", "Chart"]) }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+        structuredResponse: { rendered: true },
+      });
+      const agent = createAgent({
+        model,
+        tools: [render],
+        responseFormat: z.object({ rendered: z.boolean() }),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      // The model node must not short-circuit on the failed call: it runs
+      // again, and the successful retry then ends the run.
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+    });
+  });
+
   it("should work with store integration", async () => {
     const add = tool((input: { a: number; b: number }) => input.a + input.b, {
       name: "add",
