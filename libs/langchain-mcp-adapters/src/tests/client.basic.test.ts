@@ -506,6 +506,53 @@ describe("MultiServerMCPClient", () => {
         }
       );
 
+      test("successful background reconnect restores discovery after an overlapping failure", async () => {
+        resetClientMock();
+        vi.mocked(Client.prototype.connect).mockResolvedValue(undefined);
+
+        const client = new MCPAdapter({
+          servers: {
+            test: {
+              mode: "legacy",
+              command: "node",
+              args: [],
+              restart: { enabled: true, maxAttempts: 1, delayMs: 100 },
+            },
+          },
+          onConnectionError: "ignore",
+        });
+
+        try {
+          await client.listTools();
+          const transport = vi.mocked(StdioClientTransport).mock.results[0]
+            ?.value as { onclose?: () => void };
+          expect(transport.onclose).toBeDefined();
+
+          vi.mocked(Client.prototype.connect).mockClear();
+          vi.mocked(Client.prototype.connect)
+            .mockRejectedValueOnce(new Error("overlapping discovery failed"))
+            .mockResolvedValueOnce(undefined);
+
+          transport.onclose?.();
+          await vi.waitFor(() =>
+            expect(Client.prototype.close).toHaveBeenCalled()
+          );
+
+          // This discovery races the reconnect backoff and marks the identity
+          // failed under the ignore policy.
+          await expect(client.listTools()).resolves.toEqual([]);
+
+          // The detached reconnect then rebuilds that exact identity.
+          await vi.waitFor(() =>
+            expect(Client.prototype.connect).toHaveBeenCalledTimes(2)
+          );
+
+          await expect(client.listTools()).resolves.toHaveLength(2);
+        } finally {
+          await client.close();
+        }
+      });
+
       test("should attempt to reconnect stdio transport when enabled", async () => {
         const client = new MultiServerMCPClient({
           "test-server": {
@@ -1169,28 +1216,27 @@ describe("MultiServerMCPClient", () => {
       expect(client2).toBeUndefined();
     });
 
-    test("validates custom error handler arguments and return values", () => {
-      const errorHandler = vi.fn(() => "unexpected return");
+    test("preserves and awaits an async custom error handler", async () => {
+      resetClientMock();
+      const failure = new Error("Connection failed");
+      vi.mocked(Client.prototype.connect).mockRejectedValueOnce(failure);
+      let handled = false;
+      const errorHandler = vi.fn(async () => {
+        await Promise.resolve();
+        handled = true;
+      });
       const adapter = new MCPAdapter({
         servers: { remote: { url: "https://example.com/mcp" } },
         onConnectionError: errorHandler,
       });
-      const handler = adapter.config.onConnectionError;
-      const error = new Error("Connection failed");
 
-      if (typeof handler !== "function") throw new Error("Expected a handler");
-
-      expect(() =>
-        Reflect.apply(handler, undefined, [{ serverName: 123, error }])
-      ).toThrow(/expected string/);
-      expect(errorHandler).not.toHaveBeenCalled();
-
-      expect(() => handler({ serverName: "remote", error })).toThrow(
-        /expected void/
-      );
+      expect(adapter.config.onConnectionError).toBe(errorHandler);
+      expect(adapter.config.onConnectionError).toBe(errorHandler);
+      await expect(adapter.listTools()).resolves.toEqual([]);
+      expect(handled).toBe(true);
       expect(errorHandler).toHaveBeenCalledExactlyOnceWith({
         serverName: "remote",
-        error,
+        error: expect.objectContaining({ cause: failure }),
       });
     });
 
@@ -1740,6 +1786,7 @@ describe("MultiServerMCPClient", () => {
 
       // Reset counts to only measure reconnection attempts
       (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockClear();
       (Client.prototype.connect as Mock).mockImplementationOnce(() =>
         Promise.reject(new Error("reconnect fail 1"))
       );
@@ -1753,10 +1800,15 @@ describe("MultiServerMCPClient", () => {
       expect(onclose).toBeDefined();
       await onclose?.();
 
-      // Should attempt to create a new transport exactly maxAttempts times
+      // Wait for the detached reconnect loop to consume both failures before
+      // this test restores mocks for the next case.
       await vi.waitFor(() =>
         expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts)
       );
+      await vi.waitFor(() =>
+        expect(Client.prototype.connect).toHaveBeenCalledTimes(maxAttempts)
+      );
+      await client.close();
     });
 
     test("reports an exhausted reconnection budget through onConnectionError", async () => {

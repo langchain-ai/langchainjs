@@ -205,9 +205,8 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
       const headers = { Authorization: "Bearer token", "X-Test": "1" };
       // minimal authProvider mock
-      const authProvider = {
-        tokens: vi.fn().mockResolvedValue({ access_token: "abc" }),
-      } as never;
+      const tokens = vi.fn().mockResolvedValue({ access_token: "abc" });
+      const authProvider = { tokens } as never;
 
       await mgr.createClient("sse", "sse-server", {
         mode: "legacy",
@@ -227,6 +226,11 @@ describe("ConnectionManager", () => {
           authProvider,
         })
       );
+
+      // SDK 2 owns authorization and stream creation. The adapter must pass
+      // both inputs through without reinstating the SDK 1 custom-fetch shim.
+      expect(sseCall[1]).not.toHaveProperty("eventSourceInit");
+      expect(tokens).not.toHaveBeenCalled();
     });
   });
 

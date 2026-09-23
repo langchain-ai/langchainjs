@@ -9,10 +9,14 @@ export type {
   MCPAdapterConfig,
   ResolvedMCPAdapterConfig,
   Connection,
+  ResolvedConnection,
   LoadMcpToolsOptions,
   ToolDiscoveryOptions,
   OutputHandling,
   StdioConnection,
+  ResolvedStdioConnection,
+  HTTPConnection,
+  ResolvedHTTPConnection,
   StreamableHTTPConnection,
   ResolvedStreamableHTTPConnection,
   SSEConnection,
@@ -20,6 +24,12 @@ export type {
   MCPResource,
   MCPResourceTemplate,
   MCPResourceContent,
+} from "./types.js";
+
+export {
+  StdioConnectionSchema,
+  HTTPConnectionSchema,
+  ConnectionSchema,
 } from "./types.js";
 
 export { loadMcpTools, ToolException, isToolException } from "./tools.js";

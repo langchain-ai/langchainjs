@@ -16,7 +16,9 @@ import type {
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertMcpTools } from "./tools.js";
-import { ConnectionManager, mergeHeaders, type Client } from "./connection.js";
+import { _resolveAndApplyOverrideHandlingOverrides } from "./content.js";
+import { ConnectionManager, type Client } from "./connection.js";
+import { mergeHeaders } from "./utils/misc.js";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
@@ -36,10 +38,9 @@ import {
   type ToolDiscoveryOptions,
   adapterConfigSchema,
   loggingLevelSchema,
-  sseConnectionSchema,
+  SSEConnectionSchema,
   customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
-  _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
 
 const toolSelectionSchema = createServerSelectionSchema(
@@ -261,7 +262,7 @@ export class MCPAdapter {
         }
 
         if (typeof this.#onConnectionError === "function") {
-          this.#onConnectionError({ serverName, error });
+          await this.#onConnectionError({ serverName, error });
         }
         this.#failedServers.add(key);
       }
@@ -793,7 +794,7 @@ export class MCPAdapter {
           try {
             await this._initializeSSEConnection(
               serverName,
-              sseConnectionSchema.parse({ ...fallback, transport: "sse" })
+              SSEConnectionSchema.parse({ ...fallback, transport: "sse" })
             );
           } catch (firstSSEError) {
             // try one more time, but modify the URL to end with `/sse`
@@ -803,7 +804,7 @@ export class MCPAdapter {
               try {
                 await this._initializeSSEConnection(
                   serverName,
-                  sseConnectionSchema.parse({
+                  SSEConnectionSchema.parse({
                     ...fallback,
                     transport: "sse",
                     url: sseUrl,
@@ -1125,6 +1126,7 @@ export class MCPAdapter {
             : { serverName };
         if (this.#clientConnections.has(key)) {
           connected = true;
+          this.#failedServers.delete(this.#clientConnections.identity(key));
         }
       } catch (error) {
         lastError = error;
@@ -1139,7 +1141,7 @@ export class MCPAdapter {
       !signal.aborted &&
       typeof this.#onConnectionError === "function"
     ) {
-      this.#onConnectionError({
+      await this.#onConnectionError({
         serverName,
         error:
           lastError ??

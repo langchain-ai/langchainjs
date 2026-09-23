@@ -3,7 +3,7 @@ import { createServer, type IncomingHttpHeaders, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { SSEClientTransport } from "@modelcontextprotocol/client";
 import { ConnectionManager } from "../connection.js";
-import { connectionSchema } from "../types.js";
+import { ConnectionSchema } from "../types.js";
 
 /** An `authProvider` that holds one static token, the smallest shape the SDK adapts. */
 const staticProvider = (token: string) =>
@@ -82,7 +82,7 @@ describe("what the transports send", () => {
       // Parsed, not hand-built: the connection schema is what canonicalises
       // header spelling, and every connection the adapter holds comes from it.
       const connection = {
-        ...connectionSchema.parse({
+        ...ConnectionSchema.parse({
           mode: "legacy",
           transport,
           url,

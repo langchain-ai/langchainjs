@@ -109,5 +109,4 @@ account binding, redirects and callback handling.
 Use `MCPAdapter` and `servers` for new code. Replace `getTools()` with `listTools()`
 when upgrading from adapter 1.x.
 
-MIT licensed. Originally adapted from
-[Julien Blanchon's implementation](https://github.com/JulienBlanchon/langchain-mcp-adapter).
+MIT licensed.

@@ -1,6 +1,10 @@
 import {
   MCPAdapter,
   type MCPAdapterConfig,
+  type HTTPConnection,
+  type ResolvedConnection,
+  type StdioConnection,
+  type ResolvedStdioConnection,
   type ResolvedMCPAdapterConfig,
   type SSEConnection,
   type StreamableHTTPConnection,
@@ -21,7 +25,6 @@ import type {
   MCPResourceTemplate,
   MCPResourceContent,
   CallToolResultContentType,
-  ResolvedConnection,
 } from "../types.js";
 
 test("check tool hooks types", () => {
@@ -185,6 +188,10 @@ test("public transport types distinguish SSE from Streamable HTTP", () => {
   const config = { servers: { sse, http } } satisfies MCPAdapterConfig;
   expectTypeOf(config).toMatchTypeOf<MCPAdapterConfig>();
   expectTypeOf<SSEConnection>().not.toMatchTypeOf<StreamableHTTPConnection>();
+  expectTypeOf<SSEConnection>().toMatchTypeOf<HTTPConnection>();
+  expectTypeOf<StreamableHTTPConnection>().toMatchTypeOf<HTTPConnection>();
+  expectTypeOf<StdioConnection>().not.toMatchTypeOf<HTTPConnection>();
+  expectTypeOf<ResolvedStdioConnection>().toMatchTypeOf<ResolvedConnection>();
   expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<
     "auto" | "legacy"
   >();
