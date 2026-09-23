@@ -1,6 +1,7 @@
 import {
   MCPClientError,
   getHttpErrorCode,
+  isAuthenticationError,
   createAuthenticationErrorMessage,
 } from "./utils/errors.js";
 import { z } from "zod";
@@ -854,7 +855,7 @@ export class MCPAdapter {
           }
         } else {
           // Provide specific error message for authentication failures
-          if (code === 401) {
+          if (isAuthenticationError(error)) {
             throw new MCPClientError(
               createAuthenticationErrorMessage(
                 serverName,
@@ -911,7 +912,7 @@ export class MCPAdapter {
       }
 
       // Check if this is an authentication error that needs better messaging
-      const isAuthError = error && getHttpErrorCode(error) === 401;
+      const isAuthError = isAuthenticationError(error);
 
       if (isAuthError) {
         throw new MCPClientError(

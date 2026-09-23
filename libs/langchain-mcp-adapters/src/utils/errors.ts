@@ -1,5 +1,6 @@
 import { ns, LangChainError } from "@langchain/core/errors";
 import type { CallToolResult } from "@modelcontextprotocol/client";
+import { UnauthorizedError } from "@modelcontextprotocol/client";
 import { z } from "zod";
 
 /** An operational failure while connecting to or using an MCP server. */
@@ -56,6 +57,18 @@ export function getHttpErrorCode(error: unknown): number | undefined {
   const match = message?.match(/\(HTTP (\d{3})\)/);
 
   return status ?? code ?? httpStatusSchema.safeParse(Number(match?.[1])).data;
+}
+
+/**
+ * Whether `error`, or its direct cause, means the server wants credentials:
+ * the SDK's `UnauthorizedError` (provider flows, which carry no HTTP status)
+ * or an HTTP 401.
+ */
+export function isAuthenticationError(error: unknown): boolean {
+  const matches = (value: unknown) =>
+    UnauthorizedError.isInstance(value) || getHttpErrorCode(value) === 401;
+
+  return matches(error) || (error instanceof Error && matches(error.cause));
 }
 
 export function createAuthenticationErrorMessage(

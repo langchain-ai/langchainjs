@@ -7,6 +7,8 @@ export type {
   OAuthClientProvider,
 } from "@modelcontextprotocol/client";
 
+export { UnauthorizedError } from "@modelcontextprotocol/client";
+
 export type {
   ClientConfig,
   MCPAdapterConfig,

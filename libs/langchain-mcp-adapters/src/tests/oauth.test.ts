@@ -1,11 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { MCPAdapter, type MCPAdapterConfig } from "../index.js";
+import {
+  MCPAdapter,
+  MCPClientError,
+  UnauthorizedError,
+  type MCPAdapterConfig,
+} from "../index.js";
+import { getHttpErrorCode } from "../utils/errors.js";
 import {
   startOAuthFixture,
   type OAuthFixture,
   type OAuthFixtureOptions,
 } from "./fixtures/oauth-server.js";
+import { createTestOAuthProvider } from "./fixtures/oauth-client.js";
 
 const cleanup: Array<() => Promise<unknown>> = [];
 
@@ -30,6 +37,17 @@ const toolNames = (tools: ReadonlyArray<{ name: string }>) =>
 
 const hasWhoami = (tools: ReadonlyArray<{ name: string }>) =>
   toolNames(tools).some((name) => name.endsWith("whoami"));
+
+/** Await a rejection that must be an MCPClientError, and return it. */
+async function failure(promise: Promise<unknown>): Promise<MCPClientError> {
+  const error = await promise.then(
+    () => undefined,
+    (reason: unknown) => reason
+  );
+  if (!MCPClientError.isInstance(error))
+    throw new Error(`expected MCPClientError, got ${String(error)}`);
+  return error;
+}
 
 describe("OAuth fixture", () => {
   it("advertises RFC 9207 support and challenges unauthenticated MCP requests", async () => {
@@ -129,5 +147,92 @@ describe("token providers", () => {
           },
         })
     ).toThrow();
+  });
+});
+
+describe("auth failure labeling", () => {
+  it("labels a provider flow on HTTP and keeps UnauthorizedError as the cause", async () => {
+    const server = await fixture();
+    const error = await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "http",
+            url: server.mcpUrl,
+            authProvider: createTestOAuthProvider(),
+          },
+        },
+      }).listTools()
+    );
+    expect(error.message).toMatch(/^Authentication failed for HTTP server "svc"/);
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
+  });
+
+  it("labels a provider flow on SSE", async () => {
+    const server = await fixture();
+    const error = await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "sse",
+            url: server.sseUrl,
+            authProvider: createTestOAuthProvider(),
+          },
+        },
+      }).listTools()
+    );
+    expect(error.message).toMatch(/^Authentication failed for SSE server "svc"/);
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
+  });
+
+  it("labels a 401 without a provider, with the HTTP status on the cause", async () => {
+    const server = await fixture();
+    const error = await failure(
+      adapter({
+        servers: { svc: { transport: "http", url: server.mcpUrl } },
+      }).listTools()
+    );
+    expect(error.message).toMatch(/^Authentication failed for HTTP server "svc"/);
+    expect(getHttpErrorCode(error.cause)).toBe(401);
+  });
+
+  it("never falls back to SSE from a legacy-mode provider flow", async () => {
+    const server = await fixture();
+    const error = await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "http",
+            mode: "legacy",
+            url: server.mcpUrl,
+            authProvider: createTestOAuthProvider(),
+          },
+        },
+      }).listTools()
+    );
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
+    expect(server.requests.some((request) => request.path === "/sse")).toBe(false);
+  });
+
+  it("keeps a throwing token() as the cause and does not call it an auth failure", async () => {
+    const server = await fixture();
+    const error = await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "http",
+            url: server.mcpUrl,
+            authProvider: {
+              token: async () => {
+                throw new Error("vault unavailable");
+              },
+            },
+          },
+        },
+      }).listTools()
+    );
+    expect(error.message).not.toMatch(/^Authentication failed/);
+    expect(error.cause).toBeInstanceOf(Error);
+    expect((error.cause as Error).message).toBe("vault unavailable");
   });
 });

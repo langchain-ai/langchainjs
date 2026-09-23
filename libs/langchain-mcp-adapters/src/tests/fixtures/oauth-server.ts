@@ -155,6 +155,7 @@ export async function startOAuthFixture(
   const { port } = z.object({ port: z.number() }).parse(http.address());
   const base = `http://127.0.0.1:${port}`;
   const mcpUrl = `${base}/mcp`;
+  const sseUrl = `${base}/sse`;
 
   app.use(
     mcpAuthRouter({
@@ -171,6 +172,17 @@ export async function startOAuthFixture(
   const bearer = requireBearerAuth({
     verifier: provider,
     resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(new URL(mcpUrl)),
+  });
+
+  // The SSE endpoint is a separate protected resource: the SDK checks that
+  // the metadata's `resource` matches the URL it connected to.
+  const sseMetadataUrl = getOAuthProtectedResourceMetadataUrl(new URL(sseUrl));
+  app.get(new URL(sseMetadataUrl).pathname, (_req, res) => {
+    res.json({ resource: sseUrl, authorization_servers: [new URL(base).href] });
+  });
+  const sseBearer = requireBearerAuth({
+    verifier: provider,
+    resourceMetadataUrl: sseMetadataUrl,
   });
 
   const handleMcp = toNodeHandler(
@@ -196,14 +208,14 @@ export async function startOAuthFixture(
 
   app.all("/mcp", bearer, (req, res) => handleMcp(req, res));
   // SSE tests only exercise the 401 path and the token exchange.
-  app.get("/sse", bearer, (_req, res) => {
+  app.get("/sse", sseBearer, (_req, res) => {
     res.status(501).end();
   });
 
   return {
     base,
     mcpUrl,
-    sseUrl: `${base}/sse`,
+    sseUrl,
     requests,
     stats,
     mintAccessToken: () => issue("minted").access_token,
