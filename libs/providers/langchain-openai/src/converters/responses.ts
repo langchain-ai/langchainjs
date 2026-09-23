@@ -45,6 +45,7 @@ import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+const _FUNCTION_CALL_NAMESPACES_MAP_KEY = "__openai_function_call_namespaces__";
 const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
 
 /** Streaming-only marker; not part of @langchain/core ToolCallChunk. */
@@ -387,6 +388,7 @@ export const convertResponsesMessageToAIMessage: Converter<
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+    [_FUNCTION_CALL_NAMESPACES_MAP_KEY]?: Record<string, string>;
     [_CUSTOM_TOOL_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
@@ -441,6 +443,11 @@ export const convertResponsesMessageToAIMessage: Converter<
       additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] ??= {};
       if (item.id) {
         additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      }
+      if (item.namespace) {
+        additional_kwargs[_FUNCTION_CALL_NAMESPACES_MAP_KEY] ??= {};
+        additional_kwargs[_FUNCTION_CALL_NAMESPACES_MAP_KEY][item.call_id] =
+          item.namespace;
       }
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
@@ -718,6 +725,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
       [event.item.call_id]: event.item.id,
     };
+  } else if (
+    event.type === "response.output_item.done" &&
+    event.item.type === "function_call"
+  ) {
+    if (event.item.namespace) {
+      additional_kwargs[_FUNCTION_CALL_NAMESPACES_MAP_KEY] = {
+        [event.item.call_id]: event.item.namespace,
+      };
+    }
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "custom_tool_call"
@@ -1409,6 +1425,7 @@ export const convertMessagesToResponsesInput: Converter<
       const additional_kwargs =
         lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
           [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+          [_FUNCTION_CALL_NAMESPACES_MAP_KEY]?: Record<string, string>;
           reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
           type?: string;
           refusal?: string;
@@ -1623,7 +1640,34 @@ export const convertMessagesToResponsesInput: Converter<
           input.push(messageItem);
         }
 
+        const toolOutputs = (
+          responseMetadata?.output as Array<ResponsesInputItem>
+        )?.length
+          ? responseMetadata?.output
+          : additional_kwargs.tool_outputs;
+
+        // Tools loaded by tool search stay available only while the search items
+        // are in the input; with store: false nothing is kept server-side.
+        const toolSearchItems = (
+          (toolOutputs ?? []) as Array<ResponsesInputItem>
+        ).filter(
+          (item) =>
+            item.type === "tool_search_call" ||
+            item.type === "tool_search_output"
+        );
+        input.push(
+          ...toolSearchItems.map((item): ResponsesInputItem => {
+            if (!zdrEnabled) return item;
+            const { id: _id, ...rest } = item as ResponsesInputItem & {
+              id?: string | null;
+            };
+            return rest as ResponsesInputItem;
+          })
+        );
+
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
+        const functionCallNamespaces =
+          additional_kwargs?.[_FUNCTION_CALL_NAMESPACES_MAP_KEY];
         const customToolCallIds =
           additional_kwargs?.[_CUSTOM_TOOL_CALL_IDS_MAP_KEY];
 
@@ -1656,6 +1700,9 @@ export const convertMessagesToResponsesInput: Converter<
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
+                ...(functionCallNamespaces?.[toolCall.id!]
+                  ? { namespace: functionCallNamespaces[toolCall.id!] }
+                  : {}),
                 ...(!zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               };
             })
@@ -1668,17 +1715,14 @@ export const convertMessagesToResponsesInput: Converter<
                 name: toolCall.function.name,
                 call_id: toolCall.id,
                 arguments: toolCall.function.arguments,
+                ...(functionCallNamespaces?.[toolCall.id]
+                  ? { namespace: functionCallNamespaces[toolCall.id] }
+                  : {}),
                 ...(!zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
               })
             )
           );
         }
-
-        const toolOutputs = (
-          responseMetadata?.output as Array<ResponsesInputItem>
-        )?.length
-          ? responseMetadata?.output
-          : additional_kwargs.tool_outputs;
 
         const fallthroughCallTypes: ResponsesInputItem["type"][] = [
           "computer_call",

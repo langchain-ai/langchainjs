@@ -3473,3 +3473,162 @@ describe("phase parameter support", () => {
     });
   });
 });
+
+describe("tool search round-trip", () => {
+  const toolSearchCall = {
+    type: "tool_search_call",
+    id: "tsc_1",
+    call_id: null,
+    execution: "server",
+    status: "completed",
+    arguments: { query: "calendar events" },
+  };
+  const toolSearchOutput = {
+    type: "tool_search_output",
+    id: "tso_1",
+    call_id: null,
+    execution: "server",
+    status: "completed",
+    tools: [
+      {
+        type: "namespace",
+        name: "google_calendar",
+        tools: [{ type: "function", name: "list_events" }],
+      },
+    ],
+  };
+  const namespacedCall = {
+    type: "function_call",
+    id: "fc_1",
+    call_id: "call_1",
+    name: "list_events",
+    namespace: "google_calendar",
+    arguments: "{}",
+    status: "completed",
+  };
+  const plainCall = {
+    type: "function_call",
+    id: "fc_2",
+    call_id: "call_2",
+    name: "set_plan",
+    arguments: "{}",
+    status: "completed",
+  };
+
+  it("captures function_call namespaces from a non-streaming response", () => {
+    const result = convertResponsesMessageToAIMessage({
+      id: "resp_1",
+      model: "gpt-5.4",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [toolSearchCall, toolSearchOutput, namespacedCall, plainCall],
+    } as any);
+
+    expect(
+      result.additional_kwargs.__openai_function_call_namespaces__
+    ).toEqual({ call_1: "google_calendar" });
+  });
+
+  it("captures each streamed function_call namespace exactly once", () => {
+    const events = [namespacedCall, plainCall].flatMap((item, index) => [
+      {
+        type: "response.output_item.added",
+        output_index: index,
+        item: { ...item, arguments: "", status: "in_progress" },
+      },
+      {
+        type: "response.output_item.done",
+        output_index: index,
+        item,
+      },
+    ]);
+    const chunks = events
+      .map((event) => convertResponsesDeltaToChatGenerationChunk(event as any))
+      .filter((chunk) => chunk != null);
+
+    const aggregated = chunks
+      .slice(1)
+      .reduce(
+        (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+        chunks[0].message as AIMessageChunk
+      );
+
+    expect(
+      aggregated.additional_kwargs.__openai_function_call_namespaces__
+    ).toEqual({ call_1: "google_calendar" });
+  });
+
+  const assistantTurn = (fields: {
+    response_metadata?: Record<string, unknown>;
+  }) =>
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        { id: "call_1", name: "list_events", args: {} },
+        { id: "call_2", name: "set_plan", args: {} },
+      ],
+      additional_kwargs: {
+        tool_outputs: [toolSearchCall, toolSearchOutput],
+        __openai_function_call_ids__: { call_1: "fc_1", call_2: "fc_2" },
+        __openai_function_call_namespaces__: { call_1: "google_calendar" },
+      },
+      ...fields,
+    });
+
+  it("replays tool search items without ids and namespaced calls in ZDR mode", () => {
+    const result = convertMessagesToResponsesInput({
+      messages: [assistantTurn({})],
+      zdrEnabled: true,
+      model: "gpt-5.4",
+    });
+
+    const { id: _tscId, ...toolSearchCallNoId } = toolSearchCall;
+    const { id: _tsoId, ...toolSearchOutputNoId } = toolSearchOutput;
+    expect(result.filter((item) => item.type !== "message")).toEqual([
+      toolSearchCallNoId,
+      toolSearchOutputNoId,
+      {
+        type: "function_call",
+        name: "list_events",
+        arguments: "{}",
+        call_id: "call_1",
+        namespace: "google_calendar",
+      },
+      {
+        type: "function_call",
+        name: "set_plan",
+        arguments: "{}",
+        call_id: "call_2",
+      },
+    ]);
+  });
+
+  it("keeps tool search item ids outside ZDR mode", () => {
+    const result = convertMessagesToResponsesInput({
+      messages: [assistantTurn({})],
+      zdrEnabled: false,
+      model: "gpt-5.4",
+    });
+
+    expect(result.filter((item) => item.type !== "message")).toEqual([
+      toolSearchCall,
+      toolSearchOutput,
+      {
+        type: "function_call",
+        name: "list_events",
+        arguments: "{}",
+        call_id: "call_1",
+        namespace: "google_calendar",
+        id: "fc_1",
+      },
+      {
+        type: "function_call",
+        name: "set_plan",
+        arguments: "{}",
+        call_id: "call_2",
+        id: "fc_2",
+      },
+    ]);
+  });
+});
