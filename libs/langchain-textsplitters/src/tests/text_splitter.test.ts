@@ -352,6 +352,111 @@ test("Separator length is considered correctly for chunk size", async () => {
   expect(output).toEqual(expectedOutput);
 });
 
+describe("chunkOverlap across separator boundaries", () => {
+  /**
+   * How many characters two consecutive chunks actually share, i.e. the length of
+   * the longest suffix of `previous` that is also a prefix of `next`.
+   */
+  function sharedOverlap(previous: string, next: string) {
+    for (
+      let size = Math.min(previous.length, next.length);
+      size > 0;
+      size -= 1
+    ) {
+      if (previous.endsWith(next.slice(0, size))) {
+        return size;
+      }
+    }
+    return 0;
+  }
+
+  const paragraphText = "AAAAAAAAAAAAAAAAAAAAAAAAAA\n\nBBBBBBBBBB";
+  const lineText =
+    "AAAA\nBBBB\nCCCC\nDDDD\nEEEE\n\nFFFF\nGGGG\nHHHH\nIIII\nJJJJ";
+
+  // chunkOverlap is documented to overlap consecutive chunks so no context is
+  // lost at a boundary. When one chunk exactly fills chunkSize and the split
+  // after it does not fit next to any part of that chunk, `mergeSplits` pops the
+  // whole chunk and emits the next one with no overlap at all, even though a
+  // valid chunking with the requested overlap exists.
+  //
+  // These cases are marked as expected failures so the suite stays green while
+  // the contract is unsettled. Fixing the splitting behaviour makes them pass,
+  // and `test.fails` then reports them as failures on purpose, which is the
+  // signal to drop the marker. See issue #11702.
+  test.fails("CharacterTextSplitter: keeps chunkOverlap when a chunk exactly fills chunkSize", async () => {
+    const splitter = new CharacterTextSplitter({
+      separator: "\n\n",
+      chunkSize: 30,
+      chunkOverlap: 10,
+    });
+    const output = await splitter.splitText(paragraphText);
+
+    expect(output.length).toBeGreaterThan(1);
+    for (let i = 1; i < output.length; i += 1) {
+      expect(sharedOverlap(output[i - 1], output[i])).toBe(10);
+    }
+  });
+
+  test.fails("RecursiveCharacterTextSplitter: keeps chunkOverlap when a chunk exactly fills chunkSize", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 30,
+      chunkOverlap: 10,
+    });
+    const output = await splitter.splitText(paragraphText);
+
+    expect(output.length).toBeGreaterThan(1);
+    for (let i = 1; i < output.length; i += 1) {
+      expect(sharedOverlap(output[i - 1], output[i])).toBe(10);
+    }
+  });
+
+  test.fails("RecursiveCharacterTextSplitter: keeps chunkOverlap across a paragraph break", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 40,
+      chunkOverlap: 10,
+    });
+    const output = await splitter.splitText(lineText);
+
+    expect(output.length).toBeGreaterThan(1);
+    for (let i = 1; i < output.length; i += 1) {
+      expect(sharedOverlap(output[i - 1], output[i])).toBe(10);
+    }
+  });
+
+  test("chunking never drops or duplicates text, whatever the overlap does", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 30,
+      chunkOverlap: 10,
+    });
+    const output = await splitter.splitText(paragraphText);
+
+    // Every non-whitespace character of the source is still recoverable from the
+    // chunks, and the overlap never consumes a whole chunk.
+    const strip = (value: string) => value.replace(/\s/g, "");
+    expect(strip(output.join(""))).toBe(strip(paragraphText));
+    for (const chunk of output) {
+      expect(chunk.length).toBeGreaterThan(0);
+      expect(chunk.length).toBeLessThanOrEqual(30);
+    }
+  });
+
+  test("chunkOverlap is honoured when the split fits next to the previous chunk", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 40,
+      chunkOverlap: 10,
+    });
+    const output = await splitter.splitText(
+      "AAAA BBBB CCCC DDDD EEEE FFFF GGGG HHHH IIII JJJJ KKKK LLLL"
+    );
+
+    expect(output.length).toBeGreaterThan(1);
+    for (let i = 1; i < output.length; i += 1) {
+      expect(sharedOverlap(output[i - 1], output[i])).toBeGreaterThan(0);
+    }
+  });
+});
+
 test("Token text splitter", async () => {
   const text = "foo bar baz a a";
   const splitter = new TokenTextSplitter({
