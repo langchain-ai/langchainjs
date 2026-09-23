@@ -96,7 +96,7 @@ export function _modelPrefersResponsesAPI(model: string): boolean {
   if (model.includes("gpt-5.4-pro")) return true;
   if (model.includes("gpt-5.5-pro")) return true;
   if (model.includes("gpt-5.6-sol")) return true;
-  if (/^gpt-6-(astra|sol|luna)(?:-|$)/.test(model)) return true;
+  if (model.startsWith("gpt-6")) return true;
   // Codex models are Responses API only
   if (model.includes("codex")) return true;
   return false;
