@@ -18,6 +18,7 @@
     "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
+    "typecheck": "turbo typecheck",
     "precommit": "turbo precommit",
     "prerelease": "BUILD_MODE=prerelease pnpm build",
     "release": "changeset publish",
