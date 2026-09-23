@@ -5,8 +5,8 @@ import { SSEClientTransport } from "@modelcontextprotocol/client";
 import { ConnectionManager } from "../connection.js";
 import { ConnectionSchema } from "../types.js";
 
-/** An `authProvider` that holds one static token, the smallest shape the SDK adapts. */
-const staticProvider = (token: string) =>
+/** An `authProvider` holding one static token (or none), the smallest shape the SDK adapts. */
+const staticProvider = (token: string | undefined) =>
   ({
     get redirectUrl() {
       return "http://localhost/cb";
@@ -15,7 +15,10 @@ const staticProvider = (token: string) =>
       return { redirect_uris: ["http://localhost/cb"] };
     },
     clientInformation: () => undefined,
-    tokens: () => ({ access_token: token, token_type: "Bearer" }),
+    tokens: () =>
+      token === undefined
+        ? undefined
+        : { access_token: token, token_type: "Bearer" },
     saveTokens: () => {},
     redirectToAuthorization: () => {},
     saveCodeVerifier: () => {},
@@ -62,10 +65,8 @@ describe("what the transports send", () => {
     expect(seen[0].accept).toContain("text/event-stream");
   });
 
-  // Every spelling must land on the SDK's own, or the spread that builds a
-  // transport's headers appends instead of replacing. Lower case is what
-  // `mergeHeaders` produces; the others prove the fix canonicalises rather
-  // than happening to agree.
+  // SDK >= 2.1.0 (#2475): once the provider has a token it replaces a
+  // configured Authorization in any spelling, and the two never join.
   it.each([
     ["sse", "authorization"],
     ["sse", "Authorization"],
@@ -74,13 +75,10 @@ describe("what the transports send", () => {
     ["http", "Authorization"],
     ["http", "AUTHORIZATION"],
   ] as const)(
-    "%s: a configured %s replaces the provider's, never joins it",
+    "%s: the provider's token replaces a configured %s",
     async (transport, spelling) => {
       const { url, seen, server } = await recordingServer(true);
       const manager = new ConnectionManager();
-
-      // Parsed, not hand-built: the connection schema is what canonicalises
-      // header spelling, and every connection the adapter holds comes from it.
       const connection = {
         ...ConnectionSchema.parse({
           mode: "legacy",
@@ -92,8 +90,6 @@ describe("what the transports send", () => {
         authProvider: staticProvider("from-provider"),
       } as never;
 
-      // `createClient` is overloaded per transport, so the literal has to
-      // reach it narrowed rather than as the union this table iterates.
       await (
         transport === "sse"
           ? manager.createClient("sse", "svc", connection)
@@ -106,6 +102,35 @@ describe("what the transports send", () => {
       server.close();
 
       expect(seen.length).toBeGreaterThan(0);
+      expect(seen[0].authorization).toBe("Bearer from-provider");
+    }
+  );
+
+  it.each(["sse", "http"] as const)(
+    "%s: a configured Authorization is sent while the provider has no token",
+    async (transport) => {
+      const { url, seen, server } = await recordingServer(true);
+      const manager = new ConnectionManager();
+      const connection = {
+        ...ConnectionSchema.parse({
+          mode: "legacy",
+          transport,
+          url,
+          automaticSSEFallback: false,
+          headers: { Authorization: "Bearer from-config" },
+        }),
+        authProvider: staticProvider(undefined),
+      } as never;
+
+      await (
+        transport === "sse"
+          ? manager.createClient("sse", "svc", connection)
+          : manager.createClient("http", "svc", connection)
+      ).catch(() => {});
+
+      await manager.delete();
+      server.close();
+
       expect(seen[0].authorization).toBe("Bearer from-config");
     }
   );

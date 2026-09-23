@@ -31,8 +31,6 @@ export {
   type DetailedOutputHandling,
   type OutputHandling,
 } from "./content.js";
-import { getSdkHeaderCase } from "./utils/misc.js";
-
 export type {
   Command,
   ContentBlock,
@@ -244,10 +242,7 @@ export const streamableHttpReconnectSchema = z
   })
   .describe("Configuration for streamable HTTP transport reconnection");
 
-const headersSchema = z
-  .record(z.string(), z.string())
-  .transform(getSdkHeaderCase)
-  .optional();
+const headersSchema = z.record(z.string(), z.string()).optional();
 
 const httpOptionsSchema = z
   .object({
