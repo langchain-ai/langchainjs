@@ -2889,3 +2889,43 @@ describe("withStructuredOutput - StandardSchema", () => {
     });
   });
 });
+
+describe("structured output without forced tool support", () => {
+  test.each(["claude-opus-5-5", "claude-fable-5-1"])("%s", async (model) => {
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      for (const thinking of [undefined, { type: "adaptive" as const }]) {
+        const chat = new ChatAnthropic({ apiKey: "testing", model, thinking });
+        const invoke = vi.spyOn(chat, "invoke").mockResolvedValue(
+          new AIMessage({
+            content: [
+              {
+                type: "tool_use",
+                name: "extract",
+                input: { name: "Ada" },
+                id: "call_1",
+              },
+            ],
+            tool_calls: [
+              { name: "extract", args: { name: "Ada" }, id: "call_1" },
+            ],
+          })
+        );
+        const structured = chat.withStructuredOutput(
+          z.object({ name: z.string() })
+        );
+        expect(await structured.invoke("name")).toEqual({ name: "Ada" });
+        const options = invoke.mock.calls[0][1];
+        expect(options).not.toHaveProperty("tool_choice");
+        expect(options).not.toHaveProperty("outputConfig");
+        expect(warning).toHaveBeenCalledWith(
+          expect.stringContaining('method: "jsonSchema"')
+        );
+        invoke.mockResolvedValue(new AIMessage("No tool call"));
+        await expect(structured.invoke("name")).rejects.toThrow("forced tool");
+      }
+    } finally {
+      warning.mockRestore();
+    }
+  });
+});

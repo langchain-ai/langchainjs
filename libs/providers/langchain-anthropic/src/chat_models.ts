@@ -39,6 +39,7 @@ import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   getSamplingParams,
   getTaskBudgetBetas,
+  supportsForcedToolChoice,
   validateInvocationParamCompatibility,
 } from "./utils/params.js";
 import {
@@ -1865,13 +1866,14 @@ export class ChatAnthropicMessages<
 
       if (
         this.thinking?.type === "enabled" ||
-        this.thinking?.type === "adaptive"
+        this.thinking?.type === "adaptive" ||
+        !supportsForcedToolChoice(this.model)
       ) {
         const thinkingAdmonition =
           "Anthropic structured output relies on forced tool calling, " +
-          "which is not supported when `thinking` is enabled. This method will raise " +
+          "which is not supported when `thinking` is enabled or the model rejects forced tool use. This method will raise " +
           "OutputParserException if tool calls are not " +
-          "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
+          'generated. Consider method: "jsonSchema", disabling `thinking` where supported, or adjust your prompt to ensure ' +
           "the tool is called.";
 
         console.warn(thinkingAdmonition);

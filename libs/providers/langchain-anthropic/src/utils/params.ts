@@ -40,6 +40,13 @@ function isThinkingEnabled(thinking: AnthropicThinkingConfigParam): boolean {
   return thinking.type === "enabled" || thinking.type === "adaptive";
 }
 
+export function supportsForcedToolChoice(model?: string): boolean {
+  return !modelStartsWithAnyPrefix(model, [
+    "claude-opus-5-5",
+    "claude-fable-5-1",
+  ]);
+}
+
 export function isOpus47Model(model?: string): boolean {
   return modelStartsWithAnyPrefix(model, ["claude-opus-4-7"]);
 }
@@ -81,7 +88,7 @@ export function validateInvocationParamCompatibility(
 
   const opus55Model = modelStartsWithAnyPrefix(model, ["claude-opus-5-5"]);
   if (
-    opus55Model &&
+    !supportsForcedToolChoice(model) &&
     (fields.toolChoice?.type === "any" || fields.toolChoice?.type === "tool")
   ) {
     throw new Error(

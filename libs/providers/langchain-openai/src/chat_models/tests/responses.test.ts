@@ -270,3 +270,31 @@ describe("prompt cache options", () => {
     expect(model.invocationParams().prompt_cache_options).toBeUndefined();
   });
 });
+
+it.each(["gpt-6-sol", "gpt-6-luna"])(
+  "routes %s through Responses with reasoning and tools",
+  (model) => {
+    const chat = new ChatOpenAI({
+      model,
+      maxTokens: 128,
+      reasoning: { effort: "high" },
+    });
+    const params = chat.invocationParams({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "lookup",
+            parameters: { type: "object", properties: {} },
+          },
+        },
+      ],
+    });
+    expect(params).toMatchObject({
+      max_output_tokens: 128,
+      reasoning: { effort: "high" },
+    });
+    expect(params).not.toHaveProperty("max_tokens");
+    expect(params.tools?.[0]).toHaveProperty("name", "lookup");
+  }
+);

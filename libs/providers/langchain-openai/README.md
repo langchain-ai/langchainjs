@@ -70,27 +70,6 @@ const model = new ChatOpenAI({
 const response = await model.stream(new HumanMessage("Hello world!"));
 ```
 
-### Responses prompt cache options
-
-Pass `prompt_cache_options` at invocation time to use the Responses API cache
-controls on supported models. `comparison_response_id` requests cache diagnostics;
-`prewarm: true` prepares the cache without generating output. Diagnostics are
-available as `response.response_metadata.prompt_cache_diagnostics` for both invoke
-and streaming responses.
-
-```typescript
-const response = await model.invoke("Your reusable prompt", {
-  prompt_cache_options: {
-    mode: "implicit",
-    ttl: "30m",
-    comparison_response_id: "resp_previous",
-  },
-});
-```
-
-The image generation tool also supports GPT Image 2.5 models, `xhigh` and `max`
-quality, and model-supported arbitrary dimensions such as `1536x864`.
-
 ## Tools
 
 This package provides LangChain-compatible wrappers for OpenAI's built-in tools for the Responses API.
