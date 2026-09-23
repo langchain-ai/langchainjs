@@ -1786,6 +1786,7 @@ describe("MultiServerMCPClient", () => {
 
       // Reset counts to only measure reconnection attempts
       (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockClear();
       (Client.prototype.connect as Mock).mockImplementationOnce(() =>
         Promise.reject(new Error("reconnect fail 1"))
       );
@@ -1799,10 +1800,15 @@ describe("MultiServerMCPClient", () => {
       expect(onclose).toBeDefined();
       await onclose?.();
 
-      // Should attempt to create a new transport exactly maxAttempts times
+      // Wait for the detached reconnect loop to consume both failures before
+      // this test restores mocks for the next case.
       await vi.waitFor(() =>
         expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts)
       );
+      await vi.waitFor(() =>
+        expect(Client.prototype.connect).toHaveBeenCalledTimes(maxAttempts)
+      );
+      await client.close();
     });
 
     test("reports an exhausted reconnection budget through onConnectionError", async () => {
