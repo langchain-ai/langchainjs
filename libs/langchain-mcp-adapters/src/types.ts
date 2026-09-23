@@ -978,7 +978,7 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .extend({
     logLevel: loggingLevelSchema.optional(),
     /** Answer in-band input requests with LangGraph interrupts. Defaults to true. */
-    elicitation: modernElicitationSchema,
+    elicitation: z.boolean().default(true),
   });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
