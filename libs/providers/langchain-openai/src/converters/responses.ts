@@ -23,6 +23,10 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages/tool";
 import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
+import {
+  toResponseInputItems,
+  type ResponseInputItemLike,
+} from "openai/lib/responses/ResponseInputItems.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
 import {
   isComputerToolCall,
@@ -732,6 +736,16 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     };
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "reasoning" &&
+    event.item.encrypted_content
+  ) {
+    // Encrypted reasoning content is only complete on the done event. Emit it
+    // separately so it merges with the id and summary from output_item.added.
+    additional_kwargs.reasoning = {
+      encrypted_content: event.item.encrypted_content,
+    };
+  } else if (
+    event.type === "response.output_item.done" &&
     event.item.type === "computer_call"
   ) {
     // Handle computer_call as a tool call so ToolNode can process it
@@ -1188,10 +1202,18 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       // a populated `content` array on input (`400 Invalid 'input[n].content':
       // array too long. Expected an array with maximum length 0`). The reasoning
       // text is already represented in `summary`, so we do not forward `content`.
+      //
+      // `encrypted_content` is required to replay this item under Zero Data
+      // Retention, so forward it when the block carries one.
+      const encryptedContent = (block as { encrypted_content?: unknown })
+        .encrypted_content;
       return {
         type: "reasoning",
         ...(block.id ? { id: block.id } : {}),
         summary,
+        ...(typeof encryptedContent === "string"
+          ? { encrypted_content: encryptedContent }
+          : {}),
       } as OpenAIClient.Responses.ResponseReasoningItem;
     };
 
@@ -1501,15 +1523,26 @@ export const convertMessagesToResponsesInput: Converter<
       }
 
       if (role === "assistant") {
-        // if we have the original response items, just reuse them
+        // If we have the original response items, reuse their canonical order.
+        // This is especially important under ZDR, where independently rebuilding
+        // reasoning and tool-call items loses multiple reasoning payloads and
+        // their interleaving.
         if (
-          !zdrEnabled &&
           responseMetadata?.output != null &&
-          Array.isArray(responseMetadata?.output) &&
-          responseMetadata?.output.length > 0 &&
-          responseMetadata?.output.every((item) => "type" in item)
+          Array.isArray(responseMetadata.output) &&
+          responseMetadata.output.length > 0 &&
+          responseMetadata.output.every(
+            (item) =>
+              typeof item === "object" &&
+              item != null &&
+              "type" in item &&
+              typeof item.type === "string"
+          )
         ) {
-          return responseMetadata?.output;
+          const output = responseMetadata.output as ResponseInputItemLike[];
+          return zdrEnabled
+            ? toResponseInputItems(output)
+            : (output as ResponsesInputItem[]);
         }
 
         // otherwise, try to reconstruct the response from what we have
@@ -1520,9 +1553,10 @@ export const convertMessagesToResponsesInput: Converter<
         const reasoning = additional_kwargs?.reasoning;
         const hasEncryptedContent = !!reasoning?.encrypted_content;
         /**
-         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
-         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
-         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
+         * replay, so only send reasoning items when that payload is available.
+         * With ZDR disabled, include reasoning item IDs so OpenAI can reference
+         * the stored items.
          */
         if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
           const reasoningItem =
@@ -1679,6 +1713,13 @@ export const convertMessagesToResponsesInput: Converter<
               approval_request_id: item.approval_request_id as string,
               approve: item.approve as boolean,
             });
+          }
+          if (item.type === "configuration_update") {
+            // Hoisted to a top-level item preceding the message.
+            messages.push({
+              type: "configuration_update",
+              reasoning: item.reasoning,
+            } as unknown as ResponsesInputItem);
           }
           if (isDataContentBlock(item)) {
             // The Responses API supports file URLs natively, but the Chat

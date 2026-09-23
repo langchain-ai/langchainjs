@@ -700,6 +700,224 @@ describe("openaiTranslator", () => {
         execution: "server",
       });
     });
+
+    it("should derive multiple, correctly-ordered reasoning blocks from response_metadata.output", () => {
+      // additional_kwargs.reasoning (here, deliberately stale) holds only
+      // one item, so multi-item turns must derive from response.output.
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { id: "call_1", name: "add", args: { a: 1, b: 2 } },
+          { id: "call_2", name: "multiply", args: { a: 3, b: 4 } },
+        ],
+        additional_kwargs: {
+          reasoning: {
+            type: "reasoning",
+            id: "rs_stale",
+            summary: [{ type: "summary_text", text: "stale" }],
+          },
+        },
+        response_metadata: {
+          model_provider: "openai",
+          output: [
+            {
+              type: "reasoning",
+              id: "rs_first",
+              summary: [{ type: "summary_text", text: "First" }],
+              encrypted_content: "enc_1",
+            },
+            {
+              type: "function_call",
+              call_id: "call_1",
+              name: "add",
+              arguments: '{"a":1,"b":2}',
+            },
+            {
+              type: "reasoning",
+              id: "rs_second",
+              summary: [{ type: "summary_text", text: "Second" }],
+              encrypted_content: "enc_2",
+            },
+            {
+              type: "function_call",
+              call_id: "call_2",
+              name: "multiply",
+              arguments: '{"a":3,"b":4}',
+            },
+          ],
+        },
+      });
+
+      const relevant = message.contentBlocks.filter(
+        (b) => b.type === "reasoning" || b.type === "tool_call"
+      );
+      expect(relevant).toEqual([
+        {
+          type: "reasoning",
+          reasoning: "First",
+          id: "rs_first",
+          encrypted_content: "enc_1",
+        },
+        { type: "tool_call", id: "call_1", name: "add", args: { a: 1, b: 2 } },
+        {
+          type: "reasoning",
+          reasoning: "Second",
+          id: "rs_second",
+          encrypted_content: "enc_2",
+        },
+        {
+          type: "tool_call",
+          id: "call_2",
+          name: "multiply",
+          args: { a: 3, b: 4 },
+        },
+      ]);
+    });
+
+    it("should fall back to additional_kwargs.reasoning when response_metadata.output is absent", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Done." }],
+        additional_kwargs: {
+          reasoning: {
+            type: "reasoning",
+            id: "rs_only",
+            summary: [{ type: "summary_text", text: "Thinking..." }],
+          },
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const reasoningBlocks = message.contentBlocks.filter(
+        (b) => b.type === "reasoning"
+      );
+      expect(reasoningBlocks).toEqual([
+        {
+          type: "reasoning",
+          reasoning: "Thinking...",
+          id: "rs_only",
+        },
+      ]);
+    });
+
+    it("should position custom_tool_call and computer_call correctly relative to reasoning", () => {
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "computer_use",
+            args: { action: { type: "click" } },
+          },
+          { id: "call_2", name: "my_tool", args: { input: "do it" } },
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output: [
+            {
+              type: "reasoning",
+              id: "rs_first",
+              summary: [{ type: "summary_text", text: "First" }],
+              encrypted_content: "enc_1",
+            },
+            {
+              type: "computer_call",
+              id: "cc_1",
+              call_id: "call_1",
+              action: { type: "click" },
+            },
+            {
+              type: "reasoning",
+              id: "rs_second",
+              summary: [{ type: "summary_text", text: "Second" }],
+              encrypted_content: "enc_2",
+            },
+            {
+              type: "custom_tool_call",
+              id: "ctc_1",
+              call_id: "call_2",
+              name: "my_tool",
+              input: "do it",
+            },
+          ],
+        },
+      });
+
+      const relevant = message.contentBlocks.filter(
+        (b) => b.type === "reasoning" || b.type === "tool_call"
+      );
+      expect(relevant.map((b) => ("id" in b ? b.id : undefined))).toEqual([
+        "rs_first",
+        "call_1",
+        "rs_second",
+        "call_2",
+      ]);
+    });
+
+    it("should position a single text block correctly when it appears before a tool call", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Let me check that.", phase: "1" }],
+        tool_calls: [{ id: "call_1", name: "add", args: { a: 1, b: 2 } }],
+        response_metadata: {
+          model_provider: "openai",
+          output: [
+            {
+              type: "message",
+              id: "msg_1",
+              content: [{ type: "output_text", text: "Let me check that." }],
+              phase: "1",
+            },
+            {
+              type: "function_call",
+              call_id: "call_1",
+              name: "add",
+              arguments: '{"a":1,"b":2}',
+            },
+          ],
+        },
+      });
+
+      const relevant = message.contentBlocks.filter(
+        (b) => b.type === "text" || b.type === "tool_call"
+      );
+      expect(relevant.map((b) => b.type)).toEqual(["text", "tool_call"]);
+    });
+
+    it("should not collide positions for different item types that share an id", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          tool_outputs: [
+            { type: "web_search_call", id: "shared_id", status: "completed" },
+            {
+              type: "file_search_call",
+              id: "shared_id",
+              status: "completed",
+              queries: [],
+            },
+          ],
+        },
+        response_metadata: {
+          model_provider: "openai",
+          output: [
+            { type: "web_search_call", id: "shared_id", status: "completed" },
+            {
+              type: "file_search_call",
+              id: "shared_id",
+              status: "completed",
+              queries: [],
+            },
+          ],
+        },
+      });
+
+      const serverToolCalls = message.contentBlocks.filter(
+        (b) => b.type === "server_tool_call"
+      ) as Array<{ name?: string }>;
+      expect(serverToolCalls.map((b) => b.name)).toEqual([
+        "web_search",
+        "file_search",
+      ]);
+    });
   });
 
   describe("phase parameter support", () => {

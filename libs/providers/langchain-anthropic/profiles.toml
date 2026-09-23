@@ -8,3 +8,6 @@ pdfInputs = true
 pdfToolMessage = true
 imageToolMessage = true
 structuredOutput = false
+
+[overrides."claude-fable-5-1"]
+structuredOutput = true

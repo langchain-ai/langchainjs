@@ -319,6 +319,27 @@ describe("Google Mock", () => {
     );
   });
 
+  test.each(["eu", "us"])(
+    "uses the Vertex %s multi-region endpoint",
+    async (location) => {
+      const apiClient = new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      });
+      const llm = new ChatGoogle({
+        model: "gemini-2.5-flash",
+        platformType: "gcp",
+        location,
+        apiClient,
+      });
+
+      await llm.invoke("What is 1+1?");
+
+      expect(apiClient.request.url).toBe(
+        `https://aiplatform.${location}.rep.googleapis.com/v1/projects/unknown-project-id/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
+      );
+    }
+  );
+
   test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
     let callbackResult: LLMResult | undefined;
 
@@ -1175,6 +1196,101 @@ describe("Google Mock", () => {
 
       expect(res).toBeDefined();
       expect(res!.usage_metadata).toBeUndefined();
+    });
+  });
+
+  describe("llmOutput.tokenUsage across call styles (#11424)", () => {
+    test("invoke(), streaming off", async () => {
+      let callbackResult: LLMResult | undefined;
+      const llm = new ChatGoogle({
+        model: "gemini-3.8-flash",
+        apiClient: new MockApiClient({ fileName: "gemini-chat-001.json" }),
+        callbacks: [
+          {
+            async handleLLMEnd(output: LLMResult) {
+              callbackResult = output;
+            },
+          },
+        ],
+      });
+
+      const result = await llm.invoke("What is 1+1?");
+
+      expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: result.usage_metadata!.input_tokens,
+        completionTokens: result.usage_metadata!.output_tokens,
+        totalTokens: result.usage_metadata!.total_tokens,
+      });
+    });
+
+    test("invoke({streaming: true})", async () => {
+      let callbackResult: LLMResult | undefined;
+      const llm = new ChatGoogle({
+        model: "gemini-3.8-flash",
+        streaming: true,
+        apiClient: new MockApiClient({
+          fileName: "gemini-stream-001.txt",
+          streaming: true,
+        }),
+        callbacks: [
+          {
+            async handleLLMEnd(output: LLMResult) {
+              callbackResult = output;
+            },
+          },
+        ],
+      });
+
+      const result = await llm.invoke("Why is the sky blue?");
+
+      // Message-level usage_metadata is the concatenated, correct total.
+      expect(result.usage_metadata).toMatchObject({
+        input_tokens: 10,
+        output_tokens: 12,
+        total_tokens: 22,
+      });
+
+      // llmOutput.tokenUsage should agree with it.
+      expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: 10,
+        completionTokens: 12,
+        totalTokens: 22,
+      });
+    });
+
+    test(".stream()", async () => {
+      let callbackResult: LLMResult | undefined;
+      const llm = new ChatGoogle({
+        model: "gemini-3.8-flash",
+        apiClient: new MockApiClient({
+          fileName: "gemini-stream-001.txt",
+          streaming: true,
+        }),
+        callbacks: [
+          {
+            async handleLLMEnd(output: LLMResult) {
+              callbackResult = output;
+            },
+          },
+        ],
+      });
+
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        res = res ? res.concat(chunk) : chunk;
+      }
+
+      expect(res?.usage_metadata).toMatchObject({
+        input_tokens: 10,
+        output_tokens: 12,
+        total_tokens: 22,
+      });
+
+      expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: 10,
+        completionTokens: 12,
+        totalTokens: 22,
+      });
     });
   });
 
