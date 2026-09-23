@@ -56,6 +56,7 @@ coverage/
 !**/src/**/*.d.ts
 !**/src/**/*.d.cts
 !internal/tsconfig/vitest-matchers.d.ts
+!internal/tsconfig/vitest-matchers.typecheck.d.ts
 
 examples/src/createAgent/*.png
 libs/langchain/graph-matrix.mermaid.md

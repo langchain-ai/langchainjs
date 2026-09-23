@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Typecheck",
+  "files": ["./env.d.ts", "./vitest-matchers.typecheck.d.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "paths": {
+      "@langchain/core/testing": [
+        "${configDir}/node_modules/@langchain/core/dist/testing/index.d.ts"
+      ]
+    }
+  }
+}
