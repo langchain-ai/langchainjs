@@ -574,9 +574,6 @@ export type CreateAgentParams<
    * or a string. If a string is provided the agent initializes a ChatModel based on the provided model name and provider.
    * It supports various model providers and allows for runtime configuration of model parameters.
    *
-   * `openai:` model strings use the OpenAI Responses API by default. To use Chat Completions,
-   * pass a model instance instead, e.g. `new ChatOpenAI({ model: "gpt-5.5", useResponsesApi: false })`.
-   *
    * @uses {@link initChatModel}
    * @example
    * ```ts
