@@ -6,6 +6,7 @@ import {
 } from "./utils/errors.js";
 import { z } from "zod";
 import {
+  IssuerMismatchError,
   SSEClientTransport,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
@@ -474,6 +475,17 @@ export class MCPAdapter {
         params
       );
     } catch (error) {
+      // The SDK's IssuerMismatchError carries the callback's raw `iss` value
+      // (and other error/error_description/error_uri fields from the same
+      // callback are equally attacker-controlled); its own docstring says
+      // callers must not display it. Use a fixed message instead.
+      if (IssuerMismatchError.isInstance(error))
+        throw new MCPClientError(
+          `OAuth authorization for "${serverName}" failed: the callback's issuer does not match the authorization server (RFC 9207), so the code was not redeemed.`,
+          serverName,
+          { cause: error }
+        );
+
       throw new MCPClientError(
         `OAuth authorization for "${serverName}" failed: ${error}.${discoveryStateHint(provider.data)}`,
         serverName,

@@ -387,6 +387,7 @@ describe("finishAuth", () => {
     const error = await failure(mcp.finishAuth("svc", callback));
     expect(error.cause).toBeInstanceOf(IssuerMismatchError);
     expect(error.message).not.toContain("attacker-text");
+    expect(error.message).not.toContain("attacker.invalid");
     expect(server.stats.exchanges).toBe(0);
     expect(provider.stored.tokens).toBeUndefined();
   });
