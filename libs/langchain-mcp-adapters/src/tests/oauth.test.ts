@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { MCPAdapter, type MCPAdapterConfig } from "../index.js";
 import {
@@ -63,5 +63,71 @@ describe("OAuth fixture", () => {
       },
     }).listTools();
     expect(hasWhoami(tools)).toBe(true);
+  });
+});
+
+describe("token providers", () => {
+  it("connects with { token }", async () => {
+    const server = await fixture();
+    const token = server.mintAccessToken();
+    const tools = await adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: { token: async () => token },
+        },
+      },
+    }).listTools();
+
+    expect(hasWhoami(tools)).toBe(true);
+    const sent = server.requests
+      .filter((request) => request.path === "/mcp")
+      .map((request) => request.authorization);
+    expect(new Set(sent)).toEqual(new Set([`Bearer ${token}`]));
+  });
+
+  it("refreshes through onUnauthorized and retries once", async () => {
+    const server = await fixture();
+    let current = "stale";
+    const onUnauthorized = vi.fn(async () => {
+      current = server.mintAccessToken();
+    });
+    const tools = await adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: { token: async () => current, onUnauthorized },
+        },
+      },
+    }).listTools();
+
+    expect(hasWhoami(tools)).toBe(true);
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["an empty object", {}],
+    ["a non-callable token", { token: "abc" }],
+    [
+      "a non-callable onUnauthorized",
+      { token: async () => "t", onUnauthorized: 1 },
+    ],
+    ["null", null],
+    ["a string", "token"],
+  ])("rejects %s at construction", (_label, authProvider) => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            svc: {
+              transport: "http",
+              url: "http://127.0.0.1:1/mcp",
+              authProvider: authProvider as never,
+            },
+          },
+        })
+    ).toThrow();
   });
 });

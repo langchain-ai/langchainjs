@@ -9,6 +9,7 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import type {
+  AuthProvider,
   CacheMode,
   OAuthClientProvider,
   LoggingLevel,
@@ -1158,7 +1159,7 @@ export class MCPAdapter {
    */
   async #cleanupServerResources(transportOptions: {
     serverName: string;
-    authProvider?: OAuthClientProvider;
+    authProvider?: AuthProvider | OAuthClientProvider;
     headers?: Record<string, string>;
   }): Promise<void> {
     const { serverName, authProvider, headers } = transportOptions;
