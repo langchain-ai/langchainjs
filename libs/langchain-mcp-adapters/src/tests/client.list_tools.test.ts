@@ -15,13 +15,24 @@ describe("adapter tool listing", () => {
     vi.spyOn(ConnectionManager.prototype, "createClient").mockImplementation(
       async (_transport, serverName) => {
         const client = new Client({ name: serverName, version: "1" });
+        vi.spyOn(client, "getServerVersion").mockReturnValue({
+          name: `advertised-${serverName}`,
+          version: "2.1.0",
+        });
 
         const connected = Object.assign(client, {
           fork: async () => connected,
         });
 
         vi.spyOn(client, "listTools").mockResolvedValue({
-          tools: [{ name: serverName, inputSchema: { type: "object" } }],
+          tools: [
+            {
+              name: serverName,
+              inputSchema: { type: "object" },
+              annotations: { readOnlyHint: true },
+              _meta: { origin: serverName },
+            },
+          ],
         });
         vi.spyOn(client, "callTool").mockResolvedValue({
           content: [{ type: "text", text: serverName }],
@@ -52,6 +63,16 @@ describe("adapter tool listing", () => {
       expect(await adapter.initializeConnections()).toEqual(toolsets);
       expect(await toolsets.second[0].invoke({})).toBe("second");
       expect(selected.name).toBe("second");
+      expect(selected.metadata).toEqual({
+        annotations: { readOnlyHint: true },
+        mcp: {
+          tool: {
+            annotations: { readOnlyHint: true },
+            _meta: { origin: "second" },
+          },
+          server: { name: "advertised-second", version: "2.1.0" },
+        },
+      });
       expect(await selected.invoke({})).toBe("second");
       expect(
         (await adapter.listTools(["second"])).map((tool) => tool.name)

@@ -53,6 +53,30 @@ import type { Client } from "./connection.js";
 
 type MCPInstance = Client | MCPClient;
 type ToolArguments = NonNullable<CallToolRequest["params"]["arguments"]>;
+type MCPServerImplementation = NonNullable<
+  ReturnType<MCPClient["getServerVersion"]>
+>;
+type MCPServerProvenance = Partial<
+  Pick<MCPServerImplementation, "name" | "version">
+>;
+
+/**
+ * Metadata attached to a LangChain tool adapted from an MCP tool.
+ *
+ * This is the adapter's metadata contract, not a copy of the complete MCP
+ * `Tool` descriptor. It preserves the descriptor's `annotations` and `_meta`
+ * plus the connected server implementation's `name` and `version`.
+ */
+export interface MCPToolMetadata {
+  [key: string]: unknown;
+  /** Compatibility alias for callers using the original metadata shape. */
+  annotations?: MCPTool["annotations"];
+  /** MCP descriptor metadata and advertised server identity. */
+  mcp: {
+    tool: Pick<MCPTool, "annotations" | "_meta">;
+    server?: MCPServerProvenance;
+  };
+}
 
 export { ToolException, isToolException } from "./utils/errors.js";
 
@@ -441,6 +465,53 @@ async function _callTool(
   }
 }
 
+function getServerProvenance(
+  client: MCPInstance
+): MCPServerProvenance | undefined {
+  try {
+    const implementation = client.getServerVersion?.();
+    if (!implementation) return undefined;
+
+    const server = {
+      ...(implementation.name !== undefined
+        ? { name: implementation.name }
+        : {}),
+      ...(implementation.version !== undefined
+        ? { version: implementation.version }
+        : {}),
+    };
+
+    return Object.keys(server).length > 0 ? server : undefined;
+  } catch {
+    // Server identity is optional provenance and must not break tool discovery.
+    return undefined;
+  }
+}
+
+function buildToolMetadata(
+  tool: MCPTool,
+  server: MCPServerProvenance | undefined
+): MCPToolMetadata {
+  const mcpTool = {
+    ...(tool.annotations !== undefined
+      ? { annotations: structuredClone(tool.annotations) }
+      : {}),
+    ...(tool._meta !== undefined ? { _meta: structuredClone(tool._meta) } : {}),
+  };
+
+  return {
+    // Retained as a compatibility alias for the metadata shape published before
+    // MCP provenance was namespaced under `mcp`.
+    ...(tool.annotations !== undefined
+      ? { annotations: structuredClone(tool.annotations) }
+      : {}),
+    mcp: {
+      tool: mcpTool,
+      ...(server !== undefined ? { server: { ...server } } : {}),
+    },
+  };
+}
+
 const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
   throwOnLoadError: true,
   prefixToolNameWithServerName: false,
@@ -488,6 +559,7 @@ export async function convertMcpTools(
     : "";
   const serverPrefix = prefixToolNameWithServerName ? `${serverName}__` : "";
   const toolNamePrefix = `${initialPrefix}${serverPrefix}`;
+  const serverProvenance = getServerProvenance(client);
 
   // Filter out tools without names and convert in a single map operation
   return (
@@ -513,7 +585,7 @@ export async function convertMcpTools(
               description: tool.description || "",
               schema: structuredClone(originalSchema),
               responseFormat: "content_and_artifact",
-              metadata: { annotations: tool.annotations },
+              metadata: buildToolMetadata(tool, serverProvenance),
               defaultConfig: defaultToolTimeout
                 ? { timeout: defaultToolTimeout }
                 : undefined,
