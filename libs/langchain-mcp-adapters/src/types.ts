@@ -97,6 +97,26 @@ export const authProviderSchema = z.union([
   tokenAuthProviderSchema,
 ]);
 
+/** `finishAuth` takes the callback URL's query, never the raw URL or code. */
+export const callbackParamsSchema = z.instanceof(URLSearchParams, {
+  error:
+    "finishAuth expects the callback URL's URLSearchParams (new URL(callbackUrl).searchParams)",
+});
+
+export const finishAuthOptionsSchema = z
+  .object({
+    /** Overrides the server's configured provider, as per-call discovery options do. */
+    authProvider: oAuthClientProviderSchema.optional(),
+    /** The `state` your application issued for this attempt; checked before the SDK runs. */
+    expectedState: z
+      .string()
+      .min(1, { error: "expectedState must be a non-empty string" })
+      .optional(),
+  })
+  .strict();
+
+export type FinishAuthOptions = z.input<typeof finishAuthOptionsSchema>;
+
 /** SDK logging levels, exposed as an adapter request option. */
 export const loggingLevelSchema = LoggingLevelSchema;
 

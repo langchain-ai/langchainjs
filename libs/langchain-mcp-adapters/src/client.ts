@@ -21,6 +21,7 @@ import { convertMcpTools } from "./tools.js";
 import { _resolveAndApplyOverrideHandlingOverrides } from "./content.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { mergeHeaders } from "./utils/misc.js";
+import { assertCallbackState, discoveryStateHint } from "./utils/oauth.js";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
@@ -35,6 +36,7 @@ import {
   type MCPResourceTemplate,
   type MCPResourceContent,
   type ConnectionErrorHandler,
+  type FinishAuthOptions,
   mcpAdapterConfigSchema,
   toolDiscoveryOptionsSchema,
   type ToolDiscoveryOptions,
@@ -42,6 +44,9 @@ import {
   loggingLevelSchema,
   SSEConnectionSchema,
   customHTTPTransportOptionsSchema,
+  callbackParamsSchema,
+  finishAuthOptionsSchema,
+  oAuthClientProviderSchema,
   type LoadMcpToolsOptions,
 } from "./types.js";
 
@@ -412,6 +417,69 @@ export class MCPAdapter {
     return this.#clientConnections.get(
       this.#transportOptions(serverName, parsedOptions)
     );
+  }
+
+  /**
+   * Complete an OAuth authorization-code redirect for an HTTP or SSE server.
+   *
+   * Pass the callback URL's query (`new URL(callbackUrl).searchParams`). The
+   * SDK validates `iss` (RFC 9207) before redeeming the code and saves tokens
+   * through the provider. Nothing connects here and no state is kept between
+   * the redirect and this call, so the callback may arrive in another request
+   * or process; the next discovery or tool call connects.
+   *
+   * @throws {MCPClientError} for an unknown or stdio server, a provider that is
+   * not an `OAuthClientProvider`, a `state` mismatch, or a failed exchange (the
+   * SDK error is the `cause`).
+   */
+  async finishAuth(
+    serverName: string,
+    callbackParams: URLSearchParams,
+    options?: FinishAuthOptions
+  ): Promise<void> {
+    const params = callbackParamsSchema.parse(callbackParams);
+    const { authProvider, expectedState } = finishAuthOptionsSchema.parse(
+      options ?? {}
+    );
+    const connection = this.#config.servers[serverName];
+
+    if (!connection)
+      throw new MCPClientError(
+        `MCP server "${serverName}" is not configured`,
+        serverName
+      );
+
+    if (connection.transport === "stdio")
+      throw new MCPClientError(
+        `OAuth applies to HTTP and SSE servers, but "${serverName}" uses stdio`,
+        serverName
+      );
+
+    const provider = oAuthClientProviderSchema.safeParse(
+      authProvider ?? connection.authProvider
+    );
+
+    if (!provider.success)
+      throw new MCPClientError(
+        `finishAuth requires an OAuthClientProvider for "${serverName}"`,
+        serverName
+      );
+
+    if (expectedState !== undefined)
+      assertCallbackState(params, expectedState, serverName);
+
+    try {
+      await this.#clientConnections.finishAuth(
+        { ...connection, authProvider: provider.data },
+        params
+      );
+    } catch (error) {
+      throw new MCPClientError(
+        `OAuth authorization for "${serverName}" failed: ${error}.${discoveryStateHint(provider.data)}`,
+        serverName,
+        { cause: error }
+      );
+    }
   }
 
   /**

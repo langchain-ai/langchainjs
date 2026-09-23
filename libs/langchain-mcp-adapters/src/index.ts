@@ -29,6 +29,7 @@ export type {
   MCPResource,
   MCPResourceTemplate,
   MCPResourceContent,
+  FinishAuthOptions,
 } from "./types.js";
 
 export {
