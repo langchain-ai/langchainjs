@@ -324,7 +324,13 @@ export class AgentNode<
    */
   #deriveModel() {
     if (typeof this.#options.model === "string") {
-      return initChatModel(this.#options.model);
+      // `openai:` model strings default to the Responses API; pass a model instance to opt out.
+      return initChatModel(
+        this.#options.model,
+        this.#options.model.startsWith("openai:")
+          ? { useResponsesApi: true }
+          : undefined
+      );
     }
 
     if (this.#options.model) {
