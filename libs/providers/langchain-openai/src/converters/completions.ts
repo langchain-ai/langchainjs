@@ -31,11 +31,9 @@ import type {
   ChatCompletionContentPartImage,
   ChatCompletionContentPartInputAudio,
   ChatCompletionContentPart,
-  ChatCompletionToolMessageParam,
 } from "openai/resources/chat/completions";
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
-import PROFILES from "../chat_models/profiles.js";
 import {
   getRequiredFilenameFromMetadata,
   isReasoningModel,
@@ -725,57 +723,6 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   };
 };
 
-const TOOL_ATTACHMENTS_NOTE =
-  "Attachments from this tool result are provided in the next user message.";
-
-type SplitToolMessage = {
-  toolParam: ChatCompletionToolMessageParam;
-  attachments: ChatCompletionContentPart[];
-};
-
-/** Chat Completions models ignore images in tool messages, so move them out. */
-function splitToolMessageAttachments(
-  message: ToolMessage
-): SplitToolMessage | undefined {
-  if (!Array.isArray(message.content)) {
-    return undefined;
-  }
-  const toolContent: ChatCompletionContentPartText[] = [];
-  const attachments: ChatCompletionContentPart[] = [];
-  for (const block of message.contentBlocks) {
-    if (block.type === "text") {
-      toolContent.push({ type: "text", text: block.text });
-      continue;
-    }
-    const image =
-      block.type === "image"
-        ? convertStandardContentBlockToCompletionsContentPart(block)
-        : undefined;
-    if (image) {
-      attachments.push(image);
-    } else {
-      toolContent.push({ type: "text", text: JSON.stringify(block) });
-    }
-  }
-  if (attachments.length === 0) {
-    return undefined;
-  }
-  return {
-    toolParam: {
-      role: "tool",
-      tool_call_id: message.tool_call_id,
-      content: [...toolContent, { type: "text", text: TOOL_ATTACHMENTS_NOTE }],
-    },
-    attachments: [
-      {
-        type: "text",
-        text: `Attachments from tool call ${message.tool_call_id}:`,
-      },
-      ...attachments,
-    ],
-  };
-}
-
 /**
  * Converts an array of LangChain BaseMessages to OpenAI Chat Completions API message parameters.
  *
@@ -791,7 +738,6 @@ function splitToolMessageAttachments(
  * - Preserves tool calls and function calls with proper formatting
  * - Applies model-specific role mappings (e.g., "system" → "developer" for reasoning models)
  * - Splits audio messages into separate message parameters when needed
- * - Moves image blocks from tool messages into a user message after the tool results
  *
  * @param params - Conversion parameters
  * @param params.messages - Array of LangChain BaseMessages to convert. Can include any message
@@ -852,11 +798,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
   { messages: BaseMessage[]; model?: string },
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam[]
 > = ({ messages, model }) => {
-  const convertMessage = (
-    message: BaseMessage
-  ):
-    | OpenAIClient.Chat.Completions.ChatCompletionMessageParam
-    | OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] => {
+  return messages.flatMap((message) => {
     if (
       "output_version" in message.response_metadata &&
       message.response_metadata?.output_version === "v1"
@@ -945,37 +887,5 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     }
 
     return completionParam as OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
-  };
-
-  const params: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] = [];
-  let pendingAttachments: ChatCompletionContentPart[] = [];
-  const flushAttachments = () => {
-    if (pendingAttachments.length > 0) {
-      params.push({ role: "user", content: pendingAttachments });
-      pendingAttachments = [];
-    }
-  };
-  const modelSupportsImages =
-    model != null && PROFILES[model]?.imageInputs === true;
-  for (const message of messages) {
-    if (!ToolMessage.isInstance(message)) {
-      flushAttachments();
-    }
-    // v1 tool messages drop images today, so only move them for models known to accept images.
-    const split =
-      ToolMessage.isInstance(message) &&
-      (message.response_metadata?.output_version !== "v1" ||
-        modelSupportsImages)
-        ? splitToolMessageAttachments(message)
-        : undefined;
-    if (split) {
-      params.push(split.toolParam);
-      pendingAttachments.push(...split.attachments);
-    } else {
-      const converted = convertMessage(message);
-      params.push(...(Array.isArray(converted) ? converted : [converted]));
-    }
-  }
-  flushAttachments();
-  return params;
+  });
 };
