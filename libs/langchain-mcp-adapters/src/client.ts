@@ -762,6 +762,11 @@ export class MCPAdapter {
       connection.mode === "auto" ||
       (connection.mode === "legacy" && connection.automaticSSEFallback);
 
+    // Falling back to SSE settles the era as legacy, as negotiating it would:
+    // `elicitation` meant "if the server is modern", so it drops out here
+    // rather than failing the explicit-SSE check.
+    const { elicitation: _elicitation, ...fallback } = connection;
+
     if (transportType === "http" || transportType == null) {
       try {
         await this.#clientConnections.createClient(
@@ -782,7 +787,7 @@ export class MCPAdapter {
           try {
             await this._initializeSSEConnection(
               serverName,
-              sseConnectionSchema.parse({ ...connection, transport: "sse" })
+              sseConnectionSchema.parse({ ...fallback, transport: "sse" })
             );
           } catch (firstSSEError) {
             // try one more time, but modify the URL to end with `/sse`
@@ -793,7 +798,7 @@ export class MCPAdapter {
                 await this._initializeSSEConnection(
                   serverName,
                   sseConnectionSchema.parse({
-                    ...connection,
+                    ...fallback,
                     transport: "sse",
                     url: sseUrl,
                   })

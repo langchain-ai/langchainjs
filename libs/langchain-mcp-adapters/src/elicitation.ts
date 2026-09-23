@@ -23,8 +23,6 @@ import {
 } from "@langchain/langgraph";
 import { ToolException } from "./utils/errors.js";
 
-export const elicitationAnswerSchema = ElicitResultSchema;
-
 export const modernElicitationAnswerSchema = ElicitResultSchema.pick({
   action: true,
   content: true,
@@ -75,7 +73,7 @@ export type MCPElicitationHandler = (
 /** Parse application answers without duplicating the protocol's schemas. */
 export function elicitationAnswerFor(
   request: MCPElicitationRequest | ModernElicitationRequest,
-  schema: z.ZodType<ElicitResult> = elicitationAnswerSchema
+  schema: z.ZodType<ElicitResult> = ElicitResultSchema
 ) {
   return schema.check(async (ctx) => {
     const answer = ctx.value;
@@ -217,15 +215,13 @@ const answerableRequestsSchema = z
  * without a checkpointer, before it ever suspends — both mean the same thing
  * here, so the refusal is read off the pause rather than probed for.
  *
- * The answer is parsed as a whole against the question it claims to answer:
- * the saved question must still match the one now pending, the keys must be
- * exactly the server's, and each answer must satisfy the schema that question
- * requested. Replay can surface a different question under the same keys and
- * schema — "approve $1,000" where the human approved "approve $10" — or
- * different effective arguments; consent covers what was shown, so the answer
- * is refused rather than applied to it. A malformed answer fails the call
- * rather than re-asking, since the caller resuming the graph is code, not the
- * human who filled the form.
+ * The answer is parsed against the question now being asked: exactly the
+ * server's keys, each answer against that question's requested schema. The
+ * question the human saw is not compared with it, as in the Python adapter,
+ * so a replay that asks something different under the same keys receives the
+ * earlier answer. A malformed answer fails the call rather than re-asking,
+ * since the caller resuming the graph is code, not the human who filled the
+ * form.
  */
 async function answerFor(
   question: MCPElicitationInterrupt

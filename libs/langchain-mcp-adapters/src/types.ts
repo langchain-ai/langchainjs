@@ -717,6 +717,13 @@ export const sseConnectionSchema = z
     legacySse.extend(modernPolicy.shape).extend({
       mode: z.literal("auto").optional().default("auto"),
       reconnect: modernHttp.shape.reconnect,
+      // SSE only ever negotiates legacy, where the flag would do nothing.
+      elicitation: z
+        .never({
+          error:
+            "elicitation requires modern MCP, which SSE never speaks; use mode: legacy with onElicitation",
+        })
+        .optional(),
     }),
   ])
   .transform(({ type: _type, command: _command, ...options }) => options);

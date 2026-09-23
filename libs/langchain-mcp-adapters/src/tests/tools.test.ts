@@ -131,10 +131,12 @@ describe("Simplified Tool Adapter Tests", () => {
 
       // A legacy server never returns an `input_required` result, so the
       // elicitation path stays out of its way even when the server opted in.
-      // Outside a graph the modern path reports how to answer, while the
-      // legacy path lets the response surface as a generic tool failure.
+      // Outside a graph the modern path reports how to answer; the legacy path
+      // refuses the result by name rather than raising an interrupt.
       await expect(tool.invoke({})).rejects.toThrow(
-        answers ? /Invoke it inside a LangGraph/ : /Error calling tool echo/
+        answers
+          ? /Invoke it inside a LangGraph/
+          : /asked for input, which only a modern server with elicitation enabled can answer/
       );
       expect(client.callTool).toHaveBeenCalledTimes(1);
     }

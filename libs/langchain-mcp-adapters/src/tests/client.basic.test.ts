@@ -2338,6 +2338,22 @@ describe("protocol-specific server configuration", () => {
     expect(() => new MCPAdapter(config)).toThrow(/onMessage/);
   });
 
+  test("rejects interrupt elicitation on SSE instead of ignoring it", () => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            // @ts-expect-error SSE negotiates legacy, which cannot answer in band.
+            remote: {
+              transport: "sse",
+              url: "https://example.com/sse",
+              elicitation: true,
+            },
+          },
+        })
+    ).toThrow(/elicitation requires modern MCP, which SSE never speaks/);
+  });
+
   test("rejects explicit modern SSE at the configuration boundary", () => {
     expect(
       () =>
