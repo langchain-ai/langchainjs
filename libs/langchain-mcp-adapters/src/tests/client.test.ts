@@ -2510,7 +2510,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
       try {
         await client.connect(clientTransport);
         const callTool = vi.spyOn(client, "callTool");
+        const setRequestHandler = vi.spyOn(client, "setRequestHandler");
         const [echo] = await loadMcpTools("external", client);
+        expect(setRequestHandler).not.toHaveBeenCalled();
         const controller = new AbortController();
         await expect(
           echo.invoke(
@@ -3200,15 +3202,19 @@ describe("modern wire boundaries", () => {
           expect(wireHeaders[index].name).toMatch(/^json_/);
 
         if (request.method !== "server/discover")
-          // Elicitation is opt-in per server, so this connection advertises
-          // no elicitation capability on any request.
           expect(request.params?._meta).toMatchObject({
             "io.modelcontextprotocol/protocolVersion": "2026-07-28",
             "io.modelcontextprotocol/clientInfo": {
               name: "@langchain/mcp-adapters",
             },
           });
-        if (request.method !== "server/discover")
+        if (request.method === "tools/call")
+          expect(request.params?._meta).toMatchObject({
+            "io.modelcontextprotocol/clientCapabilities": {
+              elicitation: { form: {}, url: {} },
+            },
+          });
+        else if (request.method !== "server/discover")
           expect(
             JSON.stringify(
               request.params?._meta?.[

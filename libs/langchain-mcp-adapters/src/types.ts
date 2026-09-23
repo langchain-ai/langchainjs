@@ -576,9 +576,9 @@ const modernPolicy = z
      *
      * This requires a modern MCP server and a LangGraph checkpointer.
      *
-     * @default false
+     * @default true
      */
-    elicitation: z.boolean().default(false),
+    elicitation: z.boolean().default(true),
     /** @deprecated Use `elicitation` for modern MCP servers. */
     onElicitation: z
       .never({
@@ -609,7 +609,7 @@ const legacyPolicy = z
     /**
      * Handles elicitation requests from a legacy MCP server.
      *
-     * Modern servers use `elicitation: true` and LangGraph interrupts instead.
+     * Modern servers use LangGraph interrupts by default instead.
      */
     onElicitation: z
       .custom<MCPElicitationHandler>(
@@ -777,11 +777,10 @@ const clientOptionsSchema = z
       .never({ error: "Move onElicitation into a legacy server definition" })
       .optional(),
     /**
-     * Modern in-band elicitation is enabled per server so only servers that
-     * support it can suspend LangGraph runs.
+     * Modern in-band elicitation is enabled by default per modern server.
      *
-     * Set `elicitation: true` on a server with `mode: "auto"` or
-     * `mode: "modern"` instead.
+     * Set `elicitation: false` on a server with `mode: "auto"` or
+     * `mode: "modern"` to opt out.
      */
     elicitation: z
       .never({ error: "Move elicitation into a modern server definition" })
@@ -978,8 +977,8 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .extend(notifications.pick({ onProgress: true }).shape)
   .extend({
     logLevel: loggingLevelSchema.optional(),
-    /** Answer in-band input requests with LangGraph interrupts. */
-    elicitation: z.boolean().optional(),
+    /** Answer in-band input requests with LangGraph interrupts. Defaults to true. */
+    elicitation: modernElicitationSchema,
   });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;

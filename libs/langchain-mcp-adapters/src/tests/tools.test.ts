@@ -92,11 +92,39 @@ describe("Simplified Tool Adapter Tests", () => {
   });
 
   test.each([
-    { era: "legacy", answers: false },
-    { era: "modern", answers: true },
+    {
+      name: "legacy default",
+      era: "legacy",
+      elicitation: undefined,
+      answers: false,
+    },
+    {
+      name: "legacy explicit opt-in",
+      era: "legacy",
+      elicitation: true,
+      answers: false,
+    },
+    {
+      name: "modern default",
+      era: "modern",
+      elicitation: undefined,
+      answers: true,
+    },
+    {
+      name: "modern explicit opt-in",
+      era: "modern",
+      elicitation: true,
+      answers: true,
+    },
+    {
+      name: "modern explicit opt-out",
+      era: "modern",
+      elicitation: false,
+      answers: false,
+    },
   ] as const)(
-    "answers an incomplete response only on a $era server",
-    async ({ era, answers }) => {
+    "handles an incomplete response for $name",
+    async ({ era, elicitation, answers }) => {
       // `allowInputRequired` makes this a resolved value rather than a throw.
       const pending = {
         resultType: "input_required",
@@ -125,9 +153,11 @@ describe("Simplified Tool Adapter Tests", () => {
         getProtocolEra: vi.fn(() => era),
       } as unknown as MockedObject<Client>;
 
-      const [tool] = await loadMcpTools("test", client, {
-        elicitation: true,
-      });
+      const [tool] = await loadMcpTools(
+        "test",
+        client,
+        elicitation === undefined ? undefined : { elicitation }
+      );
 
       // A legacy server never returns an `input_required` result, so the
       // elicitation path stays out of its way even when the server opted in.
@@ -139,6 +169,22 @@ describe("Simplified Tool Adapter Tests", () => {
           : /asked for input, which only a modern server with elicitation enabled can answer/
       );
       expect(client.callTool).toHaveBeenCalledTimes(1);
+      expect(client.callTool.mock.calls[0][0]).toMatchObject({
+        _meta: answers
+          ? {
+              "io.modelcontextprotocol/clientCapabilities": {
+                elicitation: { form: {}, url: {} },
+              },
+            }
+          : undefined,
+      });
+      expect(client.callTool.mock.calls[0][1]).toMatchObject(
+        answers ? { allowInputRequired: true } : {}
+      );
+      if (!answers)
+        expect(client.callTool.mock.calls[0][1]).not.toHaveProperty(
+          "allowInputRequired"
+        );
     }
   );
 

@@ -245,7 +245,7 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
   }
 );
 
-it("answers legacy reverse requests using the same callback contract", async () => {
+it("preserves a prebuilt legacy client's elicitation handler", async () => {
   const { Client, InMemoryTransport } =
     await import("@modelcontextprotocol/client");
 
@@ -454,6 +454,26 @@ it.each([true, false])(
 );
 
 describe("elicitation and logging configuration", () => {
+  it("defaults modern elicitation on and preserves an explicit opt-out", () => {
+    const parsed = adapterConfigSchema.parse({
+      servers: {
+        defaultOn: { url: "http://localhost/default" },
+        explicitOn: { url: "http://localhost/enabled", elicitation: true },
+        optedOut: { url: "http://localhost/disabled", elicitation: false },
+        legacy: {
+          mode: "legacy",
+          url: "http://localhost/legacy",
+          automaticSSEFallback: false,
+        },
+      },
+    });
+
+    expect(parsed.servers.defaultOn.elicitation).toBe(true);
+    expect(parsed.servers.explicitOn.elicitation).toBe(true);
+    expect(parsed.servers.optedOut.elicitation).toBe(false);
+    expect(parsed.servers.legacy).not.toHaveProperty("elicitation");
+  });
+
   it("uses SDK logging levels", () => {
     expect(
       adapterConfigSchema.safeParse({

@@ -55,12 +55,12 @@ to SSE drops them instead. HTTP 404/405 may fall back to SSE
 
 ### Elicitation through interrupts
 
-Opt a modern server in with `elicitation: true`. It then answers `tools/call`
-with an `input_required` result, the adapter raises each round as a LangGraph
+Modern in-band elicitation is enabled by default. When a modern `tools/call`
+returns an `input_required` result, the adapter raises each round as a LangGraph
 `interrupt()`, and you resume with
-`createMCPElicitationResume(interrupt, responses)`. A server that does not opt
-in behaves exactly as before, and legacy servers keep `onElicitation`,
-unchanged.
+`createMCPElicitationResume(interrupt, responses)`. Set `elicitation: false` on
+an individual modern server to opt out. A checkpointer is only required when a
+tool actually elicits, while legacy servers keep `onElicitation` unchanged.
 
 Resuming replays the tool call from its first round, so the server is asked
 again before it is answered: N questions cost O(N^2) requests, and servers and
