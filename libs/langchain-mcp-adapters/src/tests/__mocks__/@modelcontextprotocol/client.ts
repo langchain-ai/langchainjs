@@ -76,6 +76,14 @@ export const Client: Mock<typeof mockClient> = vi.fn(mockClient);
 
 Client.prototype = clientPrototype;
 
+/**
+ * Restore the default constructor behaviour.
+ *
+ * `vi.clearAllMocks()` clears calls but keeps implementations, so a test that
+ * replaces `Client` with its own constructor leaks into every test after it.
+ */
+export const resetClientMock = () => Client.mockImplementation(mockClient);
+
 const sseClientTransportPrototype = {
   start: vi
     .fn<InstanceType<typeof actual.SSEClientTransport>["start"]>()

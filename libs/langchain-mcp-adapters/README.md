@@ -106,16 +106,17 @@ if (isInterrupted<MCPElicitationInterrupt>(paused)) {
 
 Here `agent`, `input`, and `config` are application-owned; `confirmation` and
 `confirmed` must match the server's input-request key and form schema. Answers
-are parsed against the server's requested schema, and the resume carries the
-`questionId` of the question the human saw. A missing, unexpected, or malformed
-answer fails the tool call rather than re-asking: the caller resuming the graph
-is code, not the human who filled the form.
+are parsed against the question being asked when the graph resumes: exactly the
+server's keys, and each answer against that question's requested schema. A
+missing, unexpected, or malformed answer fails the tool call rather than
+re-asking, since the caller resuming the graph is code, not the human who
+filled the form.
 
-`questionId` is derived from the question's content and the call's effective
-arguments, so it changes if the server asks something different on resume — the
-same keys and schema but "approve $1,000" instead of "approve $10" — or if
-`beforeToolCall` resolves different arguments. The saved answer is then refused
-rather than applied to an operation nobody agreed to.
+Resuming replays the call, so the server is asked again before it is answered.
+The adapter does not compare the second question with the first: if a server
+asks something different on resume, the human's earlier answer is what it
+receives. Servers whose questions depend on state that can change between
+rounds should carry that state in `requestState` rather than re-deriving it.
 
 ### Resuming replays the call
 

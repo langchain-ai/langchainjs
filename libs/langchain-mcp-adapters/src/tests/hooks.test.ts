@@ -178,7 +178,6 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
               ...((args as Record<string, unknown>) ?? {}),
               input: "global-mod",
             },
-            header: { "X-Global": "1" },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
           ...params,
@@ -207,7 +206,6 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
               ...((args as Record<string, unknown>) ?? {}),
               input: "global-mod",
             },
-            header: { "X-Global": "1" },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
           ...params,
@@ -476,6 +474,17 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         messages: [{ type: "user", content: "orig" }],
       });
       expect(stateCalls).toHaveLength(2);
+
+      // The name promises runtime too. Inside a graph that means the tool
+      // call itself, which the bare-tool case above never carries.
+      expect(runtimeCalls).toHaveLength(2);
+      for (const runtime of runtimeCalls) {
+        expect(runtime as Record<string, unknown>).toMatchObject({
+          toolCallId: "1",
+          toolCall: { name: "test_tool", id: "1" },
+        });
+      }
+
       const [beforeState, afterState] = stateCalls;
       expect(beforeState.messages.length).toEqual(2);
       expect(afterState.messages.length).toEqual(2);

@@ -14,12 +14,29 @@ import { ElicitRequestSchema } from "@modelcontextprotocol/core";
 import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
+import {
+  Annotation,
+  Command,
+  END,
+  MemorySaver,
+  START,
+  StateGraph,
+  type Interrupt,
+} from "@langchain/langgraph";
+import type {
+  CallToolResult,
+  InputRequest,
+} from "@modelcontextprotocol/client";
+
 import { describe, expect, it, vi } from "vitest";
 import {
+  callToolWithElicitation,
+  createMCPElicitationResume,
   modernElicitationRequestSchema,
   validateElicitationAnswer,
 } from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
+import { isToolException } from "../utils/errors.js";
 
 const form = {
   message: "Approve deployment?",
@@ -690,7 +707,9 @@ it("does not replay a modern tool whose response stream is lost", async () => {
 
   try {
     const [tool] = await adapter.listTools();
-    await expect(tool.invoke({})).rejects.toThrow();
+    await expect(tool.invoke({})).rejects.toThrow(
+      /Error calling tool disconnect/
+    );
     expect(executions).toBe(1);
   } finally {
     await adapter.close();
@@ -698,4 +717,123 @@ it("does not replay a modern tool whose response stream is lost", async () => {
     http.closeAllConnections();
     await once(http, "close");
   }
+});
+
+/** One form question, as a server would put it on the wire. */
+function elicitQuestion(message: string): InputRequest {
+  return {
+    method: "elicitation/create" as const,
+    params: {
+      mode: "form" as const,
+      message,
+      requestedSchema: {
+        type: "object" as const,
+        properties: { confirm: { type: "boolean" }, note: { type: "string" } },
+        required: ["confirm"],
+      },
+    },
+  };
+}
+
+const interruptsIn = (snapshot: {
+  tasks: readonly { interrupts?: readonly Interrupt<unknown>[] }[];
+}) => snapshot.tasks.flatMap((task) => [...(task.interrupts ?? [])]);
+
+describe("resuming an elicitation", () => {
+  const accepted = { action: "accept" as const, content: { confirm: true } };
+
+  /** One question, then completion once it is answered. */
+  async function askOnce() {
+    const served: unknown[] = [];
+    const State = Annotation.Root({ done: Annotation<boolean>() });
+
+    const graph = new StateGraph(State)
+      .addNode("call", async () => {
+        await callToolWithElicitation(
+          async (params) => {
+            served.push(params.inputResponses);
+            if (params.inputResponses)
+              return {
+                content: [{ type: "text", text: "done" }],
+              } as CallToolResult;
+            return {
+              resultType: "input_required" as const,
+              requestState: "opaque",
+              inputRequests: { confirmation: elicitQuestion("approve $10") },
+            };
+          },
+          { name: "approve", arguments: { label: "operation" } },
+          "modern",
+          "approve"
+        );
+        return { done: true };
+      })
+      .addEdge(START, "call")
+      .addEdge("call", END)
+      .compile({ checkpointer: new MemorySaver() });
+
+    const config = {
+      configurable: { thread_id: `resume-${served.length}-${Math.random()}` },
+    };
+    await graph.invoke({ done: false }, config);
+    const [raised] = interruptsIn(await graph.getState(config));
+    return { graph, config, raised, served };
+  }
+
+  it("accepts an answer built by createMCPElicitationResume", async () => {
+    const { graph, config, raised, served } = await askOnce();
+
+    await expect(
+      graph.invoke(
+        new Command({
+          resume: createMCPElicitationResume(raised, {
+            confirmation: accepted,
+          }),
+        }),
+        config
+      )
+    ).resolves.toMatchObject({ done: true });
+
+    expect(served.filter(Boolean)).toHaveLength(1);
+  });
+
+  // Each is a resume the parse must refuse, and none may reach the server.
+  it.each([
+    { name: "no answers at all", body: { responses: {} } },
+    {
+      name: "an answer under the wrong key",
+      body: { responses: { wrong: accepted } },
+    },
+    {
+      name: "an unexpected extra answer",
+      body: { responses: { confirmation: accepted, extra: accepted } },
+    },
+    {
+      name: "an action the protocol does not define",
+      body: { responses: { confirmation: { action: "sideways" } } },
+    },
+    {
+      name: "content that does not fit the requested schema",
+      body: {
+        responses: {
+          confirmation: { action: "accept", content: { confirm: "yes" } },
+        },
+      },
+    },
+    {
+      name: "responses that are not wrapped",
+      body: { confirmation: accepted },
+    },
+    { name: "null", body: null },
+    { name: "a string", body: "not an answer" },
+  ])("refuses $name", async ({ body }) => {
+    const { graph, config, raised, served } = await askOnce();
+
+    await expect(
+      graph.invoke(new Command({ resume: { [raised.id!]: body } }), config)
+    ).rejects.toSatisfy(isToolException);
+
+    // A refused resume never reaches the server carrying an answer.
+    expect(served.filter(Boolean)).toEqual([]);
+  });
 });

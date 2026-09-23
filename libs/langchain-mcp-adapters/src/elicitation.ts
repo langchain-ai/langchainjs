@@ -43,32 +43,6 @@ const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
   url: true,
 });
 
-/**
- * Compare two questions structurally, using JSON as the notion of equality.
- *
- * `JSON.stringify` with a sorting replacer, rather than `node:util`'s
- * `isDeepStrictEqual`. The build externalizes `node:` imports rather than
- * bundling them, so one here reaches the consumer verbatim, and a bundler
- * targeting the browser rejects it — which LangGraph supports, publishing a
- * `browser` condition for the graph this runs inside. Sorting is the part
- * the built-in lacks anyway: a server may emit a schema's keys in any order,
- * and Go servers genuinely do, but it is the question the human answered.
- */
-function sameJSON(left: unknown, right: unknown): boolean {
-  const canonical = (value: unknown): string =>
-    JSON.stringify(value, (_key, entry: unknown) =>
-      entry !== null && typeof entry === "object" && !Array.isArray(entry)
-        ? Object.fromEntries(
-            Object.entries(entry as Record<string, unknown>).sort(([a], [b]) =>
-              a < b ? -1 : 1
-            )
-          )
-        : entry
-    ) ?? "null";
-
-  return canonical(left) === canonical(right);
-}
-
 /** A modern question: the shape an `elicitation/create` request carries. */
 const modernQuestionSchema = z.union([
   modernFormRequestSchema,
@@ -195,10 +169,10 @@ export type MCPElicitationResponses = Record<
   z.output<typeof modernElicitationAnswerSchema>
 >;
 
-/** Resume values carry the question they answer, keyed by graph task. */
+/** Resume values, keyed by the graph task whose interrupt they answer. */
 export type MCPElicitationResume = Record<
   string,
-  { question: MCPElicitationInterrupt; responses: MCPElicitationResponses }
+  { responses: MCPElicitationResponses }
 >;
 
 /** `Interrupt` types `id` as optional and `value` as `any`, so parse both. */
@@ -207,19 +181,13 @@ const elicitationTargetSchema = z.object({
   value: elicitationInterruptSchema,
 });
 
-/**
- * Build an answer addressed to the task and question that raised `pending`.
- *
- * The question travels with the answer because resuming replays the tool call:
- * the server is asked again and may answer differently, so the driver compares
- * what the human saw against what it now has.
- */
+/** Build an answer addressed to the task that raised `pending`. */
 export function createMCPElicitationResume(
   pending: Interrupt<unknown>,
   responses: MCPElicitationResponses
 ): MCPElicitationResume {
-  const { id, value } = elicitationTargetSchema.parse(pending);
-  return { [id]: { question: value, responses } };
+  const { id } = elicitationTargetSchema.parse(pending);
+  return { [id]: { responses } };
 }
 
 /** `tools/call` params plus the 2026-07-28 retry channel. */
@@ -276,10 +244,6 @@ async function answerFor(
 
   const answered = await z
     .object({
-      question: z.looseObject({}).refine((saved) => sameJSON(saved, question), {
-        error:
-          "answers a question that is no longer the one this tool call is asking",
-      }),
       responses: z.strictObject(
         Object.fromEntries(
           Object.entries(question.requests).map(([key, request]) => [
@@ -333,12 +297,7 @@ export async function callToolWithElicitation(
       type: "mcp_elicitation",
       server,
       tool,
-      // Omitted, never undefined: JSON drops an undefined-valued key, so
-      // writing one here would make the question differ from its own
-      // checkpointed copy.
-      ...(params.arguments === undefined
-        ? {}
-        : { arguments: params.arguments }),
+      arguments: params.arguments,
       requests: requests.data,
     });
 

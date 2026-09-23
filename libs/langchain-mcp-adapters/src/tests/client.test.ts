@@ -1538,6 +1538,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
             mode: "legacy",
             transport,
             url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            // Long enough that it cannot be what aborts the call below.
+            defaultToolTimeout: 10_000,
           },
         });
 
@@ -1546,13 +1548,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
-          // Set a per-call timeout longer than the server default to ensure it is honored
-          // The server sleep is 1500ms; we set timeout to 2000ms so it should succeed
-          const result = await testTool!.invoke(
-            { sleepMsec: 1500 },
-            { timeout: 2000 }
-          );
-          expect(result).toContain("done");
+          // The same sleep succeeds under the server default, so only the
+          // per-call timeout can abort it — an assertion that the value
+          // reaches the SDK rather than one the default would satisfy too.
+          expect(await testTool!.invoke({ sleepMsec: 300 })).toContain("done");
+
+          await expect(
+            testTool!.invoke({ sleepMsec: 300 }, { timeout: 50 })
+          ).rejects.toThrow(/aborted due to timeout/);
         } finally {
           await client.close();
         }
@@ -2412,7 +2415,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         try {
           await expect(
             client.readResource(serverName, "mem://nonexistent.txt")
-          ).rejects.toThrow();
+          ).rejects.toThrow(/Resource not found: mem:\/\/nonexistent.txt/);
         } finally {
           await client.close();
         }
@@ -2609,8 +2612,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           await expect(tool.invoke({ value: 0.25 })).resolves.toBe("0.25");
           await expect(tool.invoke({ value: 0.75 })).resolves.toBe("0.75");
           const call = vi.spyOn(client, "callTool");
-          await expect(tool.invoke({ value: 0.1 })).rejects.toThrow();
-          await expect(tool.invoke({ value: 0.9 })).rejects.toThrow();
+          const offSchema = /did not match expected schema/;
+          await expect(tool.invoke({ value: 0.1 })).rejects.toThrow(offSchema);
+          await expect(tool.invoke({ value: 0.9 })).rejects.toThrow(offSchema);
           expect(call).not.toHaveBeenCalled();
         }
       );
@@ -3285,7 +3289,9 @@ describe("modern wire boundaries", () => {
         const [tool] = await adapter.listTools();
 
         if (outcome === "invalid-result") {
-          await expect(tool.invoke({})).rejects.toThrow();
+          await expect(tool.invoke({})).rejects.toThrow(
+            /Unsupported result type/
+          );
         } else {
           await expect(tool.invoke({})).rejects.toMatchObject({
             cause: { code: outcome },
