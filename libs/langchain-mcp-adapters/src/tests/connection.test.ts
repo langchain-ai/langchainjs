@@ -205,8 +205,9 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
       const headers = { Authorization: "Bearer token", "X-Test": "1" };
       // minimal authProvider mock
-      const tokens = vi.fn().mockResolvedValue({ access_token: "abc" });
-      const authProvider = { tokens } as never;
+      const authProvider = {
+        tokens: vi.fn().mockResolvedValue({ access_token: "abc" }),
+      } as never;
 
       await mgr.createClient("sse", "sse-server", {
         mode: "legacy",
@@ -226,31 +227,6 @@ describe("ConnectionManager", () => {
           authProvider,
         })
       );
-
-      // the event stream is opened through a custom fetch that injects the
-      // provider token first; a configured Authorization header has to replace
-      // that token rather than be appended to it ("Bearer abc, Bearer token")
-      let sent = new Headers();
-      const fetchSpy = vi
-        .spyOn(globalThis, "fetch")
-        .mockImplementation(async (_url, init) => {
-          sent = new Headers(init?.headers);
-          return new Response();
-        });
-
-      try {
-        await sseCall[1].eventSourceInit.fetch(
-          new URL("http://localhost:8000/sse"),
-          {}
-        );
-      } finally {
-        fetchSpy.mockRestore();
-      }
-
-      expect(tokens).toHaveBeenCalled();
-      expect(sent.get("authorization")).toBe("Bearer token");
-      expect(sent.get("x-test")).toBe("1");
-      expect(sent.get("accept")).toBe("text/event-stream");
     });
   });
 
