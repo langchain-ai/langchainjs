@@ -1,8 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { Server } from "node:http";
+import {
+  Client as SDKClient,
+  type Tool,
+  InMemoryTransport,
+} from "@modelcontextprotocol/client";
+import { JSONRPCRequestSchema } from "@modelcontextprotocol/core";
+import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
+import { z } from "zod";
+import { MCPAdapter, loadMcpTools } from "../index.js";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { createServer, Server } from "node:http";
+import { once } from "node:events";
+import { toNodeHandler } from "@modelcontextprotocol/node";
 import { join } from "node:path";
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
+import type {
+  OAuthClientProvider,
+  OAuthTokens,
+} from "@modelcontextprotocol/client";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
@@ -15,13 +28,20 @@ import { type ClientConfig } from "../types.js";
 class TestMCPServers {
   private _httpServers: Server[] = [];
 
-  createStdioServer(name: string): { command: string; args: string[] } {
+  createStdioServer(
+    name: string,
+    sdk = 2
+  ): { command: string; args: string[] } {
     // Use the fixture file instead of inline server code
-    const fixturePath = join(__dirname, "fixtures", "dummy-stdio-server.ts");
+    const fixturePath = join(
+      __dirname,
+      "fixtures",
+      sdk === 1 ? "sdk1-stdio-server.ts" : "dummy-stdio-server.ts"
+    );
 
     return {
       command: "node",
-      args: ["--loader", "tsx", "--no-warnings", fixturePath, name],
+      args: ["--import", "tsx", "--no-warnings", fixturePath, name],
     };
   }
 
@@ -81,6 +101,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "stdio-server": {
+          mode: "legacy",
           command,
           args,
           env: { TEST_VAR: "test-value" },
@@ -88,7 +109,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -113,6 +134,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "stdio-server": {
+          mode: "legacy",
           command,
           args,
           restart: {
@@ -124,7 +146,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
       } finally {
         await client.close();
@@ -136,14 +158,18 @@ describe("MultiServerMCPClient Integration Tests", () => {
     it("should connect to and communicate with an HTTP MCP server", async () => {
       const { baseUrl } = await testServers.createHTTPServer("http-test");
 
-      const client = new MultiServerMCPClient({
-        "http-server": {
-          url: `${baseUrl}/mcp`,
+      const client = new MCPAdapter({
+        servers: {
+          "http-server": {
+            mode: "legacy",
+            transport: "http",
+            url: `${baseUrl}/mcp`,
+          },
         },
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -164,6 +190,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "http-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           headers: {
             Authorization: "Bearer test-token",
@@ -172,7 +199,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
       } finally {
         await client.close();
@@ -186,6 +213,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "http-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           headers: {
             Authorization: "Bearer invalid-token",
@@ -195,7 +223,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       try {
         try {
-          await client.getTools();
+          await client.listTools();
           expect.fail("Expected authentication error but got success");
         } catch (error) {
           expect(error).toEqual(
@@ -223,6 +251,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "streamable-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           headers: {
             Authorization: "Bearer test-token",
@@ -232,7 +261,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -265,6 +294,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "streamable-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           headers: {
             Authorization: "Bearer wrong-token",
@@ -273,7 +303,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -299,13 +329,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
       // but with SSE fallback available
       const client = new MultiServerMCPClient({
         "http-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
         },
       });
 
       try {
         // This should fail on streamable HTTP and fallback to SSE
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
       } finally {
         await client.close();
@@ -321,13 +352,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
         },
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -352,6 +384,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           headers: {
@@ -362,7 +395,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const headerTool = tools.find((t) => t.name.includes("check_headers"));
@@ -390,6 +423,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           headers: {
@@ -399,7 +433,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -419,6 +453,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           // No headers provided - should still work
@@ -426,7 +461,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -442,61 +477,116 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Multiple Servers", () => {
-    it.skip("should connect to multiple servers of different transport types", async () => {
-      const { command, args } = testServers.createStdioServer("multi-stdio");
-      const { baseUrl: streamableHttpBaseUrl } =
-        await testServers.createHTTPServer("multi-http");
-      const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
-        "multi-sse",
-        {
-          supportSSEFallback: true,
-        }
-      );
-
-      const client = new MultiServerMCPClient({
-        mcpServers: {
-          "stdio-server": {
-            command,
-            args,
-          },
-          "http-server": {
-            url: `${streamableHttpBaseUrl}/mcp`,
-          },
-          "sse-server": {
-            url: `${sseBaseUrl}/sse`,
-            transport: "sse",
-          },
-        },
-        prefixToolNameWithServerName: true,
-      });
-
-      try {
-        const tools = await client.getTools();
-        // Check tools from each server
-        const stdioTools = tools.filter((t) => t.name.includes("stdio-server"));
-        const httpTools = tools.filter((t) => t.name.includes("http-server"));
-        const sseTools = tools.filter((t) => t.name.includes("sse-server"));
-
-        expect(stdioTools.length).toBe(2);
-        expect(httpTools.length).toBe(5);
-        expect(sseTools.length).toBe(5);
-
-        expect(tools.length).toBe(12);
-
-        // Test tool from each server
-        const stdioTestTool = tools.find(
-          (t) => t.name.includes("stdio-server") && t.name.includes("test_tool")
+    it.each([1, 2])(
+      "connects SDK %s stdio alongside SDK 2 HTTP and SSE",
+      async (sdk) => {
+        const { command, args } = testServers.createStdioServer(
+          "multi-stdio",
+          sdk
         );
-        const result = await stdioTestTool!.invoke({
-          input: "multi-server test",
-        });
-        expect(result).toContain("multi-stdio");
-      } finally {
-        await client.close();
-      }
-    });
 
-    it.skip("should filter tools by server name", async () => {
+        const { baseUrl: streamableHttpBaseUrl } =
+          await testServers.createHTTPServer("multi-http");
+
+        const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
+          "multi-sse",
+          {
+            supportSSEFallback: true,
+          }
+        );
+
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "stdio-server": {
+              mode: "legacy",
+              command,
+              args,
+            },
+            "http-server": {
+              mode: "legacy",
+              url: `${streamableHttpBaseUrl}/mcp`,
+            },
+            "sse-server": {
+              mode: "legacy",
+              url: `${sseBaseUrl}/sse`,
+              transport: "sse",
+            },
+          },
+          prefixToolNameWithServerName: true,
+        });
+
+        try {
+          const tools = await client.listTools();
+
+          // Check tools from each server
+          const stdioTools = tools.filter((t) =>
+            t.name.includes("stdio-server")
+          );
+
+          const httpTools = tools.filter((t) => t.name.includes("http-server"));
+          const sseTools = tools.filter((t) => t.name.includes("sse-server"));
+
+          expect(stdioTools.length).toBe(2);
+          expect(httpTools.length).toBeGreaterThanOrEqual(5);
+          expect(sseTools.length).toBe(httpTools.length);
+
+          expect(tools.length).toBe(
+            stdioTools.length + httpTools.length + sseTools.length
+          );
+
+          // Test tool from each server
+          const stdioTestTool = tools.find(
+            (t) =>
+              t.name.includes("stdio-server") && t.name.includes("test_tool")
+          );
+
+          const result = await stdioTestTool!.invoke({
+            input: "multi-server test",
+          });
+
+          expect(result).toContain("multi-stdio");
+
+          if (sdk === 1) {
+            expect(
+              (await client.getClient("stdio-server"))?.getServerVersion()
+                ?.version
+            ).toBe("1.30.0");
+            expect(
+              (await client.listResources("stdio-server"))["stdio-server"][0]
+                .uri
+            ).toBe("test://legacy");
+            expect(
+              (await client.readResource("stdio-server", "test://legacy"))[0]
+            ).toMatchObject({ text: "multi-stdio" });
+          }
+
+          for (const [server, label] of [
+            ["http-server", "multi-http"],
+            ["sse-server", "multi-sse"],
+          ]) {
+            const selected = tools.find(
+              (tool) => tool.name === `${server}__test_tool`
+            );
+
+            expect(selected).toBeDefined();
+            expect(await selected!.invoke({ input: "routing" })).toContain(
+              label
+            );
+          }
+
+          const resources = await client.listResources(
+            "http-server",
+            "sse-server"
+          );
+
+          expect(Object.keys(resources)).toEqual(["http-server", "sse-server"]);
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it("should filter tools by server name", async () => {
       const { command, args } = testServers.createStdioServer("filter-stdio");
       const { baseUrl: streamableHttpBaseUrl } =
         await testServers.createHTTPServer("filter-http");
@@ -504,10 +594,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const client = new MultiServerMCPClient({
         mcpServers: {
           "stdio-server": {
+            mode: "legacy",
             command,
             args,
           },
           "http-server": {
+            mode: "legacy",
             url: `${streamableHttpBaseUrl}/mcp`,
           },
         },
@@ -515,9 +607,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const allTools = await client.getTools();
-        const stdioTools = await client.getTools("stdio-server");
-        const httpTools = await client.getTools("http-server");
+        const allTools = await client.listTools();
+        const stdioTools = await client.listTools("stdio-server");
+        const httpTools = await client.listTools("http-server");
 
         expect(allTools.length).toBe(stdioTools.length + httpTools.length);
         expect(stdioTools.every((t) => t.name.includes("stdio-server"))).toBe(
@@ -536,6 +628,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
         },
       });
@@ -557,12 +650,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
     it("should handle connection failures gracefully", async () => {
       const client = new MultiServerMCPClient({
         "failing-server": {
+          mode: "legacy",
           url: "http://totally-not-a-server.fakeurl.example.com:9999/mcp", // Non-existent server
         },
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -584,7 +678,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -605,6 +699,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const clientWithPrefix = new MultiServerMCPClient({
         mcpServers: {
           "test-server": {
+            mode: "legacy",
             url: `${baseUrl}/mcp`,
           },
         },
@@ -615,6 +710,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const clientWithoutPrefix = new MultiServerMCPClient({
         mcpServers: {
           "test-server": {
+            mode: "legacy",
             url: `${baseUrl}/mcp`,
           },
         },
@@ -623,8 +719,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const toolsWithPrefix = await clientWithPrefix.getTools();
-        const toolsWithoutPrefix = await clientWithoutPrefix.getTools();
+        const toolsWithPrefix = await clientWithPrefix.listTools();
+        const toolsWithoutPrefix = await clientWithoutPrefix.listTools();
 
         const prefixedTool = toolsWithPrefix.find((t) =>
           t.name.includes("custom__test-server__")
@@ -642,9 +738,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
     });
 
     it("should allow config inspection", async () => {
-      const config = {
+      const config: ClientConfig = {
         mcpServers: {
           "test-server": {
+            mode: "legacy",
             url: "http://example.com/mcp",
           },
         },
@@ -655,7 +752,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const client = new MultiServerMCPClient(config);
 
       const inspectedConfig = client.config;
-      expect(inspectedConfig.mcpServers["test-server"]).toBeDefined();
+      expect(inspectedConfig.servers["test-server"]).toBeDefined();
       expect(inspectedConfig.throwOnLoadError).toBe(false);
       expect(inspectedConfig.prefixToolNameWithServerName).toBe(true);
 
@@ -712,13 +809,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "oauth-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           authProvider: mockAuthProvider,
         },
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -776,6 +874,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-oauth-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           authProvider: mockAuthProvider,
@@ -783,7 +882,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -844,13 +943,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "oauth-invalid-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           authProvider: mockAuthProvider,
         },
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -906,13 +1006,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "oauth-no-tokens-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           authProvider: mockAuthProvider,
         },
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -969,6 +1070,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-oauth-error-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           authProvider: mockAuthProvider,
@@ -976,7 +1078,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -1037,6 +1139,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "oauth-headers-server": {
+          mode: "legacy",
           url: `${baseUrl}/mcp`,
           authProvider: mockAuthProvider,
           headers: {
@@ -1047,7 +1150,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -1130,6 +1233,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-oauth-headers-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           authProvider: mockAuthProvider,
@@ -1141,7 +1245,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -1225,6 +1329,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "sse-oauth-invalid-server": {
+          mode: "legacy",
           transport: "sse",
           url: `${baseUrl}/sse`,
           authProvider: mockAuthProvider,
@@ -1232,7 +1337,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -1258,13 +1363,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient({
         "timeout-server": {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
         },
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const testTool = tools.find((t) => t.name.includes("sleep_tool"));
         expect(testTool).toBeDefined();
 
@@ -1294,13 +1400,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
         const client = new MultiServerMCPClient({
           "timeout-server": {
+            mode: "legacy",
             transport,
             url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
           },
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1329,13 +1436,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
         const client = new MultiServerMCPClient({
           "timeout-server": {
+            mode: "legacy",
             transport,
             url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
           },
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1363,6 +1471,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
         const client = new MultiServerMCPClient({
           "timeout-server": {
+            mode: "legacy",
             transport,
             url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             defaultToolTimeout: 1000,
@@ -1370,7 +1479,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1393,6 +1502,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
         const client = new MultiServerMCPClient({
           "timeout-server": {
+            mode: "legacy",
             transport,
             url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             defaultToolTimeout: 5, // 5 milliseconds
@@ -1400,7 +1510,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1425,23 +1535,27 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
         const client = new MultiServerMCPClient({
           "timeout-server": {
+            mode: "legacy",
             transport,
             url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            // Long enough that it cannot be what aborts the call below.
+            defaultToolTimeout: 10_000,
           },
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
-          // Set a per-call timeout longer than the server default to ensure it is honored
-          // The server sleep is 1500ms; we set timeout to 2000ms so it should succeed
-          const result = await testTool!.invoke(
-            { sleepMsec: 1500 },
-            { timeout: 2000 }
-          );
-          expect(result).toContain("done");
+          // The same sleep succeeds under the server default, so only the
+          // per-call timeout can abort it — an assertion that the value
+          // reaches the SDK rather than one the default would satisfy too.
+          expect(await testTool!.invoke({ sleepMsec: 300 })).toContain("done");
+
+          await expect(
+            testTool!.invoke({ sleepMsec: 300 }, { timeout: 50 })
+          ).rejects.toThrow(/aborted due to timeout/);
         } finally {
           await client.close();
         }
@@ -1459,6 +1573,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             "timeout-server": {
+              mode: "legacy",
               transport,
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -1467,7 +1582,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1498,16 +1613,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             "audio-server": {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
           },
           // Ensure we test with standard content blocks as per README recommendation for new apps
-          useStandardContentBlocks: true,
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const audioTool = tools.find((t) => t.name.includes("audio_tool"));
           expect(audioTool).toBeDefined();
           const fakeToolCall: ToolCall = {
@@ -1538,8 +1653,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
             (c) => c.type === "audio"
           ) as ContentBlock.Multimodal.Audio;
           expect(audioBlock).toBeDefined();
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(audioBlock.source_type).toBeUndefined();
+          expect(audioBlock.mimeType).toBe("audio/wav");
           expect(typeof audioBlock.data).toBe("string");
           expect(audioBlock.data?.length).toBeGreaterThan(10);
         } finally {
@@ -1549,7 +1664,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
     );
   });
 
-  describe("useStandardContentBlocks Configuration", () => {
+  describe("Standard content blocks", () => {
     const serverName = "content-block-test-server";
     const toolInput = { input: "test standard blocks" };
     const fakeToolCallBase = {
@@ -1558,7 +1673,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
     };
 
     it.each(["http", "sse"] as const)(
-      "should use Standard Content Blocks when useStandardContentBlocks is true (%s)",
+      "should use Standard Content Blocks by default (%s)",
       async (transport) => {
         const { baseUrl } = await testServers.createHTTPServer(
           "http-std-true",
@@ -1570,15 +1685,15 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
           },
-          useStandardContentBlocks: true,
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = tools.find((t) => t.name.includes("image_tool"));
           const audioTool = tools.find((t) => t.name.includes("audio_tool"));
           expect(imageTool).toBeDefined();
@@ -1603,8 +1718,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const imgBlock = imgContentArray.find(
             (c) => c.type === "image"
           ) as ContentBlock.Multimodal.Data;
-          expect(imgBlock.source_type).toBe("base64");
-          expect(imgBlock.mime_type).toBe("image/png");
+
+          expect(imgBlock.source_type).toBeUndefined();
+          expect(imgBlock.mimeType).toBe("image/png");
           expect(typeof imgBlock.data).toBe("string");
 
           // Test Audio Tool (should always use StandardAudioBlock)
@@ -1626,78 +1742,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const audioBlock = audioContentArray.find(
             (c) => c.type === "audio"
           ) as ContentBlock.Multimodal.Audio;
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
-        } finally {
-          await client.close();
-        }
-      }
-    );
 
-    it.each(["http", "sse"] as const)(
-      "should use legacy ImageUrl when useStandardContentBlocks is false (%s)",
-      async (transport) => {
-        const { baseUrl } = await testServers.createHTTPServer(
-          "http-std-false",
-          {
-            disableStreamableHttp: transport === "sse",
-            supportSSEFallback: transport === "sse",
-          }
-        );
-        const client = new MultiServerMCPClient({
-          mcpServers: {
-            [serverName]: {
-              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
-            },
-          },
-          /* useStandardContentBlocks: false */ // defaults to false
-        });
-
-        try {
-          const tools = await client.getTools();
-          const imageTool = tools.find((t) => t.name.includes("image_tool"));
-          expect(imageTool).toBeDefined();
-
-          const { content: imgContent, artifact: imgArtifact } =
-            await imageTool!.invoke({
-              ...fakeToolCallBase,
-              name: imageTool!.name,
-              args: toolInput,
-            });
-          expect(imgArtifact).toEqual([]);
-          const imgContentArray = imgContent as ContentBlock[];
-
-          const imgTextBlock = imgContentArray.find(
-            (c) => c.type === "text"
-          ) as ContentBlock.Text;
-          expect(imgTextBlock.text).toContain(
-            "Image input was: test standard blocks"
-          );
-          // Check for legacy image_url format
-          const imgUrlBlock = imgContentArray.find(
-            (c) => c.type === "image_url"
-          ) as ContentBlock.Multimodal.Data;
-          expect(imgUrlBlock).toBeDefined();
-          // @ts-expect-error image_url is unknown
-          const imageUrl = imgUrlBlock.image_url?.url;
-          expect(imageUrl).toMatch(/^data:image\/png;base64,/);
-
-          // Audio should still use StandardAudioBlock
-          const audioTool = tools.find((t) => t.name.includes("audio_tool"));
-          expect(audioTool).toBeDefined();
-          const { content: audioContent, artifact: audioArtifact } =
-            await audioTool!.invoke({
-              ...fakeToolCallBase,
-              name: audioTool!.name,
-              args: toolInput,
-            });
-          expect(audioArtifact).toEqual([]);
-          const audioContentArray = audioContent as ContentBlock[];
-          const audioBlock = audioContentArray.find(
-            (c) => c.type === "audio"
-          ) as ContentBlock.Multimodal.Audio;
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(audioBlock.source_type).toBeUndefined();
+          expect(audioBlock.mimeType).toBe("audio/wav");
         } finally {
           await client.close();
         }
@@ -1745,6 +1792,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -1752,7 +1800,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -1774,10 +1822,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "image_url",
-                image_url: expect.objectContaining({
-                  url: expect.stringMatching(/^data:image\/png;base64,/),
-                }),
+                type: "image",
+                mimeType: "image/png",
+                data: expect.any(String),
               }),
             ])
           );
@@ -1830,16 +1877,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
           },
           outputHandling: "artifact",
-          useStandardContentBlocks: false,
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
           const audioTool = findTool(tools, "audio_tool");
@@ -1920,16 +1967,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
           },
           outputHandling: "content",
-          useStandardContentBlocks: false,
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -1948,17 +1995,29 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "image_url",
-                image_url: expect.objectContaining({
-                  url: expect.stringMatching(/^data:image\/png;base64,/),
-                }),
+                type: "image",
+                mimeType: "image/png",
+                data: expect.any(String),
               }),
             ])
           );
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resArtifact).toEqual([]);
+
+          expect(resArtifact).toEqual([
+            {
+              type: "mcp_content",
+              data: {
+                type: "resource",
+                resource: {
+                  uri: "mem://test.txt",
+                  mimeType: "text/plain",
+                  text: "This is a test resource.",
+                },
+              },
+            },
+          ]);
           expect(Array.isArray(resContent)).toBe(true);
           const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
@@ -1971,9 +2030,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "file",
-                source_type: "text",
-                mime_type: "text/plain",
+                type: "text",
                 text: "This is a test resource.",
                 metadata: { uri: "mem://test.txt" },
               }),
@@ -1996,6 +2053,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2006,11 +2064,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             audio: "content",
             resource: "content",
           },
-          useStandardContentBlocks: false,
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -2034,14 +2091,27 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resArtifact).toEqual([]);
+
+          expect(resArtifact).toEqual([
+            {
+              type: "mcp_content",
+              data: {
+                type: "resource",
+                resource: {
+                  uri: "mem://test.txt",
+                  mimeType: "text/plain",
+                  text: "This is a test resource.",
+                },
+              },
+            },
+          ]);
           const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
           expect(resContentArray).toEqual(
             expect.arrayContaining([
               expect.objectContaining({ type: "text" }),
               expect.objectContaining({
-                type: "file",
+                type: "text",
                 metadata: { uri: "mem://test.txt" },
               }),
             ])
@@ -2063,6 +2133,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const clientConfig: ClientConfig = {
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
               outputHandling: {
@@ -2072,12 +2143,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
             },
           },
           outputHandling: "artifact",
-          useStandardContentBlocks: false,
         };
         const client = new MultiServerMCPClient(clientConfig);
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -2086,10 +2156,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const imgContentArray = imgContent as ContentBlock[];
           expect(imgContentArray).toHaveLength(1);
           expect(imgContentArray[0]).toEqual({
-            image_url: {
-              url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-            },
-            type: "image_url",
+            type: "image",
+            mimeType: "image/png",
+            data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
           });
           expect(imgArtifact).toHaveLength(1);
           expect(imgArtifact[0]).toEqual({
@@ -2117,7 +2186,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
     );
 
     it.each(["http", "sse"] as const)(
-      "should respect outputHandling with useStandardContentBlocks=true (%s)",
+      "should respect outputHandling with standard content (%s)",
       async (transport) => {
         const serverName = `${serverNameBase}-std-blocks-${transport}`;
         const { baseUrl } = await testServers.createHTTPServer(serverName, {
@@ -2127,6 +2196,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2137,11 +2207,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             audio: "content",
             resource: "artifact",
           },
-          useStandardContentBlocks: true,
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const audioTool = findTool(tools, "audio_tool");
           const resourceTool = findTool(tools, "resource_tool");
@@ -2154,7 +2223,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             const imgContentArray = imgContent as ContentBlock[];
             expect(imgContentArray).toHaveLength(1);
             expect(imgContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+              expect.objectContaining({ type: "text" })
             );
           } else {
             expect(imgContent).toEqual([]);
@@ -2163,8 +2232,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(imgArtifact[0]).toEqual(
             expect.objectContaining({
               type: "image",
-              source_type: "base64",
-              mime_type: "image/png",
+              mimeType: "image/png",
             })
           );
 
@@ -2175,11 +2243,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(audioContentArray).toHaveLength(2);
           expect(audioContentArray).toEqual(
             expect.arrayContaining([
-              expect.objectContaining({ type: "text", source_type: "text" }),
+              expect.objectContaining({ type: "text" }),
               expect.objectContaining({
                 type: "audio",
-                source_type: "base64",
-                mime_type: "audio/wav",
+                mimeType: "audio/wav",
               }),
             ])
           );
@@ -2192,7 +2259,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             const resContentArray = resContent as ContentBlock[];
             expect(resContentArray).toHaveLength(1);
             expect(resContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+              expect.objectContaining({ type: "text" })
             );
           } else {
             expect(resContent).toEqual([]);
@@ -2200,10 +2267,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(resArtifact).toHaveLength(1);
           expect(resArtifact[0]).toEqual(
             expect.objectContaining({
-              type: "file",
-              source_type: "text",
-              mime_type: "text/plain",
-              metadata: { uri: "mem://test.txt" },
+              type: "resource",
+              resource: {
+                uri: "mem://test.txt",
+                mimeType: "text/plain",
+                text: "This is a test resource.",
+              },
             })
           );
         } finally {
@@ -2225,6 +2294,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2261,6 +2331,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2297,6 +2368,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2312,7 +2384,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(content.length).toBeGreaterThan(0);
           expect(content[0].uri).toBe("mem://test.txt");
           expect(content[0].mimeType).toBe("text/plain");
-          expect(content[0].text).toBe("This is a test resource content.");
+          expect(content[0]).toMatchObject({
+            text: "This is a test resource content.",
+            _meta: { revision: "test-revision" },
+          });
         } finally {
           await client.close();
         }
@@ -2330,6 +2405,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2339,7 +2415,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         try {
           await expect(
             client.readResource(serverName, "mem://nonexistent.txt")
-          ).rejects.toThrow();
+          ).rejects.toThrow(/Resource not found: mem:\/\/nonexistent.txt/);
         } finally {
           await client.close();
         }
@@ -2359,6 +2435,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
+              mode: "legacy",
               transport: transport as "http" | "sse",
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
@@ -2366,27 +2443,957 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const structuredTool = tools.find((t: { name: string }) =>
             t.name.includes("structured_tool")
           );
           expect(structuredTool).toBeDefined();
 
-          const result = await structuredTool!.invoke({ input: "test input" });
-          expect(result).toBeDefined();
+          const fakeToolCall: ToolCall = {
+            name: structuredTool!.name,
+            args: { input: "test input" },
+            id: "structured-tool-call-id",
+            type: "tool_call",
+          };
 
-          // Check if structuredContent and meta are accessible
-          // The result should be a string or content blocks
-          if (typeof result === "string") {
-            expect(result).toContain("test input");
-          } else if (Array.isArray(result)) {
-            // If it's an array, check for structured content in artifacts
-            expect(result.length).toBeGreaterThan(0);
-          }
+          const { content, artifact } =
+            await structuredTool!.invoke(fakeToolCall);
+
+          // The text block still reaches the model unchanged...
+          expect(content).toBe("Structured input was: test input");
+
+          // ...while structuredContent and _meta are preserved as artifacts
+          // instead of being dropped on the floor.
+          const artifacts = artifact as { type: string; data: unknown }[];
+
+          expect(artifacts.map((entry) => entry.type)).toEqual([
+            "mcp_structured_content",
+            "mcp_meta",
+          ]);
+
+          const structured = artifacts.find(
+            (entry) => entry.type === "mcp_structured_content"
+          );
+          expect(structured!.data).toMatchObject({
+            type: "object",
+            data: { result: "success", value: "test input" },
+          });
+
+          const meta = artifacts.find((entry) => entry.type === "mcp_meta");
+          expect(meta!.data).toMatchObject({
+            toolVersion: "1.0.0",
+            serverName,
+            executionTime: 100,
+          });
         } finally {
           await client.close();
         }
       }
     );
   });
+
+  describe("SDK client integration", () => {
+    it("loads tools from an external SDK 2 client and forwards request options", async () => {
+      const server = new McpServer({ name: "external", version: "1.0.0" });
+      server.registerTool(
+        "echo",
+        { inputSchema: z.object({ value: z.string() }) },
+        async ({ value }) => ({ content: [{ type: "text", text: value }] })
+      );
+      const client = new SDKClient({ name: "consumer", version: "1.0.0" });
+
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+
+      await server.connect(serverTransport);
+
+      try {
+        await client.connect(clientTransport);
+        const callTool = vi.spyOn(client, "callTool");
+        const [echo] = await loadMcpTools("external", client);
+        const controller = new AbortController();
+        await expect(
+          echo.invoke(
+            { value: "hello" },
+            { signal: controller.signal, metadata: { timeoutMs: 1000 } }
+          )
+        ).resolves.toBe("hello");
+        expect(callTool).toHaveBeenCalledWith(
+          { name: "echo", arguments: { value: "hello" } },
+          expect.objectContaining({ signal: controller.signal, timeout: 1000 })
+        );
+      } finally {
+        await client.close();
+        await server.close();
+      }
+    });
+
+    async function withClient(
+      configure: (server: McpServer) => void,
+      run: (
+        client: SDKClient,
+        serverTransport: InMemoryTransport
+      ) => Promise<void>
+    ) {
+      const server = new McpServer({ name: "compatibility", version: "1.0.0" });
+      configure(server);
+      const client = new SDKClient({ name: "consumer", version: "1.0.0" });
+
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+
+      await server.connect(serverTransport);
+
+      try {
+        await client.connect(clientTransport);
+        await run(client, serverTransport);
+      } finally {
+        await client.close();
+        await server.close();
+      }
+    }
+
+    it("completes legacy wire results without resultType", async () => {
+      await withClient(
+        (server) =>
+          server.registerTool(
+            "legacy_result",
+            { inputSchema: z.object({}) },
+            async () => ({
+              content: [{ type: "text", text: "legacy complete" }],
+            })
+          ),
+        async (client, transport) => {
+          expect(client.getProtocolEra()).toBe("legacy");
+          const sent = vi.spyOn(transport, "send");
+          const [tool] = await loadMcpTools("legacy", client);
+          await expect(tool.invoke({})).resolves.toBe("legacy complete");
+
+          const legacyResult = z.object({
+            result: z.object({
+              resultType: z.never().optional(),
+              content: z.tuple([
+                z.object({
+                  type: z.literal("text"),
+                  text: z.literal("legacy complete"),
+                }),
+              ]),
+            }),
+          });
+
+          expect(
+            sent.mock.calls.some(
+              ([message]) => legacyResult.safeParse(message).success
+            )
+          ).toBe(true);
+        }
+      );
+    });
+
+    it("preserves fractional schema bounds and defaults", async () => {
+      await withClient(
+        (server) =>
+          server.registerTool(
+            "fraction",
+            {
+              inputSchema: z.object({
+                value: z.number().min(0.25).max(0.75).default(0.5),
+              }),
+              outputSchema: z.object({ value: z.number().min(0.25).max(0.75) }),
+            },
+            async ({ value }) => ({
+              content: [{ type: "text", text: String(value) }],
+              structuredContent: { value },
+            })
+          ),
+        async (client) => {
+          const [tool] = await loadMcpTools("fraction", client);
+          await expect(tool.invoke({})).resolves.toBe("0.5");
+          await expect(tool.invoke({ value: 0.25 })).resolves.toBe("0.25");
+          await expect(tool.invoke({ value: 0.75 })).resolves.toBe("0.75");
+          const call = vi.spyOn(client, "callTool");
+          const offSchema = /did not match expected schema/;
+          await expect(tool.invoke({ value: 0.1 })).rejects.toThrow(offSchema);
+          await expect(tool.invoke({ value: 0.9 })).rejects.toThrow(offSchema);
+          expect(call).not.toHaveBeenCalled();
+        }
+      );
+    });
+
+    it("preserves SDK output schema validation", async () => {
+      await withClient(
+        (server) => {
+          server.registerTool(
+            "validated",
+            { outputSchema: z.object({ value: z.string() }) },
+            async () => ({ content: [], structuredContent: { value: "valid" } })
+          );
+        },
+        async (client) => {
+          const [tool] = await loadMcpTools("external", client);
+          // Corrupt a response after server-side validation, before client-side validation.
+          const request = client.request.bind(client);
+          vi.spyOn(client, "request").mockImplementation(async (...args) => {
+            const result = await request(...args);
+
+            if (args[0].method === "tools/call") {
+              return { content: [], structuredContent: { value: 123 } };
+            }
+
+            return result;
+          });
+          await expect(tool.invoke({})).rejects.toThrow(/schema|validat/i);
+        }
+      );
+    });
+
+    it("forwards progress callbacks through the SDK 2 call options", async () => {
+      await withClient(
+        (server) => {
+          server.registerTool(
+            "progress",
+            { inputSchema: z.object({}) },
+            async (_args, extra) => {
+              const progressToken = extra.mcpReq._meta?.progressToken;
+
+              if (progressToken === undefined)
+                throw new Error("Missing progress token");
+              await server.server.notification({
+                method: "notifications/progress",
+                params: {
+                  progressToken,
+                  progress: 1,
+                  total: 1,
+                },
+              });
+
+              return { content: [{ type: "text", text: "done" }] };
+            }
+          );
+        },
+        async (client) => {
+          const onProgress = vi.fn();
+          const [tool] = await loadMcpTools("external", client, { onProgress });
+          await expect(tool.invoke({})).resolves.toBe("done");
+          expect(onProgress).toHaveBeenCalledWith(
+            expect.objectContaining({ progress: 1, total: 1 }),
+            expect.objectContaining({ name: "progress", server: "external" })
+          );
+        }
+      );
+    });
+
+    it.each(["timeout", "abort"] as const)(
+      "honors %s through the SDK 2 call options",
+      async (mode) => {
+        let started!: () => void;
+
+        const toolStarted = new Promise<void>((resolve) => {
+          started = resolve;
+        });
+
+        await withClient(
+          (server) => {
+            server.registerTool("slow", {}, async () => {
+              started();
+              await new Promise((resolve) => setTimeout(resolve, 50));
+
+              return { content: [{ type: "text", text: "done" }] };
+            });
+          },
+          async (client) => {
+            const [tool] = await loadMcpTools("external", client);
+            const controller = new AbortController();
+
+            const result = tool.invoke(
+              {},
+              mode === "timeout"
+                ? { metadata: { timeoutMs: 5 } }
+                : { signal: controller.signal }
+            );
+
+            const rejected = expect(result).rejects.toThrow(
+              /timeout|timed out|abort/i
+            );
+
+            if (mode === "abort") {
+              await toolStarted;
+              controller.abort();
+            }
+
+            await rejected;
+          }
+        );
+      }
+    );
+
+    it("method-string notification handlers still validate incoming messages", async () => {
+      await withClient(
+        () => {},
+        async (client, transport) => {
+          const onMessage = vi.fn();
+          const onError = vi.fn();
+          client.onerror = onError;
+          client.setNotificationHandler("notifications/message", onMessage);
+          await transport.send({
+            jsonrpc: "2.0",
+            method: "notifications/message",
+            params: { level: "invalid-level", data: "invalid" },
+          });
+          await transport.send({
+            jsonrpc: "2.0",
+            method: "notifications/message",
+            params: { level: "info", data: "valid" },
+          });
+          await vi.waitFor(() => expect(onMessage).toHaveBeenCalledTimes(1));
+          expect(onMessage).toHaveBeenCalledWith(
+            expect.objectContaining({
+              params: expect.objectContaining({ level: "info", data: "valid" }),
+            })
+          );
+          expect(onError).toHaveBeenCalled();
+        }
+      );
+    });
+  });
+});
+
+describe("server tool schemas", () => {
+  // Spy on SDK methods instead of replacing protocol types and validators.
+  function mockClient(inputSchema: Tool["inputSchema"] = { type: "object" }) {
+    const client = new SDKClient({ name: "schema-test", version: "1" });
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [{ name: "echo", inputSchema }],
+    });
+    vi.spyOn(client, "callTool").mockResolvedValue({
+      content: [{ type: "text", text: "ok" }],
+    });
+
+    return client;
+  }
+
+  describe("original server schema", () => {
+    it("preserves recursive references and compositions through provider formatting", async () => {
+      const schema = {
+        type: "object",
+        properties: { node: { $ref: "#/$defs/node" } },
+        $defs: {
+          node: {
+            type: "object",
+            properties: { next: { $ref: "#/$defs/node" } },
+          },
+        },
+        allOf: [{ required: ["node"] }],
+        "x-provider": { retained: true },
+      } satisfies Tool["inputSchema"];
+
+      const snapshot = structuredClone(schema);
+      const [tool] = await loadMcpTools("test", mockClient(schema));
+      expect(tool.schema).toEqual(snapshot);
+
+      const { convertToOpenAITool } =
+        await import("@langchain/core/utils/function_calling");
+
+      expect(convertToOpenAITool(tool).function.parameters).toEqual(snapshot);
+      expect(schema).toEqual(snapshot);
+    });
+
+    it("keeps model-facing schema overrides separate from invocation constraints", async () => {
+      const schema = {
+        type: "object",
+        properties: { value: { type: "number", minimum: 1 } },
+        required: ["value"],
+      } satisfies Tool["inputSchema"];
+
+      const client = mockClient(schema);
+      const [tool] = await loadMcpTools("test", client);
+      tool.schema = {
+        type: "object",
+        properties: { value: { type: "number" } },
+      };
+      await expect(tool.invoke({ value: 0 })).rejects.toThrow(
+        /Invalid arguments/
+      );
+      expect(client.callTool).not.toHaveBeenCalled();
+      expect(schema.properties.value.minimum).toBe(1);
+      await expect(tool.invoke({ value: 1 })).resolves.toBeDefined();
+    });
+
+    it("does not mutate descriptors without properties", async () => {
+      const schema = Object.freeze({
+        type: "object",
+      } satisfies Tool["inputSchema"]);
+
+      await expect(
+        loadMcpTools("test", mockClient(schema))
+      ).resolves.toHaveLength(1);
+      expect(schema).toEqual({ type: "object" });
+    });
+
+    it("validates hook overrides against the original server schema", async () => {
+      const client = mockClient({
+        type: "object",
+        properties: { value: { type: "number" } },
+        required: ["value"],
+        not: { properties: { value: { const: 2 } } },
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: () => ({ args: { value: 2 } }),
+      });
+
+      await expect(tool.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      expect(client.callTool).not.toHaveBeenCalled();
+    });
+
+    it("accepts valid effective arguments with local references", async () => {
+      const client = mockClient({
+        type: "object",
+        $defs: { value: { type: "integer", minimum: 1 } },
+        properties: { value: { $ref: "#/$defs/value" } },
+        required: ["value"],
+        additionalProperties: false,
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: () => ({ args: { value: 3 } }),
+      });
+
+      expect(await tool.invoke({ value: 1 })).toBe("ok");
+      expect(client.callTool).toHaveBeenCalledWith(
+        {
+          name: "echo",
+          arguments: { value: 3 },
+        },
+        expect.objectContaining({
+          toolDefinition: expect.objectContaining({ name: "echo" }),
+        })
+      );
+    });
+  });
+
+  it.each([
+    {
+      constraint: {
+        anyOf: [
+          { properties: { value: { const: 1 } } },
+          { properties: { value: { const: 3 } } },
+        ],
+      },
+      value: 2,
+    },
+    {
+      constraint: {
+        oneOf: [
+          { properties: { value: { minimum: 1 } } },
+          { properties: { value: { minimum: 2 } } },
+        ],
+      },
+      value: 3,
+    },
+    {
+      constraint: {
+        allOf: [
+          { properties: { value: { minimum: 1 } } },
+          { properties: { value: { maximum: 2 } } },
+        ],
+      },
+      value: 3,
+    },
+    {
+      constraint: {
+        if: { properties: { value: { minimum: 2 } } },
+        then: { properties: { value: { minimum: 4 } } },
+      },
+      value: 3,
+    },
+  ])(
+    "validates effective arguments against $constraint",
+    async ({ constraint, value }) => {
+      const client = mockClient({
+        type: "object",
+        properties: { value: { type: "number" } },
+        ...constraint,
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: () => ({ args: { value } }),
+      });
+
+      await expect(tool.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      expect(client.callTool).not.toHaveBeenCalled();
+    }
+  );
+
+  it("rejects additional properties added by a hook", async () => {
+    const client = mockClient({
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    });
+
+    const [tool] = await loadMcpTools("test", client, {
+      beforeToolCall: () => ({ args: { injected: true } }),
+    });
+
+    await expect(tool.invoke({})).rejects.toThrow(/additional properties/);
+    expect(client.callTool).not.toHaveBeenCalled();
+  });
+
+  it("rejects a required value removed by a hook", async () => {
+    const client = mockClient({
+      type: "object",
+      properties: { value: { type: "string" } },
+      required: ["value"],
+    });
+
+    const [tool] = await loadMcpTools("test", client, {
+      beforeToolCall: () => ({ args: { value: undefined } }),
+    });
+
+    await expect(tool.invoke({ value: "original" })).rejects.toThrow(
+      /arguments/
+    );
+    expect(client.callTool).not.toHaveBeenCalled();
+  });
+
+  describe("validator identity", () => {
+    function descriptor(id: string, forbidden: number): Tool["inputSchema"] {
+      return {
+        $id: id,
+        type: "object",
+        properties: { value: { type: "number" } },
+        $defs: { forbidden: { properties: { value: { const: forbidden } } } },
+        not: { $ref: "#/$defs/forbidden" },
+      };
+    }
+
+    it("isolates servers advertising different constraints under the same schema ID", async () => {
+      const id = "https://example.com/schema/shared";
+      const firstClient = mockClient(descriptor(id, 2));
+      const secondClient = mockClient(descriptor(id, 1));
+      const [first] = await loadMcpTools("first", firstClient);
+      const [second] = await loadMcpTools("second", secondClient);
+      await expect(second.invoke({ value: 1 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
+      expect(secondClient.callTool).not.toHaveBeenCalled();
+      expect(await second.invoke({ value: 2 })).toBe("ok");
+      expect(await first.invoke({ value: 1 })).toBe("ok");
+      await expect(first.invoke({ value: 2 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
+    });
+
+    it("recompiles changed constraints on rediscovery without changing existing tools", async () => {
+      const id = "https://example.com/schema/refreshed";
+      const client = mockClient(descriptor(id, 2));
+      const [original] = await loadMcpTools("test", client);
+      vi.mocked(client.listTools).mockResolvedValue({
+        tools: [{ name: "echo", inputSchema: descriptor(id, 1) }],
+      });
+      const [refreshed] = await loadMcpTools("test", client);
+      await expect(refreshed.invoke({ value: 1 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
+      expect(client.callTool).not.toHaveBeenCalled();
+      expect(await refreshed.invoke({ value: 2 })).toBe("ok");
+      expect(await original.invoke({ value: 1 })).toBe("ok");
+      await expect(original.invoke({ value: 2 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
+    });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+});
+
+describe("protocol negotiation with live servers", () => {
+  it("detects modern HTTP, legacy HTTP and SDK 1 stdio in one adapter", async () => {
+    const legacyServers = new TestMCPServers();
+    const { baseUrl } = await legacyServers.createHTTPServer("legacy-mode");
+    const { baseUrl: sseUrl } = await legacyServers.createHTTPServer(
+      "sse-mode",
+      {
+        disableStreamableHttp: true,
+        supportSSEFallback: true,
+      }
+    );
+
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer({ name: "modern-mode", version: "1" });
+        server.registerTool(
+          "modern_echo",
+          { inputSchema: z.object({ value: z.string() }) },
+          ({ value }) => ({ content: [{ type: "text", text: value }] })
+        );
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const http = createServer(toNodeHandler(handler));
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const address = http.address();
+
+    if (!address || typeof address === "string")
+      throw new Error("Missing HTTP address");
+
+    const adapter = new MCPAdapter({
+      servers: {
+        modern: { url: `http://127.0.0.1:${address.port}` },
+        legacy: { url: `${baseUrl}/mcp` },
+        stdio: legacyServers.createStdioServer("sdk1-auto", 1),
+        sse: { transport: "sse", url: `${sseUrl}/sse` },
+        fallback: { url: `${sseUrl}/mcp` },
+      },
+    });
+
+    const mismatch = new MCPAdapter({
+      servers: { wrong: { mode: "modern", url: `${baseUrl}/mcp` } },
+    });
+
+    try {
+      const tools = await adapter.listTools();
+      const modern = tools.find((tool) => tool.name === "modern_echo");
+
+      if (!modern) throw new Error("Modern tool was not discovered");
+      expect(await modern.invoke({ value: "modern response" })).toContain(
+        "modern response"
+      );
+      expect((await adapter.getClient("modern"))?.getProtocolEra()).toBe(
+        "modern"
+      );
+      expect((await adapter.getClient("legacy"))?.getProtocolEra()).toBe(
+        "legacy"
+      );
+      const stdio = (await adapter.listToolsets()).stdio.find(
+        (tool) => tool.name === "legacy_tool"
+      );
+      if (!stdio) {
+        throw new Error("SDK 1 tool was not discovered");
+      }
+      expect(await stdio.invoke({ input: "automatic" })).toBe(
+        "sdk1-auto:automatic"
+      );
+      expect((await adapter.getClient("stdio"))?.getProtocolEra()).toBe(
+        "legacy"
+      );
+      for (const name of ["legacy", "sse", "fallback"]) {
+        const [tool] = await adapter.listTools(name);
+        expect(await tool.invoke({ input: "automatic" })).toContain(
+          "automatic"
+        );
+        expect((await adapter.getClient(name))?.getProtocolEra()).toBe(
+          "legacy"
+        );
+      }
+      await expect(mismatch.listTools()).rejects.toThrow(/modern mode/);
+    } finally {
+      await Promise.all([adapter.close(), mismatch.close()]);
+      await legacyServers.cleanup();
+      await new Promise<void>((resolve, reject) =>
+        http.close((error) => (error ? reject(error) : resolve()))
+      );
+    }
+  });
+});
+describe("modern wire boundaries", () => {
+  it("preserves JSON output and protocol metadata while excluding invalid header declarations", async () => {
+    const requests: string[] = [];
+
+    const values = [0, false, null, [1, "value"], "text"];
+
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer({ name: "wire-boundary", version: "1" });
+        values.forEach((value, index) =>
+          server.registerTool(
+            `json_${index}`,
+            { inputSchema: z.object({}) },
+            async () => ({ content: [], structuredContent: value })
+          )
+        );
+        server.registerTool(
+          "invalid_header",
+          {
+            inputSchema: z.object({
+              region: z.string().meta({ "x-mcp-header": "bad header" }),
+            }),
+          },
+          async () => ({ content: [] })
+        );
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const serve = toNodeHandler(handler);
+
+    const wireHeaders: {
+      method: string | string[] | undefined;
+      name: string | string[] | undefined;
+      session: boolean;
+      replay: boolean;
+    }[] = [];
+
+    const http = createServer((request, response) => {
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      request.on("end", () => {
+        requests.push(Buffer.concat(chunks).toString());
+        wireHeaders.push({
+          method: request.headers["mcp-method"],
+          name: request.headers["mcp-name"],
+          session: "mcp-session-id" in request.headers,
+          replay: "last-event-id" in request.headers,
+        });
+      });
+      serve(request, response);
+    });
+
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const { port } = z.object({ port: z.number() }).parse(http.address());
+
+    const adapter = new MCPAdapter({
+      servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+    });
+
+    try {
+      const tools = await adapter.listTools();
+      expect(tools.map((tool) => tool.name)).toEqual(
+        values.map((_, index) => `json_${index}`)
+      );
+
+      for (const [index, tool] of tools.entries()) {
+        const result = await tool.invoke({
+          type: "tool_call",
+          id: `call_${index}`,
+          name: tool.name,
+          args: {},
+        });
+
+        expect(result.artifact).toContainEqual({
+          type: "mcp_structured_content",
+          data: values[index],
+        });
+      }
+
+      expect(requests.length).toBeGreaterThan(values.length);
+
+      for (const [index, body] of requests.entries()) {
+        const request = JSONRPCRequestSchema.parse(JSON.parse(body));
+
+        expect(request.method).not.toMatch(/initialize/);
+        expect(wireHeaders[index]).toMatchObject({
+          method: request.method,
+          session: false,
+          replay: false,
+        });
+
+        if (request.method === "tools/call")
+          expect(wireHeaders[index].name).toMatch(/^json_/);
+
+        if (request.method !== "server/discover")
+          // Elicitation is opt-in per server, so this connection advertises
+          // no elicitation capability on any request.
+          expect(request.params?._meta).toMatchObject({
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              name: "@langchain/mcp-adapters",
+            },
+          });
+        if (request.method !== "server/discover")
+          expect(
+            JSON.stringify(
+              request.params?._meta?.[
+                "io.modelcontextprotocol/clientCapabilities"
+              ] ?? {}
+            )
+          ).not.toContain("elicitation");
+      }
+    } finally {
+      await adapter.close();
+      await handler.close();
+      http.close();
+      http.closeAllConnections();
+      await once(http, "close");
+    }
+  });
+
+  it.each([-32020, -32021, -32022, -32602, "invalid-result"])(
+    "preserves protocol errors and rejects malformed results: %s",
+    async (outcome) => {
+      const handler = createMcpHandler(
+        () => {
+          const server = new McpServer({ name: "wire-error", version: "1" });
+          server.registerTool(
+            "raw",
+            { inputSchema: z.object({}) },
+            async () => ({ content: [] })
+          );
+
+          return server;
+        },
+        { legacy: "reject" }
+      );
+
+      const serve = toNodeHandler(handler);
+
+      const http = createServer((request, response) => {
+        if (request.headers["mcp-method"] !== "tools/call") {
+          serve(request, response);
+
+          return;
+        }
+
+        const chunks: Buffer[] = [];
+        request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        request.on("end", () => {
+          const { id } = z
+            .object({ id: z.union([z.string(), z.number()]) })
+            .parse(JSON.parse(Buffer.concat(chunks).toString()));
+
+          response.writeHead(200, { "content-type": "application/json" });
+          response.end(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id,
+              ...(outcome === "invalid-result"
+                ? { result: { resultType: "unknown", content: [] } }
+                : {
+                    error: {
+                      code: outcome,
+                      message: "Fixture protocol rejection",
+                    },
+                  }),
+            })
+          );
+        });
+      });
+
+      http.listen(0, "127.0.0.1");
+      await once(http, "listening");
+      const { port } = z.object({ port: z.number() }).parse(http.address());
+
+      const adapter = new MCPAdapter({
+        servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+      });
+
+      try {
+        const [tool] = await adapter.listTools();
+
+        if (outcome === "invalid-result") {
+          await expect(tool.invoke({})).rejects.toThrow(
+            /Unsupported result type/
+          );
+        } else {
+          await expect(tool.invoke({})).rejects.toMatchObject({
+            cause: { code: outcome },
+          });
+        }
+      } finally {
+        await adapter.close();
+        await handler.close();
+        http.close();
+        http.closeAllConnections();
+        await once(http, "close");
+      }
+    }
+  );
+});
+
+it("honors resource cache policy without sharing private results between header contexts", async () => {
+  let revision = 1;
+  let timestamp = Date.now();
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+  const handler = createMcpHandler(
+    (request) => {
+      const account =
+        request.requestInfo?.headers.get("x-test-account") ?? "default";
+
+      const server = new McpServer(
+        { name: "resource-cache", version: "1" },
+        {
+          cacheHints: {
+            "resources/list": { ttlMs: 60_000, cacheScope: "private" },
+            "resources/read": { ttlMs: 0, cacheScope: "private" },
+          },
+        }
+      );
+
+      server.registerResource(
+        `${account}-${revision}`,
+        "test://item",
+        {},
+        async () => ({
+          contents: [{ uri: "test://item", text: `${account}-${revision}` }],
+        })
+      );
+
+      return server;
+    },
+    { legacy: "reject" }
+  );
+
+  const http = createServer(toNodeHandler(handler));
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const { port } = z.object({ port: z.number() }).parse(http.address());
+
+  const adapter = new MCPAdapter({
+    servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+  });
+
+  const alpha = { headers: { "X-Test-Account": "alpha" } };
+  const beta = { headers: { "X-Test-Account": "beta" } };
+
+  try {
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-1");
+    revision = 2;
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    const client = await adapter.getClient("test", alpha);
+    expect(
+      (await client?.listResources(undefined, { cacheMode: "bypass" }))
+        ?.resources[0].name
+    ).toBe("alpha-2");
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    expect(
+      (await client?.listResources(undefined, { cacheMode: "refresh" }))
+        ?.resources[0].name
+    ).toBe("alpha-2");
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-1");
+    timestamp += 60_001;
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-2");
+    expect(
+      await adapter.readResource("test", "test://item", alpha)
+    ).toMatchObject([{ text: "alpha-2" }]);
+    revision = 3;
+    expect(
+      await adapter.readResource("test", "test://item", alpha)
+    ).toMatchObject([{ text: "alpha-3" }]);
+    await expect(
+      adapter.readResource("test", "test://missing", alpha)
+    ).rejects.toMatchObject({ cause: { code: -32602 } });
+  } finally {
+    clock.mockRestore();
+    await adapter.close();
+    await handler.close();
+    http.close();
+    http.closeAllConnections();
+    await once(http, "close");
+  }
 });
