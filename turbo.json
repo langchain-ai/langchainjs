@@ -21,7 +21,7 @@
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "inputs": ["src/**", "tsconfig.json", "package.json"],
-      "outputs": []
+      "outputs": [".tsc-types/**", "*.tsbuildinfo"]
     },
     "test:single": {
       "dependsOn": ["build:compile"],
