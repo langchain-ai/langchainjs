@@ -763,9 +763,13 @@ export class MCPAdapter {
       (connection.mode === "legacy" && connection.automaticSSEFallback);
 
     // Falling back to SSE settles the era as legacy, as negotiating it would:
-    // `elicitation` meant "if the server is modern", so it drops out here
-    // rather than failing the explicit-SSE check.
-    const { elicitation: _elicitation, ...fallback } = connection;
+    // these meant "if the server is modern", so they drop out here rather than
+    // failing the explicit-SSE check.
+    const {
+      elicitation: _elicitation,
+      logLevel: _logLevel,
+      ...fallback
+    } = connection;
 
     if (transportType === "http" || transportType == null) {
       try {

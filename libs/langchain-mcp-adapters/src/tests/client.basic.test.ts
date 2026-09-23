@@ -128,6 +128,30 @@ describe("MultiServerMCPClient", () => {
       );
       expect(Client.prototype.connect).not.toHaveBeenCalled();
     });
+    test("falls back to SSE with the options that only apply to a modern server", async () => {
+      vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
+        status: 404,
+      });
+
+      // Both meant "if the server is modern"; SSE settles it as legacy.
+      const client = new MCPAdapter({
+        servers: {
+          remote: {
+            url: "https://example.com/mcp",
+            elicitation: true,
+            logLevel: "info",
+          },
+        },
+      });
+
+      try {
+        await expect(client.listTools()).resolves.toHaveLength(2);
+        expect(SSEClientTransport).toHaveBeenCalledOnce();
+      } finally {
+        await client.close();
+      }
+    });
+
     test("does not fall back to SSE for an explicit modern connection", async () => {
       vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
         status: 404,
@@ -2352,6 +2376,22 @@ describe("protocol-specific server configuration", () => {
           },
         })
     ).toThrow(/elicitation requires modern MCP, which SSE never speaks/);
+  });
+
+  test("rejects a per-request log level on SSE instead of ignoring it", () => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            // @ts-expect-error SSE negotiates legacy, which has no per-request level.
+            remote: {
+              transport: "sse",
+              url: "https://example.com/sse",
+              logLevel: "info",
+            },
+          },
+        })
+    ).toThrow(/logLevel requires modern MCP, which SSE never speaks/);
   });
 
   test("rejects explicit modern SSE at the configuration boundary", () => {
