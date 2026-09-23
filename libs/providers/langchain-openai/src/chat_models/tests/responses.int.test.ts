@@ -525,6 +525,57 @@ describe("OpenAI configuration_update", () => {
   }, 60000);
 });
 
+describe("OpenAI additional_tools", () => {
+  const additionalTools = {
+    type: "additional_tools",
+    role: "developer",
+    tools: [
+      {
+        type: "function",
+        name: "get_time",
+        description: "Get the current time.",
+        parameters: { type: "object", properties: {} },
+      },
+    ],
+  };
+
+  // The bare and wrapped spellings take the `content` branch of the converter;
+  // `contentBlocks` takes the `output_version: "v1"` branch.
+  it.each([
+    ["bare", () => new SystemMessage({ content: [additionalTools] })],
+    [
+      "wrapped",
+      () =>
+        new SystemMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "contentBlocks",
+      () =>
+        new SystemMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+  ])(
+    "offers a tool from a %s additional_tools block",
+    async (_spelling, makeMessage) => {
+      const llm = new ChatOpenAI({
+        model: "gpt-6-astra",
+        useResponsesApi: true,
+      });
+
+      const response = await llm.invoke([
+        new HumanMessage("What time is it?"),
+        makeMessage(),
+      ]);
+
+      expect(response.tool_calls?.[0]?.name).toBe("get_time");
+    },
+    60000
+  );
+});
+
 test("Test stateful API", async () => {
   const llm = new ChatOpenAI({
     model: "gpt-4o-mini",

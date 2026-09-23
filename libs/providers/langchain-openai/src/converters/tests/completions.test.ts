@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsDeltaToBaseMessageChunk,
@@ -671,5 +676,97 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         ],
       });
     });
+  });
+});
+
+describe("non_standard content on Chat Completions", () => {
+  it("forwards the provider payload of a wrapped block, not the wrapper", () => {
+    const audio = {
+      type: "input_audio",
+      input_audio: { data: "UklGRg==", format: "wav" },
+    };
+
+    const result = convertMessagesToCompletionsMessageParams({
+      messages: [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Transcribe this." },
+            { type: "non_standard", value: audio },
+          ],
+        }),
+      ],
+      model: "gpt-4o-audio-preview",
+    });
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        content: [{ type: "text", text: "Transcribe this." }, audio],
+      },
+    ]);
+  });
+});
+
+describe("additional_tools on Chat Completions", () => {
+  const additionalTools = {
+    type: "additional_tools",
+    role: "developer",
+    tools: [{ type: "function", name: "get_customer", parameters: {} }],
+  };
+
+  it.each([
+    ["bare", () => new SystemMessage({ content: [additionalTools] })],
+    [
+      "wrapped",
+      () =>
+        new SystemMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "contentBlocks",
+      () =>
+        new SystemMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+  ])(
+    "rejects a %s block on a SystemMessage, naming the Responses API",
+    (_spelling, makeMessage) => {
+      expect(() =>
+        convertMessagesToCompletionsMessageParams({
+          messages: [makeMessage(), new HumanMessage("Hi")],
+          model: "gpt-4o",
+        })
+      ).toThrow(
+        "`additional_tools` requires the Responses API and cannot be sent via Chat Completions. Set `useResponsesApi: true`."
+      );
+    }
+  );
+
+  it("rejects the block on any other message, naming SystemMessage", () => {
+    expect(() =>
+      convertMessagesToCompletionsMessageParams({
+        messages: [
+          new HumanMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+          }),
+        ],
+        model: "gpt-4o",
+      })
+    ).toThrow("`additional_tools` must be carried on a `SystemMessage`");
+  });
+
+  it("does not reject the block on an assistant message", () => {
+    expect(() =>
+      convertMessagesToCompletionsMessageParams({
+        messages: [
+          new AIMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+          }),
+        ],
+        model: "gpt-4o",
+      })
+    ).not.toThrow();
   });
 });
