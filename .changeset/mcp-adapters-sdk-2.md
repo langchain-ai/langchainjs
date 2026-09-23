@@ -47,7 +47,9 @@ interrupts.
 Connections negotiate their revision when `mode` is omitted, so mixed modern and
 legacy servers need no declaration in advance. `mode: "modern"` forbids fallback;
 `mode: "legacy"` skips probing and enables the legacy callbacks. SSE always speaks
-legacy and rejects `mode: "modern"`. HTTP 404/405 may fall back to SSE
+legacy and rejects `mode: "modern"`, and with it `elicitation` and `logLevel`,
+which only a modern server can serve; an `auto` HTTP connection that falls back
+to SSE drops them instead. HTTP 404/405 may fall back to SSE
 (`automaticSSEFallback`); authentication and network failures stay errors.
 `setLoggingLevel()` remains legacy-only.
 
@@ -63,21 +65,18 @@ unchanged.
 Resuming replays the tool call from its first round, so the server is asked
 again before it is answered: N questions cost O(N^2) requests, and servers and
 hooks must be replay-safe. `beforeToolCall` runs once per execution, replays
-included, and the adapter promises no exactly-once effects. Because the server
-issues a fresh continuation on every resume, a pause cannot outlive a
-`requestState` lifetime.
+included, and the adapter promises no exactly-once effects. Each resume gets a
+fresh continuation from that replay, so a pause is not limited by any
+`requestState` lifetime: the one issued before the pause may expire while the
+graph waits.
 
-Each interrupt carries a `questionId` derived from the question's content and
-the call's effective arguments, and the resume is bound to it. If the replayed
-round asks something different under the same keys and schema — "approve
-$1,000" where the human approved "approve $10" — or `beforeToolCall` resolves
-different arguments, the saved answer is refused rather than applied to an
-operation nobody agreed to; the refused run is rolled back, leaving the
-original question pending. A resume is parsed as a whole against the question
-it answers — matching `questionId`, exactly the server's keys, and each answer
-against that question's requested schema — so a missing, unexpected or
-malformed answer fails the call rather than re-asking, since the caller
-resuming the graph is code and not the human who filled the form.
+Because the call replays, a server that asks something different the second
+time is answered with what the human said the first time; like the Python
+adapter, the adapter does not compare the two. A resume is parsed against the
+question now being asked — exactly the server's keys, each answer against that
+question's requested schema — so a missing, unexpected or malformed answer
+fails the call rather than re-asking, since the caller resuming the graph is
+code and not the human who filled the form.
 
 Rounds go through the SDK's own manual input-required path (the per-call
 `allowInputRequired` request option), so `Mcp-Param-*` mirroring and descriptor
