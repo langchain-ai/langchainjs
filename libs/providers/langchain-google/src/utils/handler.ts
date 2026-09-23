@@ -80,6 +80,36 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     this.handleStreamEvent(event);
   }
 
+  /**
+   * Taps into a stream of chat model events, observing and recording each event
+   * without interrupting or consuming the stream pipeline.
+   *
+   * ### Why this exists
+   * While event streams can be observed by attaching callback handlers in model
+   * options or by running concurrent iterators over `ChatModelStream`, `tap()` provides
+   * an ergonomic, inline alternative inspired by functional reactive programming.
+   * It allows callers to spy on, log, or record events (such as raw provider requests,
+   * responses, and chunks) directly within a single iteration loop without needing to
+   * configure callbacks on the model or separate consumers.
+   *
+   * @param stream The source stream of `ChatModelStreamEvent` (e.g. from `model.streamEvents(...)`).
+   * @returns An async generator that re-yields every event untouched after routing it
+   *          to `this.handleStreamEvent(event)`.
+   *
+   * @example
+   * ```typescript
+   * const recorder = new GoogleRequestRecorder();
+   * const stream = model.streamEvents("Hello");
+   *
+   * for await (const event of recorder.tap(stream)) {
+   *   // Consume the stream normally...
+   * }
+   *
+   * // Inspect recorded network data
+   * console.log(recorder.request.url);
+   * console.log(recorder.response.status);
+   * ```
+   */
   async *tap(
     stream: AsyncIterable<ChatModelStreamEvent>
   ): AsyncGenerator<ChatModelStreamEvent> {
