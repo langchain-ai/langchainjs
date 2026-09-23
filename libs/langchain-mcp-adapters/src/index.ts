@@ -32,3 +32,10 @@ export type {
 } from "./hooks.js";
 
 export type { Notifications, ConnectionErrorHandler } from "./types.js";
+
+export type {
+  MCPElicitationRequest,
+  MCPElicitationAnswer,
+  MCPElicitationContext,
+  MCPElicitationHandler,
+} from "./elicitation.js";
