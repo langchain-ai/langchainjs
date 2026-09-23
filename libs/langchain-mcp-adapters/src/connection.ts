@@ -1,8 +1,5 @@
 import { MCPClientError } from "./utils/errors.js";
-import {
-  CancellationObserverMCPClient,
-  configureElicitation,
-} from "./elicitation.js";
+import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   SSEClientTransport,
@@ -82,7 +79,6 @@ function protocolClientOptions(
     versionNegotiation: {
       mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
     },
-    inputRequired: { maxRounds: options.maxElicitationRounds },
   };
 }
 
@@ -192,23 +188,10 @@ export class ConnectionManager {
           ? await this.#createSSETransport(options)
           : await this.#createStdioTransport(options);
 
-    const onCancelled: ConstructorParameters<
-      typeof CancellationObserverMCPClient
-    >[2] = options.onCancelled
-      ? (notification) => {
-          const { requestId, reason } = notification;
-          if (requestId == null) return;
-          return options.onCancelled?.(
-            { requestId, reason },
-            { server: serverName, options: connectionSchema.parse(options) }
-          );
-        }
-      : undefined;
-    const mcpClient = new CancellationObserverMCPClient(
-      { name: packageJson.name, version: packageJson.version },
-      protocolClientOptions(options),
-      onCancelled
-    );
+    const identity = { name: packageJson.name, version: packageJson.version };
+    const clientOptions = protocolClientOptions(options);
+
+    const mcpClient = new MCPClient(identity, clientOptions);
 
     if (options.mode === "legacy")
       configureElicitation(mcpClient, serverName, options.onElicitation);
@@ -646,10 +629,9 @@ export class ConnectionManager {
     return new StdioClientTransport({
       command,
       args,
+      env,
       stderr,
       cwd,
-      // oxlint-disable-next-line no-process-env
-      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
   }
 }

@@ -1,59 +1,57 @@
+import { z } from "zod";
 import {
   Client,
   fromJsonSchema,
-  type CancelledNotificationParams,
+  isInputRequiredResult,
+  type CallToolRequest,
+  type CallToolResult,
   type ElicitRequest,
   type ElicitResult,
-  type JSONRPCNotification,
-  type MessageExtraInfo,
+  type InputRequiredResult,
 } from "@modelcontextprotocol/client";
 import {
-  CancelledNotificationParamsSchema,
+  ElicitRequestFormParamsSchema,
+  ElicitRequestSchema,
+  ElicitRequestURLParamsSchema,
   ElicitResultSchema,
 } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
+import {
+  interrupt,
+  isGraphInterrupt,
+  type Interrupt,
+} from "@langchain/langgraph";
+import { ToolException } from "./utils/errors.js";
 
-/** Observe validated cancellations without replacing the SDK handler. */
-export class CancellationObserverMCPClient extends Client {
-  constructor(
-    info: ConstructorParameters<typeof Client>[0],
-    options: ConstructorParameters<typeof Client>[1],
-    private readonly onCancelled?: (
-      notification: CancelledNotificationParams
-    ) => void | Promise<void>
-  ) {
-    super(info, options);
-  }
+export const modernElicitationAnswerSchema = ElicitResultSchema.pick({
+  action: true,
+  content: true,
+}).strip();
 
-  protected override _onnotification(
-    notification: JSONRPCNotification,
-    extra?: MessageExtraInfo
-  ): void {
-    // The SDK aborts the in-flight request from this notification. Dispatch it
-    // first so observing a cancellation can never suppress that.
-    super._onnotification(notification, extra);
+// Keep the modern question fields from the SDK's legacy-compatible schemas.
+const modernFormRequestSchema = ElicitRequestFormParamsSchema.pick({
+  mode: true,
+  message: true,
+  requestedSchema: true,
+});
 
-    if (notification.method !== "notifications/cancelled") return;
+const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
+  mode: true,
+  message: true,
+  url: true,
+});
 
-    const parsed = CancelledNotificationParamsSchema.safeParse(
-      notification.params
-    );
-    if (
-      !parsed.success ||
-      (this.getProtocolEra() === "modern" &&
-        parsed.data.requestId === undefined)
-    )
-      return;
+/** A modern question: the shape an `elicitation/create` request carries. */
+const modernQuestionSchema = z.union([
+  modernFormRequestSchema,
+  modernURLRequestSchema,
+]);
 
-    try {
-      Promise.resolve(this.onCancelled?.(parsed.data)).catch(() => {});
-    } catch {
-      // Observer failures must not affect SDK cancellation dispatch.
-    }
-  }
-}
+export const modernElicitationRequestSchema = ElicitRequestSchema.extend({
+  params: modernQuestionSchema,
+}).transform((request) => request.params);
 
-export const elicitationAnswerSchema = ElicitResultSchema;
+type ModernElicitationRequest = z.output<typeof modernElicitationRequestSchema>;
 
 /** SDK-owned form or URL request. The application owns presentation. */
 export type MCPElicitationRequest = ElicitRequest["params"];
@@ -73,8 +71,11 @@ export type MCPElicitationHandler = (
 ) => MCPElicitationAnswer | Promise<MCPElicitationAnswer>;
 
 /** Parse application answers without duplicating the protocol's schemas. */
-export function elicitationAnswerFor(request: MCPElicitationRequest) {
-  return elicitationAnswerSchema.check(async (ctx) => {
+export function elicitationAnswerFor(
+  request: MCPElicitationRequest | ModernElicitationRequest,
+  schema: z.ZodType<ElicitResult> = ElicitResultSchema
+) {
+  return schema.check(async (ctx) => {
     const answer = ctx.value;
 
     if (request.mode === "url") {
@@ -140,4 +141,169 @@ export function configureElicitation(
 
     return validateElicitationAnswer(request.params, answer);
   });
+}
+
+/**
+ * The interrupt payload raised while an MCP tool call waits on input.
+ *
+ * It carries the effective arguments as well as the questions, because both
+ * are what the human is consenting to.
+ */
+const elicitationInterruptSchema = z.object({
+  type: z.literal("mcp_elicitation"),
+  server: z.string(),
+  tool: z.string(),
+  arguments: z.record(z.string(), z.unknown()).optional(),
+  requests: z.record(z.string(), modernQuestionSchema),
+});
+
+export type MCPElicitationInterrupt = z.output<
+  typeof elicitationInterruptSchema
+>;
+
+/** Answers to one question set, keyed by the server's input-request keys. */
+export type MCPElicitationResponses = Record<
+  string,
+  z.output<typeof modernElicitationAnswerSchema>
+>;
+
+/** Resume values, keyed by the graph task whose interrupt they answer. */
+export type MCPElicitationResume = Record<
+  string,
+  { responses: MCPElicitationResponses }
+>;
+
+/** `Interrupt` types `id` as optional and `value` as `any`, so parse both. */
+const elicitationTargetSchema = z.object({
+  id: z.string().min(1),
+  value: elicitationInterruptSchema,
+});
+
+/** Build an answer addressed to the task that raised `pending`. */
+export function createMCPElicitationResume(
+  pending: Interrupt<unknown>,
+  responses: MCPElicitationResponses
+): MCPElicitationResume {
+  const { id } = elicitationTargetSchema.parse(pending);
+  return { [id]: { responses } };
+}
+
+/** `tools/call` params plus the 2026-07-28 retry channel. */
+export type ElicitationRoundParams = CallToolRequest["params"] & {
+  inputResponses?: MCPElicitationResponses;
+  requestState?: string;
+};
+
+/**
+ * Questions a graph interrupt can carry.
+ *
+ * Sampling and roots fail the `elicitation/create` literal, naming the key
+ * that asked. A round with no questions is refused too: nothing can advance a
+ * response that asks nothing, and the adapter does not poll for completion.
+ * The Python adapter refuses the same three.
+ */
+const answerableRequestsSchema = z
+  .record(z.string(), modernElicitationRequestSchema)
+  .refine((requests) => Object.keys(requests).length > 0, {
+    error: "a state-only response carries no question to ask",
+  });
+
+/**
+ * Raise one question and parse the answer that comes back.
+ *
+ * `interrupt()` rejects a call made outside a graph, and a graph compiled
+ * without a checkpointer, before it ever suspends — both mean the same thing
+ * here, so the refusal is read off the pause rather than probed for.
+ *
+ * The answer is parsed against the question now being asked: exactly the
+ * server's keys, each answer against that question's requested schema. The
+ * question the human saw is not compared with it, as in the Python adapter,
+ * so a replay that asks something different under the same keys receives the
+ * earlier answer. A malformed answer fails the call rather than re-asking,
+ * since the caller resuming the graph is code, not the human who filled the
+ * form.
+ */
+async function answerFor(
+  question: MCPElicitationInterrupt
+): Promise<MCPElicitationResponses> {
+  let resumed: unknown;
+
+  try {
+    resumed = interrupt<MCPElicitationInterrupt, unknown>(question);
+  } catch (error) {
+    if (isGraphInterrupt(error)) throw error;
+    throw new ToolException(
+      "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+      error
+    );
+  }
+
+  const answered = await z
+    .object({
+      responses: z.strictObject(
+        Object.fromEntries(
+          Object.entries(question.requests).map(([key, request]) => [
+            key,
+            elicitationAnswerFor(request, modernElicitationAnswerSchema),
+          ])
+        )
+      ),
+    })
+    .safeParseAsync(resumed);
+
+  if (!answered.success)
+    throw new ToolException(
+      `Resuming MCP tool "${question.tool}" on server "${question.server}" needs answers built by createMCPElicitationResume() from the latest interrupt: ${z.prettifyError(answered.error)}`
+    );
+
+  return answered.data.responses;
+}
+
+/**
+ * Call an MCP tool, answering each round of requested input with an interrupt.
+ *
+ * `interrupt()` unwinds the whole call, so on resume the tool is re-issued from
+ * the first round and the server hands back a fresh `requestState`. A server
+ * that asks before doing work repeats nothing; one that works first repeats
+ * that work once per round, so effects must be idempotent.
+ */
+export async function callToolWithElicitation(
+  round: (
+    params: ElicitationRoundParams
+  ) => Promise<CallToolResult | InputRequiredResult>,
+  params: CallToolRequest["params"],
+  server: string,
+  tool: string,
+  signal?: AbortSignal
+): Promise<CallToolResult> {
+  signal?.throwIfAborted();
+  let result = await round(params);
+
+  while (isInputRequiredResult(result)) {
+    const requests = answerableRequestsSchema.safeParse(
+      result.inputRequests ?? {}
+    );
+
+    if (!requests.success)
+      throw new ToolException(
+        `MCP tool "${tool}" on server "${server}" asked for input this adapter cannot answer: ${z.prettifyError(requests.error)}`
+      );
+
+    const responses = await answerFor({
+      type: "mcp_elicitation",
+      server,
+      tool,
+      arguments: params.arguments,
+      requests: requests.data,
+    });
+
+    signal?.throwIfAborted();
+    result = await round({
+      ...params,
+      inputResponses: responses,
+      requestState: result.requestState,
+    });
+  }
+
+  return result;
 }

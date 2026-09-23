@@ -17,6 +17,12 @@ export const isSpecType = actual.isSpecType;
 
 export const fromJsonSchema = actual.fromJsonSchema;
 
+export const isInputRequiredResult = actual.isInputRequiredResult;
+
+export const CLIENT_CAPABILITIES_META_KEY = actual.CLIENT_CAPABILITIES_META_KEY;
+
+export const LOG_LEVEL_META_KEY = actual.LOG_LEVEL_META_KEY;
+
 const clientPrototype = {
   getProtocolEra: vi
     .fn<InstanceType<typeof actual.Client>["getProtocolEra"]>()
@@ -69,6 +75,14 @@ function mockClient(
 export const Client: Mock<typeof mockClient> = vi.fn(mockClient);
 
 Client.prototype = clientPrototype;
+
+/**
+ * Restore the default constructor behaviour.
+ *
+ * `vi.clearAllMocks()` clears calls but keeps implementations, so a test that
+ * replaces `Client` with its own constructor leaks into every test after it.
+ */
+export const resetClientMock = () => Client.mockImplementation(mockClient);
 
 const sseClientTransportPrototype = {
   start: vi

@@ -16,6 +16,8 @@ import {
 } from "@modelcontextprotocol/client";
 import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
 import { adapterConfigSchema, oAuthClientProviderSchema } from "../types.js";
+import type { Connection } from "../types.js";
+import { resetClientMock } from "./__mocks__/@modelcontextprotocol/client.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -126,6 +128,30 @@ describe("MultiServerMCPClient", () => {
       );
       expect(Client.prototype.connect).not.toHaveBeenCalled();
     });
+    test("falls back to SSE with the options that only apply to a modern server", async () => {
+      vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
+        status: 404,
+      });
+
+      // Both meant "if the server is modern"; SSE settles it as legacy.
+      const client = new MCPAdapter({
+        servers: {
+          remote: {
+            url: "https://example.com/mcp",
+            elicitation: true,
+            logLevel: "info",
+          },
+        },
+      });
+
+      try {
+        await expect(client.listTools()).resolves.toHaveLength(2);
+        expect(SSEClientTransport).toHaveBeenCalledOnce();
+      } finally {
+        await client.close();
+      }
+    });
+
     test("does not fall back to SSE for an explicit modern connection", async () => {
       vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
         status: 404,
@@ -138,7 +164,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       try {
-        await expect(client.listTools()).rejects.toThrow();
+        await expect(client.listTools()).rejects.toThrow(/in modern mode/);
         expect(SSEClientTransport).not.toHaveBeenCalled();
       } finally {
         await client.close();
@@ -153,7 +179,12 @@ describe("MultiServerMCPClient", () => {
           servers: { remote: { url: "https://example.com/mcp" } },
         });
         try {
-          await expect(adapter.listTools()).rejects.toThrow();
+          await expect(adapter.listTools()).rejects.toThrow(
+            // Only 401 is treated as an auth failure; 403 and 503 surface
+            // as plain connect errors. All three skip the SSE retry, which
+            // is what this asserts.
+            status === 401 ? /Authentication failed/ : /in auto mode/
+          );
           expect(SSEClientTransport).not.toHaveBeenCalled();
         } finally {
           await adapter.close();
@@ -191,10 +222,36 @@ describe("MultiServerMCPClient", () => {
         try {
           if (fallsBack) {
             await client.initializeConnections();
+
+            // HTTP was attempted first, then retried once over SSE at the
+            // same URL rather than the server being reported as unreachable.
+            expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(1);
             expect(SSEClientTransport).toHaveBeenCalledTimes(1);
+            expect(
+              (SSEClientTransport as Mock).mock.calls[0][0].toString()
+            ).toBe("https://example.com/mcp");
           } else {
-            await expect(client.initializeConnections()).rejects.toThrow();
+            const failure = await client.initializeConnections().then(
+              () => {
+                throw new Error("initializeConnections should have rejected");
+              },
+              (thrown: unknown) => thrown
+            );
+
             expect(SSEClientTransport).not.toHaveBeenCalled();
+            expect(MCPClientError.isInstance(failure)).toBe(true);
+
+            const clientError = failure as MCPClientError;
+
+            // This row's transport failure survives verbatim as the cause...
+            expect(Object.hasOwn(clientError, "cause")).toBe(true);
+            expect(clientError.cause).toBe(error);
+
+            // ...and is rendered into the message with the server context.
+            expect(clientError.serverName).toBe("remote");
+            expect(clientError.message).toBe(
+              `Failed to connect to streamable HTTP server "remote, url: https://example.com/mcp" in legacy mode: ${error}`
+            );
           }
         } finally {
           await client.close();
@@ -210,7 +267,7 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should process valid stdio connection config", () => {
-      new MultiServerMCPClient({
+      const client = new MultiServerMCPClient({
         "test-server": {
           mode: "legacy",
           transport: "stdio",
@@ -218,10 +275,19 @@ describe("MultiServerMCPClient", () => {
           args: ["./script.py"],
         },
       });
+
+      // The flat config form is lifted under `servers` and stdio defaults applied.
+      expect(client.config.servers["test-server"]).toEqual({
+        mode: "legacy",
+        transport: "stdio",
+        command: "python",
+        args: ["./script.py"],
+        stderr: "inherit",
+      });
     });
 
     test("should process valid SSE connection config", () => {
-      new MultiServerMCPClient({
+      const client = new MultiServerMCPClient({
         "test-server": {
           mode: "legacy",
           transport: "sse",
@@ -229,15 +295,30 @@ describe("MultiServerMCPClient", () => {
           headers: { Authorization: "Bearer token" },
         },
       });
+
+      expect(client.config.servers["test-server"]).toEqual({
+        mode: "legacy",
+        transport: "sse",
+        url: "http://localhost:8000/sse",
+        headers: { Authorization: "Bearer token" },
+        automaticSSEFallback: true,
+      });
     });
 
     test("should process valid streamable HTTP connection config", () => {
-      new MultiServerMCPClient({
+      const client = new MultiServerMCPClient({
         "test-server": {
           mode: "legacy",
           transport: "http",
           url: "http://localhost:8000/mcp",
         },
+      });
+
+      expect(client.config.servers["test-server"]).toEqual({
+        mode: "legacy",
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
       });
     });
 
@@ -529,6 +610,29 @@ describe("MultiServerMCPClient", () => {
 
   // Tool Management tests
   describe("listTools", () => {
+    /**
+     * Queue one mock MCP client per server, in the order the servers are
+     * declared, each advertising its own tool list.
+     */
+    function mockClientsWithTools(
+      ...toolsPerServer: {
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }[][]
+    ) {
+      for (const tools of toolsPerServer) {
+        (Client as Mock).mockImplementationOnce(function mockClient() {
+          return {
+            ...Client.prototype,
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools })),
+          };
+        });
+      }
+    }
+
     test("should get all tools as a flattened array", async () => {
       // Mock tool response
       const mockTools = [
@@ -569,11 +673,96 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should get tools from specific servers", async () => {
-      // Mock implementation similar to above
+      mockClientsWithTools(
+        [{ name: "alpha1", description: "Alpha 1", inputSchema: {} }],
+        [
+          { name: "beta1", description: "Beta 1", inputSchema: {} },
+          { name: "beta2", description: "Beta 2", inputSchema: {} },
+        ]
+      );
+
+      const client = new MultiServerMCPClient({
+        alpha: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./alpha.py"],
+        },
+        beta: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./beta.py"],
+        },
+      });
+
+      try {
+        // A single server name keeps that server's tools and drops the rest.
+        expect((await client.listTools("beta")).map((t) => t.name)).toEqual([
+          "beta1",
+          "beta2",
+        ]);
+        expect((await client.listTools("alpha")).map((t) => t.name)).toEqual([
+          "alpha1",
+        ]);
+
+        // The array overload filters and preserves the requested order.
+        expect(
+          (await client.listTools(["beta", "alpha"])).map((t) => t.name)
+        ).toEqual(["beta1", "beta2", "alpha1"]);
+
+        // Unfiltered discovery still returns every server's tools.
+        expect((await client.listTools()).map((t) => t.name)).toEqual([
+          "alpha1",
+          "beta1",
+          "beta2",
+        ]);
+
+        // An unknown server name contributes nothing instead of throwing.
+        expect(await client.listTools("missing")).toEqual([]);
+      } finally {
+        await client.close();
+      }
     });
 
     test("should handle empty tool lists correctly", async () => {
-      // Mock implementation similar to above
+      mockClientsWithTools(
+        [],
+        [{ name: "beta1", description: "Beta 1", inputSchema: {} }]
+      );
+
+      const client = new MultiServerMCPClient({
+        empty: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./empty.py"],
+        },
+        beta: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./beta.py"],
+        },
+      });
+
+      try {
+        // A server advertising no tools is still listed, with an empty group.
+        const toolsets = await client.listToolsets();
+        expect(Object.keys(toolsets).sort()).toEqual(["beta", "empty"]);
+        expect(toolsets.empty).toEqual([]);
+
+        // It contributes no entries to the flattened list, and no holes either.
+        expect((await client.listTools()).map((t) => t.name)).toEqual([
+          "beta1",
+        ]);
+        expect(await client.listTools("empty")).toEqual([]);
+        expect(
+          (await client.listTools(["empty", "beta"])).map((t) => t.name)
+        ).toEqual(["beta1"]);
+      } finally {
+        await client.close();
+      }
     });
 
     describe("should apply tool name prefixes correctly", () => {
@@ -696,7 +885,9 @@ describe("MultiServerMCPClient", () => {
       });
 
       await client.initializeConnections();
-      await expect(client.close()).rejects.toThrow();
+      await expect(client.close()).rejects.toThrow(
+        /Failed to close MCP connections/
+      );
 
       expect(Client.prototype.close).toHaveBeenCalledOnce();
     });
@@ -704,6 +895,12 @@ describe("MultiServerMCPClient", () => {
 
   // Streamable HTTP specific tests
   describe("streamable HTTP transport", () => {
+    // These replace the Client constructor outright; without this every test
+    // that runs afterwards inherits it.
+    afterEach(() => {
+      resetClientMock();
+    });
+
     test("should throw when streamable HTTP config is missing required fields", () => {
       expect(() => {
         new MultiServerMCPClient({
@@ -800,7 +997,9 @@ describe("MultiServerMCPClient", () => {
       });
 
       await client.initializeConnections();
-      await expect(client.close()).rejects.toThrow();
+      await expect(client.close()).rejects.toThrow(
+        /Failed to close MCP connections/
+      );
 
       expect(Client.prototype.close).toHaveBeenCalledOnce();
     });
@@ -1162,6 +1361,705 @@ describe("MultiServerMCPClient", () => {
       expect(workingClient2).toBeDefined();
     });
   });
+
+  // ---- merged from client.comprehensive.test.ts ----
+  describe("Constructor", () => {
+    test("should throw when initialized with empty connections", async () => {
+      expect(() => new MultiServerMCPClient({})).toThrow(ZodError);
+    });
+
+    test("should process valid stdio connection config", async () => {
+      const config = {
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      } satisfies Record<string, Connection>;
+
+      const client = new MultiServerMCPClient(config);
+      expect(client).toBeDefined();
+
+      // Initialize connections and verify
+      await client.initializeConnections();
+      expect(StdioClientTransport).toHaveBeenCalled();
+      expect(Client).toHaveBeenCalled();
+    });
+
+    test("should process valid streamable HTTP connection config", async () => {
+      const config = {
+        "test-server": {
+          mode: "legacy",
+          transport: "http" as const,
+          url: "http://localhost:8000/mcp",
+        },
+      } satisfies Record<string, Connection>;
+
+      const client = new MultiServerMCPClient(config);
+      expect(client).toBeDefined();
+
+      // Initialize connections and verify
+      await client.initializeConnections();
+      expect(StreamableHTTPClientTransport).toHaveBeenCalled();
+      expect(Client).toHaveBeenCalled();
+    });
+
+    test("should process valid SSE connection config", async () => {
+      const config = {
+        "test-server": {
+          mode: "legacy",
+          transport: "sse" as const,
+          url: "http://localhost:8000/sse",
+          headers: { Authorization: "Bearer token" },
+        },
+      } satisfies Record<string, Connection>;
+
+      const client = new MultiServerMCPClient(config);
+      expect(client).toBeDefined();
+
+      // Initialize connections and verify
+      await client.initializeConnections();
+      expect(SSEClientTransport).toHaveBeenCalledWith(
+        new URL(config["test-server"].url),
+        expect.objectContaining({
+          requestInit: {
+            headers: Object.fromEntries(
+              new Headers(config["test-server"].headers)
+            ),
+          },
+        })
+      );
+      expect(Client).toHaveBeenCalled();
+    });
+
+    test("should throw if initialized with invalid connection type", async () => {
+      const config: Record<string, Connection> = {
+        "test-server": {
+          // @ts-expect-error invalid transport type
+          transport: "invalid" as const,
+          url: "http://localhost:8000/invalid",
+        },
+      };
+
+      // Should throw error during initialization
+      expect(() => {
+        new MultiServerMCPClient(config);
+      }).toThrow(ZodError);
+    });
+  });
+
+  describe("Connection Management", () => {
+    test("should initialize stdio connections correctly", async () => {
+      // Create a client instance with the config
+      const client = new MultiServerMCPClient({
+        "stdio-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      // Reset mocks to ensure clean state
+      vi.clearAllMocks();
+
+      // Initialize connections
+      await client.initializeConnections();
+
+      // The StdioClientTransport should have been called at least once
+      expect(StdioClientTransport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          command: "python",
+          args: ["./script.py"],
+        })
+      );
+
+      // Verify the client methods were called as expected
+      expect(Client).toHaveBeenCalled();
+      expect(Client.prototype.connect).toHaveBeenCalled();
+    });
+
+    test("should initialize SSE connections correctly", async () => {
+      // Create a client instance with the config
+      const client = new MultiServerMCPClient({
+        "sse-server": {
+          mode: "legacy",
+          transport: "sse" as const,
+          url: "http://example.com/sse",
+        },
+      });
+
+      // Reset mocks to ensure clean state
+      vi.clearAllMocks();
+
+      // Initialize connections
+      await client.initializeConnections();
+
+      // The SSEClientTransport should have been called at least once
+      expect(SSEClientTransport).toHaveBeenCalled();
+
+      // Verify the client methods were called as expected
+      expect(Client).toHaveBeenCalled();
+      expect(Client.prototype.connect).toHaveBeenCalled();
+    });
+
+    test("should throw on connection failures", async () => {
+      // Mock connection failure
+      (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("Connection failed"))
+      );
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      // Named, so this cannot pass on a failure from any other stage.
+      await expect(client.initializeConnections()).rejects.toThrow(
+        /Connection failed/
+      );
+    });
+
+    test("should throw on tool loading failures", async () => {
+      // Mock tool loading failure
+      (Client.prototype.listTools as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("Failed to list tools"))
+      );
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      await expect(client.initializeConnections()).rejects.toThrow(
+        /Failed to list tools/
+      );
+    });
+  });
+
+  describe("Reconnection Logic", () => {
+    test("should attempt to reconnect stdio transport when enabled", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+          restart: {
+            enabled: true,
+            maxAttempts: 3,
+            delayMs: 100,
+          },
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Grab the created transport instance before clearing call counts
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+
+      // Clear previous calls
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockClear();
+
+      // Trigger onclose handler
+      expect(stdioInstance).toBeDefined();
+      const { onclose } = stdioInstance;
+      expect(onclose).toBeDefined();
+      await onclose?.();
+
+      // Wait for reconnection delay
+      await new Promise((resolve) => {
+        setTimeout(resolve, 150);
+      });
+
+      // Should attempt to create a new transport
+      expect(StdioClientTransport).toHaveBeenCalledTimes(1);
+      // And connect
+      expect(Client.prototype.connect).toHaveBeenCalled();
+    });
+
+    test("a close during the reconnect backoff cancels the reconnect", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+          restart: {
+            enabled: true,
+            maxAttempts: 3,
+            delayMs: 100,
+          },
+        },
+      });
+
+      await client.initializeConnections();
+
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+      expect(stdioInstance).toBeDefined();
+
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockClear();
+
+      // Drop the transport so a reconnect is scheduled, let it reach its
+      // backoff, then close while it is waiting there.
+      const reconnecting = stdioInstance.onclose?.();
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10);
+      });
+      await client.close();
+      await reconnecting;
+
+      // Past the backoff window: the aborted epoch must have cancelled it, so
+      // no connection is rebuilt behind a closed adapter.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 200);
+      });
+
+      expect(StdioClientTransport as Mock).not.toHaveBeenCalled();
+      expect(Client.prototype.connect as Mock).not.toHaveBeenCalled();
+    });
+
+    test("should attempt to reconnect SSE transport when enabled", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "sse" as const,
+          url: "http://localhost:8000/sse",
+          reconnect: {
+            enabled: true,
+            maxAttempts: 3,
+            delayMs: 100,
+          },
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Grab the created transport instance before clearing call counts
+      const sseInstance = (SSEClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+
+      // Clear previous calls
+      (SSEClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockClear();
+
+      // Trigger onclose handler
+      expect(sseInstance).toBeDefined();
+      const { onclose } = sseInstance;
+      expect(onclose).toBeDefined();
+      await onclose?.();
+
+      // Wait for reconnection delay
+      await new Promise((resolve) => {
+        setTimeout(resolve, 150);
+      });
+
+      // Should attempt to create a new transport
+      expect(SSEClientTransport).toHaveBeenCalledTimes(1);
+      // And connect
+      expect(Client.prototype.connect).toHaveBeenCalled();
+    });
+
+    test("should respect maxAttempts setting for reconnection", async () => {
+      // Set up the test
+      const maxAttempts = 2;
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+          restart: {
+            enabled: true,
+            maxAttempts,
+          },
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Grab instance created during initialization
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+
+      // Reset counts to only measure reconnection attempts
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("reconnect fail 1"))
+      );
+      (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("reconnect fail 2"))
+      );
+
+      // Simulate connection close to trigger reconnection
+      expect(stdioInstance).toBeDefined();
+      const { onclose } = stdioInstance;
+      expect(onclose).toBeDefined();
+      await onclose?.();
+
+      // Wait for reconnection attempts to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Should attempt to create a new transport exactly maxAttempts times
+      expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts);
+    });
+  });
+
+  describe("Tool Management", () => {
+    /**
+     * Queue one mock MCP client per server, in the order the servers are
+     * declared, each advertising its own tool list. Per-instance mocks (rather
+     * than one queued `Client.prototype.listTools`) keep the tool list stable
+     * across repeated discovery calls.
+     */
+    function mockClientsWithTools(
+      ...toolsPerServer: {
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }[][]
+    ) {
+      for (const tools of toolsPerServer) {
+        (Client as Mock).mockImplementationOnce(function mockClient() {
+          return {
+            ...Client.prototype,
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools })),
+          };
+        });
+      }
+    }
+
+    test("should get all tools as a flattened array", async () => {
+      // Mock tool response
+      (Client.prototype.listTools as Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          tools: [
+            { name: "tool1", description: "Tool 1", inputSchema: {} },
+            { name: "tool2", description: "Tool 2", inputSchema: {} },
+          ],
+        })
+      );
+
+      const client = new MultiServerMCPClient({
+        server1: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+      });
+
+      const conf = client.config;
+      expect(conf.additionalToolNamePrefix).toBe("");
+      expect(conf.prefixToolNameWithServerName).toBe(false);
+
+      await client.initializeConnections();
+      const tools = await client.listTools();
+
+      // Should have 2 tools
+      expect(tools.length).toBe(2);
+      expect(tools[0].name).toBe("tool1");
+      expect(tools[1].name).toBe("tool2");
+    });
+
+    test("should get tools from a specific server", async () => {
+      mockClientsWithTools(
+        [{ name: "tool1", description: "Tool 1", inputSchema: {} }],
+        [
+          { name: "tool2", description: "Tool 2", inputSchema: {} },
+          { name: "tool3", description: "Tool 3", inputSchema: {} },
+        ]
+      );
+
+      const client = new MultiServerMCPClient({
+        server1: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+        server2: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script2.py"],
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Naming a server keeps only that server's tools.
+      const server2Tools = await client.listTools("server2");
+      expect(server2Tools.map((tool) => tool.name)).toEqual(["tool2", "tool3"]);
+
+      const server1Tools = await client.listTools("server1");
+      expect(server1Tools.map((tool) => tool.name)).toEqual(["tool1"]);
+
+      // The filtered result matches that server's group in the toolset map.
+      const toolsets = await client.listToolsets();
+      expect(toolsets.server2.map((tool) => tool.name)).toEqual([
+        "tool2",
+        "tool3",
+      ]);
+
+      // Unfiltered discovery still spans every server.
+      expect((await client.listTools()).map((tool) => tool.name)).toEqual([
+        "tool1",
+        "tool2",
+        "tool3",
+      ]);
+    });
+
+    test("should handle empty tool lists correctly", async () => {
+      mockClientsWithTools(
+        [],
+        [{ name: "tool1", description: "Tool 1", inputSchema: {} }]
+      );
+
+      const client = new MultiServerMCPClient({
+        emptyServer: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./empty.py"],
+        },
+        server1: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+      });
+
+      const toolsets = await client.initializeConnections();
+
+      // A server that advertises no tools is still connected and listed.
+      expect(Object.keys(toolsets).sort()).toEqual(["emptyServer", "server1"]);
+      expect(toolsets.emptyServer).toEqual([]);
+
+      // It contributes nothing to the flattened list, and no undefined holes.
+      const tools = await client.listTools();
+      expect(tools.map((tool) => tool.name)).toEqual(["tool1"]);
+      expect(await client.listTools("emptyServer")).toEqual([]);
+    });
+
+    test("should get client for a specific server", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      await client.initializeConnections();
+
+      const serverClient = await client.getClient("test-server");
+      expect(serverClient).toBeDefined();
+
+      // Non-existent server should return undefined
+      const nonExistentClient = await client.getClient("non-existent");
+      expect(nonExistentClient).toBeUndefined();
+    });
+  });
+
+  describe("Cleanup Handling", () => {
+    test("should close all connections properly", async () => {
+      const client = new MultiServerMCPClient({
+        "stdio-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+        "sse-server": {
+          mode: "legacy",
+          transport: "sse" as const,
+          url: "http://localhost:8000/sse",
+        },
+      });
+
+      await client.initializeConnections();
+      await client.close();
+
+      // ConnectionManager now closes the MCP clients, which close transports internally
+      expect(Client.prototype.close).toHaveBeenCalledTimes(2);
+    });
+
+    test("should handle errors during cleanup gracefully", async () => {
+      // Mock client.close to throw error for the only stdio client
+      (Client.prototype.close as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("Close failed"))
+      );
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Should reject due to one close failing
+      await expect(client.close()).rejects.toThrow(
+        /Failed to close MCP connections/
+      );
+
+      // Should have attempted to close the client
+      expect(Client.prototype.close).toHaveBeenCalled();
+    });
+
+    test("should clean up all resources even if some fail", async () => {
+      // First client.close fails, second succeeds
+      (Client.prototype.close as Mock)
+        .mockImplementationOnce(() => Promise.reject(new Error("Close failed")))
+        .mockImplementationOnce(() => Promise.resolve());
+
+      const client = new MultiServerMCPClient({
+        "stdio-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+        "sse-server": {
+          mode: "legacy",
+          transport: "sse" as const,
+          url: "http://localhost:8000/sse",
+        },
+      });
+
+      await client.initializeConnections();
+      await expect(client.close()).rejects.toThrow(
+        /Failed to close MCP connections/
+      );
+
+      // Both client.close methods should have been called
+      expect(Client.prototype.close).toHaveBeenCalledTimes(2);
+    });
+
+    test("should clear internal state after close", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      await client.initializeConnections();
+
+      await client.close();
+
+      // Internal state is private now; assert that the SDK client was closed
+      expect(Client.prototype.close).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Error Cases", () => {
+    test("should handle invalid server name when getting client", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+      const result = await client.getClient("non-existent");
+      expect(result).toBeUndefined();
+    });
+
+    test("should handle invalid server name when getting tools", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      // Get a client for a non-existent server (should be undefined)
+      const serverClient = await client.getClient("non-existent");
+      expect(serverClient).toBeUndefined();
+    });
+
+    test("should throw on transport creation errors", async () => {
+      // Force an error when creating transport
+      (StdioClientTransport as Mock).mockImplementationOnce(
+        function mockStdioTransport() {
+          throw new Error("Transport creation failed");
+        }
+      );
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+        },
+      });
+
+      await expect(
+        async () => await client.initializeConnections()
+      ).rejects.toThrow(/Transport creation failed/);
+
+      // Should have attempted to create transport
+      expect(StdioClientTransport).toHaveBeenCalled();
+
+      // Should not have created a client
+      expect(Client).not.toHaveBeenCalled();
+    });
+
+    test("should throw on streamable HTTP transport creation errors", async () => {
+      // Force an error when creating transport
+      (StreamableHTTPClientTransport as Mock).mockImplementationOnce(
+        function mockStreamableHTTPTransport() {
+          throw new Error("Streamable HTTP transport creation failed");
+        }
+      );
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "http" as const,
+          url: "http://localhost:8000/mcp",
+        },
+      });
+
+      await expect(
+        async () => await client.initializeConnections()
+      ).rejects.toThrow(/Streamable HTTP transport creation failed/);
+
+      // Should have attempted to create transport
+      expect(StreamableHTTPClientTransport).toHaveBeenCalled();
+
+      // Should not have created a client
+      expect(Client).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe("MCPAdapter configuration boundary", () => {
@@ -1462,6 +2360,38 @@ describe("protocol-specific server configuration", () => {
 
     // @ts-expect-error Protocol callbacks belong to a server, even on predeclared configs.
     expect(() => new MCPAdapter(config)).toThrow(/onMessage/);
+  });
+
+  test("rejects interrupt elicitation on SSE instead of ignoring it", () => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            // @ts-expect-error SSE negotiates legacy, which cannot answer in band.
+            remote: {
+              transport: "sse",
+              url: "https://example.com/sse",
+              elicitation: true,
+            },
+          },
+        })
+    ).toThrow(/elicitation requires modern MCP, which SSE never speaks/);
+  });
+
+  test("rejects a per-request log level on SSE instead of ignoring it", () => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            // @ts-expect-error SSE negotiates legacy, which has no per-request level.
+            remote: {
+              transport: "sse",
+              url: "https://example.com/sse",
+              logLevel: "info",
+            },
+          },
+        })
+    ).toThrow(/logLevel requires modern MCP, which SSE never speaks/);
   });
 
   test("rejects explicit modern SSE at the configuration boundary", () => {

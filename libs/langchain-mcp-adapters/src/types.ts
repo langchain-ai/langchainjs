@@ -13,7 +13,6 @@ import type {
   OAuthClientProvider,
   LoggingMessageNotificationParams,
   Progress,
-  CancelledNotificationParams,
   ResourceUpdatedNotificationParams,
 } from "@modelcontextprotocol/client";
 import type {
@@ -445,19 +444,6 @@ const notifications = z.object({
     )
     .optional(),
   /**
-   * Observes server cancellation of a request it previously issued.
-   * @param notification - Request ID and optional cancellation reason
-   * @param source - Server identity and connection-options snapshot
-   */
-  onCancelled: z
-    .custom<
-      (
-        notification: CancelledNotificationParams,
-        source: ServerMessageSource
-      ) => void | Promise<void>
-    >((value) => typeof value === "function", "Expected a callback")
-    .optional(),
-  /**
    * Called when an initialized notification is received from the server.
    * This is a notification observer, not a connection-ready callback.
    *
@@ -625,7 +611,8 @@ const modernPolicy = z
     mode: z.enum(["auto", "modern"]).optional().default("auto"),
     /** @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr. */
     logLevel: loggingLevelSchema.optional(),
-    maxElicitationRounds: z.int().positive().default(32),
+    /** Answer this server's in-band input requests with LangGraph interrupts. */
+    elicitation: z.boolean().default(false),
     onElicitation: z
       .never({
         error:
@@ -651,8 +638,11 @@ const legacyPolicy = z
         "Expected an elicitation callback"
       )
       .optional(),
-    maxElicitationRounds: z
-      .never({ error: "maxElicitationRounds requires mode: modern" })
+    elicitation: z
+      .never({
+        error:
+          "elicitation requires mode: modern; legacy servers use onElicitation",
+      })
       .optional(),
     logLevel: z
       .never({
@@ -727,6 +717,19 @@ export const sseConnectionSchema = z
     legacySse.extend(modernPolicy.shape).extend({
       mode: z.literal("auto").optional().default("auto"),
       reconnect: modernHttp.shape.reconnect,
+      // SSE only ever negotiates legacy, where these would do nothing.
+      elicitation: z
+        .never({
+          error:
+            "elicitation requires modern MCP, which SSE never speaks; use mode: legacy with onElicitation",
+        })
+        .optional(),
+      logLevel: z
+        .never({
+          error:
+            "logLevel requires modern MCP, which SSE never speaks; use setLoggingLevel",
+        })
+        .optional(),
     }),
   ])
   .transform(({ type: _type, command: _command, ...options }) => options);
@@ -752,10 +755,8 @@ const clientOptionsSchema = z
     onElicitation: z
       .never({ error: "Move onElicitation into a legacy server definition" })
       .optional(),
-    maxElicitationRounds: z
-      .never({
-        error: "Move maxElicitationRounds into a modern server definition",
-      })
+    elicitation: z
+      .never({ error: "Move elicitation into a modern server definition" })
       .optional(),
     logLevel: z
       .never({ error: "Move logLevel into a modern server definition" })
@@ -821,7 +822,6 @@ const clientOptionsSchema = z
     resourceSubscriptions: serverOnlyCallback,
     onMessage: serverOnlyCallback,
     onProgress: serverOnlyCallback,
-    onCancelled: serverOnlyCallback,
     onInitialized: serverOnlyCallback,
     onPromptsListChanged: serverOnlyCallback,
     onResourcesListChanged: serverOnlyCallback,
@@ -954,7 +954,11 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   })
   .partial()
   .extend(notifications.pick({ onProgress: true }).shape)
-  .extend({ logLevel: loggingLevelSchema.optional() });
+  .extend({
+    logLevel: loggingLevelSchema.optional(),
+    /** Answer in-band input requests with LangGraph interrupts. */
+    elicitation: z.boolean().optional(),
+  });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
 

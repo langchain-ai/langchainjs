@@ -56,14 +56,6 @@ test("check tool hooks types", () => {
               }
           >();
         },
-        onCancelled: (notification, server) => {
-          expectTypeOf(notification.reason).toEqualTypeOf<string | undefined>();
-          expectTypeOf(server).toEqualTypeOf<{
-            server: string;
-            options: ResolvedConnection;
-          }>();
-        },
-
         onInitialized: (server) => {
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
@@ -155,6 +147,30 @@ test("canonical adapter API retains typed SDK callbacks and native tools", () =>
     typeof adapter.initializeConnections
   >();
   expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
+});
+
+test("elicitation uses SDK answers and adapter-owned source context", () => {
+  new MCPAdapter({
+    servers: {
+      modern: {
+        transport: "http",
+        url: "https://example.com/mcp",
+      },
+      legacy: {
+        transport: "stdio",
+        command: "server",
+        args: [],
+        mode: "legacy",
+        onElicitation: (request, context) => {
+          expectTypeOf(context.server).toEqualTypeOf<string>();
+          expectTypeOf(context.signal).toEqualTypeOf<AbortSignal>();
+          expectTypeOf(request.message).toEqualTypeOf<string>();
+
+          return { action: "cancel" };
+        },
+      },
+    },
+  });
 });
 
 test("public transport types distinguish SSE from Streamable HTTP", () => {

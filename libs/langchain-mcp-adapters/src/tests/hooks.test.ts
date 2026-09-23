@@ -6,7 +6,12 @@ import { Server } from "node:http";
 import { join } from "node:path";
 import { ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { createAgent, FakeToolCallingModel } from "langchain";
-import { Command, GraphInterrupt, entrypoint } from "@langchain/langgraph";
+import {
+  Command,
+  GraphInterrupt,
+  entrypoint,
+  MemorySaver,
+} from "@langchain/langgraph";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
@@ -173,7 +178,6 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
               ...((args as Record<string, unknown>) ?? {}),
               input: "global-mod",
             },
-            header: { "X-Global": "1" },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
           ...params,
@@ -202,7 +206,6 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
               ...((args as Record<string, unknown>) ?? {}),
               input: "global-mod",
             },
-            header: { "X-Global": "1" },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
           ...params,
@@ -471,6 +474,17 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         messages: [{ type: "user", content: "orig" }],
       });
       expect(stateCalls).toHaveLength(2);
+
+      // The name promises runtime too. Inside a graph that means the tool
+      // call itself, which the bare-tool case above never carries.
+      expect(runtimeCalls).toHaveLength(2);
+      for (const runtime of runtimeCalls) {
+        expect(runtime as Record<string, unknown>).toMatchObject({
+          toolCallId: "1",
+          toolCall: { name: "test_tool", id: "1" },
+        });
+      }
+
       const [beforeState, afterState] = stateCalls;
       expect(beforeState.messages.length).toEqual(2);
       expect(afterState.messages.length).toEqual(2);
@@ -642,4 +656,83 @@ describe("tool hook results", () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
+});
+
+describe("negotiated tool invocation policy", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  // Elicitation is opt-in per server and modern-only, so the interrupt path
+  // engages on exactly one of these four.
+  test.each([
+    { elicitation: false, era: "legacy", durable: false },
+    { elicitation: false, era: "modern", durable: false },
+    { elicitation: true, era: "legacy", durable: false },
+    { elicitation: true, era: "modern", durable: true },
+  ] satisfies {
+    elicitation: boolean;
+    era: ReturnType<Client["getProtocolEra"]>;
+    durable: boolean;
+  }[])(
+    "$era client with elicitation=$elicitation drives interrupts: $durable",
+    async ({ elicitation, era, durable }) => {
+      const client = new Client({ name: "policy-test", version: "1" });
+      const protocol = vi.spyOn(client, "getProtocolEra").mockReturnValue(era);
+      vi.spyOn(client, "listTools").mockResolvedValue({
+        tools: [{ name: "echo", inputSchema: { type: "object" } }],
+      });
+
+      const call = vi.spyOn(client, "callTool").mockResolvedValue({
+        content: [{ type: "text", text: "done" }],
+      });
+
+      const before = vi.fn(() => ({ args: { effective: true } }));
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: before,
+        logLevel: "info",
+        elicitation,
+      });
+
+      protocol.mockClear();
+
+      if (durable) {
+        await expect(tool.invoke({})).resolves.toBe("done");
+        expect(call).toHaveBeenCalledTimes(1);
+        call.mockClear();
+        before.mockClear();
+
+        const graph = entrypoint(
+          { name: "policy-test", checkpointer: new MemorySaver() },
+          async () => tool.invoke({})
+        );
+
+        await expect(
+          graph.invoke({}, { configurable: { thread_id: "policy" } })
+        ).resolves.toBe("done");
+      } else {
+        await expect(tool.invoke({})).resolves.toBe("done");
+      }
+
+      expect(protocol).not.toHaveBeenCalled();
+      expect(before).toHaveBeenCalledTimes(1);
+      expect(call).toHaveBeenCalledTimes(1);
+      expect(call.mock.calls[0][0]).toEqual({
+        name: "echo",
+        arguments: { effective: true },
+        _meta:
+          era === "modern"
+            ? {
+                "io.modelcontextprotocol/logLevel": "info",
+                ...(durable
+                  ? {
+                      "io.modelcontextprotocol/clientCapabilities": {
+                        elicitation: { form: {}, url: {} },
+                      },
+                    }
+                  : {}),
+              }
+            : undefined,
+      });
+    }
+  );
 });

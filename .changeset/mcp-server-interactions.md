@@ -13,14 +13,7 @@ explicitly legacy servers. Requests and answers use native SDK core schemas and
 preserve Zod validation issues. Modern configurations reject callback elicitation.
 Logging levels and resource subscription filters also derive from SDK core schemas.
 
-Scope modern request logging and round limits to each modern server. Reject these options on legacy connections and at the adapter root. Keep tool catalogs current through SDK subscriptions even when no application observer is configured.
-
-Observe server cancellations without disabling them. `onCancelled` is now attached
-by composing with the SDK's own notification dispatch instead of replacing its
-`notifications/cancelled` handler, so configuring the callback no longer stops the
-SDK from aborting the request it cancels. Notifications are validated before the
-callback runs, a callback that throws or rejects cannot disturb SDK dispatch, and
-modern connections require the request id the SDK generates.
+Scope modern request logging and elicitation to each modern server. Reject these options on legacy connections and at the adapter root. Keep tool catalogs current through SDK subscriptions even when no application observer is configured.
 
 Add per-server resourceSubscriptions with modern listen and legacy subscribe routing. Reject unsupported resource subscriptions and modern reconnect configuration; modern response streams cannot be replayed. Document protocol logging, SSE, and OAuth DCR deprecations without tying authorization-server compatibility to MCP mode.
 

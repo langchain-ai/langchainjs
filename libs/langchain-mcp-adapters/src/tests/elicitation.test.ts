@@ -10,17 +10,33 @@ import { join } from "node:path";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
-import { InMemoryTransport } from "@modelcontextprotocol/client";
 import { ElicitRequestSchema } from "@modelcontextprotocol/core";
 import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
+import {
+  Annotation,
+  Command,
+  END,
+  MemorySaver,
+  START,
+  StateGraph,
+  type Interrupt,
+} from "@langchain/langgraph";
+import type {
+  CallToolResult,
+  InputRequest,
+} from "@modelcontextprotocol/client";
+
 import { describe, expect, it, vi } from "vitest";
 import {
-  CancellationObserverMCPClient,
+  callToolWithElicitation,
+  createMCPElicitationResume,
+  modernElicitationRequestSchema,
   validateElicitationAnswer,
 } from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
+import { isToolException } from "../utils/errors.js";
 
 const form = {
   message: "Approve deployment?",
@@ -32,6 +48,58 @@ const form = {
 } satisfies MCPElicitationRequest;
 
 describe("elicitation answers", () => {
+  it("projects modern form requests without legacy task metadata", () => {
+    const request = {
+      method: "elicitation/create",
+      params: { mode: "form", ...form },
+    };
+    expect(
+      modernElicitationRequestSchema.parse({
+        ...request,
+        params: {
+          ...request.params,
+          task: { ttl: 1000 },
+          _meta: { application: "example" },
+          extension: true,
+        },
+      })
+    ).toEqual(request.params);
+  });
+
+  it("projects modern URL requests without weakening legacy validation", () => {
+    const request = {
+      method: "elicitation/create",
+      params: {
+        mode: "url",
+        message: "Continue in browser",
+        url: "https://example.com/authorize",
+      },
+    };
+    expect(modernElicitationRequestSchema.parse(request)).toEqual(
+      request.params
+    );
+    expect(() => ElicitRequestSchema.parse(request)).toThrow(z.ZodError);
+    expect(
+      modernElicitationRequestSchema.parse({
+        ...request,
+        params: {
+          ...request.params,
+          elicitationId: "legacy",
+          task: { ttl: 1000 },
+          _meta: { application: "example" },
+          extension: true,
+        },
+      })
+    ).toEqual(request.params);
+    for (const invalid of [
+      { ...request, method: "tools/call" },
+      { ...request, params: { ...request.params, url: "invalid" } },
+      { ...request, params: { ...request.params, message: 42 } },
+    ])
+      expect(() => modernElicitationRequestSchema.parse(invalid)).toThrow(
+        z.ZodError
+      );
+  });
   it("retains the SDK-required legacy URL identifier", () => {
     const params = {
       mode: "url",
@@ -102,6 +170,18 @@ describe("elicitation answers", () => {
   });
 });
 
+/** Why each failing scenario is refused, and whether it reached the callback. */
+const legacyFailures: Record<string, { reason: string; asked: string[] }> = {
+  // The requested schema, not just the result envelope, rejects the answer.
+  invalid: {
+    reason: "data/confirm must be boolean",
+    asked: ["Approve legacy?"],
+  },
+  throws: { reason: "Application rejected input", asked: ["Approve legacy?"] },
+  // Refused before the question reaches an application that cannot answer it.
+  missing: { reason: "Client does not support form elicitation", asked: [] },
+};
+
 it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
   "handles legacy adapter elicitation: %s",
   async (scenario) => {
@@ -151,7 +231,13 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
         expect(await tool.invoke({})).toBe(scenario);
         expect(questions).toEqual(["Approve legacy?"]);
       } else {
-        await expect(tool.invoke({})).rejects.toThrow();
+        const { reason, asked } = legacyFailures[scenario];
+        const failure = await tool.invoke({}).catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(Error);
+        expect((failure as Error).message).toContain(reason);
+        // Whether the application was consulted at all is part of the contract.
+        expect(questions).toEqual(asked);
       }
     } finally {
       await adapter.close();
@@ -206,10 +292,8 @@ it("answers legacy reverse requests using the same callback contract", async () 
   }
 });
 
-it.each([false, true])(
-  "keeps SDK cancellation active while observing it: %s",
-  async (observeCancellation) => {
-    const cancelled = vi.fn();
+it("aborts an in-flight elicitation when the server cancels it", async () => {
+  {
     let resolveElicitationStarted: () => void = () => {};
     const elicitationStarted = new Promise<void>((resolve) => {
       resolveElicitationStarted = resolve;
@@ -231,7 +315,6 @@ it.each([false, true])(
             "--elicitation",
             "--cancel-elicitation",
           ],
-          ...(observeCancellation ? { onCancelled: cancelled } : {}),
           onElicitation: async (_, { signal }) => {
             elicitationSignal = signal;
             resolveElicitationStarted();
@@ -259,142 +342,9 @@ it.each([false, true])(
       await expect(invocation).resolves.toEqual(
         expect.objectContaining({ status: "rejected" })
       );
-      if (observeCancellation)
-        expect(cancelled).toHaveBeenCalledWith(
-          expect.objectContaining({
-            requestId: 1,
-            reason: "cancel elicitation",
-          }),
-          expect.objectContaining({ server: "legacy" })
-        );
     } finally {
       await adapter.close();
     }
-  }
-);
-
-it.each(["auto", "modern"] as const)(
-  "observes validated cancellation notifications in %s mode",
-  async (mode) => {
-    const cancelled = vi.fn();
-    const handler = createMcpHandler(
-      () => {
-        const server = new McpServer({ name: "cancelled", version: "1" });
-        server.registerTool(
-          "notify",
-          { inputSchema: z.object({}) },
-          async (_, context) => {
-            await context.mcpReq.notify({
-              method: "notifications/cancelled",
-              params: { requestId: "valid", reason: "server cancelled" },
-            });
-
-            return { content: [{ type: "text", text: "done" }] };
-          }
-        );
-
-        return server;
-      },
-      { legacy: "reject" }
-    );
-    const http = createServer(toNodeHandler(handler));
-    http.listen(0, "127.0.0.1");
-    await once(http, "listening");
-    const { port } = z.object({ port: z.number() }).parse(http.address());
-    const adapter = new MCPAdapter({
-      servers: {
-        cancelled: {
-          mode,
-          url: `http://127.0.0.1:${port}/mcp`,
-          onCancelled: cancelled,
-        },
-      },
-    });
-
-    try {
-      const [tool] = await adapter.listTools();
-      expect(await tool.invoke({})).toBe("done");
-      await vi.waitFor(() => expect(cancelled).toHaveBeenCalledTimes(1));
-      expect(cancelled).toHaveBeenCalledWith(
-        { requestId: "valid", reason: "server cancelled" },
-        expect.objectContaining({ server: "cancelled" })
-      );
-    } finally {
-      await adapter.close();
-      await handler.close();
-      const closed = once(http, "close");
-      http.close();
-      http.closeAllConnections();
-      await closed;
-    }
-  }
-);
-
-it("ignores malformed cancellation observer input", async () => {
-  const cancelled = vi.fn();
-  const errors = vi.fn();
-  const server = new McpServer({ name: "malformed-peer", version: "1" });
-  const client = new CancellationObserverMCPClient(
-    { name: "consumer", version: "1" },
-    { versionNegotiation: { mode: "legacy" } },
-    cancelled
-  );
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-  client.onerror = errors;
-
-  try {
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
-    await serverTransport.send({
-      jsonrpc: "2.0",
-      method: "notifications/cancelled",
-      params: { requestId: {} },
-    });
-    await vi.waitFor(() => expect(errors).toHaveBeenCalledTimes(1));
-    expect(cancelled).not.toHaveBeenCalled();
-  } finally {
-    await client.close();
-    await server.close();
-  }
-});
-
-it.each([
-  () => {
-    throw new Error("observer failure");
-  },
-  () => Promise.reject(new Error("observer rejection")),
-])("isolates cancellation observer failure", async (onCancelled) => {
-  const observer = vi.fn(onCancelled);
-  const errors = vi.fn();
-  const server = new McpServer({ name: "observer-peer", version: "1" });
-  const client = new CancellationObserverMCPClient(
-    { name: "consumer", version: "1" },
-    { versionNegotiation: { mode: "legacy" } },
-    observer
-  );
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-  client.onerror = errors;
-
-  try {
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
-    await serverTransport.send({
-      jsonrpc: "2.0",
-      method: "notifications/cancelled",
-      params: { requestId: 1 },
-    });
-    await vi.waitFor(() => expect(observer).toHaveBeenCalledTimes(1));
-    await expect(client.ping()).resolves.toEqual({});
-    expect(errors).not.toHaveBeenCalled();
-  } finally {
-    await client.close();
-    await server.close();
   }
 });
 
@@ -409,6 +359,7 @@ it.each([true, false])(
     const notification = new Promise<void>((resolve) => {
       changed = resolve;
     });
+    const observer = vi.fn(() => changed());
 
     const handler = createMcpHandler(
       () => {
@@ -454,7 +405,7 @@ it.each([true, false])(
           onMessage: (message) => {
             logs.push(message.data);
           },
-          onToolsListChanged: externalObserver ? changed : undefined,
+          onToolsListChanged: externalObserver ? observer : undefined,
         },
       },
     });
@@ -476,6 +427,8 @@ it.each([true, false])(
       await vi.waitFor(async () =>
         expect((await adapter.listTools())[0].name).toContain("second")
       );
+      // The catalog refreshes either way; only a configured observer is told.
+      expect(observer).toHaveBeenCalledTimes(externalObserver ? 1 : 0);
       toolName = "third";
       expect(
         (await adapter.listTools([], { cacheMode: "bypass" }))[0].name
@@ -534,7 +487,7 @@ describe("elicitation and logging configuration", () => {
           mode: "legacy",
           command: "node",
           args: [],
-          maxElicitationRounds: 2,
+          elicitation: true,
         },
       },
     },
@@ -549,7 +502,7 @@ describe("elicitation and logging configuration", () => {
     },
     {
       servers: { modern: { command: "node", args: [] } },
-      maxElicitationRounds: 2,
+      elicitation: true,
     },
     { servers: { modern: { command: "node", args: [] } }, logLevel: "info" },
   ])("rejects unsupported server policy with Zod errors: %j", (input) => {
@@ -611,7 +564,10 @@ it.each([true, false])(
       await handler.notify.resourceUpdated("test://ignored");
       await handler.notify.resourceUpdated("test://watched");
       await vi.waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
-      expect(updated.mock.calls[0][0]).toMatchObject({ uri: "test://watched" });
+      expect(updated.mock.calls[0][0]).toMatchObject({
+        uri: "test://watched",
+        _meta: { "io.modelcontextprotocol/subscriptionId": expect.any(String) },
+      });
       await adapter.close();
       await handler.notify.resourceUpdated("test://watched");
       expect(updated).toHaveBeenCalledTimes(1);
@@ -654,7 +610,7 @@ it("rejects modern reconnect settings and invalid resource subscriptions", () =>
   ).toBe("legacy");
 });
 
-it("routes legacy resource subscriptions through resources/subscribe", async () => {
+it("auto-detects legacy subscriptions without advertising callback elicitation", async () => {
   const subscribed: string[] = [];
   const updated = vi.fn();
 
@@ -691,9 +647,7 @@ it("routes legacy resource subscriptions through resources/subscribe", async () 
   const adapter = new MCPAdapter({
     servers: {
       resources: {
-        mode: "legacy",
         url: `http://127.0.0.1:${port}/mcp`,
-        automaticSSEFallback: false,
         resourceSubscriptions: ["test://watched"],
         onResourcesUpdated: updated,
       },
@@ -703,6 +657,7 @@ it("routes legacy resource subscriptions through resources/subscribe", async () 
   try {
     await adapter.listResources();
     expect(subscribed).toEqual(["test://watched"]);
+    expect(server.getClientCapabilities()).not.toHaveProperty("elicitation");
   } finally {
     await adapter.close();
     await server.close();
@@ -752,7 +707,9 @@ it("does not replay a modern tool whose response stream is lost", async () => {
 
   try {
     const [tool] = await adapter.listTools();
-    await expect(tool.invoke({})).rejects.toThrow();
+    await expect(tool.invoke({})).rejects.toThrow(
+      /Error calling tool disconnect/
+    );
     expect(executions).toBe(1);
   } finally {
     await adapter.close();
@@ -760,4 +717,123 @@ it("does not replay a modern tool whose response stream is lost", async () => {
     http.closeAllConnections();
     await once(http, "close");
   }
+});
+
+/** One form question, as a server would put it on the wire. */
+function elicitQuestion(message: string): InputRequest {
+  return {
+    method: "elicitation/create" as const,
+    params: {
+      mode: "form" as const,
+      message,
+      requestedSchema: {
+        type: "object" as const,
+        properties: { confirm: { type: "boolean" }, note: { type: "string" } },
+        required: ["confirm"],
+      },
+    },
+  };
+}
+
+const interruptsIn = (snapshot: {
+  tasks: readonly { interrupts?: readonly Interrupt<unknown>[] }[];
+}) => snapshot.tasks.flatMap((task) => [...(task.interrupts ?? [])]);
+
+describe("resuming an elicitation", () => {
+  const accepted = { action: "accept" as const, content: { confirm: true } };
+
+  /** One question, then completion once it is answered. */
+  async function askOnce() {
+    const served: unknown[] = [];
+    const State = Annotation.Root({ done: Annotation<boolean>() });
+
+    const graph = new StateGraph(State)
+      .addNode("call", async () => {
+        await callToolWithElicitation(
+          async (params) => {
+            served.push(params.inputResponses);
+            if (params.inputResponses)
+              return {
+                content: [{ type: "text", text: "done" }],
+              } as CallToolResult;
+            return {
+              resultType: "input_required" as const,
+              requestState: "opaque",
+              inputRequests: { confirmation: elicitQuestion("approve $10") },
+            };
+          },
+          { name: "approve", arguments: { label: "operation" } },
+          "modern",
+          "approve"
+        );
+        return { done: true };
+      })
+      .addEdge(START, "call")
+      .addEdge("call", END)
+      .compile({ checkpointer: new MemorySaver() });
+
+    const config = {
+      configurable: { thread_id: `resume-${served.length}-${Math.random()}` },
+    };
+    await graph.invoke({ done: false }, config);
+    const [raised] = interruptsIn(await graph.getState(config));
+    return { graph, config, raised, served };
+  }
+
+  it("accepts an answer built by createMCPElicitationResume", async () => {
+    const { graph, config, raised, served } = await askOnce();
+
+    await expect(
+      graph.invoke(
+        new Command({
+          resume: createMCPElicitationResume(raised, {
+            confirmation: accepted,
+          }),
+        }),
+        config
+      )
+    ).resolves.toMatchObject({ done: true });
+
+    expect(served.filter(Boolean)).toHaveLength(1);
+  });
+
+  // Each is a resume the parse must refuse, and none may reach the server.
+  it.each([
+    { name: "no answers at all", body: { responses: {} } },
+    {
+      name: "an answer under the wrong key",
+      body: { responses: { wrong: accepted } },
+    },
+    {
+      name: "an unexpected extra answer",
+      body: { responses: { confirmation: accepted, extra: accepted } },
+    },
+    {
+      name: "an action the protocol does not define",
+      body: { responses: { confirmation: { action: "sideways" } } },
+    },
+    {
+      name: "content that does not fit the requested schema",
+      body: {
+        responses: {
+          confirmation: { action: "accept", content: { confirm: "yes" } },
+        },
+      },
+    },
+    {
+      name: "responses that are not wrapped",
+      body: { confirmation: accepted },
+    },
+    { name: "null", body: null },
+    { name: "a string", body: "not an answer" },
+  ])("refuses $name", async ({ body }) => {
+    const { graph, config, raised, served } = await askOnce();
+
+    await expect(
+      graph.invoke(new Command({ resume: { [raised.id!]: body } }), config)
+    ).rejects.toSatisfy(isToolException);
+
+    // A refused resume never reaches the server carrying an answer.
+    expect(served.filter(Boolean)).toEqual([]);
+  });
 });

@@ -1,7 +1,13 @@
+import {
+  callToolWithElicitation,
+  type ElicitationRoundParams,
+} from "./elicitation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
 import {
+  CLIENT_CAPABILITIES_META_KEY,
   fromJsonSchema,
+  isInputRequiredResult,
   LOG_LEVEL_META_KEY,
 } from "@modelcontextprotocol/client";
 import { JSONObjectSchema } from "@modelcontextprotocol/core";
@@ -16,6 +22,7 @@ import type {
   CallToolRequestOptions,
   CallToolResult,
   ContentBlock as MCPContentBlock,
+  InputRequiredResult,
   Client as MCPClient,
   Tool as MCPTool,
   RequestOptions,
@@ -335,54 +342,102 @@ type ContentBlocksWithArtifacts = [
 
 type ToolInputSchema = z.ZodTransform<ToolArguments, ToolArguments>;
 
+type ToolRound = (
+  params: ElicitationRoundParams,
+  options: CallToolRequestOptions
+) => Promise<CallToolResult | InputRequiredResult>;
+
 interface ToolInvocation {
-  execute(
-    request: CallToolRequest["params"],
-    options: CallToolRequestOptions,
-    headers: ToolCallModification["headers"]
-  ): Promise<CallToolResult>;
+  /** True when this tool answers requested input with graph interrupts. */
+  readonly elicitation: boolean;
+  /** Parses the terminal result when the rounds were not given the schema. */
+  readonly output?: z.ZodType<unknown>;
+  /** Resolve the client this execution's rounds are sent through. */
+  bind(headers: ToolCallModification["headers"]): Promise<ToolRound>;
 }
 
-function createToolInvocationFactory(
+/** Graph task state for this invocation; `{}` for a direct tool call. */
+function graphTaskState(config?: RunnableConfig): unknown {
+  try {
+    return getCurrentTaskInput(config);
+  } catch {
+    return {};
+  }
+}
+
+function createToolInvocation(
   client: MCPInstance,
   serverName: string,
   descriptor: MCPTool,
-  logLevel?: LoggingLevel
-): () => ToolInvocation {
+  logLevel?: LoggingLevel,
+  elicitation = false
+): ToolInvocation {
   const modern = client.getProtocolEra() === "modern";
+  // Legacy servers answer elicitation through `onElicitation`, never in band.
+  const inBand = modern && elicitation;
 
-  function executor(connectedClient: MCPInstance, modernProtocol: boolean) {
-    const metadata =
-      logLevel !== undefined && modernProtocol
-        ? { [LOG_LEVEL_META_KEY]: logLevel }
-        : undefined;
+  // An `input_required` round carries no structured content, which the SDK's
+  // output validator rejects before the caller can see the question. Withhold
+  // the schema from the rounds and validate the terminal result here instead.
+  const { outputSchema, ...withoutOutputSchema } = descriptor;
+  const roundDefinition =
+    inBand && outputSchema ? withoutOutputSchema : descriptor;
 
-    return (
-      request: CallToolRequest["params"],
-      options: CallToolRequestOptions
-    ) => {
-      const params = { ...request, _meta: metadata };
+  // Advertised per request rather than as a declared capability: declared
+  // capabilities are sent during initialization, before negotiation settles
+  // the era, so an `auto` connection landing on legacy would advertise
+  // elicitation to a server that must not see it. A user-supplied `_meta` key
+  // takes precedence over the SDK's auto-attached envelope.
+  const metadata = {
+    ...(logLevel !== undefined && modern
+      ? { [LOG_LEVEL_META_KEY]: logLevel }
+      : {}),
+    ...(inBand
+      ? {
+          [CLIENT_CAPABILITIES_META_KEY]: {
+            elicitation: { form: {}, url: {} },
+          },
+        }
+      : {}),
+  };
+  const _meta = Object.keys(metadata).length > 0 ? metadata : undefined;
 
-      return connectedClient.callTool(params, {
-        ...options,
-        toolDefinition: descriptor,
-      });
-    };
-  }
+  /**
+   * Bind the wire call to a client.
+   *
+   * Only the client varies: a forked connection must serve the era tools were
+   * discovered under, which `selectHeaderPolicy` enforces before calling here.
+   */
+  const executor =
+    (connectedClient: MCPInstance): ToolRound =>
+    (request, options) =>
+      // `callTool` deliberately does not widen its return type for
+      // `allowInputRequired`; `isInputRequiredResult` does the narrowing.
+      connectedClient.callTool(
+        { ...request, _meta },
+        {
+          ...options,
+          toolDefinition: roundDefinition,
+          ...(inBand ? { allowInputRequired: true } : {}),
+        }
+      ) as Promise<CallToolResult | InputRequiredResult>;
 
-  const direct = executor(client, modern);
+  const unbound = executor(client);
 
+  /** Header-bound clients remain runtime resources, never checkpointed state. */
   function selectHeaderPolicy() {
     if ("fork" in client && typeof client.fork === "function") {
       const fork = client.fork.bind(client);
 
       return async (headers: NonNullable<ToolCallModification["headers"]>) => {
         const connectedClient = await fork(headers);
+        const connectedModern = connectedClient.getProtocolEra() === "modern";
+        if (connectedModern !== modern)
+          throw new ToolException(
+            `MCP connection for server "${serverName}" changed protocol era after tool discovery.`
+          );
 
-        return executor(
-          connectedClient,
-          connectedClient.getProtocolEra() === "modern"
-        );
+        return executor(connectedClient);
       };
     }
 
@@ -393,36 +448,39 @@ function createToolInvocationFactory(
     };
   }
 
-  return () => {
-    let executeRound = direct;
+  const headerPolicy = selectHeaderPolicy();
 
-    const execute = async (
-      request: CallToolRequest["params"],
-      options: CallToolRequestOptions,
-      headers: ToolCallModification["headers"]
-    ) => {
-      if (headers && Object.keys(headers).length > 0) {
-        executeRound = await selectHeaderPolicy()(headers);
-      }
+  return {
+    elicitation: inBand,
+    // Compiled once per tool, not per call.
+    output:
+      inBand && outputSchema
+        ? z.object({
+            structuredContent: jsonSchemaParser(
+              JSONObjectSchema.parse(outputSchema)
+            ),
+          })
+        : undefined,
+    async bind(headers: ToolCallModification["headers"]) {
+      if (headers && Object.keys(headers).length > 0)
+        return headerPolicy(headers);
 
-      return executeRound(request, options);
-    };
-
-    return { execute };
+      return unbound;
+    },
   };
 }
 
 /** Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary. */
-function createToolInputSchema(
+function jsonSchemaParser<T>(
   jsonSchema: z.output<typeof JSONObjectSchema>
-): ToolInputSchema {
+): z.ZodTransform<T, T> {
   // Scope the SDK engine to this descriptor: its shared cache keys by $id.
-  const validator = fromJsonSchema<ToolArguments>(
+  const validator = fromJsonSchema<T>(
     jsonSchema,
     new DefaultJsonSchemaValidator()
   );
 
-  return z.transform(async (input: ToolArguments, ctx) => {
+  return z.transform(async (input: T, ctx) => {
     const result = await validator["~standard"].validate(input);
 
     if (result.issues) {
@@ -449,15 +507,18 @@ function createToolInputSchema(
 }
 
 /** Parse hook output and effective arguments before choosing a wire request. */
-async function prepareToolCall({
-  serverName,
-  toolName,
-  args,
-  config,
-  onProgress,
-  beforeToolCall,
-  inputSchema,
-}: CallToolArgs) {
+async function prepareToolCall(
+  {
+    serverName,
+    toolName,
+    args,
+    config,
+    onProgress,
+    beforeToolCall,
+    inputSchema,
+  }: CallToolArgs,
+  state: unknown
+) {
   // Extract timeout from RunnableConfig and pass to MCP SDK
   // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
   // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
@@ -484,14 +545,6 @@ async function prepareToolCall({
         )
         .catch(() => {});
     };
-  }
-
-  let state: unknown = {};
-
-  try {
-    state = getCurrentTaskInput(config);
-  } catch {
-    // Direct tool calls have no LangGraph task state.
   }
 
   const beforeToolCallInterception = toolCallModificationSchema
@@ -521,13 +574,13 @@ async function prepareToolCall({
   }
 
   const finalArgs = parsed.data;
-  const request = {
+  const initialRequest = {
     name: toolName,
     arguments: finalArgs,
   } satisfies CallToolRequest["params"];
 
   return {
-    request,
+    request: initialRequest,
     requestOptions,
     headers: beforeToolCallInterception?.headers,
     args: finalArgs,
@@ -549,13 +602,35 @@ async function _callTool(
   } = call;
 
   try {
-    const prepared = await prepareToolCall(call);
+    const prepared = await prepareToolCall(call, graphTaskState(config));
+    const execute = await invocation.bind(prepared.headers);
+    const round = (params: ElicitationRoundParams) =>
+      execute(params, prepared.requestOptions);
 
-    const result = await invocation.execute(
-      prepared.request,
-      prepared.requestOptions,
-      prepared.headers
-    );
+    const result = invocation.elicitation
+      ? await callToolWithElicitation(
+          round,
+          prepared.request,
+          serverName,
+          toolName,
+          config?.signal
+        )
+      : await round(prepared.request);
+
+    // The SDK refuses `input_required` unless asked to allow it, but a client
+    // passed to `loadMcpTools` need not be the SDK's, so narrow rather than cast.
+    if (isInputRequiredResult(result))
+      throw new ToolException(
+        `MCP tool "${toolName}" on server "${serverName}" asked for input, which only a modern server with elicitation enabled can answer`
+      );
+
+    if (invocation.output && !result.isError) {
+      const parsed = await invocation.output.safeParseAsync(result);
+      if (!parsed.success)
+        throw new ToolException(
+          `MCP tool "${toolName}" on server "${serverName}" returned output its schema rejects: ${z.prettifyError(parsed.error)}`
+        );
+    }
 
     const { args: finalArgs, state } = prepared;
 
@@ -659,13 +734,14 @@ export async function convertMcpTools(
           try {
             const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
-            const inputSchema = createToolInputSchema(originalSchema);
+            const inputSchema = jsonSchemaParser<ToolArguments>(originalSchema);
 
-            const createInvocation = createToolInvocationFactory(
+            const invocation = createToolInvocation(
               client,
               serverName,
               tool,
-              options?.logLevel
+              options?.logLevel,
+              options?.elicitation
             );
 
             return new DynamicStructuredTool({
@@ -682,8 +758,6 @@ export async function convertMcpTools(
                 _runManager?: CallbackManagerForToolRun,
                 config?: RunnableConfig
               ) => {
-                const invocation = createInvocation();
-
                 return _callTool({
                   invocation,
                   serverName,
