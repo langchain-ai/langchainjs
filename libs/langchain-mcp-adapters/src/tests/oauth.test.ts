@@ -6,7 +6,7 @@ import {
   UnauthorizedError,
   type MCPAdapterConfig,
 } from "../index.js";
-import { getHttpErrorCode } from "../utils/errors.js";
+import { getHttpErrorCode, isAuthenticationError } from "../utils/errors.js";
 import {
   startOAuthFixture,
   type OAuthFixture,
@@ -234,5 +234,86 @@ describe("auth failure labeling", () => {
     expect(error.message).not.toMatch(/^Authentication failed/);
     expect(error.cause).toBeInstanceOf(Error);
     expect((error.cause as Error).message).toBe("vault unavailable");
+  });
+});
+
+describe("auth failures stay retryable", () => {
+  function tokenAdapter(
+    server: OAuthFixture,
+    token: () => string,
+    onConnectionError:
+      | "ignore"
+      | ((params: { serverName: string; error: unknown }) => void)
+  ) {
+    return adapter({
+      onConnectionError,
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: { token: async () => token() },
+        },
+      },
+    });
+  }
+
+  it("retries an auth-failed server under onConnectionError: ignore", async () => {
+    const server = await fixture();
+    let token = "not-yet-valid";
+    const mcp = tokenAdapter(server, () => token, "ignore");
+
+    expect(await mcp.listTools()).toEqual([]);
+    token = server.mintAccessToken();
+    expect(hasWhoami(await mcp.listTools())).toBe(true);
+  });
+
+  it("reports each auth failure to the handler and retries", async () => {
+    const server = await fixture();
+    let token = "not-yet-valid";
+    const onConnectionError = vi.fn();
+    const mcp = tokenAdapter(server, () => token, onConnectionError);
+
+    expect(await mcp.listTools()).toEqual([]);
+    expect(onConnectionError).toHaveBeenCalledTimes(1);
+    expect(
+      isAuthenticationError(onConnectionError.mock.calls[0][0].error)
+    ).toBe(true);
+
+    token = server.mintAccessToken();
+    expect(hasWhoami(await mcp.listTools())).toBe(true);
+    expect(onConnectionError).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an unreachable server blocked", async () => {
+    const onConnectionError = vi.fn();
+    const mcp = adapter({
+      onConnectionError,
+      servers: { down: { transport: "http", url: "http://127.0.0.1:1/mcp" } },
+    });
+    await mcp.listTools();
+    await mcp.listTools();
+    expect(onConnectionError).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a throwing token provider blocked", async () => {
+    const server = await fixture();
+    const onConnectionError = vi.fn();
+    const mcp = adapter({
+      onConnectionError,
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: {
+            token: async () => {
+              throw new Error("vault unavailable");
+            },
+          },
+        },
+      },
+    });
+    await mcp.listTools();
+    await mcp.listTools();
+    expect(onConnectionError).toHaveBeenCalledTimes(1);
   });
 });
