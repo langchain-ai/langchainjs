@@ -2529,6 +2529,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
     });
 
     it("propagates tool and advertised server metadata from a live MCP session", async () => {
+      const annotations = {
+        destructiveHint: true,
+        readOnlyHint: false,
+      };
+      const _meta = { origin: "crm" };
       const server = new McpServer({
         name: "crm",
         version: "2.1.0",
@@ -2540,11 +2545,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
         "lookup_customer",
         {
           inputSchema: z.object({ customerId: z.string() }),
-          annotations: {
-            destructiveHint: true,
-            readOnlyHint: false,
-          },
-          _meta: { origin: "crm" },
+          annotations,
+          _meta,
         },
         async ({ customerId }) => ({
           content: [{ type: "text", text: customerId }],
@@ -2561,18 +2563,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const [tool] = await loadMcpTools("configured-alias", client);
 
         expect(tool.metadata as MCPToolMetadata).toEqual({
-          annotations: {
-            destructiveHint: true,
-            readOnlyHint: false,
-          },
+          annotations,
           mcp: {
-            tool: {
-              annotations: {
-                destructiveHint: true,
-                readOnlyHint: false,
-              },
-              _meta: { origin: "crm" },
-            },
+            tool: { annotations, _meta },
             server: {
               name: "crm",
               version: "2.1.0",

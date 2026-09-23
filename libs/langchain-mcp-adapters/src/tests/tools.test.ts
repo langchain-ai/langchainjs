@@ -83,29 +83,19 @@ describe("Simplified Tool Adapter Tests", () => {
       })),
     });
 
-    const tools = await loadMcpTools("configured-alias", mockClient);
-    const [first, second] = tools.map(
-      (tool) => tool.metadata as MCPToolMetadata
-    );
+    const [first, second] = (
+      await loadMcpTools("configured-alias", mockClient)
+    ).map((tool) => tool.metadata as MCPToolMetadata);
 
-    first.mcp.tool.annotations!.readOnlyHint = false;
-    (first.mcp.tool._meta as { origin: string }).origin = "changed";
-    first.mcp.server!.name = "changed";
-    first.mcp.server!.icons![0].src = "https://changed.example.com/icon.png";
-
-    expect(second.mcp).toEqual({
-      tool: { annotations, _meta },
-      server,
-    });
-    expect({ annotations, _meta, server }).toEqual({
-      annotations: { readOnlyHint: true },
-      _meta: { origin: "crm" },
-      server: {
-        name: "crm",
-        version: "2.1.0",
-        icons: [{ src: "https://crm.example.com/icon.png" }],
-      },
-    });
+    expect(first.mcp).toEqual(second.mcp);
+    expect(first.mcp.tool.annotations).not.toBe(annotations);
+    expect(first.mcp.tool.annotations).not.toBe(second.mcp.tool.annotations);
+    expect(first.mcp.tool._meta).not.toBe(_meta);
+    expect(first.mcp.tool._meta).not.toBe(second.mcp.tool._meta);
+    expect(first.mcp.server).not.toBe(server);
+    expect(first.mcp.server?.icons).not.toBe(server.icons);
+    expect(first.mcp.server).not.toBe(second.mcp.server);
+    expect(first.mcp.server?.icons).not.toBe(second.mcp.server?.icons);
   });
 
   test("ignores unavailable server identity", async () => {

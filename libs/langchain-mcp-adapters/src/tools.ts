@@ -464,7 +464,7 @@ async function _callTool(
 
 function getServerProvenance(
   client: MCPInstance
-): MCPServerProvenance | undefined {
+): MCPServerImplementation | undefined {
   try {
     return client.getServerVersion?.();
   } catch {
@@ -475,7 +475,7 @@ function getServerProvenance(
 
 function buildToolMetadata(
   tool: MCPTool,
-  server: MCPServerProvenance | undefined
+  server: MCPServerImplementation | undefined
 ): MCPToolMetadata {
   const mcpTool = {
     ...(tool.annotations !== undefined
