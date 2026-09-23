@@ -56,16 +56,13 @@ type ToolArguments = NonNullable<CallToolRequest["params"]["arguments"]>;
 type MCPServerImplementation = NonNullable<
   ReturnType<MCPClient["getServerVersion"]>
 >;
-type MCPServerProvenance = Partial<
-  Pick<MCPServerImplementation, "name" | "version">
->;
 
 /**
  * Metadata attached to a LangChain tool adapted from an MCP tool.
  *
  * This is the adapter's metadata contract, not a copy of the complete MCP
  * `Tool` descriptor. It preserves the descriptor's `annotations` and `_meta`
- * plus the connected server implementation's `name` and `version`.
+ * plus the connected server's advertised implementation information.
  */
 export interface MCPToolMetadata {
   [key: string]: unknown;
@@ -74,7 +71,7 @@ export interface MCPToolMetadata {
   /** MCP descriptor metadata and advertised server identity. */
   mcp: {
     tool: Pick<MCPTool, "annotations" | "_meta">;
-    server?: MCPServerProvenance;
+    server?: MCPServerImplementation;
   };
 }
 
@@ -469,19 +466,7 @@ function getServerProvenance(
   client: MCPInstance
 ): MCPServerProvenance | undefined {
   try {
-    const implementation = client.getServerVersion?.();
-    if (!implementation) return undefined;
-
-    const server = {
-      ...(implementation.name !== undefined
-        ? { name: implementation.name }
-        : {}),
-      ...(implementation.version !== undefined
-        ? { version: implementation.version }
-        : {}),
-    };
-
-    return Object.keys(server).length > 0 ? server : undefined;
+    return client.getServerVersion?.();
   } catch {
     // Server identity is optional provenance and must not break tool discovery.
     return undefined;
@@ -507,7 +492,9 @@ function buildToolMetadata(
       : {}),
     mcp: {
       tool: mcpTool,
-      ...(server !== undefined ? { server: { ...server } } : {}),
+      ...(server !== undefined
+        ? { server: structuredClone({ ...server }) }
+        : {}),
     },
   };
 }

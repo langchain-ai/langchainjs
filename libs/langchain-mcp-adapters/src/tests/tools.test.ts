@@ -68,7 +68,11 @@ describe("Simplified Tool Adapter Tests", () => {
   test("copies provenance for each adapted tool", async () => {
     const annotations = { readOnlyHint: true };
     const _meta = { origin: "crm" };
-    const server = { name: "crm", version: "2.1.0" };
+    const server = {
+      name: "crm",
+      version: "2.1.0",
+      icons: [{ src: "https://crm.example.com/icon.png" }],
+    };
     mockClient.getServerVersion.mockReturnValue(server);
     mockClient.listTools.mockResolvedValue({
       tools: ["first", "second"].map((name) => ({
@@ -87,6 +91,7 @@ describe("Simplified Tool Adapter Tests", () => {
     first.mcp.tool.annotations!.readOnlyHint = false;
     (first.mcp.tool._meta as { origin: string }).origin = "changed";
     first.mcp.server!.name = "changed";
+    first.mcp.server!.icons![0].src = "https://changed.example.com/icon.png";
 
     expect(second.mcp).toEqual({
       tool: { annotations, _meta },
@@ -95,7 +100,11 @@ describe("Simplified Tool Adapter Tests", () => {
     expect({ annotations, _meta, server }).toEqual({
       annotations: { readOnlyHint: true },
       _meta: { origin: "crm" },
-      server: { name: "crm", version: "2.1.0" },
+      server: {
+        name: "crm",
+        version: "2.1.0",
+        icons: [{ src: "https://crm.example.com/icon.png" }],
+      },
     });
   });
 

@@ -2529,7 +2529,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
     });
 
     it("propagates tool and advertised server metadata from a live MCP session", async () => {
-      const server = new McpServer({ name: "crm", version: "2.1.0" });
+      const server = new McpServer({
+        name: "crm",
+        version: "2.1.0",
+        title: "CRM Server",
+        description: "Customer relationship management tools",
+        websiteUrl: "https://crm.example.com",
+      });
       server.registerTool(
         "lookup_customer",
         {
@@ -2567,7 +2573,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
               },
               _meta: { origin: "crm" },
             },
-            server: { name: "crm", version: "2.1.0" },
+            server: {
+              name: "crm",
+              version: "2.1.0",
+              title: "CRM Server",
+              description: "Customer relationship management tools",
+              websiteUrl: "https://crm.example.com",
+            },
           },
         });
       } finally {
