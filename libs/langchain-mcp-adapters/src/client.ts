@@ -16,7 +16,8 @@ import type {
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertMcpTools } from "./tools.js";
-import { ConnectionManager, mergeHeaders, type Client } from "./connection.js";
+import { ConnectionManager, type Client } from "./connection.js";
+import { mergeHeaders } from "./utils/misc.js";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
@@ -36,7 +37,7 @@ import {
   type ToolDiscoveryOptions,
   adapterConfigSchema,
   loggingLevelSchema,
-  sseConnectionSchema,
+  SSEConnectionSchema,
   customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
@@ -793,7 +794,7 @@ export class MCPAdapter {
           try {
             await this._initializeSSEConnection(
               serverName,
-              sseConnectionSchema.parse({ ...fallback, transport: "sse" })
+              SSEConnectionSchema.parse({ ...fallback, transport: "sse" })
             );
           } catch (firstSSEError) {
             // try one more time, but modify the URL to end with `/sse`
@@ -803,7 +804,7 @@ export class MCPAdapter {
               try {
                 await this._initializeSSEConnection(
                   serverName,
-                  sseConnectionSchema.parse({
+                  SSEConnectionSchema.parse({
                     ...fallback,
                     transport: "sse",
                     url: sseUrl,

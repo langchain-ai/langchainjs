@@ -8,23 +8,18 @@ import {
   Client as MCPClient,
 } from "@modelcontextprotocol/client";
 import type {
+  ClientOptions,
   OAuthClientProvider,
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
-import { connectionSchema, sdkHeaderCase } from "./types.js";
+import { ConnectionSchema } from "./types.js";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedSSEConnection,
   ResolvedStdioConnection,
-  ResolvedConnection,
 } from "./types.js";
-
-/**
- * TSDown automatically creates a JS file that allows us to consume the package.json file
- * within ESM and CJS modules.
- */
-import packageJson from "../package.json" with { type: "json" };
+import { iife, mergeHeaders, serializeHeaders } from "./utils/misc.js";
 
 export interface Client extends MCPClient {
   /**
@@ -59,28 +54,6 @@ export interface Connection {
 }
 
 const transportTypes = ["http", "sse", "stdio"] as const;
-
-/** Resolve only the SDK features supported by the parsed server mode. */
-function protocolClientOptions(
-  options: ResolvedConnection
-): ConstructorParameters<typeof MCPClient>[1] {
-  if (options.mode === "legacy" || options.transport === "sse") {
-    if (options.onElicitation) {
-      return {
-        versionNegotiation: { mode: "legacy" },
-        capabilities: { elicitation: { form: {}, url: {} } },
-      };
-    }
-
-    return { versionNegotiation: { mode: "legacy" } };
-  }
-
-  return {
-    versionNegotiation: {
-      mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
-    },
-  };
-}
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -188,8 +161,28 @@ export class ConnectionManager {
           ? await this.#createSSETransport(options)
           : await this.#createStdioTransport(options);
 
-    const identity = { name: packageJson.name, version: packageJson.version };
-    const clientOptions = protocolClientOptions(options);
+    const identity = {
+      name: "@langchain/mcp-adapters",
+      version: __PKG_VERSION__,
+    };
+    const clientOptions = iife<ClientOptions>(() => {
+      if (options.mode === "legacy" || options.transport === "sse") {
+        if (options.onElicitation) {
+          return {
+            versionNegotiation: { mode: "legacy" },
+            capabilities: { elicitation: { form: {}, url: {} } },
+          };
+        }
+
+        return { versionNegotiation: { mode: "legacy" } };
+      }
+
+      return {
+        versionNegotiation: {
+          mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
+        },
+      };
+    });
 
     const mcpClient = new MCPClient(identity, clientOptions);
 
@@ -202,7 +195,7 @@ export class ConnectionManager {
         (notification) =>
           options.onMessage?.(notification.params, {
             server: serverName,
-            options: connectionSchema.parse(options),
+            options: ConnectionSchema.parse(options),
           })
       );
     }
@@ -211,7 +204,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
         options.onInitialized?.({
           server: serverName,
-          options: connectionSchema.parse(options),
+          options: ConnectionSchema.parse(options),
         })
       );
     }
@@ -222,7 +215,7 @@ export class ConnectionManager {
         () =>
           options.onPromptsListChanged?.({
             server: serverName,
-            options: connectionSchema.parse(options),
+            options: ConnectionSchema.parse(options),
           })
       );
     }
@@ -233,7 +226,7 @@ export class ConnectionManager {
         () =>
           options.onResourcesListChanged?.({
             server: serverName,
-            options: connectionSchema.parse(options),
+            options: ConnectionSchema.parse(options),
           })
       );
     }
@@ -244,7 +237,7 @@ export class ConnectionManager {
         (notification) =>
           options.onResourcesUpdated?.(notification.params, {
             server: serverName,
-            options: connectionSchema.parse(options),
+            options: ConnectionSchema.parse(options),
           })
       );
     }
@@ -265,7 +258,7 @@ export class ConnectionManager {
 
           return options.onToolsListChanged?.({
             server: serverName,
-            options: connectionSchema.parse(options),
+            options: ConnectionSchema.parse(options),
           });
         }
       );
@@ -606,40 +599,4 @@ export class ConnectionManager {
       cwd,
     });
   }
-}
-
-/**
- * A utility function that serializes the headers object to a string
- * and orders the keys alphabetically so that the same headers object
- * will always produce the same string.
- * @param headers - The headers object to serialize
- * @returns The serialized headers object
- */
-function serializeHeaders(
-  headers?: Record<string, string>
-): string | undefined {
-  if (!headers || Object.keys(headers).length === 0) {
-    return;
-  }
-
-  return JSON.stringify([...new Headers(headers)]);
-}
-
-/**
- * Merge header sets; later sources win.
- *
- * `Headers` deduplicates case-insensitively, which also lower-cases, so the
- * result is respelled with {@link sdkHeaderCase} — a merge produces headers
- * that never passed through the connection schema.
- */
-export function mergeHeaders(
-  base: Record<string, string> | undefined,
-  overrides: Record<string, string> | undefined
-): Record<string, string> {
-  const headers = new Headers(base);
-
-  for (const [name, value] of Object.entries(overrides ?? {}))
-    headers.set(name, value);
-
-  return sdkHeaderCase(Object.fromEntries(headers));
 }

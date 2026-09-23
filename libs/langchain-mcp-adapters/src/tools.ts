@@ -3,6 +3,11 @@ import {
   type ElicitationRoundParams,
 } from "./elicitation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
+import {
+  convertCallToolResult,
+  type ExtendedArtifact,
+  type ExtendedContent,
+} from "./content.js";
 import { z } from "zod";
 import {
   CLIENT_CAPABILITIES_META_KEY,
@@ -21,14 +26,12 @@ import type {
   CallToolRequest,
   CallToolRequestOptions,
   CallToolResult,
-  ContentBlock as MCPContentBlock,
   InputRequiredResult,
   Client as MCPClient,
   Tool as MCPTool,
   RequestOptions,
 } from "@modelcontextprotocol/client";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import type { ToolMessage } from "@langchain/core/messages";
@@ -41,10 +44,7 @@ import {
 import type { Notifications } from "./types.js";
 
 import {
-  _resolveDetailedOutputHandling,
-  callToolResultContentTypes,
   loadMcpToolsOptionsSchema,
-  type CallToolResultContentType,
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
@@ -55,242 +55,6 @@ type MCPInstance = Client | MCPClient;
 type ToolArguments = NonNullable<CallToolRequest["params"]["arguments"]>;
 
 export { ToolException, isToolException } from "./utils/errors.js";
-
-/** Terminal conversion never dereferences resource URIs or performs network IO. */
-function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  toolName: string,
-  serverName: string
-): ContentBlock.Standard[] {
-  const contentType = content.type;
-
-  switch (content.type) {
-    case "text":
-      return [{ type: "text", text: content.text }];
-    case "image":
-      return [
-        {
-          type: "image",
-          data: content.data,
-          mimeType: content.mimeType,
-        } satisfies ContentBlock.Multimodal.Image,
-      ];
-    case "audio":
-      return [
-        {
-          type: "audio",
-          data: content.data,
-          mimeType: content.mimeType,
-        } satisfies ContentBlock.Multimodal.Audio,
-      ];
-    case "resource": {
-      const resource = content.resource;
-      const metadata = { uri: resource.uri };
-
-      if ("text" in resource) {
-        return [{ type: "text", text: resource.text, metadata }];
-      }
-
-      const mimeType = resource.mimeType ?? "application/octet-stream";
-
-      return [
-        {
-          type: mimeType.startsWith("image/")
-            ? "image"
-            : mimeType.startsWith("audio/")
-              ? "audio"
-              : "file",
-          data: resource.blob,
-          mimeType,
-          metadata,
-        } satisfies ContentBlock.Multimodal.Standard,
-      ];
-    }
-
-    case "resource_link": {
-      const metadata =
-        content.title === undefined
-          ? { uri: content.uri, name: content.name }
-          : { uri: content.uri, name: content.name, title: content.title };
-
-      return [
-        {
-          type: "file",
-          url: content.uri,
-          mimeType: content.mimeType,
-          metadata,
-        } satisfies ContentBlock.Multimodal.File,
-      ];
-    }
-    default:
-      throw new ToolException(
-        `MCP tool '${toolName}' on server '${serverName}' returned unexpected content type "${contentType}". Expected ${callToolResultContentTypes.join(", ")}.`
-      );
-  }
-}
-
-/**
- * Special artifact type for structured content from MCP tool results
- * @internal
- */
-type MCPStructuredContentArtifact = {
-  type: "mcp_structured_content";
-  data: Exclude<CallToolResult["structuredContent"], undefined>;
-};
-
-/**
- * Special artifact type for meta information from MCP tool results
- * @internal
- */
-type MCPMetaArtifact = {
-  type: "mcp_meta";
-  data: NonNullable<CallToolResult["_meta"]>;
-};
-
-/**
- * Extended artifact type that includes MCP-specific artifacts
- * @internal
- */
-type ExtendedArtifact =
-  | MCPContentBlock
-  | ContentBlock
-  | { type: "mcp_content"; data: MCPContentBlock }
-  | MCPStructuredContentArtifact
-  | MCPMetaArtifact;
-
-/**
- * Model-visible content; protocol metadata belongs in artifacts.
- * @internal
- */
-type ExtendedContent = ContentBlock[] | string;
-
-/**
- * @internal
- */
-type ConvertCallToolResultArgs = {
-  /**
-   * The name of the server to call the tool on (used for error messages)
-   */
-  serverName: string;
-  /**
-   * The name of the tool that was called
-   */
-  toolName: string;
-  /**
-   * The result from the MCP tool call
-   */
-  result: CallToolResult;
-  /**
-   * Defines where to place each tool output type in the LangChain ToolMessage.
-   */
-  outputHandling?: OutputHandling;
-};
-
-function _getOutputTypeForContentType(
-  contentType: CallToolResultContentType,
-  outputHandling?: OutputHandling
-): "content" | "artifact" {
-  if (outputHandling === "content" || outputHandling === "artifact") {
-    return outputHandling;
-  }
-
-  const resolved = _resolveDetailedOutputHandling(outputHandling);
-
-  return (
-    resolved[contentType] ??
-    (contentType === "resource" ? "artifact" : "content")
-  );
-}
-
-/**
- * Process the result from calling an MCP tool.
- * Extracts text content and non-text content for better agent compatibility.
- *
- * @internal
- *
- * @param args - The arguments to pass to the tool
- * @returns A tuple of [textContent, nonTextContent]
- */
-function _convertCallToolResult({
-  serverName,
-  toolName,
-  result,
-  outputHandling,
-}: ConvertCallToolResultArgs): [ExtendedContent, ExtendedArtifact[]] {
-  if (result.isError) {
-    throw new ToolException(
-      `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: MCPContentBlock) =>
-          content.type === "text" ? content.text : ""
-        )
-        .join("\n")}`,
-      undefined,
-      result
-    );
-  }
-
-  const convertedContent = result.content
-    .filter(
-      (block) =>
-        _getOutputTypeForContentType(block.type, outputHandling) === "content"
-    )
-    .flatMap((block) =>
-      _toolOutputToContentBlocks(block, toolName, serverName)
-    );
-
-  const artifacts = result.content.filter(
-    (block) =>
-      _getOutputTypeForContentType(block.type, outputHandling) === "artifact"
-  );
-
-  // Extract structuredContent and _meta from result
-  // These are optional fields that are part of the CallToolResult type
-  const structuredContent = result.structuredContent;
-  const meta = result._meta;
-
-  // Add structuredContent and meta as special artifacts
-  const enhancedArtifacts: ExtendedArtifact[] = [...artifacts];
-
-  for (const block of result.content) {
-    const retainedKeys =
-      block.type === "text" ? ["type", "text"] : ["type", "data", "mimeType"];
-
-    if (
-      !artifacts.includes(block) &&
-      (block.type === "resource" ||
-        block.type === "resource_link" ||
-        Object.keys(block).some((key) => !retainedKeys.includes(key)))
-    ) {
-      enhancedArtifacts.push({ type: "mcp_content", data: block });
-    }
-  }
-
-  if (structuredContent !== undefined) {
-    enhancedArtifacts.push({
-      type: "mcp_structured_content",
-      data: structuredContent,
-    });
-  }
-  if (meta) {
-    enhancedArtifacts.push({
-      type: "mcp_meta",
-      data: meta,
-    });
-  }
-
-  // Preserve the plain-text convenience without dropping resource provenance.
-  const firstBlock = convertedContent[0];
-
-  if (
-    convertedContent.length === 1 &&
-    firstBlock.type === "text" &&
-    !("metadata" in firstBlock)
-  ) {
-    return [firstBlock.text, enhancedArtifacts];
-  }
-
-  return [convertedContent, enhancedArtifacts];
-}
 
 /**
  * @internal
@@ -634,7 +398,7 @@ async function _callTool(
 
     const { args: finalArgs, state } = prepared;
 
-    const [content, artifacts] = _convertCallToolResult({
+    const [content, artifacts] = convertCallToolResult({
       serverName,
       toolName,
       result,

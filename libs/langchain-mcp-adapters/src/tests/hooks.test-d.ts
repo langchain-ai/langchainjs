@@ -1,6 +1,8 @@
 import {
   MCPAdapter,
   type MCPAdapterConfig,
+  type HTTPConnection,
+  type StdioConnection,
   type ResolvedMCPAdapterConfig,
   type SSEConnection,
   type StreamableHTTPConnection,
@@ -185,6 +187,9 @@ test("public transport types distinguish SSE from Streamable HTTP", () => {
   const config = { servers: { sse, http } } satisfies MCPAdapterConfig;
   expectTypeOf(config).toMatchTypeOf<MCPAdapterConfig>();
   expectTypeOf<SSEConnection>().not.toMatchTypeOf<StreamableHTTPConnection>();
+  expectTypeOf<SSEConnection>().toMatchTypeOf<HTTPConnection>();
+  expectTypeOf<StreamableHTTPConnection>().toMatchTypeOf<HTTPConnection>();
+  expectTypeOf<StdioConnection>().not.toMatchTypeOf<HTTPConnection>();
   expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<
     "auto" | "legacy"
   >();

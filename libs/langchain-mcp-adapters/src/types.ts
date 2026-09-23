@@ -24,6 +24,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema } from "./hooks.js";
+import { getSdkHeaderCase } from "./utils/misc.js";
 
 export type {
   Command,
@@ -302,39 +303,9 @@ export const streamableHttpReconnectSchema = z
   })
   .describe("Configuration for streamable HTTP transport reconnection");
 
-/**
- * Streamable HTTP transport connection
- */
-/**
- * Headers, spelled the way the MCP SDK spells the ones it sets itself.
- *
- * A transport builds its request headers as
- * `new Headers({ Authorization, ...ours })` — a case-sensitive spread over a
- * case-insensitive namespace. A header of ours differing only in case
- * survives that spread as a *second* key and the `Headers` constructor
- * appends, so an `Authorization` configured beside an `authProvider` reached
- * the wire as `Bearer <provider>, Bearer <ours>`, which a server rejects.
- *
- * Canonicalising as they are parsed means every header the adapter holds is
- * already spelled the SDK's way, so nothing downstream has to remember — a
- * connection reaches a transport through several paths and only some of them
- * merge. `Authorization` is the only name affected: the SDK spells everything
- * else it sets in lower case, where any case of ours already replaces
- * cleanly. A future capitalised SDK header would be added here.
- */
-export const sdkHeaderCase = (
-  headers: Record<string, string>
-): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(headers).map(([name, value]) => [
-      name.toLowerCase() === "authorization" ? "Authorization" : name,
-      value,
-    ])
-  );
-
 const headersSchema = z
   .record(z.string(), z.string())
-  .transform(sdkHeaderCase)
+  .transform(getSdkHeaderCase)
   .optional();
 
 const httpOptionsSchema = z
@@ -639,21 +610,45 @@ const serverNotifications = notifications.omit({ onInitialized: true }).extend({
 
 const modernPolicy = z
   .object({
-    /** Negotiate automatically unless modern MCP is explicitly required. */
+    /**
+     * MCP protocol negotiation strategy.
+     *
+     * - `"auto"` tries the current MCP protocol and falls back when the server
+     *   only supports the legacy protocol.
+     * - `"modern"` requires the current MCP protocol and fails instead of
+     *   connecting to a legacy server.
+     *
+     * @default "auto"
+     */
     mode: z.enum(["auto", "modern"]).optional().default("auto"),
-    /** @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr. */
+    /**
+     * Logging level requested from the MCP server for tool calls.
+     *
+     * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or
+     * server stderr.
+     */
     logLevel: loggingLevelSchema.optional(),
-    /** Answer this server's in-band input requests with LangGraph interrupts. */
+    /**
+     * Whether in-band MCP elicitation requests should suspend a LangGraph run
+     * and surface as graph interrupts.
+     *
+     * This requires a modern MCP server and a LangGraph checkpointer.
+     *
+     * @default false
+     */
     elicitation: z.boolean().default(false),
+    /** @deprecated Use `elicitation` for modern MCP servers. */
     onElicitation: z
       .never({
         error:
           "onElicitation requires mode: legacy; modern elicitation uses LangGraph interrupts",
       })
       .optional(),
+    /** @deprecated `onInitialized` is only available for legacy MCP servers. */
     onInitialized: z
       .never({ error: "onInitialized requires mode: legacy" })
       .optional(),
+    /** @deprecated Automatic SSE fallback is only available in legacy mode. */
     automaticSSEFallback: z
       .never({ error: "automaticSSEFallback requires mode: legacy" })
       .optional(),
@@ -663,19 +658,31 @@ const modernPolicy = z
 
 const legacyPolicy = z
   .object({
+    /**
+     * Use the legacy MCP client interface without protocol auto-negotiation.
+     *
+     * Select this mode for SDK 1 servers or when startup probing is undesirable.
+     */
     mode: z.literal("legacy"),
+    /**
+     * Handles elicitation requests from a legacy MCP server.
+     *
+     * Modern servers use `elicitation: true` and LangGraph interrupts instead.
+     */
     onElicitation: z
       .custom<MCPElicitationHandler>(
         (value) => typeof value === "function",
         "Expected an elicitation callback"
       )
       .optional(),
+    /** @deprecated Legacy servers use `onElicitation`. */
     elicitation: z
       .never({
         error:
           "elicitation requires mode: auto or modern; legacy servers use onElicitation",
       })
       .optional(),
+    /** @deprecated Configure legacy logging with `setLoggingLevel`. */
     logLevel: z
       .never({
         error:
@@ -689,8 +696,14 @@ const legacyPolicy = z
     resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
   });
 
-/** Transport aliases are normalized once; every public entry uses the same mode rules. */
-export const stdioConnectionSchema = z
+/**
+ * Configuration schema for MCP servers reached through a child process over
+ * standard input and output.
+ *
+ * The `mode` discriminator selects modern protocol negotiation or the legacy
+ * client interface; callers do not need a separate schema for each MCP era.
+ */
+export const StdioConnectionSchema = z
   .discriminatedUnion("mode", [
     stdioOptionsSchema.extend(modernPolicy.shape).strict(),
     stdioOptionsSchema.extend(legacyPolicy.shape).strict(),
@@ -739,11 +752,11 @@ const legacySse = httpOptionsSchema
   })
   .strict();
 
-export const streamableHttpConnectionSchema = z
+export const StreamableHTTPConnectionSchema = z
   .discriminatedUnion("mode", [modernHttp, legacyHttp])
   .transform(({ type: _type, command: _command, ...options }) => options);
 
-export const sseConnectionSchema = z
+export const SSEConnectionSchema = z
   .discriminatedUnion("mode", [
     legacySse,
     legacySse.extend(modernPolicy.shape).extend({
@@ -766,10 +779,22 @@ export const sseConnectionSchema = z
   ])
   .transform(({ type: _type, command: _command, ...options }) => options);
 
-export const connectionSchema = z.union([
-  stdioConnectionSchema,
-  streamableHttpConnectionSchema,
-  sseConnectionSchema,
+/**
+ * Configuration schema for URL-based MCP connections.
+ *
+ * Streamable HTTP is used by default. Set `transport: "sse"` only for a
+ * legacy server that exposes a direct SSE endpoint. The `mode` discriminator
+ * controls MCP protocol negotiation independently of the transport.
+ */
+export const HTTPConnectionSchema = z.union([
+  StreamableHTTPConnectionSchema,
+  SSEConnectionSchema,
+]);
+
+/** Configuration schema for every transport supported by the MCP adapter. */
+export const ConnectionSchema = z.union([
+  StdioConnectionSchema,
+  HTTPConnectionSchema,
 ]);
 
 /**
@@ -784,12 +809,35 @@ const serverOnlyCallback = z
 
 const clientOptionsSchema = z
   .object({
+    /**
+     * Legacy elicitation handler callbacks are configured per server because
+     * each connection owns its request lifecycle and abort signal.
+     *
+     * Set `onElicitation` on a server with `mode: "legacy"` instead.
+     */
     onElicitation: z
       .never({ error: "Move onElicitation into a legacy server definition" })
       .optional(),
+    /**
+     * Modern in-band elicitation is enabled per server so only servers that
+     * support it can suspend LangGraph runs.
+     *
+     * Set `elicitation: true` on a server with `mode: "auto"` or
+     * `mode: "modern"` instead.
+     */
     elicitation: z
       .never({ error: "Move elicitation into a modern server definition" })
       .optional(),
+    /**
+     * The requested MCP logging level is scoped to an individual modern
+     * server connection.
+     *
+     * Set `logLevel` on a server with `mode: "auto"` or `mode: "modern"`
+     * instead.
+     *
+     * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or
+     * server stderr.
+     */
     logLevel: z
       .never({ error: "Move logLevel into a modern server definition" })
       .optional(),
@@ -865,7 +913,7 @@ const clientOptionsSchema = z
   .describe("Configuration for the MCP client");
 
 const serverMapSchema = z
-  .record(z.string(), connectionSchema)
+  .record(z.string(), ConnectionSchema)
   .refine((servers) => Object.keys(servers).length > 0, {
     error: "No MCP servers provided",
   });
@@ -907,37 +955,41 @@ export const adapterConfigSchema = z.union([
 /**
  * Configuration for stdio transport connection
  */
-export type StdioConnection = z.input<typeof stdioConnectionSchema>;
+export type StdioConnection = z.input<typeof StdioConnectionSchema>;
 
 /**
  * Type for {@link StdioConnection} with default values applied.
  */
-export type ResolvedStdioConnection = z.output<typeof stdioConnectionSchema>;
+export type ResolvedStdioConnection = z.output<typeof StdioConnectionSchema>;
 
 /**
  * Configuration for streamable HTTP transport connection
  */
 export type StreamableHTTPConnection = z.input<
-  typeof streamableHttpConnectionSchema
+  typeof StreamableHTTPConnectionSchema
 >;
 
 /**
  * Type for {@link StreamableHTTPConnection} with default values applied.
  */
 export type ResolvedStreamableHTTPConnection = z.output<
-  typeof streamableHttpConnectionSchema
+  typeof StreamableHTTPConnectionSchema
 >;
 
 /** Legacy SSE transport options. Modern servers use Streamable HTTP. */
-export type SSEConnection = z.input<typeof sseConnectionSchema>;
+export type SSEConnection = z.input<typeof SSEConnectionSchema>;
 
 /** Legacy SSE transport options with defaults applied. */
-export type ResolvedSSEConnection = z.output<typeof sseConnectionSchema>;
+export type ResolvedSSEConnection = z.output<typeof SSEConnectionSchema>;
 
-/**
- * Union type for all transport connection types
- */
-export type Connection = z.input<typeof connectionSchema>;
+/** Configuration for a URL-based Streamable HTTP or legacy SSE connection. */
+export type HTTPConnection = z.input<typeof HTTPConnectionSchema>;
+
+/** {@link HTTPConnection} with defaults applied. */
+export type ResolvedHTTPConnection = z.output<typeof HTTPConnectionSchema>;
+
+/** Union type for all supported MCP connection transports. */
+export type Connection = z.input<typeof ConnectionSchema>;
 
 /**
  * @deprecated Use MCPAdapterConfig with a servers map.
@@ -953,7 +1005,7 @@ export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
 /**
  * Type for {@link Connection} with default values applied.
  */
-export type ResolvedConnection = z.output<typeof connectionSchema>;
+export type ResolvedConnection = z.output<typeof ConnectionSchema>;
 
 /**
  * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
