@@ -18,6 +18,7 @@ import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
 import { adapterConfigSchema, oAuthClientProviderSchema } from "../types.js";
 import type { Connection } from "../types.js";
 import { resetClientMock } from "./__mocks__/@modelcontextprotocol/client.js";
+import { ConnectionManager } from "../connection.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -462,6 +463,49 @@ describe("MultiServerMCPClient", () => {
 
     // Reconnection Logic tests
     describe("reconnection", () => {
+      test.each(["stdio", "sse"])(
+        "handles background %s reconnection failures",
+        async (transportType) => {
+          const lookup = vi.spyOn(ConnectionManager.prototype, "getTransport");
+          const client = new MCPAdapter({
+            servers: {
+              test:
+                transportType === "stdio"
+                  ? {
+                      mode: "legacy",
+                      command: "node",
+                      args: [],
+                      restart: { enabled: true, delayMs: 0 },
+                    }
+                  : {
+                      mode: "legacy",
+                      transport: "sse",
+                      url: "http://localhost/sse",
+                      reconnect: { enabled: true, delayMs: 0 },
+                    },
+            },
+          });
+
+          try {
+            await client.initializeConnections();
+            const transport = lookup.mock.results.find(
+              (result) => result.type === "return"
+            )?.value;
+            if (!transport?.onclose) {
+              throw new Error("Expected a transport close handler");
+            }
+            const failure = new Error("cleanup failed");
+            vi.mocked(Client.prototype.close).mockRejectedValueOnce(failure);
+            const result = transport.onclose();
+            await expect(Promise.resolve(result)).resolves.toBeUndefined();
+            expect(result).toBeUndefined();
+          } finally {
+            await client.close();
+            lookup.mockRestore();
+          }
+        }
+      );
+
       test("should attempt to reconnect stdio transport when enabled", async () => {
         const client = new MultiServerMCPClient({
           "test-server": {
@@ -1423,11 +1467,9 @@ describe("MultiServerMCPClient", () => {
       expect(SSEClientTransport).toHaveBeenCalledWith(
         new URL(config["test-server"].url),
         expect.objectContaining({
-          requestInit: {
-            headers: Object.fromEntries(
-              new Headers(config["test-server"].headers)
-            ),
-          },
+          // Spelled the way the SDK spells the header it sets itself, so its
+          // own spread replaces ours rather than appending a second entry.
+          requestInit: { headers: { Authorization: "Bearer token" } },
         })
       );
       expect(Client).toHaveBeenCalled();
@@ -1685,6 +1727,7 @@ describe("MultiServerMCPClient", () => {
           restart: {
             enabled: true,
             maxAttempts,
+            delayMs: 10,
           },
         },
       });
@@ -1710,11 +1753,53 @@ describe("MultiServerMCPClient", () => {
       expect(onclose).toBeDefined();
       await onclose?.();
 
-      // Wait for reconnection attempts to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       // Should attempt to create a new transport exactly maxAttempts times
-      expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts);
+      await vi.waitFor(() =>
+        expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts)
+      );
+    });
+
+    test("reports an exhausted reconnection budget through onConnectionError", async () => {
+      const onConnectionError = vi.fn();
+      const client = new MultiServerMCPClient({
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+            restart: { enabled: true, maxAttempts: 2, delayMs: 10 },
+          },
+        },
+        onConnectionError,
+      });
+
+      await client.initializeConnections();
+
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock)
+        .mockImplementationOnce(() =>
+          Promise.reject(new Error("reconnect fail 1"))
+        )
+        .mockImplementationOnce(() =>
+          Promise.reject(new Error("reconnect fail 2"))
+        );
+
+      await stdioInstance.onclose?.();
+
+      // Reconnection runs detached, so an exhausted budget has to reach the
+      // handler; otherwise a server that never comes back fails silently.
+      await vi.waitFor(() =>
+        expect(onConnectionError).toHaveBeenCalledWith({
+          serverName: "test-server",
+          error: expect.objectContaining({
+            name: "MCPClientError",
+            message: expect.stringContaining("reconnect fail 2"),
+          }),
+        })
+      );
     });
   });
 

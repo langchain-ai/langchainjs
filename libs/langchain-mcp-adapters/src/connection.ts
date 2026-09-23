@@ -12,7 +12,7 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
-import { connectionSchema } from "./types.js";
+import { connectionSchema, sdkHeaderCase } from "./types.js";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedSSEConnection,
@@ -359,16 +359,21 @@ export class ConnectionManager {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    if (options.transport === "sse")
-      return this.createClient("sse", key.serverName, {
-        ...options,
-        headers,
-      });
+    // Both transports merge. SSE used to replace the whole set, so forking an
+    // SSE connection to add one header silently dropped its credentials.
+    // `createClient` is overloaded per transport, so the literal has to reach
+    // it narrowed rather than through a shared variable.
+    const merged = mergeHeaders(options.headers, headers);
 
-    return this.createClient("http", key.serverName, {
-      ...options,
-      headers: mergeHeaders(options.headers, headers),
-    });
+    return options.transport === "sse"
+      ? this.createClient("sse", key.serverName, {
+          ...options,
+          headers: merged,
+        })
+      : this.createClient("http", key.serverName, {
+          ...options,
+          headers: merged,
+        });
   }
 
   /**
@@ -576,48 +581,15 @@ export class ConnectionManager {
     args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
-    const options: SSEClientTransportOptions = {};
 
-    if (authProvider) {
-      options.authProvider = authProvider;
-    }
-
-    if (headers) {
-      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
-      // and also via requestInit.headers for subsequent POST requests
-      options.eventSourceInit = {
-        fetch: async (url, init) => {
-          const requestHeaders = new Headers(init?.headers);
-
-          // Add OAuth token if authProvider is available
-          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
-          if (authProvider) {
-            const tokens = await authProvider.tokens();
-            if (tokens) {
-              requestHeaders.set(
-                "Authorization",
-                `Bearer ${tokens.access_token}`
-              );
-            }
-          }
-
-          // Add our custom headers
-          Object.entries(headers).forEach(([key, value]) => {
-            requestHeaders.set(key, value);
-          });
-          // Always include Accept header for SSE
-          requestHeaders.set("Accept", "text/event-stream");
-
-          return fetch(url, {
-            ...init,
-            headers: requestHeaders,
-          });
-        },
-      };
-
-      // Also include headers for POST requests
-      options.requestInit = { headers };
-    }
+    // The transport authorizes the stream, applies `requestInit.headers` and
+    // sets `Accept: text/event-stream` itself. SDK 1 skipped all three when a
+    // caller supplied `eventSourceInit.fetch`, so the adapter reproduced them
+    // by hand; SDK 2 wraps that fetch instead of replacing it.
+    const options: SSEClientTransportOptions = {
+      ...(authProvider ? { authProvider } : {}),
+      ...(headers ? { requestInit: { headers } } : {}),
+    };
 
     return new SSEClientTransport(new URL(url), options);
   }
@@ -653,7 +625,13 @@ function serializeHeaders(
   return JSON.stringify([...new Headers(headers)]);
 }
 
-/** HTTP header names are case-insensitive; later sources take precedence. */
+/**
+ * Merge header sets; later sources win.
+ *
+ * `Headers` deduplicates case-insensitively, which also lower-cases, so the
+ * result is respelled with {@link sdkHeaderCase} — a merge produces headers
+ * that never passed through the connection schema.
+ */
 export function mergeHeaders(
   base: Record<string, string> | undefined,
   overrides: Record<string, string> | undefined
@@ -663,5 +641,5 @@ export function mergeHeaders(
   for (const [name, value] of Object.entries(overrides ?? {}))
     headers.set(name, value);
 
-  return Object.fromEntries(headers);
+  return sdkHeaderCase(Object.fromEntries(headers));
 }
