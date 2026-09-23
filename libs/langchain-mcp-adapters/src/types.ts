@@ -748,6 +748,22 @@ const serverOnlyCallback = z
   })
   .optional();
 
+/**
+ * Custom error handler for connection failures.
+ *
+ * If the handler throws or rejects, the error is propagated when a caller is
+ * waiting for discovery. Returning normally treats the server as ignored.
+ */
+export type ConnectionErrorHandler = (params: {
+  serverName: string;
+  error: unknown;
+}) => void | Promise<void>;
+
+const connectionErrorHandlerSchema = z.custom<ConnectionErrorHandler>(
+  (value) => typeof value === "function",
+  "Expected a connection error handler"
+);
+
 const clientOptionsSchema = z
   .object({
     /**
@@ -824,13 +840,7 @@ const clientOptionsSchema = z
      * @default "throw"
      */
     onConnectionError: z
-      .union([
-        z.enum(["throw", "ignore"]),
-        z.function({
-          input: [z.object({ serverName: z.string(), error: z.unknown() })],
-          output: z.void(),
-        }),
-      ])
+      .union([z.enum(["throw", "ignore"]), connectionErrorHandlerSchema])
       .describe(
         "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers, or a function for custom error handling"
       )
@@ -952,20 +962,6 @@ export type ResolvedConnection = z.output<typeof ConnectionSchema>;
  * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
  */
 export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
-
-/**
- * Custom error handler function for connection errors.
- * If the function throws, the error is bubbled through.
- * If it returns normally, the server is treated as ignored and skipped.
- *
- * @param params - Error handler parameters
- * @param params.serverName - The name of the server that failed to connect
- * @param params.error - The error that occurred during connection
- */
-export type ConnectionErrorHandler = Exclude<
-  ResolvedMCPAdapterConfig["onConnectionError"],
-  string
->;
 
 export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .pick({

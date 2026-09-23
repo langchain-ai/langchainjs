@@ -262,7 +262,7 @@ export class MCPAdapter {
         }
 
         if (typeof this.#onConnectionError === "function") {
-          this.#onConnectionError({ serverName, error });
+          await this.#onConnectionError({ serverName, error });
         }
         this.#failedServers.add(key);
       }
@@ -1141,7 +1141,7 @@ export class MCPAdapter {
       !signal.aborted &&
       typeof this.#onConnectionError === "function"
     ) {
-      this.#onConnectionError({
+      await this.#onConnectionError({
         serverName,
         error:
           lastError ??
