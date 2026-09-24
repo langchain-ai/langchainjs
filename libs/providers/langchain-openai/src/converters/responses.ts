@@ -1013,7 +1013,8 @@ function convertToolContentToResponsesOutput(
       return { type: "input_text", text: block.text };
     }
     if (block.type === "image") {
-      return resolveImageItem(block);
+      const image = resolveImageItem(block);
+      if (image) return image;
     }
     return { type: "input_text", text: JSON.stringify(block) };
   });

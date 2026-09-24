@@ -1723,6 +1723,35 @@ describe("convertMessagesToResponsesInput", () => {
       });
     });
 
+    it("keeps an image without a source as JSON text", () => {
+      const empty = { type: "image", mimeType: "image/png" };
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "image", mimeType: "image/png", data: "AAA" },
+              empty,
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+          { type: "input_text", text: JSON.stringify(empty) },
+        ],
+      });
+    });
+
     it("keeps non-image blocks as JSON text next to images", () => {
       const file = { type: "file", mimeType: "application/zip", data: "BBB" };
       const result = convertMessagesToResponsesInput({
