@@ -292,6 +292,38 @@ describe("auth failures stay retryable", () => {
     expect(onConnectionError).toHaveBeenCalledTimes(1);
   });
 
+  it("retries a legacy-mode server whose HTTP→SSE fallback also 401s", async () => {
+    const server = await fixture();
+    const onConnectionError = vi.fn();
+    const mcp = adapter({
+      onConnectionError,
+      servers: {
+        svc: {
+          transport: "http",
+          mode: "legacy",
+          automaticSSEFallback: true,
+          url: server.mcpUrl,
+        },
+      },
+    });
+
+    expect(await mcp.listTools()).toEqual([]);
+    expect(onConnectionError).toHaveBeenCalledTimes(1);
+    expect(server.requests.some((request) => request.path === "/sse")).toBe(
+      true
+    );
+
+    const [{ error }] = onConnectionError.mock.calls[0];
+    expect(MCPClientError.isInstance(error)).toBe(true);
+    expect(MCPClientError.isInstance((error as MCPClientError).cause)).toBe(
+      true
+    );
+    expect(isAuthenticationError(error)).toBe(true);
+
+    expect(await mcp.listTools()).toEqual([]);
+    expect(onConnectionError).toHaveBeenCalledTimes(2);
+  });
+
   it("keeps an unreachable server blocked", async () => {
     const onConnectionError = vi.fn();
     const mcp = adapter({

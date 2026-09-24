@@ -59,16 +59,28 @@ export function getHttpErrorCode(error: unknown): number | undefined {
   return status ?? code ?? httpStatusSchema.safeParse(Number(match?.[1])).data;
 }
 
+/** `.cause` hops {@link isAuthenticationError} follows before giving up. */
+const MAX_CAUSE_WALK_DEPTH = 3;
+
 /**
- * Whether `error`, or its direct cause, means the server wants credentials:
- * the SDK's `UnauthorizedError` (provider flows, which carry no HTTP status)
- * or an HTTP 401.
+ * Whether `error`, or a cause up to {@link MAX_CAUSE_WALK_DEPTH} hops down
+ * its `.cause` chain, means the server wants credentials: the SDK's
+ * `UnauthorizedError` (provider flows, no HTTP status) or an HTTP 401. Two
+ * hops handles the legacy HTTP→SSE fallback, which wraps its own
+ * `MCPClientError` around the SSE 401.
  */
 export function isAuthenticationError(error: unknown): boolean {
   const matches = (value: unknown) =>
     UnauthorizedError.isInstance(value) || getHttpErrorCode(value) === 401;
 
-  return matches(error) || (error instanceof Error && matches(error.cause));
+  let current: unknown = error;
+  for (let depth = 0; depth <= MAX_CAUSE_WALK_DEPTH; depth += 1) {
+    if (matches(current)) return true;
+    if (!(current instanceof Error)) return false;
+    current = current.cause;
+  }
+
+  return false;
 }
 
 export function createAuthenticationErrorMessage(
