@@ -35,7 +35,10 @@ import {
   getTopLevelSchemaCompositionKeys,
   handleToolChoice,
 } from "./utils/tools.js";
-import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
+import {
+  _convertMessagesToAnthropicPayload,
+  _getToolChangeKind,
+} from "./utils/message_inputs.js";
 import {
   getSamplingParams,
   getTaskBudgetBetas,
@@ -299,6 +302,42 @@ function _combineBetas(
   return Array.from(
     new Set([...(a ?? []), ...(b ?? []), ...rest.flatMap((x) => Array.from(x))])
   );
+}
+
+const MID_CONVERSATION_TOOL_CHANGES_BETA: AnthropicBeta =
+  "mid-conversation-tool-changes-2026-07-01";
+
+// Required to define a tool by value in a `tool_addition` block. It also
+// covers tool changes by reference, in place of the tool changes beta.
+const INLINE_TOOLS_BETA: AnthropicBeta = "inline-tools-2026-09-15";
+
+/**
+ * Builds a request payload from invocation params and the messages to send.
+ *
+ * Betas in `params` are derived from call options alone. This adds the ones
+ * the message content itself requires, which can only be known once the
+ * messages are converted.
+ */
+function _buildMessagesRequest(
+  params: AnthropicInvocationParams,
+  messages: BaseMessage[]
+) {
+  const formattedMessages = _convertMessagesToAnthropicPayload(messages);
+  const toolChangeKind = _getToolChangeKind(formattedMessages);
+  const toolChangeBeta =
+    toolChangeKind === "inline"
+      ? INLINE_TOOLS_BETA
+      : toolChangeKind === "reference" &&
+          !params.betas?.includes(INLINE_TOOLS_BETA)
+        ? MID_CONVERSATION_TOOL_CHANGES_BETA
+        : undefined;
+  return {
+    ...params,
+    ...formattedMessages,
+    ...(toolChangeBeta
+      ? { betas: _combineBetas(params.betas, [toolChangeBeta]) }
+      : {}),
+  };
 }
 
 /**
@@ -1430,11 +1469,9 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
-      ...params,
-      ...formattedMessages,
+      ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
     const coerceContentToString =
@@ -1508,11 +1545,9 @@ export class ChatAnthropicMessages<
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
     const params = this.invocationParams(options);
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
-      ...params,
-      ...formattedMessages,
+      ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
 
@@ -1555,13 +1590,10 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
     const response = await this.completionWithRetry(
       {
-        ...params,
+        ..._buildMessagesRequest(params, messages),
         stream: false,
-        ...formattedMessages,
       },
       requestOptions
     );

@@ -155,8 +155,6 @@ function* _formatContentBlocks(
     "bash_code_execution_tool_result",
     "input_json_delta",
     "mcp_tool_listing",
-    "tool_addition",
-    "tool_removal",
     "server_tool_use",
     "text_editor_code_execution_tool_result",
     "tool_result",
@@ -460,15 +458,46 @@ function _formatContent(message: BaseMessage, toolCalls?: ToolCall[]) {
   }
 }
 
+type AnthropicToolChangeBlockParam =
+  | Anthropic.Beta.BetaRequestToolAdditionBlock
+  | Anthropic.Beta.BetaRequestToolRemovalBlock;
+
+type AnthropicSystemContentBlockParam =
+  | Anthropic.Messages.ContentBlockParam
+  | AnthropicToolChangeBlockParam;
+
+const TOOL_CHANGE_BLOCK_TYPES = ["tool_addition", "tool_removal"];
+
+/**
+ * Returns the provider payload a block carries: the `value` of a
+ * `non_standard` wrapper, or the block itself.
+ */
+function _unwrapNonStandard(
+  block: MessageContentComplex
+): MessageContentComplex {
+  if (
+    block.type === "non_standard" &&
+    "value" in block &&
+    typeof block.value === "object" &&
+    block.value !== null
+  ) {
+    return block.value as MessageContentComplex;
+  }
+  return block;
+}
+
 /**
  * Normalizes the content of a system message for the wire.
  *
  * Shared by the hoisted top-level `system` field and by in-place
  * `role: "system"` entries, so both strip the same framework-internal fields.
+ *
+ * Blocks wrapped in core's `non_standard` escape hatch are unwrapped first, so
+ * a provider-native block behaves the same whichever way it was written.
  */
 function _formatSystemContent(
   content: BaseMessage["content"]
-): string | Anthropic.Messages.ContentBlockParam[] {
+): string | AnthropicSystemContentBlockParam[] {
   if (typeof content === "string") {
     return content;
   }
@@ -476,25 +505,42 @@ function _formatSystemContent(
     // rare case: message.content could be undefined
     return [];
   }
-  return content.map((block) => {
-    if (block.type !== "text" || typeof block.text !== "string") {
-      return block as Anthropic.Messages.ContentBlockParam;
+  return content.flatMap((rawBlock): AnthropicSystemContentBlockParam[] => {
+    if (typeof rawBlock !== "object" || rawBlock === null) {
+      return [{ type: "text" as const, text: String(rawBlock) }];
     }
-    return {
-      type: "text" as const,
-      text: block.text,
-      ...("cache_control" in block && block.cache_control
-        ? {
-            cache_control:
-              block.cache_control as AnthropicTextBlockParam["cache_control"],
-          }
-        : {}),
-      ...("citations" in block && block.citations
-        ? {
-            citations: block.citations as AnthropicTextBlockParam["citations"],
-          }
-        : {}),
-    };
+    const block = _unwrapNonStandard(rawBlock);
+    if (TOOL_CHANGE_BLOCK_TYPES.includes(block.type as string)) {
+      return [block as AnthropicToolChangeBlockParam];
+    }
+    if (block.type === "text" && typeof block.text === "string") {
+      return [
+        {
+          type: "text" as const,
+          text: block.text,
+          ...("cache_control" in block && block.cache_control
+            ? {
+                cache_control:
+                  block.cache_control as AnthropicTextBlockParam["cache_control"],
+              }
+            : {}),
+          ...("citations" in block && block.citations
+            ? {
+                citations:
+                  block.citations as AnthropicTextBlockParam["citations"],
+              }
+            : {}),
+        },
+      ];
+    }
+    // Anthropic accepts a closed set of system content blocks, and rejects
+    // the whole request for anything else.
+    console.warn(
+      `Unrecognized system content block ${JSON.stringify(block.type)} was dropped. ` +
+        "Anthropic accepts `text` in any system message, plus `tool_addition` " +
+        "and `tool_removal` on a mid-conversation one."
+    );
+    return [];
   });
 }
 
@@ -522,7 +568,7 @@ export function _convertMessagesToAnthropicPayload(
     leadingSystemCount += 1;
   }
 
-  let system: string | Anthropic.Messages.ContentBlockParam[] | undefined;
+  let system: string | AnthropicSystemContentBlockParam[] | undefined;
   if (leadingSystemCount === 1) {
     system = _formatSystemContent(mergedMessages[0].content);
   } else if (leadingSystemCount > 1) {
@@ -532,6 +578,11 @@ export function _convertMessagesToAnthropicPayload(
         ? [{ type: "text" as const, text: content }]
         : content;
     });
+  }
+  // The provider rejects empty system content, so system content that narrowed
+  // to nothing is omitted rather than sent.
+  if (Array.isArray(system) && system.length === 0) {
+    system = undefined;
   }
 
   const conversationMessages = mergedMessages.slice(leadingSystemCount);
@@ -600,7 +651,10 @@ export function _convertMessagesToAnthropicPayload(
         };
       }
     } else if (role === "system") {
-      return { role, content: _formatSystemContent(message.content) };
+      const content = _formatSystemContent(message.content);
+      return Array.isArray(content) && content.length === 0
+        ? undefined
+        : { role, content };
     } else {
       return {
         role,
@@ -613,10 +667,42 @@ export function _convertMessagesToAnthropicPayload(
   });
   return {
     messages: mergeMessages(
-      formattedMessages as AnthropicMessageCreateParams["messages"]
+      formattedMessages.filter(
+        (message) => message !== undefined
+      ) as AnthropicMessageCreateParams["messages"]
     ),
     system,
   } as AnthropicMessageCreateParams;
+}
+
+/**
+ * Describes the tool changes in the system content of a converted payload:
+ * `"inline"` if any `tool_addition` block defines a tool by value,
+ * `"reference"` if tool changes only name tools declared elsewhere, or
+ * `undefined` if there are none. The provider requires a different beta for
+ * each.
+ *
+ * Reads the converted payload rather than the input messages, so a block that
+ * was dropped during conversion never enables a beta.
+ */
+export function _getToolChangeKind(
+  payload: AnthropicMessageCreateParams
+): "inline" | "reference" | undefined {
+  const systemContents: unknown[] = [
+    payload.system,
+    ...payload.messages
+      .filter((message) => message.role === "system")
+      .map((message) => message.content),
+  ];
+  const toolChanges = systemContents.flatMap((content) =>
+    Array.isArray(content)
+      ? content.filter((block) => TOOL_CHANGE_BLOCK_TYPES.includes(block.type))
+      : []
+  );
+  if (toolChanges.some((block) => block.tool?.type === "tool_definition")) {
+    return "inline";
+  }
+  return toolChanges.length > 0 ? "reference" : undefined;
 }
 
 function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {

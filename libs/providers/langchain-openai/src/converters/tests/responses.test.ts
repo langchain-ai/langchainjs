@@ -1979,6 +1979,48 @@ describe("convertMessagesToResponsesInput", () => {
       expect(second.slice(0, first.length)).toEqual(first);
     });
 
+    it.each([
+      [
+        "configuration_update",
+        { type: "configuration_update", reasoning: { effort: "high" } },
+      ],
+      [
+        "mcp_approval_response",
+        {
+          type: "mcp_approval_response",
+          approval_request_id: "mcpr_123",
+          approve: true,
+        },
+      ],
+    ])(
+      "hoists a non_standard-wrapped %s block in every spelling",
+      (_name, block) => {
+        const text = { type: "text" as const, text: "Hello" };
+        const wrapped = { type: "non_standard" as const, value: block };
+        const spellings = [
+          new HumanMessage({ content: [wrapped, text] }),
+          new HumanMessage({ contentBlocks: [wrapped, text] }),
+        ];
+
+        for (const message of spellings) {
+          expect(
+            convertMessagesToResponsesInput({
+              messages: [message],
+              zdrEnabled: false,
+              model: "gpt-6-astra",
+            })
+          ).toEqual([
+            block,
+            {
+              type: "message",
+              role: "user",
+              content: [{ type: "input_text", text: "Hello" }],
+            },
+          ]);
+        }
+      }
+    );
+
     it("still yields the input item when there is no accompanying text", () => {
       const messages = [
         new HumanMessage("Earlier question"),
@@ -2004,6 +2046,259 @@ describe("convertMessagesToResponsesInput", () => {
         reasoning: { effort: "low" },
       });
     });
+  });
+});
+
+describe("additional_tools input item", () => {
+  const additionalTools = {
+    type: "additional_tools",
+    role: "developer",
+    tools: [
+      {
+        type: "function",
+        name: "get_customer",
+        description: "Look up a customer by ID.",
+        parameters: {
+          type: "object",
+          properties: { customer_id: { type: "string" } },
+          required: ["customer_id"],
+          additionalProperties: false,
+        },
+      },
+    ],
+  };
+  const text = { type: "text" as const, text: "Customer lookup is enabled." };
+  // A non-reasoning model, so the sibling message keeps `role: "system"` on
+  // every path.
+  const model = "gpt-4o";
+
+  const spellings = {
+    bare: () => new SystemMessage({ content: [text, additionalTools] }),
+    wrapped: () =>
+      new SystemMessage({
+        content: [text, { type: "non_standard", value: additionalTools }],
+      }),
+    contentBlocks: () =>
+      new SystemMessage({
+        contentBlocks: [text, { type: "non_standard", value: additionalTools }],
+      }),
+  };
+
+  it.each(Object.entries(spellings))(
+    "hoists a %s block to a top-level item preceding its message",
+    (_spelling, makeMessage) => {
+      const result = convertMessagesToResponsesInput({
+        messages: [new HumanMessage("Hi"), makeMessage()],
+        zdrEnabled: false,
+        model,
+      });
+
+      expect(result).toEqual([
+        { type: "message", role: "user", content: "Hi" },
+        additionalTools,
+        {
+          type: "message",
+          role: "system",
+          content: [
+            { type: "input_text", text: "Customer lookup is enabled." },
+          ],
+        },
+      ]);
+    }
+  );
+
+  it.each([
+    [
+      "HumanMessage",
+      () =>
+        new HumanMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "HumanMessage (contentBlocks)",
+      () =>
+        new HumanMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "ToolMessage",
+      () =>
+        new ToolMessage({ tool_call_id: "call_1", content: [additionalTools] }),
+    ],
+  ])("rejects the block on a %s", (_name, makeMessage) => {
+    expect(() =>
+      convertMessagesToResponsesInput({
+        messages: [makeMessage()],
+        zdrEnabled: false,
+        model,
+      })
+    ).toThrow("`additional_tools` must be carried on a `SystemMessage`");
+  });
+
+  describe("unrecognized blocks", () => {
+    // A foreign block, e.g. from a mid-thread switch away from Anthropic.
+    const toolRemoval = {
+      type: "tool_removal",
+      tool: { type: "tool_reference", name: "get_weather" },
+    };
+    const spellings = {
+      bare: [text, toolRemoval],
+      wrapped: [text, { type: "non_standard", value: toolRemoval }],
+    };
+
+    it.each([
+      ...Object.entries(spellings).map(
+        ([spelling, content]) =>
+          [spelling, () => new SystemMessage({ content })] as const
+      ),
+      [
+        "contentBlocks",
+        () =>
+          new SystemMessage({
+            contentBlocks: [text, { type: "non_standard", value: toolRemoval }],
+          }),
+      ] as const,
+    ])(
+      "drops a %s block from system content with a warning",
+      (_spelling, makeMessage) => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        const result = convertMessagesToResponsesInput({
+          messages: [makeMessage()],
+          zdrEnabled: false,
+          model,
+        });
+
+        expect(result).toEqual([
+          {
+            type: "message",
+            role: "system",
+            content: [
+              { type: "input_text", text: "Customer lookup is enabled." },
+            ],
+          },
+        ]);
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(
+          expect.stringContaining('"tool_removal"')
+        );
+        warn.mockRestore();
+      }
+    );
+
+    it.each([
+      [
+        "content",
+        () =>
+          new HumanMessage({
+            content: [
+              { type: "text", text: "Hi" },
+              { type: "non_standard", value: toolRemoval },
+            ],
+          }),
+      ],
+      [
+        "contentBlocks",
+        () =>
+          new HumanMessage({
+            contentBlocks: [
+              { type: "text", text: "Hi" },
+              { type: "non_standard", value: toolRemoval },
+            ],
+          }),
+      ],
+    ])(
+      "drops the block from user %s without a warning",
+      (_spelling, makeMessage) => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        const result = convertMessagesToResponsesInput({
+          messages: [makeMessage()],
+          zdrEnabled: false,
+          model,
+        });
+
+        expect(result).toEqual([
+          {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: "Hi" }],
+          },
+        ]);
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+      }
+    );
+  });
+
+  it.each([
+    ["bare", () => new SystemMessage({ content: [additionalTools] })],
+    [
+      "wrapped",
+      () =>
+        new SystemMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "contentBlocks",
+      () =>
+        new SystemMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+  ])(
+    "omits a %s system message left empty by the hoist",
+    (_spelling, makeMessage) => {
+      const result = convertMessagesToResponsesInput({
+        messages: [new HumanMessage("Hi"), makeMessage()],
+        zdrEnabled: false,
+        model,
+      });
+
+      expect(result).toEqual([
+        { type: "message", role: "user", content: "Hi" },
+        additionalTools,
+      ]);
+    }
+  );
+
+  it("replays the block from an assistant message as a top-level item", () => {
+    // Assistant content is replayed model output, so the SystemMessage
+    // restriction does not apply to it.
+    const result = convertMessagesToResponsesInput({
+      messages: [
+        new HumanMessage("Hi"),
+        new AIMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+          response_metadata: { model_provider: "openai" },
+        }),
+      ],
+      zdrEnabled: false,
+      model,
+    });
+
+    expect(result).toEqual([
+      { type: "message", role: "user", content: "Hi" },
+      additionalTools,
+    ]);
+  });
+
+  it("does not reject the block on an assistant message sent without v1 metadata", () => {
+    expect(() =>
+      convertMessagesToResponsesInput({
+        messages: [
+          new AIMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+            response_metadata: { model_provider: "openai" },
+          }),
+        ],
+        zdrEnabled: false,
+        model,
+      })
+    ).not.toThrow();
   });
 });
 
