@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import {
   IssuerMismatchError,
   OAuthError,
@@ -154,7 +154,7 @@ describe("token providers", () => {
             },
           },
         })
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });
 
@@ -172,7 +172,9 @@ describe("auth failure labeling", () => {
         },
       }).listTools()
     );
-    expect(error.message).toMatch(/^Authentication failed for HTTP server "svc"/);
+    expect(error.message).toMatch(
+      /^Authentication failed for HTTP server "svc"/
+    );
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
   });
 
@@ -189,7 +191,9 @@ describe("auth failure labeling", () => {
         },
       }).listTools()
     );
-    expect(error.message).toMatch(/^Authentication failed for SSE server "svc"/);
+    expect(error.message).toMatch(
+      /^Authentication failed for SSE server "svc"/
+    );
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
   });
 
@@ -200,7 +204,9 @@ describe("auth failure labeling", () => {
         servers: { svc: { transport: "http", url: server.mcpUrl } },
       }).listTools()
     );
-    expect(error.message).toMatch(/^Authentication failed for HTTP server "svc"/);
+    expect(error.message).toMatch(
+      /^Authentication failed for HTTP server "svc"/
+    );
     expect(getHttpErrorCode(error.cause)).toBe(401);
   });
 
@@ -219,7 +225,9 @@ describe("auth failure labeling", () => {
       }).listTools()
     );
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
-    expect(server.requests.some((request) => request.path === "/sse")).toBe(false);
+    expect(server.requests.some((request) => request.path === "/sse")).toBe(
+      false
+    );
   });
 
   it("keeps a throwing token() as the cause and does not call it an auth failure", async () => {
@@ -656,7 +664,7 @@ describe("OAuth behavior on SDK 2.1", () => {
     );
 
     server.revokeAll();
-    await expect(tool.invoke({})).rejects.toThrow();
+    await expect(tool.invoke({})).rejects.toThrow(/UnauthorizedError/);
     expect(provider.redirects).toHaveLength(2);
 
     await mcp.finishAuth(

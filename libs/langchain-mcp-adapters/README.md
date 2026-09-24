@@ -96,10 +96,23 @@ for argument and result hooks.
 
 ## Authentication
 
-Supply an application-owned `authProvider` implementing the exported
-`OAuthClientProvider` interface. The official SDK handles OAuth discovery,
-registration, exchange and refresh. Your application owns credential storage,
-account binding, redirects and callback handling.
+`authProvider` takes either SDK provider shape:
+
+- `{ token, onUnauthorized? }` (`AuthProvider`) for tokens your application
+  manages. `token()` runs before every request; `onUnauthorized()` runs once
+  on a 401 before the request is retried.
+- An `OAuthClientProvider` for OAuth. The SDK handles discovery, registration,
+  exchange and refresh; your application owns storage, redirects and the
+  callback. Implement `invalidateCredentials()` so a refresh the server
+  rejects restarts the login instead of failing. When a connection needs a
+  login, the thrown `MCPClientError` has an `UnauthorizedError` as its
+  `cause`. After the redirect, call
+  `adapter.finishAuth(serverName, new URL(callbackUrl).searchParams, { expectedState })`
+  and connect again. Don't start another discovery while a login is pending:
+  it begins a new redirect and invalidates the first callback.
+
+Once a provider has a token it replaces a configured `Authorization` header;
+until then the header is sent.
 
 ## Examples
 
