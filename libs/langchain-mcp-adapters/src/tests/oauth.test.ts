@@ -164,7 +164,9 @@ describe("auth failure labeling", () => {
         },
       }).listTools()
     );
-    expect(error.message).toMatch(/^Authentication failed for HTTP server "svc"/);
+    expect(error.message).toMatch(
+      /^Authentication failed for HTTP server "svc"/
+    );
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
   });
 
@@ -181,7 +183,9 @@ describe("auth failure labeling", () => {
         },
       }).listTools()
     );
-    expect(error.message).toMatch(/^Authentication failed for SSE server "svc"/);
+    expect(error.message).toMatch(
+      /^Authentication failed for SSE server "svc"/
+    );
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
   });
 
@@ -192,7 +196,9 @@ describe("auth failure labeling", () => {
         servers: { svc: { transport: "http", url: server.mcpUrl } },
       }).listTools()
     );
-    expect(error.message).toMatch(/^Authentication failed for HTTP server "svc"/);
+    expect(error.message).toMatch(
+      /^Authentication failed for HTTP server "svc"/
+    );
     expect(getHttpErrorCode(error.cause)).toBe(401);
   });
 
@@ -211,7 +217,9 @@ describe("auth failure labeling", () => {
       }).listTools()
     );
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
-    expect(server.requests.some((request) => request.path === "/sse")).toBe(false);
+    expect(server.requests.some((request) => request.path === "/sse")).toBe(
+      false
+    );
   });
 
   it("keeps a throwing token() as the cause and does not call it an auth failure", async () => {
