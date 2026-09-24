@@ -12,14 +12,13 @@ import {
 } from "@modelcontextprotocol/client";
 import { ConnectionManager } from "../connection.js";
 import { MCPAdapter } from "../client.js";
-import type { ResolvedStreamableHTTPConnection } from "../types.js";
+import type { SSEConnection } from "../types.js";
 
 const connection = {
   mode: "legacy",
   transport: "http",
   url: "https://example.com/mcp",
-  automaticSSEFallback: false,
-} satisfies ResolvedStreamableHTTPConnection;
+} satisfies SSEConnection;
 
 afterEach(() => vi.restoreAllMocks());
 

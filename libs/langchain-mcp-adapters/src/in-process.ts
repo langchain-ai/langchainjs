@@ -3,7 +3,7 @@ import {
   InMemoryTransport,
 } from "@modelcontextprotocol/client";
 import type { Client, Connection } from "./connection.js";
-import type { ResolvedInProcessConnection } from "./types.js";
+import type { InProcessConnection } from "./types.js";
 
 export interface InProcessConnectionContext {
   serverName: string;
@@ -13,7 +13,7 @@ export interface InProcessConnectionContext {
 const consumedServers = new WeakSet<object>();
 
 export async function connectInProcessServer(
-  server: ResolvedInProcessConnection,
+  server: InProcessConnection,
   context: InProcessConnectionContext
 ): Promise<Connection> {
   if (consumedServers.has(server)) {

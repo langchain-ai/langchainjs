@@ -8,7 +8,7 @@ import {
   type NotificationTypeMap,
 } from "@modelcontextprotocol/client";
 import { isDescriptorConnection } from "../types.js";
-import type { ResolvedConnection, ServerMessageSource } from "../types.js";
+import type { Connection, ServerMessageSource } from "../types.js";
 import { ConnectionManager, type Client } from "../connection.js";
 
 vi.mock(
@@ -29,7 +29,7 @@ describe("ConnectionManager", () => {
     test.each(["http", "stdio"] as const)(
       "isolates notification options for %s clients",
       async (transport) => {
-        const observed: ResolvedConnection[] = [];
+        const observed: Connection[] = [];
 
         const mutateOptions = (source: ServerMessageSource) => {
           const options = source.options;
@@ -68,13 +68,12 @@ describe("ConnectionManager", () => {
 
         const manager = new ConnectionManager();
 
-        const options: ResolvedConnection =
+        const options: Connection =
           transport === "http"
             ? {
                 mode: "legacy",
                 transport: "http",
                 url: "https://example.com/mcp",
-                automaticSSEFallback: false,
                 headers: { "X-Test": "original" },
                 reconnect: { enabled: false },
                 outputHandling: { text: "content" },
@@ -189,7 +188,6 @@ describe("ConnectionManager", () => {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
         reconnect: { enabled: true, maxAttempts: 5, delayMs: 250 },
       });
 
@@ -219,7 +217,6 @@ describe("ConnectionManager", () => {
         mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
-        automaticSSEFallback: true,
         headers,
         authProvider,
       });
@@ -249,14 +246,12 @@ describe("ConnectionManager", () => {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
         headers: { A: "1" },
       });
       const c2 = await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
         headers: { A: "2" },
       });
 
@@ -300,14 +295,12 @@ describe("ConnectionManager", () => {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
         headers: { A: "1" },
       });
       await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
-        automaticSSEFallback: true,
       });
 
       expect(mgr.getAllClients().length).toBe(2);
@@ -327,7 +320,6 @@ describe("ConnectionManager", () => {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
         headers: { A: "1", "X-Keep": "base" },
       });
 
@@ -366,7 +358,6 @@ describe("ConnectionManager", () => {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
         headers: { A: "1" },
       });
 

@@ -33,7 +33,7 @@ import {
   createMCPElicitationResume,
 } from "../elicitation.js";
 import type { MCPElicitationHandler } from "../elicitation.js";
-import type { StdioConnection } from "../types.js";
+import type { StdioConnectionInit } from "../types.js";
 
 const cleanups: (() => Promise<void> | void)[] = [];
 
@@ -812,7 +812,7 @@ describe("real stdio servers", () => {
           ],
           elicitation: true,
         },
-      } satisfies Record<string, StdioConnection>;
+      } satisfies Record<string, StdioConnectionInit>;
 
       const adapter = new MCPAdapter({
         servers: Object.fromEntries(

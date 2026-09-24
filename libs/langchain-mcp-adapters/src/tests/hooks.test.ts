@@ -16,7 +16,7 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
-import type { ClientConfig } from "../types.js";
+import type { MCPAdapterConfig } from "../types.js";
 
 type TransportKind = "stdio" | "http" | "sse";
 
@@ -82,7 +82,9 @@ test("preserves MCP artifacts through an awaited afterToolCall", async () => {
   vi.spyOn(client, "callTool").mockResolvedValue({ content: artifacts });
 
   const afterToolCall = vi.fn(
-    ({ result }: Parameters<NonNullable<ClientConfig["afterToolCall"]>>[0]) => {
+    ({
+      result,
+    }: Parameters<NonNullable<MCPAdapterConfig["afterToolCall"]>>[0]) => {
       expect(result).toEqual([expect.anything(), artifacts]);
 
       // Returning a promise is the case that can detect a dropped `await`:
@@ -127,16 +129,16 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
   const matrix: Array<{
     kind: TransportKind;
     setup: (
-      params?: Partial<ClientConfig>
+      params?: Partial<MCPAdapterConfig>
     ) => Promise<{ client: MultiServerMCPClient; serverName: string }>;
     supportsHeaders: boolean;
   }> = [
     {
       kind: "stdio",
-      setup: async (params?: Partial<ClientConfig>) => {
+      setup: async (params?: Partial<MCPAdapterConfig>) => {
         const { command, args } = servers.createStdio("stdio-interceptor");
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             stdio: {
               mode: "legacy",
               transport: "stdio",
@@ -160,17 +162,16 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     },
     {
       kind: "http",
-      setup: async (params?: Partial<ClientConfig>) => {
+      setup: async (params?: Partial<MCPAdapterConfig>) => {
         const { baseUrl } = await servers.createHTTP("http-interceptor", {
           testHeaders: true,
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             http: {
               mode: "legacy",
               transport: "http",
               url: `${baseUrl}/mcp`,
-              automaticSSEFallback: true,
             },
           },
           beforeToolCall: ({ args }) => ({
@@ -188,13 +189,13 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     },
     {
       kind: "sse",
-      setup: async (params?: Partial<ClientConfig>) => {
+      setup: async (params?: Partial<MCPAdapterConfig>) => {
         const { baseUrl } = await servers.createHTTP("sse-interceptor", {
           supportSSEFallback: true,
           testHeaders: true,
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             sse: {
               mode: "legacy",
               transport: "sse",
@@ -318,7 +319,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const logs: string[] = [];
     const progresses: number[] = [];
     const client = new MultiServerMCPClient({
-      mcpServers: {
+      servers: {
         http: {
           mode: "legacy",
           transport: "http",
@@ -331,7 +332,6 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
               p.total ? Math.round((p.progress / p.total) * 100) : p.progress
             );
           },
-          automaticSSEFallback: true,
         },
       },
     });
@@ -354,12 +354,11 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const stateCalls: unknown[] = [];
     const runtimeCalls: RunnableConfig[] = [];
     const client = new MultiServerMCPClient({
-      mcpServers: {
+      servers: {
         http: {
           mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
-          automaticSSEFallback: true,
         },
       },
       beforeToolCall: (_, state, runtime) => {
@@ -395,7 +394,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const observed: unknown[] = [];
 
     const client = new MultiServerMCPClient({
-      mcpServers: { http: { mode: "legacy", url: `${baseUrl}/mcp` } },
+      servers: { http: { mode: "legacy", url: `${baseUrl}/mcp` } },
       beforeToolCall: (_, state) => {
         observed.push(state);
       },
@@ -441,12 +440,11 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const stateCalls: { messages: BaseMessage[] }[] = [];
     const runtimeCalls: RunnableConfig[] = [];
     const client = new MultiServerMCPClient({
-      mcpServers: {
+      servers: {
         http: {
           mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
-          automaticSSEFallback: true,
         },
       },
       beforeToolCall: (_, state, runtime) => {

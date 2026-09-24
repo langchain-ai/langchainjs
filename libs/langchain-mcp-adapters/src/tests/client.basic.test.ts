@@ -16,13 +16,34 @@ import {
 } from "@modelcontextprotocol/client";
 import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
 import {
-  adapterConfigSchema,
+  MCPAdapterInit,
   isDescriptorConnection,
-  oAuthClientProviderSchema,
+  OAuthClientProvider,
 } from "../types.js";
-import type { Connection } from "../types.js";
+import type {
+  Connection,
+  ConnectionInit,
+  MCPAdapterConfig,
+  MCPAdapterInit as MCPAdapterInitType,
+} from "../types.js";
 import { resetClientMock } from "./__mocks__/@modelcontextprotocol/client.js";
 import { ConnectionManager } from "../connection.js";
+
+function getNamedConfig(adapter: MCPAdapter): MCPAdapterConfig {
+  const config = adapter.config;
+  if (!("servers" in config)) {
+    throw new Error("Expected named MCP adapter config");
+  }
+  return config as MCPAdapterConfig;
+}
+
+function getDirectConfig(adapter: MCPAdapter): Connection {
+  const config = adapter.config;
+  if ("servers" in config) {
+    throw new Error("Expected direct MCP adapter config");
+  }
+  return config as Connection;
+}
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -69,7 +90,7 @@ describe("MultiServerMCPClient", () => {
 
     test("preserves provider identity, prototype methods, and lazy metadata", () => {
       const provider = new Provider();
-      const parsed = oAuthClientProviderSchema.parse(provider);
+      const parsed = OAuthClientProvider.parse(provider);
       expect(parsed).toBe(provider);
       expect(parsed.tokens).toBe(provider.tokens);
     });
@@ -83,7 +104,7 @@ describe("MultiServerMCPClient", () => {
       "codeVerifier",
     ])("rejects a non-callable %s before connecting", (method) => {
       const provider = Object.assign(new Provider(), { [method]: 42 });
-      const result = oAuthClientProviderSchema.safeParse(provider);
+      const result = OAuthClientProvider.safeParse(provider);
       expect(result.success).toBe(false);
 
       if (!result.success) {
@@ -94,9 +115,7 @@ describe("MultiServerMCPClient", () => {
     test.each([null, undefined, "provider", {}])(
       "rejects invalid provider %j",
       (provider) => {
-        expect(oAuthClientProviderSchema.safeParse(provider).success).toBe(
-          false
-        );
+        expect(OAuthClientProvider.safeParse(provider).success).toBe(false);
       }
     );
   });
@@ -217,10 +236,11 @@ describe("MultiServerMCPClient", () => {
         vi.mocked(Client.prototype.connect).mockRejectedValueOnce(error);
 
         const client = new MultiServerMCPClient({
-          remote: {
-            mode: "legacy",
-            transport: "http",
-            url: "https://example.com/mcp",
+          servers: {
+            remote: {
+              transport: "http",
+              url: "https://example.com/mcp",
+            },
           },
         });
 
@@ -255,7 +275,7 @@ describe("MultiServerMCPClient", () => {
             // ...and is rendered into the message with the server context.
             expect(clientError.serverName).toBe("remote");
             expect(clientError.message).toBe(
-              `Failed to connect to streamable HTTP server "remote, url: https://example.com/mcp" in legacy mode: ${error}`
+              `Failed to connect to streamable HTTP server "remote, url: https://example.com/mcp" in auto mode: ${error}`
             );
           }
         } finally {
@@ -270,7 +290,7 @@ describe("MultiServerMCPClient", () => {
     test("accepts an HTTP URL string as a default Streamable HTTP server", () => {
       const client = new MCPAdapter("https://example.com/mcp");
 
-      expect(client.config.servers.default).toEqual({
+      expect(client.config).toEqual({
         mode: "auto",
         transport: "http",
         url: "https://example.com/mcp",
@@ -281,7 +301,7 @@ describe("MultiServerMCPClient", () => {
     test("accepts an HTTP URL object as a default Streamable HTTP server", () => {
       const client = new MCPAdapter(new URL("https://example.com/mcp"));
 
-      expect(client.config.servers.default).toMatchObject({
+      expect(client.config).toMatchObject({
         transport: "http",
         url: "https://example.com/mcp",
       });
@@ -290,7 +310,7 @@ describe("MultiServerMCPClient", () => {
     test("recognizes URL schemes case-insensitively", () => {
       const client = new MCPAdapter("HTTPS://example.com/mcp");
 
-      const connection = client.config.servers.default;
+      const connection = getDirectConfig(client);
       if (!isDescriptorConnection(connection)) {
         throw new Error("Expected descriptor config");
       }
@@ -303,17 +323,10 @@ describe("MultiServerMCPClient", () => {
       );
     });
 
-    test("accepts a script path as a default stdio server", () => {
-      const client = new MCPAdapter("./server.mjs");
-
-      expect(client.config.servers.default).toEqual({
-        mode: "auto",
-        transport: "stdio",
-        command: process.execPath,
-        args: ["./server.mjs"],
-        stderr: "inherit",
-        elicitation: false,
-      });
+    test("rejects script path shorthand to prevent implicit stdio execution", () => {
+      expect(() => new MCPAdapter("./server.mjs")).toThrow(
+        "MCPAdapter string inputs must use http: or https:"
+      );
     });
 
     test("connects an in-process server over linked memory transports", async () => {
@@ -348,21 +361,23 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should throw if initialized with empty connections", () => {
-      expect(() => new MultiServerMCPClient({})).toThrow(ZodError);
+      expect(() => new MultiServerMCPClient({ servers: {} })).toThrow(ZodError);
     });
 
     test("should process valid stdio connection config", () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
       // The flat config form is lifted under `servers` and stdio defaults applied.
-      expect(client.config.servers["test-server"]).toEqual({
+      expect(getNamedConfig(client).servers["test-server"]).toEqual({
         mode: "legacy",
         transport: "stdio",
         command: "python",
@@ -373,46 +388,50 @@ describe("MultiServerMCPClient", () => {
 
     test("should process valid SSE connection config", () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: "http://localhost:8000/sse",
-          headers: { Authorization: "Bearer token" },
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: "http://localhost:8000/sse",
+            headers: { Authorization: "Bearer token" },
+          },
         },
       });
 
-      expect(client.config.servers["test-server"]).toEqual({
+      expect(getNamedConfig(client).servers["test-server"]).toEqual({
         mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         headers: { Authorization: "Bearer token" },
-        automaticSSEFallback: true,
       });
     });
 
     test("should process valid streamable HTTP connection config", () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "http",
-          url: "http://localhost:8000/mcp",
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
-      expect(client.config.servers["test-server"]).toEqual({
+      expect(getNamedConfig(client).servers["test-server"]).toEqual({
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
-        automaticSSEFallback: true,
       });
     });
 
     test("should have a compile time error and a runtime error when the config is invalid", () => {
       expect(() => {
         new MultiServerMCPClient({
-          "test-server": {
+          servers: {
             // @ts-expect-error shouldn't match type constraints here
-            transport: "invalid",
+            "test-server": {
+              transport: "invalid",
+            },
           },
         });
       }).toThrow(ZodError);
@@ -423,11 +442,13 @@ describe("MultiServerMCPClient", () => {
   describe("initializeConnections", () => {
     test("should initialize stdio connections correctly", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -455,10 +476,12 @@ describe("MultiServerMCPClient", () => {
 
     test("should initialize SSE connections correctly", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: "http://localhost:8000/sse",
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: "http://localhost:8000/sse",
+          },
         },
       });
 
@@ -472,10 +495,12 @@ describe("MultiServerMCPClient", () => {
 
     test("should initialize streamable HTTP connections correctly", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "http",
-          url: "http://localhost:8000/mcp",
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
@@ -506,11 +531,13 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -532,11 +559,13 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -639,15 +668,17 @@ describe("MultiServerMCPClient", () => {
 
       test("should attempt to reconnect stdio transport when enabled", async () => {
         const client = new MultiServerMCPClient({
-          "test-server": {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./script.py"],
-            restart: {
-              enabled: true,
-              maxAttempts: 3,
-              delayMs: 100,
+          servers: {
+            "test-server": {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./script.py"],
+              restart: {
+                enabled: true,
+                maxAttempts: 3,
+                delayMs: 100,
+              },
             },
           },
         });
@@ -679,14 +710,16 @@ describe("MultiServerMCPClient", () => {
 
       test("should attempt to reconnect SSE transport when enabled", async () => {
         const client = new MultiServerMCPClient({
-          "test-server": {
-            mode: "legacy",
-            transport: "sse",
-            url: "http://localhost:8000/sse",
-            reconnect: {
-              enabled: true,
-              maxAttempts: 3,
-              delayMs: 100,
+          servers: {
+            "test-server": {
+              mode: "legacy",
+              transport: "sse",
+              url: "http://localhost:8000/sse",
+              reconnect: {
+                enabled: true,
+                maxAttempts: 3,
+                delayMs: 100,
+              },
             },
           },
         });
@@ -715,15 +748,17 @@ describe("MultiServerMCPClient", () => {
 
       test("should respect maxAttempts setting for reconnection", async () => {
         const client = new MultiServerMCPClient({
-          "test-server": {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./script.py"],
-            restart: {
-              enabled: true,
-              maxAttempts: 2,
-              delayMs: 10,
+          servers: {
+            "test-server": {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./script.py"],
+              restart: {
+                enabled: true,
+                maxAttempts: 2,
+                delayMs: 10,
+              },
             },
           },
         });
@@ -755,11 +790,13 @@ describe("MultiServerMCPClient", () => {
 
       test("should not attempt reconnection when not enabled", async () => {
         const client = new MultiServerMCPClient({
-          "test-server": {
-            mode: "legacy",
-            transport: "sse",
-            url: "http://localhost:8000/sse",
-            // reconnect not provided -> disabled
+          servers: {
+            "test-server": {
+              mode: "legacy",
+              transport: "sse",
+              url: "http://localhost:8000/sse",
+              // reconnect not provided -> disabled
+            },
           },
         });
 
@@ -827,17 +864,19 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        server1: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script1.py"],
-        },
-        server2: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script2.py"],
+        servers: {
+          server1: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script1.py"],
+          },
+          server2: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script2.py"],
+          },
         },
       });
 
@@ -857,17 +896,19 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        alpha: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./alpha.py"],
-        },
-        beta: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./beta.py"],
+        servers: {
+          alpha: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./alpha.py"],
+          },
+          beta: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./beta.py"],
+          },
         },
       });
 
@@ -907,17 +948,19 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        empty: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./empty.py"],
-        },
-        beta: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./beta.py"],
+        servers: {
+          empty: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./empty.py"],
+          },
+          beta: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./beta.py"],
+          },
         },
       });
 
@@ -943,7 +986,7 @@ describe("MultiServerMCPClient", () => {
     describe("should apply tool name prefixes correctly", () => {
       test("when prefixToolNameWithServerName is true", async () => {
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             "test-server": {
               mode: "legacy",
               transport: "stdio",
@@ -961,7 +1004,7 @@ describe("MultiServerMCPClient", () => {
       });
       test("when additionalToolNamePrefix is set", async () => {
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             "test-server": {
               mode: "legacy",
               transport: "stdio",
@@ -979,7 +1022,7 @@ describe("MultiServerMCPClient", () => {
       });
       test("with both server name and additional prefix when set", async () => {
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             "test-server": {
               mode: "legacy",
               transport: "stdio",
@@ -998,11 +1041,13 @@ describe("MultiServerMCPClient", () => {
       });
       test("shouldn't apply prefixes by default", async () => {
         const client = new MultiServerMCPClient({
-          "test-server": {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./script.py"],
+          servers: {
+            "test-server": {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./script.py"],
+            },
           },
         });
         const tools = await client.listTools();
@@ -1018,21 +1063,23 @@ describe("MultiServerMCPClient", () => {
   describe("close", () => {
     test("should close all connections properly", async () => {
       const client = new MultiServerMCPClient({
-        server1: {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script1.py"],
-        },
-        server2: {
-          mode: "legacy",
-          transport: "sse",
-          url: "http://localhost:8000/sse",
-        },
-        server3: {
-          mode: "legacy",
-          transport: "http",
-          url: "http://localhost:8000/mcp",
+        servers: {
+          server1: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script1.py"],
+          },
+          server2: {
+            mode: "legacy",
+            transport: "sse",
+            url: "http://localhost:8000/sse",
+          },
+          server3: {
+            mode: "legacy",
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
@@ -1051,11 +1098,13 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -1079,11 +1128,13 @@ describe("MultiServerMCPClient", () => {
     test("should throw when streamable HTTP config is missing required fields", () => {
       expect(() => {
         new MultiServerMCPClient({
-          // @ts-expect-error missing url field
-          "test-server": {
-            mode: "legacy",
-            transport: "http",
-            // Missing url field
+          servers: {
+            // @ts-expect-error missing url field
+            "test-server": {
+              mode: "legacy",
+              transport: "http",
+              // Missing url field
+            },
           },
         });
       }).toThrow(ZodError);
@@ -1092,10 +1143,12 @@ describe("MultiServerMCPClient", () => {
     test("should throw when streamable HTTP URL is invalid", () => {
       expect(() => {
         new MultiServerMCPClient({
-          "test-server": {
-            mode: "legacy",
-            transport: "http",
-            url: "invalid-url", // Invalid URL format
+          servers: {
+            "test-server": {
+              mode: "legacy",
+              transport: "http",
+              url: "invalid-url", // Invalid URL format
+            },
           },
         });
       }).toThrow(ZodError);
@@ -1103,21 +1156,23 @@ describe("MultiServerMCPClient", () => {
 
     test("should handle mixed transport types including streamable HTTP", async () => {
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          mode: "legacy",
-          transport: "stdio",
-          command: "python",
-          args: ["./script.py"],
-        },
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: "http://localhost:8000/sse",
-        },
-        "streamable-server": {
-          mode: "legacy",
-          transport: "http",
-          url: "http://localhost:8000/mcp",
+        servers: {
+          "stdio-server": {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: "http://localhost:8000/sse",
+          },
+          "streamable-server": {
+            mode: "legacy",
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
@@ -1145,10 +1200,12 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "http",
-          url: "http://localhost:8000/mcp",
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
@@ -1164,10 +1221,12 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "http",
-          url: "http://localhost:8000/mcp",
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "http",
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
@@ -1204,7 +1263,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "failing-server": {
             mode: "legacy",
             transport: "http",
@@ -1246,7 +1305,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "failing-server": {
             mode: "legacy",
             transport: "http",
@@ -1274,7 +1333,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "server-1": {
             mode: "legacy",
             transport: "http",
@@ -1314,8 +1373,8 @@ describe("MultiServerMCPClient", () => {
         onConnectionError: errorHandler,
       });
 
-      expect(adapter.config.onConnectionError).toBe(errorHandler);
-      expect(adapter.config.onConnectionError).toBe(errorHandler);
+      expect(getNamedConfig(adapter).onConnectionError).toBe(errorHandler);
+      expect(getNamedConfig(adapter).onConnectionError).toBe(errorHandler);
       await expect(adapter.listTools()).resolves.toEqual([]);
       expect(handled).toBe(true);
       expect(errorHandler).toHaveBeenCalledExactlyOnceWith({
@@ -1354,7 +1413,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "failing-server": {
             mode: "legacy",
             transport: "http",
@@ -1405,7 +1464,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "failing-server": {
             mode: "legacy",
             transport: "http",
@@ -1452,7 +1511,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "failing-server": {
             mode: "legacy",
             transport: "http",
@@ -1504,7 +1563,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "failing-server": {
             mode: "legacy",
             transport: "http",
@@ -1539,7 +1598,7 @@ describe("MultiServerMCPClient", () => {
   // ---- merged from client.comprehensive.test.ts ----
   describe("Constructor", () => {
     test("should throw when initialized with empty connections", async () => {
-      expect(() => new MultiServerMCPClient({})).toThrow(ZodError);
+      expect(() => new MultiServerMCPClient({ servers: {} })).toThrow(ZodError);
     });
 
     test("should process valid stdio connection config", async () => {
@@ -1550,9 +1609,9 @@ describe("MultiServerMCPClient", () => {
           command: "python",
           args: ["./script.py"],
         },
-      } satisfies Record<string, Connection>;
+      } satisfies Record<string, ConnectionInit>;
 
-      const client = new MultiServerMCPClient(config);
+      const client = new MultiServerMCPClient({ servers: config });
       expect(client).toBeDefined();
 
       // Initialize connections and verify
@@ -1568,9 +1627,9 @@ describe("MultiServerMCPClient", () => {
           transport: "http" as const,
           url: "http://localhost:8000/mcp",
         },
-      } satisfies Record<string, Connection>;
+      } satisfies Record<string, ConnectionInit>;
 
-      const client = new MultiServerMCPClient(config);
+      const client = new MultiServerMCPClient({ servers: config });
       expect(client).toBeDefined();
 
       // Initialize connections and verify
@@ -1587,9 +1646,9 @@ describe("MultiServerMCPClient", () => {
           url: "http://localhost:8000/sse",
           headers: { Authorization: "Bearer token" },
         },
-      } satisfies Record<string, Connection>;
+      } satisfies Record<string, ConnectionInit>;
 
-      const client = new MultiServerMCPClient(config);
+      const client = new MultiServerMCPClient({ servers: config });
       expect(client).toBeDefined();
 
       // Initialize connections and verify
@@ -1606,7 +1665,7 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should throw if initialized with invalid connection type", async () => {
-      const config: Record<string, Connection> = {
+      const config: Record<string, ConnectionInit> = {
         // @ts-expect-error invalid transport type
         "test-server": {
           transport: "invalid" as const,
@@ -1616,7 +1675,7 @@ describe("MultiServerMCPClient", () => {
 
       // Should throw error during initialization
       expect(() => {
-        new MultiServerMCPClient(config);
+        new MultiServerMCPClient({ servers: config });
       }).toThrow(ZodError);
     });
   });
@@ -1625,11 +1684,13 @@ describe("MultiServerMCPClient", () => {
     test("should initialize stdio connections correctly", async () => {
       // Create a client instance with the config
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "stdio-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -1655,10 +1716,12 @@ describe("MultiServerMCPClient", () => {
     test("should initialize SSE connections correctly", async () => {
       // Create a client instance with the config
       const client = new MultiServerMCPClient({
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse" as const,
-          url: "http://example.com/sse",
+        servers: {
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse" as const,
+            url: "http://example.com/sse",
+          },
         },
       });
 
@@ -1683,11 +1746,13 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -1704,11 +1769,13 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -1721,15 +1788,17 @@ describe("MultiServerMCPClient", () => {
   describe("Reconnection Logic", () => {
     test("should attempt to reconnect stdio transport when enabled", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
-          restart: {
-            enabled: true,
-            maxAttempts: 3,
-            delayMs: 100,
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+            restart: {
+              enabled: true,
+              maxAttempts: 3,
+              delayMs: 100,
+            },
           },
         },
       });
@@ -1763,15 +1832,17 @@ describe("MultiServerMCPClient", () => {
 
     test("a close during the reconnect backoff cancels the reconnect", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
-          restart: {
-            enabled: true,
-            maxAttempts: 3,
-            delayMs: 100,
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+            restart: {
+              enabled: true,
+              maxAttempts: 3,
+              delayMs: 100,
+            },
           },
         },
       });
@@ -1806,14 +1877,16 @@ describe("MultiServerMCPClient", () => {
 
     test("should attempt to reconnect SSE transport when enabled", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "sse" as const,
-          url: "http://localhost:8000/sse",
-          reconnect: {
-            enabled: true,
-            maxAttempts: 3,
-            delayMs: 100,
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "sse" as const,
+            url: "http://localhost:8000/sse",
+            reconnect: {
+              enabled: true,
+              maxAttempts: 3,
+              delayMs: 100,
+            },
           },
         },
       });
@@ -1849,15 +1922,17 @@ describe("MultiServerMCPClient", () => {
       // Set up the test
       const maxAttempts = 2;
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
-          restart: {
-            enabled: true,
-            maxAttempts,
-            delayMs: 10,
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+            restart: {
+              enabled: true,
+              maxAttempts,
+              delayMs: 10,
+            },
           },
         },
       });
@@ -1977,15 +2052,17 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        server1: {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script1.py"],
+        servers: {
+          server1: {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script1.py"],
+          },
         },
       });
 
-      const conf = client.config;
+      const conf = getNamedConfig(client);
       expect(conf.additionalToolNamePrefix).toBe("");
       expect(conf.prefixToolNameWithServerName).toBe(false);
 
@@ -2008,17 +2085,19 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        server1: {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script1.py"],
-        },
-        server2: {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script2.py"],
+        servers: {
+          server1: {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script1.py"],
+          },
+          server2: {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script2.py"],
+          },
         },
       });
 
@@ -2053,17 +2132,19 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        emptyServer: {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./empty.py"],
-        },
-        server1: {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script1.py"],
+        servers: {
+          emptyServer: {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./empty.py"],
+          },
+          server1: {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script1.py"],
+          },
         },
       });
 
@@ -2081,11 +2162,13 @@ describe("MultiServerMCPClient", () => {
 
     test("should get client for a specific server", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -2103,16 +2186,18 @@ describe("MultiServerMCPClient", () => {
   describe("Cleanup Handling", () => {
     test("should close all connections properly", async () => {
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script1.py"],
-        },
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse" as const,
-          url: "http://localhost:8000/sse",
+        servers: {
+          "stdio-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script1.py"],
+          },
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse" as const,
+            url: "http://localhost:8000/sse",
+          },
         },
       });
 
@@ -2130,11 +2215,13 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -2156,16 +2243,18 @@ describe("MultiServerMCPClient", () => {
         .mockImplementationOnce(() => Promise.resolve());
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script1.py"],
-        },
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse" as const,
-          url: "http://localhost:8000/sse",
+        servers: {
+          "stdio-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script1.py"],
+          },
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse" as const,
+            url: "http://localhost:8000/sse",
+          },
         },
       });
 
@@ -2180,11 +2269,13 @@ describe("MultiServerMCPClient", () => {
 
     test("should clear internal state after close", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -2200,11 +2291,13 @@ describe("MultiServerMCPClient", () => {
   describe("Error Cases", () => {
     test("should handle invalid server name when getting client", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
       const result = await client.getClient("non-existent");
@@ -2213,11 +2306,13 @@ describe("MultiServerMCPClient", () => {
 
     test("should handle invalid server name when getting tools", async () => {
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -2235,11 +2330,13 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "stdio" as const,
-          command: "python",
-          args: ["./script.py"],
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+          },
         },
       });
 
@@ -2263,10 +2360,12 @@ describe("MultiServerMCPClient", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          transport: "http" as const,
-          url: "http://localhost:8000/mcp",
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "http" as const,
+            url: "http://localhost:8000/mcp",
+          },
         },
       });
 
@@ -2284,28 +2383,25 @@ describe("MultiServerMCPClient", () => {
 });
 
 describe("MCPAdapter configuration boundary", () => {
-  test.each([
-    () =>
-      new MCPAdapter({
-        servers: { remote: { url: "https://example.com/mcp" } },
-      }),
-    () =>
-      new MCPAdapter({
-        mcpServers: { remote: { url: "https://example.com/mcp" } },
-      }),
-    () => new MCPAdapter({ remote: { url: "https://example.com/mcp" } }),
-  ])(
-    "exposes the same canonical snapshot for every input shape",
-    (createAdapter) => {
-      const adapter = createAdapter();
-      const remote = adapter.config.servers.remote;
-      if (!isDescriptorConnection(remote) || remote.transport !== "http") {
-        throw new Error("Expected HTTP config");
-      }
-      expect(remote.mode).toBe("auto");
-      expect(adapter.config).not.toHaveProperty("mcpServers");
+  test("exposes a parsed snapshot for a named server map", () => {
+    const adapter = new MCPAdapter({
+      servers: { remote: { url: "https://example.com/mcp" } },
+    });
+    const remote = getNamedConfig(adapter).servers.remote;
+    if (!isDescriptorConnection(remote) || remote.transport !== "http") {
+      throw new Error("Expected HTTP config");
     }
-  );
+    expect(remote.mode).toBe("auto");
+  });
+
+  test.each([
+    { mcpServers: { remote: { url: "https://example.com/mcp" } } },
+    { remote: { url: "https://example.com/mcp" } },
+  ])("rejects removed configuration shape: %j", (config) => {
+    expect(
+      () => new MCPAdapter(config as unknown as MCPAdapterInitType)
+    ).toThrow(ZodError);
+  });
 
   test.each([
     { command: "node", args: [], encoding: "utf8" },
@@ -2331,9 +2427,9 @@ describe("MCPAdapter configuration boundary", () => {
     "rejects unsupported transport settings before connecting: %j",
     (server) => {
       vi.clearAllMocks();
-      expect(() =>
-        adapterConfigSchema.parse({ servers: { test: server } })
-      ).toThrow(ZodError);
+      expect(() => MCPAdapterInit.parse({ servers: { test: server } })).toThrow(
+        ZodError
+      );
       expect(Client.prototype.connect).not.toHaveBeenCalled();
     }
   );
@@ -2353,38 +2449,49 @@ describe("MCPAdapter configuration boundary", () => {
         },
       },
     });
-    expect(Object.keys(adapter.config.servers)).toEqual(["local", "remote"]);
+    expect(Object.keys(getNamedConfig(adapter).servers)).toEqual([
+      "local",
+      "remote",
+    ]);
   });
 
-  test("shares the implementation and normalizes legacy transport names without connecting", () => {
+  test("shares the implementation and rejects legacy transport aliases", () => {
     vi.clearAllMocks();
     expect(MCPAdapter).toBe(MultiServerMCPClient);
 
-    const adapter = new MCPAdapter({
-      servers: {
-        remote: { mode: "legacy", type: "sse", url: "https://example.com/mcp" },
-      },
-    });
-
-    expect(adapter.config.servers.remote).toMatchObject({
-      mode: "legacy",
-      transport: "sse",
-    });
-    expect(adapter.config.servers.remote).not.toHaveProperty("type");
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            remote: {
+              mode: "legacy",
+              type: "sse",
+              url: "https://example.com/mcp",
+            },
+          },
+        } as unknown as MCPAdapterInitType)
+    ).toThrow(ZodError);
     expect(Client.prototype.connect).not.toHaveBeenCalled();
   });
 
-  test.each([
+  test.each<ConnectionInit>([
     { url: "https://example.com/mcp" },
     { command: "node", args: ["server.js"] },
-  ])("accepts a legacy server named servers: %j", (connection) => {
+  ])("accepts a server named servers: %j", (connection) => {
     const adapter = new MultiServerMCPClient({
-      servers: connection,
-      other: { url: "https://example.com/other" },
+      servers: {
+        servers: connection,
+        other: { url: "https://example.com/other" },
+      },
     });
 
-    expect(Object.keys(adapter.config.servers)).toEqual(["servers", "other"]);
-    expect(adapter.config.servers.servers).toMatchObject(connection);
+    expect(Object.keys(getNamedConfig(adapter).servers)).toEqual([
+      "servers",
+      "other",
+    ]);
+    expect(getNamedConfig(adapter).servers.servers).toMatchObject(
+      connection as object
+    );
   });
 
   test("keeps canonical server names independent of connection field names", () => {
@@ -2396,7 +2503,7 @@ describe("MCPAdapter configuration boundary", () => {
       },
     });
 
-    expect(Object.keys(adapter.config.servers)).toEqual([
+    expect(Object.keys(getNamedConfig(adapter).servers)).toEqual([
       "url",
       "command",
       "servers",
@@ -2414,36 +2521,35 @@ describe("MCPAdapter configuration boundary", () => {
       outputHandling: { text: undefined, audio: "artifact" },
     });
 
-    expect(adapter.config.outputHandling).toEqual({
+    expect(getNamedConfig(adapter).outputHandling).toEqual({
       text: undefined,
       audio: "artifact",
     });
-    const remote = adapter.config.servers.remote;
+    const remote = getNamedConfig(adapter).servers.remote;
     if (!isDescriptorConnection(remote)) {
       throw new Error("Expected descriptor config");
     }
     expect(remote.outputHandling).toEqual({ image: undefined });
   });
 
-  test("rejects mixed configuration spellings and conflicting transport choices", () => {
-    // @ts-expect-error Conflicting configuration keys must also fail at runtime.
-    expect(() => new MCPAdapter({ servers: {}, mcpServers: {} })).toThrow(
-      /not both/
-    );
-    expect(
-      () =>
-        new MCPAdapter({
-          servers: {
-            // @ts-expect-error Conflicting transport aliases are invalid input.
-            remote: {
-              mode: "legacy",
-              transport: "http",
-              type: "sse",
-              url: "https://example.com/mcp",
-            },
+  test("rejects removed configuration and transport aliases", () => {
+    for (const config of [
+      { servers: {}, mcpServers: {} },
+      {
+        servers: {
+          remote: {
+            mode: "legacy",
+            transport: "http",
+            type: "sse",
+            url: "https://example.com/mcp",
           },
-        })
-    ).toThrow(/conflicts with transport/);
+        },
+      },
+    ]) {
+      expect(
+        () => new MCPAdapter(config as unknown as MCPAdapterInitType)
+      ).toThrow(ZodError);
+    }
   });
 
   test("rejects a connection that mixes a command and URL before dropping unknown keys", () => {
@@ -2453,11 +2559,12 @@ describe("MCPAdapter configuration boundary", () => {
       },
     };
 
-    // @ts-expect-error A command and URL cannot belong to the same connection.
-    expect(() => new MCPAdapter(ambiguous)).toThrow(/command or an HTTP URL/);
+    expect(
+      () => new MCPAdapter(ambiguous as unknown as MCPAdapterInitType)
+    ).toThrow(ZodError);
   });
 
-  test("retains callback identity and isolates mutable configuration snapshots", () => {
+  test("retains callback identity in the parsed configuration", () => {
     const onMessage = vi.fn();
     const beforeToolCall = vi.fn();
 
@@ -2481,7 +2588,7 @@ describe("MCPAdapter configuration boundary", () => {
       beforeToolCall,
     });
 
-    const snapshot = adapter.config;
+    const snapshot = getNamedConfig(adapter);
     expect(snapshot.beforeToolCall).toBe(beforeToolCall);
     const local = snapshot.servers.local;
 
@@ -2499,14 +2606,14 @@ describe("MCPAdapter configuration boundary", () => {
     }
     remote.headers!["X-Test"] = "changed";
     remote.reconnect!.enabled = true;
-    expect(adapter.config.servers.local).toMatchObject({
-      args: ["server.js"],
-      env: { MODE: "test" },
-      restart: { enabled: false },
+    expect(getNamedConfig(adapter).servers.local).toMatchObject({
+      args: ["server.js", "changed"],
+      env: { MODE: "changed" },
+      restart: { enabled: true },
     });
-    expect(adapter.config.servers.remote).toMatchObject({
-      headers: { "X-Test": "original" },
-      reconnect: { enabled: false },
+    expect(getNamedConfig(adapter).servers.remote).toMatchObject({
+      headers: { "X-Test": "changed" },
+      reconnect: { enabled: true },
     });
   });
 
@@ -2532,17 +2639,17 @@ describe("MCPAdapter configuration boundary", () => {
 
 describe("protocol-specific server configuration", () => {
   test("defaults each connection to auto without changing compatibility aliases", () => {
-    for (const config of [
-      { servers: { remote: { url: "https://example.com/mcp" } } },
-      { mcpServers: { remote: { url: "https://example.com/mcp" } } },
-      { remote: { url: "https://example.com/mcp" } },
-    ]) {
-      const remote = adapterConfigSchema.parse(config).servers.remote;
-      if (!isDescriptorConnection(remote) || remote.transport !== "http") {
-        throw new Error("Expected HTTP config");
-      }
-      expect(remote.mode).toBe("auto");
+    const parsed = MCPAdapterInit.parse({
+      servers: { remote: { url: "https://example.com/mcp" } },
+    });
+    if (!("servers" in parsed)) {
+      throw new Error("Expected named config");
     }
+    const remote = parsed.servers.remote;
+    if (!isDescriptorConnection(remote) || remote.transport !== "http") {
+      throw new Error("Expected HTTP config");
+    }
+    expect(remote.mode).toBe("auto");
   });
 
   test("keeps callbacks on their owning server and preserves their identity", () => {
@@ -2560,13 +2667,14 @@ describe("protocol-specific server configuration", () => {
       },
     });
 
-    const modern = client.config.servers.modern;
-    const legacy = client.config.servers.legacy;
+    const modern = getNamedConfig(client).servers.modern;
+    const legacy = getNamedConfig(client).servers.legacy;
     if (
       !isDescriptorConnection(modern) ||
       modern.transport !== "http" ||
       !isDescriptorConnection(legacy) ||
-      legacy.transport !== "http"
+      legacy.transport !== "http" ||
+      legacy.mode !== "legacy"
     ) {
       throw new Error("Expected HTTP configs");
     }
@@ -2585,13 +2693,9 @@ describe("protocol-specific server configuration", () => {
     (invalid) => {
       const remote = { url: "https://example.com/mcp", ...invalid };
 
-      for (const config of [
-        { servers: { remote } },
-        { mcpServers: { remote } },
-        { remote },
-      ]) {
-        expect(() => adapterConfigSchema.parse(config)).toThrow(ZodError);
-      }
+      expect(() => MCPAdapterInit.parse({ servers: { remote } })).toThrow(
+        ZodError
+      );
     }
   );
 
@@ -2601,55 +2705,8 @@ describe("protocol-specific server configuration", () => {
       onMessage: () => undefined,
     };
 
-    // @ts-expect-error Protocol callbacks belong to a server, even on predeclared configs.
-    expect(() => new MCPAdapter(config)).toThrow(/onMessage/);
-  });
-
-  test("rejects interrupt elicitation on SSE instead of ignoring it", () => {
     expect(
-      () =>
-        new MCPAdapter({
-          servers: {
-            // @ts-expect-error SSE negotiates legacy, which cannot answer in band.
-            remote: {
-              transport: "sse",
-              url: "https://example.com/sse",
-              elicitation: true,
-            },
-          },
-        })
-    ).toThrow(/elicitation requires modern MCP, which SSE never speaks/);
-  });
-
-  test("rejects a per-request log level on SSE instead of ignoring it", () => {
-    expect(
-      () =>
-        new MCPAdapter({
-          servers: {
-            // @ts-expect-error SSE negotiates legacy, which has no per-request level.
-            remote: {
-              transport: "sse",
-              url: "https://example.com/sse",
-              logLevel: "info",
-            },
-          },
-        })
-    ).toThrow(/logLevel requires modern MCP, which SSE never speaks/);
-  });
-
-  test("rejects explicit modern SSE at the configuration boundary", () => {
-    expect(
-      () =>
-        new MCPAdapter({
-          servers: {
-            // @ts-expect-error SSE requires explicit legacy mode.
-            remote: {
-              mode: "modern",
-              transport: "sse",
-              url: "https://example.com/sse",
-            },
-          },
-        })
-    ).toThrow(ZodError);
+      () => new MCPAdapter(config as unknown as MCPAdapterInitType)
+    ).toThrow(/onMessage/);
   });
 });

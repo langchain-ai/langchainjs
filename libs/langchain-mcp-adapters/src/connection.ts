@@ -15,17 +15,16 @@ import type {
   Transport,
 } from "@modelcontextprotocol/client";
 import {
-  ClientConnectionSchema,
-  ConnectionSchema,
-  InProcessConnectionSchema,
+  ClientConnection,
+  Connection as ConnectionSchema,
+  InProcessConnection,
   isDescriptorConnection,
 } from "./types.js";
 import type {
-  ResolvedStreamableHTTPConnection,
-  ResolvedSSEConnection,
-  ResolvedStdioConnection,
-  ResolvedConnection,
-  ResolvedDescriptorConnection,
+  Connection as ResolvedConnection,
+  DescriptorConnection as ResolvedDescriptorConnection,
+  SSEConnection as ResolvedSSEConnection,
+  StdioConnection as ResolvedStdioConnection,
 } from "./types.js";
 import { connectInProcessServer } from "./in-process.js";
 import { iife, mergeHeaders, serializeHeaders } from "./utils/misc.js";
@@ -114,7 +113,7 @@ export class ConnectionManager {
     if (isDescriptorConnection(options)) {
       connection = await this.#openDescriptor(serverName, options, key);
     } else {
-      const client = ClientConnectionSchema.safeParse(options);
+      const client = ClientConnection.safeParse(options);
       if (client.success) {
         connection = {
           client: client.data,
@@ -122,7 +121,7 @@ export class ConnectionManager {
           closeCallback: async () => {},
         };
       } else {
-        const server = InProcessConnectionSchema.parse(options);
+        const server = InProcessConnection.parse(options);
         connection = await connectInProcessServer(server, {
           serverName,
           onToolsChanged: this.onToolsChanged
@@ -166,10 +165,14 @@ export class ConnectionManager {
   ): Promise<Connection> {
     const transport =
       options.transport === "http"
-        ? await this.#createStreamableHTTPTransport(options)
+        ? await this.#createStreamableHTTPTransport(
+            options as ResolvedSSEConnection
+          )
         : options.transport === "sse"
-          ? await this.#createSSETransport(options)
-          : await this.#createStdioTransport(options);
+          ? await this.#createSSETransport(options as ResolvedSSEConnection)
+          : await this.#createStdioTransport(
+              options as ResolvedStdioConnection
+            );
 
     const identity = {
       name: "@langchain/mcp-adapters",
@@ -177,7 +180,7 @@ export class ConnectionManager {
     };
     const clientOptions = iife<ClientOptions>(() => {
       if (options.mode === "legacy" || options.transport === "sse") {
-        if (options.onElicitation) {
+        if (options.mode === "legacy" && options.onElicitation) {
           return {
             versionNegotiation: { mode: "legacy" },
             capabilities: { elicitation: { form: {}, url: {} } },
@@ -210,7 +213,7 @@ export class ConnectionManager {
       );
     }
 
-    if (options.onInitialized) {
+    if (options.mode === "legacy" && options.onInitialized) {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
         options.onInitialized?.({
           server: serverName,
@@ -515,7 +518,7 @@ export class ConnectionManager {
   }
 
   async #createStreamableHTTPTransport(
-    args: ResolvedStreamableHTTPConnection
+    args: ResolvedSSEConnection
   ): Promise<StreamableHTTPClientTransport> {
     const { url, headers, reconnect, authProvider } = args;
 
