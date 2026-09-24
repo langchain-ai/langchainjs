@@ -542,3 +542,130 @@ describe("finishAuth", () => {
     }
   );
 });
+
+describe("OAuth behavior on SDK 2.1", () => {
+  it("lets the provider's token win over a stale configured Authorization after login", async () => {
+    const server = await fixture();
+    const provider = createTestOAuthProvider();
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          headers: { Authorization: "Bearer stale" },
+          authProvider: provider,
+        },
+      },
+    });
+    await failure(mcp.listTools());
+    await mcp.finishAuth(
+      "svc",
+      await authorizeInBrowser(provider.redirects[0])
+    );
+
+    expect(hasWhoami(await mcp.listTools())).toBe(true);
+    expect(provider.redirects).toHaveLength(1);
+    const sent = server.requests
+      .filter((request) => request.path === "/mcp")
+      .map((request) => request.authorization);
+    expect(sent[0]).toBe("Bearer stale");
+    expect(sent.at(-1)).toBe(`Bearer ${provider.stored.tokens?.access_token}`);
+  });
+
+  it("gives a per-call provider precedence over a configured Authorization", async () => {
+    const server = await fixture();
+    const token = server.mintAccessToken();
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          headers: { Authorization: "Bearer stale" },
+        },
+      },
+    });
+    await mcp.listToolsets({ authProvider: { token: async () => token } });
+    const sent = server.requests
+      .filter((request) => request.path === "/mcp")
+      .map((request) => request.authorization);
+    expect(new Set(sent)).toEqual(new Set([`Bearer ${token}`]));
+  });
+
+  it("refreshes an expired access token without a new redirect", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    await mcp.finishAuth("svc", callback);
+    const [tool] = (await mcp.listTools()).filter((t) =>
+      t.name.endsWith("whoami")
+    );
+
+    server.expireAccessTokens();
+    expect(JSON.stringify(await tool.invoke({}))).toContain("authorized");
+    expect(server.stats.refreshes).toBe(1);
+    expect(provider.redirects).toHaveLength(1);
+  });
+
+  it("keeps one connection per per-call provider", async () => {
+    const server = await fixture();
+    const [a, b] = [server.mintAccessToken(), server.mintAccessToken()];
+    const mcp = adapter({
+      servers: { svc: { transport: "http", url: server.mcpUrl } },
+    });
+    await mcp.listToolsets({ authProvider: { token: async () => a } });
+    await mcp.listToolsets({ authProvider: { token: async () => b } });
+    const sent = new Set(
+      server.requests
+        .filter((request) => request.path === "/mcp")
+        .map((request) => request.authorization)
+    );
+    expect(sent).toEqual(new Set([`Bearer ${a}`, `Bearer ${b}`]));
+  });
+
+  it("keeps the last spelling when one config repeats Authorization", async () => {
+    const server = await fixture();
+    await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "http",
+            url: server.mcpUrl,
+            headers: { authorization: "Bearer a", Authorization: "Bearer b" },
+          },
+        },
+      }).listTools()
+    );
+    expect(
+      server.requests.find((request) => request.path === "/mcp")?.authorization
+    ).toBe("Bearer b");
+  });
+
+  // Upstream #2510: the SDK cannot complete a mid-session redirect itself. A
+  // stateless finishAuth lets the live connection pick up the new tokens.
+  it("characterization: a login that lapses mid-session completes through finishAuth", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    await mcp.finishAuth("svc", callback);
+    const [tool] = (await mcp.listTools()).filter((t) =>
+      t.name.endsWith("whoami")
+    );
+
+    server.revokeAll();
+    await expect(tool.invoke({})).rejects.toThrow();
+    expect(provider.redirects).toHaveLength(2);
+
+    await mcp.finishAuth(
+      "svc",
+      await authorizeInBrowser(provider.redirects[1])
+    );
+    expect(JSON.stringify(await tool.invoke({}))).toContain("authorized");
+  });
+
+  // Documented limitation (§4.5): rediscovering while a login is pending
+  // starts a second redirect and replaces the PKCE verifier.
+  it("characterization: rediscovering during a pending login invalidates the first callback", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    await failure(mcp.listTools());
+    expect(provider.redirects).toHaveLength(2);
+
+    await failure(mcp.finishAuth("svc", callback));
+    expect(server.stats.exchanges).toBe(0);
+  });
+});

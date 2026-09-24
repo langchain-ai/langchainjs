@@ -64,6 +64,14 @@ export function createTestOAuthProvider(
       if (verifier === undefined) throw new Error("no code verifier saved");
       return verifier;
     },
+    // The SDK calls this when the server rejects stored credentials (for
+    // example invalid_grant on refresh) and then retries the flow.
+    invalidateCredentials: (scope) => {
+      if (scope === "all" || scope === "client") stored.client = undefined;
+      if (scope === "all" || scope === "tokens") stored.tokens = undefined;
+      if (scope === "all" || scope === "verifier") verifier = undefined;
+      if (scope === "all" || scope === "discovery") discovery = undefined;
+    },
     ...(options.persistDiscovery
       ? {
           saveDiscoveryState: (value: OAuthDiscoveryState) => {
