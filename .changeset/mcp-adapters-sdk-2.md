@@ -20,6 +20,10 @@ interrupts.
   `StreamableHTTPConnection` for HTTP or `Connection` for any transport. Stdio
   `encoding` is unsupported, retry counts must be nonnegative integers and delays
   nonnegative.
+- **Authentication.** `@modelcontextprotocol/client` 2.1 or later is required.
+  Once an `authProvider` has a token it replaces a configured `Authorization`
+  header (1.x sent the configured header instead); until then the header is
+  sent, so a static API key can fall back to OAuth.
 - **Zod 4.** Configuration rejects conflicting options, unknown output-handling
   keys, incompatible fields and empty server maps with Zod errors; hook argument
   overrides must be objects. Tool schemas now preserve the server's original JSON
@@ -52,6 +56,14 @@ which only a modern server can serve; an `auto` HTTP connection that falls back
 to SSE drops them instead. HTTP 404/405 may fall back to SSE
 (`automaticSSEFallback`); authentication and network failures stay errors.
 `setLoggingLevel()` remains legacy-only.
+
+### Authentication
+
+`authProvider` accepts the SDK's `AuthProvider` (`{ token, onUnauthorized? }`)
+as well as an `OAuthClientProvider`. Provider auth failures are
+`MCPClientError`s whose `cause` is the SDK's `UnauthorizedError`, now
+exported, and servers that failed on authentication are retried on the next
+discovery.
 
 ### Elicitation through interrupts
 
