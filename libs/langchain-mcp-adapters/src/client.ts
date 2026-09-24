@@ -22,6 +22,7 @@ import { mergeHeaders } from "./utils/misc.js";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
+  type MCPAdapterInput,
   type Connection,
   type ResolvedMCPAdapterConfig,
   type ResolvedConnection,
@@ -33,10 +34,12 @@ import {
   type MCPResourceTemplate,
   type MCPResourceContent,
   type ConnectionErrorHandler,
+  type MCPAdapterSource,
+  isDescriptorConnection,
   mcpAdapterConfigSchema,
+  adapterConfigSchema,
   toolDiscoveryOptionsSchema,
   type ToolDiscoveryOptions,
-  adapterConfigSchema,
   loggingLevelSchema,
   SSEConnectionSchema,
   customHTTPTransportOptionsSchema,
@@ -136,39 +139,36 @@ export class MCPAdapter {
    * @param config - Configuration object
    */
   constructor(config: MCPAdapterConfig);
+  /** Connect to one server named `default` from a direct MCP source. */
+  constructor(config: MCPAdapterSource);
   /** @deprecated Use `{ servers: { ... } }`. */
   constructor(config: ClientConfig | Record<string, Connection>);
-  constructor(
-    config: MCPAdapterConfig | ClientConfig | Record<string, Connection>
-  ) {
+  constructor(config: MCPAdapterInput) {
     const parsedServerConfig = adapterConfigSchema.parse(config);
 
     for (const [serverName, serverConfig] of Object.entries(
       parsedServerConfig.servers
     )) {
+      const descriptor = isDescriptorConnection(serverConfig)
+        ? serverConfig
+        : undefined;
       const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
         parsedServerConfig.outputHandling,
-        serverConfig.outputHandling
+        descriptor?.outputHandling
       );
       const defaultToolTimeout =
-        parsedServerConfig.defaultToolTimeout ??
-        serverConfig.defaultToolTimeout;
+        parsedServerConfig.defaultToolTimeout ?? descriptor?.defaultToolTimeout;
 
       this.#loadToolsOptions[serverName] = {
-        logLevel: serverConfig.logLevel,
-        elicitation: serverConfig.elicitation,
+        logLevel: descriptor?.logLevel,
+        elicitation: descriptor?.elicitation,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
-        onProgress: serverConfig.onProgress,
-        /**
-         * make sure to place global hooks (e.g. parsedServerConfig) first before
-         * server-specific hooks (e.g. serverConfig) so they can override tool call
-         * configuration.
-         */
+        onProgress: descriptor?.onProgress,
         beforeToolCall: parsedServerConfig.beforeToolCall,
         afterToolCall: parsedServerConfig.afterToolCall,
       };
@@ -285,7 +285,9 @@ export class MCPAdapter {
   #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
     const connection = this.#config.servers[serverName];
 
-    return !connection || connection.transport === "stdio"
+    return !connection ||
+      !isDescriptorConnection(connection) ||
+      (connection.transport !== "http" && connection.transport !== "sse")
       ? { serverName }
       : {
           serverName,
@@ -575,10 +577,11 @@ export class MCPAdapter {
    * waiting on its backoff wakes and gives up instead of resurrecting a
    * connection. Concurrent calls share one teardown.
    *
-   * The adapter stays usable afterwards: the server configuration survives, so
-   * a later `listTools()` discovers again and builds fresh clients rather than
-   * restoring the closed ones. A discovery that arrives mid-close waits for
-   * teardown and then runs in the new epoch.
+   * Descriptor-based server configuration remains reusable afterwards, so a
+   * later `listTools()` discovers again and builds fresh clients. Supplied
+   * transports and in-process servers are one-shot instances and cannot be
+   * reconnected after they are closed. A discovery that arrives mid-close waits
+   * for teardown and then runs in the new epoch.
    */
   async close(): Promise<void> {
     if (this.#closing) {
@@ -627,6 +630,11 @@ export class MCPAdapter {
     connection: ResolvedConnection,
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<void> {
+    if (!isDescriptorConnection(connection)) {
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
+      return;
+    }
+
     if (connection.transport === "stdio") {
       /**
        * check if we already initialized this stdio connection
@@ -689,11 +697,7 @@ export class MCPAdapter {
     const { restart } = connection;
 
     try {
-      await this.#clientConnections.createClient(
-        "stdio",
-        serverName,
-        connection
-      );
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
       const transport = this.#clientConnections.getTransport({
         serverName,
       }) as StdioClientTransport;
@@ -776,11 +780,7 @@ export class MCPAdapter {
 
     if (transportType === "http" || transportType == null) {
       try {
-        await this.#clientConnections.createClient(
-          "http",
-          serverName,
-          connection
-        );
+        await this.#clientConnections.getOrCreateClient(serverName, connection);
       } catch (error) {
         const code = getHttpErrorCode(error);
         if (
@@ -892,7 +892,7 @@ export class MCPAdapter {
     const { url, headers, reconnect, authProvider } = connection;
 
     try {
-      await this.#clientConnections.createClient("sse", serverName, connection);
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
       const transport = this.#clientConnections.getTransport({
         serverName,
         headers,
@@ -1064,7 +1064,7 @@ export class MCPAdapter {
    */
   private async _attemptReconnect(
     serverName: string,
-    connection: ResolvedConnection,
+    connection: ResolvedStdioConnection | ResolvedSSEConnection,
     maxAttempts = 3,
     delayMs = 1000
   ): Promise<void> {
@@ -1101,18 +1101,8 @@ export class MCPAdapter {
         // Initialize just this connection based on its type
         if (connection.transport === "stdio") {
           await this._initializeStdioConnection(serverName, connection);
-        } else if (
-          connection.transport === "http" ||
-          connection.transport === "sse"
-        ) {
-          if (connection.transport === "sse") {
-            await this._initializeSSEConnection(serverName, connection);
-          } else {
-            await this._initializeStreamableHTTPConnection(
-              serverName,
-              connection
-            );
-          }
+        } else {
+          await this._initializeSSEConnection(serverName, connection);
         }
 
         // Check if connected

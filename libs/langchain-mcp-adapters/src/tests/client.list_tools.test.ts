@@ -12,26 +12,27 @@ describe("adapter tool listing", () => {
     vi.spyOn(ConnectionManager.prototype, "get").mockImplementation((key) =>
       clients.get(typeof key === "string" ? key : key.serverName)
     );
-    vi.spyOn(ConnectionManager.prototype, "createClient").mockImplementation(
-      async (_transport, serverName) => {
-        const client = new Client({ name: serverName, version: "1" });
+    vi.spyOn(
+      ConnectionManager.prototype,
+      "getOrCreateClient"
+    ).mockImplementation(async (serverName) => {
+      const client = new Client({ name: serverName, version: "1" });
 
-        const connected = Object.assign(client, {
-          fork: async () => connected,
-        });
+      const connected = Object.assign(client, {
+        fork: async () => connected,
+      });
 
-        vi.spyOn(client, "listTools").mockResolvedValue({
-          tools: [{ name: serverName, inputSchema: { type: "object" } }],
-        });
-        vi.spyOn(client, "callTool").mockResolvedValue({
-          content: [{ type: "text", text: serverName }],
-        });
+      vi.spyOn(client, "listTools").mockResolvedValue({
+        tools: [{ name: serverName, inputSchema: { type: "object" } }],
+      });
+      vi.spyOn(client, "callTool").mockResolvedValue({
+        content: [{ type: "text", text: serverName }],
+      });
 
-        clients.set(serverName, connected);
+      clients.set(serverName, connected);
 
-        return connected;
-      }
-    );
+      return connected;
+    });
 
     const adapter = new MCPAdapter({
       servers: {

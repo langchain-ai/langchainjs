@@ -7,6 +7,7 @@ import {
   type NotificationMethod,
   type NotificationTypeMap,
 } from "@modelcontextprotocol/client";
+import { isDescriptorConnection } from "../types.js";
 import type { ResolvedConnection, ServerMessageSource } from "../types.js";
 import { ConnectionManager, type Client } from "../connection.js";
 
@@ -33,6 +34,9 @@ describe("ConnectionManager", () => {
         const mutateOptions = (source: ServerMessageSource) => {
           const options = source.options;
           observed.push(options);
+          if (!isDescriptorConnection(options)) {
+            throw new Error("Expected descriptor config");
+          }
           expect(options.outputHandling).toEqual({ text: "content" });
 
           if (typeof options.outputHandling === "object")
@@ -46,6 +50,9 @@ describe("ConnectionManager", () => {
             options.env!.MODE = "changed";
             options.restart!.enabled = true;
           } else {
+            if (options.transport !== "http") {
+              throw new Error("Expected HTTP config");
+            }
             expect(options.url).toBe("https://example.com/mcp");
             expect(options.headers).toEqual({ "X-Test": "original" });
             expect(options.reconnect).toEqual({ enabled: false });
@@ -88,8 +95,8 @@ describe("ConnectionManager", () => {
               };
 
         if ("command" in options)
-          await manager.createClient("stdio", "test", options);
-        else await manager.createClient("http", "test", options);
+          await manager.getOrCreateClient("test", options);
+        else await manager.getOrCreateClient("test", options);
 
         const registerNotification: <M extends NotificationMethod>(
           method: M,
@@ -138,7 +145,7 @@ describe("ConnectionManager", () => {
     test("creates stdio client and connects", async () => {
       const mgr = new ConnectionManager();
 
-      const client = await mgr.createClient("stdio", "stdio-server", {
+      const client = await mgr.getOrCreateClient("stdio-server", {
         mode: "legacy",
         transport: "stdio",
         command: "python",
@@ -156,7 +163,7 @@ describe("ConnectionManager", () => {
     test("creates stdio client with cwd option passed correctly", async () => {
       const mgr = new ConnectionManager();
 
-      const client = await mgr.createClient("stdio", "stdio-server", {
+      const client = await mgr.getOrCreateClient("stdio-server", {
         mode: "legacy",
         transport: "stdio",
         command: "node",
@@ -178,7 +185,7 @@ describe("ConnectionManager", () => {
     test("creates HTTP client and maps reconnect options", async () => {
       const mgr = new ConnectionManager();
 
-      await mgr.createClient("http", "http-server", {
+      await mgr.getOrCreateClient("http-server", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
@@ -208,7 +215,7 @@ describe("ConnectionManager", () => {
       const tokens = vi.fn().mockResolvedValue({ access_token: "abc" });
       const authProvider = { tokens } as never;
 
-      await mgr.createClient("sse", "sse-server", {
+      await mgr.getOrCreateClient("sse-server", {
         mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
@@ -238,14 +245,14 @@ describe("ConnectionManager", () => {
     test("manages multiple distinct connections keyed by headers/auth", async () => {
       const mgr = new ConnectionManager();
 
-      const c1 = await mgr.createClient("http", "svc", {
+      const c1 = await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
-      const c2 = await mgr.createClient("http", "svc", {
+      const c2 = await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
@@ -270,7 +277,7 @@ describe("ConnectionManager", () => {
         args: ["-e", "console.log('ok')"],
         stderr: "inherit" as const,
       };
-      const client = await mgr.createClient("stdio", "s", {
+      const client = await mgr.getOrCreateClient("s", {
         ...config,
         mode: "legacy",
         transport: "stdio",
@@ -289,14 +296,14 @@ describe("ConnectionManager", () => {
   describe("delete", () => {
     test("deletes specific connection and all connections", async () => {
       const mgr = new ConnectionManager();
-      await mgr.createClient("http", "svc", {
+      await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
-      await mgr.createClient("sse", "svc", {
+      await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
@@ -316,7 +323,7 @@ describe("ConnectionManager", () => {
   describe("fork", () => {
     test("forks HTTP client with new headers and creates a new connection", async () => {
       const mgr = new ConnectionManager();
-      const base = await mgr.createClient("http", "svc", {
+      const base = await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
@@ -324,7 +331,7 @@ describe("ConnectionManager", () => {
         headers: { A: "1", "X-Keep": "base" },
       });
 
-      const forked = await (base as Client).fork({ A: "2" });
+      const forked = await (base as Client).fork!({ A: "2" });
       expect(forked).not.toBe(base);
       expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(2);
       expect(mgr.getAllClients().length).toBe(2);
@@ -355,7 +362,7 @@ describe("ConnectionManager", () => {
 
     test("forking with equivalent headers reuses the existing connection", async () => {
       const mgr = new ConnectionManager();
-      const base = await mgr.createClient("http", "svc", {
+      const base = await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
@@ -364,7 +371,7 @@ describe("ConnectionManager", () => {
       });
 
       // header names are case-insensitive, so this resolves to the same identity
-      expect(await (base as Client).fork({ a: "1" })).toBe(base);
+      expect(await (base as Client).fork!({ a: "1" })).toBe(base);
 
       expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(1);
       expect(mgr.getAllClients().length).toBe(1);
@@ -372,7 +379,7 @@ describe("ConnectionManager", () => {
 
     test("forking stdio client is not supported", async () => {
       const mgr = new ConnectionManager();
-      const stdio = await mgr.createClient("stdio", "svc", {
+      const stdio = await mgr.getOrCreateClient("svc", {
         mode: "legacy",
         transport: "stdio",
         command: "python",
@@ -380,7 +387,7 @@ describe("ConnectionManager", () => {
         stderr: "inherit",
       });
 
-      expect(() => (stdio as Client).fork({ A: "2" })).toThrow(
+      expect(() => (stdio as Client).fork!({ A: "2" })).toThrow(
         /Forking stdio transport is not supported/
       );
     });

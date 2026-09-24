@@ -11,7 +11,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
 import { ElicitRequestSchema } from "@modelcontextprotocol/core";
-import { adapterConfigSchema } from "../types.js";
+import { adapterConfigSchema, isDescriptorConnection } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import {
@@ -597,17 +597,19 @@ it("rejects modern reconnect settings and invalid resource subscriptions", () =>
     ).toBe(false);
   }
 
-  expect(
-    adapterConfigSchema.parse({
-      servers: {
-        server: {
-          mode: "legacy",
-          url: "https://example.com/mcp",
-          reconnect: { enabled: false },
-        },
+  const server = adapterConfigSchema.parse({
+    servers: {
+      server: {
+        mode: "legacy",
+        url: "https://example.com/mcp",
+        reconnect: { enabled: false },
       },
-    }).servers.server.mode
-  ).toBe("legacy");
+    },
+  }).servers.server;
+  if (!isDescriptorConnection(server) || server.transport !== "http") {
+    throw new Error("Expected HTTP config");
+  }
+  expect(server.mode).toBe("legacy");
 });
 
 it("auto-detects legacy subscriptions without advertising callback elicitation", async () => {
