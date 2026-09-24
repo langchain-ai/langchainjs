@@ -12,9 +12,15 @@ export { UnauthorizedError } from "@modelcontextprotocol/client";
 export type {
   ClientConfig,
   MCPAdapterConfig,
+  MCPAdapterInput,
+  MCPAdapterSource,
+  MCPServerLike,
   ResolvedMCPAdapterConfig,
   Connection,
   ResolvedConnection,
+  ResolvedDescriptorConnection,
+  ResolvedInProcessConnection,
+  ResolvedClientConnection,
   LoadMcpToolsOptions,
   ToolDiscoveryOptions,
   OutputHandling,
@@ -34,7 +40,11 @@ export type {
 export {
   StdioConnectionSchema,
   HTTPConnectionSchema,
+  InProcessConnectionSchema,
+  ClientConnectionSchema,
   ConnectionSchema,
+  isDescriptorConnection,
+  adapterConfigSchema,
 } from "./types.js";
 
 export { loadMcpTools, ToolException, isToolException } from "./tools.js";

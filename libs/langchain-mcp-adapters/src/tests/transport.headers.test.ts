@@ -90,11 +90,7 @@ describe("what the transports send", () => {
         authProvider: staticProvider("from-provider"),
       } as never;
 
-      await (
-        transport === "sse"
-          ? manager.createClient("sse", "svc", connection)
-          : manager.createClient("http", "svc", connection)
-      ).catch(() => {
+      await manager.getOrCreateClient("svc", connection).catch(() => {
         // The recording server speaks no MCP; the request is what matters.
       });
 

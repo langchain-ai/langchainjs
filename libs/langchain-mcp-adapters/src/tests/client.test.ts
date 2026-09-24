@@ -2492,6 +2492,72 @@ describe("MultiServerMCPClient Integration Tests", () => {
     );
   });
 
+  describe("direct constructor inputs", () => {
+    function createEchoServer(name: string) {
+      const server = new McpServer({ name, version: "1.0.0" });
+      server.registerTool(
+        "echo",
+        { inputSchema: z.object({ value: z.string() }) },
+        async ({ value }) => ({ content: [{ type: "text", text: value }] })
+      );
+      return server;
+    }
+
+    it("connects an in-process MCP server", async () => {
+      const server = createEchoServer("in-process-source");
+      const close = vi.spyOn(server, "close");
+      const adapter = new MCPAdapter(server);
+
+      const [echo] = await adapter.listTools();
+      await expect(echo.invoke({ value: "memory" })).resolves.toBe("memory");
+
+      await adapter.close();
+      expect(close).toHaveBeenCalledOnce();
+      await expect(adapter.listTools()).rejects.toThrow(
+        'MCP connection for "default" has already been closed'
+      );
+    });
+
+    it("accepts object-backed connections in the canonical servers map", async () => {
+      const server = createEchoServer("named-object-source");
+      const adapter = new MCPAdapter({
+        servers: { local: server },
+      });
+
+      expect(adapter.config.servers.local).toBe(server);
+
+      try {
+        const toolsets = await adapter.listToolsets();
+        await expect(
+          toolsets.local[0].invoke({ value: "named" })
+        ).resolves.toBe("named");
+      } finally {
+        await adapter.close();
+      }
+    });
+
+    it("uses a connected Client without taking ownership", async () => {
+      const server = createEchoServer("client-source");
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+      await server.connect(serverTransport);
+      const client = new SDKClient({ name: "prebuilt", version: "1.0.0" });
+      await client.connect(clientTransport);
+      const close = vi.spyOn(client, "close");
+      const adapter = new MCPAdapter(client);
+
+      try {
+        const [echo] = await adapter.listTools();
+        await expect(echo.invoke({ value: "client" })).resolves.toBe("client");
+        await adapter.close();
+        expect(close).not.toHaveBeenCalled();
+      } finally {
+        await client.close();
+        await server.close();
+      }
+    });
+  });
+
   describe("SDK client integration", () => {
     it("loads tools from an external SDK 2 client and forwards request options", async () => {
       const server = new McpServer({ name: "external", version: "1.0.0" });
