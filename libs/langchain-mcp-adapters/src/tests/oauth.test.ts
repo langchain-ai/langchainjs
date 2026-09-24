@@ -607,17 +607,25 @@ describe("OAuth behavior on SDK 2.1", () => {
   it("keeps one connection per per-call provider", async () => {
     const server = await fixture();
     const [a, b] = [server.mintAccessToken(), server.mintAccessToken()];
+    const providerA = { token: async () => a };
+    const providerB = { token: async () => b };
     const mcp = adapter({
       servers: { svc: { transport: "http", url: server.mcpUrl } },
     });
-    await mcp.listToolsets({ authProvider: { token: async () => a } });
-    await mcp.listToolsets({ authProvider: { token: async () => b } });
+    await mcp.listToolsets({ authProvider: providerA });
+    await mcp.listToolsets({ authProvider: providerB });
     const sent = new Set(
       server.requests
         .filter((request) => request.path === "/mcp")
         .map((request) => request.authorization)
     );
     expect(sent).toEqual(new Set([`Bearer ${a}`, `Bearer ${b}`]));
+
+    const clientA = await mcp.getClient("svc", { authProvider: providerA });
+    const clientB = await mcp.getClient("svc", { authProvider: providerB });
+    expect(clientA).toBeDefined();
+    expect(clientB).toBeDefined();
+    expect(clientA).not.toBe(clientB);
   });
 
   it("keeps the last spelling when one config repeats Authorization", async () => {
