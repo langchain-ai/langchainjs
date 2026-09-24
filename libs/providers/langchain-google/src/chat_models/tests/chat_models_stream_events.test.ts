@@ -2,6 +2,10 @@ import { describe, expect, test } from "vitest";
 import { ApiClient } from "../../clients/index.js";
 import { ChatGoogle } from "../index.js";
 import type { Gemini } from "../api-types.js";
+import {
+  GoogleRequestRecorder,
+  GoogleRequestLogger,
+} from "../../utils/handler.js";
 
 class MockChunkStreamingResponse implements Response {
   readonly headers = new Headers();
@@ -150,5 +154,127 @@ describe("ChatGoogle.streamEvents", () => {
       output_tokens: 4,
       total_tokens: 14,
     });
+  });
+
+  test("yields request, response, and chunk provider events in stream", async () => {
+    const model = mockChatGoogle(textChunks);
+    const stream = model.streamEvents("Hello");
+    const events = [];
+    for await (const event of stream) {
+      events.push(event);
+    }
+
+    const providerEvents = events.filter((e) => e.event === "provider");
+    expect(providerEvents.length).toBeGreaterThanOrEqual(3);
+
+    const requestEvent = providerEvents.find((e) => e.name === "request");
+    expect(requestEvent).toBeDefined();
+    expect(requestEvent?.provider).toBe("google");
+    expect(
+      (requestEvent?.payload as { url: string; body: unknown }).url
+    ).toContain("streamGenerateContent");
+    expect(
+      (requestEvent?.payload as { url: string; body: unknown }).body
+    ).toBeDefined();
+
+    const responseEvent = providerEvents.find((e) => e.name === "response");
+    expect(responseEvent).toBeDefined();
+    expect(responseEvent?.provider).toBe("google");
+    expect((responseEvent?.payload as { status: number }).status).toBe(200);
+
+    const chunkEvents = providerEvents.filter((e) => e.name === "chunk");
+    expect(chunkEvents).toHaveLength(2);
+    expect(
+      (chunkEvents[0].payload as { chunk: Gemini.GenerateContentResponse })
+        .chunk
+    ).toBeDefined();
+  });
+
+  test("populates GoogleRequestRecorder passed in model callbacks", async () => {
+    const recorder = new GoogleRequestRecorder();
+    const model = new ChatGoogle({
+      model: "gemini-2.0-flash",
+      apiKey: "fake-key",
+      apiClient: new MockStreamingApiClient(textChunks),
+      callbacks: [recorder],
+    });
+
+    const stream = model.streamEvents("Hello");
+    for await (const _ of stream) {
+      // consume stream
+    }
+
+    expect(recorder.request.url).toContain("streamGenerateContent");
+    expect(recorder.request.body).toBeDefined();
+    expect(recorder.response.status).toBe(200);
+    expect(recorder.chunk).toHaveLength(2);
+    expect(recorder.chunks).toHaveLength(2);
+    expect(recorder.requests).toHaveLength(1);
+    expect(recorder.responses).toHaveLength(1);
+
+    recorder.reset();
+    expect(recorder.chunk).toHaveLength(0);
+    expect(recorder.request).toEqual({});
+  });
+
+  test("records stream events using recorder.tap()", async () => {
+    const recorder = new GoogleRequestRecorder();
+    const model = mockChatGoogle(textChunks);
+    const stream = model.streamEvents("Hello");
+
+    const collectedEvents = [];
+    for await (const event of recorder.tap(stream)) {
+      collectedEvents.push(event);
+    }
+
+    expect(collectedEvents.length).toBeGreaterThan(0);
+    expect(recorder.request.url).toBeDefined();
+    expect(recorder.response.status).toBe(200);
+    expect(recorder.chunk).toHaveLength(2);
+  });
+
+  test("records error response event on fetch failure", async () => {
+    const recorder = new GoogleRequestRecorder();
+    class FailingApiClient extends MockStreamingApiClient {
+      constructor() {
+        super([]);
+      }
+      override async fetch(): Promise<Response> {
+        throw new Error("Simulated network failure");
+      }
+    }
+    const failingApiClient = new FailingApiClient();
+
+    const model = new ChatGoogle({
+      model: "gemini-3.7-flash",
+      apiKey: "fake-key",
+      apiClient: failingApiClient,
+      callbacks: [recorder],
+      maxRetries: 0,
+    });
+
+    await expect(async () => {
+      const stream = model.streamEvents("Hello");
+      for await (const _ of stream) {
+        // consume
+      }
+    }).rejects.toThrow("Simulated network failure");
+
+    expect(recorder.response.error).toBeDefined();
+  });
+
+  test("runs with GoogleRequestLogger without error", async () => {
+    const logger = new GoogleRequestLogger();
+    const model = new ChatGoogle({
+      model: "gemini-3.7-flash",
+      apiKey: "fake-key",
+      apiClient: new MockStreamingApiClient(textChunks),
+      callbacks: [logger],
+    });
+
+    const stream = model.streamEvents("Hello");
+    for await (const _ of stream) {
+      // consume
+    }
   });
 });
