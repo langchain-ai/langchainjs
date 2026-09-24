@@ -1012,8 +1012,10 @@ function convertToolContentToResponsesOutput(
     if (block.type === "text") {
       return { type: "input_text", text: block.text };
     }
-    const image = block.type === "image" ? resolveImageItem(block) : undefined;
-    return image ?? { type: "input_text", text: JSON.stringify(block) };
+    if (block.type === "image") {
+      return resolveImageItem(block);
+    }
+    return { type: "input_text", text: JSON.stringify(block) };
   });
 }
 
