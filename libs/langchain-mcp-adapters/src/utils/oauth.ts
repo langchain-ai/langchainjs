@@ -29,6 +29,25 @@ export function assertCallbackState(
     );
 }
 
+/** RFC 6749 §4.1.2.1's authorization-endpoint `error` codes. */
+const AUTHORIZATION_ERROR_CODES = new Set([
+  "invalid_request",
+  "unauthorized_client",
+  "access_denied",
+  "unsupported_response_type",
+  "invalid_scope",
+  "server_error",
+  "temporarily_unavailable",
+]);
+
+/** The callback's `error` if it is a standard code; never its free text. */
+export function knownCallbackErrorCode(
+  params: URLSearchParams
+): string | undefined {
+  const code = params.get("error") ?? "";
+  return AUTHORIZATION_ERROR_CODES.has(code) ? code : undefined;
+}
+
 /**
  * A fresh transport never saw the 401 that started the login, so only the
  * provider's persisted discovery state can carry that challenge's metadata URL.

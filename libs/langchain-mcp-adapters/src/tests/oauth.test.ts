@@ -457,6 +457,69 @@ describe("finishAuth", () => {
     });
     const error = await failure(mcp.finishAuth("svc", denied));
     expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).toContain("access_denied");
+    expect(error.message).not.toContain("user declined");
+  });
+
+  it("drops error_description/error_uri from an access_denied callback when the server doesn't support iss", async () => {
+    const { mcp } = await pendingLogin({ iss: "unsupported" });
+    const denied = new URLSearchParams({
+      error: "access_denied",
+      error_description: "you were phished by attacker.invalid",
+      error_uri: "https://distinct-uri-marker.example/explain",
+    });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).toContain("access_denied");
+    expect(error.message).not.toContain("attacker.invalid");
+    expect(error.message).not.toContain("phished");
+    expect(error.message).not.toContain("distinct-uri-marker");
+  });
+
+  it("does not echo a non-allowlisted error code", async () => {
+    const { mcp } = await pendingLogin({ iss: "unsupported" });
+    const code = "evil<script>alert(1)</script>";
+    const denied = new URLSearchParams({ error: code });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).not.toContain(code);
+  });
+
+  it("does not treat a CRLF-suffixed near-miss as the standard code", async () => {
+    const { mcp } = await pendingLogin({ iss: "unsupported" });
+    const denied = new URLSearchParams({ error: "access_denied\r\nX: y" });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).toContain("an error");
+    expect(error.message).not.toContain("access_denied");
+  });
+
+  it("keeps an unverifiable error= callback on the generic path", async () => {
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: "http://127.0.0.1:9/mcp",
+          authProvider: createTestOAuthProvider(),
+        },
+      },
+    });
+    const error = await failure(
+      mcp.finishAuth("svc", new URLSearchParams({ error: "access_denied" }))
+    );
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
+    expect(error.message).not.toContain("access_denied");
+    expect(error.message).toContain("saveDiscoveryState");
+  });
+
+  it("reports a failed exchange when the callback carries both code and error", async () => {
+    const { mcp, callback } = await pendingLogin();
+    callback.set("code", "bogus");
+    callback.set("error", "access_denied");
+    const error = await failure(mcp.finishAuth("svc", callback));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).not.toContain("access_denied");
+    expect(error.message).toContain("saveDiscoveryState");
   });
 
   it("rejects an unknown server, a stdio server, and a token-only provider", async () => {

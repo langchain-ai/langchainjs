@@ -7,6 +7,7 @@ import {
 import { z } from "zod";
 import {
   IssuerMismatchError,
+  OAuthError,
   SSEClientTransport,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
@@ -22,7 +23,11 @@ import { convertMcpTools } from "./tools.js";
 import { _resolveAndApplyOverrideHandlingOverrides } from "./content.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { mergeHeaders } from "./utils/misc.js";
-import { assertCallbackState, discoveryStateHint } from "./utils/oauth.js";
+import {
+  assertCallbackState,
+  discoveryStateHint,
+  knownCallbackErrorCode,
+} from "./utils/oauth.js";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
@@ -430,8 +435,9 @@ export class MCPAdapter {
    * or process; the next discovery or tool call connects.
    *
    * @throws {MCPClientError} for an unknown or stdio server, a provider that is
-   * not an `OAuthClientProvider`, a `state` mismatch, or a failed exchange (the
-   * SDK error is the `cause`).
+   * not an `OAuthClientProvider`, a `state` mismatch, an `error=` callback, or
+   * a failed exchange (the SDK error is the `cause`; it may carry callback
+   * text, so don't display it).
    */
   async finishAuth(
     serverName: string,
@@ -485,6 +491,18 @@ export class MCPAdapter {
           serverName,
           { cause: error }
         );
+
+      // With no `code`, the SDK builds this OAuthError from the callback's own
+      // error fields once `iss` passes (unchecked when the server doesn't
+      // advertise RFC 9207). Echo only a standard `error` code.
+      if (!params.get("code") && OAuthError.isInstance(error)) {
+        const code = knownCallbackErrorCode(params);
+        throw new MCPClientError(
+          `OAuth authorization for "${serverName}" failed: the callback reported ${code ? `"${code}"` : "an error"}, so no code was redeemed.`,
+          serverName,
+          { cause: error }
+        );
+      }
 
       throw new MCPClientError(
         `OAuth authorization for "${serverName}" failed: ${error}.${discoveryStateHint(provider.data)}`,
