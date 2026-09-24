@@ -33,6 +33,7 @@ export {
 } from "./types.js";
 
 export { loadMcpTools, ToolException, isToolException } from "./tools.js";
+export type { MCPToolMetadata } from "./tools.js";
 
 export type {
   ToolHooks,

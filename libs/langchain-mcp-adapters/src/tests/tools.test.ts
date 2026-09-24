@@ -17,7 +17,7 @@ import type {
 } from "@langchain/core/messages";
 
 import { z } from "zod";
-import { loadMcpTools } from "../tools.js";
+import { loadMcpTools, type MCPToolMetadata } from "../tools.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -37,9 +37,77 @@ describe("Simplified Tool Adapter Tests", () => {
       callTool: vi.fn(),
       listTools: vi.fn(),
       getProtocolEra: vi.fn(() => "legacy"),
+      getServerVersion: vi.fn(() => undefined),
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
+  });
+
+  test("omits provenance fields that were not advertised", async () => {
+    const annotations = { readOnlyHint: true };
+    const _meta = { origin: "crm" };
+    mockClient.listTools.mockResolvedValue({
+      tools: [
+        { name: "with_meta", inputSchema: { type: "object" }, _meta },
+        {
+          name: "with_annotations",
+          inputSchema: { type: "object" },
+          annotations,
+        },
+      ],
+    });
+
+    const tools = await loadMcpTools("configured-alias", mockClient);
+
+    expect(tools.map((tool) => tool.metadata)).toEqual([
+      { mcp: { tool: { _meta } } },
+      { annotations, mcp: { tool: { annotations } } },
+    ]);
+  });
+
+  test("copies provenance for each adapted tool", async () => {
+    const annotations = { readOnlyHint: true };
+    const _meta = { origin: "crm" };
+    const server = {
+      name: "crm",
+      version: "2.1.0",
+      icons: [{ src: "https://crm.example.com/icon.png" }],
+    };
+    mockClient.getServerVersion.mockReturnValue(server);
+    mockClient.listTools.mockResolvedValue({
+      tools: ["first", "second"].map((name) => ({
+        name,
+        inputSchema: { type: "object" },
+        annotations,
+        _meta,
+      })),
+    });
+
+    const [first, second] = (
+      await loadMcpTools("configured-alias", mockClient)
+    ).map((tool) => tool.metadata as MCPToolMetadata);
+
+    expect(first.mcp).toEqual(second.mcp);
+    expect(first.mcp.tool.annotations).not.toBe(annotations);
+    expect(first.mcp.tool.annotations).not.toBe(second.mcp.tool.annotations);
+    expect(first.mcp.tool._meta).not.toBe(_meta);
+    expect(first.mcp.tool._meta).not.toBe(second.mcp.tool._meta);
+    expect(first.mcp.server).not.toBe(server);
+    expect(first.mcp.server?.icons).not.toBe(server.icons);
+    expect(first.mcp.server).not.toBe(second.mcp.server);
+    expect(first.mcp.server?.icons).not.toBe(second.mcp.server?.icons);
+  });
+
+  test("ignores unavailable server identity", async () => {
+    mockClient.listTools.mockResolvedValue({
+      tools: [{ name: "minimal", inputSchema: { type: "object" } }],
+    });
+    mockClient.getServerVersion.mockImplementation(() => {
+      throw new Error("identity unavailable");
+    });
+
+    const [tool] = await loadMcpTools("configured-alias", mockClient);
+    expect(tool.metadata).toEqual({ mcp: { tool: {} } });
   });
 
   test.each([

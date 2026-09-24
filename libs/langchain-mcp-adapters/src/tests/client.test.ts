@@ -6,7 +6,7 @@ import {
 import { JSONRPCRequestSchema } from "@modelcontextprotocol/core";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { MCPAdapter, loadMcpTools } from "../index.js";
+import { MCPAdapter, loadMcpTools, type MCPToolMetadata } from "../index.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createServer, Server } from "node:http";
 import { once } from "node:events";
@@ -2522,6 +2522,59 @@ describe("MultiServerMCPClient Integration Tests", () => {
           { name: "echo", arguments: { value: "hello" } },
           expect.objectContaining({ signal: controller.signal, timeout: 1000 })
         );
+      } finally {
+        await client.close();
+        await server.close();
+      }
+    });
+
+    it("propagates tool and advertised server metadata from a live MCP session", async () => {
+      const annotations = {
+        destructiveHint: true,
+        readOnlyHint: false,
+      };
+      const _meta = { origin: "crm" };
+      const server = new McpServer({
+        name: "crm",
+        version: "2.1.0",
+        title: "CRM Server",
+        description: "Customer relationship management tools",
+        websiteUrl: "https://crm.example.com",
+      });
+      server.registerTool(
+        "lookup_customer",
+        {
+          inputSchema: z.object({ customerId: z.string() }),
+          annotations,
+          _meta,
+        },
+        async ({ customerId }) => ({
+          content: [{ type: "text", text: customerId }],
+        })
+      );
+      const client = new SDKClient({ name: "consumer", version: "1.0.0" });
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+
+      await server.connect(serverTransport);
+
+      try {
+        await client.connect(clientTransport);
+        const [tool] = await loadMcpTools("configured-alias", client);
+
+        expect(tool.metadata as MCPToolMetadata).toEqual({
+          annotations,
+          mcp: {
+            tool: { annotations, _meta },
+            server: {
+              name: "crm",
+              version: "2.1.0",
+              title: "CRM Server",
+              description: "Customer relationship management tools",
+              websiteUrl: "https://crm.example.com",
+            },
+          },
+        });
       } finally {
         await client.close();
         await server.close();
