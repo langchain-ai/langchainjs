@@ -43,6 +43,34 @@ type ChatCompletionsInvocationParams = Omit<
   "messages"
 >;
 
+const TOOL_IMAGE_HINT =
+  "Chat Completions does not support images in tool messages. " +
+  "Use the Responses API (`useResponsesApi: true`) to send images from tool results.";
+
+/** Points a 400 caused by a tool-result image at the Responses API. */
+function addToolImageHint(
+  error: unknown,
+  messages: OpenAIClient.Chat.ChatCompletionMessageParam[]
+) {
+  const hasToolImage = messages.some(
+    (message) =>
+      message.role === "tool" &&
+      Array.isArray(message.content) &&
+      message.content.some(
+        (part) => (part as { type: string }).type === "image"
+      )
+  );
+  if (
+    hasToolImage &&
+    error instanceof Error &&
+    "status" in error &&
+    error.status === 400
+  ) {
+    error.message = `${error.message}\n\n${TOOL_IMAGE_HINT}`;
+  }
+  return error;
+}
+
 /**
  * OpenAI Completions API implementation.
  * @internal
@@ -555,7 +583,7 @@ export class ChatOpenAICompletions<
         }
       } catch (e) {
         const error = wrapOpenAIClientError(e);
-        throw error;
+        throw addToolImageHint(error, request.messages);
       }
     });
   }

@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  AIMessage,
+  AIMessageChunk,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
 
@@ -373,5 +378,71 @@ describe("ChatOpenAICompletions strict tools for structured output", () => {
     expect(
       toolStrict({ response_format: { type: "json_object" } })
     ).toBeUndefined();
+  });
+});
+
+describe("ChatOpenAICompletions tool image errors", () => {
+  const invokeWithToolContent = (
+    content: ToolMessage["content"],
+    status = 400
+  ) => {
+    const fetch = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ error: { message: "Invalid value: 'image'." } }),
+          { status, headers: { "content-type": "application/json" } }
+        )
+    );
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test-key",
+      maxRetries: 0,
+      configuration: { fetch },
+    });
+    return model.invoke([
+      new HumanMessage("Read /a.png"),
+      new AIMessage({
+        content: "",
+        tool_calls: [{ id: "call_1", name: "read_file", args: {} }],
+      }),
+      new ToolMessage({ tool_call_id: "call_1", content }),
+    ]);
+  };
+
+  it("adds a Responses API hint to a 400 when a tool message has an image", async () => {
+    await expect(
+      invokeWithToolContent([
+        { type: "image", mimeType: "image/png", data: "AAA" },
+      ])
+    ).rejects.toThrow(
+      /Invalid value: 'image'[\s\S]*Chat Completions does not support images in tool messages/
+    );
+  });
+
+  it("leaves the 400 unchanged without a tool image", async () => {
+    const error = await invokeWithToolContent([
+      { type: "text", text: "42" },
+    ]).catch((e) => e);
+
+    expect(error.status).toBe(400);
+    expect(error.message).not.toContain("does not support images");
+  });
+
+  it("leaves the 400 unchanged for image_url tool content", async () => {
+    const error = await invokeWithToolContent([
+      { type: "image_url", image_url: { url: "data:image/png;base64,AAA" } },
+    ]).catch((e) => e);
+
+    expect(error.status).toBe(400);
+    expect(error.message).not.toContain("does not support images");
+  });
+
+  it("leaves other errors unchanged", async () => {
+    const error = await invokeWithToolContent(
+      [{ type: "image", mimeType: "image/png", data: "AAA" }],
+      500
+    ).catch((e) => e);
+
+    expect(error.message).not.toContain("does not support images");
   });
 });
