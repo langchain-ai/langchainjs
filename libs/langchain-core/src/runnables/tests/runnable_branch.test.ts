@@ -126,3 +126,47 @@ test("RunnableBranch invoke", async () => {
   expect(chunks2.length).toBeGreaterThan(1);
   expect(chunks2.join("")).toContain("GENERAL");
 });
+
+test("RunnableBranch returns a matched branch's falsy output", async () => {
+  // A matched branch that returns 0, "", false or null must win over the default.
+  // Testing `!result` cannot tell "no branch matched" apart from "the branch
+  // returned something falsy", so these silently fell through to the default.
+  const cases: [unknown, unknown][] = [
+    [0, -1],
+    ["", "default"],
+    [false, true],
+    [null, "default"],
+  ];
+
+  for (const [branchOutput, defaultOutput] of cases) {
+    const branch = RunnableBranch.from([
+      [(x: number) => x > 0, () => branchOutput],
+      () => defaultOutput,
+    ]);
+    expect(await branch.invoke(5)).toEqual(branchOutput);
+  }
+});
+
+test("RunnableBranch returns a matched branch's undefined output", async () => {
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 0, () => undefined],
+    () => "default",
+  ]);
+  expect(await branch.invoke(5)).toBeUndefined();
+});
+
+test("RunnableBranch still uses the default when no condition matches", async () => {
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 100, () => 0],
+    () => "default",
+  ]);
+  expect(await branch.invoke(5)).toEqual("default");
+});
+
+test("RunnableBranch batch preserves falsy branch outputs", async () => {
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 0, () => 0],
+    () => -1,
+  ]);
+  expect(await branch.batch([1, -1, 2])).toEqual([0, -1, 0]);
+});
