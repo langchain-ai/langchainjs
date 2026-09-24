@@ -11,9 +11,10 @@ import {
   type InteropZodObject,
 } from "@langchain/core/utils/types";
 import type { StateDefinitionInit } from "@langchain/langgraph";
-import { END, StateSchema, ReducedValue } from "@langchain/langgraph";
+import { StateSchema, ReducedValue } from "@langchain/langgraph";
 
-import type { JumpTo } from "../types.js";
+import type { JumpToTarget } from "../constants.js";
+import type { TOOLS_NODE_NAME } from "./ToolNode.js";
 import type { AnyAgentMiddleware } from "../middleware/types.js";
 
 /**
@@ -196,34 +197,33 @@ export function toPartialZodObject(
 }
 
 /**
- * Parse `jumpTo` target from user facing labels to a LangGraph node names
+ * Resolve a user facing `jumpTo` label to the LangGraph node it lands on.
+ *
+ * `"model"` means the top of the agent loop, which is the first `beforeModel`
+ * node when any middleware defines a `beforeModel` hook and the model request
+ * node otherwise — the caller supplies it as `modelDestination`. `"end"`
+ * likewise resolves to the caller's `endDestination`, which may be an
+ * `afterAgent` node rather than `END`.
+ *
+ * Mirrors `_resolve_jump` in the Python SDK (`langchain.agents.factory`) so the
+ * two implementations can be compared side by side. Returns `undefined` for an
+ * absent or unrecognised label; `canJumpTo` validation rejects bad labels
+ * before routing sees them.
  */
-export function parseJumpToTarget(target: string): JumpTo;
-export function parseJumpToTarget(target?: string): JumpTo | undefined {
-  if (!target) {
-    return undefined;
+export function resolveJump(
+  jumpTo: JumpToTarget | undefined,
+  options: { modelDestination: string; endDestination: string }
+): string | undefined {
+  if (jumpTo === "model") {
+    return options.modelDestination;
   }
-
-  /**
-   * if target is already a valid jump target, return it
-   */
-  if (["model_request", "tools", END].includes(target)) {
-    return target as JumpTo;
+  if (jumpTo === "end") {
+    return options.endDestination;
   }
-
-  if (target === "model") {
-    return "model_request";
+  if (jumpTo === "tools") {
+    return "tools" satisfies typeof TOOLS_NODE_NAME;
   }
-  if (target === "tools") {
-    return "tools";
-  }
-  if (target === "end") {
-    return END;
-  }
-
-  throw new Error(
-    `Invalid jump target: ${target}, must be "model", "tools" or "end".`
-  );
+  return undefined;
 }
 
 /**
