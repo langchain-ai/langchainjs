@@ -618,6 +618,13 @@
             ],
             "description": "Optional. If set, enables transcription of voice input. The transcription aligns\nwith the input audio language, if configured."
           },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional. Labels with user-defined metadata for the request.\n\nOptional. Labels must follow standard unified Cloud label requirements:\n- Label keys must start with a letter.\n- Label keys and values can be no longer than 63 characters (Unicode\n  codepoints) and can only contain lowercase letters, numeric characters,\n  underscores, and dashes.\n- International characters are allowed.\n\nUsage:\n-  Safety identifiers from aggregators: Use the key `safety_identifier`\n   (e.g. `{\"safety_identifier\": \"user_session_123\"}`)",
+            "type": "object"
+          },
           "model": {
             "description": "Required. The model's resource name. This serves as an ID for the Model to use.\n\nFormat: `models/{model}`",
             "type": "string"
@@ -1508,6 +1515,10 @@
       "CreateEnvironmentRequest": {
         "description": "Request for `CreateEnvironment`.",
         "properties": {
+          "fromEnvironment": {
+            "description": "Optional. The source environment to copy/fork from.\nFormat: `environments/{environment_id}` or `{environment_id}`.\nWhen specified, `sources` and `env` must be empty.",
+            "type": "string"
+          },
           "networkAllowlist": {
             "allOf": [
               {
@@ -1926,10 +1937,14 @@
         "type": "object"
       },
       "EgressRule": {
-        "description": "A network egress rule that controls which external domains the\nenvironment is allowed to reach.  Each rule identifies a target domain\nand, optionally, a set of HTTP headers to inject into every matching\noutbound request.",
+        "description": "A single domain allowlist rule with optional header injection.",
         "properties": {
+          "credential": {
+            "description": "Optional. Reference to a server-managed Credential resource by ID.",
+            "type": "string"
+          },
           "domain": {
-            "description": "The domain pattern to match for this rule.\nUse an exact hostname (e.g., `github.com`), a wildcard prefix\n(e.g., `*.googleapis.com`), or `*` to match all domains.",
+            "description": "Domain to allow outbound requests to. Supports wildcards (e.g.\n'*.googleapis.com'). Use '*' to allow all domains.",
             "type": "string"
           },
           "transform": {
@@ -3297,6 +3312,13 @@
             ],
             "description": "Optional. Configuration options for model generation and outputs."
           },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional. Labels with user-defined metadata for the request.\n\nOptional. Labels must follow standard unified Cloud label requirements:\n- Label keys must start with a letter.\n- Label keys and values can be no longer than 63 characters (Unicode\n  codepoints) and can only contain lowercase letters, numeric characters,\n  underscores, and dashes.\n- International characters are allowed.\n\nUsage:\n-  Safety identifiers from aggregators: Use the key `safety_identifier`\n   (e.g. `{\"safety_identifier\": \"user_session_123\"}`)",
+            "type": "object"
+          },
           "model": {
             "description": "Required. The name of the `Model` to use for generating the completion.\n\nFormat: `models/{model}`.",
             "type": "string"
@@ -3591,7 +3613,7 @@
         "properties": {
           "_responseJsonSchema": {
             "deprecated": true,
-            "description": "Optional. Output schema of the generated response. This is an alternative to\n`response_schema` that accepts [JSON Schema](https://json-schema.org/).\n\nIf set, `response_schema` must be omitted, but `response_mime_type` is\nrequired.\n\nWhile the full JSON Schema may be sent, not all features are supported.\nSpecifically, only the following properties are supported:\n\n- `$id`\n- `$defs`\n- `$ref`\n- `$anchor`\n- `type`\n- `format`\n- `title`\n- `description`\n- `enum` (for strings and numbers)\n- `items`\n- `prefixItems`\n- `minItems`\n- `maxItems`\n- `minimum`\n- `maximum`\n- `anyOf`\n- `oneOf` (interpreted the same as `anyOf`)\n- `properties`\n- `additionalProperties`\n- `required`\n\nThe non-standard `propertyOrdering` property may also be set.\n\nCyclic references are unrolled to a limited degree and, as such, may only\nbe used within non-required properties. (Nullable properties are not\nsufficient.) If `$ref` is set on a sub-schema, no other properties, except\nfor than those starting as a `$`, may be set."
+            "description": "Optional. Output schema of the generated response. This is an alternative to\n`response_schema` that accepts [JSON Schema](https://json-schema.org/).\n\nIf set, `response_schema` must be omitted, but `response_mime_type` is\nrequired.\n\nWhile the full JSON Schema may be sent, not all features are supported.\nSpecifically, only the following properties are supported:\n\n- `$id`\n- `$defs`\n- `$ref`\n- `$anchor`\n- `type`\n- `format`\n- `title`\n- `description`\n- `enum` (for strings and numbers)\n- `items`\n- `prefixItems`\n- `minItems`\n- `maxItems`\n- `minimum`\n- `maximum`\n- `anyOf`\n- `oneOf` (interpreted the same as `anyOf`)\n- `properties`\n- `additionalProperties`\n- `required`\n\nThe non-standard `propertyOrdering` property may also be set.\n\nCyclic references are unrolled to a limited degree and, as such, may only\nbe used within non-required properties. (Nullable properties are not\nsufficient.) If `$ref` is set on a sub-schema, no other properties, except\nfor than those starting as a `$`, may be set.\n\nDeprecated. Use `response_format` instead."
           },
           "audioTranscriptionConfig": {
             "allOf": [
@@ -3703,7 +3725,7 @@
               }
             ],
             "deprecated": true,
-            "description": "Optional. Output schema of the generated candidate text. Schemas must be a\nsubset of the [OpenAPI schema](https://spec.openapis.org/oas/v3.0.3#schema)\nand can be objects, primitives or arrays.\n\nIf set, a compatible `response_mime_type` must also be set.\nCompatible MIME types:\n`application/json`: Schema for JSON response.\nRefer to the [JSON text generation\nguide](https://ai.google.dev/gemini-api/docs/json-mode) for more details."
+            "description": "Optional. Output schema of the generated candidate text. Schemas must be a\nsubset of the [OpenAPI schema](https://spec.openapis.org/oas/v3.0.3#schema)\nand can be objects, primitives or arrays.\n\nIf set, a compatible `response_mime_type` must also be set.\nCompatible MIME types:\n`application/json`: Schema for JSON response.\nRefer to the [JSON text generation\nguide](https://ai.google.dev/gemini-api/docs/json-mode) for more details.\n\nDeprecated. Use `response_format` instead."
           },
           "seed": {
             "description": "Optional. Seed used in decoding. If not set, the request uses a randomly generated\nseed.",
@@ -5381,6 +5403,14 @@
             "description": "Custom metadata associated with the Part.\nAgents using genai.Part as content representation may need to keep track\nof the additional information. For example it can be name of a file/source\nfrom which the Part originates or a way to multiplex multiple Part streams.",
             "type": "object"
           },
+          "speechMetadata": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SpeechMetadata"
+              }
+            ],
+            "description": "Optional. Metadata applied to text parts to customize how they should be spoken or\nsynthesized, such as specifying speaker identity or speaking style."
+          },
           "text": {
             "description": "Inline text.",
             "type": "string"
@@ -5554,6 +5584,13 @@
             "items": {},
             "type": "array"
           },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional. Labels with user-defined metadata for the request.\n\nOptional. Labels must follow standard unified Cloud label requirements:\n- Label keys must start with a letter.\n- Label keys and values can be no longer than 63 characters (Unicode\n  codepoints) and can only contain lowercase letters, numeric characters,\n  underscores, and dashes.\n- International characters are allowed.\n\nUsage:\n-  Safety identifiers from aggregators: Use the key `safety_identifier`\n   (e.g. `{\"safety_identifier\": \"user_session_123\"}`)",
+            "type": "object"
+          },
           "parameters": {
             "description": "Optional. The parameters that govern the prediction call."
           }
@@ -5584,6 +5621,13 @@
             "description": "Required. The instances that are the input to the prediction call.",
             "items": {},
             "type": "array"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional. Labels with user-defined metadata for the request.\n\nOptional. Labels must follow standard unified Cloud label requirements:\n- Label keys must start with a letter.\n- Label keys and values can be no longer than 63 characters (Unicode\n  codepoints) and can only contain lowercase letters, numeric characters,\n  underscores, and dashes.\n- International characters are allowed.\n\nUsage:\n-  Safety identifiers from aggregators: Use the key `safety_identifier`\n   (e.g. `{\"safety_identifier\": \"user_session_123\"}`)",
+            "type": "object"
           },
           "parameters": {
             "description": "Optional. The parameters that govern the prediction call."
@@ -6259,6 +6303,20 @@
         },
         "type": "object"
       },
+      "SpeechMetadata": {
+        "description": "Speech metadata for `text` parts.",
+        "properties": {
+          "speaker": {
+            "description": "Optional. Optional speaker name for multi-speaker synthesis.",
+            "type": "string"
+          },
+          "style": {
+            "description": "Optional. Optional style instruction for the speech synthesis.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Status": {
         "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors).",
         "properties": {
@@ -6900,6 +6958,33 @@
           "Null type."
         ]
       },
+      "UploadEnvironmentFileRequest": {
+        "description": "Request for `UploadEnvironmentFile`.",
+        "properties": {
+          "extract": {
+            "description": "Optional. If true, treats the uploaded file as a tar/tar.gz archive and\nunpacks it into `path`.",
+            "type": "boolean"
+          },
+          "overwrite": {
+            "description": "Optional. Whether to overwrite the destination file if it already exists.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "UploadEnvironmentFileResponse": {
+        "description": "Response for `UploadEnvironmentFile`.",
+        "properties": {
+          "files": {
+            "description": "List of files created or extracted in the environment.",
+            "items": {
+              "$ref": "#/components/schemas/EnvironmentFile"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "UploadToFileSearchStoreMetadata": {
         "description": "Metadata for LongRunning UploadToFileSearchStore Operations.",
         "type": "object"
@@ -7265,6 +7350,10 @@
               }
             ],
             "description": "The configuration for the prebuilt voice to use."
+          },
+          "voice": {
+            "description": "Optional. The speaker identifier for synthesis.\nSupported formats:\n\n*   Speaker name for prebuilt voices (for example, `Orus` or `Kore`).\n*   Voice ID for stored voices (for example, `voice_xxx`).\n*   Voice replication key (for example, `voicekey_xxx`).",
+            "type": "string"
           }
         },
         "type": "object"
@@ -7371,7 +7460,7 @@
     "description": "The Gemini API allows developers to build generative AI applications using Gemini models. Gemini is our most capable model, built from the ground up to be multimodal. It can generalize and seamlessly understand, operate across, and combine different types of information including language, images, audio, video, and code. You can use the Gemini API for use cases like reasoning across text and images, content generation, dialogue agents, summarization and classification systems, and more.",
     "title": "Gemini API",
     "version": "v1beta",
-    "x-google-revision": "20260904"
+    "x-google-revision": "20260924"
   },
   "openapi": "3.0.3",
   "paths": {
@@ -8653,11 +8742,11 @@
     },
     "/v1beta/environments": {
       "get": {
-        "description": "Lists environments (HTTP endpoint).",
+        "description": "Lists environments.",
         "operationId": "ListEnvironmentsHttp",
         "parameters": [
           {
-            "description": "Maximum number of environments to return.\nIf unspecified, defaults to 50. Maximum is 1000.",
+            "description": "Optional. Maximum number of environments to return.\nIf unspecified, defaults to 50. Maximum is 1000.",
             "in": "query",
             "name": "pageSize",
             "schema": {
@@ -8666,7 +8755,7 @@
             }
           },
           {
-            "description": "Pagination token.",
+            "description": "Optional. Pagination token.",
             "in": "query",
             "name": "pageToken",
             "schema": {
@@ -8706,7 +8795,7 @@
         }
       ],
       "post": {
-        "description": "Creates an environment (HTTP endpoint).",
+        "description": "Creates an environment.",
         "operationId": "CreateEnvironmentHttp",
         "parameters": [],
         "requestBody": {
@@ -8717,7 +8806,7 @@
               }
             }
           },
-          "description": "Required. The environment to create (HTTP request body)."
+          "description": "Required. The request body."
         },
         "responses": {
           "default": {
@@ -8739,7 +8828,7 @@
     },
     "/v1beta/environments/{environment}/files": {
       "get": {
-        "description": "Retrieves a file or directory from an environment's snapshot (HTTP\nendpoint).",
+        "description": "Retrieves file metadata or directory contents from an environment's\nsnapshot. To download file contents directly, pass ?alt=media or use the\nfiles.download helper.",
         "operationId": "GetEnvironmentFilesHttpByEnvironment",
         "parameters": [
           {
@@ -8820,7 +8909,7 @@
     },
     "/v1beta/environments/{environment}/files/{path=**}": {
       "get": {
-        "description": "Retrieves a file or directory from an environment's snapshot (HTTP\nendpoint).",
+        "description": "Retrieves file metadata or directory contents from an environment's\nsnapshot. To download file contents directly, pass ?alt=media or use the\nfiles.download helper.",
         "operationId": "GetEnvironmentFilesHttp",
         "parameters": [
           {
@@ -8897,15 +8986,65 @@
         {
           "$ref": "#/components/parameters/_.xgafv"
         }
-      ]
+      ],
+      "put": {
+        "description": "Uploads (creates or updates) a file in an environment's workspace.",
+        "operationId": "UploadEnvironmentFileHttp",
+        "parameters": [
+          {
+            "description": "Resource ID segment making up resource `name`. It identifies the resource within its parent collection as described in https://google.aip.dev/122.",
+            "in": "path",
+            "name": "environment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Resource ID segment making up resource `name`. It identifies the resource within its parent collection as described in https://google.aip.dev/122.",
+            "in": "path",
+            "name": "path=**",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadEnvironmentFileRequest"
+              }
+            }
+          },
+          "description": "The request body."
+        },
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadEnvironmentFileResponse"
+                }
+              }
+            },
+            "description": "Successful operation"
+          }
+        },
+        "security": [],
+        "tags": [
+          "generativelanguage"
+        ]
+      }
     },
     "/v1beta/environments/{id}": {
       "delete": {
-        "description": "Deletes an environment (HTTP endpoint).",
+        "description": "Deletes an environment.",
         "operationId": "DeleteEnvironmentHttp",
         "parameters": [
           {
-            "description": "Required. The identifier of the environment to delete.",
+            "description": "Required. Resource ID segment making up resource `name`. It identifies the resource\nwithin its parent collection as described in https://google.aip.dev/122.",
             "in": "path",
             "name": "id",
             "required": true,
@@ -8932,11 +9071,11 @@
         ]
       },
       "get": {
-        "description": "Gets an environment (HTTP endpoint).",
+        "description": "Gets an environment.",
         "operationId": "GetEnvironmentHttp",
         "parameters": [
           {
-            "description": "Required. The identifier of the environment to retrieve.",
+            "description": "Required. Resource ID segment making up resource `name`. It identifies the resource\nwithin its parent collection as described in https://google.aip.dev/122.",
             "in": "path",
             "name": "id",
             "required": true,
@@ -8983,7 +9122,7 @@
         "operationId": "DeleteEnvironment",
         "parameters": [
           {
-            "description": "Required. The identifier of the environment to delete.",
+            "description": "Required. Resource ID segment making up resource `name`. It identifies the resource\nwithin its parent collection as described in https://google.aip.dev/122.",
             "in": "path",
             "name": "id",
             "required": true,
@@ -9030,7 +9169,7 @@
         "operationId": "GetEnvironment",
         "parameters": [
           {
-            "description": "Required. The identifier of the environment to retrieve.",
+            "description": "Required. Resource ID segment making up resource `name`. It identifies the resource\nwithin its parent collection as described in https://google.aip.dev/122.",
             "in": "path",
             "name": "id",
             "required": true,
@@ -9124,7 +9263,7 @@
         "operationId": "ListEnvironments",
         "parameters": [
           {
-            "description": "Maximum number of environments to return.\nIf unspecified, defaults to 50. Maximum is 1000.",
+            "description": "Optional. Maximum number of environments to return.\nIf unspecified, defaults to 50. Maximum is 1000.",
             "in": "query",
             "name": "pageSize",
             "schema": {
@@ -9133,7 +9272,7 @@
             }
           },
           {
-            "description": "Pagination token.",
+            "description": "Optional. Pagination token.",
             "in": "query",
             "name": "pageToken",
             "schema": {

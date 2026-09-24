@@ -75,6 +75,16 @@ export namespace Gemini {
   export interface VoiceConfig {
     /** The configuration for the prebuilt voice to use. */
     prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+
+    /**
+     * Optional. The speaker identifier for synthesis.
+     * Supported formats:
+     * 
+     * *   Speaker name for prebuilt voices (for example, `Orus` or `Kore`).
+     * *   Voice ID for stored voices (for example, `voice_xxx`).
+     * *   Voice replication key (for example, `voicekey_xxx`).
+     */
+    voice?: string;
   }
 
   /** The configuration for the multi-speaker setup. */
@@ -176,6 +186,12 @@ export namespace Gemini {
      */
     partMetadata?: Record<string, unknown>;
 
+    /**
+     * Optional. Metadata applied to text parts to customize how they should be spoken or
+     * synthesized, such as specifying speaker identity or speaking style.
+     */
+    speechMetadata?: SpeechMetadata;
+
     /** Inline text. */
     text?: string;
 
@@ -207,6 +223,17 @@ export namespace Gemini {
      * data is presented in inline_data or file_data.
      */
     videoMetadata?: VideoMetadata;
+  }
+
+  /** Speech metadata for `text` parts. */
+  export interface SpeechMetadata {
+    /** Optional. Optional speaker name for multi-speaker synthesis. */
+    speaker?: string;
+
+    /**
+     * Optional. Optional style instruction for the speech synthesis.
+     */
+    style?: string;
   }
 
   /**
@@ -337,6 +364,8 @@ export namespace Gemini {
      * be used within non-required properties. (Nullable properties are not
      * sufficient.) If `$ref` is set on a sub-schema, no other properties, except
      * for than those starting as a `$`, may be set.
+     * 
+     * Deprecated. Use `response_format` instead.
      */
     _responseJsonSchema?: unknown;
 
@@ -475,6 +504,8 @@ export namespace Gemini {
      * `application/json`: Schema for JSON response.
      * Refer to the [JSON text generation
      * guide](https://ai.google.dev/gemini-api/docs/json-mode) for more details.
+     * 
+     * Deprecated. Use `response_format` instead.
      */
     responseSchema?: Gemini.Tools.Schema;
 
@@ -962,6 +993,22 @@ export namespace Gemini {
      * Optional. Configuration options for model generation and outputs.
      */
     generationConfig?: GenerationConfig;
+
+    /**
+     * Optional. Labels with user-defined metadata for the request.
+     * 
+     * Optional. Labels must follow standard unified Cloud label requirements:
+     * - Label keys must start with a letter.
+     * - Label keys and values can be no longer than 63 characters (Unicode
+     *   codepoints) and can only contain lowercase letters, numeric characters,
+     *   underscores, and dashes.
+     * - International characters are allowed.
+     * 
+     * Usage:
+     * -  Safety identifiers from aggregators: Use the key `safety_identifier`
+     *    (e.g. `{"safety_identifier": "user_session_123"}`)
+     */
+    labels?: Record<string, unknown>;
 
     /**
      * Required. The name of the `Model` to use for generating the completion.
