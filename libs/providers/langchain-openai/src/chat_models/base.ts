@@ -553,13 +553,14 @@ export abstract class BaseChatOpenAI<
       fields && "baseUrl" in fields && typeof fields.baseUrl === "string"
         ? fields.baseUrl
         : undefined;
+    const configuredBaseURL =
+      fields?.configuration?.baseURL ??
+      serializedBaseUrl ??
+      (getEnvironmentVariable("OPENAI_API_BASE") ||
+        getEnvironmentVariable("OPENAI_BASE_URL") ||
+        undefined);
     const gatewayConfig = resolveLangSmithGatewayConfig({
-      baseURL:
-        fields?.configuration?.baseURL ??
-        serializedBaseUrl ??
-        (getEnvironmentVariable("OPENAI_API_BASE") ||
-          getEnvironmentVariable("OPENAI_BASE_URL") ||
-          undefined),
+      baseURL: configuredBaseURL,
       providerPath: "openai/v1",
     });
     this.apiKey =
@@ -602,7 +603,7 @@ export abstract class BaseChatOpenAI<
     // disable streaming in BaseChatModel if explicitly disabled
     if (fields?.streaming === false) this.disableStreaming = true;
 
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.streamUsage = fields?.streamUsage ?? configuredBaseURL === undefined;
     if (this.disableStreaming) this.streamUsage = false;
 
     this.clientConfig = {

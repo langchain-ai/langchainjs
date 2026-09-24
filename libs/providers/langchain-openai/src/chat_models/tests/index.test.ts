@@ -75,6 +75,43 @@ describe("ChatOpenAI", () => {
       }
     });
 
+    it("disables stream usage by default for custom endpoints", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      try {
+        expect(new ChatOpenAI({ model: "gpt-4o-mini" }).streamUsage).toBe(true);
+
+        expect(
+          new ChatOpenAI({
+            model: "gpt-4o-mini",
+            configuration: { baseURL: "https://openai.example.com/v1" },
+          }).streamUsage
+        ).toBe(false);
+
+        expect(
+          new ChatOpenAI({
+            model: "gpt-4o-mini",
+            streamUsage: true,
+            configuration: { baseURL: "https://openai.example.com/v1" },
+          }).streamUsage
+        ).toBe(true);
+
+        vi.stubEnv("OPENAI_API_BASE", "https://api-base.example.com/v1");
+        expect(new ChatOpenAI({ model: "gpt-4o-mini" }).streamUsage).toBe(
+          false
+        );
+
+        vi.stubEnv("OPENAI_API_BASE", "");
+        vi.stubEnv("OPENAI_BASE_URL", "https://base-url.example.com/v1");
+        expect(new ChatOpenAI({ model: "gpt-4o-mini" }).streamUsage).toBe(
+          false
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it("should handle disableStreaming and streaming properties", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",
