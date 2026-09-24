@@ -16,7 +16,8 @@ export type AnthropicMessageCreateParams =
   Anthropic.MessageCreateParamsNonStreaming;
 export type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
-export type AnthropicThinkingConfigParam = Anthropic.ThinkingConfigParam;
+export type AnthropicThinkingConfigParam =
+  Anthropic.Beta.BetaThinkingConfigParam;
 export type AnthropicContextManagementConfigParam =
   Anthropic.Beta.BetaContextManagementConfig;
 export type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;

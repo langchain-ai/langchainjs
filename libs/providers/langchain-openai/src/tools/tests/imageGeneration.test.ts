@@ -52,3 +52,21 @@ describe("OpenAI Image Generation Tool Tests", () => {
     }
   });
 });
+
+it.each(["xhigh", "max"] as const)(
+  "supports GPT Image 2.5 quality %s",
+  (quality) => {
+    expect(
+      tools.imageGeneration({
+        model: "gpt-image-2.5-sunburst",
+        quality,
+        size: "1536x864",
+      })
+    ).toMatchObject({
+      type: "image_generation",
+      model: "gpt-image-2.5-sunburst",
+      quality,
+      size: "1536x864",
+    });
+  }
+);

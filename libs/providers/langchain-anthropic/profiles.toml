@@ -11,3 +11,8 @@ structuredOutput = false
 
 [overrides."claude-fable-5-1"]
 structuredOutput = true
+toolChoice = false
+
+[overrides."claude-opus-5-5"]
+structuredOutput = true
+toolChoice = false

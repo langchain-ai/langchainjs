@@ -68,6 +68,7 @@ export function isReasoningModel(model?: string) {
   if (!model) return false;
   if (/^o\d/.test(model ?? "")) return true;
   if (model.startsWith("gpt-5") && !model.startsWith("gpt-5-chat")) return true;
+  if (model.startsWith("gpt-6") && !model.startsWith("gpt-6-chat")) return true;
   return false;
 }
 
@@ -151,6 +152,7 @@ export function _modelPrefersResponsesAPI(model: string): boolean {
   if (model.includes("gpt-5.4-pro")) return true;
   if (model.includes("gpt-5.5-pro")) return true;
   if (model.includes("gpt-5.6-sol")) return true;
+  if (model.startsWith("gpt-6")) return true;
   // Codex models are Responses API only
   if (model.includes("codex")) return true;
   return false;

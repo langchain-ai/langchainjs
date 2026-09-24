@@ -87,6 +87,7 @@ const PROFILES: Record<string, ModelProfile> = {
     imageUrlInputs: true,
     pdfToolMessage: true,
     imageToolMessage: true,
+    toolChoice: false,
   },
   "claude-opus-4-8": {
     maxInputTokens: 1000000,
@@ -274,6 +275,24 @@ const PROFILES: Record<string, ModelProfile> = {
     imageUrlInputs: true,
     pdfToolMessage: true,
     imageToolMessage: true,
+  },
+  "claude-opus-5-5": {
+    maxInputTokens: 1000000,
+    imageInputs: true,
+    audioInputs: false,
+    pdfInputs: true,
+    videoInputs: false,
+    maxOutputTokens: 128000,
+    reasoningOutput: true,
+    imageOutputs: false,
+    audioOutputs: false,
+    videoOutputs: false,
+    toolCalling: true,
+    structuredOutput: true,
+    imageUrlInputs: true,
+    pdfToolMessage: true,
+    imageToolMessage: true,
+    toolChoice: false,
   },
 };
 export default PROFILES;

@@ -154,6 +154,7 @@ function* _formatContentBlocks(
   const toolTypes = [
     "bash_code_execution_tool_result",
     "input_json_delta",
+    "mcp_tool_listing",
     "server_tool_use",
     "text_editor_code_execution_tool_result",
     "tool_result",
@@ -329,6 +330,15 @@ function* _formatContentBlocks(
       const block: AnthropicCompactionBlockParam = {
         type: "compaction" as const,
         content: contentPart.content,
+        ...(contentPart.encrypted_content !== undefined
+          ? { encrypted_content: contentPart.encrypted_content }
+          : {}),
+        ...(contentPart.signature !== undefined
+          ? { signature: contentPart.signature }
+          : {}),
+        ...(contentPart.tool_changes !== undefined
+          ? { tool_changes: contentPart.tool_changes }
+          : {}),
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       };
       yield block;

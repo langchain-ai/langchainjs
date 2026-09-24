@@ -42,6 +42,7 @@ import {
 import {
   getSamplingParams,
   getTaskBudgetBetas,
+  supportsForcedToolChoice,
   validateInvocationParamCompatibility,
 } from "./utils/params.js";
 import {
@@ -186,6 +187,9 @@ export interface ChatAnthropicCallOptions
    * released after February 1, 2026.
    */
   inferenceGeo?: string;
+
+  /** Workspace to select when the credential can access multiple workspaces. */
+  workspaceId?: string;
   /**
    * Cache control configuration for prompt caching. When provided, the value
    * is forwarded to the Anthropic API as a top-level `cache_control` parameter,
@@ -253,7 +257,10 @@ function _compactionInParams(
   params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
 ): boolean {
   const cm = params.context_management;
-  return !!cm?.edits?.some((e) => e.type === "compact_20260112");
+  return (
+    ("compaction" in params && params.compaction != null) ||
+    !!cm?.edits?.some((e) => e.type === "compact_20260112")
+  );
 }
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -453,6 +460,9 @@ export interface AnthropicInput {
    * released after February 1, 2026.
    */
   inferenceGeo?: string;
+
+  /** Workspace to select when the credential can access multiple workspaces. */
+  workspaceId?: string;
 
   /**
    * Optional array of beta features to enable for the Anthropic API.
@@ -1074,6 +1084,9 @@ export class ChatAnthropicMessages<
 
   inferenceGeo?: string;
 
+  /** Workspace to select when the credential can access multiple workspaces. */
+  workspaceId?: string;
+
   // Used for non-streaming requests
   protected batchClient: Anthropic;
 
@@ -1157,6 +1170,7 @@ export class ChatAnthropicMessages<
       fields?.contextManagement ?? this.contextManagement;
     this.outputConfig = fields?.outputConfig ?? this.outputConfig;
     this.inferenceGeo = fields?.inferenceGeo ?? this.inferenceGeo;
+    this.workspaceId = fields?.workspaceId;
     this.betas = fields?.betas ?? this.betas;
 
     this.createClient =
@@ -1356,6 +1370,10 @@ export class ChatAnthropicMessages<
       ),
       output_config: mergedOutputConfig,
       inference_geo: options?.inferenceGeo ?? this.inferenceGeo,
+      workspace_id:
+        options?.workspaceId ??
+        this.workspaceId ??
+        this.invocationKwargs?.workspace_id,
       mcp_servers: options?.mcp_servers,
       cache_control: options?.cache_control,
     };
@@ -1364,6 +1382,7 @@ export class ChatAnthropicMessages<
       model: this.model,
       thinking: output.thinking ?? this.thinking,
       thinkingExplicitlySet: output.thinking !== undefined,
+      toolChoice: output.tool_choice,
       outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,
@@ -1879,13 +1898,14 @@ export class ChatAnthropicMessages<
 
       if (
         this.thinking?.type === "enabled" ||
-        this.thinking?.type === "adaptive"
+        this.thinking?.type === "adaptive" ||
+        !supportsForcedToolChoice(this.model)
       ) {
         const thinkingAdmonition =
           "Anthropic structured output relies on forced tool calling, " +
-          "which is not supported when `thinking` is enabled. This method will raise " +
+          "which is not supported when `thinking` is enabled or the model rejects forced tool use. This method will raise " +
           "OutputParserException if tool calls are not " +
-          "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
+          'generated. Consider method: "jsonSchema", disabling `thinking` where supported, or adjust your prompt to ensure ' +
           "the tool is called.";
 
         console.warn(thinkingAdmonition);
