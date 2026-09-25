@@ -265,4 +265,20 @@ describe("constructMetadataFilter", () => {
       constructMetadataFilter({ name: { $eq: "A", $ne: "B" } })
     ).toThrow("Expected a value which is a dictionary");
   });
+
+  test("should bind every parameter it references when filters are nested", () => {
+    // Renaming used a plain string replace, which rewrites only the first occurrence and
+    // matches a prefix of a longer name. Nesting makes parameter names accumulate suffixes,
+    // so `$param_1_1` would rewrite the start of `$param_1_1_1_1`.
+    const [query, params] = constructMetadataFilter({
+      $and: [{ $and: [{ $and: [{ a: 1 }] }, { b: 2 }] }, { c: 3 }],
+    });
+
+    const referenced = [...query.matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)].map(
+      (m) => m[1]
+    );
+    expect(referenced.sort()).toEqual(Object.keys(params).sort());
+    // and each condition keeps its own parameter
+    expect(new Set(referenced).size).toBe(3);
+  });
 });
