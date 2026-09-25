@@ -198,7 +198,7 @@ export interface ChatGroqInput extends BaseChatModelParams {
 
   /**
    * The maximum number of tokens that the model can process in a single response.
-   * This limits ensures computational efficiency and resource management.
+   * This limit ensures computational efficiency and resource management.
    */
   maxTokens?: number;
 
@@ -297,6 +297,20 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * @see https://console.groq.com/docs/reasoning#options-for-reasoning-effort
    */
   reasoningEffort?: "none" | "default" | "low" | "medium" | "high" | null;
+
+  /**
+   * The format of the reasoning content in the response.
+   * Supported values: `"parsed"`, `"streaming_parsed"`, `"raw"`, `"hidden"`.
+   * @see https://console.groq.com/docs/reasoning
+   */
+  reasoningFormat?: ChatCompletionsAPI.ChatCompletionCreateParamsBase["reasoning_format"];
+
+  /**
+   * The service tier to use for the request. Affects cost and latency.
+   * Supported values: `"on_demand"`, `"auto"`.
+   * @see https://console.groq.com/docs/openai
+   */
+  serviceTier?: ChatCompletionsAPI.ChatCompletionCreateParamsBase["service_tier"];
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -849,7 +863,7 @@ function _oldConvertDeltaToMessageChunk(
  * import { z } from 'zod';
  *
  * const llmForToolCalling = new ChatGroq({
- *   model: "llama3-groq-70b-8192-tool-use-preview",
+ *   model: "llama-3.3-70b-versatile",
  *   temperature: 0,
  *   // other params...
  * });
@@ -1083,6 +1097,9 @@ export class ChatGroq extends BaseChatModel<
     this.logitBias = params.logitBias;
     this.user = params.user;
     this.reasoningEffort = params.reasoningEffort;
+    this.reasoningFormat = params.reasoningFormat;
+    this.serviceTier = params.serviceTier;
+    this.topLogprobs = params.topLogprobs;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
