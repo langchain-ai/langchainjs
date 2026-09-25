@@ -897,6 +897,8 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        // AsyncCaller owns model-level retries unless the client is explicitly configured.
+        maxAttempts: fields.clientOptions?.maxAttempts ?? 1,
         ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
@@ -1085,9 +1087,18 @@ export class ChatBedrockConverse
         requestMetadata: options.requestMetadata,
         ...params,
       });
-      const response = await this.client.send(command, {
-        abortSignal: options.signal,
-      });
+      const response = await this.caller.callWithOptions(
+        { signal: options.signal, maxRetries: options.maxRetries },
+        async () => {
+          try {
+            return await this.client.send(command, {
+              abortSignal: options.signal,
+            });
+          } catch (error) {
+            throw normalizeBedrockError(error);
+          }
+        }
+      );
       const { output, ...responseMetadata } = response;
       if (!output?.message) {
         throw new Error("No message found in Bedrock response.");
@@ -1147,9 +1158,21 @@ export class ChatBedrockConverse
           options.streamIdleTimeout ?? this.streamIdleTimeout
         );
         const response = await withRequestIdleTimeout(
-          this.client.send(command, {
-            abortSignal: abortController.signal,
-          }),
+          this.caller.callWithOptions(
+            {
+              signal: abortController.signal,
+              maxRetries: options.maxRetries,
+            },
+            async () => {
+              try {
+                return await this.client.send(command, {
+                  abortSignal: abortController.signal,
+                });
+              } catch (error) {
+                throw normalizeBedrockError(error);
+              }
+            }
+          ),
           streamIdleTimeout,
           abortController
         );
@@ -1223,9 +1246,21 @@ export class ChatBedrockConverse
           options.streamIdleTimeout ?? this.streamIdleTimeout
         );
         const response = await withRequestIdleTimeout(
-          this.client.send(command, {
-            abortSignal: abortController.signal,
-          }),
+          this.caller.callWithOptions(
+            {
+              signal: abortController.signal,
+              maxRetries: options.maxRetries,
+            },
+            async () => {
+              try {
+                return await this.client.send(command, {
+                  abortSignal: abortController.signal,
+                });
+              } catch (error) {
+                throw normalizeBedrockError(error);
+              }
+            }
+          ),
           streamIdleTimeout,
           abortController
         );
