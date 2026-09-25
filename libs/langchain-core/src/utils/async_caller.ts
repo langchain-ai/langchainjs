@@ -253,9 +253,13 @@ export function classifyRateLimitError(
 /**
  * The default failed attempt handler for the AsyncCaller.
  * @param error - The error to handle.
+ * @param retryableStatusCodes - Status codes to retry despite the default list.
  * @returns void
  */
-const defaultFailedAttemptHandler = (error: unknown) => {
+const defaultFailedAttemptHandler = (
+  error: unknown,
+  retryableStatusCodes: readonly number[] = []
+) => {
   if (typeof error !== "object" || error === null) {
     return;
   }
@@ -285,7 +289,11 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     throw error;
   }
   const status = getResponseStatus(error) ?? getDirectStatus(error);
-  if (status && STATUS_NO_RETRY.includes(+status)) {
+  if (
+    status &&
+    STATUS_NO_RETRY.includes(+status) &&
+    !retryableStatusCodes.includes(+status)
+  ) {
     // Deterministic client error; retrying it unchanged fails identically.
     throw stampRetryable(error, false);
   }
@@ -344,6 +352,14 @@ export interface AsyncCallerParams {
    */
   maxRetries?: number;
   /**
+   * HTTP status codes that should be retried even though the default handler
+   * normally treats them as non-retryable.
+   *
+   * This is useful for gateways that reuse a client-error status for a
+   * transient upstream provider failure. Defaults to an empty array.
+   */
+  retryableStatusCodes?: readonly number[];
+  /**
    * Custom handler to handle failed attempts. Takes the originally thrown
    * error object as input, and should itself throw an error if the input
    * error is not retryable.
@@ -374,6 +390,8 @@ export class AsyncCaller {
 
   protected maxRetries: AsyncCallerParams["maxRetries"];
 
+  protected retryableStatusCodes: readonly number[];
+
   protected onFailedAttempt: AsyncCallerParams["onFailedAttempt"];
 
   private queue: (typeof import("p-queue"))["default"]["prototype"];
@@ -381,8 +399,11 @@ export class AsyncCaller {
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
     this.maxRetries = params.maxRetries ?? 6;
+    this.retryableStatusCodes = params.retryableStatusCodes ?? [];
     this.onFailedAttempt =
-      params.onFailedAttempt ?? defaultFailedAttemptHandler;
+      params.onFailedAttempt ??
+      ((error) =>
+        defaultFailedAttemptHandler(error, this.retryableStatusCodes));
 
     const PQueue = (
       "default" in PQueueMod ? PQueueMod.default : PQueueMod
