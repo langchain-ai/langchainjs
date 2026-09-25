@@ -379,7 +379,10 @@ export class ChatOpenAICompletions<
       stream: true as const,
     };
 
-    const streamIterable = await this.completionWithRetry(params, options);
+    const streamIterable = await this.completionWithRetry(params, {
+      signal: options.signal,
+      ...options.options,
+    });
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
 
     const abortableStream = async function* (
@@ -428,7 +431,10 @@ export class ChatOpenAICompletions<
     };
     let defaultRole: OpenAIClient.Chat.ChatCompletionRole | undefined;
 
-    const streamIterable = await this.completionWithRetry(params, options);
+    const streamIterable = await this.completionWithRetry(params, {
+      signal: options.signal,
+      ...options.options,
+    });
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
       if (options.signal?.aborted) {
