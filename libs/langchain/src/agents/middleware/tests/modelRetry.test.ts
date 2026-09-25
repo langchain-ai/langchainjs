@@ -6,7 +6,7 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
 
-import { createAgent } from "../../index.js";
+import { createAgent, createMiddleware } from "../../index.js";
 import { modelRetryMiddleware } from "../modelRetry.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
 import { InvalidRetryConfigError } from "../error.js";
@@ -666,6 +666,121 @@ describe("modelRetryMiddleware", () => {
       expect(avgDelay).toBeGreaterThanOrEqual(90);
       expect(avgDelay).toBeLessThan(150);
       expect(model._generate).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe("Errors propagated through a middleware reach retryOn (issue #11324)", () => {
+    // A middleware whose wrapModelCall only forwards to the handler used to make
+    // AgentNode re-wrap the model's error in a MiddlewareError, so retryOn saw
+    // the wrapper (constructor !== TimeoutError, custom fields gone) and stopped
+    // retrying. AgentNode now re-throws such pass-through errors unchanged, so
+    // both retryOn forms see the error as thrown regardless of the middleware.
+    const passthrough = createMiddleware({
+      name: "passthrough",
+      wrapModelCall: async (request, handler) => handler(request),
+    });
+
+    it("retries the class-array form when a middleware sits inside the retry", async () => {
+      const model = new AlwaysFailingModel(new TimeoutError("Timeout"));
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+        retryOn: [TimeoutError],
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry, passthrough] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      // Initial attempt + 2 retries. If the pass-through error were wrapped the
+      // retry would see a MiddlewareError (constructor !== TimeoutError) and
+      // fire only once.
+      expect(model._generate).toHaveBeenCalledTimes(3);
+
+      // The failure handler also receives the unwrapped error, so the formatted
+      // message names the original error type, not MiddlewareError.
+      const aiMessages = result.messages.filter(AIMessage.isInstance);
+      const lastContent = aiMessages[aiMessages.length - 1].content;
+      expect(lastContent).toContain("TimeoutError");
+      expect(lastContent).toContain("3 attempts");
+    });
+
+    it("gives the predicate form the original error, not the wrapper", async () => {
+      const original = new Error("Service Unavailable");
+      (original as any).statusCode = 503;
+      const model = new AlwaysFailingModel(original);
+
+      const shouldRetry = vi.fn(
+        (error: Error): boolean => (error as any).statusCode === 503
+      );
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+        retryOn: shouldRetry,
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry, passthrough] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      // The predicate must receive the error as thrown, with statusCode intact.
+      expect((shouldRetry.mock.calls[0][0] as any).statusCode).toBe(503);
+      expect(model._generate).toHaveBeenCalledTimes(3);
+    });
+
+    it("re-raises the original error, not a wrapper, when onFailure is error", async () => {
+      const original = new TimeoutError("Timeout");
+      const model = new AlwaysFailingModel(original);
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 1,
+        initialDelayMs: 10,
+        jitter: false,
+        retryOn: [TimeoutError],
+        onFailure: "error",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry, passthrough] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const error = await agent
+        .invoke(
+          { messages: [new HumanMessage("Hello")] },
+          { configurable: { thread_id: "test" } }
+        )
+        .catch((e) => e);
+
+      // retryOn matched the unwrapped TimeoutError (so it retried), and
+      // onFailure "error" re-raised the original error object rather than a
+      // MiddlewareError wrapper.
+      expect(error).toBe(original);
+      expect(model._generate).toHaveBeenCalledTimes(2);
     });
   });
 });
