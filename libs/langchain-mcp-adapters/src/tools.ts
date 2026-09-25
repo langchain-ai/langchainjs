@@ -42,11 +42,11 @@ import {
   type Command,
 } from "@langchain/langgraph";
 
-import type { Notifications } from "./types.js";
+import type { NotificationCallbacks } from "./types.js";
 
 import {
-  loadMcpToolsOptionsSchema,
-  type LoadMcpToolsOptions,
+  LoadMcpToolsParams as LoadMcpToolsParamsSchema,
+  type LoadMcpToolsParams,
 } from "./types.js";
 import type { ToolHooks, ToolCallModification } from "./hooks.js";
 import type { Client } from "./connection.js";
@@ -85,7 +85,7 @@ type CallToolArgs = {
   /**
    * `onProgress` callbacks used for tool calls.
    */
-  onProgress?: Notifications["onProgress"];
+  onProgress?: NotificationCallbacks["onProgress"];
 
   /**
    * `beforeToolCall` callbacks used for tool calls.
@@ -441,7 +441,7 @@ async function _callTool(
   }
 }
 
-const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
+const defaultLoadMcpToolsParams: LoadMcpToolsParams = {
   throwOnLoadError: true,
   prefixToolNameWithServerName: false,
   additionalToolNamePrefix: "",
@@ -457,9 +457,9 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
 export async function loadMcpTools(
   serverName: string,
   client: MCPInstance,
-  options?: LoadMcpToolsOptions
+  options?: LoadMcpToolsParams
 ): Promise<DynamicStructuredTool[]> {
-  const parsedOptions = loadMcpToolsOptionsSchema.parse(options ?? {});
+  const parsedOptions = LoadMcpToolsParamsSchema.parse(options ?? {});
   const { tools } = await client.listTools();
 
   return convertMcpTools(serverName, client, tools, parsedOptions);
@@ -470,7 +470,7 @@ export async function convertMcpTools(
   serverName: string,
   client: MCPInstance,
   mcpTools: MCPTool[],
-  options?: LoadMcpToolsOptions
+  options?: LoadMcpToolsParams
 ): Promise<DynamicStructuredTool[]> {
   const {
     throwOnLoadError,
@@ -479,7 +479,7 @@ export async function convertMcpTools(
     outputHandling,
     defaultToolTimeout,
   } = {
-    ...defaultLoadMcpToolsOptions,
+    ...defaultLoadMcpToolsParams,
     ...options,
   };
 

@@ -11,7 +11,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
 import { ElicitRequestSchema } from "@modelcontextprotocol/core";
-import { adapterConfigSchema } from "../types.js";
+import { MCPAdapterInit, isDescriptorConnection } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import {
@@ -456,12 +456,12 @@ it.each([true, false])(
 describe("elicitation and logging configuration", () => {
   it("uses SDK logging levels", () => {
     expect(
-      adapterConfigSchema.safeParse({
+      MCPAdapterInit.safeParse({
         servers: { modern: { url: "http://localhost/mcp", logLevel: "info" } },
       }).success
     ).toBe(true);
 
-    const invalid = adapterConfigSchema.safeParse({
+    const invalid = MCPAdapterInit.safeParse({
       servers: { modern: { url: "http://localhost/mcp", logLevel: "trace" } },
     });
 
@@ -492,11 +492,6 @@ describe("elicitation and logging configuration", () => {
       },
     },
     {
-      servers: {
-        legacy: { mode: "legacy", command: "node", args: [], logLevel: "info" },
-      },
-    },
-    {
       servers: { modern: { command: "node", args: [] } },
       onElicitation: () => ({ action: "decline" }),
     },
@@ -506,7 +501,7 @@ describe("elicitation and logging configuration", () => {
     },
     { servers: { modern: { command: "node", args: [] } }, logLevel: "info" },
   ])("rejects unsupported server policy with Zod errors: %j", (input) => {
-    const parsed = adapterConfigSchema.safeParse(input);
+    const parsed = MCPAdapterInit.safeParse(input);
     expect(parsed.success).toBe(false);
 
     if (!parsed.success) expect(parsed.error.issues.length).toBeGreaterThan(0);
@@ -580,34 +575,46 @@ it.each([true, false])(
   }
 );
 
-it("rejects modern reconnect settings and invalid resource subscriptions", () => {
-  for (const options of [
-    { reconnect: { enabled: true } },
-    { resourceSubscriptions: [42] },
-  ]) {
-    expect(
-      adapterConfigSchema.safeParse({
-        servers: {
-          server: {
-            url: "https://example.com/mcp",
-            ...options,
-          },
-        },
-      }).success
-    ).toBe(false);
-  }
-
+it("accepts modern reconnect settings and rejects invalid resource subscriptions", () => {
   expect(
-    adapterConfigSchema.parse({
+    MCPAdapterInit.safeParse({
       servers: {
         server: {
-          mode: "legacy",
           url: "https://example.com/mcp",
-          reconnect: { enabled: false },
+          reconnect: { enabled: true },
         },
       },
-    }).servers.server.mode
-  ).toBe("legacy");
+    }).success
+  ).toBe(true);
+
+  expect(
+    MCPAdapterInit.safeParse({
+      servers: {
+        server: {
+          url: "https://example.com/mcp",
+          resourceSubscriptions: [42],
+        },
+      },
+    }).success
+  ).toBe(false);
+
+  const parsed = MCPAdapterInit.parse({
+    servers: {
+      server: {
+        mode: "legacy",
+        url: "https://example.com/mcp",
+        reconnect: { enabled: false },
+      },
+    },
+  });
+  if (!("servers" in parsed)) {
+    throw new Error("Expected named config");
+  }
+  const server = parsed.servers.server;
+  if (!isDescriptorConnection(server) || server.transport !== "http") {
+    throw new Error("Expected HTTP config");
+  }
+  expect(server.mode).toBe("legacy");
 });
 
 it("auto-detects legacy subscriptions without advertising callback elicitation", async () => {

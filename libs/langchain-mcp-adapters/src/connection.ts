@@ -12,13 +12,21 @@ import type {
   OAuthClientProvider,
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
+  Transport,
 } from "@modelcontextprotocol/client";
-import { ConnectionSchema } from "./types.js";
-import type {
-  ResolvedStreamableHTTPConnection,
-  ResolvedSSEConnection,
-  ResolvedStdioConnection,
+import {
+  ClientConnection,
+  Connection as ConnectionSchema,
+  InProcessConnection,
+  isDescriptorConnection,
 } from "./types.js";
+import type {
+  Connection as ResolvedConnection,
+  DescriptorConnection as ResolvedDescriptorConnection,
+  SSEConnection as ResolvedSSEConnection,
+  StdioConnection as ResolvedStdioConnection,
+} from "./types.js";
+import { connectInProcessServer } from "./in-process.js";
 import { iife, mergeHeaders, serializeHeaders } from "./utils/misc.js";
 
 export interface Client extends MCPClient {
@@ -27,7 +35,7 @@ export interface Client extends MCPClient {
    * @param headers - The headers to fork the client with
    * @returns The forked client
    */
-  fork: (headers: Record<string, string>) => Promise<Client>;
+  fork?: (headers: Record<string, string>) => Promise<Client>;
 }
 
 export interface TransportOptions {
@@ -41,19 +49,24 @@ type ClientKeyObject = Omit<TransportOptions, "headers"> & {
 };
 
 export interface Connection {
-  transport:
-    | StreamableHTTPClientTransport
-    | SSEClientTransport
-    | StdioClientTransport;
+  transport?: Transport;
   client: Client;
-  transportOptions:
-    | ResolvedStdioConnection
-    | ResolvedStreamableHTTPConnection
-    | ResolvedSSEConnection;
+  transportOptions: ResolvedConnection;
   closeCallback: () => Promise<void>;
 }
 
-const transportTypes = ["http", "sse", "stdio"] as const;
+function connectionTransportOptions(
+  serverName: string,
+  connection: ResolvedConnection
+): TransportOptions {
+  return isDescriptorConnection(connection) && connection.transport !== "stdio"
+    ? {
+        serverName,
+        headers: connection.headers,
+        authProvider: connection.authProvider,
+      }
+    : { serverName };
+}
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -68,6 +81,59 @@ export class ConnectionManager {
   constructor(
     private readonly onToolsChanged?: (options: TransportOptions) => void
   ) {}
+
+  async getOrCreateClient(
+    serverName: string,
+    connection: ResolvedConnection
+  ): Promise<Client> {
+    if (this.#closing) throw new Error("MCP connections are closing");
+    const key = this.identity(
+      connectionTransportOptions(serverName, connection)
+    );
+    const existing = this.#connections.get(key)?.client;
+    if (existing) return existing;
+
+    const pending = this.#pending.get(key);
+    if (pending) return pending;
+
+    const opening = this.#openAndStore(serverName, connection, key);
+    this.#pending.set(key, opening);
+
+    return opening.finally(() => {
+      this.#pending.delete(key);
+    });
+  }
+
+  async #openAndStore(
+    serverName: string,
+    options: ResolvedConnection,
+    key: ClientKeyObject
+  ): Promise<Client> {
+    let connection: Connection;
+    if (isDescriptorConnection(options)) {
+      connection = await this.#openDescriptor(serverName, options, key);
+    } else {
+      const client = ClientConnection.safeParse(options);
+      if (client.success) {
+        connection = {
+          client: client.data,
+          transportOptions: client.data,
+          closeCallback: async () => {},
+        };
+      } else {
+        const server = InProcessConnection.parse(options);
+        connection = await connectInProcessServer(server, {
+          serverName,
+          onToolsChanged: this.onToolsChanged
+            ? () => this.onToolsChanged?.({ serverName })
+            : undefined,
+        });
+      }
+    }
+
+    this.#connections.set(key, connection);
+    return connection.client;
+  }
 
   identity(options: TransportOptions): ClientKeyObject {
     const headers = serializeHeaders(options.headers);
@@ -92,74 +158,21 @@ export class ConnectionManager {
     return key;
   }
 
-  async createClient(
-    type: "stdio",
+  async #openDescriptor(
     serverName: string,
-    options: ResolvedStdioConnection
-  ): Promise<Client>;
-  async createClient(
-    type: "http",
-    serverName: string,
-    options: ResolvedStreamableHTTPConnection
-  ): Promise<Client>;
-  async createClient(
-    type: "sse",
-    serverName: string,
-    options: ResolvedSSEConnection
-  ): Promise<Client>;
-  async createClient(
-    ...args:
-      | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedSSEConnection]
-      | ["http", string, ResolvedStreamableHTTPConnection]
-  ): Promise<Client> {
-    if (this.#closing) throw new Error("MCP connections are closing");
-    const [type, serverName, options] = args;
-
-    const key = this.identity(
-      type === "stdio"
-        ? { serverName }
-        : {
-            serverName,
-            headers: options.headers,
-            authProvider: options.authProvider,
-          }
-    );
-
-    const existing = this.#connections.get(key)?.client;
-
-    if (existing) return existing;
-    const pending = this.#pending.get(key);
-
-    if (pending) return pending;
-    const acquisition = this.#connect(args, key);
-    this.#pending.set(key, acquisition);
-
-    try {
-      return await acquisition;
-    } finally {
-      this.#pending.delete(key);
-    }
-  }
-
-  async #connect(
-    args:
-      | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedSSEConnection]
-      | ["http", string, ResolvedStreamableHTTPConnection],
+    options: ResolvedDescriptorConnection,
     key: ClientKeyObject
-  ): Promise<Client> {
-    const [type, serverName, options] = args;
-    if (!transportTypes.includes(type)) {
-      throw new Error(`Invalid transport type: ${type}`);
-    }
-
+  ): Promise<Connection> {
     const transport =
-      type === "http"
-        ? await this.#createStreamableHTTPTransport(options)
-        : type === "sse"
-          ? await this.#createSSETransport(options)
-          : await this.#createStdioTransport(options);
+      options.transport === "http"
+        ? await this.#createStreamableHTTPTransport(
+            options as ResolvedSSEConnection
+          )
+        : options.transport === "sse"
+          ? await this.#createSSETransport(options as ResolvedSSEConnection)
+          : await this.#createStdioTransport(
+              options as ResolvedStdioConnection
+            );
 
     const identity = {
       name: "@langchain/mcp-adapters",
@@ -167,7 +180,7 @@ export class ConnectionManager {
     };
     const clientOptions = iife<ClientOptions>(() => {
       if (options.mode === "legacy" || options.transport === "sse") {
-        if (options.onElicitation) {
+        if (options.mode === "legacy" && options.onElicitation) {
           return {
             versionNegotiation: { mode: "legacy" },
             capabilities: { elicitation: { form: {}, url: {} } },
@@ -200,7 +213,7 @@ export class ConnectionManager {
       );
     }
 
-    if (options.onInitialized) {
+    if (options.mode === "legacy" && options.onInitialized) {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
         options.onInitialized?.({
           server: serverName,
@@ -320,14 +333,12 @@ export class ConnectionManager {
 
     const client = Object.assign(mcpClient, { fork: forkClient });
 
-    this.#connections.set(key, {
+    return {
       transport,
       client,
       transportOptions: options,
       closeCallback: async () => client.close(),
-    });
-
-    return client;
+    };
   }
 
   /**
@@ -348,25 +359,25 @@ export class ConnectionManager {
       return Promise.resolve(connection.client);
     const options = connection.transportOptions;
 
-    if (options.transport === "stdio") {
-      throw new Error("Forking stdio transport is not supported");
+    if (!isDescriptorConnection(options)) {
+      throw new Error("Forking a supplied MCP source is not supported");
+    }
+    if (options.transport !== "http" && options.transport !== "sse") {
+      throw new Error(
+        `Forking ${options.transport} transport is not supported`
+      );
     }
 
-    // Both transports merge. SSE used to replace the whole set, so forking an
+    // Both HTTP transports merge. SSE used to replace the whole set, so forking an
     // SSE connection to add one header silently dropped its credentials.
     // `createClient` is overloaded per transport, so the literal has to reach
     // it narrowed rather than through a shared variable.
     const merged = mergeHeaders(options.headers, headers);
 
-    return options.transport === "sse"
-      ? this.createClient("sse", key.serverName, {
-          ...options,
-          headers: merged,
-        })
-      : this.createClient("http", key.serverName, {
-          ...options,
-          headers: merged,
-        });
+    return this.getOrCreateClient(key.serverName, {
+      ...options,
+      headers: merged,
+    });
   }
 
   /**
@@ -482,31 +493,13 @@ export class ConnectionManager {
    * Get the transport for a specific client
    * @param client - The client to get the transport for
    */
-  getTransport(
-    client: Client
-  ):
-    | StreamableHTTPClientTransport
-    | SSEClientTransport
-    | StdioClientTransport
-    | undefined;
+  getTransport(client: Client): Transport | undefined;
   /**
    * Get the transport for a specific connection combination
    * @param options - The options to get the transport for
    */
-  getTransport(
-    options: TransportOptions
-  ):
-    | StreamableHTTPClientTransport
-    | SSEClientTransport
-    | StdioClientTransport
-    | undefined;
-  getTransport(
-    opts: Client | TransportOptions
-  ):
-    | StreamableHTTPClientTransport
-    | SSEClientTransport
-    | StdioClientTransport
-    | undefined {
+  getTransport(options: TransportOptions): Transport | undefined;
+  getTransport(opts: Client | TransportOptions): Transport | undefined {
     /**
      * if a client instance is passed in
      */
@@ -525,7 +518,7 @@ export class ConnectionManager {
   }
 
   async #createStreamableHTTPTransport(
-    args: ResolvedStreamableHTTPConnection
+    args: ResolvedSSEConnection
   ): Promise<StreamableHTTPClientTransport> {
     const { url, headers, reconnect, authProvider } = args;
 

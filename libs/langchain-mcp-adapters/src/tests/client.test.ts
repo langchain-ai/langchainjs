@@ -22,7 +22,15 @@ import type { StructuredToolInterface } from "@langchain/core/tools";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
-import { type ClientConfig } from "../types.js";
+import type { MCPAdapterConfig, MCPAdapterInit } from "../types.js";
+
+function getNamedConfig(adapter: MCPAdapter): MCPAdapterConfig {
+  const config = adapter.config;
+  if (!("servers" in config)) {
+    throw new Error("Expected named MCP adapter config");
+  }
+  return config as MCPAdapterConfig;
+}
 
 // Manages dummy MCP servers for testing
 class TestMCPServers {
@@ -100,11 +108,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const { command, args } = testServers.createStdioServer("stdio-test");
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          mode: "legacy",
-          command,
-          args,
-          env: { TEST_VAR: "test-value" },
+        servers: {
+          "stdio-server": {
+            mode: "legacy",
+            command,
+            args,
+            env: { TEST_VAR: "test-value" },
+          },
         },
       });
 
@@ -133,14 +143,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const { command, args } = testServers.createStdioServer("stdio-restart");
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          mode: "legacy",
-          command,
-          args,
-          restart: {
-            enabled: true,
-            maxAttempts: 2,
-            delayMs: 100,
+        servers: {
+          "stdio-server": {
+            mode: "legacy",
+            command,
+            args,
+            restart: {
+              enabled: true,
+              maxAttempts: 2,
+              delayMs: 100,
+            },
           },
         },
       });
@@ -189,11 +201,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "http-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          headers: {
-            Authorization: "Bearer test-token",
+        servers: {
+          "http-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            headers: {
+              Authorization: "Bearer test-token",
+            },
           },
         },
       });
@@ -212,11 +226,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "http-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          headers: {
-            Authorization: "Bearer invalid-token",
+        servers: {
+          "http-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            headers: {
+              Authorization: "Bearer invalid-token",
+            },
           },
         },
       });
@@ -250,12 +266,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "streamable-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          headers: {
-            Authorization: "Bearer test-token",
-            "X-API-Key": "my-api-key",
+        servers: {
+          "streamable-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            headers: {
+              Authorization: "Bearer test-token",
+              "X-API-Key": "my-api-key",
+            },
           },
         },
       });
@@ -293,11 +311,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "streamable-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          headers: {
-            Authorization: "Bearer wrong-token",
+        servers: {
+          "streamable-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            headers: {
+              Authorization: "Bearer wrong-token",
+            },
           },
         },
       });
@@ -328,9 +348,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
       // Configure client to connect to a non-existent streamable HTTP endpoint
       // but with SSE fallback available
       const client = new MultiServerMCPClient({
-        "http-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
+        servers: {
+          "http-server": {
+            url: `${baseUrl}/mcp`,
+          },
         },
       });
 
@@ -351,10 +372,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
+        servers: {
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+          },
         },
       });
 
@@ -383,13 +406,15 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          headers: {
-            Authorization: "Bearer test-token",
-            "X-Custom-Header": "sse-value",
+        servers: {
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            headers: {
+              Authorization: "Bearer test-token",
+              "X-Custom-Header": "sse-value",
+            },
           },
         },
       });
@@ -422,12 +447,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          headers: {
-            Authorization: "Bearer invalid-token",
+        servers: {
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            headers: {
+              Authorization: "Bearer invalid-token",
+            },
           },
         },
       });
@@ -452,11 +479,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       const client = new MultiServerMCPClient({
-        "sse-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          // No headers provided - should still work
+        servers: {
+          "sse-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            // No headers provided - should still work
+          },
         },
       });
 
@@ -496,7 +525,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         );
 
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             "stdio-server": {
               mode: "legacy",
               command,
@@ -592,7 +621,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         await testServers.createHTTPServer("filter-http");
 
       const client = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "stdio-server": {
             mode: "legacy",
             command,
@@ -627,9 +656,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const { baseUrl } = await testServers.createHTTPServer("client-access");
 
       const client = new MultiServerMCPClient({
-        "test-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+          },
         },
       });
 
@@ -649,9 +680,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
   describe("Error Handling", () => {
     it("should handle connection failures gracefully", async () => {
       const client = new MultiServerMCPClient({
-        "failing-server": {
-          mode: "legacy",
-          url: "http://totally-not-a-server.fakeurl.example.com:9999/mcp", // Non-existent server
+        servers: {
+          "failing-server": {
+            mode: "legacy",
+            url: "http://totally-not-a-server.fakeurl.example.com:9999/mcp", // Non-existent server
+          },
         },
       });
 
@@ -671,9 +704,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
     it("should handle invalid stdio command", async () => {
       const client = new MultiServerMCPClient({
-        "failing-stdio": {
-          command: "nonexistent-command",
-          args: [],
+        servers: {
+          "failing-stdio": {
+            command: "nonexistent-command",
+            args: [],
+          },
         },
       });
 
@@ -697,7 +732,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const { baseUrl } = await testServers.createHTTPServer("prefix-test");
 
       const clientWithPrefix = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "test-server": {
             mode: "legacy",
             url: `${baseUrl}/mcp`,
@@ -708,7 +743,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       const clientWithoutPrefix = new MultiServerMCPClient({
-        mcpServers: {
+        servers: {
           "test-server": {
             mode: "legacy",
             url: `${baseUrl}/mcp`,
@@ -738,8 +773,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
     });
 
     it("should allow config inspection", async () => {
-      const config: ClientConfig = {
-        mcpServers: {
+      const config: MCPAdapterInit = {
+        servers: {
           "test-server": {
             mode: "legacy",
             url: "http://example.com/mcp",
@@ -751,14 +786,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       const client = new MultiServerMCPClient(config);
 
-      const inspectedConfig = client.config;
+      const inspectedConfig = getNamedConfig(client);
       expect(inspectedConfig.servers["test-server"]).toBeDefined();
       expect(inspectedConfig.throwOnLoadError).toBe(false);
       expect(inspectedConfig.prefixToolNameWithServerName).toBe(true);
 
       // Ensure config is cloned (not a reference)
       config.throwOnLoadError = true;
-      expect(client.config.throwOnLoadError).toBe(false);
+      expect(getNamedConfig(client).throwOnLoadError).toBe(false);
 
       await client.close();
     });
@@ -808,10 +843,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "oauth-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          authProvider: mockAuthProvider,
+        servers: {
+          "oauth-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            authProvider: mockAuthProvider,
+          },
         },
       });
 
@@ -873,11 +910,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "sse-oauth-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          authProvider: mockAuthProvider,
+        servers: {
+          "sse-oauth-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            authProvider: mockAuthProvider,
+          },
         },
       });
 
@@ -942,10 +981,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "oauth-invalid-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          authProvider: mockAuthProvider,
+        servers: {
+          "oauth-invalid-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            authProvider: mockAuthProvider,
+          },
         },
       });
 
@@ -1005,10 +1046,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "oauth-no-tokens-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          authProvider: mockAuthProvider,
+        servers: {
+          "oauth-no-tokens-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            authProvider: mockAuthProvider,
+          },
         },
       });
 
@@ -1069,11 +1112,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "sse-oauth-error-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          authProvider: mockAuthProvider,
+        servers: {
+          "sse-oauth-error-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            authProvider: mockAuthProvider,
+          },
         },
       });
 
@@ -1138,13 +1183,15 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "oauth-headers-server": {
-          mode: "legacy",
-          url: `${baseUrl}/mcp`,
-          authProvider: mockAuthProvider,
-          headers: {
-            "X-Custom-API-Key": "custom-api-key-123",
-            "X-Request-ID": "req-oauth-headers-456",
+        servers: {
+          "oauth-headers-server": {
+            mode: "legacy",
+            url: `${baseUrl}/mcp`,
+            authProvider: mockAuthProvider,
+            headers: {
+              "X-Custom-API-Key": "custom-api-key-123",
+              "X-Request-ID": "req-oauth-headers-456",
+            },
           },
         },
       });
@@ -1232,14 +1279,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "sse-oauth-headers-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          authProvider: mockAuthProvider,
-          headers: {
-            "X-SSE-Custom-Header": "sse-custom-value-789",
-            "X-Correlation-ID": "corr-sse-oauth-101112",
+        servers: {
+          "sse-oauth-headers-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            authProvider: mockAuthProvider,
+            headers: {
+              "X-SSE-Custom-Header": "sse-custom-value-789",
+              "X-Correlation-ID": "corr-sse-oauth-101112",
+            },
           },
         },
       });
@@ -1328,11 +1377,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
       };
 
       const client = new MultiServerMCPClient({
-        "sse-oauth-invalid-server": {
-          mode: "legacy",
-          transport: "sse",
-          url: `${baseUrl}/sse`,
-          authProvider: mockAuthProvider,
+        servers: {
+          "sse-oauth-invalid-server": {
+            mode: "legacy",
+            transport: "sse",
+            url: `${baseUrl}/sse`,
+            authProvider: mockAuthProvider,
+          },
         },
       });
 
@@ -1362,10 +1413,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "timeout-server": {
-          mode: "legacy",
-          transport: "http",
-          url: `${baseUrl}/mcp`,
+        servers: {
+          "timeout-server": {
+            mode: "legacy",
+            transport: "http",
+            url: `${baseUrl}/mcp`,
+          },
         },
       });
 
@@ -1399,10 +1452,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         const client = new MultiServerMCPClient({
-          "timeout-server": {
-            mode: "legacy",
-            transport,
-            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          servers: {
+            "timeout-server": {
+              mode: "legacy",
+              transport,
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
           },
         });
 
@@ -1435,10 +1490,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
         );
 
         const client = new MultiServerMCPClient({
-          "timeout-server": {
-            mode: "legacy",
-            transport,
-            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          servers: {
+            "timeout-server": {
+              mode: "legacy",
+              transport,
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
           },
         });
 
@@ -1470,11 +1527,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         const client = new MultiServerMCPClient({
-          "timeout-server": {
-            mode: "legacy",
-            transport,
-            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
-            defaultToolTimeout: 1000,
+          servers: {
+            "timeout-server": {
+              mode: "legacy",
+              transport,
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+              defaultToolTimeout: 1000,
+            },
           },
         });
 
@@ -1501,11 +1560,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         const client = new MultiServerMCPClient({
-          "timeout-server": {
-            mode: "legacy",
-            transport,
-            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
-            defaultToolTimeout: 5, // 5 milliseconds
+          servers: {
+            "timeout-server": {
+              mode: "legacy",
+              transport,
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+              defaultToolTimeout: 5, // 5 milliseconds
+            },
           },
         });
 
@@ -1534,12 +1595,14 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         const client = new MultiServerMCPClient({
-          "timeout-server": {
-            mode: "legacy",
-            transport,
-            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
-            // Long enough that it cannot be what aborts the call below.
-            defaultToolTimeout: 10_000,
+          servers: {
+            "timeout-server": {
+              mode: "legacy",
+              transport,
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+              // Long enough that it cannot be what aborts the call below.
+              defaultToolTimeout: 10_000,
+            },
           },
         });
 
@@ -1571,7 +1634,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             "timeout-server": {
               mode: "legacy",
               transport,
@@ -1611,7 +1674,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         );
 
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             "audio-server": {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -1683,7 +1746,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           }
         );
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -1790,7 +1853,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -1875,7 +1938,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -1965,7 +2028,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2051,7 +2114,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2130,8 +2193,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
           disableStreamableHttp: transport === "sse",
           supportSSEFallback: transport === "sse",
         });
-        const clientConfig: ClientConfig = {
-          mcpServers: {
+        const clientConfig: MCPAdapterInit = {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2194,7 +2257,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2292,7 +2355,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2329,7 +2392,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2366,7 +2429,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2403,7 +2466,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2433,7 +2496,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           supportSSEFallback: transport === "sse",
         });
         const client = new MultiServerMCPClient({
-          mcpServers: {
+          servers: {
             [serverName]: {
               mode: "legacy",
               transport: transport as "http" | "sse",
@@ -2490,6 +2553,73 @@ describe("MultiServerMCPClient Integration Tests", () => {
         }
       }
     );
+  });
+
+  describe("direct constructor inputs", () => {
+    function createEchoServer(name: string) {
+      const server = new McpServer({ name, version: "1.0.0" });
+      server.registerTool(
+        "echo",
+        { inputSchema: z.object({ value: z.string() }) },
+        async ({ value }) => ({ content: [{ type: "text", text: value }] })
+      );
+      return server;
+    }
+
+    it("connects an in-process MCP server", async () => {
+      const server = createEchoServer("in-process-source");
+      const close = vi.spyOn(server, "close");
+      const adapter = new MCPAdapter(server);
+
+      const [echo] = await adapter.listTools();
+      expect(echo.name).toBe("echo");
+      await expect(echo.invoke({ value: "memory" })).resolves.toBe("memory");
+
+      await adapter.close();
+      expect(close).toHaveBeenCalledOnce();
+      await expect(adapter.listTools()).rejects.toThrow(
+        'MCP connection for "direct" has already been closed'
+      );
+    });
+
+    it("accepts object-backed connections in the canonical servers map", async () => {
+      const server = createEchoServer("named-object-source");
+      const adapter = new MCPAdapter({
+        servers: { local: server },
+      });
+
+      expect(getNamedConfig(adapter).servers.local).toBe(server);
+
+      try {
+        const toolsets = await adapter.listToolsets();
+        await expect(
+          toolsets.local[0].invoke({ value: "named" })
+        ).resolves.toBe("named");
+      } finally {
+        await adapter.close();
+      }
+    });
+
+    it("uses a connected Client without taking ownership", async () => {
+      const server = createEchoServer("client-source");
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+      await server.connect(serverTransport);
+      const client = new SDKClient({ name: "prebuilt", version: "1.0.0" });
+      await client.connect(clientTransport);
+      const close = vi.spyOn(client, "close");
+      const adapter = new MCPAdapter(client);
+
+      try {
+        const [echo] = await adapter.listTools();
+        await expect(echo.invoke({ value: "client" })).resolves.toBe("client");
+        await adapter.close();
+        expect(close).not.toHaveBeenCalled();
+      } finally {
+        await client.close();
+        await server.close();
+      }
+    });
   });
 
   describe("SDK client integration", () => {

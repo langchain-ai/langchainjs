@@ -23,6 +23,8 @@ export const CLIENT_CAPABILITIES_META_KEY = actual.CLIENT_CAPABILITIES_META_KEY;
 
 export const LOG_LEVEL_META_KEY = actual.LOG_LEVEL_META_KEY;
 
+export const InMemoryTransport = actual.InMemoryTransport;
+
 const clientPrototype = {
   getProtocolEra: vi
     .fn<InstanceType<typeof actual.Client>["getProtocolEra"]>()

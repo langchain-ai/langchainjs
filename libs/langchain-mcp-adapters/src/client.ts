@@ -14,40 +14,31 @@ import type {
   LoggingLevel,
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import { LoggingLevelSchema } from "@modelcontextprotocol/core";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertMcpTools } from "./tools.js";
 import { _resolveAndApplyOverrideHandlingOverrides } from "./content.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { mergeHeaders } from "./utils/misc.js";
 import {
-  type ClientConfig,
-  type MCPAdapterConfig,
+  CustomHTTPTransportParams,
+  MCPAdapterConfig,
+  MCPAdapterInit,
+  MCPAdapterParams,
+  SSEConnection,
+  ToolDiscoveryParams,
+  _MCPAliases,
+  isDescriptorConnection,
   type Connection,
-  type ResolvedMCPAdapterConfig,
-  type ResolvedConnection,
-  type ResolvedStdioConnection,
-  type ResolvedStreamableHTTPConnection,
-  type ResolvedSSEConnection,
-  type CustomHTTPTransportOptions,
-  type MCPResource,
-  type MCPResourceTemplate,
-  type MCPResourceContent,
   type ConnectionErrorHandler,
-  mcpAdapterConfigSchema,
-  toolDiscoveryOptionsSchema,
+  type LoadMcpToolsParams,
+  type StdioConnection,
   type ToolDiscoveryOptions,
-  adapterConfigSchema,
-  loggingLevelSchema,
-  SSEConnectionSchema,
-  customHTTPTransportOptionsSchema,
-  type LoadMcpToolsOptions,
 } from "./types.js";
 
-const toolSelectionSchema = createServerSelectionSchema(
-  toolDiscoveryOptionsSchema
-);
+const toolSelectionSchema = createServerSelectionSchema(ToolDiscoveryParams);
 const transportSelectionSchema = createServerSelectionSchema(
-  customHTTPTransportOptionsSchema
+  CustomHTTPTransportParams
 );
 
 export { MCPClientError } from "./utils/errors.js";
@@ -93,22 +84,26 @@ export class MCPAdapter {
   /**
    * Configured MCP servers
    */
-  #mcpServers?: Record<string, ResolvedConnection>;
+  #mcpServers?: Record<string, Connection>;
+
+  /** True when constructed with a direct connection rather than a named server map. */
+  #isDirectConnection = false;
 
   /**
    * Cached map of server names to load tools options
    */
-  #loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
+  #loadToolsOptions: Record<string, LoadMcpToolsParams> = {};
 
   /**
    * Connection manager
    */
   #clientConnections: ConnectionManager;
 
-  /**
-   * Resolved client config
-   */
-  #config: ResolvedMCPAdapterConfig;
+  /** Parsed named-server configuration, if the adapter was constructed with one. */
+  #config?: MCPAdapterConfig;
+
+  /** Parsed direct connection, if the adapter was constructed with one. */
+  #directConnection?: Connection;
 
   /**
    * Behavior when a server fails to connect
@@ -126,55 +121,63 @@ export class MCPAdapter {
    *
    * Client does not support config modifications.
    */
-  get config(): ResolvedMCPAdapterConfig {
-    return mcpAdapterConfigSchema.parse(this.#config);
+  get config(): MCPAdapterConfig | Connection {
+    return this.#config ?? this.#directConnection!;
   }
 
   /**
    * Create an MCP adapter. Construction does not open connections.
    *
-   * @param config - Configuration object
+   * Direct connections remain distinct from named server maps. Internally they
+   * use a stable key because discovery and connection pooling are server-keyed.
    */
-  constructor(config: MCPAdapterConfig);
-  /** @deprecated Use `{ servers: { ... } }`. */
-  constructor(config: ClientConfig | Record<string, Connection>);
-  constructor(
-    config: MCPAdapterConfig | ClientConfig | Record<string, Connection>
-  ) {
-    const parsedServerConfig = adapterConfigSchema.parse(config);
+  constructor(config: MCPAdapterInit) {
+    const parsed = MCPAdapterInit.parse(config);
+    const isNamedMap =
+      parsed !== null && typeof parsed === "object" && "servers" in parsed;
+    const parsedServerConfig = isNamedMap
+      ? parsed
+      : MCPAdapterConfig.parse({
+          ...MCPAdapterParams.parse({}),
+          servers: { direct: parsed },
+        });
+
+    this.#isDirectConnection = !isNamedMap;
+    this.#config = isNamedMap ? parsed : undefined;
+    this.#directConnection = isNamedMap ? undefined : parsed;
 
     for (const [serverName, serverConfig] of Object.entries(
       parsedServerConfig.servers
     )) {
+      const descriptor = isDescriptorConnection(serverConfig)
+        ? serverConfig
+        : undefined;
       const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
         parsedServerConfig.outputHandling,
-        serverConfig.outputHandling
+        descriptor?.outputHandling
       );
       const defaultToolTimeout =
-        parsedServerConfig.defaultToolTimeout ??
-        serverConfig.defaultToolTimeout;
+        parsedServerConfig.defaultToolTimeout ?? descriptor?.defaultToolTimeout;
 
       this.#loadToolsOptions[serverName] = {
-        logLevel: serverConfig.logLevel,
-        elicitation: serverConfig.elicitation,
+        logLevel: descriptor?.logLevel,
+        elicitation:
+          descriptor && "elicitation" in descriptor
+            ? descriptor.elicitation
+            : undefined,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
-        prefixToolNameWithServerName:
-          parsedServerConfig.prefixToolNameWithServerName,
+        prefixToolNameWithServerName: this.#isDirectConnection
+          ? false
+          : parsedServerConfig.prefixToolNameWithServerName,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
-        onProgress: serverConfig.onProgress,
-        /**
-         * make sure to place global hooks (e.g. parsedServerConfig) first before
-         * server-specific hooks (e.g. serverConfig) so they can override tool call
-         * configuration.
-         */
+        onProgress: descriptor?.onProgress,
         beforeToolCall: parsedServerConfig.beforeToolCall,
         afterToolCall: parsedServerConfig.afterToolCall,
       };
     }
 
-    this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.servers;
     this.#clientConnections = new ConnectionManager((options) => {
       const client = this.#clientConnections.get(options);
@@ -200,7 +203,7 @@ export class MCPAdapter {
     customTransportOptions?: ToolDiscoveryOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
     return this.#discoverToolsets(
-      toolDiscoveryOptionsSchema.parse(customTransportOptions ?? {})
+      ToolDiscoveryParams.parse(customTransportOptions ?? {})
     );
   }
 
@@ -282,10 +285,12 @@ export class MCPAdapter {
     return catalog;
   }
 
-  #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
-    const connection = this.#config.servers[serverName];
+  #transportOptions(serverName: string, options?: CustomHTTPTransportParams) {
+    const connection = this.#mcpServers?.[serverName];
 
-    return !connection || connection.transport === "stdio"
+    return !connection ||
+      !isDescriptorConnection(connection) ||
+      (connection.transport !== "http" && connection.transport !== "sse")
       ? { serverName }
       : {
           serverName,
@@ -363,10 +368,10 @@ export class MCPAdapter {
     const parsed = z
       .union([
         z
-          .tuple([loggingLevelSchema])
+          .tuple([LoggingLevelSchema])
           .transform(([level]) => ({ serverName: undefined, level })),
         z
-          .tuple([z.string(), loggingLevelSchema])
+          .tuple([z.string(), LoggingLevelSchema])
           .transform(([serverName, level]) => ({ serverName, level })),
       ])
       .parse(args);
@@ -399,9 +404,9 @@ export class MCPAdapter {
    */
   async getClient(
     serverName: string,
-    options?: CustomHTTPTransportOptions
+    options?: CustomHTTPTransportParams
   ): Promise<Client | undefined> {
-    const parsedOptions = customHTTPTransportOptionsSchema.parse(options ?? {});
+    const parsedOptions = CustomHTTPTransportParams.parse(options ?? {});
     await this.#discoverToolsets(parsedOptions);
 
     return this.#clientConnections.get(
@@ -431,21 +436,21 @@ export class MCPAdapter {
    */
   async listResources(
     ...servers: string[]
-  ): Promise<Record<string, MCPResource[]>>;
+  ): Promise<Record<string, _MCPAliases.MCPResource[]>>;
   async listResources(
     servers: string[],
-    options?: CustomHTTPTransportOptions
-  ): Promise<Record<string, MCPResource[]>>;
+    options?: CustomHTTPTransportParams
+  ): Promise<Record<string, _MCPAliases.MCPResource[]>>;
   async listResources(
     ...args: unknown[]
-  ): Promise<Record<string, MCPResource[]>> {
+  ): Promise<Record<string, _MCPAliases.MCPResource[]>> {
     const { servers, options } = transportSelectionSchema.parse(args);
     await this.#discoverToolsets(options);
 
     const targetServers =
-      servers.length > 0 ? servers : Object.keys(this.#config.servers);
+      servers.length > 0 ? servers : Object.keys(this.#mcpServers ?? {});
 
-    const result: Record<string, MCPResource[]> = {};
+    const result: Record<string, _MCPAliases.MCPResource[]> = {};
 
     for (const serverName of targetServers) {
       const client = this.#clientConnections.get(
@@ -492,21 +497,21 @@ export class MCPAdapter {
    */
   async listResourceTemplates(
     ...servers: string[]
-  ): Promise<Record<string, MCPResourceTemplate[]>>;
+  ): Promise<Record<string, _MCPAliases.MCPResourceTemplate[]>>;
   async listResourceTemplates(
     servers: string[],
-    options?: CustomHTTPTransportOptions
-  ): Promise<Record<string, MCPResourceTemplate[]>>;
+    options?: CustomHTTPTransportParams
+  ): Promise<Record<string, _MCPAliases.MCPResourceTemplate[]>>;
   async listResourceTemplates(
     ...args: unknown[]
-  ): Promise<Record<string, MCPResourceTemplate[]>> {
+  ): Promise<Record<string, _MCPAliases.MCPResourceTemplate[]>> {
     const { servers, options } = transportSelectionSchema.parse(args);
     await this.#discoverToolsets(options);
 
     const targetServers =
-      servers.length > 0 ? servers : Object.keys(this.#config.servers);
+      servers.length > 0 ? servers : Object.keys(this.#mcpServers ?? {});
 
-    const result: Record<string, MCPResourceTemplate[]> = {};
+    const result: Record<string, _MCPAliases.MCPResourceTemplate[]> = {};
 
     for (const serverName of targetServers) {
       const client = this.#clientConnections.get(
@@ -545,8 +550,8 @@ export class MCPAdapter {
   async readResource(
     serverName: string,
     uri: string,
-    options?: CustomHTTPTransportOptions
-  ): Promise<MCPResourceContent[]> {
+    options?: CustomHTTPTransportParams
+  ): Promise<_MCPAliases.MCPResourceContent[]> {
     const client = await this.getClient(serverName, options);
     if (!client) {
       throw new MCPClientError(
@@ -575,10 +580,11 @@ export class MCPAdapter {
    * waiting on its backoff wakes and gives up instead of resurrecting a
    * connection. Concurrent calls share one teardown.
    *
-   * The adapter stays usable afterwards: the server configuration survives, so
-   * a later `listTools()` discovers again and builds fresh clients rather than
-   * restoring the closed ones. A discovery that arrives mid-close waits for
-   * teardown and then runs in the new epoch.
+   * Descriptor-based server configuration remains reusable afterwards, so a
+   * later `listTools()` discovers again and builds fresh clients. Supplied
+   * transports and in-process servers are one-shot instances and cannot be
+   * reconnected after they are closed. A discovery that arrives mid-close waits
+   * for teardown and then runs in the new epoch.
    */
   async close(): Promise<void> {
     if (this.#closing) {
@@ -624,9 +630,14 @@ export class MCPAdapter {
    */
   private async _initializeConnection(
     serverName: string,
-    connection: ResolvedConnection,
-    customTransportOptions?: CustomHTTPTransportOptions
+    connection: Connection,
+    customTransportOptions?: CustomHTTPTransportParams
   ): Promise<void> {
+    if (!isDescriptorConnection(connection)) {
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
+      return;
+    }
+
     if (connection.transport === "stdio") {
       /**
        * check if we already initialized this stdio connection
@@ -684,16 +695,12 @@ export class MCPAdapter {
    */
   private async _initializeStdioConnection(
     serverName: string,
-    connection: ResolvedStdioConnection
+    connection: StdioConnection
   ): Promise<void> {
     const { restart } = connection;
 
     try {
-      await this.#clientConnections.createClient(
-        "stdio",
-        serverName,
-        connection
-      );
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
       const transport = this.#clientConnections.getTransport({
         serverName,
       }) as StdioClientTransport;
@@ -717,8 +724,8 @@ export class MCPAdapter {
   private _setupStdioRestart(
     serverName: string,
     transport: StdioClientTransport,
-    connection: ResolvedStdioConnection,
-    restart: NonNullable<ResolvedStdioConnection["restart"]>
+    connection: StdioConnection,
+    restart: NonNullable<StdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
     const handleClose = async () => {
@@ -757,30 +764,20 @@ export class MCPAdapter {
    */
   private async _initializeStreamableHTTPConnection(
     serverName: string,
-    connection: ResolvedStreamableHTTPConnection
+    connection: SSEConnection
   ): Promise<void> {
     const { url, transport: transportType } = connection;
 
-    const automaticSSEFallback =
-      connection.mode === "auto" ||
-      (connection.mode === "legacy" && connection.automaticSSEFallback);
+    const automaticSSEFallback = connection.mode === "auto";
 
-    // Falling back to SSE settles the era as legacy, as negotiating it would:
-    // these meant "if the server is modern", so they drop out here rather than
-    // failing the explicit-SSE check.
-    const {
-      elicitation: _elicitation,
-      logLevel: _logLevel,
-      ...fallback
-    } = connection;
+    // Falling back to SSE settles the era as legacy. The simplified schema
+    // permits the connection options in either protocol branch, so the
+    // fallback can reuse the descriptor unchanged.
+    const fallback = connection;
 
     if (transportType === "http" || transportType == null) {
       try {
-        await this.#clientConnections.createClient(
-          "http",
-          serverName,
-          connection
-        );
+        await this.#clientConnections.getOrCreateClient(serverName, connection);
       } catch (error) {
         const code = getHttpErrorCode(error);
         if (
@@ -794,7 +791,7 @@ export class MCPAdapter {
           try {
             await this._initializeSSEConnection(
               serverName,
-              SSEConnectionSchema.parse({ ...fallback, transport: "sse" })
+              SSEConnection.parse({ ...fallback, transport: "sse" })
             );
           } catch (firstSSEError) {
             // try one more time, but modify the URL to end with `/sse`
@@ -804,7 +801,7 @@ export class MCPAdapter {
               try {
                 await this._initializeSSEConnection(
                   serverName,
-                  SSEConnectionSchema.parse({
+                  SSEConnection.parse({
                     ...fallback,
                     transport: "sse",
                     url: sseUrl,
@@ -887,12 +884,12 @@ export class MCPAdapter {
    */
   private async _initializeSSEConnection(
     serverName: string,
-    connection: ResolvedSSEConnection
+    connection: SSEConnection
   ): Promise<void> {
     const { url, headers, reconnect, authProvider } = connection;
 
     try {
-      await this.#clientConnections.createClient("sse", serverName, connection);
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
       const transport = this.#clientConnections.getTransport({
         serverName,
         headers,
@@ -934,8 +931,8 @@ export class MCPAdapter {
   private _setupSSEReconnect(
     serverName: string,
     transport: SSEClientTransport | StreamableHTTPClientTransport,
-    connection: ResolvedSSEConnection,
-    reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
+    connection: SSEConnection,
+    reconnect: NonNullable<SSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
     const handleClose = async () => {
@@ -1064,7 +1061,7 @@ export class MCPAdapter {
    */
   private async _attemptReconnect(
     serverName: string,
-    connection: ResolvedConnection,
+    connection: StdioConnection | SSEConnection,
     maxAttempts = 3,
     delayMs = 1000
   ): Promise<void> {
@@ -1101,18 +1098,8 @@ export class MCPAdapter {
         // Initialize just this connection based on its type
         if (connection.transport === "stdio") {
           await this._initializeStdioConnection(serverName, connection);
-        } else if (
-          connection.transport === "http" ||
-          connection.transport === "sse"
-        ) {
-          if (connection.transport === "sse") {
-            await this._initializeSSEConnection(serverName, connection);
-          } else {
-            await this._initializeStreamableHTTPConnection(
-              serverName,
-              connection
-            );
-          }
+        } else {
+          await this._initializeSSEConnection(serverName, connection);
         }
 
         // Check if connected

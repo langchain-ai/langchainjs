@@ -9,18 +9,13 @@ import type {
   ListResourcesResult,
   ListResourceTemplatesResult,
   ReadResourceResult,
-  OAuthClientProvider,
+  OAuthClientProvider as _MCPOAuthClientProvider,
   LoggingMessageNotificationParams,
   Progress,
   ResourceUpdatedNotificationParams,
+  Client as MCPClient,
+  Transport,
 } from "@modelcontextprotocol/client";
-import type {
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-} from "@langchain/core/messages";
-import type { RunnableConfig } from "@langchain/core/runnables";
-import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema } from "./hooks.js";
 import { outputHandlingSchema } from "./content.js";
@@ -31,24 +26,16 @@ export {
   type DetailedOutputHandling,
   type OutputHandling,
 } from "./content.js";
-import { getSdkHeaderCase } from "./utils/misc.js";
 
-export type {
-  Command,
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-  RunnableConfig,
-  CommandParams,
-};
+export namespace _MCPAliases {
+  export type MCPResource = ListResourcesResult["resources"][number];
+  export type MCPResourceTemplate =
+    ListResourceTemplatesResult["resourceTemplates"][number];
+  export type MCPResourceContent = ReadResourceResult["contents"][number];
+}
 
-/**
- * Preserve the SDK-owned service and its prototype. Property checks validate
- * callable methods without replacing them or evaluating metadata getters.
- * The SDK remains responsible for parsing OAuth metadata and method results.
- */
-export const oAuthClientProviderSchema = z
-  .custom<OAuthClientProvider>(
+export const OAuthClientProvider = z
+  .custom<_MCPOAuthClientProvider>(
     (value) =>
       value !== null &&
       typeof value === "object" &&
@@ -68,252 +55,14 @@ export const oAuthClientProviderSchema = z
     z.property("codeVerifier", z.function())
   );
 
-/** SDK logging levels, exposed as an adapter request option. */
-export const loggingLevelSchema = LoggingLevelSchema;
+export type OAuthClientProvider = z.infer<typeof OAuthClientProvider>;
 
-export const baseConfigSchema = z.object({
-  /**
-   * Defines where to place each tool output type in the LangChain ToolMessage.
-   *
-   * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
-   * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
-   * to `content` or `artifact`.
-   *
-   * @default {
-   *   "text": "content",
-   *   "image": "content",
-   *   "audio": "content",
-   *   "resource": "artifact"
-   * }
-   *
-   * Items in the `content` field will be used as input context for the LLM, while the artifact field is
-   * used for capturing tool output that won't be shown to the model, to be used in some later workflow
-   * step.
-   *
-   * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
-   * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
-   * the output in a code execution environment. In this case, you would set the output handling for the
-   * `resource` type to `artifact` (its default value), and then upon initialization of your code
-   * execution environment, you would look through your message history for `ToolMessage`s with the
-   * `artifact` field set to `resource`, and use the `content` field during initialization of the
-   * environment.
-   */
-  outputHandling: outputHandlingSchema.optional(),
-
-  /**
-   * Default timeout in milliseconds for tool execution. Must be greater than 0.
-   * If not specified, tools will use their own configured timeout values.
-   */
-  defaultToolTimeout: z.number().min(1).optional(),
-});
-
-/**
- * Stdio transport restart configuration
- */
-export const stdioRestartSchema = z
-  .object({
-    /**
-     * Whether to automatically restart the process if it exits
-     */
-    enabled: z
-      .boolean()
-      .describe("Whether to automatically restart the process if it exits")
-      .optional(),
-    /**
-     * Maximum number of restart attempts
-     */
-    maxAttempts: z
-      .int()
-      .nonnegative()
-      .describe("The maximum number of restart attempts")
-      .optional(),
-    /**
-     * Delay in milliseconds between restart attempts
-     */
-    delayMs: z
-      .number()
-      .nonnegative()
-      .describe("The delay in milliseconds between restart attempts")
-      .optional(),
-  })
-  .describe("Configuration for stdio transport restart");
-
-/**
- * Stdio transport connection
- */
-const stdioOptionsSchema = z
-  .object({
-    /**
-     * Optional transport type, inferred from the structure of the config if not provided. Included
-     * for compatibility with common MCP client config file formats.
-     */
-    transport: z.literal("stdio").default("stdio"),
-    /**
-     * Optional transport type, inferred from the structure of the config if not provided. Included
-     * for compatibility with common MCP client config file formats.
-     */
-    type: z.literal("stdio").optional(),
-    /**
-     * The executable to run the server (e.g. `node`, `npx`, etc)
-     */
-    command: z.string().describe("The executable to run the server"),
-    url: z
-      .never({ error: "Specify a stdio command or an HTTP URL, not both" })
-      .optional(),
-    /**
-     * Array of command line arguments to pass to the executable
-     */
-    args: z
-      .array(z.string())
-      .describe("Command line arguments to pass to the executable"),
-    /**
-     * Environment variables to set when spawning the process.
-     */
-    env: z
-      .record(z.string(), z.string())
-      .describe("The environment to use when spawning the process")
-      .optional(),
-    /** @deprecated SDK 2 stdio does not support overriding the encoding. */
-    encoding: z
-      .never({
-        error: "SDK 2 stdio does not support encoding; remove this option",
-      })
-      .optional(),
-    /**
-     * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
-     *
-     * The default is "inherit", meaning messages to stderr will be printed to the parent process's stderr.
-     *
-     * @default "inherit"
-     */
-    stderr: z
-      .union([
-        z.literal("overlapped"),
-        z.literal("pipe"),
-        z.literal("ignore"),
-        z.literal("inherit"),
-      ])
-      .describe(
-        "How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`"
-      )
-      .optional()
-      .default("inherit"),
-    /**
-     * The working directory to use when spawning the process.
-     */
-    cwd: z
-      .string()
-      .describe("The working directory to use when spawning the process")
-      .optional(),
-    /**
-     * Additional restart settings
-     */
-    restart: stdioRestartSchema.optional(),
-  })
-  .extend(baseConfigSchema.shape)
-  .describe("Configuration for stdio transport connection");
-
-/**
- * Streamable HTTP transport reconnection configuration
- */
-export const streamableHttpReconnectSchema = z
-  .object({
-    /**
-     * Whether to automatically reconnect if the connection is lost
-     */
-    enabled: z
-      .boolean()
-      .describe("Whether to automatically reconnect if the connection is lost")
-      .optional(),
-    /**
-     * Maximum number of reconnection attempts
-     */
-    maxAttempts: z
-      .int()
-      .nonnegative()
-      .describe("The maximum number of reconnection attempts")
-      .optional(),
-    /**
-     * Delay in milliseconds between reconnection attempts
-     */
-    delayMs: z
-      .number()
-      .nonnegative()
-      .describe("The delay in milliseconds between reconnection attempts")
-      .optional(),
-  })
-  .describe("Configuration for streamable HTTP transport reconnection");
-
-const headersSchema = z
-  .record(z.string(), z.string())
-  .transform(getSdkHeaderCase)
-  .optional();
-
-const httpOptionsSchema = z
-  .object({
-    /**
-     * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
-     * to connect using streamable HTTP.
-     */
-    transport: z.union([z.literal("http"), z.literal("sse")]).optional(),
-    /**
-     * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
-     * to connect using streamable HTTP.
-     */
-    type: z.union([z.literal("http"), z.literal("sse")]).optional(),
-    /**
-     * The URL to connect to
-     */
-    url: z.string().url(),
-    command: z
-      .never({ error: "Specify a stdio command or an HTTP URL, not both" })
-      .optional(),
-    /**
-     * Additional headers to send with the request, useful for authentication
-     */
-    headers: headersSchema,
-    /**
-     * OAuth client provider for automatic authentication handling.
-     * When provided, the transport will automatically handle token refresh,
-     * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
-     * This is the recommended approach for authentication instead of manual headers.
-     */
-    authProvider: oAuthClientProviderSchema.optional(),
-    /**
-     * Additional reconnection settings.
-     */
-    reconnect: streamableHttpReconnectSchema.optional(),
-    /**
-     * Whether to automatically fallback to SSE if Streamable HTTP is not available or not supported
-     *
-     * @default true
-     */
-    automaticSSEFallback: z.boolean().optional().default(true),
-  })
-  .extend(baseConfigSchema.shape)
-  .describe("Configuration for streamable HTTP transport connection");
-
-export const eventContextSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("tool"),
-    name: z.string(),
-    args: z.unknown(),
-    server: z.string(),
-  }),
-  z.object({ type: z.literal("unknown") }),
-]);
-
-export type EventContext = z.output<typeof eventContextSchema>;
-
-/** Trusted notification context; preserves runtime callback and OAuth identities. */
 export interface ServerMessageSource {
   server: string;
-  options: ResolvedConnection;
+  options: Connection;
 }
 
-// SDK payloads are already parsed by the SDK. Keep callbacks as opaque runtime
-// services; parsing a function schema would replace their identity with a wrapper.
-const notifications = z.object({
+const NotificationCallbacks = z.object({
   /**
    * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Called when a log message is received.
@@ -536,22 +285,51 @@ const notifications = z.object({
     .optional(),
 });
 
-export type Notifications = z.output<typeof notifications>;
+export type NotificationCallbacks = z.output<typeof NotificationCallbacks>;
 
-const removedRootsObserver = z
-  .never({
-    error:
-      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
-  })
-  .optional();
+const ConnectionPolicy = z.object({
+  /**
+   * Defines where to place each tool output type in the LangChain ToolMessage.
+   *
+   * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
+   * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
+   * to `content` or `artifact`.
+   *
+   * @default {
+   *   "text": "content",
+   *   "image": "content",
+   *   "audio": "content",
+   *   "resource": "artifact"
+   * }
+   *
+   * Items in the `content` field will be used as input context for the LLM, while the artifact field is
+   * used for capturing tool output that won't be shown to the model, to be used in some later workflow
+   * step.
+   *
+   * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
+   * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
+   * the output in a code execution environment. In this case, you would set the output handling for the
+   * `resource` type to `artifact` (its default value), and then upon initialization of your code
+   * execution environment, you would look through your message history for `ToolMessage`s with the
+   * `artifact` field set to `resource`, and use the `content` field during initialization of the
+   * environment.
+   */
+  outputHandling: outputHandlingSchema.optional(),
 
-const serverNotifications = notifications.omit({ onInitialized: true }).extend({
-  /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
-  resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
+  /**
+   * Default timeout in milliseconds for tool execution. Must be greater than 0.
+   * If not specified, tools will use their own configured timeout values.
+   */
+  defaultToolTimeout: z.number().min(1).optional(),
 });
 
-const modernPolicy = z
-  .object({
+type ConnectionPolicy = z.infer<typeof ConnectionPolicy>;
+
+const AutomaticPolicy = ConnectionPolicy.extend(
+  NotificationCallbacks.omit({ onInitialized: true }).shape
+)
+  .extend(SubscriptionFilterSchema.pick({ resourceSubscriptions: true }).shape)
+  .extend({
     /**
      * MCP protocol negotiation strategy.
      *
@@ -564,13 +342,6 @@ const modernPolicy = z
      */
     mode: z.enum(["auto", "modern"]).optional().default("auto"),
     /**
-     * Logging level requested from the MCP server for tool calls.
-     *
-     * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or
-     * server stderr.
-     */
-    logLevel: loggingLevelSchema.optional(),
-    /**
      * Whether in-band MCP elicitation requests should suspend a LangGraph run
      * and surface as graph interrupts.
      *
@@ -579,27 +350,14 @@ const modernPolicy = z
      * @default false
      */
     elicitation: z.boolean().default(false),
-    /** @deprecated Use `elicitation` for modern MCP servers. */
-    onElicitation: z
-      .never({
-        error:
-          "onElicitation requires mode: legacy; modern elicitation uses LangGraph interrupts",
-      })
-      .optional(),
-    /** @deprecated `onInitialized` is only available for legacy MCP servers. */
-    onInitialized: z
-      .never({ error: "onInitialized requires mode: legacy" })
-      .optional(),
-    /** @deprecated Automatic SSE fallback is only available in legacy mode. */
-    automaticSSEFallback: z
-      .never({ error: "automaticSSEFallback requires mode: legacy" })
-      .optional(),
-    onRootsListChanged: removedRootsObserver,
-  })
-  .extend(serverNotifications.shape);
+    logLevel: LoggingLevelSchema.optional(),
+  });
 
-const legacyPolicy = z
-  .object({
+type AutomaticPolicy = z.infer<typeof AutomaticPolicy>;
+
+const LegacyPolicy = ConnectionPolicy.extend(NotificationCallbacks.shape)
+  .extend(SubscriptionFilterSchema.pick({ resourceSubscriptions: true }).shape)
+  .extend({
     /**
      * Use the legacy MCP client interface without protocol auto-negotiation.
      *
@@ -617,188 +375,262 @@ const legacyPolicy = z
         "Expected an elicitation callback"
       )
       .optional(),
-    /** @deprecated Legacy servers use `onElicitation`. */
-    elicitation: z
-      .never({
-        error:
-          "elicitation requires mode: auto or modern; legacy servers use onElicitation",
-      })
-      .optional(),
-    /** @deprecated Configure legacy logging with `setLoggingLevel`. */
-    logLevel: z
-      .never({
-        error:
-          "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
-      })
-      .optional(),
-    onRootsListChanged: removedRootsObserver,
-  })
-  .extend(notifications.shape)
-  .extend({
-    resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
+    logLevel: LoggingLevelSchema.optional(),
   });
 
-/**
- * Configuration schema for MCP servers reached through a child process over
- * standard input and output.
- *
- * The `mode` discriminator selects modern protocol negotiation or the legacy
- * client interface; callers do not need a separate schema for each MCP era.
- */
-export const StdioConnectionSchema = z
-  .discriminatedUnion("mode", [
-    stdioOptionsSchema.extend(modernPolicy.shape).strict(),
-    stdioOptionsSchema.extend(legacyPolicy.shape).strict(),
-  ])
-  .transform(({ type: _type, url: _url, ...options }) => options);
+type LegacyPolicy = z.infer<typeof LegacyPolicy>;
 
-const httpTransport = httpOptionsSchema
-  .omit({ automaticSSEFallback: true })
-  .extend({
-    transport: z.literal("http").default("http"),
-    type: z
-      .literal("http", {
-        error: "type conflicts with transport; use transport only",
-      })
-      .optional(),
-  });
+function connectionObject<T extends z.ZodRawShape>(shape: T) {
+  return z.discriminatedUnion("mode", [
+    AutomaticPolicy.extend(shape).strict(),
+    LegacyPolicy.extend(shape).strict(),
+  ]);
+}
 
-const modernHttp = httpTransport
-  .extend(modernPolicy.shape)
-  .extend({
-    reconnect: z
-      .never({
-        error:
-          "reconnect is legacy-only; modern streams cannot replay lost requests",
-      })
-      .optional(),
-  })
-  .strict();
-
-const legacyHttp = httpTransport
-  .extend(legacyPolicy.shape)
-  .extend({
-    automaticSSEFallback: z.boolean().default(true),
-  })
-  .strict();
-
-const legacySse = httpOptionsSchema
-  .extend(legacyPolicy.shape)
-  .extend({
-    transport: z.literal("sse").default("sse"),
-    type: z
-      .literal("sse", {
-        error: "type conflicts with transport; use transport only",
-      })
-      .optional(),
-  })
-  .strict();
-
-export const StreamableHTTPConnectionSchema = z
-  .discriminatedUnion("mode", [modernHttp, legacyHttp])
-  .transform(({ type: _type, command: _command, ...options }) => options);
-
-export const SSEConnectionSchema = z
-  .discriminatedUnion("mode", [
-    legacySse,
-    legacySse.extend(modernPolicy.shape).extend({
-      mode: z.literal("auto").optional().default("auto"),
-      reconnect: modernHttp.shape.reconnect,
-      // SSE only ever negotiates legacy, where these would do nothing.
-      elicitation: z
-        .never({
-          error:
-            "elicitation requires modern MCP, which SSE never speaks; use mode: legacy with onElicitation",
-        })
+export const StdioConnection = connectionObject({
+  /**
+   * Optional transport type, inferred from the structure of the config if not provided. Included
+   * for compatibility with common MCP client config file formats.
+   */
+  transport: z.literal("stdio").default("stdio"),
+  /**
+   * The executable to run the server (e.g. `node`, `npx`, etc)
+   */
+  command: z.string().describe("The executable to run the server"),
+  url: z
+    .never({ error: "Specify a stdio command or an HTTP URL, not both" })
+    .optional(),
+  /**
+   * Array of command line arguments to pass to the executable
+   */
+  args: z
+    .array(z.string())
+    .describe("Command line arguments to pass to the executable"),
+  /**
+   * Environment variables to set when spawning the process.
+   */
+  env: z
+    .record(z.string(), z.string())
+    .describe("The environment to use when spawning the process")
+    .optional(),
+  /**
+   * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
+   *
+   * The default is "inherit", meaning messages to stderr will be printed to the parent process's stderr.
+   *
+   * @default "inherit"
+   */
+  stderr: z
+    .union([
+      z.literal("overlapped"),
+      z.literal("pipe"),
+      z.literal("ignore"),
+      z.literal("inherit"),
+    ])
+    .describe(
+      "How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`"
+    )
+    .optional()
+    .default("inherit"),
+  /**
+   * The working directory to use when spawning the process.
+   */
+  cwd: z
+    .string()
+    .describe("The working directory to use when spawning the process")
+    .optional(),
+  /**
+   * Additional restart settings
+   */
+  restart: z
+    .object({
+      /**
+       * Whether to automatically restart the process if it exits
+       */
+      enabled: z
+        .boolean()
+        .describe("Whether to automatically restart the process if it exits")
         .optional(),
-      logLevel: z
-        .never({
-          error:
-            "logLevel requires modern MCP, which SSE never speaks; use setLoggingLevel",
-        })
+      /**
+       * Maximum number of restart attempts
+       */
+      maxAttempts: z
+        .int()
+        .nonnegative()
+        .describe("The maximum number of restart attempts")
         .optional(),
-    }),
-  ])
-  .transform(({ type: _type, command: _command, ...options }) => options);
+      /**
+       * Delay in milliseconds between restart attempts
+       */
+      delayMs: z
+        .number()
+        .nonnegative()
+        .describe("The delay in milliseconds between restart attempts")
+        .optional(),
+    })
+    .describe("Configuration for stdio transport restart")
+    .optional(),
+}).describe("Configuration for stdio transport connection");
 
-/**
- * Configuration schema for URL-based MCP connections.
- *
- * Streamable HTTP is used by default. Set `transport: "sse"` only for a
- * legacy server that exposes a direct SSE endpoint. The `mode` discriminator
- * controls MCP protocol negotiation independently of the transport.
- */
-export const HTTPConnectionSchema = z.union([
-  StreamableHTTPConnectionSchema,
-  SSEConnectionSchema,
+export type StdioConnection = z.output<typeof StdioConnection>;
+export type StdioConnectionInit = z.input<typeof StdioConnection>;
+
+const HTTPConnectionParams = z.object({
+  /**
+   * The URL to connect to
+   */
+  url: z.string().url(),
+  /**
+   * Additional headers to send with the request, useful for authentication
+   */
+  headers: z
+    .record(z.string(), z.string())
+    .transform((headers) => {
+      return Object.fromEntries(
+        Object.entries(headers).map(([name, value]) => [
+          name.toLowerCase() === "authorization" ? "Authorization" : name,
+          value,
+        ])
+      );
+    })
+    .optional(),
+  /**
+   * OAuth client provider for automatic authentication handling.
+   * When provided, the transport will automatically handle token refresh,
+   * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
+   * This is the recommended approach for authentication instead of manual headers.
+   */
+  authProvider: OAuthClientProvider.optional(),
+});
+
+export const SSEConnection = connectionObject({
+  /**
+   * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
+   * to connect using streamable HTTP.
+   */
+  transport: z
+    .union([z.literal("http"), z.literal("sse")])
+    .optional()
+    .default("http"),
+  ...HTTPConnectionParams.shape,
+  /**
+   * Additional reconnection settings.
+   */
+  reconnect: z
+    .object({
+      /**
+       * Whether to automatically reconnect if the connection is lost
+       */
+      enabled: z
+        .boolean()
+        .describe(
+          "Whether to automatically reconnect if the connection is lost"
+        )
+        .optional(),
+      /**
+       * Maximum number of reconnection attempts
+       */
+      maxAttempts: z
+        .int()
+        .nonnegative()
+        .describe("The maximum number of reconnection attempts")
+        .optional(),
+      /**
+       * Delay in milliseconds between reconnection attempts
+       */
+      delayMs: z
+        .number()
+        .nonnegative()
+        .describe("The delay in milliseconds between reconnection attempts")
+        .optional(),
+    })
+    .describe("Configuration for streamable HTTP transport reconnection")
+    .optional(),
+}).describe("Configuration for streamable HTTP transport connection");
+
+export type SSEConnection = z.output<typeof SSEConnection>;
+export type SSEConnectionInit = z.input<typeof SSEConnection>;
+
+export const ClientConnection = z.custom<MCPClient>(
+  (value) =>
+    value !== null &&
+    typeof value === "object" &&
+    "listTools" in value &&
+    typeof value.listTools === "function" &&
+    "callTool" in value &&
+    typeof value.callTool === "function" &&
+    "close" in value &&
+    typeof value.close === "function",
+  "Expected a connected MCP Client"
+);
+
+export type ClientConnection = z.infer<typeof ClientConnection>;
+
+export interface MCPServerLike {
+  connect(transport: Transport): Promise<void>;
+  close(): Promise<void>;
+}
+
+export const InProcessConnection = z.custom<MCPServerLike>(
+  (value) =>
+    value !== null &&
+    typeof value === "object" &&
+    "connect" in value &&
+    typeof value.connect === "function" &&
+    "close" in value &&
+    typeof value.close === "function" &&
+    !ClientConnection.safeParse(value).success,
+  "Expected an in-process MCP server"
+);
+
+export type InProcessConnection = z.infer<typeof InProcessConnection>;
+
+export const Connection = z.union([
+  StdioConnection,
+  SSEConnection,
+  ClientConnection,
+  InProcessConnection,
+  z
+    .string()
+    .refine((value) => /^https?:\/\//iu.test(value), {
+      error: "MCPAdapter string inputs must use http: or https:",
+    })
+    .transform((value) => SSEConnection.parse({ url: value })),
+  z
+    .instanceof(URL)
+    .refine((url) => url.protocol === "http:" || url.protocol === "https:", {
+      error: "MCPAdapter URL inputs must use http: or https:",
+    })
+    .transform((url) => SSEConnection.parse({ url: url.toString() })),
 ]);
 
-/** Configuration schema for every transport supported by the MCP adapter. */
-export const ConnectionSchema = z.union([
-  StdioConnectionSchema,
-  HTTPConnectionSchema,
-]);
+export type Connection = z.output<typeof Connection>;
+export type ConnectionInit = z.input<typeof Connection>;
 
-/**
- * {@link MultiServerMCPClient} configuration
- */
-const serverOnlyCallback = z
-  .never({
-    error:
-      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
-  })
-  .optional();
+export type DescriptorConnection =
+  | z.output<typeof StdioConnection>
+  | z.output<typeof SSEConnection>;
 
-/**
- * Custom error handler for connection failures.
- *
- * If the handler throws or rejects, the error is propagated when a caller is
- * waiting for discovery. Returning normally treats the server as ignored.
- */
+export function isDescriptorConnection(
+  value: Connection
+): value is DescriptorConnection {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "transport" in value &&
+    (value.transport === "stdio" ||
+      value.transport === "http" ||
+      value.transport === "sse")
+  );
+}
+
 export type ConnectionErrorHandler = (params: {
   serverName: string;
   error: unknown;
 }) => void | Promise<void>;
 
-const connectionErrorHandlerSchema = z.custom<ConnectionErrorHandler>(
-  (value) => typeof value === "function",
-  "Expected a connection error handler"
-);
-
-const clientOptionsSchema = z
+export const MCPAdapterParams = z
   .object({
-    /**
-     * Legacy elicitation handler callbacks are configured per server because
-     * each connection owns its request lifecycle and abort signal.
-     *
-     * Set `onElicitation` on a server with `mode: "legacy"` instead.
-     */
-    onElicitation: z
-      .never({ error: "Move onElicitation into a legacy server definition" })
-      .optional(),
-    /**
-     * Modern in-band elicitation is enabled per server so only servers that
-     * support it can suspend LangGraph runs.
-     *
-     * Set `elicitation: true` on a server with `mode: "auto"` or
-     * `mode: "modern"` instead.
-     */
-    elicitation: z
-      .never({ error: "Move elicitation into a modern server definition" })
-      .optional(),
-    /**
-     * The requested MCP logging level is scoped to an individual modern
-     * server connection.
-     *
-     * Set `logLevel` on a server with `mode: "auto"` or `mode: "modern"`
-     * instead.
-     *
-     * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or
-     * server stderr.
-     */
-    logLevel: z
-      .never({ error: "Move logLevel into a modern server definition" })
-      .optional(),
     /**
      * Whether to throw an error if a tool fails to load
      *
@@ -841,180 +673,84 @@ const clientOptionsSchema = z
      * @default "throw"
      */
     onConnectionError: z
-      .union([z.enum(["throw", "ignore"]), connectionErrorHandlerSchema])
+      .union([
+        z.enum(["throw", "ignore"]),
+        z.custom<ConnectionErrorHandler>(
+          (value) => typeof value === "function",
+          "Expected a connection error handler"
+        ),
+      ])
       .describe(
         "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers, or a function for custom error handling"
       )
       .optional()
       .default("throw"),
   })
-  .extend(baseConfigSchema.shape)
+  .extend(ConnectionPolicy.shape)
   .extend(toolHooksSchema.shape)
-  .extend({
-    resourceSubscriptions: serverOnlyCallback,
-    onMessage: serverOnlyCallback,
-    onProgress: serverOnlyCallback,
-    onInitialized: serverOnlyCallback,
-    onPromptsListChanged: serverOnlyCallback,
-    onResourcesListChanged: serverOnlyCallback,
-    onResourcesUpdated: serverOnlyCallback,
-    onToolsListChanged: serverOnlyCallback,
-    onRootsListChanged: removedRootsObserver,
-  })
-  .strict()
-  .describe("Configuration for the MCP client");
+  .strict();
 
-const serverMapSchema = z
-  .record(z.string(), ConnectionSchema)
-  .refine((servers) => Object.keys(servers).length > 0, {
-    error: "No MCP servers provided",
-  });
+export type MCPAdapterParams = z.input<typeof MCPAdapterParams>;
 
-const exclusiveServerMap = z
-  .never({ error: "Specify servers or legacy mcpServers, not both" })
-  .optional();
-
-/** @deprecated Use mcpAdapterConfigSchema for canonical configuration. */
-export const clientConfigSchema = clientOptionsSchema.extend({
-  mcpServers: serverMapSchema,
+export const MCPAdapterConfig = MCPAdapterParams.extend({
+  servers: z
+    .record(z.string(), Connection)
+    .refine((servers) => Object.keys(servers).length > 0, {
+      error: "No MCP servers provided",
+    }),
 });
 
-export const mcpAdapterConfigSchema = clientOptionsSchema.extend({
-  servers: serverMapSchema,
-});
+/** Accept either one direct connection or a named server map without normalizing one into the other. */
+export const MCPAdapterInit = z.union([Connection, MCPAdapterConfig]);
 
-const canonicalConfigSchema = mcpAdapterConfigSchema
-  .extend({ mcpServers: exclusiveServerMap })
-  .transform(({ mcpServers: _legacy, ...options }) => options);
+export type MCPAdapterConfig = z.output<typeof MCPAdapterConfig>;
+export type MCPAdapterConfigInit = z.input<typeof MCPAdapterConfig>;
+export type MCPAdapterInit = z.input<typeof MCPAdapterInit>;
 
-const legacyConfigSchema = clientConfigSchema
-  .extend({ servers: exclusiveServerMap })
-  .transform(({ mcpServers, servers: _canonical, ...options }) => ({
-    ...options,
-    servers: mcpServers,
-  }));
-
-/** All supported external shapes produce the same resolved configuration. */
-export const adapterConfigSchema = z.union([
-  canonicalConfigSchema,
-  legacyConfigSchema,
-  serverMapSchema.transform((servers) => ({
-    ...clientOptionsSchema.parse({}),
-    servers,
-  })),
+export const EventContext = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("tool"),
+    name: z.string(),
+    args: z.unknown(),
+    server: z.string(),
+  }),
+  z.object({ type: z.literal("unknown") }),
 ]);
 
-/**
- * Configuration for stdio transport connection
- */
-export type StdioConnection = z.input<typeof StdioConnectionSchema>;
+export type EventContext = z.output<typeof EventContext>;
 
-/**
- * Type for {@link StdioConnection} with default values applied.
- */
-export type ResolvedStdioConnection = z.output<typeof StdioConnectionSchema>;
-
-/**
- * Configuration for streamable HTTP transport connection
- */
-export type StreamableHTTPConnection = z.input<
-  typeof StreamableHTTPConnectionSchema
->;
-
-/**
- * Type for {@link StreamableHTTPConnection} with default values applied.
- */
-export type ResolvedStreamableHTTPConnection = z.output<
-  typeof StreamableHTTPConnectionSchema
->;
-
-/** Legacy SSE transport options. Modern servers use Streamable HTTP. */
-export type SSEConnection = z.input<typeof SSEConnectionSchema>;
-
-/** Legacy SSE transport options with defaults applied. */
-export type ResolvedSSEConnection = z.output<typeof SSEConnectionSchema>;
-
-/** Configuration for a URL-based Streamable HTTP or legacy SSE connection. */
-export type HTTPConnection = z.input<typeof HTTPConnectionSchema>;
-
-/** {@link HTTPConnection} with defaults applied. */
-export type ResolvedHTTPConnection = z.output<typeof HTTPConnectionSchema>;
-
-/** Union type for all supported MCP connection transports. */
-export type Connection = z.input<typeof ConnectionSchema>;
-
-/**
- * @deprecated Use MCPAdapterConfig with a servers map.
- */
-export type ClientConfig = z.input<typeof clientConfigSchema>;
-
-/** Canonical adapter options. */
-export type MCPAdapterConfig = z.input<typeof canonicalConfigSchema>;
-
-/** Canonical configuration snapshot with defaults applied. */
-export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
-
-/**
- * Type for {@link Connection} with default values applied.
- */
-export type ResolvedConnection = z.output<typeof ConnectionSchema>;
-
-/**
- * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
- */
-export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
-
-export const loadMcpToolsOptionsSchema = clientOptionsSchema
-  .pick({
-    throwOnLoadError: true,
-    prefixToolNameWithServerName: true,
-    additionalToolNamePrefix: true,
-    outputHandling: true,
-    defaultToolTimeout: true,
-    beforeToolCall: true,
-    afterToolCall: true,
-  })
+export const LoadMcpToolsParams = MCPAdapterParams.pick({
+  throwOnLoadError: true,
+  prefixToolNameWithServerName: true,
+  additionalToolNamePrefix: true,
+  outputHandling: true,
+  defaultToolTimeout: true,
+  beforeToolCall: true,
+  afterToolCall: true,
+})
   .partial()
-  .extend(notifications.pick({ onProgress: true }).shape)
+  .extend(NotificationCallbacks.pick({ onProgress: true }).shape)
   .extend({
-    logLevel: loggingLevelSchema.optional(),
+    logLevel: LoggingLevelSchema.optional(),
     /** Answer in-band input requests with LangGraph interrupts. */
     elicitation: z.boolean().optional(),
   });
 
-export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
+export type LoadMcpToolsParams = z.input<typeof LoadMcpToolsParams>;
 
-export const customHTTPTransportOptionsSchema = httpOptionsSchema
-  .pick({ authProvider: true, headers: true })
-  .strict();
+export const CustomHTTPTransportParams = HTTPConnectionParams.pick({
+  authProvider: true,
+  headers: true,
+}).strict();
 
-export type CustomHTTPTransportOptions = z.input<
-  typeof customHTTPTransportOptionsSchema
+export type CustomHTTPTransportParams = z.input<
+  typeof CustomHTTPTransportParams
 >;
 
-/**
- * Represents a resource provided by an MCP server.
- */
-export type MCPResource = ListResourcesResult["resources"][number];
+export const ToolDiscoveryParams = CustomHTTPTransportParams.extend({
+  cacheMode: z
+    .enum(["use", "refresh", "bypass"] satisfies CacheMode[])
+    .optional(),
+});
 
-/**
- * Represents a resource template provided by an MCP server.
- * Resource templates are used for dynamic resources with parameterized URIs.
- */
-export type MCPResourceTemplate =
-  ListResourceTemplatesResult["resourceTemplates"][number];
-
-/**
- * Represents the content of a resource retrieved from an MCP server.
- */
-export type MCPResourceContent = ReadResourceResult["contents"][number];
-
-/** SDK cache policy for discovery; the SDK owns TTL and storage semantics. */
-export const toolDiscoveryOptionsSchema =
-  customHTTPTransportOptionsSchema.extend({
-    cacheMode: z
-      .enum(["use", "refresh", "bypass"] satisfies CacheMode[])
-      .optional(),
-  });
-
-export type ToolDiscoveryOptions = z.input<typeof toolDiscoveryOptionsSchema>;
+export type ToolDiscoveryOptions = z.input<typeof ToolDiscoveryParams>;

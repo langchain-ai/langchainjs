@@ -12,14 +12,13 @@ import {
 } from "@modelcontextprotocol/client";
 import { ConnectionManager } from "../connection.js";
 import { MCPAdapter } from "../client.js";
-import type { ResolvedStreamableHTTPConnection } from "../types.js";
+import type { SSEConnection } from "../types.js";
 
 const connection = {
   mode: "legacy",
   transport: "http",
   url: "https://example.com/mcp",
-  automaticSSEFallback: false,
-} satisfies ResolvedStreamableHTTPConnection;
+} satisfies SSEConnection;
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -35,16 +34,16 @@ describe("connection ownership", () => {
     const manager = new ConnectionManager();
 
     const [first, second] = await Promise.all([
-      manager.createClient("http", "test", connection),
-      manager.createClient("http", "test", connection),
+      manager.getOrCreateClient("test", connection),
+      manager.getOrCreateClient("test", connection),
     ]);
 
     expect(first).toBe(second);
     expect(connect).toHaveBeenCalledTimes(1);
-    expect(await first.fork({})).toBe(first);
-    const fork = await first.fork({ tenant: "one" });
-    expect(await first.fork({ Tenant: "one" })).toBe(fork);
-    expect(await first.fork({ tenant: "one" })).toBe(fork);
+    expect(await first.fork!({})).toBe(first);
+    const fork = await first.fork!({ tenant: "one" });
+    expect(await first.fork!({ Tenant: "one" })).toBe(fork);
+    expect(await first.fork!({ tenant: "one" })).toBe(fork);
     expect(manager.get("test")).toBe(first);
     expect(
       manager.get({ serverName: "test", headers: { tenant: "two" } })
@@ -65,7 +64,7 @@ describe("connection ownership", () => {
     connect.mockRejectedValueOnce(failure);
     const manager = new ConnectionManager();
     await expect(
-      manager.createClient("http", "test", {
+      manager.getOrCreateClient("test", {
         ...connection,
         onMessage: () => {},
       })
@@ -76,7 +75,7 @@ describe("connection ownership", () => {
     expect(SDKClient.prototype.close).toHaveBeenCalledTimes(1);
     expect(transportClose).toHaveBeenCalledTimes(1);
     expect(manager.getAllClients()).toEqual([]);
-    await manager.createClient("http", "test", connection);
+    await manager.getOrCreateClient("test", connection);
     expect(connect).toHaveBeenCalledTimes(2);
     await manager.delete();
   });
@@ -84,8 +83,8 @@ describe("connection ownership", () => {
   test("settles all closes, clears ownership on failure, and tolerates repeated close", async () => {
     mockConnect();
     const manager = new ConnectionManager();
-    const first = await manager.createClient("http", "one", connection);
-    const second = await manager.createClient("http", "two", connection);
+    const first = await manager.getOrCreateClient("one", connection);
+    const second = await manager.getOrCreateClient("two", connection);
 
     const firstClose = vi
       .fn<SDKClient["close"]>()
@@ -113,11 +112,11 @@ describe("connection ownership", () => {
         })
     );
     const manager = new ConnectionManager();
-    const acquisition = manager.createClient("http", "test", connection);
+    const acquisition = manager.getOrCreateClient("test", connection);
     await vi.waitFor(() => expect(connect).toHaveBeenCalled());
     const closing = manager.delete();
     await expect(
-      manager.createClient("http", "other", connection)
+      manager.getOrCreateClient("other", connection)
     ).rejects.toThrow(/closing/);
     release();
     await acquisition;
@@ -416,7 +415,10 @@ test.each(["cached", "bypass", "invalidated"])(
       method: M,
       handler: (notification: NotificationTypeMap[M]) => void | Promise<void>
     ) => void = SDKClient.prototype.setNotificationHandler;
-    const connections = vi.spyOn(ConnectionManager.prototype, "createClient");
+    const connections = vi.spyOn(
+      ConnectionManager.prototype,
+      "getOrCreateClient"
+    );
     let failRefresh = false;
     const handler = createMcpHandler(
       () => {

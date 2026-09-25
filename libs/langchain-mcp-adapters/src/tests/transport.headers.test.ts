@@ -3,7 +3,7 @@ import { createServer, type IncomingHttpHeaders, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { SSEClientTransport } from "@modelcontextprotocol/client";
 import { ConnectionManager } from "../connection.js";
-import { ConnectionSchema } from "../types.js";
+import { Connection } from "../types.js";
 
 /** An `authProvider` that holds one static token, the smallest shape the SDK adapts. */
 const staticProvider = (token: string) =>
@@ -82,23 +82,16 @@ describe("what the transports send", () => {
       // Parsed, not hand-built: the connection schema is what canonicalises
       // header spelling, and every connection the adapter holds comes from it.
       const connection = {
-        ...ConnectionSchema.parse({
+        ...Connection.parse({
           mode: "legacy",
           transport,
           url,
-          automaticSSEFallback: false,
           headers: { [spelling]: "Bearer from-config" },
         }),
         authProvider: staticProvider("from-provider"),
       } as never;
 
-      // `createClient` is overloaded per transport, so the literal has to
-      // reach it narrowed rather than as the union this table iterates.
-      await (
-        transport === "sse"
-          ? manager.createClient("sse", "svc", connection)
-          : manager.createClient("http", "svc", connection)
-      ).catch(() => {
+      await manager.getOrCreateClient("svc", connection).catch(() => {
         // The recording server speaks no MCP; the request is what matters.
       });
 

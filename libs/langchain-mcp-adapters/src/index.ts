@@ -4,32 +4,29 @@ export { MCPClientError } from "./utils/errors.js";
 
 export type { OAuthClientProvider } from "@modelcontextprotocol/client";
 
-export type {
-  ClientConfig,
-  MCPAdapterConfig,
-  ResolvedMCPAdapterConfig,
-  Connection,
-  ResolvedConnection,
-  LoadMcpToolsOptions,
-  ToolDiscoveryOptions,
-  OutputHandling,
-  StdioConnection,
-  ResolvedStdioConnection,
-  HTTPConnection,
-  ResolvedHTTPConnection,
-  StreamableHTTPConnection,
-  ResolvedStreamableHTTPConnection,
-  SSEConnection,
-  ResolvedSSEConnection,
-  MCPResource,
-  MCPResourceTemplate,
-  MCPResourceContent,
-} from "./types.js";
+export { ToolDiscoveryParams, isDescriptorConnection } from "./types.js";
 
-export {
-  StdioConnectionSchema,
-  HTTPConnectionSchema,
-  ConnectionSchema,
+export type {
+  ClientConnection,
+  Connection,
+  ConnectionErrorHandler,
+  ConnectionInit,
+  CustomHTTPTransportParams,
+  DescriptorConnection,
+  InProcessConnection,
+  LoadMcpToolsParams,
+  MCPAdapterConfig,
+  MCPAdapterConfigInit,
+  MCPAdapterInit,
+  MCPAdapterParams,
+  MCPServerLike,
+  NotificationCallbacks,
+  SSEConnection,
+  SSEConnectionInit,
+  StdioConnection,
+  StdioConnectionInit,
+  ToolDiscoveryOptions,
+  _MCPAliases,
 } from "./types.js";
 
 export { loadMcpTools, ToolException, isToolException } from "./tools.js";
@@ -40,8 +37,6 @@ export type {
   ToolCallModification,
   ToolResult,
 } from "./hooks.js";
-
-export type { Notifications, ConnectionErrorHandler } from "./types.js";
 
 export type {
   MCPElicitationRequest,
