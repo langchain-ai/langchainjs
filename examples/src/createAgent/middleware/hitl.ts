@@ -123,7 +123,7 @@ if (state.next && state.next.length > 0) {
 
     console.log("\nℹ️  In a real application, you would:");
     console.log("  - Show this to the user");
-    console.log("  - Get their response (approve/edit/reject)");
+    console.log("  - Get their response (approve/edit/reject/respond)");
     console.log(
       "  - Resume with: agent.invoke(new Command({ resume: { decisions: [...] } }))"
     );
