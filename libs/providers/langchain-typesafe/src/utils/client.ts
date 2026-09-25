@@ -2,6 +2,8 @@ import {
   classificationResponseSchema,
   withAnswerAccessors,
   type ClassificationResponse,
+  type ParsedResponse,
+  type QuestionsInput,
 } from "../types.js";
 import {
   apiErrorFromResponse,
@@ -64,11 +66,17 @@ async function readBody(response: Response): Promise<unknown> {
  * @throws a mapped `TypeSafeAPIError` subclass for any non-2xx response.
  * @throws `TypeSafeAPIResponseValidationError` if a 2xx body does not
  *   match the schema.
+ *
+ * `QS` only names the questions the caller asked, so the answers can be
+ * typed one by one. It changes nothing at runtime: the schema above
+ * validates every answer's shape against its own `type` discriminant
+ * either way, and an answer that does not match is a
+ * `TypeSafeAPIResponseValidationError`, not a bad cast.
  */
-export async function parseResponse(
+export async function parseResponse<QS extends QuestionsInput = QuestionsInput>(
   response: Response,
   endpoint: string
-): Promise<ClassificationResponse> {
+): Promise<ClassificationResponse<QS>> {
   const body = await readBody(response);
 
   if (!response.ok) {
@@ -105,5 +113,5 @@ export async function parseResponse(
   // `base` is the transform's plain shape, which lacks the accessors that
   // make it satisfy `ClassificationResponse` — `withAnswerAccessors`
   // attaches them and returns the now-complete object.
-  return withAnswerAccessors(base as ClassificationResponse);
+  return withAnswerAccessors(base as ParsedResponse<QS>);
 }
