@@ -1386,6 +1386,42 @@ describe("promptCacheKey", () => {
   });
 });
 
+describe("promptCacheOptions", { retry: 3 }, () => {
+  test.each([
+    { api: "responses", useResponsesApi: true },
+    { api: "completions", useResponsesApi: false },
+  ])(
+    "reads an explicit breakpoint back from cache ($api)",
+    async ({ useResponsesApi }) => {
+      const model = new ChatOpenAI({
+        model: "gpt-5.6-sol",
+        maxTokens: 16,
+        useResponsesApi,
+        promptCacheOptions: { mode: "explicit" },
+      });
+      const messages = [
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: LONG_PROMPT,
+              prompt_cache_breakpoint: { mode: "explicit" },
+            },
+            { type: "text", text: "Say hello." },
+          ],
+        }),
+      ];
+
+      await model.invoke(messages);
+      const second = await model.invoke(messages);
+
+      expect(
+        second.usage_metadata?.input_token_details?.cache_read
+      ).toBeGreaterThan(0);
+    }
+  );
+});
+
 it("won't modify structured output content if outputVersion is set", async () => {
   const schema = z.object({ name: z.string() });
   const model = new ChatOpenAI({

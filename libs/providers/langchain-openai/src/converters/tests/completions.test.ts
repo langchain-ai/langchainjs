@@ -5,6 +5,7 @@ import {
   AIMessage,
   AIMessageChunk,
   HumanMessage,
+  SystemMessage,
 } from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
@@ -380,6 +381,64 @@ describe("convertCompletionsMessageToBaseMessage", () => {
           cache_control: { type: "ephemeral" },
           prompt_cache_breakpoint: { mode: "explicit" },
         },
+      ]);
+    });
+
+    it("lifts prompt cache breakpoints from v1 standard content blocks", () => {
+      const breakpoint = { prompt_cache_breakpoint: { mode: "explicit" } };
+      const messages = [
+        new SystemMessage({
+          content: [{ type: "text", text: "Instructions", extras: breakpoint }],
+          response_metadata: { output_version: "v1" },
+        }),
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Stable prefix", extras: breakpoint },
+            {
+              type: "image",
+              url: "https://example.com/image.png",
+              extras: breakpoint,
+            },
+          ],
+          response_metadata: { output_version: "v1" },
+        }),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Earlier answer", extras: breakpoint },
+          ],
+          response_metadata: { output_version: "v1" },
+        }),
+      ];
+
+      const result = convertMessagesToCompletionsMessageParams({ messages });
+
+      expect(result.map((m) => m.content)).toEqual([
+        [
+          {
+            type: "text",
+            text: "Instructions",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            text: "Stable prefix",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+          {
+            type: "image_url",
+            image_url: { url: "https://example.com/image.png" },
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            text: "Earlier answer",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
       ]);
     });
 
