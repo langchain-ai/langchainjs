@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { z, ZodError } from "zod";
+import {
+  IssuerMismatchError,
+  OAuthError,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 import {
   MCPAdapter,
   MCPClientError,
@@ -12,7 +17,10 @@ import {
   type OAuthFixture,
   type OAuthFixtureOptions,
 } from "./fixtures/oauth-server.js";
-import { createTestOAuthProvider } from "./fixtures/oauth-client.js";
+import {
+  authorizeInBrowser,
+  createTestOAuthProvider,
+} from "./fixtures/oauth-client.js";
 
 const cleanup: Array<() => Promise<unknown>> = [];
 
@@ -146,7 +154,7 @@ describe("token providers", () => {
             },
           },
         })
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });
 
@@ -355,5 +363,420 @@ describe("auth failures stay retryable", () => {
     await mcp.listTools();
     await mcp.listTools();
     expect(onConnectionError).toHaveBeenCalledTimes(1);
+  });
+});
+
+/** Start a login: the first discovery fails and hands out one authorization URL. */
+async function pendingLogin(
+  options: {
+    iss?: OAuthFixtureOptions["iss"];
+    state?: string;
+    persistDiscovery?: boolean;
+    transport?: "http" | "sse";
+  } = {}
+) {
+  const server = await fixture({ iss: options.iss });
+  const provider = createTestOAuthProvider({
+    state: options.state,
+    persistDiscovery: options.persistDiscovery,
+  });
+  const transport = options.transport ?? "http";
+  const mcp = adapter({
+    servers: {
+      // A widened `transport` variable does not narrow the discriminated
+      // union below, so each branch is written with its literal directly.
+      svc:
+        transport === "sse"
+          ? { transport: "sse", url: server.sseUrl, authProvider: provider }
+          : { transport: "http", url: server.mcpUrl, authProvider: provider },
+    },
+  });
+  const error = await failure(mcp.listTools());
+  expect(error.cause).toBeInstanceOf(UnauthorizedError);
+  expect(provider.redirects).toHaveLength(1);
+  const callback = await authorizeInBrowser(provider.redirects[0]);
+  return { server, provider, mcp, callback };
+}
+
+describe("finishAuth", () => {
+  it.each([false, true])(
+    "completes a redirect login (persisted discovery: %s)",
+    async (persistDiscovery) => {
+      const { server, mcp, callback } = await pendingLogin({
+        persistDiscovery,
+      });
+      await mcp.finishAuth("svc", callback);
+      expect(hasWhoami(await mcp.listTools())).toBe(true);
+      expect(server.stats.exchanges).toBe(1);
+    }
+  );
+
+  it("completes the exchange for an SSE server", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin({
+      transport: "sse",
+    });
+    await mcp.finishAuth("svc", callback);
+    expect(provider.stored.tokens?.access_token).toBeDefined();
+    expect(server.stats.exchanges).toBe(1);
+  });
+
+  it("rejects a tampered iss before redeeming the code, without echoing callback text", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    callback.set("iss", "http://attacker.invalid/");
+    callback.set("error_description", "attacker-text");
+    const error = await failure(mcp.finishAuth("svc", callback));
+    expect(error.cause).toBeInstanceOf(IssuerMismatchError);
+    expect(error.message).not.toContain("attacker-text");
+    expect(error.message).not.toContain("attacker.invalid");
+    expect(server.stats.exchanges).toBe(0);
+    expect(provider.stored.tokens).toBeUndefined();
+  });
+
+  it("rejects a callback without iss when the server advertises it", async () => {
+    const { server, mcp, callback } = await pendingLogin({ iss: "omitted" });
+    expect(callback.has("iss")).toBe(false);
+    const error = await failure(mcp.finishAuth("svc", callback));
+    expect(error.cause).toBeInstanceOf(IssuerMismatchError);
+    expect(server.stats.exchanges).toBe(0);
+  });
+
+  it("accepts a callback without iss when the server does not send it", async () => {
+    const { server, mcp, callback } = await pendingLogin({
+      iss: "unsupported",
+    });
+    await mcp.finishAuth("svc", callback);
+    expect(server.stats.exchanges).toBe(1);
+  });
+
+  it("surfaces an error= callback as OAuthError", async () => {
+    const { mcp, callback } = await pendingLogin();
+    const denied = new URLSearchParams({
+      error: "access_denied",
+      error_description: "user declined",
+      iss: callback.get("iss") ?? "",
+    });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).toContain("access_denied");
+    expect(error.message).not.toContain("user declined");
+  });
+
+  it("drops error_description/error_uri from an access_denied callback when the server doesn't support iss", async () => {
+    const { mcp } = await pendingLogin({ iss: "unsupported" });
+    const denied = new URLSearchParams({
+      error: "access_denied",
+      error_description: "you were phished by attacker.invalid",
+      error_uri: "https://distinct-uri-marker.example/explain",
+    });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).toContain("access_denied");
+    expect(error.message).not.toContain("attacker.invalid");
+    expect(error.message).not.toContain("phished");
+    expect(error.message).not.toContain("distinct-uri-marker");
+  });
+
+  it("does not echo a non-allowlisted error code", async () => {
+    const { mcp } = await pendingLogin({ iss: "unsupported" });
+    const code = "evil<script>alert(1)</script>";
+    const denied = new URLSearchParams({ error: code });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).not.toContain(code);
+  });
+
+  it("does not treat a CRLF-suffixed near-miss as the standard code", async () => {
+    const { mcp } = await pendingLogin({ iss: "unsupported" });
+    const denied = new URLSearchParams({ error: "access_denied\r\nX: y" });
+    const error = await failure(mcp.finishAuth("svc", denied));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).toContain("an error");
+    expect(error.message).not.toContain("access_denied");
+  });
+
+  it("keeps an unverifiable error= callback on the generic path", async () => {
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: "http://127.0.0.1:9/mcp",
+          authProvider: createTestOAuthProvider(),
+        },
+      },
+    });
+    const error = await failure(
+      mcp.finishAuth("svc", new URLSearchParams({ error: "access_denied" }))
+    );
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
+    expect(error.message).not.toContain("access_denied");
+    expect(error.message).toContain("saveDiscoveryState");
+  });
+
+  it("reports a failed exchange when the callback carries both code and error", async () => {
+    const { mcp, callback } = await pendingLogin();
+    callback.set("code", "bogus");
+    callback.set("error", "access_denied");
+    const error = await failure(mcp.finishAuth("svc", callback));
+    expect(error.cause).toBeInstanceOf(OAuthError);
+    expect(error.message).not.toContain("access_denied");
+    expect(error.message).toContain("saveDiscoveryState");
+  });
+
+  it("rejects an unknown server, a stdio server, and a token-only provider", async () => {
+    const server = await fixture();
+    const mcp = adapter({
+      servers: {
+        local: { transport: "stdio", command: "node", args: ["-e", ""] },
+        token: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: { token: async () => "t" },
+        },
+      },
+    });
+    const params = new URLSearchParams({ code: "c" });
+    expect((await failure(mcp.finishAuth("missing", params))).message).toMatch(
+      /^MCP server "missing" is not configured/
+    );
+    expect((await failure(mcp.finishAuth("local", params))).message).toMatch(
+      /^OAuth applies to HTTP and SSE servers, but "local" uses stdio/
+    );
+    // Anchored: the SDK's own message also names OAuthClientProvider.
+    expect((await failure(mcp.finishAuth("token", params))).message).toMatch(
+      /^finishAuth requires an OAuthClientProvider/
+    );
+  });
+
+  it("uses a per-call provider override", async () => {
+    const server = await fixture();
+    const provider = createTestOAuthProvider();
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: { token: async () => "not-valid" },
+        },
+      },
+    });
+    await failure(mcp.listToolsets({ authProvider: provider }));
+    const callback = await authorizeInBrowser(provider.redirects[0]);
+    await mcp.finishAuth("svc", callback, { authProvider: provider });
+    const toolsets = await mcp.listToolsets({ authProvider: provider });
+    expect(hasWhoami(toolsets.svc)).toBe(true);
+  });
+
+  it("sends no MCP request and closes the transport it creates", async () => {
+    const { server, mcp, callback } = await pendingLogin();
+    const before = server.requests.filter(
+      (request) => request.path === "/mcp"
+    ).length;
+    const close = vi.spyOn(StreamableHTTPClientTransport.prototype, "close");
+    try {
+      await mcp.finishAuth("svc", callback);
+      expect(close).toHaveBeenCalledTimes(1);
+    } finally {
+      close.mockRestore();
+    }
+    expect(
+      server.requests.filter((request) => request.path === "/mcp")
+    ).toHaveLength(before);
+  });
+
+  it("requires URLSearchParams", async () => {
+    const { mcp, callback } = await pendingLogin();
+    await expect(
+      mcp.finishAuth("svc", `http://127.0.0.1:9/callback?${callback}` as never)
+    ).rejects.toThrow(/URLSearchParams/);
+  });
+
+  describe("expectedState", () => {
+    it("accepts the matching state", async () => {
+      const { server, mcp, callback } = await pendingLogin({ state: "s-1" });
+      expect(callback.get("state")).toBe("s-1");
+      await mcp.finishAuth("svc", callback, { expectedState: "s-1" });
+      expect(server.stats.exchanges).toBe(1);
+    });
+
+    it.each([
+      ["missing", (params: URLSearchParams) => params.delete("state")],
+      ["repeated", (params: URLSearchParams) => params.append("state", "s-1")],
+      ["different", (params: URLSearchParams) => params.set("state", "s-2")],
+    ])(
+      "rejects a %s state before redeeming the code",
+      async (_label, mutate) => {
+        const { server, mcp, callback } = await pendingLogin({ state: "s-1" });
+        mutate(callback);
+        const error = await failure(
+          mcp.finishAuth("svc", callback, { expectedState: "s-1" })
+        );
+        expect(error.message).toMatch(/state/);
+        expect(server.stats.exchanges).toBe(0);
+      }
+    );
+
+    it("defers to the SDK when omitted", async () => {
+      const { server, mcp, callback } = await pendingLogin({ state: "s-1" });
+      callback.set("state", "tampered");
+      await mcp.finishAuth("svc", callback);
+      expect(server.stats.exchanges).toBe(1);
+    });
+
+    it("rejects an empty expectedState up front", async () => {
+      const { server, mcp, callback } = await pendingLogin({ state: "s-1" });
+      await expect(
+        mcp.finishAuth("svc", callback, { expectedState: "" })
+      ).rejects.toThrow(/expectedState/);
+      expect(server.stats.exchanges).toBe(0);
+    });
+  });
+
+  it.each([
+    [false, true],
+    [true, false],
+  ])(
+    "hints at discovery state when a callback fails (persisted: %s)",
+    async (persistDiscovery, hinted) => {
+      const { mcp, callback } = await pendingLogin({ persistDiscovery });
+      callback.set("code", "bogus");
+      const error = await failure(mcp.finishAuth("svc", callback));
+      expect(error.cause).toBeDefined();
+      expect(error.message.includes("saveDiscoveryState")).toBe(hinted);
+    }
+  );
+});
+
+describe("OAuth behavior on SDK 2.1", () => {
+  it("lets the provider's token win over a stale configured Authorization after login", async () => {
+    const server = await fixture();
+    const provider = createTestOAuthProvider();
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          headers: { Authorization: "Bearer stale" },
+          authProvider: provider,
+        },
+      },
+    });
+    await failure(mcp.listTools());
+    await mcp.finishAuth(
+      "svc",
+      await authorizeInBrowser(provider.redirects[0])
+    );
+
+    expect(hasWhoami(await mcp.listTools())).toBe(true);
+    expect(provider.redirects).toHaveLength(1);
+    const sent = server.requests
+      .filter((request) => request.path === "/mcp")
+      .map((request) => request.authorization);
+    expect(sent[0]).toBe("Bearer stale");
+    expect(sent.at(-1)).toBe(`Bearer ${provider.stored.tokens?.access_token}`);
+  });
+
+  it("gives a per-call provider precedence over a configured Authorization", async () => {
+    const server = await fixture();
+    const token = server.mintAccessToken();
+    const mcp = adapter({
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          headers: { Authorization: "Bearer stale" },
+        },
+      },
+    });
+    await mcp.listToolsets({ authProvider: { token: async () => token } });
+    const sent = server.requests
+      .filter((request) => request.path === "/mcp")
+      .map((request) => request.authorization);
+    expect(new Set(sent)).toEqual(new Set([`Bearer ${token}`]));
+  });
+
+  it("refreshes an expired access token without a new redirect", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    await mcp.finishAuth("svc", callback);
+    const [tool] = (await mcp.listTools()).filter((t) =>
+      t.name.endsWith("whoami")
+    );
+
+    server.expireAccessTokens();
+    expect(JSON.stringify(await tool.invoke({}))).toContain("authorized");
+    expect(server.stats.refreshes).toBe(1);
+    expect(provider.redirects).toHaveLength(1);
+  });
+
+  it("keeps one connection per per-call provider", async () => {
+    const server = await fixture();
+    const [a, b] = [server.mintAccessToken(), server.mintAccessToken()];
+    const providerA = { token: async () => a };
+    const providerB = { token: async () => b };
+    const mcp = adapter({
+      servers: { svc: { transport: "http", url: server.mcpUrl } },
+    });
+    await mcp.listToolsets({ authProvider: providerA });
+    await mcp.listToolsets({ authProvider: providerB });
+    const sent = new Set(
+      server.requests
+        .filter((request) => request.path === "/mcp")
+        .map((request) => request.authorization)
+    );
+    expect(sent).toEqual(new Set([`Bearer ${a}`, `Bearer ${b}`]));
+
+    const clientA = await mcp.getClient("svc", { authProvider: providerA });
+    const clientB = await mcp.getClient("svc", { authProvider: providerB });
+    expect(clientA).toBeDefined();
+    expect(clientB).toBeDefined();
+    expect(clientA).not.toBe(clientB);
+  });
+
+  it("keeps the last spelling when one config repeats Authorization", async () => {
+    const server = await fixture();
+    await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "http",
+            url: server.mcpUrl,
+            headers: { authorization: "Bearer a", Authorization: "Bearer b" },
+          },
+        },
+      }).listTools()
+    );
+    expect(
+      server.requests.find((request) => request.path === "/mcp")?.authorization
+    ).toBe("Bearer b");
+  });
+
+  // Upstream #2510: the SDK cannot complete a mid-session redirect itself. A
+  // stateless finishAuth lets the live connection pick up the new tokens.
+  it("characterization: a login that lapses mid-session completes through finishAuth", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    await mcp.finishAuth("svc", callback);
+    const [tool] = (await mcp.listTools()).filter((t) =>
+      t.name.endsWith("whoami")
+    );
+
+    server.revokeAll();
+    await expect(tool.invoke({})).rejects.toThrow(/UnauthorizedError/);
+    expect(provider.redirects).toHaveLength(2);
+
+    await mcp.finishAuth(
+      "svc",
+      await authorizeInBrowser(provider.redirects[1])
+    );
+    expect(JSON.stringify(await tool.invoke({}))).toContain("authorized");
+  });
+
+  // Documented limitation (§4.5): rediscovering while a login is pending
+  // starts a second redirect and replaces the PKCE verifier.
+  it("characterization: rediscovering during a pending login invalidates the first callback", async () => {
+    const { server, provider, mcp, callback } = await pendingLogin();
+    await failure(mcp.listTools());
+    expect(provider.redirects).toHaveLength(2);
+
+    await failure(mcp.finishAuth("svc", callback));
+    expect(server.stats.exchanges).toBe(0);
   });
 });

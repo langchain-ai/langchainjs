@@ -106,7 +106,10 @@ for argument and result hooks.
   callback. Implement `invalidateCredentials()` so a refresh the server
   rejects restarts the login instead of failing. When a connection needs a
   login, the thrown `MCPClientError` has an `UnauthorizedError` as its
-  `cause`.
+  `cause`. After the redirect, call
+  `adapter.finishAuth(serverName, new URL(callbackUrl).searchParams, { expectedState })`
+  and connect again. Don't start another discovery while a login is pending:
+  it begins a new redirect and invalidates the first callback.
 
 Once a provider has a token it replaces a configured `Authorization` header;
 until then the header is sent.

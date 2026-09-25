@@ -588,6 +588,27 @@ export class ConnectionManager {
     return new SSEClientTransport(new URL(url), options);
   }
 
+  /**
+   * Complete an OAuth redirect on a transport that is never started. The SDK
+   * validates `iss`, redeems the code and saves tokens through the provider;
+   * the transport is closed whatever the outcome.
+   */
+  async finishAuth(
+    options: ResolvedStreamableHTTPConnection | ResolvedSSEConnection,
+    callbackParams: URLSearchParams
+  ): Promise<void> {
+    const transport =
+      options.transport === "sse"
+        ? await this.#createSSETransport(options)
+        : await this.#createStreamableHTTPTransport(options);
+
+    try {
+      await transport.finishAuth(callbackParams);
+    } finally {
+      await transport.close();
+    }
+  }
+
   #createStdioTransport(
     options: ResolvedStdioConnection
   ): StdioClientTransport {
