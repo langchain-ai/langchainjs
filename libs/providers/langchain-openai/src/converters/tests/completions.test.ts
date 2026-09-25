@@ -323,6 +323,66 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       ]);
     });
 
+    it("passes provider-specific text block fields through unchanged", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            cache_control: { type: "ephemeral" },
+          },
+          {
+            type: "text",
+            text: "Top-level breakpoint",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "Top-level breakpoint",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
+    it("keeps other text block fields when lifting a breakpoint from extras", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            cache_control: { type: "ephemeral" },
+            extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          cache_control: { type: "ephemeral" },
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
     it("should preserve AIMessage content when tool_calls are present", () => {
       const message = new AIMessage({
         content:

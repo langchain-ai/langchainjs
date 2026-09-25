@@ -847,11 +847,15 @@ export const convertMessagesToCompletionsMessageParams: Converter<
                 )
               );
             }
-            if (m.type === "text") {
-              return applyPromptCacheBreakpoint(m, {
-                type: "text",
-                text: m.text,
-              });
+            // Only rebuild to lift an `extras` breakpoint; other fields (e.g. `cache_control`) pass through.
+            if (
+              m.type === "text" &&
+              typeof m.extras === "object" &&
+              m.extras !== null &&
+              "prompt_cache_breakpoint" in m.extras
+            ) {
+              const { extras: _extras, ...rest } = m;
+              return applyPromptCacheBreakpoint(m, rest);
             }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
