@@ -14,7 +14,7 @@ import {
   interopSafeParse,
 } from "@langchain/core/utils/types";
 import {
-  authenticateAndSetInstance,
+  initWatsonxOrGatewayInstance,
   jsonSchemaToZod,
 } from "../../utils/ibm.js";
 import { WatsonxAuth, WatsonxInit } from "../../types.js";
@@ -91,30 +91,8 @@ export class WatsonxToolkit extends BaseToolkit {
 
   constructor(fields: WatsonxAuth & WatsonxInit) {
     super();
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      version,
-      disableSSL,
-      serviceUrl,
-    } = fields;
 
-    const auth = authenticateAndSetInstance({
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    });
-    if (auth) this.service = auth;
+    this.service = initWatsonxOrGatewayInstance(fields);
   }
 
   async loadTools() {
