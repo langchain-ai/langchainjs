@@ -161,6 +161,10 @@ export class ChatOpenAIResponses<
         options?.promptCacheRetention ?? this.promptCacheRetention,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
+      prompt_cache_options:
+        options?.promptCacheOptions ??
+        this.modelKwargs?.prompt_cache_options ??
+        this.promptCacheOptions,
     };
 
     const reasoning = this._getReasoningParams(options);

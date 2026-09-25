@@ -8,6 +8,45 @@ import {
 
 export const iife = <T>(fn: () => T) => fn();
 
+export function applyPromptCacheBreakpoint<T extends object>(
+  source: Record<string, unknown>,
+  target: T
+): T {
+  if ("prompt_cache_breakpoint" in source) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.prompt_cache_breakpoint,
+    };
+  }
+  if (hasExtrasPromptCacheBreakpoint(source)) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.extras.prompt_cache_breakpoint,
+    };
+  }
+  return target;
+}
+
+export function hasExtrasPromptCacheBreakpoint(
+  block: Record<string, unknown>
+): block is { extras: { prompt_cache_breakpoint: unknown } } {
+  const { extras } = block;
+  return (
+    typeof extras === "object" &&
+    extras !== null &&
+    "prompt_cache_breakpoint" in extras
+  );
+}
+
+export function liftExtrasPromptCacheBreakpoint<T extends object>(block: T): T {
+  const source = block as Record<string, unknown>;
+  if (!hasExtrasPromptCacheBreakpoint(source)) {
+    return block;
+  }
+  const { extras: _extras, ...rest } = source;
+  return applyPromptCacheBreakpoint(source, rest) as T;
+}
+
 export function isReasoningModel(model?: string) {
   if (!model) return false;
   if (/^o\d/.test(model ?? "")) return true;

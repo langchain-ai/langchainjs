@@ -1350,6 +1350,104 @@ describe("convertStandardContentMessageToResponsesInput (role-aware text parts)"
 });
 
 describe("convertMessagesToResponsesInput", () => {
+  it("preserves prompt cache breakpoints on converted content blocks", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Stable prefix",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+        {
+          type: "file",
+          source_type: "id",
+          id: "file_123",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect((result[0] as any).content).toEqual([
+      {
+        type: "input_text",
+        text: "Stable prefix",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+      {
+        type: "input_image",
+        image_url: "https://example.com/image.png",
+        detail: undefined,
+        prompt_cache_breakpoint: null,
+      },
+      {
+        type: "input_file",
+        file_id: "file_123",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+    ]);
+  });
+
+  it("applies prompt cache breakpoints to v1 standard input blocks only", () => {
+    const breakpoint = { prompt_cache_breakpoint: { mode: "explicit" } };
+    const messages = [
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Stable prefix", extras: breakpoint },
+          {
+            type: "image",
+            url: "https://example.com/image.png",
+            extras: breakpoint,
+          },
+          { type: "file", fileId: "file_123", extras: breakpoint },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "Earlier answer", extras: breakpoint }],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const result = convertMessagesToResponsesInput({
+      messages,
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect(result.map((item) => (item as any).content)).toEqual([
+      [
+        {
+          type: "input_text",
+          text: "Stable prefix",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "input_image",
+          detail: "auto",
+          image_url: "https://example.com/image.png",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "input_file",
+          file_id: "file_123",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ],
+      [{ type: "output_text", text: "Earlier answer", annotations: [] }],
+    ]);
+  });
+
   describe("Regression Tests", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
       const messages = [
