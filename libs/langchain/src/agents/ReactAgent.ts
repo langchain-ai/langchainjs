@@ -442,15 +442,22 @@ export class ReactAgent<
       const nextDefault = isLast ? loopEntryNode : beforeAgentNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const allowedMapped = node.allowed
-          .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
+        const destinationSet = new Set<BaseGraphDestination>([nextDefault]);
+
+        for (const target of node.allowed) {
+          const dest = parseJumpToTarget(target);
+          if (dest !== TOOLS_NODE_NAME || hasToolsAvailable) {
+            if (dest === END) {
+              destinationSet.add(exitNode as BaseGraphDestination);
+            } else {
+              destinationSet.add(dest as BaseGraphDestination);
+            }
+          }
+        }
+
         // Replace END with exitNode (which could be an afterAgent node)
         const destinations = Array.from(
-          new Set([
-            nextDefault,
-            ...allowedMapped.map((dest) => (dest === END ? exitNode : dest)),
-          ])
+          destinationSet
         ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
@@ -478,11 +485,17 @@ export class ReactAgent<
         : beforeModelNodes[i + 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const allowedMapped = node.allowed
-          .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
+        const destinationSet = new Set<BaseGraphDestination>([nextDefault]);
+
+        for (const target of node.allowed) {
+          const dest = parseJumpToTarget(target);
+          if (dest !== TOOLS_NODE_NAME || hasToolsAvailable) {
+            destinationSet.add(dest as BaseGraphDestination);
+          }
+        }
+
         const destinations = Array.from(
-          new Set([nextDefault, ...allowedMapped])
+          destinationSet
         ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
@@ -532,11 +545,16 @@ export class ReactAgent<
       const nextDefault = afterModelNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const allowedMapped = node.allowed
-          .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
+        const destinationSet = new Set<BaseGraphDestination>([nextDefault]);
+        for (const target of node.allowed) {
+          const dest = parseJumpToTarget(target);
+          if (dest !== TOOLS_NODE_NAME || hasToolsAvailable) {
+            destinationSet.add(dest as BaseGraphDestination);
+          }
+        }
+
         const destinations = Array.from(
-          new Set([nextDefault, ...allowedMapped])
+          destinationSet
         ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
@@ -594,12 +612,14 @@ export class ReactAgent<
       const nextDefault = afterAgentNodes[i - 1].name;
 
       if (node.allowed && node.allowed.length > 0) {
-        const allowedMapped = node.allowed
-          .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
-        const destinations = Array.from(
-          new Set([nextDefault, ...allowedMapped])
-        ) as BaseGraphDestination[];
+        const destinationSet = new Set<BaseGraphDestination>([nextDefault]);
+
+        for (const target of node.allowed) {
+          const dest = parseJumpToTarget(target);
+          if (dest !== TOOLS_NODE_NAME || hasToolsAvailable) {
+            destinationSet.add(dest as BaseGraphDestination);
+          }
+        }
 
         allNodeWorkflows.addConditionalEdges(
           current,
@@ -609,7 +629,7 @@ export class ReactAgent<
             nextDefault,
             hasToolsAvailable
           ),
-          destinations
+          Array.from(destinationSet) as BaseGraphDestination[]
         );
       } else {
         allNodeWorkflows.addEdge(current, nextDefault);
@@ -622,16 +642,21 @@ export class ReactAgent<
       const firstAfterAgentNode = firstAfterAgent.name;
 
       if (firstAfterAgent.allowed && firstAfterAgent.allowed.length > 0) {
-        const allowedMapped = firstAfterAgent.allowed
-          .map((t) => parseJumpToTarget(t))
-          .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
+        const destinationSet = new Set<BaseGraphDestination>([END]);
+
+        for (const target of firstAfterAgent.allowed) {
+          const dest = parseJumpToTarget(target);
+          if (dest !== TOOLS_NODE_NAME || hasToolsAvailable) {
+            destinationSet.add(dest as BaseGraphDestination);
+          }
+        }
 
         /**
          * For after_agent, only use explicitly allowed destinations (don't add loopEntryNode)
          * The default destination (when no jump occurs) should be END
          */
         const destinations = Array.from(
-          new Set([END, ...allowedMapped])
+          destinationSet
         ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
