@@ -285,7 +285,8 @@ describe("ChatPerplexity", () => {
             { role: "user", content: "Hello!" },
           ],
           stream: false,
-        })
+        }),
+        { signal: undefined }
       );
     });
 
@@ -812,7 +813,8 @@ describe("ChatPerplexity", () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: [{ role: "user", content: "Hello" }],
-        })
+        }),
+        { signal: undefined }
       );
     });
 
@@ -821,7 +823,8 @@ describe("ChatPerplexity", () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: [{ role: "assistant", content: "I am an AI" }],
-        })
+        }),
+        { signal: undefined }
       );
     });
 
@@ -830,7 +833,8 @@ describe("ChatPerplexity", () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: [{ role: "system", content: "Be helpful" }],
-        })
+        }),
+        { signal: undefined }
       );
     });
 
@@ -852,7 +856,8 @@ describe("ChatPerplexity", () => {
             { role: "assistant", content: "Hello!" },
             { role: "user", content: "How are you?" },
           ],
-        })
+        }),
+        { signal: undefined }
       );
     });
   });
