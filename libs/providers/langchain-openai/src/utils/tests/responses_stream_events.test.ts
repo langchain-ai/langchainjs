@@ -1,5 +1,7 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { ChatModelStream } from "@langchain/core/language_models/stream";
+import { convertResponsesDeltaToChatGenerationChunk } from "../../converters/responses.js";
 import { OpenAI as OpenAIClient } from "openai";
 import { convertOpenAIResponsesStream } from "../responses_stream_events.js";
 
@@ -280,4 +282,94 @@ describe("convertOpenAIResponsesStream", () => {
     }
     expect(out.filter((e) => e.event === "usage")).toHaveLength(0);
   });
+});
+
+test("preserves Responses identities and final provider metadata", async () => {
+  const raw = [
+    {
+      type: "response.created",
+      response: { id: "resp_identity", model: "o3" },
+    },
+    {
+      type: "response.output_item.added",
+      output_index: 2,
+      item: { type: "reasoning", id: "reason_7", summary: [] },
+    },
+    {
+      type: "response.reasoning_summary_part.added",
+      output_index: 2,
+      item_id: "reason_7",
+      summary_index: 3,
+      part: { type: "summary_text", text: "" },
+    },
+    {
+      type: "response.reasoning_summary_text.delta",
+      output_index: 2,
+      item_id: "reason_7",
+      summary_index: 3,
+      delta: "Thinking",
+    },
+    {
+      type: "response.output_text.delta",
+      output_index: 4,
+      item_id: "message_9",
+      content_index: 5,
+      delta: "Answer",
+    },
+    completedResponse({
+      id: "resp_identity",
+      model: "o3",
+      output: [
+        {
+          type: "reasoning",
+          id: "reason_7",
+          summary: [{ type: "summary_text", text: "Thinking" }],
+        },
+        {
+          type: "message",
+          id: "message_9",
+          role: "assistant",
+          status: "completed",
+          content: [{ type: "output_text", text: "Answer", annotations: [] }],
+        },
+      ],
+      metadata: { request: "kept" },
+      service_tier: "default",
+      reasoning: { effort: "medium", summary: "auto" },
+      temperature: 1,
+      top_p: 1,
+      user: "customer",
+    }),
+  ] as RawEvent[];
+  const chunks = raw
+    .map(convertResponsesDeltaToChatGenerationChunk)
+    .filter((chunk) => chunk !== null);
+  const legacy = chunks
+    .slice(1)
+    .reduce(
+      (message, chunk) => message.concat(chunk.message),
+      chunks[0].message
+    );
+  const events = await collectEvents(raw);
+  const native = await new ChatModelStream(asAsyncIterable(events));
+  expect(native.response_metadata).toMatchObject(legacy.response_metadata);
+  expect(native.additional_kwargs.reasoning).toEqual(
+    legacy.additional_kwargs.reasoning
+  );
+  expect(
+    events.filter((event) => event.event === "content-block-start")
+  ).toMatchObject([
+    {
+      index: 0,
+      content: { type: "reasoning", reasoning: "", index: 3, id: "reason_7" },
+    },
+    {
+      index: 1,
+      content: { type: "text", text: "", index: 5, id: "message_9" },
+    },
+  ]);
+  expect(native.content).toMatchObject([
+    { type: "reasoning", reasoning: "Thinking", index: 3, id: "reason_7" },
+    { type: "text", text: "Answer", index: 5, id: "message_9" },
+  ]);
 });
