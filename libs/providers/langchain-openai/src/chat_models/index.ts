@@ -63,6 +63,14 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * export OPENAI_API_KEY="your-api-key"
  * ```
  *
+ * To connect through a custom proxy, gateway, or OpenAI-compatible endpoint, configure the base URL.
+ * Base URL resolution order (first match wins):
+ * 1. `configuration.baseURL` (passed in constructor fields)
+ * 2. `baseUrl` (legacy/serialized compatibility option)
+ * 3. `OPENAI_API_BASE` environment variable (read by LangChain — takes precedence over `OPENAI_BASE_URL`)
+ * 4. `OPENAI_BASE_URL` environment variable (read by the underlying OpenAI SDK)
+ * 5. Default OpenAI API base URL (`https://api.openai.com/v1`)
+ *
  * ## [Constructor args](https://api.js.langchain.com/classes/langchain_openai.ChatOpenAI.html#constructor)
  *
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)

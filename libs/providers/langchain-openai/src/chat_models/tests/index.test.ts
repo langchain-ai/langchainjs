@@ -75,6 +75,45 @@ describe("ChatOpenAI", () => {
       }
     });
 
+    it("prefers OPENAI_API_BASE over OPENAI_BASE_URL environment variable", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "false");
+      vi.stubEnv("OPENAI_API_BASE", "https://api-base.example.com/v1");
+      vi.stubEnv("OPENAI_BASE_URL", "https://base-url.example.com/v1");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+        expect(chat.apiKey).toBe("provider-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://api-base.example.com/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it("prefers configuration.baseURL over OPENAI_API_BASE environment variable", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "false");
+      vi.stubEnv("OPENAI_API_BASE", "https://api-base.example.com/v1");
+      vi.stubEnv("OPENAI_BASE_URL", "https://base-url.example.com/v1");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({
+          model: "gpt-4o-mini",
+          configuration: {
+            baseURL: "https://config-base.example.com/v1",
+          },
+        });
+
+        expect(chat.apiKey).toBe("provider-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://config-base.example.com/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it("should handle disableStreaming and streaming properties", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",
