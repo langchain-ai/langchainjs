@@ -1,5 +1,12 @@
 # @langchain/classic
 
+## 1.0.50
+
+### Patch Changes
+
+- Updated dependencies [[`0fcb98b`](https://github.com/langchain-ai/langchainjs/commit/0fcb98b4306a771c940e78d6881d0be9f88507c1)]:
+  - @langchain/textsplitters@1.0.2
+
 ## 1.0.49
 
 ### Patch Changes
