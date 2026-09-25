@@ -1,5 +1,11 @@
 # @langchain/textsplitters
 
+## 1.0.2
+
+### Patch Changes
+
+- [#11709](https://github.com/langchain-ai/langchainjs/pull/11709) [`0fcb98b`](https://github.com/langchain-ai/langchainjs/commit/0fcb98b4306a771c940e78d6881d0be9f88507c1) Thanks [@Pajimo](https://github.com/Pajimo)! - fix(textsplitters): use character length when computing `loc.lines` so a custom `lengthFunction` no longer shifts line numbers
+
 ## 1.0.1
 
 ### Patch Changes
