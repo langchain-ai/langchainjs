@@ -18,6 +18,9 @@ import { concat } from "@langchain/core/utils/stream";
 import { tool } from "@langchain/core/tools";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "../index.js";
+import type { BaseChatOpenAIFields } from "../base.js";
+import { ChatOpenAICompletions } from "../completions.js";
+import { ChatOpenAIResponses } from "../responses.js";
 import { REASONING_OUTPUT_MESSAGES } from "../../tests/data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../../types.js";
 import { LONG_PROMPT } from "../../tests/data/long-prompt.js";
@@ -1387,18 +1390,19 @@ describe("promptCacheKey", () => {
 });
 
 describe("promptCacheOptions", { retry: 3 }, () => {
+  const fields: BaseChatOpenAIFields = {
+    model: "gpt-5.6-sol",
+    maxTokens: 16,
+    promptCacheOptions: { mode: "explicit" },
+  };
+
   test.each([
-    { api: "responses", useResponsesApi: true },
-    { api: "completions", useResponsesApi: false },
+    { api: "responses", make: () => new ChatOpenAIResponses(fields) },
+    { api: "completions", make: () => new ChatOpenAICompletions(fields) },
   ])(
     "reads an explicit breakpoint back from cache ($api)",
-    async ({ useResponsesApi }) => {
-      const model = new ChatOpenAI({
-        model: "gpt-5.6-sol",
-        maxTokens: 16,
-        useResponsesApi,
-        promptCacheOptions: { mode: "explicit" },
-      });
+    async ({ make }) => {
+      const model = make();
       const messages = [
         new HumanMessage({
           content: [

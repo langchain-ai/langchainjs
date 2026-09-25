@@ -162,7 +162,9 @@ export class ChatOpenAICompletions<
       prompt_cache_retention:
         options?.promptCacheRetention ?? this.promptCacheRetention,
       prompt_cache_options:
-        options?.promptCacheOptions ?? this.promptCacheOptions,
+        options?.promptCacheOptions ??
+        this.modelKwargs?.prompt_cache_options ??
+        this.promptCacheOptions,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {

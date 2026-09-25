@@ -5,6 +5,9 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
+import type { BaseChatOpenAIFields } from "../base.js";
+import { ChatOpenAICompletions } from "../completions.js";
+import { ChatOpenAIResponses } from "../responses.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
 import {
   isReasoningModel,
@@ -30,6 +33,45 @@ describe("ChatOpenAI", () => {
         }).prompt_cache_options
       ).toEqual({ mode: "implicit" });
     });
+
+    it.each([
+      {
+        api: "completions",
+        make: (fields: BaseChatOpenAIFields) =>
+          new ChatOpenAICompletions(fields),
+      },
+      {
+        api: "responses",
+        make: (fields: BaseChatOpenAIFields) => new ChatOpenAIResponses(fields),
+      },
+    ])(
+      "gives prompt cache options call > modelKwargs > field precedence ($api)",
+      ({ make }) => {
+        const kwargsOnly = make({
+          model: "gpt-5.6-sol",
+          apiKey: "test",
+          modelKwargs: { prompt_cache_options: { mode: "implicit" } },
+        });
+        expect(kwargsOnly.invocationParams().prompt_cache_options).toEqual({
+          mode: "implicit",
+        });
+        expect(
+          kwargsOnly.invocationParams({
+            promptCacheOptions: { mode: "explicit" },
+          }).prompt_cache_options
+        ).toEqual({ mode: "explicit" });
+
+        const withField = make({
+          model: "gpt-5.6-sol",
+          apiKey: "test",
+          promptCacheOptions: { mode: "explicit" },
+          modelKwargs: { prompt_cache_options: { mode: "implicit" } },
+        });
+        expect(withField.invocationParams().prompt_cache_options).toEqual({
+          mode: "implicit",
+        });
+      }
+    );
 
     it("supports string model shorthand", () => {
       const chat = new ChatOpenAI("gpt-4o-mini", { temperature: 0.2 });
