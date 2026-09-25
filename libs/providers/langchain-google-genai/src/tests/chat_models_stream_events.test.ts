@@ -189,4 +189,51 @@ describe("ChatGoogleGenerativeAI.streamEvents", () => {
     ]);
     expect(getTestClient(model).systemInstruction).toBeUndefined();
   });
+
+  test("passes streamed chunk metadata to handleLLMNewToken callbacks", async () => {
+    const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+    try {
+      const model = new ChatGoogleGenerativeAI({
+        apiKey: "fake-key",
+        model: "gemini-2.0-flash",
+        streaming: true,
+      });
+      vi.spyOn(getTestClient(model), "generateContentStream").mockResolvedValue({
+        stream: geminiReasoningStream(),
+      });
+
+      const callbackCalls: { token: string; chunk: unknown }[] = [];
+
+      await model.invoke([new HumanMessage("Hello")], {
+        callbacks: [
+          {
+            handleLLMNewToken(
+              token: string,
+              _idx,
+              _runId,
+              _parentRunId,
+              _tags,
+              fields
+            ) {
+              callbackCalls.push({ token, chunk: fields?.chunk });
+            },
+          },
+        ],
+      });
+
+      expect(callbackCalls).toHaveLength(1);
+      expect(callbackCalls[0]?.token).toBe("");
+      expect(callbackCalls[0]?.chunk).toBeDefined();
+      expect(callbackCalls[0]?.chunk).toMatchObject({
+        text: "",
+        message: {
+          content: [{ type: "thinking", thinking: "Let me reason..." }],
+        },
+      });
+    } finally {
+      process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+    }
+  });
 });
