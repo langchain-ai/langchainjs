@@ -9,6 +9,7 @@ import { OutputParserException } from "@langchain/core/output_parsers";
 import {
   ChatMistralAI,
   convertMessagesToMistralMessages,
+  _convertDeltaToMessageChunk,
 } from "../chat_models.js";
 import {
   _isValidMistralToolCallId,
@@ -64,6 +65,43 @@ test("Constructor supports string model shorthand", () => {
 
   expect(shorthand.model).toBe(explicit.model);
   expect(shorthand.temperature).toBe(explicit.temperature);
+});
+
+test("preserves the tool call ID for a null-ID continuation chunk", () => {
+  const toolCallIds = new Map<number, string>();
+  const firstChunk = _convertDeltaToMessageChunk(
+    {
+      toolCalls: [
+        {
+          id: "chatcmpl-tool-123",
+          function: { name: "write_file", arguments: "" },
+        },
+      ],
+    } as never,
+    undefined,
+    toolCallIds
+  );
+  const continuationChunk = _convertDeltaToMessageChunk(
+    {
+      toolCalls: [
+        {
+          id: "null",
+          function: {
+            name: "",
+            arguments: '{"file_path":"/one.txt","content":"one"}',
+          },
+        },
+      ],
+    } as never,
+    undefined,
+    toolCallIds
+  );
+
+  expect(firstChunk).toBeInstanceOf(AIMessageChunk);
+  expect(continuationChunk).toBeInstanceOf(AIMessageChunk);
+  expect((continuationChunk as AIMessageChunk).tool_call_chunks?.[0]?.id).toBe(
+    "chatcmpl-tool-123"
+  );
 });
 
 /**
