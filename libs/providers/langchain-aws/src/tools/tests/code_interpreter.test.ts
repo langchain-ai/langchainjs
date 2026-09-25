@@ -457,6 +457,80 @@ describe("CodeInterpreterToolkit", () => {
     ).toHaveLength(1);
   });
 
+  it("does not replace the session for unrelated not-found errors", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    await toolkit.executeCode({ code: "1" });
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementationOnce(async (command: unknown) => {
+      if (command instanceof InvokeCodeInterpreterCommand) {
+        throw Object.assign(new Error("Task not found: task-1"), {
+          name: "ResourceNotFoundException",
+        });
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.getTask({ task_id: "task-1" })).rejects.toThrow(
+      "Task not found"
+    );
+    await expect(toolkit.executeCode({ code: "2" })).resolves.toBe("ok");
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(1);
+  });
+
+  it("does not start a new session when cleanup stopped it mid-call", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const config = { configurable: { thread_id: "t" } };
+    await toolkit.executeCode({ code: "1" }, config);
+
+    // The invoke is in flight while cleanup() stops the session.
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementationOnce(async (command: unknown) => {
+      if (command instanceof InvokeCodeInterpreterCommand) {
+        await toolkit.cleanup();
+        throw sessionNotActive();
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.executeCode({ code: "2" }, config)).rejects.toThrow(
+      "is not active"
+    );
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(1);
+    expect(toolkit["sessions"].size).toBe(0);
+  });
+
+  it("reuses the session a concurrent call already started after expiry", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const config = { configurable: { thread_id: "t" } };
+    await toolkit.executeCode({ code: "1" }, config);
+
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementation(async (command: unknown) => {
+      if (
+        command instanceof InvokeCodeInterpreterCommand &&
+        command.input.sessionId === "session-1"
+      ) {
+        throw sessionNotActive();
+      }
+      return defaultSend(command);
+    });
+
+    await Promise.all([
+      toolkit.executeCode({ code: "2" }, config),
+      toolkit.executeCode({ code: "3" }, config),
+    ]);
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(2);
+  });
+
   it("only retries an expired session once", async () => {
     const { client, send } = createMockClient();
     const toolkit = new CodeInterpreterToolkit({ client });
@@ -578,12 +652,35 @@ describe("CodeInterpreterToolkit", () => {
       { configurable: { thread_id: "t:sub-a:1" } }
     );
 
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(3);
+
     await toolkit.cleanup("t");
     expect(
       commandsOfType(send, StopCodeInterpreterSessionCommand).map(
         (command) => command.input.sessionId
       )
     ).toEqual(["session-1", "session-2"]);
+  });
+
+  it("does not share sessions between a subagent and a thread with a colliding ID", async () => {
+    const { client, send } = createMockClient();
+    const tools = new CodeInterpreterToolkit({ client }).getToolsByName();
+
+    await tools.execute_code.invoke(
+      { code: "1" },
+      { configurable: { thread_id: "t", checkpoint_ns: "sub-a:1|tools:1" } }
+    );
+    await tools.execute_code.invoke(
+      { code: "1" },
+      { configurable: { thread_id: "t:sub-a:1" } }
+    );
+
+    const sessionIds = commandsOfType(send, InvokeCodeInterpreterCommand).map(
+      (command) => command.input.sessionId
+    );
+    expect(sessionIds).toEqual(["session-1", "session-2"]);
   });
 
   it("stops sessions on cleanup", async () => {

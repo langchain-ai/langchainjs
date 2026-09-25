@@ -515,10 +515,20 @@ export class CodeInterpreterToolkit extends BaseToolkit {
       if (!isSessionGoneError(e)) {
         throw e;
       }
+      const current = this.sessions.get(key);
+      if (current === undefined) {
+        // cleanup() stopped this session while the call was in flight, so do
+        // not start a new one behind its back.
+        throw e;
+      }
       // The session expired or was stopped outside of the toolkit, so start
-      // a new one and retry once.
-      this.removeSession(key, entry);
-      const retry = this.getOrCreateSession(key, threadId);
+      // a new one and retry once. If a concurrent call already replaced the
+      // session, reuse that one.
+      let retry = current;
+      if (current === entry) {
+        this.removeSession(key, entry);
+        retry = this.getOrCreateSession(key, threadId);
+      }
       const output = await this.invokeSession(
         await retry.session,
         name,
@@ -703,12 +713,14 @@ Examples:
 }
 
 /**
- * Builds the session key from the thread ID. The innermost `checkpoint_ns`
- * segment (the tool call itself) is dropped, so all tool calls of an agent
- * share a session while subagents get their own.
+ * Builds the session key from the thread ID and the parent `checkpoint_ns`.
+ * The innermost `checkpoint_ns` segment (the tool call itself) is dropped, so
+ * all tool calls of an agent share a session while subagents get their own.
+ * The two parts are JSON encoded so that a `thread_id` containing `:` cannot
+ * collide with another thread's subagent namespace.
  *
- * - Top-level agent (ns `tools:abc`): `thread-001`
- * - Subagent (ns `sub-a:1|tools:xyz`): `thread-001:sub-a:1`
+ * - Top-level agent (ns `tools:abc`): thread `thread-001`, namespace ``
+ * - Subagent (ns `sub-a:1|tools:xyz`): thread `thread-001`, namespace `sub-a:1`
  */
 function getSessionKey(config?: ToolRunnableConfig): {
   key: string;
@@ -719,14 +731,15 @@ function getSessionKey(config?: ToolRunnableConfig): {
   const separatorIndex = checkpointNs.lastIndexOf(CHECKPOINT_NS_SEPARATOR);
   const parentNs =
     separatorIndex === -1 ? "" : checkpointNs.slice(0, separatorIndex);
-  return { key: parentNs ? `${threadId}:${parentNs}` : threadId, threadId };
+  return { key: JSON.stringify([threadId, parentNs]), threadId };
 }
 
 /**
  * Whether the error means the session no longer exists. AgentCore returns a
  * `ValidationException` when invoking a stopped or expired session, a
  * `ConflictException` when stopping a stopped session, and a
- * `ResourceNotFoundException` for unknown sessions.
+ * `ResourceNotFoundException` for unknown sessions. Other errors of the same
+ * types, e.g. an unknown task ID, must not replace a healthy session.
  */
 function isSessionGoneError(error: unknown): boolean {
   if (!(error instanceof Error)) {
@@ -734,7 +747,7 @@ function isSessionGoneError(error: unknown): boolean {
   }
   switch (error.name) {
     case "ResourceNotFoundException":
-      return true;
+      return /session not found/i.test(error.message);
     case "ValidationException":
       return /session .* is not active/i.test(error.message);
     case "ConflictException":
