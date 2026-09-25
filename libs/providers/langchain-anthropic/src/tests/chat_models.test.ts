@@ -2722,3 +2722,53 @@ describe("withStructuredOutput - StandardSchema", () => {
     });
   });
 });
+
+describe("model profile structuredOutput", () => {
+  const MODELS_WITH_STRUCTURED_OUTPUT = [
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5",
+    "claude-opus-4-6",
+    "claude-fable-5",
+    "claude-fable-5-1",
+    "claude-opus-4-8",
+    "claude-sonnet-4-5",
+    "claude-sonnet-4-5-20250929",
+    "claude-opus-4-5-20251101",
+    "claude-haiku-4-5-20251001",
+    "claude-opus-4-7",
+    "claude-opus-4-5",
+    "claude-sonnet-5",
+    "claude-opus-5",
+  ];
+  const MODELS_WITHOUT_STRUCTURED_OUTPUT = [
+    "claude-opus-4-1",
+    "claude-opus-4-1-20250805",
+  ];
+  test.each(MODELS_WITH_STRUCTURED_OUTPUT)(
+    "%s reports structuredOutput: true",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        anthropicApiKey: "testing",
+      });
+      expect(model.profile.structuredOutput).toBe(true);
+    }
+  );
+  test.each(MODELS_WITHOUT_STRUCTURED_OUTPUT)(
+    "%s reports structuredOutput: false",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        anthropicApiKey: "testing",
+      });
+      expect(model.profile.structuredOutput).toBe(false);
+    }
+  );
+  test("returns empty profile for unknown models", () => {
+    const model = new ChatAnthropic({
+      model: "claude-unknown-99",
+      anthropicApiKey: "testing",
+    });
+    expect(model.profile.structuredOutput).toBeUndefined();
+  });
+});
