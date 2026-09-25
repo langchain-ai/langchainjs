@@ -187,6 +187,7 @@ describe("PerplexitySearchRetriever", () => {
       expect(init.headers).toEqual({
         Authorization: "Bearer test-key",
         "Content-Type": "application/json",
+        "X-Pplx-Integration": `langchainjs/${__PKG_VERSION__}`,
       });
       expect(JSON.parse(init.body)).toEqual({
         query: "test query",
