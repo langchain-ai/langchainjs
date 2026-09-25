@@ -1,5 +1,6 @@
 import { Tool, type ToolParams } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { getPerplexityHeaders } from "./utils/headers.js";
 import type {
   PerplexitySearchRecencyFilter,
   PerplexitySearchRequestBody,
@@ -131,10 +132,7 @@ export class PerplexitySearchResults extends Tool {
 
       const response = await fetch(PERPLEXITY_SEARCH_URL, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: getPerplexityHeaders(this.apiKey),
         body: JSON.stringify(body),
       });
 
