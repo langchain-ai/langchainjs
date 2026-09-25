@@ -28,6 +28,7 @@ import {
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
 import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
+import { normalizePromptCacheRetention } from "../utils/misc.js";
 
 export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
@@ -156,11 +157,17 @@ export class ChatOpenAIResponses<
       })(),
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
-      prompt_cache_retention:
-        options?.promptCacheRetention ?? this.promptCacheRetention,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
+      prompt_cache_key:
+        options?.promptCacheKey ??
+        this.modelKwargs?.prompt_cache_key ??
+        this.promptCacheKey,
+      prompt_cache_retention: normalizePromptCacheRetention(
+        options?.promptCacheRetention ??
+          this.modelKwargs?.prompt_cache_retention ??
+          this.promptCacheRetention
+      ),
       prompt_cache_options:
         options?.promptCacheOptions ??
         this.modelKwargs?.prompt_cache_options ??

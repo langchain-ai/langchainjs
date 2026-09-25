@@ -23,7 +23,12 @@ export type OpenAIChatModelId =
   | (string & NonNullable<unknown>);
 
 export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
-export type OpenAICacheRetentionParam = "in-memory" | "24h" | null;
+// `"in-memory"` is the pre-rename SDK spelling, kept for compatibility and sent as `"in_memory"`.
+export type OpenAICacheRetentionParam =
+  | "in_memory"
+  | "in-memory"
+  | "24h"
+  | null;
 export type OpenAIPromptCacheOptions =
   OpenAIClient.Responses.ResponseCreateParams["prompt_cache_options"];
 
