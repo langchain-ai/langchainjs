@@ -2197,6 +2197,20 @@ describe("MultiServerMCPClient", () => {
       expect(Client).not.toHaveBeenCalled();
     });
   });
+
+  test("explains that useStandardContentBlocks was removed", () => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            svc: { transport: "http", url: "http://localhost:8000/mcp" },
+          },
+          useStandardContentBlocks: true,
+        } as never)
+    ).toThrow(
+      /useStandardContentBlocks was removed: tool content is always standard LangChain content blocks/
+    );
+  });
 });
 
 describe("MCPAdapter configuration boundary", () => {
