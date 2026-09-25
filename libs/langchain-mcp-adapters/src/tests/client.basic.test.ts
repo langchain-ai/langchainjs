@@ -15,7 +15,11 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
-import { adapterConfigSchema, oAuthClientProviderSchema } from "../types.js";
+import {
+  adapterConfigSchema,
+  isDescriptorConnection,
+  oAuthClientProviderSchema,
+} from "../types.js";
 import type { Connection } from "../types.js";
 import { resetClientMock } from "./__mocks__/@modelcontextprotocol/client.js";
 import { ConnectionManager } from "../connection.js";
@@ -263,6 +267,86 @@ describe("MultiServerMCPClient", () => {
 
   // Constructor functionality tests
   describe("constructor", () => {
+    test("accepts an HTTP URL string as a default Streamable HTTP server", () => {
+      const client = new MCPAdapter("https://example.com/mcp");
+
+      expect(client.config.servers.default).toEqual({
+        mode: "auto",
+        transport: "http",
+        url: "https://example.com/mcp",
+        elicitation: false,
+      });
+    });
+
+    test("accepts an HTTP URL object as a default Streamable HTTP server", () => {
+      const client = new MCPAdapter(new URL("https://example.com/mcp"));
+
+      expect(client.config.servers.default).toMatchObject({
+        transport: "http",
+        url: "https://example.com/mcp",
+      });
+    });
+
+    test("recognizes URL schemes case-insensitively", () => {
+      const client = new MCPAdapter("HTTPS://example.com/mcp");
+
+      const connection = client.config.servers.default;
+      if (!isDescriptorConnection(connection)) {
+        throw new Error("Expected descriptor config");
+      }
+      expect(connection.transport).toBe("http");
+    });
+
+    test("rejects non-HTTP URL objects", () => {
+      expect(() => new MCPAdapter(new URL("file:///server.mjs"))).toThrow(
+        "MCPAdapter URL inputs must use http: or https:"
+      );
+    });
+
+    test("accepts a script path as a default stdio server", () => {
+      const client = new MCPAdapter("./server.mjs");
+
+      expect(client.config.servers.default).toEqual({
+        mode: "auto",
+        transport: "stdio",
+        command: process.execPath,
+        args: ["./server.mjs"],
+        stderr: "inherit",
+        elicitation: false,
+      });
+    });
+
+    test("connects an in-process server over linked memory transports", async () => {
+      const server = {
+        connect: vi.fn(async () => {}),
+        close: vi.fn(async () => {}),
+      };
+      const adapter = new MCPAdapter(server);
+
+      await expect(adapter.listTools()).resolves.toHaveLength(2);
+      expect(server.connect).toHaveBeenCalledOnce();
+      expect(Client.prototype.connect).toHaveBeenCalledOnce();
+
+      await adapter.close();
+      expect(server.close).toHaveBeenCalledOnce();
+    });
+
+    test("uses a supplied connected Client without reconnecting or owning it", async () => {
+      const connectedClient = new Client(
+        { name: "prebuilt", version: "1.0.0" },
+        { versionNegotiation: { mode: "legacy" } }
+      );
+      vi.mocked(Client.prototype.connect).mockClear();
+      vi.mocked(Client.prototype.close).mockClear();
+      const adapter = new MCPAdapter(connectedClient);
+
+      await expect(adapter.listTools()).resolves.toHaveLength(2);
+      expect(Client.prototype.connect).not.toHaveBeenCalled();
+
+      await adapter.close();
+      expect(Client.prototype.close).not.toHaveBeenCalled();
+    });
+
     test("should throw if initialized with empty connections", () => {
       expect(() => new MultiServerMCPClient({})).toThrow(ZodError);
     });
@@ -1523,8 +1607,8 @@ describe("MultiServerMCPClient", () => {
 
     test("should throw if initialized with invalid connection type", async () => {
       const config: Record<string, Connection> = {
+        // @ts-expect-error invalid transport type
         "test-server": {
-          // @ts-expect-error invalid transport type
           transport: "invalid" as const,
           url: "http://localhost:8000/invalid",
         },
@@ -2214,7 +2298,11 @@ describe("MCPAdapter configuration boundary", () => {
     "exposes the same canonical snapshot for every input shape",
     (createAdapter) => {
       const adapter = createAdapter();
-      expect(adapter.config.servers.remote.mode).toBe("auto");
+      const remote = adapter.config.servers.remote;
+      if (!isDescriptorConnection(remote) || remote.transport !== "http") {
+        throw new Error("Expected HTTP config");
+      }
+      expect(remote.mode).toBe("auto");
       expect(adapter.config).not.toHaveProperty("mcpServers");
     }
   );
@@ -2330,9 +2418,11 @@ describe("MCPAdapter configuration boundary", () => {
       text: undefined,
       audio: "artifact",
     });
-    expect(adapter.config.servers.remote.outputHandling).toEqual({
-      image: undefined,
-    });
+    const remote = adapter.config.servers.remote;
+    if (!isDescriptorConnection(remote)) {
+      throw new Error("Expected descriptor config");
+    }
+    expect(remote.outputHandling).toEqual({ image: undefined });
   });
 
   test("rejects mixed configuration spellings and conflicting transport choices", () => {
@@ -2392,17 +2482,21 @@ describe("MCPAdapter configuration boundary", () => {
     });
 
     const snapshot = adapter.config;
-    expect(snapshot.servers.local.onMessage).toBe(onMessage);
     expect(snapshot.beforeToolCall).toBe(beforeToolCall);
     const local = snapshot.servers.local;
 
-    if (local.transport !== "stdio") throw new Error("Expected stdio config");
+    if (!isDescriptorConnection(local) || local.transport !== "stdio") {
+      throw new Error("Expected stdio config");
+    }
+    expect(local.onMessage).toBe(onMessage);
     local.args.push("changed");
     local.env!.MODE = "changed";
     local.restart!.enabled = true;
     const remote = snapshot.servers.remote;
 
-    if (remote.transport !== "http") throw new Error("Expected HTTP config");
+    if (!isDescriptorConnection(remote) || remote.transport !== "http") {
+      throw new Error("Expected HTTP config");
+    }
     remote.headers!["X-Test"] = "changed";
     remote.reconnect!.enabled = true;
     expect(adapter.config.servers.local).toMatchObject({
@@ -2443,9 +2537,11 @@ describe("protocol-specific server configuration", () => {
       { mcpServers: { remote: { url: "https://example.com/mcp" } } },
       { remote: { url: "https://example.com/mcp" } },
     ]) {
-      expect(adapterConfigSchema.parse(config).servers.remote.mode).toBe(
-        "auto"
-      );
+      const remote = adapterConfigSchema.parse(config).servers.remote;
+      if (!isDescriptorConnection(remote) || remote.transport !== "http") {
+        throw new Error("Expected HTTP config");
+      }
+      expect(remote.mode).toBe("auto");
     }
   });
 
@@ -2464,9 +2560,19 @@ describe("protocol-specific server configuration", () => {
       },
     });
 
-    expect(client.config.servers.modern.onMessage).toBe(onMessage);
-    expect(client.config.servers.legacy.onMessage).toBeUndefined();
-    expect(client.config.servers.legacy.onInitialized).toBe(onInitialized);
+    const modern = client.config.servers.modern;
+    const legacy = client.config.servers.legacy;
+    if (
+      !isDescriptorConnection(modern) ||
+      modern.transport !== "http" ||
+      !isDescriptorConnection(legacy) ||
+      legacy.transport !== "http"
+    ) {
+      throw new Error("Expected HTTP configs");
+    }
+    expect(modern.onMessage).toBe(onMessage);
+    expect(legacy.onMessage).toBeUndefined();
+    expect(legacy.onInitialized).toBe(onInitialized);
   });
 
   test.each([

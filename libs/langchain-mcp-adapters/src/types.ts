@@ -13,6 +13,8 @@ import type {
   LoggingMessageNotificationParams,
   Progress,
   ResourceUpdatedNotificationParams,
+  Client as MCPClient,
+  Transport,
 } from "@modelcontextprotocol/client";
 import type {
   ContentBlock,
@@ -733,10 +735,49 @@ export const HTTPConnectionSchema = z.union([
   SSEConnectionSchema,
 ]);
 
-/** Configuration schema for every transport supported by the MCP adapter. */
+/** A high-level MCP server that can attach to a client transport in process. */
+export interface MCPServerLike {
+  connect(transport: Transport): Promise<void>;
+  close(): Promise<void>;
+}
+
+export const ClientConnectionSchema = z.custom<MCPClient>(
+  (value) =>
+    value !== null &&
+    typeof value === "object" &&
+    "listTools" in value &&
+    typeof value.listTools === "function" &&
+    "callTool" in value &&
+    typeof value.callTool === "function" &&
+    "close" in value &&
+    typeof value.close === "function",
+  "Expected a connected MCP Client"
+);
+
+export const InProcessConnectionSchema = z.custom<MCPServerLike>(
+  (value) =>
+    value !== null &&
+    typeof value === "object" &&
+    "connect" in value &&
+    typeof value.connect === "function" &&
+    "close" in value &&
+    typeof value.close === "function" &&
+    !ClientConnectionSchema.safeParse(value).success,
+  "Expected an in-process MCP server"
+);
+
+export type ResolvedInProcessConnection = z.output<
+  typeof InProcessConnectionSchema
+>;
+
+export type ResolvedClientConnection = z.output<typeof ClientConnectionSchema>;
+
+/** Configuration schema for every supported connection source. */
 export const ConnectionSchema = z.union([
   StdioConnectionSchema,
   HTTPConnectionSchema,
+  InProcessConnectionSchema,
+  ClientConnectionSchema,
 ]);
 
 /**
@@ -894,8 +935,7 @@ const legacyConfigSchema = clientConfigSchema
     servers: mcpServers,
   }));
 
-/** All supported external shapes produce the same resolved configuration. */
-export const adapterConfigSchema = z.union([
+const adapterConfigObjectSchema = z.union([
   canonicalConfigSchema,
   legacyConfigSchema,
   serverMapSchema.transform((servers) => ({
@@ -903,6 +943,35 @@ export const adapterConfigSchema = z.union([
     servers,
   })),
 ]);
+
+const stringConnectionSchema = z
+  .string()
+  .transform((value) =>
+    ConnectionSchema.parse(
+      /^https?:\/\//iu.test(value)
+        ? { url: value }
+        : { command: process.execPath, args: [value] }
+    )
+  );
+
+const urlConnectionSchema = z
+  .instanceof(URL)
+  .refine((url) => url.protocol === "http:" || url.protocol === "https:", {
+    error: "MCPAdapter URL inputs must use http: or https:",
+  })
+  .transform((url) => ConnectionSchema.parse({ url: url.toString() }));
+
+const directAdapterInputSchema = z
+  .union([stringConnectionSchema, urlConnectionSchema, ConnectionSchema])
+  .transform((connection) =>
+    mcpAdapterConfigSchema.parse({ servers: { default: connection } })
+  );
+
+/** All supported constructor inputs produce the same resolved configuration. */
+export const adapterConfigSchema: z.ZodType<
+  ResolvedMCPAdapterConfig,
+  MCPAdapterInput
+> = z.union([directAdapterInputSchema, adapterConfigObjectSchema]);
 
 /**
  * Configuration for stdio transport connection
@@ -951,6 +1020,16 @@ export type ClientConfig = z.input<typeof clientConfigSchema>;
 /** Canonical adapter options. */
 export type MCPAdapterConfig = z.input<typeof canonicalConfigSchema>;
 
+/** Single-server inputs accepted directly by {@link MCPAdapter}. */
+export type MCPAdapterSource = string | URL | Connection;
+
+/** Every constructor input accepted by {@link MCPAdapter}. */
+export type MCPAdapterInput =
+  | MCPAdapterSource
+  | MCPAdapterConfig
+  | ClientConfig
+  | Record<string, Connection>;
+
 /** Canonical configuration snapshot with defaults applied. */
 export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
 
@@ -958,6 +1037,23 @@ export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
  * Type for {@link Connection} with default values applied.
  */
 export type ResolvedConnection = z.output<typeof ConnectionSchema>;
+
+export type ResolvedDescriptorConnection =
+  | z.output<typeof StdioConnectionSchema>
+  | z.output<typeof HTTPConnectionSchema>;
+
+export function isDescriptorConnection(
+  value: ResolvedConnection
+): value is ResolvedDescriptorConnection {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "transport" in value &&
+    (value.transport === "stdio" ||
+      value.transport === "http" ||
+      value.transport === "sse")
+  );
+}
 
 /**
  * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.

@@ -92,13 +92,7 @@ describe("what the transports send", () => {
         authProvider: staticProvider("from-provider"),
       } as never;
 
-      // `createClient` is overloaded per transport, so the literal has to
-      // reach it narrowed rather than as the union this table iterates.
-      await (
-        transport === "sse"
-          ? manager.createClient("sse", "svc", connection)
-          : manager.createClient("http", "svc", connection)
-      ).catch(() => {
+      await manager.getOrCreateClient("svc", connection).catch(() => {
         // The recording server speaks no MCP; the request is what matters.
       });
 
