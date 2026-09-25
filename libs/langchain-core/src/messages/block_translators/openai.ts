@@ -236,14 +236,14 @@ function* mapToolOutputToV1Blocks(
       name: "web_search",
       args: webSearchArgs,
     };
-    // Emit a server_tool_call_result when the search has completed or failed
+    // Emit a server_tool_result when the search has completed or failed
     if (toolOutput.status === "completed" || toolOutput.status === "failed") {
       const output: Record<string, unknown> = {};
       if (_isObject(toolOutput.action)) {
         output.action = toolOutput.action;
       }
       yield {
-        type: "server_tool_call_result",
+        type: "server_tool_result",
         toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
         status: toolOutput.status === "completed" ? "success" : "error",
         output,
@@ -260,10 +260,10 @@ function* mapToolOutputToV1Blocks(
         queries: _isArray(toolOutput.queries) ? toolOutput.queries : [],
       },
     };
-    // Emit a server_tool_call_result when results are available
+    // Emit a server_tool_result when results are available
     if (toolOutput.status === "completed" || toolOutput.status === "failed") {
       yield {
-        type: "server_tool_call_result",
+        type: "server_tool_result",
         toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
         status: toolOutput.status === "completed" ? "success" : "error",
         output: _isArray(toolOutput.results)
@@ -298,7 +298,7 @@ function* mapToolOutputToV1Blocks(
       for (const output of toolOutput.outputs) {
         if (_isContentBlock(output, "logs")) {
           yield {
-            type: "server_tool_call_result",
+            type: "server_tool_result",
             toolCallId: toolOutput.id ?? "",
             status: "success",
             output: {
@@ -373,7 +373,7 @@ function* mapToolOutputToV1Blocks(
       toolSearchOutputExtras.execution = toolOutput.execution;
     }
     yield {
-      type: "server_tool_call_result",
+      type: "server_tool_result",
       toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
       status:
         toolOutput.status === "completed"
@@ -453,7 +453,7 @@ function* mapToolOutputToV1Blocks(
  * //   { type: "text", text: "Hello world", annotations: [] },
  * //   { type: "tool_call", id: "123", name: "calculator", args: { a: 1, b: 2 } },
  * //   { type: "server_tool_call", name: "code_interpreter", args: { code: "print('hello')" } },
- * //   { type: "server_tool_call_result", toolCallId: "", status: "success", output: { type: "code_interpreter_output", returnCode: 0, stdout: "hello" } }
+ * //   { type: "server_tool_result", toolCallId: "", status: "success", output: { type: "code_interpreter_output", returnCode: 0, stdout: "hello" } }
  * // ]
  * ```
  */

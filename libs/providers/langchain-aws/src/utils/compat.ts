@@ -262,7 +262,7 @@ export function convertFromV1ToChatBedrockConverseMessage(
       } else if (block.type === "server_tool_call_chunk") {
         // no-op
         continue;
-      } else if (block.type === "server_tool_call_result") {
+      } else if (block.type === "server_tool_result") {
         // no-op
         continue;
       } else if (block.type === "text-plain") {
