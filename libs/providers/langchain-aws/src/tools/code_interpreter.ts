@@ -199,6 +199,11 @@ interface CodeInterpreterSession {
   sessionId: string;
 }
 
+interface SessionEntry {
+  threadId: string;
+  session: Promise<CodeInterpreterSession>;
+}
+
 /**
  * Toolkit for running code in an
  * [Amazon Bedrock AgentCore Code Interpreter](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-tool.html)
@@ -221,6 +226,9 @@ interface CodeInterpreterSession {
  * A code interpreter session is lazily started on first use. Each LangGraph
  * thread (`configurable.thread_id`) gets its own session, so state is
  * isolated between conversations. Subagents get their own session too.
+ * Tool calls without a `thread_id` all share a single `default` session, so
+ * always pass a `thread_id` when one toolkit serves several conversations.
+ * If a session expires, a new one is started on the next tool call.
  *
  * @example
  * ```typescript
@@ -260,10 +268,10 @@ export class CodeInterpreterToolkit extends BaseToolkit {
   sessionTimeoutSeconds: number;
 
   /**
-   * Sessions keyed by thread. Promises are stored so that concurrent tool
-   * calls on the same thread share a single session.
+   * Sessions keyed by thread and subagent namespace. Promises are stored so
+   * that concurrent tool calls on the same thread share a single session.
    */
-  protected sessions = new Map<string, Promise<CodeInterpreterSession>>();
+  protected sessions = new Map<string, SessionEntry>();
 
   constructor(fields: CodeInterpreterToolkitParams = {}) {
     super();
@@ -289,39 +297,52 @@ export class CodeInterpreterToolkit extends BaseToolkit {
   }
 
   /**
-   * Stops code interpreter sessions.
+   * Stops code interpreter sessions. Sessions whose stop request fails are
+   * kept, so calling `cleanup` again retries them.
    *
-   * @param threadId - The session key to stop (the thread ID, suffixed with
-   *   the subagent namespace for subagents). Stops all sessions if omitted.
+   * @param threadId - Stops the sessions of this thread, including the
+   *   sessions of its subagents. Stops all sessions if omitted.
    */
   async cleanup(threadId?: string): Promise<void> {
-    const entries =
-      threadId !== undefined
-        ? [[threadId, this.sessions.get(threadId)] as const]
-        : [...this.sessions.entries()];
-    if (threadId !== undefined) {
-      this.sessions.delete(threadId);
-    } else {
-      this.sessions.clear();
-    }
-
     const errors: unknown[] = [];
-    await Promise.all(
-      entries.map(async ([, sessionPromise]) => {
-        if (!sessionPromise) return;
-        try {
-          const session = await sessionPromise;
-          await this.client.send(
-            new StopCodeInterpreterSessionCommand({
-              codeInterpreterIdentifier: session.codeInterpreterIdentifier,
-              sessionId: session.sessionId,
-            })
-          );
-        } catch (e) {
-          errors.push(e);
-        }
-      })
-    );
+    const failed = new Set<SessionEntry>();
+    // Loop so that sessions started by tool calls that run while cleaning up
+    // are stopped too.
+    for (;;) {
+      const entries = [...this.sessions].filter(
+        ([, entry]) =>
+          (threadId === undefined || entry.threadId === threadId) &&
+          !failed.has(entry)
+      );
+      if (entries.length === 0) break;
+      await Promise.all(
+        entries.map(async ([key, entry]) => {
+          let session: CodeInterpreterSession;
+          try {
+            session = await entry.session;
+          } catch {
+            // The session never started, so there is nothing to stop.
+            this.removeSession(key, entry);
+            return;
+          }
+          try {
+            await this.client.send(
+              new StopCodeInterpreterSessionCommand({
+                codeInterpreterIdentifier: session.codeInterpreterIdentifier,
+                sessionId: session.sessionId,
+              })
+            );
+          } catch (e) {
+            if (!isSessionGoneError(e)) {
+              failed.add(entry);
+              errors.push(e);
+              return;
+            }
+          }
+          this.removeSession(key, entry);
+        })
+      );
+    }
     if (errors.length === 1) {
       throw errors[0];
     } else if (errors.length > 1) {
@@ -486,7 +507,34 @@ export class CodeInterpreterToolkit extends BaseToolkit {
     args: ToolArguments,
     config?: ToolRunnableConfig
   ): Promise<string> {
-    const session = await this.getOrCreateSession(config);
+    const { key, threadId } = getSessionKey(config);
+    const entry = this.getOrCreateSession(key, threadId);
+    try {
+      return await this.invokeSession(await entry.session, name, args, config);
+    } catch (e) {
+      if (!isSessionGoneError(e)) {
+        throw e;
+      }
+      // The session expired or was stopped outside of the toolkit, so start
+      // a new one and retry once.
+      this.removeSession(key, entry);
+      const retry = this.getOrCreateSession(key, threadId);
+      const output = await this.invokeSession(
+        await retry.session,
+        name,
+        args,
+        config
+      );
+      return `The previous code interpreter session expired, so a new session was started. Variables and files from earlier calls are gone.\n${output}`;
+    }
+  }
+
+  protected async invokeSession(
+    session: CodeInterpreterSession,
+    name: ToolName,
+    args: ToolArguments,
+    config?: ToolRunnableConfig
+  ): Promise<string> {
     const response = await this.client.send(
       new InvokeCodeInterpreterCommand({
         codeInterpreterIdentifier: session.codeInterpreterIdentifier,
@@ -499,22 +547,25 @@ export class CodeInterpreterToolkit extends BaseToolkit {
     return extractOutputFromStream(response);
   }
 
-  protected getOrCreateSession(
-    config?: ToolRunnableConfig
-  ): Promise<CodeInterpreterSession> {
-    const sessionKey = getSessionKey(config);
-    let session = this.sessions.get(sessionKey);
-    if (!session) {
-      session = this.startSession();
-      this.sessions.set(sessionKey, session);
+  protected getOrCreateSession(key: string, threadId: string): SessionEntry {
+    let entry = this.sessions.get(key);
+    if (!entry) {
+      const newEntry: SessionEntry = { threadId, session: this.startSession() };
+      this.sessions.set(key, newEntry);
       // Allow the next call to retry if the session failed to start.
-      session.catch(() => {
-        if (this.sessions.get(sessionKey) === session) {
-          this.sessions.delete(sessionKey);
-        }
-      });
+      newEntry.session.catch(() => this.removeSession(key, newEntry));
+      entry = newEntry;
     }
-    return session;
+    return entry;
+  }
+
+  /**
+   * Removes a session unless it was already replaced by a newer one.
+   */
+  protected removeSession(key: string, entry: SessionEntry) {
+    if (this.sessions.get(key) === entry) {
+      this.sessions.delete(key);
+    }
   }
 
   protected async startSession(): Promise<CodeInterpreterSession> {
@@ -659,13 +710,38 @@ Examples:
  * - Top-level agent (ns `tools:abc`): `thread-001`
  * - Subagent (ns `sub-a:1|tools:xyz`): `thread-001:sub-a:1`
  */
-function getSessionKey(config?: ToolRunnableConfig): string {
-  const threadId = config?.configurable?.thread_id ?? "default";
+function getSessionKey(config?: ToolRunnableConfig): {
+  key: string;
+  threadId: string;
+} {
+  const threadId = `${config?.configurable?.thread_id ?? "default"}`;
   const checkpointNs: string = config?.configurable?.checkpoint_ns ?? "";
   const separatorIndex = checkpointNs.lastIndexOf(CHECKPOINT_NS_SEPARATOR);
   const parentNs =
     separatorIndex === -1 ? "" : checkpointNs.slice(0, separatorIndex);
-  return parentNs ? `${threadId}:${parentNs}` : `${threadId}`;
+  return { key: parentNs ? `${threadId}:${parentNs}` : threadId, threadId };
+}
+
+/**
+ * Whether the error means the session no longer exists. AgentCore returns a
+ * `ValidationException` when invoking a stopped or expired session, a
+ * `ConflictException` when stopping a stopped session, and a
+ * `ResourceNotFoundException` for unknown sessions.
+ */
+function isSessionGoneError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  switch (error.name) {
+    case "ResourceNotFoundException":
+      return true;
+    case "ValidationException":
+      return /session .* is not active/i.test(error.message);
+    case "ConflictException":
+      return /session already terminated/i.test(error.message);
+    default:
+      return false;
+  }
 }
 
 function assertRelativePath(path: string) {

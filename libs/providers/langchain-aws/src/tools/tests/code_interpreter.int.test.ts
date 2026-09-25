@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test } from "vitest";
+import { StopCodeInterpreterSessionCommand } from "@aws-sdk/client-bedrock-agentcore";
 import { CodeInterpreterToolkit } from "../code_interpreter.js";
 
 describe("CodeInterpreterToolkit", () => {
@@ -77,6 +78,41 @@ describe("CodeInterpreterToolkit", () => {
     await tools.stop_task.invoke({ task_id: taskId }, config);
     const stopped = await tools.get_task.invoke({ task_id: taskId }, config);
     expect(stopped).toContain("Task status: canceled");
+  });
+
+  // Stops the thread's session behind the toolkit's back, as if it expired.
+  async function stopSessionExternally(threadId: string) {
+    const entry = [...toolkit["sessions"].values()].find(
+      (e) => e.threadId === threadId
+    );
+    const session = await entry!.session;
+    await toolkit.client.send(
+      new StopCodeInterpreterSessionCommand({
+        codeInterpreterIdentifier: session.codeInterpreterIdentifier,
+        sessionId: session.sessionId,
+      })
+    );
+  }
+
+  test("starts a new session when the session is no longer active", async () => {
+    const threadConfig = { configurable: { thread_id: "int-test-expired" } };
+    await tools.execute_code.invoke({ code: "y = 1" }, threadConfig);
+    await stopSessionExternally("int-test-expired");
+
+    const recovered = await tools.execute_code.invoke(
+      { code: "print('y' in globals())" },
+      threadConfig
+    );
+    expect(recovered).toContain("a new session was started");
+    expect(recovered).toContain("False");
+  });
+
+  test("cleanup treats stopped sessions as stopped", async () => {
+    const threadConfig = { configurable: { thread_id: "int-test-stopped" } };
+    await tools.execute_code.invoke({ code: "1" }, threadConfig);
+    await stopSessionExternally("int-test-stopped");
+
+    await expect(toolkit.cleanup("int-test-stopped")).resolves.toBeUndefined();
   });
 
   test("isolates sessions per thread", async () => {

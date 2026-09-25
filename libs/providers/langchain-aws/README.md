@@ -150,6 +150,8 @@ const response = await model.stream(new HumanMessage("Hello world!"));
 
 `CodeInterpreterToolkit` gives an agent a secure [Amazon Bedrock AgentCore Code Interpreter](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-tool.html) sandbox to run Python, JavaScript or TypeScript code, execute shell commands, and manage files. A sandbox session is started lazily for each `thread_id`, so state persists across tool calls within a conversation.
 
+> **Note:** Tool calls without a `thread_id` all share a single sandbox. Always pass a `thread_id` when one toolkit serves several conversations or users, otherwise variables and files leak between them. `toolkit.cleanup(threadId)` stops the sandbox of that thread and of its subagents.
+
 ```typescript
 import { createAgent } from "langchain";
 import { ChatBedrockConverse, CodeInterpreterToolkit } from "@langchain/aws";

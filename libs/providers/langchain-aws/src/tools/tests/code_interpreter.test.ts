@@ -46,6 +46,20 @@ function createMockClient(
   return { client, send };
 }
 
+// Error shapes returned by AgentCore for sessions that no longer exist.
+function sessionNotActive() {
+  return Object.assign(
+    new Error("Code interpreter session session-1 is not active"),
+    { name: "ValidationException" }
+  );
+}
+
+function sessionAlreadyTerminated() {
+  return Object.assign(new Error("Session already terminated: session-1"), {
+    name: "ConflictException",
+  });
+}
+
 function commandsOfType<T>(
   send: ReturnType<typeof vi.fn>,
   type: new (...args: never[]) => T
@@ -80,7 +94,11 @@ describe("CodeInterpreterToolkit", () => {
     const { client } = createMockClient();
     const tools = new CodeInterpreterToolkit({ client }).getToolsByName();
     const required = (name: string) =>
-      convertToOpenAITool(tools[name]).function.parameters.required;
+      (
+        convertToOpenAITool(tools[name]).function.parameters as {
+          required?: string[];
+        }
+      ).required;
 
     expect(required("execute_code")).toEqual(["code"]);
     expect(required("list_files") ?? []).toEqual([]);
@@ -387,6 +405,185 @@ describe("CodeInterpreterToolkit", () => {
       "AccessDenied"
     );
     await expect(toolkit.executeCode({ code: "1" })).resolves.toBe("ok");
+  });
+
+  it("starts a new session once when the session expired", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const config = { configurable: { thread_id: "t" } };
+    await toolkit.executeCode({ code: "x = 1" }, config);
+
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementation(async (command: unknown) => {
+      if (
+        command instanceof InvokeCodeInterpreterCommand &&
+        command.input.sessionId === "session-1"
+      ) {
+        throw sessionNotActive();
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.executeCode({ code: "1" }, config)).resolves.toBe(
+      "The previous code interpreter session expired, so a new session was started. Variables and files from earlier calls are gone.\nok"
+    );
+    // The new session is reused afterwards.
+    await expect(toolkit.executeCode({ code: "2" }, config)).resolves.toBe(
+      "ok"
+    );
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(2);
+  });
+
+  it("does not retry unrelated validation errors", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementation(async (command: unknown) => {
+      if (command instanceof InvokeCodeInterpreterCommand) {
+        throw Object.assign(new Error("Invalid language"), {
+          name: "ValidationException",
+        });
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.executeCode({ code: "1" })).rejects.toThrow(
+      "Invalid language"
+    );
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(1);
+  });
+
+  it("only retries an expired session once", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementation(async (command: unknown) => {
+      if (command instanceof InvokeCodeInterpreterCommand) {
+        throw sessionNotActive();
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.executeCode({ code: "1" })).rejects.toThrow(
+      "is not active"
+    );
+    expect(
+      commandsOfType(send, StartCodeInterpreterSessionCommand)
+    ).toHaveLength(2);
+  });
+
+  it("keeps a session whose stop failed so cleanup can retry it", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    await toolkit.executeCode(
+      { code: "1" },
+      { configurable: { thread_id: "t" } }
+    );
+
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementationOnce(async (command: unknown) => {
+      if (command instanceof StopCodeInterpreterSessionCommand) {
+        throw new Error("Throttled");
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.cleanup()).rejects.toThrow("Throttled");
+    await toolkit.cleanup();
+    expect(
+      commandsOfType(send, StopCodeInterpreterSessionCommand).map(
+        (command) => command.input.sessionId
+      )
+    ).toEqual(["session-1", "session-1"]);
+
+    // Nothing left to stop.
+    await toolkit.cleanup();
+    expect(
+      commandsOfType(send, StopCodeInterpreterSessionCommand)
+    ).toHaveLength(2);
+  });
+
+  it("treats already gone sessions as stopped", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    await toolkit.executeCode({ code: "1" });
+
+    const defaultSend = send.getMockImplementation()!;
+    send.mockImplementationOnce(async (command: unknown) => {
+      if (command instanceof StopCodeInterpreterSessionCommand) {
+        throw sessionAlreadyTerminated();
+      }
+      return defaultSend(command);
+    });
+
+    await expect(toolkit.cleanup()).resolves.toBeUndefined();
+    await toolkit.cleanup();
+    expect(
+      commandsOfType(send, StopCodeInterpreterSessionCommand)
+    ).toHaveLength(1);
+  });
+
+  it("stops sessions started while cleanup is running", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const config = { configurable: { thread_id: "t" } };
+    await toolkit.executeCode({ code: "1" }, config);
+
+    const defaultSend = send.getMockImplementation()!;
+    let concurrentCall: Promise<string> | undefined;
+    send.mockImplementation(async (command: unknown) => {
+      if (
+        command instanceof StopCodeInterpreterSessionCommand &&
+        !concurrentCall
+      ) {
+        // A tool call on another thread starts a session mid-cleanup.
+        concurrentCall = toolkit.executeCode(
+          { code: "2" },
+          { configurable: { thread_id: "other" } }
+        );
+        await concurrentCall;
+      }
+      return defaultSend(command);
+    });
+
+    await toolkit.cleanup();
+    expect(
+      commandsOfType(send, StopCodeInterpreterSessionCommand).map(
+        (command) => command.input.sessionId
+      )
+    ).toEqual(["session-1", "session-2"]);
+  });
+
+  it("stops subagent sessions when cleaning up a thread", async () => {
+    const { client, send } = createMockClient();
+    const toolkit = new CodeInterpreterToolkit({ client });
+    const tools = toolkit.getToolsByName();
+
+    // session-1: agent, session-2: its subagent, session-3: a thread whose
+    // ID starts with the same prefix.
+    await tools.execute_code.invoke(
+      { code: "1" },
+      { configurable: { thread_id: "t", checkpoint_ns: "tools:1" } }
+    );
+    await tools.execute_code.invoke(
+      { code: "1" },
+      { configurable: { thread_id: "t", checkpoint_ns: "sub-a:1|tools:2" } }
+    );
+    await tools.execute_code.invoke(
+      { code: "1" },
+      { configurable: { thread_id: "t:sub-a:1" } }
+    );
+
+    await toolkit.cleanup("t");
+    expect(
+      commandsOfType(send, StopCodeInterpreterSessionCommand).map(
+        (command) => command.input.sessionId
+      )
+    ).toEqual(["session-1", "session-2"]);
   });
 
   it("stops sessions on cleanup", async () => {
