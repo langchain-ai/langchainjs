@@ -148,7 +148,6 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
-    let result;
     for (let i = 0; i < this.branches.length; i += 1) {
       const [condition, branchRunnable] = this.branches[i];
       const conditionValue = await condition.invoke(
@@ -157,25 +156,26 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
           callbacks: runManager?.getChild(`condition:${i + 1}`),
         })
       );
+      // Returned from here rather than collected and tested after the loop: what
+      // selects the default branch is that no condition matched, never what the
+      // matching branch answered. A branch returning `0`, `""`, `false`, `null`,
+      // `NaN` or `undefined` has answered, and that is the result. The Python
+      // `RunnableBranch.invoke` keys its default the same way (a `for`/`else`).
       if (conditionValue) {
-        result = await branchRunnable.invoke(
+        return await branchRunnable.invoke(
           input,
           patchConfig(config, {
             callbacks: runManager?.getChild(`branch:${i + 1}`),
           })
         );
-        break;
       }
     }
-    if (!result) {
-      result = await this.default.invoke(
-        input,
-        patchConfig(config, {
-          callbacks: runManager?.getChild("branch:default"),
-        })
-      );
-    }
-    return result;
+    return await this.default.invoke(
+      input,
+      patchConfig(config, {
+        callbacks: runManager?.getChild("branch:default"),
+      })
+    );
   }
 
   async invoke(
