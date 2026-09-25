@@ -1,5 +1,15 @@
 # @langchain/openai
 
+## 1.6.0
+
+### Minor Changes
+
+- [#11232](https://github.com/langchain-ai/langchainjs/pull/11232) [`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34) Thanks [@ccurme](https://github.com/ccurme)! - feat(openai): support explicit prompt cache options and content-block breakpoints
+
+### Patch Changes
+
+- [#11735](https://github.com/langchain-ai/langchainjs/pull/11735) [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(openai): send `promptCacheRetention: "in-memory"` as `"in_memory"` (the API rejects the hyphenated value), and apply `promptCacheKey`/`promptCacheRetention` in the same order as `promptCacheOptions`: per-call option, then `modelKwargs`, then the constructor field. On Chat Completions, `modelKwargs` values are no longer dropped and now take precedence over the constructor field.
+
 ## 1.5.14
 
 ### Patch Changes
