@@ -59,24 +59,51 @@ export function toJsonSchema(
     if (cached) return cached;
   }
 
+  let unwrappedSchema = schema as any;
+  let description: string | undefined = undefined;
+
+  if (isZodSchemaV3(unwrappedSchema) || isZodSchemaV4(unwrappedSchema)) {
+    while (unwrappedSchema != null) {
+      const def = unwrappedSchema._def || unwrappedSchema._zod?.def;
+      if (!def) break;
+      if (def.description && !description) {
+        description = def.description;
+      }
+      const typeName = def.typeName || def.type;
+      if (
+        typeName === "ZodDefault" || typeName === "default" ||
+        typeName === "ZodOptional" || typeName === "optional" ||
+        typeName === "ZodNullable" || typeName === "nullable"
+      ) {
+        unwrappedSchema = def.innerType;
+      } else {
+        break;
+      }
+    }
+  }
+
   let result: JSONSchema;
 
-  if (isStandardJsonSchema(schema) && !isZodSchemaV4(schema)) {
-    result = schema["~standard"].jsonSchema.input({
+  if (isStandardJsonSchema(unwrappedSchema) && !isZodSchemaV4(unwrappedSchema)) {
+    result = unwrappedSchema["~standard"].jsonSchema.input({
       target: "draft-07",
     }) as JSONSchema;
-  } else if (isZodSchemaV4(schema)) {
-    const inputSchema = interopZodTransformInputSchema(schema, true);
+  } else if (isZodSchemaV4(unwrappedSchema)) {
+    const inputSchema = interopZodTransformInputSchema(unwrappedSchema, true);
     if (isZodObjectV4(inputSchema)) {
       const strictSchema = interopZodObjectStrict(inputSchema, true);
       result = toJSONSchema(strictSchema as unknown as $ZodType, params);
     } else {
-      result = toJSONSchema(schema as unknown as $ZodType, params);
+      result = toJSONSchema(unwrappedSchema as unknown as $ZodType, params);
     }
-  } else if (isZodSchemaV3(schema)) {
-    result = zodToJsonSchema(schema as never);
+  } else if (isZodSchemaV3(unwrappedSchema)) {
+    result = zodToJsonSchema(unwrappedSchema as never);
   } else {
-    result = schema as JSONSchema;
+    result = unwrappedSchema as JSONSchema;
+  }
+
+  if (description && !result.description) {
+    result = { ...result, description };
   }
 
   if (canCache && result != null && typeof result === "object") {
