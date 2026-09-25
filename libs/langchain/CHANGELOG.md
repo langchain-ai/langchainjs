@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.13
+
+### Patch Changes
+
+- [#11698](https://github.com/langchain-ai/langchainjs/pull/11698) [`1f66c83`](https://github.com/langchain-ai/langchainjs/commit/1f66c838c344a65581cce6fc22699cd6fc7194df) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - `createAgent` now uses the OpenAI Responses API by default when `model` is an `openai:` string. To keep using Chat Completions, pass a model instance, e.g. `new ChatOpenAI({ model: "gpt-5.5", useResponsesApi: false })`.
+
 ## 1.5.12
 
 ### Patch Changes
