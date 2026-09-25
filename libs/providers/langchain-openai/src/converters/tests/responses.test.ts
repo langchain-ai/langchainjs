@@ -27,7 +27,6 @@ describe("convertResponsesUsageToUsageMetadata", () => {
       total_tokens: 150,
       input_tokens_details: {
         cached_tokens: 75,
-        cache_write_tokens: 25,
         text_tokens: 25,
       },
       output_tokens_details: {
@@ -44,7 +43,6 @@ describe("convertResponsesUsageToUsageMetadata", () => {
       total_tokens: 150,
       input_token_details: {
         cache_read: 75,
-        cache_creation: 25,
       },
       output_token_details: {
         reasoning: 10,

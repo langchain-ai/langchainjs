@@ -271,10 +271,7 @@ export const convertResponsesUsageToUsageMetadata: Converter<
 > = (usage) => {
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
-      cache_read: usage.input_tokens_details.cached_tokens,
-    }),
-    ...(usage?.input_tokens_details?.cache_write_tokens != null && {
-      cache_creation: usage.input_tokens_details.cache_write_tokens,
+      cache_read: usage?.input_tokens_details?.cached_tokens,
     }),
     ...(usage?.input_tokens_details?.cache_write_tokens != null && {
       cache_creation: usage?.input_tokens_details?.cache_write_tokens,
