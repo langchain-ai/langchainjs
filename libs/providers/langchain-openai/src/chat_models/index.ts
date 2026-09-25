@@ -34,8 +34,10 @@ export type ChatOpenAICallOptions = ChatOpenAICompletionsCallOptions &
 
 export interface ChatOpenAIFields extends BaseChatOpenAIFields {
   /**
-   * Whether to use the responses API for all requests. If `false` the responses API will be used
-   * only when required in order to fulfill the request.
+   * Whether to use the Responses API for all requests. When left undefined, known
+   * legacy model families default to Chat Completions and all other models default
+   * to the Responses API; built-in/custom tools and Responses-only kwargs always
+   * route to the Responses API regardless of this value.
    */
   useResponsesApi?: boolean;
   /**
@@ -658,8 +660,10 @@ export class ChatOpenAI<
   CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /**
-   * Whether to use the responses API for all requests. If `false` the responses API will be used
-   * only when required in order to fulfill the request.
+   * Whether to use the Responses API for all requests. When left undefined, known
+   * legacy model families default to Chat Completions and all other models default
+   * to the Responses API; built-in/custom tools and Responses-only kwargs always
+   * route to the Responses API regardless of this value.
    */
   useResponsesApi = false;
 
@@ -703,13 +707,16 @@ export class ChatOpenAI<
     const hasCustomTools =
       options?.tools?.some(isOpenAICustomTool) ||
       options?.tools?.some(isCustomTool);
+    const modelPrefersResponses =
+      this.fields?.useResponsesApi === undefined &&
+      _modelPrefersResponsesAPI(this.model);
 
     return (
       this.useResponsesApi ||
       usesBuiltInTools ||
       hasResponsesOnlyKwargs ||
       hasCustomTools ||
-      _modelPrefersResponsesAPI(this.model)
+      modelPrefersResponses
     );
   }
 

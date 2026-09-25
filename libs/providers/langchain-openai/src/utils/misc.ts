@@ -130,12 +130,68 @@ export function messageToOpenAIRole(
   }
 }
 
+// Legacy OpenAI chat model families that default to the Chat Completions API;
+// trailing date snapshot suffixes are stripped before matching.
+const LEGACY_CHAT_COMPLETIONS_FAMILIES: readonly string[] = [
+  "gpt-3.5-turbo",
+  "gpt-3.5-turbo-0125",
+  "gpt-3.5-turbo-1106",
+  "gpt-3.5-turbo-0613",
+  "gpt-3.5-turbo-0301",
+  "gpt-3.5-turbo-16k",
+  "gpt-3.5-turbo-16k-0613",
+  "gpt-4",
+  "gpt-4-0314",
+  "gpt-4-0613",
+  "gpt-4-32k",
+  "gpt-4-32k-0314",
+  "gpt-4-32k-0613",
+  "gpt-4-turbo",
+  "gpt-4-turbo-preview",
+  "gpt-4-0125-preview",
+  "gpt-4-1106-preview",
+  "gpt-4-vision-preview",
+  "gpt-4-1106-vision-preview",
+  "gpt-4.5-preview",
+  "gpt-4o",
+  "gpt-4o-mini",
+  "gpt-4o-audio-preview",
+  "gpt-4o-mini-audio-preview",
+  "gpt-4o-search-preview",
+  "gpt-4o-mini-search-preview",
+  "chatgpt-4o-latest",
+  "gpt-4.1",
+  "gpt-4.1-mini",
+  "gpt-4.1-nano",
+  "o1",
+  "o1-preview",
+  "o1-mini",
+  "o3",
+  "o3-mini",
+  "o4-mini",
+  "gpt-audio",
+  "gpt-audio-mini",
+  "gpt-audio-1.5",
+  "gpt-5-search-api",
+  "chat-latest",
+  "gpt-5-chat-latest",
+  "gpt-5.1-chat-latest",
+  "gpt-5.2-chat-latest",
+  "gpt-5.3-chat-latest",
+  "gpt-5",
+  "gpt-5-mini",
+  "gpt-5-nano",
+  "gpt-5.1",
+  "gpt-5.2",
+  "gpt-5.4",
+  "gpt-5.4-mini",
+  "gpt-5.4-nano",
+  "gpt-5.5",
+];
+
 export function _modelPrefersResponsesAPI(model: string): boolean {
-  if (model.includes("gpt-5.2-pro")) return true;
-  if (model.includes("gpt-5.4-pro")) return true;
-  if (model.includes("gpt-5.5-pro")) return true;
-  if (model.includes("gpt-5.6")) return true;
-  // Codex models are Responses API only
-  if (model.includes("codex")) return true;
-  return false;
+  const base = (
+    model.startsWith("ft:") ? (model.split(":")[1] ?? model) : model
+  ).replace(/-\d{4}-\d{2}-\d{2}$/, "");
+  return !LEGACY_CHAT_COMPLETIONS_FAMILIES.includes(base);
 }

@@ -377,6 +377,7 @@ describe("ChatOpenAI", () => {
         },
         maxRetries: 0,
         supportsStrictToolCalling: true,
+        useResponsesApi: false,
       });
 
       const modelWithTools = model.withStructuredOutput(
@@ -425,6 +426,7 @@ describe("ChatOpenAI", () => {
           fetch: mockFetch,
         },
         maxRetries: 0,
+        useResponsesApi: false,
       });
 
       const modelWithTools = model.withStructuredOutput(
@@ -988,46 +990,250 @@ describe("ChatOpenAI", () => {
   });
 
   describe("_modelPrefersResponsesAPI", () => {
-    it("should return true for gpt-5.2-pro", () => {
+    it("should default to the Responses API for unknown or future models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-6-astra")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-99-turbo")).toBe(true);
+      expect(_modelPrefersResponsesAPI("some-custom-model")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-daybreak-blue-latest")).toBe(true);
+    });
+
+    it("should default to the Responses API for Responses-only models", () => {
+      expect(_modelPrefersResponsesAPI("o1-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("o3-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("o3-deep-research")).toBe(true);
+      expect(_modelPrefersResponsesAPI("o4-mini-deep-research")).toBe(true);
+      expect(_modelPrefersResponsesAPI("computer-use-preview")).toBe(true);
+      expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-codex-max")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5.2-pro")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
     });
 
-    it("should return true for gpt-5.4-pro", () => {
-      expect(_modelPrefersResponsesAPI("gpt-5.4-pro")).toBe(true);
-    });
-
-    it("should return true for gpt-5.5-pro", () => {
-      expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
-    });
-
-    it("should return true for gpt-5.6 models", () => {
-      expect(_modelPrefersResponsesAPI("gpt-5.6")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.6-terra")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.6-luna")).toBe(true);
-    });
-
-    it("should return true for codex models", () => {
-      expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.1-codex")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.1-codex-max")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.2-codex")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.2-codex-max")).toBe(true);
-      expect(_modelPrefersResponsesAPI("gpt-5.3-codex")).toBe(true);
-    });
-
-    it("should return false for standard chat models", () => {
+    it("should default to Chat Completions for legacy model families", () => {
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo-0125")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo-1106")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo-0613")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo-0301")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo-16k")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-3.5-turbo-16k-0613")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-0314")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-0613")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-32k")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-32k-0314")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-32k-0613")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-turbo")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-turbo-2024-04-09")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-turbo-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-0125-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-1106-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-vision-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4-1106-vision-preview")).toBe(
+        false
+      );
       expect(_modelPrefersResponsesAPI("gpt-4o")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-2024-05-13")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-2024-11-20")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-4o-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-mini-2024-07-18")).toBe(false);
+      expect(_modelPrefersResponsesAPI("chatgpt-4o-latest")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-4.1")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.1-2025-04-14")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.1-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.1-nano")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.5-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4.5-preview-2025-02-27")).toBe(
+        false
+      );
+      expect(_modelPrefersResponsesAPI("o1")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o1-2024-12-17")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o1-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o1-mini")).toBe(false);
       expect(_modelPrefersResponsesAPI("o3")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o3-2025-04-16")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o3-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o3-mini-2025-01-31")).toBe(false);
       expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("o4-mini-2025-04-16")).toBe(false);
+      expect(_modelPrefersResponsesAPI("chat-latest")).toBe(false);
+    });
+
+    it("should default to Chat Completions for GPT-5 through 5.5 families", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5-2025-08-07")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5-chat-latest")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5-nano")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-2025-11-13")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-chat-latest")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-2025-12-11")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-chat-latest")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.3-chat-latest")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4-nano")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.5")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.5-2026-04-23")).toBe(false);
+    });
+
+    it("should default to Chat Completions for chat-only audio and search models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-4o-audio-preview")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-audio-preview-2025-06-03")).toBe(
+        false
+      );
+      expect(_modelPrefersResponsesAPI("gpt-4o-mini-audio-preview")).toBe(
+        false
+      );
+      expect(_modelPrefersResponsesAPI("gpt-audio")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-audio-2025-08-28")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-audio-mini")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-audio-1.5")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-search-preview")).toBe(false);
+      expect(
+        _modelPrefersResponsesAPI("gpt-4o-search-preview-2025-03-11")
+      ).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-4o-mini-search-preview")).toBe(
+        false
+      );
+      expect(_modelPrefersResponsesAPI("gpt-5-search-api")).toBe(false);
+    });
+
+    it("should not match unrelated suffixes or broad prefixes", () => {
+      expect(_modelPrefersResponsesAPI("gpt-4o-latest")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
+      expect(_modelPrefersResponsesAPI("o3-deep-research")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-4o-somethingelse")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-turbo")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5x1")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5x1-2025-11-13")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-chat-latest")).toBe(true);
+    });
+
+    it("should route fine-tuned models by their base model", () => {
+      expect(
+        _modelPrefersResponsesAPI("ft:gpt-4o-2024-08-06:org::abc123")
+      ).toBe(false);
+      expect(
+        _modelPrefersResponsesAPI("ft:gpt-4.1-mini-2025-04-14:org::abc123")
+      ).toBe(false);
+      expect(_modelPrefersResponsesAPI("ft:gpt-5.6-sol:org::abc123")).toBe(
+        true
+      );
+      expect(
+        _modelPrefersResponsesAPI("ft:nonexistent-model:org::abc123")
+      ).toBe(true);
+    });
+  });
+
+  describe("Chat Completions/Responses routing", () => {
+    async function expectRouteTo(
+      model: ChatOpenAI,
+      endpoint: "chat/completions" | "responses",
+      options?: ChatOpenAI["ParsedCallOptions"]
+    ) {
+      const mockFetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            error: {
+              message: "Mock routing response",
+              type: "invalid_request_error",
+            },
+          }),
+          { status: 400, headers: { "content-type": "application/json" } }
+        )
+      );
+      const routedModel = new ChatOpenAI({
+        model: model.model,
+        apiKey: "test-key",
+        useResponsesApi: (
+          model as unknown as { fields?: { useResponsesApi?: boolean } }
+        ).fields?.useResponsesApi,
+        configuration: { fetch: mockFetch },
+      });
+      await routedModel.invoke("Hello!", options).catch(() => {});
+      await vi.waitFor(() => {
+        expect(mockFetch).toHaveBeenCalled();
+      });
+      const [url] = mockFetch.mock.calls[0];
+      expect(String(url)).toContain(endpoint);
+    }
+
+    it("routes legacy models to Chat Completions by default", async () => {
+      await expectRouteTo(
+        new ChatOpenAI({ model: "gpt-4o", apiKey: "test-key" }),
+        "chat/completions"
+      );
+    });
+
+    it("routes legacy snapshots and fine-tunes to Chat Completions by default", async () => {
+      await expectRouteTo(
+        new ChatOpenAI({ model: "gpt-5.2-2025-12-11", apiKey: "test-key" }),
+        "chat/completions"
+      );
+      await expectRouteTo(
+        new ChatOpenAI({
+          model: "ft:gpt-4o-2024-08-06:org::abc123",
+          apiKey: "test-key",
+        }),
+        "chat/completions"
+      );
+    });
+
+    it("routes unknown, future, and Responses-only models to Responses by default", async () => {
+      for (const model of ["gpt-5.6", "gpt-6-astra", "o3-pro", "gpt-5-codex"]) {
+        await expectRouteTo(
+          new ChatOpenAI({ model, apiKey: "test-key" }),
+          "responses"
+        );
+      }
+    });
+
+    it("explicit useResponsesApi overrides the model heuristic", async () => {
+      await expectRouteTo(
+        new ChatOpenAI({
+          model: "gpt-4o",
+          apiKey: "test-key",
+          useResponsesApi: true,
+        }),
+        "responses"
+      );
+      await expectRouteTo(
+        new ChatOpenAI({
+          model: "gpt-5.6",
+          apiKey: "test-key",
+          useResponsesApi: false,
+        }),
+        "chat/completions"
+      );
+    });
+
+    it("required Responses-only features still route to Responses", async () => {
+      await expectRouteTo(
+        new ChatOpenAI({
+          model: "gpt-4o",
+          apiKey: "test-key",
+          useResponsesApi: false,
+        }),
+        "responses",
+        { tools: [{ type: "web_search_preview" }] }
+      );
+      await expectRouteTo(
+        new ChatOpenAI({
+          model: "gpt-4o",
+          apiKey: "test-key",
+          useResponsesApi: false,
+        }),
+        "responses",
+        { previous_response_id: "resp_123" }
+      );
     });
   });
 
