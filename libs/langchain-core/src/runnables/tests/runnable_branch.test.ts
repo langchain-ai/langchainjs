@@ -31,6 +31,29 @@ test("RunnableBranch batch", async () => {
   expect(batchResult).toEqual([2, 100, -1]);
 });
 
+test("RunnableBranch respects falsy branch output", async () => {
+  const zeroBranch = RunnableBranch.from([
+    [(x: number) => x > 0, (_x: number) => 0],
+    (_x: number) => -1,
+  ]);
+  expect(await zeroBranch.invoke(5)).toBe(0);
+  expect(await zeroBranch.invoke(-1)).toBe(-1);
+
+  const emptyStringBranch = RunnableBranch.from([
+    [(x: string) => x === "a", (_x: string) => ""],
+    (_x: string) => "default",
+  ]);
+  expect(await emptyStringBranch.invoke("a")).toBe("");
+  expect(await emptyStringBranch.invoke("b")).toBe("default");
+
+  const falseBranch = RunnableBranch.from([
+    [(x: boolean) => x, (_x: boolean) => false],
+    (_x: boolean) => true,
+  ]);
+  expect(await falseBranch.invoke(true)).toBe(false);
+  expect(await falseBranch.invoke(false)).toBe(true);
+});
+
 test("RunnableBranch handles error", async () => {
   let error;
   const branch = RunnableBranch.from([
