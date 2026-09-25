@@ -35,9 +35,11 @@ import type {
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import {
+  assertAdditionalToolsPlacement,
   getRequiredFilenameFromMetadata,
   isReasoningModel,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 
 /**
@@ -643,6 +645,7 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   { message: BaseMessage; model?: string },
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam
 > = ({ message, model }) => {
+  assertAdditionalToolsPlacement(message, "chat/completions");
   let role = messageToOpenAIRole(message);
   if (role === "system" && isReasoningModel(model)) {
     role = "developer";
@@ -805,6 +808,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     ) {
       return convertStandardContentMessageToCompletionsMessage({ message });
     }
+    assertAdditionalToolsPlacement(message, "chat/completions");
     let role = messageToOpenAIRole(message);
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
@@ -813,7 +817,8 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     const content =
       typeof message.content === "string"
         ? message.content
-        : message.content.flatMap((m) => {
+        : message.content.flatMap((block) => {
+            const m = unwrapNonStandard(block);
             if (isDataContentBlock(m)) {
               return convertToProviderContentBlock(
                 m,

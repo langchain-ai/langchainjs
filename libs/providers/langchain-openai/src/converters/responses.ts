@@ -35,11 +35,13 @@ import {
   parseCustomToolCall,
 } from "../utils/tools.js";
 import {
+  assertAdditionalToolsPlacement,
   getFilenameFromMetadata,
   getRequiredFilenameFromMetadata,
   iife,
   isReasoningModel,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
@@ -210,6 +212,66 @@ export type ResponsesParseInvoke = ExcludeController<
 >;
 
 export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
+
+/**
+ * Provider-native blocks that the Responses API takes as top-level input items
+ * rather than as message content, keyed by block type. Each is hoisted out of
+ * the message carrying it, to an item immediately preceding that message.
+ */
+const HOISTED_INPUT_ITEMS = new Map<
+  string,
+  (block: ContentBlock) => ResponsesInputItem
+>([
+  [
+    "mcp_approval_response",
+    (block) => ({
+      type: "mcp_approval_response",
+      approval_request_id: block.approval_request_id as string,
+      approve: block.approve as boolean,
+    }),
+  ],
+  [
+    "configuration_update",
+    (block) =>
+      ({
+        type: "configuration_update",
+        reasoning: block.reasoning,
+      }) as unknown as ResponsesInputItem,
+  ],
+  // Sent verbatim: the tool definitions are the caller's to shape.
+  ["additional_tools", (block) => block as unknown as ResponsesInputItem],
+]);
+
+/**
+ * Returns the top-level input item a content block is hoisted to, in either
+ * spelling, or `undefined` if the block is not one the Responses API hoists.
+ */
+function toHoistedInputItem(
+  block: ContentBlock
+): ResponsesInputItem | undefined {
+  const payload = unwrapNonStandard(block);
+  return HOISTED_INPUT_ITEMS.get(payload.type)?.(payload);
+}
+
+/**
+ * Warns that a block was dropped from system content.
+ *
+ * User content keeps its silent drop: the set of blocks it may carry is open
+ * ended, so a warning there would be noise. System content is narrow, and a
+ * dropped block there is usually a provider-specific instruction that was
+ * meant to take effect.
+ */
+function warnDroppedSystemBlock(block: ContentBlock) {
+  const payload = unwrapNonStandard(block);
+  const description =
+    payload === block
+      ? JSON.stringify(block.type)
+      : `${JSON.stringify(payload.type)} (wrapped in \`non_standard\`)`;
+  console.warn(
+    `Unrecognized system content block ${description} was dropped: the ` +
+      "Responses API does not accept it in a system message."
+  );
+}
 
 /**
  * Converts OpenAI Responses API usage statistics to LangChain's UsageMetadata format.
@@ -1063,6 +1125,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
   BaseMessage,
   OpenAIClient.Responses.ResponseInputItem[]
 > = (message) => {
+  assertAdditionalToolsPlacement(message, "responses");
   const isResponsesMessage =
     AIMessage.isInstance(message) &&
     message.response_metadata?.model_provider === "openai";
@@ -1270,7 +1333,22 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       };
     };
 
+    // Hoisted items are emitted ahead of the message rather than at their
+    // position within it, matching the non-v1 branch, so a message produces the
+    // same input however its content was written. Assistant content is replayed
+    // model output and is never hoisted.
+    const contentBlocks: ContentBlock.Standard[] = [];
     for (const block of message.contentBlocks) {
+      const hoisted =
+        messageRole === "assistant" ? undefined : toHoistedInputItem(block);
+      if (hoisted) {
+        yield hoisted;
+      } else {
+        contentBlocks.push(block);
+      }
+    }
+
+    for (const block of contentBlocks) {
       if (block.type === "text") {
         const phase = iife(() => {
           if (
@@ -1358,6 +1436,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } else if (block.type === "non_standard" && isResponsesMessage) {
         yield* flushMessage();
         yield block.value as ResponsesInputItem;
+      } else if (messageRole === "system" || messageRole === "developer") {
+        warnDroppedSystemBlock(block);
       }
     }
     yield* flushMessage();
@@ -1431,6 +1511,7 @@ export const convertMessagesToResponsesInput: Converter<
       if (responseMetadata?.output_version === "v1") {
         return convertStandardContentMessageToResponsesInput(lcMsg);
       }
+      assertAdditionalToolsPlacement(lcMsg, "responses");
 
       const additional_kwargs =
         lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
@@ -1737,21 +1818,14 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const messages: ResponsesInputItem[] = [];
-        const content = (lcMsg.content as ContentBlock[]).flatMap((item) => {
-          if (item.type === "mcp_approval_response") {
-            messages.push({
-              type: "mcp_approval_response",
-              approval_request_id: item.approval_request_id as string,
-              approve: item.approve as boolean,
-            });
-          }
-          if (item.type === "configuration_update") {
+        const content = (lcMsg.content as ContentBlock[]).flatMap((block) => {
+          const hoisted = toHoistedInputItem(block);
+          if (hoisted) {
             // Hoisted to a top-level item preceding the message.
-            messages.push({
-              type: "configuration_update",
-              reasoning: item.reasoning,
-            } as unknown as ResponsesInputItem);
+            messages.push(hoisted);
+            return [];
           }
+          const item = unwrapNonStandard(block);
           if (isDataContentBlock(item)) {
             // The Responses API supports file URLs natively, but the Chat
             // Completions converter rejects URL file blocks. Convert standard
@@ -1830,6 +1904,9 @@ export const convertMessagesToResponsesInput: Converter<
             item.type === "input_file"
           ) {
             return item;
+          }
+          if (role !== "user") {
+            warnDroppedSystemBlock(item);
           }
           return [];
         });
