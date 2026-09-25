@@ -1389,6 +1389,22 @@ describe("promptCacheKey", () => {
   });
 });
 
+describe("promptCacheRetention", () => {
+  const fields: BaseChatOpenAIFields = {
+    model: "gpt-4o-mini",
+    maxTokens: 16,
+    promptCacheRetention: "in-memory",
+  };
+
+  test.each([
+    { api: "responses", make: () => new ChatOpenAIResponses(fields) },
+    { api: "completions", make: () => new ChatOpenAICompletions(fields) },
+  ])("accepts the legacy in-memory spelling ($api)", async ({ make }) => {
+    const response = await make().invoke("Say hello.");
+    expect(response.text).toBeTruthy();
+  });
+});
+
 describe("promptCacheOptions", { retry: 3 }, () => {
   const fields: BaseChatOpenAIFields = {
     model: "gpt-5.6-sol",

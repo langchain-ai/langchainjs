@@ -22,7 +22,10 @@ import {
   formatToOpenAIToolChoice,
   _convertToOpenAITool,
 } from "../utils/tools.js";
-import { isReasoningModel } from "../utils/misc.js";
+import {
+  isReasoningModel,
+  normalizePromptCacheRetention,
+} from "../utils/misc.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAICallOptions,
@@ -158,9 +161,15 @@ export class ChatOpenAICompletions<
         ? { modalities: this.modalities || options?.modalities }
         : {}),
       ...this.modelKwargs,
-      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
-      prompt_cache_retention:
-        options?.promptCacheRetention ?? this.promptCacheRetention,
+      prompt_cache_key:
+        options?.promptCacheKey ??
+        this.modelKwargs?.prompt_cache_key ??
+        this.promptCacheKey,
+      prompt_cache_retention: normalizePromptCacheRetention(
+        options?.promptCacheRetention ??
+          this.modelKwargs?.prompt_cache_retention ??
+          this.promptCacheRetention
+      ),
       prompt_cache_options:
         options?.promptCacheOptions ??
         this.modelKwargs?.prompt_cache_options ??

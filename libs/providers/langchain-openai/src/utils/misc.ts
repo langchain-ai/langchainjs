@@ -1,4 +1,5 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAICacheRetentionParam } from "../types.js";
 import {
   BaseMessage,
   ChatMessage,
@@ -7,6 +8,12 @@ import {
 } from "@langchain/core/messages";
 
 export const iife = <T>(fn: () => T) => fn();
+
+export function normalizePromptCacheRetention(
+  retention: OpenAICacheRetentionParam | undefined
+): Exclude<OpenAICacheRetentionParam, "in-memory"> | undefined {
+  return retention === "in-memory" ? "in_memory" : retention;
+}
 
 export function applyPromptCacheBreakpoint<T extends object>(
   source: Record<string, unknown>,
