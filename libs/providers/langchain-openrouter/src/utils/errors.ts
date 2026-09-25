@@ -20,7 +20,7 @@ export class OpenRouterError extends ns.brand(LangChainError) {
   statusCode?: number;
 
   /** HTTP or API error code, if available. */
-  code?: number;
+  code?: number | string;
 
   /** Additional error metadata returned by the API, if available. */
   metadata?: Record<string, unknown>;
@@ -31,7 +31,7 @@ export class OpenRouterError extends ns.brand(LangChainError) {
   constructor(
     message: string,
     statusCode?: number,
-    code?: number,
+    code?: number | string,
     metadata?: Record<string, unknown>,
     headers?: Record<string, string>
   ) {
@@ -63,7 +63,11 @@ export class OpenRouterError extends ns.brand(LangChainError) {
     }
 
     const error = body?.error as
-      | { message?: string; code?: number; metadata?: Record<string, unknown> }
+      | {
+          message?: string;
+          code?: number | string;
+          metadata?: Record<string, unknown>;
+        }
       | undefined;
 
     const baseMessage =
@@ -122,7 +126,7 @@ export class OpenRouterAuthError extends ns.brand(OpenRouterError, "auth") {
   constructor(
     message: string,
     statusCode?: number,
-    code?: number,
+    code?: number | string,
     metadata?: Record<string, unknown>,
     headers?: Record<string, string>
   ) {
@@ -145,7 +149,7 @@ export class OpenRouterRateLimitError extends ns.brand(
   constructor(
     message: string,
     statusCode?: number,
-    code?: number,
+    code?: number | string,
     metadata?: Record<string, unknown>,
     headers?: Record<string, string>
   ) {
