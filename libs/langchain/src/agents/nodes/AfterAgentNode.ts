@@ -1,4 +1,5 @@
 import { RunnableConfig } from "@langchain/core/runnables";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { MiddlewareNode } from "./middleware.js";
 import type {
   AnyAgentMiddleware,
@@ -16,14 +17,20 @@ export class AfterAgentNode<
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "afterAgentNodes"];
 
-  constructor(public middleware: AnyAgentMiddleware) {
-    super({
-      name: `AfterAgentNode_${middleware.name}`,
-      func: async (
-        state: TStateSchema,
-        config?: RunnableConfig<TContextSchema>
-      ) => this.invokeMiddleware(state, config),
-    });
+  constructor(
+    public middleware: AnyAgentMiddleware,
+    tools?: readonly (ClientTool | ServerTool)[]
+  ) {
+    super(
+      {
+        name: `AfterAgentNode_${middleware.name}`,
+        func: async (
+          state: TStateSchema,
+          config?: RunnableConfig<TContextSchema>
+        ) => this.invokeMiddleware(state, config),
+      },
+      tools
+    );
   }
 
   runHook(state: TStateSchema, runtime: Runtime<TContextSchema>) {
