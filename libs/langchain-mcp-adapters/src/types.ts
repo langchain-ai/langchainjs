@@ -571,10 +571,13 @@ const modernPolicy = z
      */
     logLevel: loggingLevelSchema.optional(),
     /**
-     * Whether in-band MCP elicitation requests should suspend a LangGraph run
-     * and surface as graph interrupts.
+     * Whether modern in-band MCP elicitation should be handled through
+     * LangGraph interrupts.
      *
-     * This requires a modern MCP server and a LangGraph checkpointer.
+     * Tools that do not request input can run directly or in a graph without a
+     * checkpointer. If a tool requests input in either context, the invocation
+     * raises a `ToolException`. A checkpointer is required to suspend and
+     * resume an eliciting tool successfully.
      *
      * @default true
      */
@@ -977,7 +980,14 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .extend(notifications.pick({ onProgress: true }).shape)
   .extend({
     logLevel: loggingLevelSchema.optional(),
-    /** Answer in-band input requests with LangGraph interrupts. Defaults to true. */
+    /**
+     * Whether modern in-band MCP elicitation should be handled through
+     * LangGraph interrupts. Tools that do not elicit need no checkpointer. A
+     * direct invocation or graph without a checkpointer raises a
+     * `ToolException` only if the tool requests input.
+     *
+     * @default true
+     */
     elicitation: z.boolean().default(true),
   });
 
