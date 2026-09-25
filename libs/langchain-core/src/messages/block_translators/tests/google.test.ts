@@ -101,6 +101,34 @@ describe("ChatGoogleTranslator", () => {
     ]);
   });
 
+  it("should set contentBlocks tool_call id from functionCall.id, not message.id", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            id: "fn-abc123",
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      tool_calls: [
+        { type: "tool_call", id: "fn-abc123", name: "calculator", args: { expression: "1 + 1" } },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "fn-abc123",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
+
   it("should pass through array content when no thoughtSignature exists", () => {
     const message = new AIMessage({
       content: [
