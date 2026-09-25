@@ -810,6 +810,47 @@ export class AgentNode<
     }
   }
 
+  /**
+   * Answer every tool call in `response` with a `ToolMessage` before retrying.
+   * Providers reject the next request (e.g. OpenAI `400 INVALID_TOOL_RESULTS`)
+   * if a tool call from the assistant message is left unanswered, which is what
+   * happened when the model emitted multiple structured-output calls and only
+   * the first was answered. The triggering call keeps the meaningful `content`;
+   * a duplicate structured-output call and a co-emitted real tool call each get
+   * a short, accurate placeholder.
+   */
+  #buildToolStrategyRetryMessages(
+    response: AIMessage,
+    primaryToolCallId: string,
+    content: string,
+    responseFormat: ToolResponseFormat
+  ): BaseMessage[] {
+    const toolCalls = response.tool_calls ?? [];
+    const toolMessages = toolCalls.map((call) => {
+      if (call.id === primaryToolCallId) {
+        return new ToolMessage({ tool_call_id: call.id ?? "", content });
+      }
+      // `responseFormat.tools` holds the structured-output (extract) tools: a
+      // leftover one is a rejected duplicate, anything else is a real tool not run here.
+      const isStructuredOutputCall = call.name in responseFormat.tools;
+      return new ToolMessage({
+        tool_call_id: call.id ?? "",
+        content: isStructuredOutputCall
+          ? "Ignored: respond with exactly one structured output."
+          : "Not run: retrying to resolve the structured output.",
+      });
+    });
+
+    // Never emit an empty retry update if the response has no tool calls.
+    if (toolMessages.length === 0) {
+      toolMessages.push(
+        new ToolMessage({ tool_call_id: primaryToolCallId, content })
+      );
+    }
+
+    return [response, ...toolMessages];
+  }
+
   async #handleToolStrategyError(
     error: ToolStrategyError,
     response: AIMessage,
@@ -859,13 +900,12 @@ export class AgentNode<
     ) {
       return new Command({
         update: {
-          messages: [
+          messages: this.#buildToolStrategyRetryMessages(
             response,
-            new ToolMessage({
-              content: error.message,
-              tool_call_id: toolCallId,
-            }),
-          ],
+            toolCallId,
+            error.message,
+            responseFormat
+          ),
         },
         goto: AGENT_NODE_NAME,
       });
@@ -877,13 +917,12 @@ export class AgentNode<
     if (typeof errorHandler === "string") {
       return new Command({
         update: {
-          messages: [
+          messages: this.#buildToolStrategyRetryMessages(
             response,
-            new ToolMessage({
-              content: errorHandler,
-              tool_call_id: toolCallId,
-            }),
-          ],
+            toolCallId,
+            errorHandler,
+            responseFormat
+          ),
         },
         goto: AGENT_NODE_NAME,
       });
@@ -900,13 +939,12 @@ export class AgentNode<
 
       return new Command({
         update: {
-          messages: [
+          messages: this.#buildToolStrategyRetryMessages(
             response,
-            new ToolMessage({
-              content,
-              tool_call_id: toolCallId,
-            }),
-          ],
+            toolCallId,
+            content,
+            responseFormat
+          ),
         },
         goto: AGENT_NODE_NAME,
       });
@@ -917,13 +955,12 @@ export class AgentNode<
      */
     return new Command({
       update: {
-        messages: [
+        messages: this.#buildToolStrategyRetryMessages(
           response,
-          new ToolMessage({
-            content: error.message,
-            tool_call_id: toolCallId,
-          }),
-        ],
+          toolCallId,
+          error.message,
+          responseFormat
+        ),
       },
       goto: AGENT_NODE_NAME,
     });
