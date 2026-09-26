@@ -5,6 +5,7 @@ import { InferInteropZodInput } from "@langchain/core/utils/types";
 import { createMiddleware } from "../middleware.js";
 
 const DEFAULT_EXIT_BEHAVIOR = "end";
+const RESET_RUN_MODEL_CALL_COUNT = 0;
 
 const contextSchema = z.object({
   /**
@@ -174,6 +175,7 @@ export function modelCallLimitMiddleware(
             return {
               jumpTo: "end",
               messages: [new AIMessage(error.message)],
+              runModelCallCount: RESET_RUN_MODEL_CALL_COUNT,
             };
           }
 
@@ -188,6 +190,7 @@ export function modelCallLimitMiddleware(
             return {
               jumpTo: "end",
               messages: [new AIMessage(error.message)],
+              runModelCallCount: RESET_RUN_MODEL_CALL_COUNT,
             };
           }
 
@@ -202,7 +205,7 @@ export function modelCallLimitMiddleware(
       threadModelCallCount: state.threadModelCallCount + 1,
     }),
     afterAgent: () => ({
-      runModelCallCount: 0,
+      runModelCallCount: RESET_RUN_MODEL_CALL_COUNT,
     }),
   });
 }
