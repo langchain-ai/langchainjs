@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { ApiClient } from "../../clients/index.js";
+import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { ChatGoogle } from "../index.js";
 import type { Gemini } from "../api-types.js";
 
@@ -113,11 +114,15 @@ const usageChunks: Gemini.GenerateContentResponse[] = [
   },
 ];
 
-function mockChatGoogle(chunks: Gemini.GenerateContentResponse[]) {
+function mockChatGoogle(
+  chunks: Gemini.GenerateContentResponse[],
+  callbacks?: GoogleRequestRecorder[]
+) {
   return new ChatGoogle({
     model: "gemini-2.0-flash",
     apiKey: "fake-key",
     apiClient: new MockStreamingApiClient(chunks),
+    callbacks,
   });
 }
 
@@ -150,5 +155,25 @@ describe("ChatGoogle.streamEvents", () => {
       output_tokens: 4,
       total_tokens: 14,
     });
+  });
+
+  test("sends request, response, and chunk callbacks", async () => {
+    const recorder = new GoogleRequestRecorder();
+    const stream = mockChatGoogle(textChunks, [recorder]).streamEvents("Hello");
+
+    for await (const _event of stream) {
+      // Consume the stream so all provider callbacks have run.
+    }
+
+    expect(recorder.request).toMatchObject({
+      body: {
+        contents: [{ parts: [{ text: "Hello" }] }],
+      },
+    });
+    expect(recorder.response).toMatchObject({
+      status: 200,
+      statusText: "OK",
+    });
+    expect(recorder.chunk).toEqual(textChunks.map((chunk) => ({ chunk })));
   });
 });
