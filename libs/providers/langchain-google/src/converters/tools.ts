@@ -444,6 +444,7 @@ export const convertToolsToGeminiTools: Converter<
  *   - `"auto"` → `"AUTO"` - Model decides whether to call functions
  *   - `"any"` or `"required"` → `"ANY"` - Model must call at least one function
  *   - `"none"` → `"NONE"` - Model cannot call functions
+ *   - `"validated"` → `"VALIDATED"` - Calls must follow the function schema
  *   - Function name string → `"ANY"` - Forces function use
  *   - Object with `mode` → Maps the mode string to Gemini format
  *   - Object with `function` → `"ANY"` - Forces function use
@@ -453,6 +454,8 @@ export const convertToolsToGeminiTools: Converter<
  * - **AUTO**: The model can choose whether to call functions based on the conversation
  * - **ANY**: The model must call at least one function before responding
  * - **NONE**: The model cannot call any functions
+ * - **VALIDATED**: The model may call functions or respond with text, and function
+ *   calls must follow the provided schema
  *
  * When a specific function is requested (via function name string or `{ function: { name } }`),
  * the converter uses `"ANY"` mode to force function usage, as Gemini doesn't support
@@ -507,6 +510,8 @@ export function convertToolChoiceToGeminiConfig(
     mode = "ANY";
   } else if (toolChoiceMode === "none") {
     mode = "NONE";
+  } else if (toolChoiceMode === "validated") {
+    mode = "VALIDATED";
   } else if (typeof toolChoiceMode === "string") {
     mode = "ANY";
     toolChoiceFunction = toolChoiceMode;
