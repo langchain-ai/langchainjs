@@ -796,6 +796,106 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   return { converseMessages: combinedConverseMessages, converseSystem };
 }
 
+/**
+ * Convert a tool result content block to plain text, preserving as much
+ * information as possible.
+ */
+function toolResultContentBlockToText(
+  block: Bedrock.ToolResultContentBlock
+): string {
+  if ("text" in block && typeof block.text === "string") {
+    return block.text;
+  }
+  if ("json" in block) {
+    return JSON.stringify(block.json);
+  }
+  const kind = Object.keys(block)[0] ?? "unknown";
+  return `[${kind} content]`;
+}
+
+/**
+ * Bedrock's Converse API requires `toolConfig` to be defined whenever
+ * `toolUse` or `toolResult` content blocks are present in the request.
+ *
+ * When a model is invoked without any bound tools (e.g. a no-tools agent in a
+ * multi-agent supervisor that receives message history containing tool calls
+ * made by other agents), no `toolConfig` is sent and Bedrock rejects the
+ * request with a `ValidationException`.
+ *
+ * To keep the request valid, this converts tool-specific content blocks into
+ * plain text blocks so the conversational context is preserved without
+ * requiring a `toolConfig`. Messages without tool blocks are returned
+ * unchanged.
+ */
+export function stripToolBlocksFromConverseMessages(
+  messages: Bedrock.Message[]
+): Bedrock.Message[] {
+  // Map toolUseId -> tool name so tool results can reference the tool by name.
+  const toolNamesById = new Map<string, string>();
+  for (const message of messages) {
+    for (const block of message.content ?? []) {
+      if (
+        typeof block === "object" &&
+        block !== null &&
+        "toolUse" in block &&
+        block.toolUse
+      ) {
+        const { toolUseId, name } = block.toolUse;
+        if (toolUseId && name) {
+          toolNamesById.set(toolUseId, name);
+        }
+      }
+    }
+  }
+
+  return messages.map((message) => {
+    const content = message.content ?? [];
+    const hasToolBlocks = content.some(
+      (block) =>
+        typeof block === "object" &&
+        block !== null &&
+        ("toolUse" in block || "toolResult" in block)
+    );
+    if (!hasToolBlocks) {
+      return message;
+    }
+
+    const sanitizedContent: Bedrock.ContentBlock[] = [];
+    for (const block of content) {
+      if (
+        typeof block === "object" &&
+        block !== null &&
+        "toolUse" in block &&
+        block.toolUse
+      ) {
+        const { name, input } = block.toolUse;
+        const inputText =
+          input !== undefined ? ` with input: ${JSON.stringify(input)}` : "";
+        sanitizedContent.push({
+          text: `Called tool "${name ?? "unknown"}"${inputText}`,
+        });
+      } else if (
+        typeof block === "object" &&
+        block !== null &&
+        "toolResult" in block &&
+        block.toolResult
+      ) {
+        const { toolUseId, content: resultContent } = block.toolResult;
+        const name = toolUseId ? toolNamesById.get(toolUseId) : undefined;
+        const resultText = (resultContent ?? [])
+          .map(toolResultContentBlockToText)
+          .join("\n");
+        sanitizedContent.push({
+          text: `Result of tool "${name ?? toolUseId ?? "unknown"}": ${resultText}`,
+        });
+      } else {
+        sanitizedContent.push(block as Bedrock.ContentBlock);
+      }
+    }
+    return { ...message, content: sanitizedContent };
+  });
+}
+
 export function langchainReasoningBlockToBedrockReasoningBlock(
   content: unknown
 ): Bedrock.ReasoningContentBlock | undefined {

@@ -56,6 +56,7 @@ import {
 import {
   applyCachePointsToConversePayload,
   convertToConverseMessages,
+  stripToolBlocksFromConverseMessages,
 } from "./utils/message_inputs.js";
 import {
   convertConverseMessageToLangChainMessage,
@@ -1068,17 +1069,24 @@ export class ChatBedrockConverse
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      // Bedrock requires `toolConfig` whenever `toolUse`/`toolResult` content
+      // blocks are present. If no tools are bound (e.g. a no-tools agent in a
+      // multi-agent supervisor receiving history from tool-using agents),
+      // convert tool blocks to text so the request stays valid.
+      const sanitizedMessages = params.toolConfig
+        ? converseMessages
+        : stripToolBlocksFromConverseMessages(converseMessages);
       applyCachePointsToConversePayload({
         cacheControl: options.cache_control,
         system: converseSystem,
-        messages: converseMessages,
+        messages: sanitizedMessages,
         params,
         modelId: this.applicationInferenceProfile ?? this.model,
       });
 
       const command = new ConverseCommand({
         modelId: this.applicationInferenceProfile ?? this.model,
-        messages: converseMessages,
+        messages: sanitizedMessages,
         ...(Array.isArray(converseSystem) && converseSystem.length > 0
           ? { system: converseSystem }
           : {}),
@@ -1119,10 +1127,17 @@ export class ChatBedrockConverse
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      // Bedrock requires `toolConfig` whenever `toolUse`/`toolResult` content
+      // blocks are present. If no tools are bound (e.g. a no-tools agent in a
+      // multi-agent supervisor receiving history from tool-using agents),
+      // convert tool blocks to text so the request stays valid.
+      const sanitizedMessages = params.toolConfig
+        ? converseMessages
+        : stripToolBlocksFromConverseMessages(converseMessages);
       applyCachePointsToConversePayload({
         cacheControl: options.cache_control,
         system: converseSystem,
-        messages: converseMessages,
+        messages: sanitizedMessages,
         params,
         modelId: this.applicationInferenceProfile ?? this.model,
       });
@@ -1132,7 +1147,7 @@ export class ChatBedrockConverse
       }
       const command = new ConverseStreamCommand({
         modelId: this.applicationInferenceProfile ?? this.model,
-        messages: converseMessages,
+        messages: sanitizedMessages,
         ...(Array.isArray(converseSystem) && converseSystem.length > 0
           ? { system: converseSystem }
           : {}),
@@ -1195,10 +1210,17 @@ export class ChatBedrockConverse
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      // Bedrock requires `toolConfig` whenever `toolUse`/`toolResult` content
+      // blocks are present. If no tools are bound (e.g. a no-tools agent in a
+      // multi-agent supervisor receiving history from tool-using agents),
+      // convert tool blocks to text so the request stays valid.
+      const sanitizedMessages = params.toolConfig
+        ? converseMessages
+        : stripToolBlocksFromConverseMessages(converseMessages);
       applyCachePointsToConversePayload({
         cacheControl: options.cache_control,
         system: converseSystem,
-        messages: converseMessages,
+        messages: sanitizedMessages,
         params,
         modelId: this.applicationInferenceProfile ?? this.model,
       });
@@ -1208,7 +1230,7 @@ export class ChatBedrockConverse
       }
       const command = new ConverseStreamCommand({
         modelId: this.applicationInferenceProfile ?? this.model,
-        messages: converseMessages,
+        messages: sanitizedMessages,
         ...(Array.isArray(converseSystem) && converseSystem.length > 0
           ? { system: converseSystem }
           : {}),
