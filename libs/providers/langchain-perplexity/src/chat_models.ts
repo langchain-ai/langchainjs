@@ -51,6 +51,17 @@ import {
   ReasoningStructuredOutputParser,
 } from "./utils/output_parsers.js";
 
+function toUsageMetadata(
+  usage: OpenAI.CompletionUsage | null | undefined
+): UsageMetadata | undefined {
+  if (!usage) return undefined;
+  return {
+    input_tokens: usage.prompt_tokens,
+    output_tokens: usage.completion_tokens,
+    total_tokens: usage.total_tokens,
+  };
+}
+
 /**
  * Type representing the role of a message in the Perplexity chat model.
  */
@@ -705,6 +716,7 @@ export class ChatPerplexity
       text: message.content ?? "",
       message: new AIMessage({
         content: message.content ?? "",
+        usage_metadata: toUsageMetadata(response.usage),
         additional_kwargs: {
           // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           citations: (response as any).citations,
@@ -812,8 +824,11 @@ export class ChatPerplexity
     });
 
     let firstChunk = true;
+    let usageMetadata: UsageMetadata | undefined;
     for await (const chunk of stream) {
+      if (chunk.usage) usageMetadata = toUsageMetadata(chunk.usage);
       const choice = chunk.choices[0];
+      if (!choice) continue;
       const { delta } = choice;
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const citations = (chunk as any).citations ?? [];
@@ -852,6 +867,17 @@ export class ChatPerplexity
       if (runManager) {
         await runManager.handleLLMNewToken(delta.content);
       }
+    }
+
+    // Usage is cumulative; emit the final totals once for chunk aggregation.
+    if (usageMetadata) {
+      yield new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({
+          content: "",
+          usage_metadata: usageMetadata,
+        }),
+      });
     }
   }
 
