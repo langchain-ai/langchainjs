@@ -122,6 +122,64 @@ describe("ChatBedrockConverse invocationParams", () => {
     });
   });
 
+  test("configures LangSmith Gateway endpoint and bearer auth", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    try {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const clientClass = BedrockRuntimeClient as unknown as {
+        lastConfig?: {
+          endpoint?: string;
+          authSchemePreference?: string[];
+          credentials?: unknown;
+          token?: () => Promise<{ token: string }>;
+        };
+      };
+
+      expect(model.bedrockBearerToken).toBe("gateway-key");
+      expect(clientClass.lastConfig?.endpoint).toBe(
+        "https://gateway.smith.langchain.com/bedrock"
+      );
+      expect(clientClass.lastConfig?.authSchemePreference).toEqual([
+        "httpBearerAuth",
+      ]);
+      expect(clientClass.lastConfig?.credentials).toBeUndefined();
+      await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
+        token: "gateway-key",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  test("prefers explicit Bedrock configuration over LangSmith Gateway", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    try {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        endpointHost: "bedrock.example.com",
+        bedrockBearerToken: "bedrock-key",
+      });
+      const clientClass = BedrockRuntimeClient as unknown as {
+        lastConfig?: {
+          endpoint?: string;
+          token?: () => Promise<{ token: string }>;
+        };
+      };
+
+      expect(model.bedrockBearerToken).toBe("bedrock-key");
+      expect(clientClass.lastConfig?.endpoint).toBe(
+        "https://bedrock.example.com"
+      );
+      await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
+        token: "bedrock-key",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   test("configures bearer auth from AWS_BEARER_TOKEN_BEDROCK", async () => {
     process.env.AWS_BEARER_TOKEN_BEDROCK = "env-bearer-token";
     try {

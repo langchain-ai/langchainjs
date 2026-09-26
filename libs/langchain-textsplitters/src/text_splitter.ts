@@ -108,8 +108,7 @@ export abstract class TextSplitter
           );
           lineCounterIndex += newLinesBeforeFirstChunk;
         } else {
-          const indexEndPrevChunk =
-            indexPrevChunk + (await this.lengthFunction(prevChunk));
+          const indexEndPrevChunk = indexPrevChunk + prevChunk.length;
           if (indexEndPrevChunk < indexChunk) {
             const numberOfIntermediateNewLines = this.numberOfNewLines(
               text,

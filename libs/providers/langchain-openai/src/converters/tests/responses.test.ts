@@ -639,6 +639,120 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
   });
 
   describe("reasoning streaming elevation", () => {
+    it("replays encrypted reasoning from streaming responses in ZDR mode", () => {
+      const added = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+          encrypted_content: "incomplete_payload",
+        },
+      } as any);
+      const done = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+          encrypted_content: "canonical_payload",
+        },
+      } as any);
+
+      expect(added).not.toBeNull();
+      expect(done).not.toBeNull();
+
+      const streamedMessage = (added!.message as AIMessageChunk).concat(
+        done!.message as AIMessageChunk
+      );
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      expect(replayInput).toEqual([
+        {
+          id: "rs_abc123",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_payload",
+        },
+      ]);
+    });
+
+    it("v0: additional_kwargs.reasoning stays a single, last-write-wins object with two reasoning items (accepted limitation)", () => {
+      // v0 stays a single object forever (array would break existing
+      // readers/merges); multi-item support is v1's job, tested below.
+      const events = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [],
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [],
+            encrypted_content: "canonical_payload_1",
+          },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [],
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [],
+            encrypted_content: "canonical_payload_2",
+          },
+        },
+      ];
+
+      const chunks = events.map((event) => {
+        const chunk = convertResponsesDeltaToChatGenerationChunk(event as any);
+        expect(chunk).not.toBeNull();
+        return chunk!.message as AIMessageChunk;
+      });
+
+      const streamedMessage = chunks.reduce((acc, chunk) => acc.concat(chunk));
+
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      // The known existing gap: wrong id, concatenated ciphertext.
+      // Fixed in V1
+      expect(replayInput).toEqual([
+        {
+          id: "rs_second",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_payload_1canonical_payload_2",
+        },
+      ]);
+    });
+
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
         type: "response.output_item.added",
@@ -1236,6 +1350,104 @@ describe("convertStandardContentMessageToResponsesInput (role-aware text parts)"
 });
 
 describe("convertMessagesToResponsesInput", () => {
+  it("preserves prompt cache breakpoints on converted content blocks", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Stable prefix",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+        {
+          type: "file",
+          source_type: "id",
+          id: "file_123",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect((result[0] as any).content).toEqual([
+      {
+        type: "input_text",
+        text: "Stable prefix",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+      {
+        type: "input_image",
+        image_url: "https://example.com/image.png",
+        detail: undefined,
+        prompt_cache_breakpoint: null,
+      },
+      {
+        type: "input_file",
+        file_id: "file_123",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+    ]);
+  });
+
+  it("applies prompt cache breakpoints to v1 standard input blocks only", () => {
+    const breakpoint = { prompt_cache_breakpoint: { mode: "explicit" } };
+    const messages = [
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Stable prefix", extras: breakpoint },
+          {
+            type: "image",
+            url: "https://example.com/image.png",
+            extras: breakpoint,
+          },
+          { type: "file", fileId: "file_123", extras: breakpoint },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "Earlier answer", extras: breakpoint }],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const result = convertMessagesToResponsesInput({
+      messages,
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect(result.map((item) => (item as any).content)).toEqual([
+      [
+        {
+          type: "input_text",
+          text: "Stable prefix",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "input_image",
+          detail: "auto",
+          image_url: "https://example.com/image.png",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "input_file",
+          file_id: "file_123",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ],
+      [{ type: "output_text", text: "Earlier answer", annotations: [] }],
+    ]);
+  });
+
   describe("Regression Tests", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
       const messages = [
@@ -1528,6 +1740,144 @@ describe("convertMessagesToResponsesInput", () => {
         },
       ]);
     });
+    it("converts a v1 image into native input_image output", () => {
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_img",
+          id: undefined,
+          output: [
+            {
+              type: "input_image",
+              detail: "auto",
+              image_url: "data:image/png;base64,AAA",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("converts a source_type image with text", () => {
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "text", text: "Read /a.png" },
+              {
+                type: "image",
+                source_type: "base64",
+                mime_type: "image/png",
+                data: "AAA",
+              },
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          { type: "input_text", text: "Read /a.png" },
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+        ],
+      });
+    });
+
+    it("keeps file-only tool content unchanged", () => {
+      const content = [
+        {
+          type: "file",
+          mimeType: "application/zip",
+          data: "AAA",
+        },
+      ];
+      const result = convertMessagesToResponsesInput({
+        messages: [new ToolMessage({ tool_call_id: "call_file", content })],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: JSON.stringify(content),
+      });
+    });
+
+    it("keeps an image without a source as JSON text", () => {
+      const empty = { type: "image", mimeType: "image/png" };
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "image", mimeType: "image/png", data: "AAA" },
+              empty,
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+          { type: "input_text", text: JSON.stringify(empty) },
+        ],
+      });
+    });
+
+    it("keeps non-image blocks as JSON text next to images", () => {
+      const file = { type: "file", mimeType: "application/zip", data: "BBB" };
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "image", mimeType: "image/png", data: "AAA" },
+              file,
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+          { type: "input_text", text: JSON.stringify(file) },
+        ],
+      });
+    });
   });
 
   describe("assistant reasoning conversion", () => {
@@ -1593,6 +1943,68 @@ describe("convertMessagesToResponsesInput", () => {
       expect(result).toEqual(output);
     });
 
+    it("preserves multiple ordered reasoning items from response_metadata.output in ZDR mode", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_first",
+          summary: [{ type: "summary_text", text: "First" }],
+          encrypted_content: "encrypted_first",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_first",
+          call_id: "call_first",
+          name: "add",
+          arguments: '{"a":1,"b":2}',
+          created_by: "provider",
+        },
+        {
+          type: "reasoning",
+          id: "rs_second",
+          summary: [{ type: "summary_text", text: "Second" }],
+          encrypted_content: "encrypted_second",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_second",
+          call_id: "call_second",
+          name: "multiply",
+          arguments: '{"a":3,"b":4}',
+          created_by: "provider",
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "add", args: { a: 1, b: 2 }, id: "call_first" },
+          {
+            name: "multiply",
+            args: { a: 3, b: 4 },
+            id: "call_second",
+          },
+        ],
+        additional_kwargs: {
+          // The legacy field can only retain one reasoning item. The original
+          // output must take precedence when it is available.
+          reasoning: output[2],
+        },
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "o3-mini",
+      });
+
+      expect(result).toEqual(
+        output.map(({ created_by: _createdBy, ...item }) => item)
+      );
+    });
+
     it("round-trips reasoning + tool calls through AIMessage", () => {
       const response = {
         id: "resp_123",
@@ -1629,6 +2041,204 @@ describe("convertMessagesToResponsesInput", () => {
 
       // Should preserve the full output array including reasoning + function_call pairing
       expect(input).toEqual(response.output);
+    });
+  });
+
+  describe("v1 content-block replay (multi-reasoning-item ordering, ZDR)", () => {
+    it('both the default (v0) path and opting into outputVersion "v1" replay multiple reasoning items correctly under ZDR', () => {
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.6",
+        created_at: 0,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [{ type: "summary_text", text: "First" }],
+            encrypted_content: "enc_1",
+          },
+          {
+            type: "function_call",
+            id: "fc_1",
+            call_id: "call_1",
+            name: "add",
+            arguments: '{"a":1,"b":2}',
+          },
+          {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [{ type: "summary_text", text: "Second" }],
+            encrypted_content: "enc_2",
+          },
+          {
+            type: "function_call",
+            id: "fc_2",
+            call_id: "call_2",
+            name: "multiply",
+            arguments: '{"a":3,"b":4}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+      };
+
+      const message = convertResponsesMessageToAIMessage(response as any);
+
+      // --- Default (v0) path: additional_kwargs.reasoning only ever holds
+      // one item, but replay now reuses response_metadata.output directly
+      // (normalized via the SDK's toResponseInputItems), so every reasoning
+      // item is preserved in its original position.
+      const defaultReplay = (
+        convertMessagesToResponsesInput({
+          messages: [message],
+          zdrEnabled: true,
+          model: "gpt-5.6",
+        }) as unknown as Array<Record<string, unknown>>
+      )
+        .filter(
+          (item) => item.type === "reasoning" || item.type === "function_call"
+        )
+        .map((item) =>
+          item.type === "reasoning"
+            ? `reasoning:${item.id}:${item.encrypted_content}`
+            : `function_call:${item.call_id}`
+        );
+      expect(defaultReplay).toEqual([
+        "reasoning:rs_first:enc_1",
+        "function_call:call_1",
+        "reasoning:rs_second:enc_2",
+        "function_call:call_2",
+      ]);
+
+      const standardizedMessage = new AIMessage({
+        ...message,
+        content: message.contentBlocks,
+        response_metadata: {
+          ...message.response_metadata,
+          output_version: "v1",
+        },
+      });
+
+      const v1Replay = (
+        convertMessagesToResponsesInput({
+          messages: [standardizedMessage],
+          zdrEnabled: true,
+          model: "gpt-5.6",
+        }) as unknown as Array<Record<string, unknown>>
+      ).map((item) =>
+        item.type === "reasoning"
+          ? `reasoning:${item.id}:${item.encrypted_content}`
+          : item.type === "function_call"
+            ? `function_call:${item.call_id}`
+            : item.type
+      );
+      expect(v1Replay).toEqual([
+        "reasoning:rs_first:enc_1",
+        "function_call:call_1",
+        "reasoning:rs_second:enc_2",
+        "function_call:call_2",
+      ]);
+    });
+  });
+
+  describe("configuration_update block support", () => {
+    it("hoists a configuration_update block out of the message content into a preceding top-level item", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "high" } },
+            { type: "text", text: "Hello" },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(result).toEqual([
+        { type: "configuration_update", reasoning: { effort: "high" } },
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "Hello" }],
+        },
+      ]);
+    });
+
+    it("keeps the configuration_update item's position stable as the conversation grows", () => {
+      const messages: any[] = [
+        new HumanMessage("First question"),
+        new AIMessage({
+          content: "First answer",
+          response_metadata: { id: "resp_123" },
+        }),
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "high" } },
+            { type: "text", text: "Second question" },
+          ],
+        }),
+      ];
+
+      const first = convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(first.map((item: any) => item.role ?? item.type)).toEqual([
+        "user",
+        "assistant",
+        "configuration_update",
+        "user",
+      ]);
+
+      const grown = [
+        ...messages,
+        new AIMessage({
+          content: "Second answer",
+          response_metadata: { id: "resp_456" },
+        }),
+        new HumanMessage("Third question"),
+      ];
+
+      const second = convertMessagesToResponsesInput({
+        messages: grown,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(second.slice(0, first.length)).toEqual(first);
+    });
+
+    it("still yields the input item when there is no accompanying text", () => {
+      const messages = [
+        new HumanMessage("Earlier question"),
+        new AIMessage({
+          content: "Earlier answer",
+          response_metadata: { id: "resp_123" },
+        }),
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "low" } },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(result[result.length - 1]).toEqual({
+        type: "configuration_update",
+        reasoning: { effort: "low" },
+      });
     });
   });
 });

@@ -1,5 +1,6 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
+  "format": "oxfmt",
   "changelog": [
     "@changesets/changelog-github",
     {
@@ -21,7 +22,7 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["examples"],
+  "ignore": ["examples", "@langchain/mcp-adapters"],
   "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
     "onlyUpdatePeerDependentsWhenOutOfRange": true
   }

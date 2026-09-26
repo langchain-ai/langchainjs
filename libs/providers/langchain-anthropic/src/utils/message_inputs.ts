@@ -15,16 +15,10 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
-  AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
   AnthropicTextBlockParam,
-  AnthropicToolResultBlockParam,
-  AnthropicToolUseBlockParam,
-  AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
-  AnthropicServerToolUseBlockParam,
-  AnthropicWebSearchToolResultBlockParam,
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
   AnthropicContainerUploadBlockParam,
@@ -163,6 +157,7 @@ function* _formatContentBlocks(
     "server_tool_use",
     "text_editor_code_execution_tool_result",
     "tool_result",
+    "tool_search_tool_result",
     "tool_search_tool_bm25_tool_result",
     "tool_search_tool_regex_tool_result",
     "tool_use",
@@ -454,6 +449,44 @@ function _formatContent(message: BaseMessage, toolCalls?: ToolCall[]) {
 }
 
 /**
+ * Normalizes the content of a system message for the wire.
+ *
+ * Shared by the hoisted top-level `system` field and by in-place
+ * `role: "system"` entries, so both strip the same framework-internal fields.
+ */
+function _formatSystemContent(
+  content: BaseMessage["content"]
+): string | Anthropic.Messages.ContentBlockParam[] {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (!Array.isArray(content)) {
+    // rare case: message.content could be undefined
+    return [];
+  }
+  return content.map((block) => {
+    if (block.type !== "text" || typeof block.text !== "string") {
+      return block as Anthropic.Messages.ContentBlockParam;
+    }
+    return {
+      type: "text" as const,
+      text: block.text,
+      ...("cache_control" in block && block.cache_control
+        ? {
+            cache_control:
+              block.cache_control as AnthropicTextBlockParam["cache_control"],
+          }
+        : {}),
+      ...("citations" in block && block.citations
+        ? {
+            citations: block.citations as AnthropicTextBlockParam["citations"],
+          }
+        : {}),
+    };
+  });
+}
+
+/**
  * Formats messages as a prompt for the model.
  * Used in LangSmith, export is important here.
  * @param messages The base messages to format as a prompt.
@@ -463,12 +496,33 @@ export function _convertMessagesToAnthropicPayload(
   messages: BaseMessage[]
 ): AnthropicMessageCreateParams {
   const mergedMessages = _ensureMessageContents(messages);
-  let system;
-  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
-    system = messages[0].content;
+
+  // The contiguous run of system messages starting at index 0 is hoisted into
+  // the top-level `system` field. Every other system message keeps its
+  // position and is sent as a `role: "system"` entry, which the provider
+  // applies from that point in the conversation onwards. The run is identified
+  // after tool-message folding, because that is the sequence the provider sees.
+  let leadingSystemCount = 0;
+  while (
+    leadingSystemCount < mergedMessages.length &&
+    mergedMessages[leadingSystemCount]._getType() === "system"
+  ) {
+    leadingSystemCount += 1;
   }
-  const conversationMessages =
-    system !== undefined ? mergedMessages.slice(1) : mergedMessages;
+
+  let system: string | Anthropic.Messages.ContentBlockParam[] | undefined;
+  if (leadingSystemCount === 1) {
+    system = _formatSystemContent(mergedMessages[0].content);
+  } else if (leadingSystemCount > 1) {
+    system = mergedMessages.slice(0, leadingSystemCount).flatMap((message) => {
+      const content = _formatSystemContent(message.content);
+      return typeof content === "string"
+        ? [{ type: "text" as const, text: content }]
+        : content;
+    });
+  }
+
+  const conversationMessages = mergedMessages.slice(leadingSystemCount);
   const formattedMessages = conversationMessages.map((message) => {
     let role;
     if (message._getType() === "human") {
@@ -478,9 +532,7 @@ export function _convertMessagesToAnthropicPayload(
     } else if (message._getType() === "tool") {
       role = "user" as const;
     } else if (message._getType() === "system") {
-      throw new Error(
-        "System messages are only permitted as the first passed message."
-      );
+      role = "system" as const;
     } else {
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
@@ -535,6 +587,8 @@ export function _convertMessagesToAnthropicPayload(
           ],
         };
       }
+    } else if (role === "system") {
+      return { role, content: _formatSystemContent(message.content) };
     } else {
       return {
         role,
@@ -562,32 +616,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
   let currentMessage = messages[0];
 
   const normalizeContent = (
-    content:
-      | string
-      | Array<
-          | AnthropicTextBlockParam
-          | AnthropicImageBlockParam
-          | AnthropicToolUseBlockParam
-          | AnthropicToolResultBlockParam
-          | AnthropicDocumentBlockParam
-          | AnthropicThinkingBlockParam
-          | AnthropicRedactedThinkingBlockParam
-          | AnthropicServerToolUseBlockParam
-          | AnthropicWebSearchToolResultBlockParam
-          | AnthropicSearchResultBlockParam
-        >
-  ): Array<
-    | AnthropicTextBlockParam
-    | AnthropicImageBlockParam
-    | AnthropicToolUseBlockParam
-    | AnthropicToolResultBlockParam
-    | AnthropicDocumentBlockParam
-    | AnthropicThinkingBlockParam
-    | AnthropicRedactedThinkingBlockParam
-    | AnthropicServerToolUseBlockParam
-    | AnthropicWebSearchToolResultBlockParam
-    | AnthropicSearchResultBlockParam
-  > => {
+    content: string | Array<Anthropic.Messages.ContentBlockParam>
+  ): Array<Anthropic.Messages.ContentBlockParam> => {
     if (typeof content === "string") {
       return [
         {

@@ -35,6 +35,7 @@ import {
   OpenAIVerbosityParam,
   type OpenAIApiKey,
   OpenAICacheRetentionParam,
+  OpenAIPromptCacheOptions,
 } from "../types.js";
 import {
   type OpenAIEndpointConfig,
@@ -184,6 +185,27 @@ export interface BaseChatOpenAICallOptions
    * API. If these options are set, the responses API will be used to fulfill the request.
    *
    * These options will be ignored when not using a reasoning model.
+   *
+   * Changing this value part-way through a conversation changes a request-level
+   * parameter, which invalidates the cached prompt prefix. Models that support it (currently GPT-6)
+   * can instead carry the new effort in a `configuration_update` content block
+   * attached to the message that should start using it:
+   *
+   * ```ts
+   * new HumanMessage({
+   *   content: [
+   *     { type: "configuration_update", reasoning: { effort: "high" } },
+   *     { type: "text", text: "Analyze the failure modes." },
+   *   ],
+   * });
+   * ```
+   *
+   * The new effort applies from that message onward, until another update
+   * overrides it.
+   *
+   * Two `configuration_update` blocks cannot be adjacent in the conversation
+   * history, and they cannot be combined with automatic truncation
+   * (`truncation: "auto"`) — OpenAI rejects both with an HTTP 400.
    */
   reasoning?: OpenAIClient.Reasoning;
 
@@ -215,6 +237,11 @@ export interface BaseChatOpenAICallOptions
    * Used by OpenAI to set cache retention time
    */
   promptCacheRetention?: OpenAICacheRetentionParam;
+
+  /**
+   * Options controlling OpenAI prompt cache behavior.
+   */
+  promptCacheOptions?: OpenAIPromptCacheOptions;
 
   /**
    * The verbosity of the model's response.
@@ -340,6 +367,11 @@ export abstract class BaseChatOpenAI<
   promptCacheRetention?: OpenAICacheRetentionParam;
 
   /**
+   * Options controlling OpenAI prompt cache behavior.
+   */
+  promptCacheOptions?: OpenAIPromptCacheOptions;
+
+  /**
    * The verbosity of the model's response.
    */
   verbosity?: OpenAIVerbosityParam;
@@ -390,6 +422,7 @@ export abstract class BaseChatOpenAI<
   get lc_serializable_keys(): string[] {
     return [
       "configuration",
+      "baseUrl",
       "logprobs",
       "topLogprobs",
       "prefixMessages",
@@ -425,6 +458,7 @@ export abstract class BaseChatOpenAI<
       "reasoning",
       "promptCacheKey",
       "promptCacheRetention",
+      "promptCacheOptions",
       "verbosity",
     ];
   }
@@ -525,9 +559,16 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
+    // The Python-serialized base_url is camel-cased by load(). Keep this
+    // compatibility input internal; JS callers should use configuration.baseURL.
+    const serializedBaseUrl =
+      fields && "baseUrl" in fields && typeof fields.baseUrl === "string"
+        ? fields.baseUrl
+        : undefined;
     const gatewayConfig = resolveLangSmithGatewayConfig({
       baseURL:
         fields?.configuration?.baseURL ??
+        serializedBaseUrl ??
         (getEnvironmentVariable("OPENAI_API_BASE") ||
           getEnvironmentVariable("OPENAI_BASE_URL") ||
           undefined),
@@ -565,6 +606,8 @@ export abstract class BaseChatOpenAI<
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
     this.promptCacheRetention =
       fields?.promptCacheRetention ?? this.promptCacheRetention;
+    this.promptCacheOptions =
+      fields?.promptCacheOptions ?? this.promptCacheOptions;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
     this.disableStreaming = fields?.disableStreaming === true;

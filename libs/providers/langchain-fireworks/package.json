@@ -1,6 +1,6 @@
 {
   "name": "@langchain/fireworks",
-  "version": "0.2.9",
+  "version": "0.2.14",
   "description": "Fireworks integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -35,11 +35,11 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"

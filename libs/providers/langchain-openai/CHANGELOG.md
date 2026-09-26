@@ -1,5 +1,53 @@
 # @langchain/openai
 
+## 1.5.14
+
+### Patch Changes
+
+- [#11625](https://github.com/langchain-ai/langchainjs/pull/11625) [`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d) Thanks [@chiliec](https://github.com/chiliec)! - Recognize gpt-6 models as reasoning models so explicit `reasoning` config is forwarded.
+
+- [#11690](https://github.com/langchain-ai/langchainjs/pull/11690) [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Send image tool results on the Responses API as native `input_image` items in `function_call_output` instead of serializing them as JSON text, so the model can see them.
+  On Chat Completions, when OpenAI rejects a request with a 400 and a tool message contains an image, the error message now explains that Chat Completions does not support images in tool messages and points to `useResponsesApi: true`.
+  Messages with `output_version: "v1"` are unchanged.
+
+- [#11536](https://github.com/langchain-ai/langchainjs/pull/11536) [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be) Thanks [@hntrl](https://github.com/hntrl)! - Route the full GPT-5.6 model family to the Responses API for function tools with reasoning.
+
+## 1.5.13
+
+### Patch Changes
+
+- [#11590](https://github.com/langchain-ai/langchainjs/pull/11590) [`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fix OpenAI Responses API replay under Zero Data Retention when a response contains more than one reasoning item, for both v0 and v1. In v0, the default replay path now reuses `response_metadata.output` directly, preserving every reasoning item's `id`/`encrypted_content` in original order. In v1, `AIMessage.contentBlocks` (`outputVersion: "v1"`) is fixed the same way. `additional_kwargs.reasoning` is unchanged.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11560](https://github.com/langchain-ai/langchainjs/pull/11560) [`6bd3a18`](https://github.com/langchain-ai/langchainjs/commit/6bd3a182a4dc558f3a5d3c87da69f17d9a35f934) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Support `configuration_update` content blocks for changing reasoning effort mid-conversation without invalidating the cached prompt prefix.
+
+- [#11588](https://github.com/langchain-ai/langchainjs/pull/11588) [`7d6e1b0`](https://github.com/langchain-ai/langchainjs/commit/7d6e1b098723690bd1b98bc36ed18c75fa5a85ed) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(openai): Fix base url deserialization
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
+## 1.5.12-rc.0
+
+### Patch Changes
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
+## 1.5.11
+
+### Patch Changes
+
+- [#11448](https://github.com/langchain-ai/langchainjs/pull/11448) [`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): resolve encrypted content with zdr when streaming
+
+  OpenAI recently changed the disposition of `encrypted_content` to contain the canonical payload on the final `done` event. Encrypted content also does not need to be a parameter in the `include` call options in order to propagate.
+
+## 1.5.10
+
+### Patch Changes
+
+- [#11419](https://github.com/langchain-ai/langchainjs/pull/11419) [`c26c87e`](https://github.com/langchain-ai/langchainjs/commit/c26c87e41bccd01111e170c32ba1e5eec94ba3a6) Thanks [@chiliec](https://github.com/chiliec)! - fix(openai): send content null (not []) for tool-call-only v1 assistant messages
+
 ## 1.5.9
 
 ### Patch Changes
