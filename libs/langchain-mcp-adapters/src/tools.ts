@@ -513,7 +513,15 @@ export async function convertMcpTools(
               description: tool.description || "",
               schema: structuredClone(originalSchema),
               responseFormat: "content_and_artifact",
-              metadata: { annotations: tool.annotations },
+              metadata: {
+                annotations: tool.annotations,
+                // Expose the MCP tool's optional outputSchema so consumers can
+                // access structured-output type info (the MCP spec defines
+                // `outputSchema` on Tool, but it is otherwise dropped here).
+                ...(tool.outputSchema != null
+                  ? { outputSchema: tool.outputSchema }
+                  : {}),
+              },
               defaultConfig: defaultToolTimeout
                 ? { timeout: defaultToolTimeout }
                 : undefined,
