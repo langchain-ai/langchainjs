@@ -6,6 +6,7 @@ import {
   ChatCompletionRequestMessage as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { ThinkChunk as MistralAIThinkChunk } from "@mistralai/mistralai/models/components/thinkchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
 import { ToolCall as MistralAIToolCall } from "@mistralai/mistralai/models/components/toolcall.js";
 import { ChatCompletionStreamRequest as MistralAIChatCompletionStreamRequest } from "@mistralai/mistralai/models/components/chatcompletionstreamrequest.js";
@@ -72,6 +73,8 @@ import {
 import {
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
+  _mistralContentToText,
+  _pushThinkingChunk,
 } from "./utils.js";
 import {
   isSerializableSchema,
@@ -283,7 +286,19 @@ export function convertMessagesToMistralMessages(
       // Mistral "system" role can support Mistral TextChunks
       const newContent: MistralAIContentChunk[] = [];
       content.forEach((messageContentComplex) => {
-        // Mistral content chunks only support type "text" and "image_url"
+        // Reasoning models return thinking chunks, which Mistral accepts back
+        // on assistant messages
+        if (
+          messageContentComplex.type === "thinking" &&
+          mistralRole === "assistant"
+        ) {
+          _pushThinkingChunk(
+            newContent,
+            messageContentComplex as unknown as MistralAIThinkChunk
+          );
+          return;
+        }
+        // Other Mistral content chunks only support type "text" and "image_url"
         if (
           messageContentComplex.type === "text" ||
           messageContentComplex.type === "image_url"
@@ -1213,10 +1228,7 @@ export class ChatMistralAI<
       if (!("message" in part)) {
         throw new Error("No message found in the choice.");
       }
-      let text = part.message?.content ?? "";
-      if (Array.isArray(text)) {
-        text = text[0].type === "text" ? text[0].text : "";
-      }
+      const text = _mistralContentToText(part.message?.content);
       const generation: ChatGeneration = {
         text,
         message: mistralAIResponseToChatMessage(part, response?.usage),
@@ -1304,10 +1316,7 @@ export class ChatMistralAI<
         // Do not yield a chunk if the message is empty
         continue;
       }
-      let text = delta.content ?? "";
-      if (Array.isArray(text)) {
-        text = text[0].type === "text" ? text[0].text : "";
-      }
+      const text = _mistralContentToText(delta.content);
       const generationInfo: Record<string, unknown> = { ...newTokenIndices };
       if (data?.model) {
         generationInfo.model = data.model;
