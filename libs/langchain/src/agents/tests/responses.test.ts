@@ -714,6 +714,48 @@ describe("structured output handling", () => {
       });
     });
 
+    describe("ProviderStrategy.parse", () => {
+      const parseSchema = z.object({ result: z.string() });
+
+      it("should parse structured output from a plain string response", () => {
+        const strategy = providerStrategy(parseSchema);
+        const parsed = strategy.parse(
+          new AIMessage({ content: JSON.stringify({ result: "ok" }) })
+        );
+        expect(parsed).toEqual({ result: "ok" });
+      });
+
+      it("should parse structured output from the first text block in array content", () => {
+        const strategy = providerStrategy(parseSchema);
+        const parsed = strategy.parse(
+          new AIMessage({
+            content: [{ type: "text", text: JSON.stringify({ result: "ok" }) }],
+          })
+        );
+        expect(parsed).toEqual({ result: "ok" });
+      });
+
+      it("should skip a leading thought text block and parse the structured response", () => {
+        // Regression test for #11435: @langchain/google represents a Gemini
+        // thought summary as `{ type: "text", thought: true }` followed by the
+        // structured JSON block. parse() must ignore the thought block.
+        const strategy = providerStrategy(parseSchema);
+        const parsed = strategy.parse(
+          new AIMessage({
+            content: [
+              {
+                type: "text",
+                thought: true,
+                text: "A returned thought summary.",
+              },
+              { type: "text", text: JSON.stringify({ result: "ok" }) },
+            ],
+          })
+        );
+        expect(parsed).toEqual({ result: "ok" });
+      });
+    });
+
     describe("ToolStrategy.fromSchema with Standard Schema", () => {
       it("should create a ToolStrategy from a Standard Schema", () => {
         const schema = makeSerializableSchema({

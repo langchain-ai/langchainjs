@@ -1,5 +1,29 @@
 # langchain
 
+## 1.5.13
+
+### Patch Changes
+
+- [#11698](https://github.com/langchain-ai/langchainjs/pull/11698) [`1f66c83`](https://github.com/langchain-ai/langchainjs/commit/1f66c838c344a65581cce6fc22699cd6fc7194df) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - `createAgent` now uses the OpenAI Responses API by default when `model` is an `openai:` string. To keep using Chat Completions, pass a model instance, e.g. `new ChatOpenAI({ model: "gpt-5.5", useResponsesApi: false })`.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11682](https://github.com/langchain-ai/langchainjs/pull/11682) [`a8c336f`](https://github.com/langchain-ai/langchainjs/commit/a8c336f3c75b76e9d94236cb4a05f2b2f414cac6) Thanks [@casparb](https://github.com/casparb)! - Preserve ReactAgent callbacks when its compiled graph is extracted, without duplicate calls through the agent.
+
+## 1.5.11
+
+### Patch Changes
+
+- [#11436](https://github.com/langchain-ai/langchainjs/pull/11436) [`702be70`](https://github.com/langchain-ai/langchainjs/commit/702be70bcaadbfe9a47a3fcccbb75bdea17cae04) Thanks [@chiliec](https://github.com/chiliec)! - fix(agents): ignore thought/reasoning text blocks when parsing structured output in `ProviderStrategy`
+
+## 1.5.11-rc.0
+
+### Patch Changes
+
+- [#11568](https://github.com/langchain-ai/langchainjs/pull/11568) [`fbc3206`](https://github.com/langchain-ai/langchainjs/commit/fbc32067aee6068dd7f96aff1889deba76d5c838) Thanks [@hntrl](https://github.com/hntrl)! - Add opt-in middleware `tracePolicy` support for transforming hook span input and output payloads, plus re-exports of LangGraph's `TracePolicy` and `omitPayload`.
+
 ## 1.5.10
 
 ### Patch Changes

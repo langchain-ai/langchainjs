@@ -7,7 +7,7 @@ import type {
   RediSearchSchema,
   SearchOptions,
 } from "redis";
-import { VectorAlgorithms, SchemaFieldTypes } from "redis";
+import { SCHEMA_VECTOR_FIELD_ALGORITHM, SCHEMA_FIELD_TYPE } from "redis";
 import {
   assertSafeRedisearchFieldName,
   escapeRedisearchValue,
@@ -148,21 +148,21 @@ export class RedisVectorStore extends VectorStore {
 
       // Basic type validation based on schema field type
       switch (fieldConfig.type) {
-        case SchemaFieldTypes.NUMERIC:
+        case SCHEMA_FIELD_TYPE.NUMERIC:
           if (typeof value !== "number") {
             throw new Error(
               `Metadata field '${fieldName}' must be a number, got ${typeof value}`
             );
           }
           break;
-        case SchemaFieldTypes.TAG:
+        case SCHEMA_FIELD_TYPE.TAG:
           if (typeof value !== "string" && !Array.isArray(value)) {
             throw new Error(
               `Metadata field '${fieldName}' must be a string or array, got ${typeof value}`
             );
           }
           break;
-        case SchemaFieldTypes.TEXT:
+        case SCHEMA_FIELD_TYPE.TEXT:
           if (typeof value !== "string") {
             throw new Error(
               `Metadata field '${fieldName}' must be a string, got ${typeof value}`
@@ -189,7 +189,7 @@ export class RedisVectorStore extends VectorStore {
     this.redisClient = _dbConfig.redisClient;
     this.indexName = _dbConfig.indexName;
     this.indexOptions = _dbConfig.indexOptions ?? {
-      ALGORITHM: VectorAlgorithms.HNSW,
+      ALGORITHM: SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
       DISTANCE_METRIC: "COSINE",
     };
     this.keyPrefix = _dbConfig.keyPrefix ?? `doc:${this.indexName}:`;
@@ -294,7 +294,7 @@ export class RedisVectorStore extends VectorStore {
 
               // Handle different field types appropriately
               if (
-                fieldConfig.type === SchemaFieldTypes.TAG &&
+                fieldConfig.type === SCHEMA_FIELD_TYPE.TAG &&
                 Array.isArray(fieldValue)
               ) {
                 // For TAG arrays, join with separator (default comma)
@@ -522,13 +522,13 @@ export class RedisVectorStore extends VectorStore {
 
     const schema: RediSearchSchema = {
       [this.vectorKey]: {
-        type: SchemaFieldTypes.VECTOR,
+        type: SCHEMA_FIELD_TYPE.VECTOR,
         TYPE: "FLOAT32",
         DIM: dimensions,
         ...this.indexOptions,
       },
-      [this.contentKey]: SchemaFieldTypes.TEXT,
-      [this.metadataKey]: SchemaFieldTypes.TEXT,
+      [this.contentKey]: SCHEMA_FIELD_TYPE.TEXT,
+      [this.metadataKey]: SCHEMA_FIELD_TYPE.TEXT,
     };
 
     // Add custom metadata schema fields for better filtering and searching
@@ -540,20 +540,20 @@ export class RedisVectorStore extends VectorStore {
         const indexedFieldName = `${this.metadataKey}.${fieldName}`;
 
         // Convert CustomSchemaField to proper Redis schema field
-        if (fieldConfig.type === SchemaFieldTypes.TAG) {
+        if (fieldConfig.type === SCHEMA_FIELD_TYPE.TAG) {
           schema[indexedFieldName] = {
-            type: SchemaFieldTypes.TAG,
+            type: SCHEMA_FIELD_TYPE.TAG,
             SORTABLE: fieldConfig.SORTABLE ? true : undefined,
             SEPARATOR: (fieldConfig.SEPARATOR as string) || ",",
           };
-        } else if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
+        } else if (fieldConfig.type === SCHEMA_FIELD_TYPE.NUMERIC) {
           schema[indexedFieldName] = {
-            type: SchemaFieldTypes.NUMERIC,
+            type: SCHEMA_FIELD_TYPE.NUMERIC,
             SORTABLE: fieldConfig.SORTABLE ? true : undefined,
           };
-        } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
+        } else if (fieldConfig.type === SCHEMA_FIELD_TYPE.TEXT) {
           schema[indexedFieldName] = {
-            type: SchemaFieldTypes.TEXT,
+            type: SCHEMA_FIELD_TYPE.TEXT,
             SORTABLE: fieldConfig.SORTABLE ? true : undefined,
           };
         } else {
@@ -692,7 +692,7 @@ export class RedisVectorStore extends VectorStore {
           const indexedFieldName = `${this.metadataKey}.${fieldName}`;
           assertSafeRedisearchFieldName(indexedFieldName);
 
-          if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
+          if (fieldConfig.type === SCHEMA_FIELD_TYPE.NUMERIC) {
             // Handle numeric range queries
             if (typeof value === "object" && value !== null) {
               const min = "min" in value ? value.min : undefined;
@@ -733,7 +733,7 @@ export class RedisVectorStore extends VectorStore {
               // Exact numeric match
               filterClauses.push(`@${indexedFieldName}:[${value} ${value}]`);
             }
-          } else if (fieldConfig.type === SchemaFieldTypes.TAG) {
+          } else if (fieldConfig.type === SCHEMA_FIELD_TYPE.TAG) {
             // Handle tag filtering
             if (Array.isArray(value)) {
               const tagFilter = value
@@ -757,7 +757,7 @@ export class RedisVectorStore extends VectorStore {
                 `@${indexedFieldName}:{${escapeRedisearchValue(value)}}`
               );
             }
-          } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
+          } else if (fieldConfig.type === SCHEMA_FIELD_TYPE.TEXT) {
             // Handle text search
             if (typeof value !== "string") {
               throw new Error(

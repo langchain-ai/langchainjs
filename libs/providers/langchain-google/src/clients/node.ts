@@ -1,6 +1,10 @@
 import { GoogleAuth, type GoogleAuthOptions } from "google-auth-library";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { GCP_API_KEY_HEADER, GOOGLE_API_KEY_HEADER } from "../const.js";
+import {
+  GCP_API_KEY_HEADER,
+  GOOGLE_API_KEY_HEADER,
+  VERTEX_AI_AUTH_SCOPES,
+} from "../const.js";
 import { ApiClient } from "./index.js";
 import {
   GCPCredentials,
@@ -192,6 +196,27 @@ export class NodeApiClient extends ApiClient {
   protected googleAuth?: GoogleAuth;
 
   /**
+   * The OAuth scopes to request when authenticating with service account
+   * credentials.
+   *
+   * The `googleAuthOptions` path already carries its scopes into
+   * google-auth-library, so those are reused when present. Service account
+   * credentials otherwise target Vertex AI, whose scope is `cloud-platform`.
+   *
+   * @protected
+   */
+  protected get authScopes(): string[] {
+    const configured = this.params.googleAuthOptions?.scopes;
+    if (typeof configured === "string") {
+      return [configured];
+    }
+    if (Array.isArray(configured) && configured.length > 0) {
+      return configured;
+    }
+    return VERTEX_AI_AUTH_SCOPES;
+  }
+
+  /**
    * Creates a new NodeApiClient instance.
    *
    * The constructor initializes authentication credentials by checking:
@@ -305,10 +330,14 @@ export class NodeApiClient extends ApiClient {
     if (this.apiKey) {
       request.headers.set(GOOGLE_API_KEY_HEADER, this.apiKey);
     } else if (this.credentials) {
-      request.headers.set(
-        GCP_API_KEY_HEADER,
-        `Bearer ${getGCPCredentialsAccessToken(this.credentials)}`
+      // The service account mints its own JWT here rather than going through
+      // google-auth-library, so the scopes have to be handed to the token
+      // exchange explicitly; nothing downstream can add them.
+      const accessToken = await getGCPCredentialsAccessToken(
+        this.credentials,
+        this.authScopes
       );
+      request.headers.set(GCP_API_KEY_HEADER, `Bearer ${accessToken}`);
     } else if (this.googleAuth) {
       const authHeaders = await this.googleAuth.getRequestHeaders(request.url);
       authHeaders.forEach((value, key) => {
