@@ -1,5 +1,17 @@
 # @langchain/openai
 
+## 1.5.14
+
+### Patch Changes
+
+- [#11625](https://github.com/langchain-ai/langchainjs/pull/11625) [`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d) Thanks [@chiliec](https://github.com/chiliec)! - Recognize gpt-6 models as reasoning models so explicit `reasoning` config is forwarded.
+
+- [#11690](https://github.com/langchain-ai/langchainjs/pull/11690) [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Send image tool results on the Responses API as native `input_image` items in `function_call_output` instead of serializing them as JSON text, so the model can see them.
+  On Chat Completions, when OpenAI rejects a request with a 400 and a tool message contains an image, the error message now explains that Chat Completions does not support images in tool messages and points to `useResponsesApi: true`.
+  Messages with `output_version: "v1"` are unchanged.
+
+- [#11536](https://github.com/langchain-ai/langchainjs/pull/11536) [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be) Thanks [@hntrl](https://github.com/hntrl)! - Route the full GPT-5.6 model family to the Responses API for function tools with reasoning.
+
 ## 1.5.13
 
 ### Patch Changes

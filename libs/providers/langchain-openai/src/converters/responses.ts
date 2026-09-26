@@ -35,6 +35,7 @@ import {
   parseCustomToolCall,
 } from "../utils/tools.js";
 import {
+  applyPromptCacheBreakpoint,
   getFilenameFromMetadata,
   getRequiredFilenameFromMetadata,
   iife,
@@ -955,6 +956,71 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   });
 };
 
+function resolveImageItem(
+  block: ContentBlock.Multimodal.Image
+): OpenAIClient.Responses.ResponseInputImage | undefined {
+  const detail = iife(() => {
+    const raw = block.metadata?.detail;
+    if (raw === "low" || raw === "high" || raw === "auto") {
+      return raw;
+    }
+    return "auto";
+  });
+  if (block.fileId) {
+    return {
+      type: "input_image",
+      detail,
+      file_id: block.fileId,
+    };
+  }
+  if (block.url) {
+    return {
+      type: "input_image",
+      detail,
+      image_url: block.url,
+    };
+  }
+  if (block.data) {
+    const base64Data =
+      typeof block.data === "string"
+        ? block.data
+        : Buffer.from(block.data).toString("base64");
+    const mimeType = block.mimeType ?? "image/png";
+    return {
+      type: "input_image",
+      detail,
+      image_url: `data:${mimeType};base64,${base64Data}`,
+    };
+  }
+  return undefined;
+}
+
+type ToolOutputItem =
+  OpenAIClient.Responses.ResponseFunctionCallOutputItemList[number];
+
+/** Converts tool content with images into a native `function_call_output` list. */
+function convertToolContentToResponsesOutput(
+  message: ToolMessage
+): OpenAIClient.Responses.ResponseFunctionCallOutputItemList | undefined {
+  if (!Array.isArray(message.content)) {
+    return undefined;
+  }
+  const blocks = message.contentBlocks;
+  if (!blocks.some((block) => block.type === "image")) {
+    return undefined;
+  }
+  return blocks.map((block): ToolOutputItem => {
+    if (block.type === "text") {
+      return { type: "input_text", text: block.text };
+    }
+    if (block.type === "image") {
+      const image = resolveImageItem(block);
+      if (image) return image;
+    }
+    return { type: "input_text", text: JSON.stringify(block) };
+  });
+}
+
 /**
  * Converts a single LangChain BaseMessage to OpenAI Responses API input format.
  *
@@ -1023,6 +1089,14 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     // Text parts must match the message role: assistant content uses
     // `output_text` (the Responses API rejects `input_text` for assistant
     // messages), every other role uses `input_text`.
+    const withBreakpoint = <T extends object>(
+      block: Record<string, unknown>,
+      part: T
+    ): T =>
+      messageRole === "assistant"
+        ? part
+        : applyPromptCacheBreakpoint(block, part);
+
     const makeTextPart = (
       text: string
     ): ResponseInputMessageContentList[number] =>
@@ -1091,45 +1165,6 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } catch {
         return "{}";
       }
-    };
-
-    const resolveImageItem = (
-      block: ContentBlock.Multimodal.Image
-    ): OpenAIClient.Responses.ResponseInputImage | undefined => {
-      const detail = iife(() => {
-        const raw = block.metadata?.detail;
-        if (raw === "low" || raw === "high" || raw === "auto") {
-          return raw;
-        }
-        return "auto";
-      });
-      if (block.fileId) {
-        return {
-          type: "input_image",
-          detail,
-          file_id: block.fileId,
-        };
-      }
-      if (block.url) {
-        return {
-          type: "input_image",
-          detail,
-          image_url: block.url,
-        };
-      }
-      if (block.data) {
-        const base64Data =
-          typeof block.data === "string"
-            ? block.data
-            : Buffer.from(block.data).toString("base64");
-        const mimeType = block.mimeType ?? "image/png";
-        return {
-          type: "input_image",
-          detail,
-          image_url: `data:${mimeType};base64,${base64Data}`,
-        };
-      }
-      return undefined;
     };
 
     const resolveFileItem = (
@@ -1259,7 +1294,10 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           return block.extras
             .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
         });
-        pushMessageContent([makeTextPart(block.text)], phase);
+        pushMessageContent(
+          [withBreakpoint(block, makeTextPart(block.text))],
+          phase
+        );
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1313,21 +1351,21 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } else if (block.type === "file") {
         const fileItem = resolveFileItem(block);
         if (fileItem) {
-          pushMessageContent([fileItem]);
+          pushMessageContent([withBreakpoint(block, fileItem)]);
         }
       } else if (block.type === "image") {
         const imageItem = resolveImageItem(block);
         if (imageItem) {
-          pushMessageContent([imageItem]);
+          pushMessageContent([withBreakpoint(block, imageItem)]);
         }
       } else if (block.type === "video") {
         const videoItem = resolveFileItem(block);
         if (videoItem) {
-          pushMessageContent([videoItem]);
+          pushMessageContent([withBreakpoint(block, videoItem)]);
         }
       } else if (block.type === "text-plain") {
         if (block.text) {
-          pushMessageContent([makeTextPart(block.text)]);
+          pushMessageContent([withBreakpoint(block, makeTextPart(block.text))]);
         }
       } else if (block.type === "non_standard" && isResponsesMessage) {
         yield* flushMessage();
@@ -1510,15 +1548,20 @@ export const convertMessagesToResponsesInput: Converter<
                 item.type === "input_text")
           );
 
+        const attachmentOutput = isProviderNativeContent
+          ? undefined
+          : convertToolContentToResponsesOutput(toolMessage);
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
           output: isProviderNativeContent
             ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
-            : typeof toolMessage.content !== "string"
-              ? JSON.stringify(toolMessage.content)
-              : toolMessage.content,
+            : (attachmentOutput ??
+              (typeof toolMessage.content !== "string"
+                ? JSON.stringify(toolMessage.content)
+                : toolMessage.content)),
         };
       }
 
@@ -1729,38 +1772,41 @@ export const convertMessagesToResponsesInput: Converter<
             if (item.type === "file") {
               const filename = getFilenameFromMetadata(item);
               if (item.source_type === "url") {
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_url: item.url,
                   ...(filename ? { filename } : {}),
-                };
+                });
               }
               if (item.source_type === "id") {
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_id: item.id,
                   ...(filename ? { filename } : {}),
-                };
+                });
               }
               if (item.source_type === "base64") {
                 const mimeType = item.mime_type ?? "";
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_data: `data:${mimeType};base64,${item.data}`,
                   filename: getRequiredFilenameFromMetadata(item),
-                };
+                });
               }
             }
-            return convertToProviderContentBlock(
+            return applyPromptCacheBreakpoint(
               item,
-              completionsApiContentBlockConverter
+              convertToProviderContentBlock(
+                item,
+                completionsApiContentBlockConverter
+              )
             );
           }
           if (item.type === "text") {
-            return {
+            return applyPromptCacheBreakpoint(item, {
               type: "input_text",
               text: item.text,
-            };
+            });
           }
           if (item.type === "image_url") {
             const imageUrl = iife(() => {
@@ -1787,11 +1833,11 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return undefined;
             });
-            return {
+            return applyPromptCacheBreakpoint(item, {
               type: "input_image",
               image_url: imageUrl,
               detail,
-            };
+            });
           }
           if (
             item.type === "input_text" ||

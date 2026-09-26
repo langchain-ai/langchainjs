@@ -1,4 +1,5 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAICacheRetentionParam } from "../types.js";
 import {
   BaseMessage,
   ChatMessage,
@@ -7,6 +8,51 @@ import {
 } from "@langchain/core/messages";
 
 export const iife = <T>(fn: () => T) => fn();
+
+export function normalizePromptCacheRetention(
+  retention: OpenAICacheRetentionParam | undefined
+): Exclude<OpenAICacheRetentionParam, "in-memory"> | undefined {
+  return retention === "in-memory" ? "in_memory" : retention;
+}
+
+export function applyPromptCacheBreakpoint<T extends object>(
+  source: Record<string, unknown>,
+  target: T
+): T {
+  if ("prompt_cache_breakpoint" in source) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.prompt_cache_breakpoint,
+    };
+  }
+  if (hasExtrasPromptCacheBreakpoint(source)) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.extras.prompt_cache_breakpoint,
+    };
+  }
+  return target;
+}
+
+export function hasExtrasPromptCacheBreakpoint(
+  block: Record<string, unknown>
+): block is { extras: { prompt_cache_breakpoint: unknown } } {
+  const { extras } = block;
+  return (
+    typeof extras === "object" &&
+    extras !== null &&
+    "prompt_cache_breakpoint" in extras
+  );
+}
+
+export function liftExtrasPromptCacheBreakpoint<T extends object>(block: T): T {
+  const source = block as Record<string, unknown>;
+  if (!hasExtrasPromptCacheBreakpoint(source)) {
+    return block;
+  }
+  const { extras: _extras, ...rest } = source;
+  return applyPromptCacheBreakpoint(source, rest) as T;
+}
 
 export function isReasoningModel(model?: string) {
   if (!model) return false;
@@ -95,7 +141,7 @@ export function _modelPrefersResponsesAPI(model: string): boolean {
   if (model.includes("gpt-5.2-pro")) return true;
   if (model.includes("gpt-5.4-pro")) return true;
   if (model.includes("gpt-5.5-pro")) return true;
-  if (model.includes("gpt-5.6-sol")) return true;
+  if (model.includes("gpt-5.6")) return true;
   // Codex models are Responses API only
   if (model.includes("codex")) return true;
   return false;

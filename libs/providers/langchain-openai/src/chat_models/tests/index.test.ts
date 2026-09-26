@@ -5,6 +5,9 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
+import type { BaseChatOpenAIFields } from "../base.js";
+import { ChatOpenAICompletions } from "../completions.js";
+import { ChatOpenAIResponses } from "../responses.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
 import {
   isReasoningModel,
@@ -12,8 +15,125 @@ import {
 } from "../../utils/misc.js";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
+const chatOpenAIApis = [
+  {
+    api: "completions",
+    make: (fields: BaseChatOpenAIFields) => new ChatOpenAICompletions(fields),
+  },
+  {
+    api: "responses",
+    make: (fields: BaseChatOpenAIFields) => new ChatOpenAIResponses(fields),
+  },
+];
+
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
+    it("forwards and overrides prompt cache options", () => {
+      const chat = new ChatOpenAI({
+        model: "gpt-5.6",
+        promptCacheOptions: { mode: "explicit", ttl: "30m" },
+      });
+
+      expect(chat.invocationParams().prompt_cache_options).toEqual({
+        mode: "explicit",
+        ttl: "30m",
+      });
+      expect(
+        chat.invocationParams({
+          promptCacheOptions: { mode: "implicit" },
+        }).prompt_cache_options
+      ).toEqual({ mode: "implicit" });
+    });
+
+    it.each(chatOpenAIApis)(
+      "gives prompt cache options call > modelKwargs > field precedence ($api)",
+      ({ make }) => {
+        const kwargsOnly = make({
+          model: "gpt-5.6-sol",
+          apiKey: "test",
+          modelKwargs: { prompt_cache_options: { mode: "implicit" } },
+        });
+        expect(kwargsOnly.invocationParams().prompt_cache_options).toEqual({
+          mode: "implicit",
+        });
+        expect(
+          kwargsOnly.invocationParams({
+            promptCacheOptions: { mode: "explicit" },
+          }).prompt_cache_options
+        ).toEqual({ mode: "explicit" });
+
+        const withField = make({
+          model: "gpt-5.6-sol",
+          apiKey: "test",
+          promptCacheOptions: { mode: "explicit" },
+          modelKwargs: { prompt_cache_options: { mode: "implicit" } },
+        });
+        expect(withField.invocationParams().prompt_cache_options).toEqual({
+          mode: "implicit",
+        });
+      }
+    );
+
+    it.each(chatOpenAIApis)(
+      "gives prompt cache key and retention call > modelKwargs > field precedence ($api)",
+      ({ make }) => {
+        const kwargsOnly = make({
+          model: "gpt-4o-mini",
+          apiKey: "test",
+          modelKwargs: {
+            prompt_cache_key: "kwargs-key",
+            prompt_cache_retention: "24h",
+          },
+        });
+        expect(kwargsOnly.invocationParams()).toMatchObject({
+          prompt_cache_key: "kwargs-key",
+          prompt_cache_retention: "24h",
+        });
+        expect(
+          kwargsOnly.invocationParams({
+            promptCacheKey: "call-key",
+            promptCacheRetention: "in-memory",
+          })
+        ).toMatchObject({
+          prompt_cache_key: "call-key",
+          prompt_cache_retention: "in_memory",
+        });
+
+        const withField = make({
+          model: "gpt-4o-mini",
+          apiKey: "test",
+          promptCacheKey: "field-key",
+          promptCacheRetention: "in-memory",
+          modelKwargs: {
+            prompt_cache_key: "kwargs-key",
+            prompt_cache_retention: "24h",
+          },
+        });
+        expect(withField.invocationParams()).toMatchObject({
+          prompt_cache_key: "kwargs-key",
+          prompt_cache_retention: "24h",
+        });
+      }
+    );
+
+    it.each(chatOpenAIApis)(
+      "sends the legacy in-memory retention as in_memory ($api)",
+      ({ make }) => {
+        const model = make({
+          model: "gpt-4o-mini",
+          apiKey: "test",
+          promptCacheRetention: "in-memory",
+        });
+        expect(model.invocationParams().prompt_cache_retention).toBe(
+          "in_memory"
+        );
+        expect(
+          model.invocationParams({ promptCacheRetention: "in-memory" })
+            .prompt_cache_retention
+        ).toBe("in_memory");
+      }
+    );
+
     it("supports string model shorthand", () => {
       const chat = new ChatOpenAI("gpt-4o-mini", { temperature: 0.2 });
       expect(chat.model).toBe("gpt-4o-mini");
@@ -942,8 +1062,11 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
     });
 
-    it("should return true for gpt-5.6-sol", () => {
+    it("should return true for gpt-5.6 models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.6")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-terra")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-luna")).toBe(true);
     });
 
     it("should return true for codex models", () => {

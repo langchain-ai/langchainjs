@@ -122,6 +122,7 @@ function defaultHandleToolErrors(
       content: error.message,
       tool_call_id: toolCall.id!,
       name: toolCall.name,
+      status: "error",
     });
   }
   /**
@@ -131,6 +132,7 @@ function defaultHandleToolErrors(
     content: `${error}\n Please fix your mistakes.`,
     tool_call_id: toolCall.id!,
     name: toolCall.name,
+    status: "error",
   });
 }
 
@@ -287,6 +289,7 @@ export class ToolNode<
     if (typeof this.handleToolErrors === "function") {
       const result = this.handleToolErrors(effectiveError, call);
       if (result && ToolMessage.isInstance(result)) {
+        result.status ??= "error";
         return result;
       }
 
@@ -299,6 +302,7 @@ export class ToolNode<
         name: call.name,
         content: `${effectiveError}\n Please fix your mistakes.`,
         tool_call_id: call.id!,
+        status: "error",
       });
     }
 

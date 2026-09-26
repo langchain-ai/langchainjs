@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.13
+
+### Patch Changes
+
+- [#11714](https://github.com/langchain-ai/langchainjs/pull/11714) [`a83dfb1`](https://github.com/langchain-ai/langchainjs/commit/a83dfb14f8e17fcb66dc7a915f0cf8ed7b0dffa1) Thanks [@ccurme](https://github.com/ccurme)! - Abbreviate long tool-call IDs when formatting chat messages as strings, keeping original messages unchanged.
+
 ## 1.2.12
 
 ### Patch Changes
