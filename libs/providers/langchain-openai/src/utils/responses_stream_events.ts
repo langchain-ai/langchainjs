@@ -10,8 +10,15 @@ import type {
   ChatModelStreamEvent,
   FinishReason,
 } from "@langchain/core/language_models/event";
-import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
-import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import {
+  _mergeDicts,
+  type ContentBlock,
+  type UsageMetadata,
+} from "@langchain/core/messages";
+import {
+  convertResponsesDeltaToChatGenerationChunk,
+  convertResponsesUsageToUsageMetadata,
+} from "../converters/responses.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -43,6 +50,7 @@ export async function* convertOpenAIResponsesStream(
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
   let responseMetadata: Record<string, unknown> | undefined;
+  let additionalKwargs: Record<string, unknown> = {};
   const finalizedBlockIndices = new Set<number>();
 
   const getOrCreateBlockIndex = (
@@ -86,6 +94,19 @@ export async function* convertOpenAIResponsesStream(
   };
 
   for await (const event of source) {
+    // Reuse the provider's established conversion for message metadata so the
+    // native event stream retains the same reasoning and tool correlation data.
+    const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+    if (chunk) {
+      additionalKwargs =
+        _mergeDicts(additionalKwargs, chunk.message.additional_kwargs) ?? {};
+      responseMetadata = {
+        ...responseMetadata,
+        ...chunk.message.response_metadata,
+        model_provider: provider,
+      };
+    }
+
     if (event.type === "response.created") {
       messageId = event.response.id;
       yield* ensureMessageStart();
@@ -104,12 +125,19 @@ export async function* convertOpenAIResponsesStream(
       const { index, isNew } = getOrCreateBlockIndex(key, {
         type: "text",
         text: "",
+        index: event.content_index,
+        ...(event.item_id ? { id: event.item_id } : {}),
       });
       if (isNew) {
         yield {
           event: "content-block-start" as const,
           index,
-          content: { type: "text", text: "" } as ContentBlock,
+          content: {
+            type: "text",
+            text: "",
+            index: event.content_index,
+            ...(event.item_id ? { id: event.item_id } : {}),
+          } as ContentBlock,
         };
       }
       const acc = blockAccumulators.get(index)!;
@@ -128,12 +156,19 @@ export async function* convertOpenAIResponsesStream(
       const { index, isNew } = getOrCreateBlockIndex(key, {
         type: "reasoning",
         reasoning: "",
+        index: event.summary_index,
+        ...(event.item_id ? { id: event.item_id } : {}),
       });
       if (isNew) {
         yield {
           event: "content-block-start" as const,
           index,
-          content: { type: "reasoning", reasoning: "" } as ContentBlock,
+          content: {
+            type: "reasoning",
+            reasoning: "",
+            index: event.summary_index,
+            ...(event.item_id ? { id: event.item_id } : {}),
+          } as ContentBlock,
         };
       }
       const acc = blockAccumulators.get(index)!;
@@ -291,12 +326,6 @@ export async function* convertOpenAIResponsesStream(
         event.response.status,
         event.type
       );
-      responseMetadata = {
-        model_provider: provider,
-        id: event.response.id,
-        model: event.response.model,
-        status: event.response.status,
-      };
       if (shouldStreamUsage && event.response.usage) {
         usageSnapshot = convertResponsesUsageToUsageMetadata(
           event.response.usage
@@ -334,6 +363,7 @@ export async function* convertOpenAIResponsesStream(
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
+    ...(Object.keys(additionalKwargs).length ? { additionalKwargs } : {}),
   };
 }
 

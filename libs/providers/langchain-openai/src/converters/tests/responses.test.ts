@@ -405,13 +405,20 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     expect(messageAdded?.message.id).toBeUndefined();
     expect(textDelta?.message.id).toBeUndefined();
 
-    const aggregated = [created!, messageAdded!, textDelta!, completed!].reduce(
+    expect(created?.message.response_metadata).toMatchObject({
+      model_name: "gpt-4o",
+    });
+    expect(created?.message.response_metadata).not.toHaveProperty("model");
+
+    const aggregated = [messageAdded!, textDelta!, completed!].reduce(
       (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
       created!.message as AIMessageChunk
     );
 
     expect(aggregated.id).toBe("resp_top_level");
     expect(aggregated.response_metadata.id).toBe("resp_top_level");
+    expect(aggregated.response_metadata.model).toBe("gpt-4o");
+    expect(aggregated.response_metadata.model_name).toBe("gpt-4o");
   });
 
   describe("custom tool streaming delta handling", () => {

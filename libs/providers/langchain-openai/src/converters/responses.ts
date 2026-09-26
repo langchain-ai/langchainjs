@@ -798,7 +798,6 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     id = event.response.id;
     response_metadata.id = event.response.id;
     response_metadata.model_name = event.response.model;
-    response_metadata.model = event.response.model;
   } else if (
     event.type === "response.completed" ||
     event.type === "response.incomplete"
