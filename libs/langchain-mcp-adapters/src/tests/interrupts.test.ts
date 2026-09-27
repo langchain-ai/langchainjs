@@ -192,7 +192,6 @@ async function harness(options: HarnessOptions = {}) {
         modern: {
           transport: "http",
           url: `http://127.0.0.1:${address.port}`,
-          elicitation: true,
         },
       },
       beforeToolCall: before,

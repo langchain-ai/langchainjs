@@ -661,8 +661,8 @@ describe("tool hook results", () => {
 describe("negotiated tool invocation policy", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  // Elicitation is opt-in per server and modern-only, so the interrupt path
-  // engages on exactly one of these four.
+  // Explicit policy remains modern-only, so the interrupt path engages on
+  // exactly one of these four.
   test.each([
     { elicitation: false, era: "legacy", durable: false },
     { elicitation: false, era: "modern", durable: false },
