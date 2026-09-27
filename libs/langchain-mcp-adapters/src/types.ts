@@ -545,6 +545,13 @@ const removedRootsObserver = z
   })
   .optional();
 
+const removedStandardContentBlocks = z
+  .never({
+    error:
+      "useStandardContentBlocks was removed: tool content is always standard LangChain content blocks; delete this option",
+  })
+  .optional();
+
 const serverNotifications = notifications.omit({ onInitialized: true }).extend({
   /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
   resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
@@ -860,6 +867,7 @@ const clientOptionsSchema = z
     onResourcesUpdated: serverOnlyCallback,
     onToolsListChanged: serverOnlyCallback,
     onRootsListChanged: removedRootsObserver,
+    useStandardContentBlocks: removedStandardContentBlocks,
   })
   .strict()
   .describe("Configuration for the MCP client");
