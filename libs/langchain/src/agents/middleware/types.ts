@@ -103,23 +103,27 @@ export type DefaultMiddlewareTypeConfig = MiddlewareTypeConfig;
 
 export type InferSchemaValueType<TSchema> = [TSchema] extends [never]
   ? AgentBuiltInState
-  : TSchema extends StateSchema<infer TFields>
-    ? InferStateSchemaValue<TFields> & AgentBuiltInState
-    : TSchema extends InteropZodObject
-      ? InferInteropZodOutput<TSchema> & AgentBuiltInState
-      : TSchema extends StateDefinitionInit
-        ? InferSchemaValue<TSchema> & AgentBuiltInState
-        : AgentBuiltInState;
+  : [TSchema] extends [undefined]
+    ? AgentBuiltInState
+    : TSchema extends StateSchema<infer TFields>
+      ? InferStateSchemaValue<TFields> & AgentBuiltInState
+      : TSchema extends InteropZodObject
+        ? InferInteropZodOutput<TSchema> & AgentBuiltInState
+        : TSchema extends StateDefinitionInit
+          ? InferSchemaValue<TSchema> & AgentBuiltInState
+          : AgentBuiltInState;
 
 export type InferSchemaUpdateType<TSchema> = [TSchema] extends [never]
   ? AgentBuiltInState
-  : TSchema extends StateSchema<infer TFields>
-    ? InferStateSchemaUpdate<TFields> & AgentBuiltInState
-    : TSchema extends InteropZodObject
-      ? InferInteropZodInput<TSchema> & AgentBuiltInState
-      : TSchema extends StateDefinitionInit
-        ? InferSchemaInput<TSchema> & AgentBuiltInState
-        : AgentBuiltInState;
+  : [TSchema] extends [undefined]
+    ? AgentBuiltInState
+    : TSchema extends StateSchema<infer TFields>
+      ? InferStateSchemaUpdate<TFields> & AgentBuiltInState
+      : TSchema extends InteropZodObject
+        ? InferInteropZodInput<TSchema> & AgentBuiltInState
+        : TSchema extends StateDefinitionInit
+          ? InferSchemaInput<TSchema> & AgentBuiltInState
+          : AgentBuiltInState;
 
 export type NormalizedSchemaInput<
   TSchema extends StateDefinitionInit | undefined | never = any,
@@ -669,8 +673,11 @@ export type InferMiddlewareToolsFromConfig<T> = InferMiddlewareType<T, "Tools">;
 export type InferMiddlewareStreamTransformersFromConfig<T> =
   InferMiddlewareType<T, "StreamTransformers">;
 
-export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
-  T extends AnyAnnotationRoot
+export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> = [
+  T,
+] extends [undefined]
+  ? {}
+  : T extends AnyAnnotationRoot
     ? ToAnnotationRoot<T>["State"]
     : T extends InteropZodObject
       ? InferInteropZodInput<T>
@@ -683,13 +690,15 @@ export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
  */
 export type InferMiddlewareState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any, any>
-    ? TSchema extends StateSchema<infer TFields>
-      ? FilterPrivateProps<InferStateSchemaValue<TFields>>
-      : TSchema extends InteropZodObject
-        ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
-        : TSchema extends StateDefinitionInit
-          ? FilterPrivateProps<InferSchemaValue<TSchema>>
-          : {}
+    ? [TSchema] extends [undefined]
+      ? {}
+      : TSchema extends StateSchema<infer TFields>
+        ? FilterPrivateProps<InferStateSchemaValue<TFields>>
+        : TSchema extends InteropZodObject
+          ? FilterPrivateProps<InferInteropZodOutput<TSchema>>
+          : TSchema extends StateDefinitionInit
+            ? FilterPrivateProps<InferSchemaValue<TSchema>>
+            : {}
     : {};
 
 /**
@@ -699,13 +708,15 @@ export type InferMiddlewareState<T extends AgentMiddleware> =
  */
 export type InferMiddlewareInputState<T extends AgentMiddleware> =
   T extends AgentMiddleware<infer TSchema, any, any, any, any>
-    ? TSchema extends StateSchema<infer TFields>
-      ? FilterPrivateProps<InferStateSchemaUpdate<TFields>>
-      : TSchema extends InteropZodObject
-        ? FilterPrivateProps<InferInteropZodInput<TSchema>>
-        : TSchema extends StateDefinitionInit
-          ? FilterPrivateProps<InferSchemaInput<TSchema>>
-          : {}
+    ? [TSchema] extends [undefined]
+      ? {}
+      : TSchema extends StateSchema<infer TFields>
+        ? FilterPrivateProps<InferStateSchemaUpdate<TFields>>
+        : TSchema extends InteropZodObject
+          ? FilterPrivateProps<InferInteropZodInput<TSchema>>
+          : TSchema extends StateDefinitionInit
+            ? FilterPrivateProps<InferSchemaInput<TSchema>>
+            : {}
     : {};
 
 /**
@@ -754,9 +765,11 @@ export type InferMergedInputState<T extends readonly AnyAgentMiddleware[]> =
  */
 export type InferMiddlewareContext<T extends AgentMiddleware> =
   T extends AgentMiddleware<any, infer TContextSchema, any, any, any>
-    ? TContextSchema extends InteropZodObject
-      ? InferInteropZodInput<TContextSchema>
-      : {}
+    ? [TContextSchema] extends [undefined]
+      ? {}
+      : TContextSchema extends InteropZodObject
+        ? InferInteropZodInput<TContextSchema>
+        : {}
     : {};
 
 /**
@@ -764,11 +777,13 @@ export type InferMiddlewareContext<T extends AgentMiddleware> =
  */
 export type InferMiddlewareContextInput<T extends AgentMiddleware> =
   T extends AgentMiddleware<any, infer TContextSchema, any, any, any>
-    ? TContextSchema extends InteropZodOptional<infer Inner>
-      ? InferInteropZodInput<Inner> | undefined
-      : TContextSchema extends InteropZodObject
-        ? InferInteropZodInput<TContextSchema>
-        : {}
+    ? [TContextSchema] extends [undefined]
+      ? {}
+      : TContextSchema extends InteropZodOptional<infer Inner>
+        ? InferInteropZodInput<Inner> | undefined
+        : TContextSchema extends InteropZodObject
+          ? InferInteropZodInput<TContextSchema>
+          : {}
     : {};
 
 /**
@@ -823,14 +838,19 @@ export type InferMiddlewareContextInputs<
  */
 export type InferContextInput<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-> = ContextSchema extends InteropZodObject
-  ? InferInteropZodInput<ContextSchema>
-  : ContextSchema extends AnyAnnotationRoot
-    ? ToAnnotationRoot<ContextSchema>["State"]
-    : {};
+> = [ContextSchema] extends [undefined]
+  ? {}
+  : ContextSchema extends InteropZodObject
+    ? InferInteropZodInput<ContextSchema>
+    : ContextSchema extends AnyAnnotationRoot
+      ? ToAnnotationRoot<ContextSchema>["State"]
+      : {};
 
-export type ToAnnotationRoot<A extends StateDefinitionInit> =
-  A extends AnyAnnotationRoot
+export type ToAnnotationRoot<A extends StateDefinitionInit> = [A] extends [
+  undefined,
+]
+  ? never
+  : A extends AnyAnnotationRoot
     ? A
     : A extends InteropZodObject
       ? InteropZodToStateDefinition<A>
