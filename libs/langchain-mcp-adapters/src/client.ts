@@ -231,6 +231,10 @@ export class MCPAdapter {
     const catalog: Record<string, DynamicStructuredTool[]> = {};
 
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
+      // A completed close may already have installed a fresh epoch. This
+      // discovery must not acquire connections owned by that later epoch.
+      if (signal.aborted) break;
+
       const key = this.#clientConnections.identity(
         this.#transportOptions(serverName, customTransportOptions)
       );
@@ -246,6 +250,8 @@ export class MCPAdapter {
           customTransportOptions
         );
 
+        if (signal.aborted) break;
+
         const client = this.#clientConnections.get(
           this.#transportOptions(serverName, customTransportOptions)
         );
@@ -259,6 +265,8 @@ export class MCPAdapter {
           );
         }
       } catch (error) {
+        if (signal.aborted) break;
+
         if (this.#onConnectionError === "throw") {
           throw error;
         }
@@ -267,15 +275,18 @@ export class MCPAdapter {
           await this.#onConnectionError({ serverName, error });
         }
 
+        // An async error handler may outlive close(). Do not write failures
+        // into the reused adapter or continue discovery after it returns.
+        if (signal.aborted) break;
+
         // A login can complete later (finishAuth, a refreshed token), so an
         // auth failure must not block the server for this adapter's lifetime.
         if (!isAuthenticationError(error)) this.#failedServers.add(key);
       }
     }
 
-    // The per-server policy above swallows failures, an aborted request
-    // included, so cancellation has to be re-checked here or a close during
-    // discovery would surface as a successful partial catalog.
+    // This also covers a close while discovering the final server, where
+    // there is no next iteration to check before returning the catalog.
     if (signal.aborted) {
       throw new MCPClientError(
         "MCP connections closed during discovery",

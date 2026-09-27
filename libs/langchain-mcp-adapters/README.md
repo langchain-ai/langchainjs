@@ -75,6 +75,10 @@ Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
 
+`close()` cancels active discovery before it can open remaining servers, even
+when connection errors are ignored or handled asynchronously. The adapter can
+be reused afterwards; a later discovery opens fresh connections.
+
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
 the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
 and auth provider instances retain their identity; the snapshot is runtime configuration,
