@@ -8,6 +8,7 @@ import {
   Client as MCPClient,
 } from "@modelcontextprotocol/client";
 import type {
+  AuthProvider,
   ClientOptions,
   OAuthClientProvider,
   StreamableHTTPClientTransportOptions,
@@ -33,7 +34,7 @@ export interface Client extends MCPClient {
 export interface TransportOptions {
   serverName: string;
   headers?: Record<string, string>;
-  authProvider?: OAuthClientProvider;
+  authProvider?: AuthProvider | OAuthClientProvider;
 }
 
 type ClientKeyObject = Omit<TransportOptions, "headers"> & {

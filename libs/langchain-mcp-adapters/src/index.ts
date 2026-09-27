@@ -2,7 +2,12 @@ export { MCPAdapter, MultiServerMCPClient } from "./client.js";
 
 export { MCPClientError } from "./utils/errors.js";
 
-export type { OAuthClientProvider } from "@modelcontextprotocol/client";
+export type {
+  AuthProvider,
+  OAuthClientProvider,
+} from "@modelcontextprotocol/client";
+
+export { UnauthorizedError } from "@modelcontextprotocol/client";
 
 export type {
   ClientConfig,

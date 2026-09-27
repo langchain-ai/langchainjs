@@ -5,6 +5,7 @@ import {
   SubscriptionFilterSchema,
 } from "@modelcontextprotocol/core";
 import type {
+  AuthProvider,
   CacheMode,
   ListResourcesResult,
   ListResourceTemplatesResult,
@@ -31,8 +32,6 @@ export {
   type DetailedOutputHandling,
   type OutputHandling,
 } from "./content.js";
-import { getSdkHeaderCase } from "./utils/misc.js";
-
 export type {
   Command,
   ContentBlock,
@@ -67,6 +66,36 @@ export const oAuthClientProviderSchema = z
     z.property("saveCodeVerifier", z.function()),
     z.property("codeVerifier", z.function())
   );
+
+/**
+ * The SDK's minimal provider: `token()` is read before every request and
+ * `onUnauthorized()`, when present, runs once on a 401 before the retry.
+ *
+ * `onUnauthorized` is optional on `AuthProvider`, so it is checked with a
+ * plain predicate rather than `z.property`, whose mapped type always makes
+ * the property required and would reject a provider that omits it.
+ */
+export const tokenAuthProviderSchema = z
+  .custom<AuthProvider>(
+    (value) => value !== null && typeof value === "object" && "token" in value,
+    { error: "Expected an AuthProvider with a token() method" }
+  )
+  .check(z.property("token", z.function()), (ctx) => {
+    const { onUnauthorized } = ctx.value;
+    if (onUnauthorized !== undefined && typeof onUnauthorized !== "function") {
+      ctx.issues.push({
+        code: "custom",
+        input: ctx.value,
+        message: "Expected onUnauthorized to be a function",
+      });
+    }
+  });
+
+/** Either SDK provider shape; the transport adapts an OAuthClientProvider itself. */
+export const authProviderSchema = z.union([
+  oAuthClientProviderSchema,
+  tokenAuthProviderSchema,
+]);
 
 /** SDK logging levels, exposed as an adapter request option. */
 export const loggingLevelSchema = LoggingLevelSchema;
@@ -244,10 +273,7 @@ export const streamableHttpReconnectSchema = z
   })
   .describe("Configuration for streamable HTTP transport reconnection");
 
-const headersSchema = z
-  .record(z.string(), z.string())
-  .transform(getSdkHeaderCase)
-  .optional();
+const headersSchema = z.record(z.string(), z.string()).optional();
 
 const httpOptionsSchema = z
   .object({
@@ -273,12 +299,14 @@ const httpOptionsSchema = z
      */
     headers: headersSchema,
     /**
-     * OAuth client provider for automatic authentication handling.
-     * When provided, the transport will automatically handle token refresh,
-     * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
-     * This is the recommended approach for authentication instead of manual headers.
+     * Credentials for this server, handed to the SDK transport as-is:
+     * - an `AuthProvider` (`{ token, onUnauthorized? }`) for tokens the
+     *   application manages;
+     * - an `OAuthClientProvider` for OAuth.
+     * Once the provider has a token it replaces a configured `Authorization`
+     * header; until then the header is sent (SDK >= 2.1.0).
      */
-    authProvider: oAuthClientProviderSchema.optional(),
+    authProvider: authProviderSchema.optional(),
     /**
      * Additional reconnection settings.
      */
