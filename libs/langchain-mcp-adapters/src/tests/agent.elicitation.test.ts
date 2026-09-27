@@ -76,7 +76,7 @@ async function environment(toolCalls?: ToolCall[][]) {
   cleanups.push(() => server.close());
 
   const adapter = new MCPAdapter({
-    servers: { modern: { url: server.url, elicitation: true } },
+    servers: { modern: { url: server.url } },
   });
   cleanups.push(() => adapter.close());
 

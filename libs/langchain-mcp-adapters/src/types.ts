@@ -5,6 +5,7 @@ import {
   SubscriptionFilterSchema,
 } from "@modelcontextprotocol/core";
 import type {
+  AuthProvider,
   CacheMode,
   ListResourcesResult,
   ListResourceTemplatesResult,
@@ -31,8 +32,6 @@ export {
   type DetailedOutputHandling,
   type OutputHandling,
 } from "./content.js";
-import { getSdkHeaderCase } from "./utils/misc.js";
-
 export type {
   Command,
   ContentBlock,
@@ -67,6 +66,36 @@ export const oAuthClientProviderSchema = z
     z.property("saveCodeVerifier", z.function()),
     z.property("codeVerifier", z.function())
   );
+
+/**
+ * The SDK's minimal provider: `token()` is read before every request and
+ * `onUnauthorized()`, when present, runs once on a 401 before the retry.
+ *
+ * `onUnauthorized` is optional on `AuthProvider`, so it is checked with a
+ * plain predicate rather than `z.property`, whose mapped type always makes
+ * the property required and would reject a provider that omits it.
+ */
+export const tokenAuthProviderSchema = z
+  .custom<AuthProvider>(
+    (value) => value !== null && typeof value === "object" && "token" in value,
+    { error: "Expected an AuthProvider with a token() method" }
+  )
+  .check(z.property("token", z.function()), (ctx) => {
+    const { onUnauthorized } = ctx.value;
+    if (onUnauthorized !== undefined && typeof onUnauthorized !== "function") {
+      ctx.issues.push({
+        code: "custom",
+        input: ctx.value,
+        message: "Expected onUnauthorized to be a function",
+      });
+    }
+  });
+
+/** Either SDK provider shape; the transport adapts an OAuthClientProvider itself. */
+export const authProviderSchema = z.union([
+  oAuthClientProviderSchema,
+  tokenAuthProviderSchema,
+]);
 
 /** SDK logging levels, exposed as an adapter request option. */
 export const loggingLevelSchema = LoggingLevelSchema;
@@ -244,10 +273,7 @@ export const streamableHttpReconnectSchema = z
   })
   .describe("Configuration for streamable HTTP transport reconnection");
 
-const headersSchema = z
-  .record(z.string(), z.string())
-  .transform(getSdkHeaderCase)
-  .optional();
+const headersSchema = z.record(z.string(), z.string()).optional();
 
 const httpOptionsSchema = z
   .object({
@@ -273,12 +299,14 @@ const httpOptionsSchema = z
      */
     headers: headersSchema,
     /**
-     * OAuth client provider for automatic authentication handling.
-     * When provided, the transport will automatically handle token refresh,
-     * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
-     * This is the recommended approach for authentication instead of manual headers.
+     * Credentials for this server, handed to the SDK transport as-is:
+     * - an `AuthProvider` (`{ token, onUnauthorized? }`) for tokens the
+     *   application manages;
+     * - an `OAuthClientProvider` for OAuth.
+     * Once the provider has a token it replaces a configured `Authorization`
+     * header; until then the header is sent (SDK >= 2.1.0).
      */
-    authProvider: oAuthClientProviderSchema.optional(),
+    authProvider: authProviderSchema.optional(),
     /**
      * Additional reconnection settings.
      */
@@ -545,6 +573,13 @@ const removedRootsObserver = z
   })
   .optional();
 
+const removedStandardContentBlocks = z
+  .never({
+    error:
+      "useStandardContentBlocks was removed: tool content is always standard LangChain content blocks; delete this option",
+  })
+  .optional();
+
 const serverNotifications = notifications.omit({ onInitialized: true }).extend({
   /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
   resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
@@ -571,14 +606,17 @@ const modernPolicy = z
      */
     logLevel: loggingLevelSchema.optional(),
     /**
-     * Whether in-band MCP elicitation requests should suspend a LangGraph run
-     * and surface as graph interrupts.
+     * Whether modern in-band MCP elicitation should be handled through
+     * LangGraph interrupts.
      *
-     * This requires a modern MCP server and a LangGraph checkpointer.
+     * Tools that do not request input can run directly or in a graph without a
+     * checkpointer. If a tool requests input in either context, the invocation
+     * raises a `ToolException`. A checkpointer is required to suspend and
+     * resume an eliciting tool successfully.
      *
-     * @default false
+     * @default true
      */
-    elicitation: z.boolean().default(false),
+    elicitation: z.boolean().default(true),
     /** @deprecated Use `elicitation` for modern MCP servers. */
     onElicitation: z
       .never({
@@ -609,7 +647,7 @@ const legacyPolicy = z
     /**
      * Handles elicitation requests from a legacy MCP server.
      *
-     * Modern servers use `elicitation: true` and LangGraph interrupts instead.
+     * Modern servers use LangGraph interrupts by default instead.
      */
     onElicitation: z
       .custom<MCPElicitationHandler>(
@@ -777,11 +815,10 @@ const clientOptionsSchema = z
       .never({ error: "Move onElicitation into a legacy server definition" })
       .optional(),
     /**
-     * Modern in-band elicitation is enabled per server so only servers that
-     * support it can suspend LangGraph runs.
+     * Modern in-band elicitation is enabled by default per modern server.
      *
-     * Set `elicitation: true` on a server with `mode: "auto"` or
-     * `mode: "modern"` instead.
+     * Set `elicitation: false` on a server with `mode: "auto"` or
+     * `mode: "modern"` to opt out.
      */
     elicitation: z
       .never({ error: "Move elicitation into a modern server definition" })
@@ -860,6 +897,7 @@ const clientOptionsSchema = z
     onResourcesUpdated: serverOnlyCallback,
     onToolsListChanged: serverOnlyCallback,
     onRootsListChanged: removedRootsObserver,
+    useStandardContentBlocks: removedStandardContentBlocks,
   })
   .strict()
   .describe("Configuration for the MCP client");
@@ -978,8 +1016,15 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .extend(notifications.pick({ onProgress: true }).shape)
   .extend({
     logLevel: loggingLevelSchema.optional(),
-    /** Answer in-band input requests with LangGraph interrupts. */
-    elicitation: z.boolean().optional(),
+    /**
+     * Whether modern in-band MCP elicitation should be handled through
+     * LangGraph interrupts. Tools that do not elicit need no checkpointer. A
+     * direct invocation or graph without a checkpointer raises a
+     * `ToolException` only if the tool requests input.
+     *
+     * @default true
+     */
+    elicitation: z.boolean().default(true),
   });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;

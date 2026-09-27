@@ -1513,9 +1513,7 @@ describe("MultiServerMCPClient", () => {
       expect(SSEClientTransport).toHaveBeenCalledWith(
         new URL(config["test-server"].url),
         expect.objectContaining({
-          // Spelled the way the SDK spells the header it sets itself, so its
-          // own spread replaces ours rather than appending a second entry.
-          requestInit: { headers: { Authorization: "Bearer token" } },
+          requestInit: { headers: { authorization: "Bearer token" } },
         })
       );
       expect(Client).toHaveBeenCalled();
@@ -2196,6 +2194,20 @@ describe("MultiServerMCPClient", () => {
       // Should not have created a client
       expect(Client).not.toHaveBeenCalled();
     });
+  });
+
+  test("explains that useStandardContentBlocks was removed", () => {
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            svc: { transport: "http", url: "http://localhost:8000/mcp" },
+          },
+          useStandardContentBlocks: true,
+        } as never)
+    ).toThrow(
+      /useStandardContentBlocks was removed: tool content is always standard LangChain content blocks/
+    );
   });
 });
 

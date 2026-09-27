@@ -1,6 +1,7 @@
 import {
   MCPClientError,
   getHttpErrorCode,
+  isAuthenticationError,
   createAuthenticationErrorMessage,
 } from "./utils/errors.js";
 import { z } from "zod";
@@ -9,6 +10,7 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import type {
+  AuthProvider,
   CacheMode,
   OAuthClientProvider,
   LoggingLevel,
@@ -264,7 +266,10 @@ export class MCPAdapter {
         if (typeof this.#onConnectionError === "function") {
           await this.#onConnectionError({ serverName, error });
         }
-        this.#failedServers.add(key);
+
+        // A login can complete later (finishAuth, a refreshed token), so an
+        // auth failure must not block the server for this adapter's lifetime.
+        if (!isAuthenticationError(error)) this.#failedServers.add(key);
       }
     }
 
@@ -853,7 +858,7 @@ export class MCPAdapter {
           }
         } else {
           // Provide specific error message for authentication failures
-          if (code === 401) {
+          if (isAuthenticationError(error)) {
             throw new MCPClientError(
               createAuthenticationErrorMessage(
                 serverName,
@@ -910,7 +915,7 @@ export class MCPAdapter {
       }
 
       // Check if this is an authentication error that needs better messaging
-      const isAuthError = error && getHttpErrorCode(error) === 401;
+      const isAuthError = isAuthenticationError(error);
 
       if (isAuthError) {
         throw new MCPClientError(
@@ -1158,7 +1163,7 @@ export class MCPAdapter {
    */
   async #cleanupServerResources(transportOptions: {
     serverName: string;
-    authProvider?: OAuthClientProvider;
+    authProvider?: AuthProvider | OAuthClientProvider;
     headers?: Record<string, string>;
   }): Promise<void> {
     const { serverName, authProvider, headers } = transportOptions;
