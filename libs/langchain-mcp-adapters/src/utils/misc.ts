@@ -20,9 +20,7 @@ export function serializeHeaders(
 /**
  * Merge header sets; later sources win.
  *
- * `Headers` deduplicates case-insensitively and lower-cases names. The SDK
- * (>= 2.1.0) compares names case-insensitively when it adds its own headers,
- * so the spelling here no longer matters downstream.
+ * `Headers` deduplicates case-insensitively and lower-cases names.
  */
 export function mergeHeaders(
   base: Record<string, string> | undefined,
