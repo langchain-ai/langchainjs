@@ -46,6 +46,11 @@ option. See the [agent example](https://github.com/langchain-ai/langchainjs/blob
 Install `langchain` and configure your model credentials for agent usage. Keep
 the adapter open until the agent finishes using its tools.
 
+To use your own `@modelcontextprotocol/client` `Client` (for example over an
+`InMemoryTransport`) instead of `MCPAdapter`, call
+`loadMcpTools(serverName, client, options?)` directly; it returns the same
+`DynamicStructuredTool[]`.
+
 ## Mix modern and legacy servers
 
 Omit `mode` to let the SDK negotiate with each server automatically:
@@ -69,20 +74,35 @@ to skip probing and enable legacy options such as `onElicitation` and
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
 without fallback. SDK 2 can serve either protocol.
 
+HTTP servers also accept `headers` for static request headers unrelated to
+`authProvider`. Stdio servers accept `env`, `cwd`, `stderr` and a `restart`
+policy for the child process.
+
 ## Configuration and lifecycle
 
 Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
-select tools and always await `close()` when finished.
+select tools and always await `close()` when finished. `listToolsets()` runs
+the same discovery but returns tools grouped by server name instead of
+`listTools()`'s flattened array.
 
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
 the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
 and auth provider instances retain their identity; the snapshot is runtime configuration,
 not a redacted diagnostic object.
 
-Put notification and progress callbacks on the server that should receive them.
-Global tool hooks, naming, output routing and load-error policies remain adapter
-options. Invalid mode/transport combinations fail before opening a connection.
+Put notification and progress callbacks — `onProgress`, `onMessage`,
+`onToolsListChanged`, `onPromptsListChanged`, `onResourcesListChanged`,
+`onResourcesUpdated`, `resourceSubscriptions`, and legacy-only `onInitialized`
+— on the server that should receive them, not on the adapter. Global tool
+hooks, tool naming (`additionalToolNamePrefix`), timeouts (`defaultToolTimeout`),
+output routing, and load-error policies (`throwOnLoadError`, `onConnectionError`)
+remain adapter options. Invalid mode/transport combinations fail before opening
+a connection.
+
+Pass `{ cacheMode: "refresh" }` or `{ cacheMode: "bypass" }` as the options
+argument to `listTools` or `listToolsets` to control the SDK's discovery
+cache; a failed refresh keeps the previous catalog.
 
 ## Tool results and hooks
 
@@ -93,6 +113,54 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
 [hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
 for argument and result hooks.
+
+A failing tool call throws `ToolException`, whose `result` carries the
+server's MCP result when the server itself reported the failure. Narrow
+catches with `isToolException(error)` instead of checking `error.name`.
+
+## Elicitation
+
+Modern servers can ask mid-call for more input. By default the adapter raises
+each request as a LangGraph `interrupt()`; a checkpointer is required only
+when a tool actually elicits, so tools that never ask run fine without one.
+
+```ts
+import { randomUUID } from "node:crypto";
+import { Command, MemorySaver } from "@langchain/langgraph";
+import { createAgent } from "langchain";
+import {
+  MCPAdapter,
+  createMCPElicitationResume,
+} from "@langchain/mcp-adapters";
+
+const adapter = new MCPAdapter({
+  servers: { local: { url: "http://127.0.0.1:3001/mcp" } },
+});
+
+const agent = createAgent({
+  model: "openai:gpt-4o-mini",
+  tools: await adapter.listTools(),
+  checkpointer: new MemorySaver(),
+});
+
+const config = { configurable: { thread_id: randomUUID() } };
+const result = await agent.invoke(
+  { messages: [{ role: "user", content: "Ask before deleting" }] },
+  config
+);
+
+const pending = result.__interrupt__?.[0];
+if (pending) {
+  const resume = createMCPElicitationResume(pending, {
+    confirmation: { action: "accept", content: { confirm: true } },
+  });
+  await agent.invoke(new Command({ resume }), config);
+}
+```
+
+Set `elicitation: false` on an individual modern server to opt out. Legacy
+servers (`mode: "legacy"`) never raise interrupts; configure a per-server
+`onElicitation` handler instead.
 
 ## Authentication
 
