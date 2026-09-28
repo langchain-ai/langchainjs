@@ -85,7 +85,9 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
     if (AIMessage.isInstance(message) && Array.isArray(message.content)) {
       for (const block of message.content) {
         if (
-          (block.type === "tool_use" || block.type === "tool_call") &&
+          (block.type === "tool_use" ||
+            block.type === "tool_call" ||
+            block.type === "tool_call_chunk") &&
           typeof block.id === "string" &&
           typeof block.toolset_name === "string"
         ) {

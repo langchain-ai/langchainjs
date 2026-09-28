@@ -1330,24 +1330,29 @@ export class ChatAnthropicMessages<
       ]);
     }
 
+    const resolved = { ...output, ...this.invocationKwargs };
+    const sonnet55 = resolved.model.startsWith("claude-sonnet-5-5");
     if (
-      this.model.startsWith("claude-sonnet-5-5") &&
-      (output.tool_choice?.type === "any" ||
-        output.tool_choice?.type === "tool")
+      sonnet55 &&
+      (resolved.tool_choice?.type === "any" ||
+        resolved.tool_choice?.type === "tool")
     ) {
       throw new Error(
-        `Forced tool choice is not supported for ${this.model}; use tool_choice="auto" or withStructuredOutput(..., { method: "jsonSchema" }).`
+        `Forced tool choice is not supported for ${resolved.model}; use tool_choice="auto" or withStructuredOutput(..., { method: "jsonSchema" }).`
       );
     }
 
     validateInvocationParamCompatibility({
-      model: this.model,
-      thinking: output.thinking ?? this.thinking,
+      model: sonnet55 ? resolved.model : this.model,
+      thinking:
+        (sonnet55 ? resolved.thinking : output.thinking) ?? this.thinking,
       thinkingExplicitlySet: output.thinking !== undefined,
-      outputConfig: mergedOutputConfig,
-      topK: this.topK,
-      topP: this.topP,
-      temperature: this.temperature,
+      outputConfig: sonnet55 ? resolved.output_config : mergedOutputConfig,
+      topK: sonnet55 ? (resolved.top_k ?? this.topK) : this.topK,
+      topP: sonnet55 ? (resolved.top_p ?? this.topP) : this.topP,
+      temperature: sonnet55
+        ? (resolved.temperature ?? this.temperature)
+        : this.temperature,
     });
 
     Object.assign(

@@ -193,12 +193,8 @@ export async function generateModelProfiles(
 
   const profiles: Record<string, ModelProfile> = {};
 
-  for (const modelName of new Set([
-    ...Object.keys(provider.models),
-    ...Object.keys(modelOverrides),
-  ])) {
-    const modelData = provider.models[modelName];
-    const baseProfile = modelData ? modelToProfile(modelData) : {};
+  for (const [modelName, modelData] of Object.entries(provider.models)) {
+    const baseProfile = modelToProfile(modelData);
     const modelSpecificOverrides = modelOverrides[modelName];
 
     const finalProfile = applyOverrides(

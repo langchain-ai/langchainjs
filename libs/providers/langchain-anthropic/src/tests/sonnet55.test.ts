@@ -47,6 +47,37 @@ describe("Sonnet 5.5", () => {
     }
   );
 
+  test.each([
+    { temperature: 0 },
+    { top_p: 0.5 },
+    { top_k: 10 },
+    { thinking: { type: "disabled" } },
+    { thinking: { type: "enabled", budget_tokens: 1000 } },
+    { thinking: { type: "between_tools" }, output_config: { effort: "max" } },
+    { tool_choice: { type: "any" } },
+  ])("validates final raw invocation overrides %j", (invocationKwargs) => {
+    expect(() =>
+      new ChatAnthropic({
+        model: "claude-sonnet-5-5",
+        apiKey: "test",
+        invocationKwargs,
+      }).invocationParams()
+    ).toThrow();
+  });
+
+  test("validates a raw model override", () => {
+    expect(() =>
+      new ChatAnthropic({
+        model: "claude-sonnet-5",
+        apiKey: "test",
+        invocationKwargs: {
+          model: "claude-sonnet-5-5",
+          tool_choice: { type: "any" },
+        },
+      }).invocationParams()
+    ).toThrow("Forced tool choice");
+  });
+
   test("adds the progress-update display beta", () => {
     const chat = new ChatAnthropic({
       model: "claude-sonnet-5-5",
@@ -193,6 +224,34 @@ describe("Sonnet 5.5", () => {
       });
     }
   );
+
+  test("replays standardized streaming toolset calls and results", () => {
+    const assistant = new AIMessageChunk({
+      content: [
+        {
+          type: "tool_call_chunk",
+          id: "call",
+          name: "screenshot",
+          args: "{}",
+          index: 0,
+          toolset_name: "computer",
+        },
+      ],
+      response_metadata: { model_provider: "anthropic", output_version: "v1" },
+    });
+    const payload = _convertMessagesToAnthropicPayload([
+      assistant,
+      new ToolMessage({ content: "Done", tool_call_id: "call" }),
+    ]);
+    expect(payload.messages[0].content[0]).toMatchObject({
+      type: "tool_use",
+      toolset_name: "computer",
+    });
+    expect(payload.messages[1].content[0]).toMatchObject({
+      type: "tool_result",
+      toolset_name: "computer",
+    });
+  });
 
   test.each([false, true])(
     "keeps signed thinking and encrypted advisor blocks with string coercion=%s",

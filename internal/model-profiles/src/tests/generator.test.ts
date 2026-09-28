@@ -84,10 +84,14 @@ describe("generator", () => {
   });
 
   describe("generateModelProfiles", () => {
-    it("generates override-only models with array capabilities", async () => {
+    it("generates array capabilities for existing models", async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ anthropic: createMockProvider("anthropic", {}) }),
+        json: async () => ({
+          anthropic: createMockProvider("anthropic", {
+            "claude-sonnet-5-5": createMockModel(),
+          }),
+        }),
       });
       const outputPath = path.join(tempDir, "models.ts");
       await generateModelProfiles(
