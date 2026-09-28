@@ -1,5 +1,19 @@
 # @langchain/google
 
+## 0.2.8
+
+### Patch Changes
+
+- [#11641](https://github.com/langchain-ai/langchainjs/pull/11641) [`12626c2`](https://github.com/langchain-ai/langchainjs/commit/12626c25a9acdd72d2c8a68788479440916d38a1) Thanks [@ccurme](https://github.com/ccurme)! - Add `LANGSMITH_GATEWAY` direct routing for Bedrock Converse and Vertex AI chat models.
+
+- [#11680](https://github.com/langchain-ai/langchainjs/pull/11680) [`29caa17`](https://github.com/langchain-ai/langchainjs/commit/29caa176aee136e0ab2e388538c151cf1f8e3a94) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Fix service account authentication on the Node client. `NodeApiClient.fetch` interpolated the unresolved access token promise, sending `Bearer [object Promise]`, and the JWT it exchanges carried no `scope` claim, which Google requires on the assertion for an access token request. Credentials supplied through `GOOGLE_CLOUD_CREDENTIALS` now reach Vertex AI instead of failing with invalid credentials and then an invalid scope error.
+
+## 0.2.7
+
+### Patch Changes
+
+- [#11664](https://github.com/langchain-ai/langchainjs/pull/11664) [`16c5a5e`](https://github.com/langchain-ai/langchainjs/commit/16c5a5e7284b14ee81ec0140a144e097712c48bc) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Configure the required OAuth scopes when the Node.js client falls back to Application Default Credentials.
+
 ## 0.2.6
 
 ### Patch Changes

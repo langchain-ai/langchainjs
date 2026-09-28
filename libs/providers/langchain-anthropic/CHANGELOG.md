@@ -1,5 +1,15 @@
 # @langchain/anthropic
 
+## 1.5.11
+
+### Patch Changes
+
+- [#11669](https://github.com/langchain-ai/langchainjs/pull/11669) [`fb2a9f3`](https://github.com/langchain-ai/langchainjs/commit/fb2a9f378e752a2dddea4af14d9c33deb185f067) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): accept a `SystemMessage` anywhere in the message list. Previously only the first message could be a system message. Anything else threw.
+
+  A system message that isn't first is now sent at its own position. It applies from that point in the conversation onwards, and adding one leaves the prompt cache for the earlier turns intact.
+
+  Two smaller changes come with it. A leading run of two or more `SystemMessage`s now merges into the top-level `system` field instead of being rejected. System content built from standard content blocks no longer sends the internal block `id` to the provider.
+
 ## 1.5.10
 
 ### Patch Changes
