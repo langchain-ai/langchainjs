@@ -929,7 +929,14 @@ describe("MultiServerMCPClient", () => {
       test("throws when two servers expose the same tool name", async () => {
         mockClientsWithTools(
           [{ name: "search", description: "Search alpha", inputSchema: {} }],
-          [{ name: "search", description: "Search beta", inputSchema: {} }]
+          [{ name: "search", description: "Search beta", inputSchema: {} }],
+          // A server whose own descriptor list repeats a name is a
+          // server-side bug, not a cross-server collision, and is unrelated
+          // to C2: it must not throw.
+          [
+            { name: "dup", description: "Gamma dup 1", inputSchema: {} },
+            { name: "dup", description: "Gamma dup 2", inputSchema: {} },
+          ]
         );
 
         const client = new MultiServerMCPClient({
@@ -945,6 +952,12 @@ describe("MultiServerMCPClient", () => {
             command: "python",
             args: ["./beta.py"],
           },
+          gamma: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./gamma.py"],
+          },
         });
 
         let error: unknown;
@@ -959,9 +972,21 @@ describe("MultiServerMCPClient", () => {
         expect(message).toContain('"search"');
         expect(message).toContain("alpha");
         expect(message).toContain("beta");
-        expect(message).toMatch(
-          /prefixToolNameWithServerName|additionalToolNamePrefix/
-        );
+        expect(message).toMatch(/prefixToolNameWithServerName/);
+        expect(message).not.toContain("additionalToolNamePrefix");
+
+        // A repeated server name in the selection is one server, not a
+        // cross-server collision, so it must not throw (flattening still
+        // returns "search" once per selected occurrence of "alpha").
+        expect(
+          (await client.listTools("alpha", "alpha")).map((tool) => tool.name)
+        ).toEqual(["search", "search"]);
+
+        // A duplicate name within one server's own list keeps its pre-fix
+        // behavior: both entries pass through untouched.
+        expect(
+          (await client.listTools("gamma")).map((tool) => tool.name)
+        ).toEqual(["dup", "dup"]);
       });
 
       test("does not throw when prefixToolNameWithServerName disambiguates names", async () => {
