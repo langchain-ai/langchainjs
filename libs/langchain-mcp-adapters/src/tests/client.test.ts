@@ -3059,7 +3059,10 @@ describe("protocol negotiation with live servers", () => {
     });
 
     try {
-      const tools = await adapter.listTools();
+      // "legacy", "sse" and "fallback" all expose the fixture's "test_tool";
+      // this assertion only needs the modern server's tool, so select it
+      // directly rather than flattening every server's catalog together.
+      const tools = await adapter.listTools("modern");
       const modern = tools.find((tool) => tool.name === "modern_echo");
 
       if (!modern) throw new Error("Modern tool was not discovered");

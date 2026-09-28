@@ -725,22 +725,18 @@ describe("MultiServerMCPClient", () => {
     }
 
     test("should get all tools as a flattened array", async () => {
-      // Mock tool response
-      const mockTools = [
-        { name: "tool1", description: "Tool 1", inputSchema: {} },
-        { name: "tool2", description: "Tool 2", inputSchema: {} },
-      ];
-
-      (Client as Mock).mockImplementationOnce(function mockClient() {
-        return {
-          ...Client.prototype,
-          connect: vi.fn().mockReturnValue(Promise.resolve()),
-          setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
-          listTools: vi
-            .fn()
-            .mockReturnValue(Promise.resolve({ tools: mockTools })),
-        };
-      });
+      // Each server advertises its own tool names so the flattened list has
+      // no cross-server collisions.
+      mockClientsWithTools(
+        [
+          { name: "server1-tool1", description: "Tool 1", inputSchema: {} },
+          { name: "server1-tool2", description: "Tool 2", inputSchema: {} },
+        ],
+        [
+          { name: "server2-tool1", description: "Tool 1", inputSchema: {} },
+          { name: "server2-tool2", description: "Tool 2", inputSchema: {} },
+        ]
+      );
 
       const client = new MultiServerMCPClient({
         server1: {
@@ -760,7 +756,7 @@ describe("MultiServerMCPClient", () => {
       const tools = await client.listTools();
 
       // Expect tools from both servers in a flat array
-      expect(tools.length).toBeGreaterThan(0);
+      expect(tools.length).toBe(4);
     });
 
     test("should get tools from specific servers", async () => {
@@ -928,6 +924,128 @@ describe("MultiServerMCPClient", () => {
         expect(tools[1].name).toBe("tool2");
       });
     });
+
+    describe("tool name collisions", () => {
+      test("throws when two servers expose the same tool name", async () => {
+        mockClientsWithTools(
+          [{ name: "search", description: "Search alpha", inputSchema: {} }],
+          [{ name: "search", description: "Search beta", inputSchema: {} }]
+        );
+
+        const client = new MultiServerMCPClient({
+          alpha: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./alpha.py"],
+          },
+          beta: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./beta.py"],
+          },
+        });
+
+        let error: unknown;
+        try {
+          await client.listTools();
+        } catch (caught) {
+          error = caught;
+        }
+
+        expect(error).toBeInstanceOf(MCPClientError);
+        const message = (error as Error).message;
+        expect(message).toContain('"search"');
+        expect(message).toContain("alpha");
+        expect(message).toContain("beta");
+        expect(message).toMatch(
+          /prefixToolNameWithServerName|additionalToolNamePrefix/
+        );
+      });
+
+      test("does not throw when prefixToolNameWithServerName disambiguates names", async () => {
+        mockClientsWithTools(
+          [{ name: "search", description: "Search alpha", inputSchema: {} }],
+          [{ name: "search", description: "Search beta", inputSchema: {} }]
+        );
+
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            alpha: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./alpha.py"],
+            },
+            beta: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./beta.py"],
+            },
+          },
+          prefixToolNameWithServerName: true,
+        });
+
+        const tools = await client.listTools();
+        expect(tools.map((tool) => tool.name)).toEqual([
+          "alpha__search",
+          "beta__search",
+        ]);
+      });
+
+      test("a server subset with no duplicate does not throw", async () => {
+        mockClientsWithTools(
+          [{ name: "search", description: "Search alpha", inputSchema: {} }],
+          [{ name: "search", description: "Search beta", inputSchema: {} }]
+        );
+
+        const client = new MultiServerMCPClient({
+          alpha: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./alpha.py"],
+          },
+          beta: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./beta.py"],
+          },
+        });
+
+        const tools = await client.listTools("alpha");
+        expect(tools.map((tool) => tool.name)).toEqual(["search"]);
+      });
+
+      test("listToolsets keeps the duplicate name, one per server", async () => {
+        mockClientsWithTools(
+          [{ name: "search", description: "Search alpha", inputSchema: {} }],
+          [{ name: "search", description: "Search beta", inputSchema: {} }]
+        );
+
+        const client = new MultiServerMCPClient({
+          alpha: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./alpha.py"],
+          },
+          beta: {
+            mode: "legacy",
+            transport: "stdio",
+            command: "python",
+            args: ["./beta.py"],
+          },
+        });
+
+        const toolsets = await client.listToolsets();
+        expect(toolsets.alpha.map((tool) => tool.name)).toEqual(["search"]);
+        expect(toolsets.beta.map((tool) => tool.name)).toEqual(["search"]);
+      });
+    });
   });
 
   // Cleanup Handling tests
@@ -1018,6 +1136,21 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should handle mixed transport types including streamable HTTP", async () => {
+      // Each server advertises its own tool name so the flattened list has
+      // no cross-server collisions.
+      for (const toolName of ["stdio_tool", "sse_tool", "streamable_tool"]) {
+        (Client as Mock).mockImplementationOnce(function mockClient() {
+          return {
+            ...Client.prototype,
+            listTools: vi.fn().mockReturnValue(
+              Promise.resolve({
+                tools: [{ name: toolName, description: "", inputSchema: {} }],
+              })
+            ),
+          };
+        });
+      }
+
       const client = new MultiServerMCPClient({
         "stdio-server": {
           mode: "legacy",

@@ -335,10 +335,11 @@ export class MCPAdapter {
   async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
     const { servers, options } = toolSelectionSchema.parse(args);
     const catalog = await this.#discoverToolsets(options);
+    const selectedServers = servers.length ? servers : Object.keys(catalog);
 
-    return (servers.length ? servers : Object.keys(catalog)).flatMap(
-      (name) => catalog[name] ?? []
-    );
+    assertNoToolNameCollisions(catalog, selectedServers);
+
+    return selectedServers.flatMap((name) => catalog[name] ?? []);
   }
 
   /**
@@ -1178,6 +1179,41 @@ export class MCPAdapter {
 
 /** @deprecated Use MCPAdapter. This alias shares the same implementation. */
 export { MCPAdapter as MultiServerMCPClient };
+
+/**
+ * `listTools()` flattens per-server catalogs into one array, so two servers
+ * exposing a tool with the same name would otherwise silently collapse into
+ * duplicate entries: `ToolNode` routes every call for that name to whichever
+ * tool appears first. Throw instead, naming every server that exposes the
+ * tool, mirroring FastMCP's `ClientGroup` tool-collision check.
+ */
+function assertNoToolNameCollisions(
+  catalog: Record<string, DynamicStructuredTool[]>,
+  servers: string[]
+): void {
+  const serversByToolName = new Map<string, string[]>();
+
+  for (const serverName of servers) {
+    for (const tool of catalog[serverName] ?? []) {
+      const owners = serversByToolName.get(tool.name);
+      if (owners) {
+        owners.push(serverName);
+      } else {
+        serversByToolName.set(tool.name, [serverName]);
+      }
+    }
+  }
+
+  for (const [toolName, owners] of serversByToolName) {
+    if (owners.length > 1) {
+      throw new MCPClientError(
+        `Tool name collision: multiple MCP servers expose a tool named "${toolName}" (${owners.join(
+          ", "
+        )}). Set "prefixToolNameWithServerName: true" or provide an "additionalToolNamePrefix" to keep tool names unique across servers.`
+      );
+    }
+  }
+}
 
 function createServerSelectionSchema<Options extends z.ZodType>(
   optionsSchema: Options

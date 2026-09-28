@@ -63,7 +63,10 @@ const adapter = new MCPAdapter({
 });
 ```
 
-Prefix names when servers expose identically named tools. Set `mode: "legacy"`
+Prefix names when servers expose identically named tools. `listTools()` throws
+an `MCPClientError` if the selected servers' flattened tool names collide,
+naming every server that exposes the tool; set `prefixToolNameWithServerName`
+or `additionalToolNamePrefix` to keep names unique. Set `mode: "legacy"`
 to skip probing and enable legacy options such as `onElicitation` and
 `onInitialized`. Set `mode: "modern"` to require MCP revision
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
