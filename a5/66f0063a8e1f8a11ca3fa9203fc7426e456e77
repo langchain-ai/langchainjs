@@ -1,0 +1,20 @@
+.changeset/record-tool-call-id.md
+  h_b47ec433af8c62 1-5
+libs/langchain-core/src/callbacks/manager.ts
+  h_b47ec433af8c62 1094-1095
+libs/langchain-core/src/tracers/base.ts
+  h_b47ec433af8c62 533-534,555-558,572,583-584
+libs/langchain-core/src/tracers/tests/tracer.test.ts
+  h_b47ec433af8c62 214-223,227-230
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a566f0063a8e1f8a11ca3fa9203fc7426e456e77",
+  "prompts": {},
+  "humans": {
+    "h_b47ec433af8c62": {
+      "author": "Emil F <emil@langchain.dev>"
+    }
+  }
+}
