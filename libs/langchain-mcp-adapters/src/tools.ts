@@ -4,6 +4,7 @@ import {
 } from "./elicitation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
 import {
+  convertCallToolError,
   convertCallToolResult,
   type ExtendedArtifact,
   type ExtendedContent,
@@ -32,7 +33,10 @@ import type {
   Tool as MCPTool,
   RequestOptions,
 } from "@modelcontextprotocol/client";
-import { DynamicStructuredTool } from "@langchain/core/tools";
+import {
+  DynamicStructuredTool,
+  type ToolRunnableConfig,
+} from "@langchain/core/tools";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import type { ToolMessage } from "@langchain/core/messages";
@@ -74,9 +78,9 @@ type CallToolArgs = {
    */
   args: ToolArguments;
   /**
-   * Optional RunnableConfig with timeout settings
+   * Optional RunnableConfig with timeout settings and, for a tool call, the call
    */
-  config?: RunnableConfig;
+  config?: ToolRunnableConfig;
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
@@ -396,6 +400,19 @@ async function _callTool(
         );
     }
 
+    // A failed call's output is the server's error, not a result to rewrite.
+    if (result.isError)
+      return [
+        convertCallToolError({
+          serverName,
+          toolName,
+          result,
+          outputHandling,
+          toolCall: config?.toolCall,
+        }),
+        [],
+      ];
+
     const { args: finalArgs, state } = prepared;
 
     const [content, artifacts] = convertCallToolResult({
@@ -523,7 +540,7 @@ export async function convertMcpTools(
               func: async (
                 args: ToolArguments,
                 _runManager?: CallbackManagerForToolRun,
-                config?: RunnableConfig
+                config?: ToolRunnableConfig
               ) => {
                 return _callTool({
                   invocation,
