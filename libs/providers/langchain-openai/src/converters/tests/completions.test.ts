@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsDeltaToBaseMessageChunk,
@@ -281,6 +286,162 @@ describe("convertCompletionsMessageToBaseMessage", () => {
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it("preserves prompt cache breakpoints and drops other extras", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            extras: {
+              prompt_cache_breakpoint: { mode: "explicit" },
+              unsupported: true,
+            },
+          },
+          {
+            type: "image",
+            source_type: "url",
+            url: "https://example.com/image.png",
+            extras: { prompt_cache_breakpoint: null },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+      ]);
+    });
+
+    it("passes provider-specific text block fields through unchanged", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            cache_control: { type: "ephemeral" },
+          },
+          {
+            type: "text",
+            text: "Top-level breakpoint",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "Top-level breakpoint",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
+    it("keeps other text block fields when lifting a breakpoint from extras", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            cache_control: { type: "ephemeral" },
+            extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          cache_control: { type: "ephemeral" },
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
+    it("lifts prompt cache breakpoints from v1 standard content blocks", () => {
+      const breakpoint = { prompt_cache_breakpoint: { mode: "explicit" } };
+      const messages = [
+        new SystemMessage({
+          content: [{ type: "text", text: "Instructions", extras: breakpoint }],
+          response_metadata: { output_version: "v1" },
+        }),
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Stable prefix", extras: breakpoint },
+            {
+              type: "image",
+              url: "https://example.com/image.png",
+              extras: breakpoint,
+            },
+          ],
+          response_metadata: { output_version: "v1" },
+        }),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Earlier answer", extras: breakpoint },
+          ],
+          response_metadata: { output_version: "v1" },
+        }),
+      ];
+
+      const result = convertMessagesToCompletionsMessageParams({ messages });
+
+      expect(result.map((m) => m.content)).toEqual([
+        [
+          {
+            type: "text",
+            text: "Instructions",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            text: "Stable prefix",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+          {
+            type: "image_url",
+            image_url: { url: "https://example.com/image.png" },
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            text: "Earlier answer",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+      ]);
+    });
+
     it("should preserve AIMessage content when tool_calls are present", () => {
       const message = new AIMessage({
         content:

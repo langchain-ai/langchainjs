@@ -1,5 +1,48 @@
 # @langchain/classic
 
+## 1.0.50
+
+### Patch Changes
+
+- Updated dependencies [[`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34), [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c), [`0fcb98b`](https://github.com/langchain-ai/langchainjs/commit/0fcb98b4306a771c940e78d6881d0be9f88507c1)]:
+  - @langchain/openai@1.6.0
+  - @langchain/textsplitters@1.0.2
+
+## 1.0.49
+
+### Patch Changes
+
+- Updated dependencies [[`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d), [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771), [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be)]:
+  - @langchain/openai@1.5.14
+
+## 1.0.48
+
+### Patch Changes
+
+- Updated dependencies [[`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c)]:
+  - @langchain/openai@1.5.13
+
+## 1.0.47
+
+### Patch Changes
+
+- Updated dependencies [[`6bd3a18`](https://github.com/langchain-ai/langchainjs/commit/6bd3a182a4dc558f3a5d3c87da69f17d9a35f934), [`7d6e1b0`](https://github.com/langchain-ai/langchainjs/commit/7d6e1b098723690bd1b98bc36ed18c75fa5a85ed), [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a)]:
+  - @langchain/openai@1.5.12
+
+## 1.0.47-rc.0
+
+### Patch Changes
+
+- Updated dependencies [[`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a)]:
+  - @langchain/openai@1.5.12-rc.0
+
+## 1.0.46
+
+### Patch Changes
+
+- Updated dependencies [[`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216)]:
+  - @langchain/openai@1.5.11
+
 ## 1.0.45
 
 ### Patch Changes

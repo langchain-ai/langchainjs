@@ -81,6 +81,7 @@ jobs:
             redis
             tavily
             together-ai
+            typesafe
             weaviate
             xai
             internal

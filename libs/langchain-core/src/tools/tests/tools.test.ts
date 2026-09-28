@@ -13,6 +13,7 @@ import {
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
+import { FakeTracer } from "../../utils/testing/index.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -712,6 +713,26 @@ describe("Generator tools (async function*)", () => {
     await awaitAllCallbacks();
 
     expect(events).toEqual(["start", "stream", "stream", "end"]);
+  });
+
+  test("structured tool inputs remain structured in tracer runs", async () => {
+    const tracer = new FakeTracer();
+    const testTool = tool((input) => input.command, {
+      name: "execute",
+      schema: z.object({ command: z.string(), timeout: z.number() }),
+      description: "Execute a command",
+    });
+
+    await testTool.invoke(
+      { command: "echo hello", timeout: 1 },
+      { callbacks: [tracer] }
+    );
+    await awaitAllCallbacks();
+
+    expect(tracer.runs[0].inputs).toEqual({
+      command: "echo hello",
+      timeout: 1,
+    });
   });
 
   test("handleToolStart receives toolCallId when invoked with ToolCall", async () => {

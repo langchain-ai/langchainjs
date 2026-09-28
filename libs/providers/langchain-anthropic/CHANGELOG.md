@@ -1,5 +1,33 @@
 # @langchain/anthropic
 
+## 1.5.11
+
+### Patch Changes
+
+- [#11669](https://github.com/langchain-ai/langchainjs/pull/11669) [`fb2a9f3`](https://github.com/langchain-ai/langchainjs/commit/fb2a9f378e752a2dddea4af14d9c33deb185f067) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): accept a `SystemMessage` anywhere in the message list. Previously only the first message could be a system message. Anything else threw.
+
+  A system message that isn't first is now sent at its own position. It applies from that point in the conversation onwards, and adding one leaves the prompt cache for the earlier turns intact.
+
+  Two smaller changes come with it. A leading run of two or more `SystemMessage`s now merges into the top-level `system` field instead of being rejected. System content built from standard content blocks no longer sends the internal block `id` to the provider.
+
+## 1.5.10
+
+### Patch Changes
+
+- [#11530](https://github.com/langchain-ai/langchainjs/pull/11530) [`c9b7eac`](https://github.com/langchain-ai/langchainjs/commit/c9b7eac3523cbaa3aead92196d6bca275ebaf55c) Thanks [@hntrl](https://github.com/hntrl)! - Add support for Claude Fable 5.1.
+
+## 1.5.10-rc.0
+
+### Patch Changes
+
+- [#11530](https://github.com/langchain-ai/langchainjs/pull/11530) [`c9b7eac`](https://github.com/langchain-ai/langchainjs/commit/c9b7eac3523cbaa3aead92196d6bca275ebaf55c) Thanks [@hntrl](https://github.com/hntrl)! - Add support for Claude Fable 5.1.
+
+## 1.5.9
+
+### Patch Changes
+
+- [#11475](https://github.com/langchain-ai/langchainjs/pull/11475) [`6bffc71`](https://github.com/langchain-ai/langchainjs/commit/6bffc7120a8d696089cc2f88e2eb15ad871deeca) Thanks [@davila7](https://github.com/davila7)! - feat(anthropic): add claude-sonnet-5 support
+
 ## 1.5.8
 
 ### Patch Changes

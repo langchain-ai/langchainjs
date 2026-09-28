@@ -381,6 +381,28 @@ function convertStandardVideoContentBlockToGeminiPart(
   return ret;
 }
 
+function convertStandardReasoningBlockToGeminiPart(
+  block: ContentBlock.Reasoning
+): Gemini.Part | null {
+  // Reasoning blocks created from Gemini should contain the base
+  // standard block they would be if "thought" wasn't set to true.
+  // If it exists, we'll use that. Otherwise, we'll assume it was
+  // originally a text block.
+  const ret =
+    "reasoningContentBlock" in block && block.reasoningContentBlock
+      ? convertStandardContentBlockToGeminiPart(
+          block.reasoningContentBlock as ContentBlock.Standard
+        )
+      : { text: block.reasoning };
+
+  // Then add that this came from the thinking process
+  if (ret) {
+    ret.thought = true;
+  }
+
+  return ret;
+}
+
 /**
  * Converts a single LangChain standard content block (v1 format)
  * into a Gemini.Part.
@@ -390,19 +412,31 @@ function convertStandardVideoContentBlockToGeminiPart(
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
-  switch (block.type) {
-    case "text":
-      return { text: block.text };
-    case "image":
-    case "audio":
-    case "text-plain":
-    case "file":
-      return convertStandardDataContentBlockToGeminiPart(block);
-    case "video":
-      return convertStandardVideoContentBlockToGeminiPart(block);
-    default:
-      return null;
+  function baseGeminiPart(): Gemini.Part | null {
+    switch (block.type) {
+      case "text":
+        return { text: block.text };
+      case "reasoning":
+        return convertStandardReasoningBlockToGeminiPart(block);
+      case "image":
+      case "audio":
+      case "text-plain":
+      case "file":
+        return convertStandardDataContentBlockToGeminiPart(block);
+      case "video":
+        return convertStandardVideoContentBlockToGeminiPart(block);
+      default:
+        return null;
+    }
   }
+
+  const ret: Gemini.Part | null = baseGeminiPart();
+  if (ret) {
+    if ("thoughtSignature" in block) {
+      ret.thoughtSignature = block.thoughtSignature! as string;
+    }
+  }
+  return ret;
 }
 
 /**
@@ -450,7 +484,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   }
 
-  const parts: Gemini.Part[] = [];
+  let parts: Gemini.Part[] = [];
 
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
@@ -467,15 +501,35 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert tool_calls to functionCall parts, reading thoughtSignature from the matching content block, falling back to the tool_call itself.
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    const signaturesById: Record<string, string> = {};
+    for (const block of contentBlocks) {
+      if (
+        block.type === "tool_call" &&
+        block.id &&
+        "thoughtSignature" in block &&
+        typeof block.thoughtSignature === "string"
+      ) {
+        signaturesById[block.id] = block.thoughtSignature;
+      }
+    }
     for (const toolCall of message.tool_calls) {
-      parts.push({
+      const part = {
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-      } as Gemini.Part.FunctionCall);
+      } as Gemini.Part.FunctionCall;
+      const thoughtSignature =
+        (toolCall.id && signaturesById[toolCall.id]) ??
+        ("thoughtSignature" in toolCall
+          ? (toolCall.thoughtSignature as string)
+          : undefined);
+      if (thoughtSignature) {
+        part.thoughtSignature = thoughtSignature;
+      }
+      parts.push(part);
     }
   }
 
@@ -501,6 +555,12 @@ function convertStandardContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+
+    // For tool messages, keep only the functionResponse part(s): any text is
+    // already included in functionResponse.response.result, and a `user`
+    // content mixing a functionResponse with text is rejected or corrupted
+    // by the API. Mirrors the legacy-path filter.
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only return content if we have parts
@@ -511,21 +571,9 @@ function convertStandardContentMessageToGeminiContent(
   return { role, parts };
 }
 
-/**
- * Converts a single LangChain message with legacy content blocks (v0 format) to Gemini Content.
- * This handles messages that have `response_metadata.output_version === "v0"`.
- *
- * This is intended to be called from `convertMessagesToGeminiContent`
- */
-function convertLegacyContentMessageToGeminiContent(
-  message: BaseMessage,
-  messages: BaseMessage[]
-): Gemini.Content | null {
-  // Skip system messages - they're handled separately
-  if (SystemMessage.isInstance(message)) {
-    return null;
-  }
-
+function convertLegacyPartToGeminiPart(
+  item: string | ContentBlock | Text
+): Gemini.Part {
   /**
    * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
    */
@@ -696,6 +744,67 @@ function convertLegacyContentMessageToGeminiContent(
     return ret;
   }
 
+  function baseGeminiPart(): Gemini.Part {
+    if (typeof item === "string") {
+      return { text: item };
+    } else if (typeof item === "object" && item !== null) {
+      if (isMessageContentText(item)) {
+        return { text: item.text };
+      } else if (isDataContentBlock(item)) {
+        return convertToProviderContentBlock(item, geminiContentBlockConverter);
+      } else if ("type" in item && item?.type === "functionCall") {
+        const { type, functionCall, ...etc } = item;
+        return {
+          ...etc,
+          functionCall,
+        } as Gemini.Part.FunctionCall;
+      } else if ("type" in item && item?.type === "executableCode") {
+        const { type, executableCode, ...etc } = item;
+        return {
+          ...etc,
+          executableCode,
+        } as Gemini.Part.ExecutableCode;
+      } else if ("type" in item && item?.type === "codeExecutionResult") {
+        const { type, codeExecutionResult, ...etc } = item;
+        return {
+          ...etc,
+          codeExecutionResult,
+        } as Gemini.Part.CodeExecutionResult;
+      } else if (isMessageContentImageUrl(item)) {
+        return messageContentImageUrl(item);
+      } else if (isMessageContentMedia(item)) {
+        return messageContentMedia(item);
+      }
+    }
+    return item as Gemini.Part;
+  }
+
+  const ret = baseGeminiPart();
+  const itemRecord = item as Record<string, unknown>;
+  if ("thought" in itemRecord) {
+    ret.thought = itemRecord.thought as boolean;
+  }
+  if ("thoughtSignature" in itemRecord) {
+    ret.thoughtSignature = itemRecord.thoughtSignature as string;
+  }
+  return ret;
+}
+
+/**
+ * Converts a single LangChain message with legacy content blocks (v0 format) to Gemini Content.
+ * This handles messages that have `response_metadata.output_version === "v0"`.
+ *
+ * This is intended to be called from `convertMessagesToGeminiContent`
+ */
+function convertLegacyContentMessageToGeminiContent(
+  message: BaseMessage,
+  messages: BaseMessage[]
+): Gemini.Content | null {
+  // Skip system messages - they're handled separately
+  if (SystemMessage.isInstance(message)) {
+    return null;
+  }
+
   const role: Gemini.Role = iife(() => {
     if (HumanMessage.isInstance(message)) {
       return "user";
@@ -738,41 +847,8 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
-      if (typeof item === "string") {
-        parts.push({ text: item });
-      } else if (typeof item === "object" && item !== null) {
-        if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
-        } else if (isDataContentBlock(item)) {
-          parts.push(
-            convertToProviderContentBlock(item, geminiContentBlockConverter)
-          );
-        } else if (item?.type === "functionCall") {
-          const { type, functionCall, ...etc } = item;
-          parts.push({
-            ...etc,
-            functionCall,
-          } as Gemini.Part.FunctionCall);
-        } else if (item?.type === "executableCode") {
-          const { type, executableCode, ...etc } = item;
-          parts.push({
-            ...etc,
-            executableCode,
-          } as Gemini.Part.ExecutableCode);
-        } else if (item?.type === "codeExecutionResult") {
-          const { type, codeExecutionResult, ...etc } = item;
-          parts.push({
-            ...etc,
-            codeExecutionResult,
-          } as Gemini.Part.CodeExecutionResult);
-        } else if (isMessageContentImageUrl(item)) {
-          parts.push(messageContentImageUrl(item));
-        } else if (isMessageContentMedia(item)) {
-          parts.push(messageContentMedia(item));
-        } else {
-          parts.push(item as Gemini.Part);
-        }
-      }
+      const part = convertLegacyPartToGeminiPart(item);
+      parts.push(part);
     }
   }
 
@@ -881,7 +957,8 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (prev && prev.role === content.role) {
+      if (canMergeInto(prev, content) && content.parts) {
+        prev.parts ??= [];
         prev.parts.push(...content.parts);
       } else {
         contents.push(content);
@@ -891,6 +968,38 @@ export const convertMessagesToGeminiContents: Converter<
 
   return contents;
 };
+
+/**
+ * Returns true if any part of the given content is a functionResponse part
+ * (i.e. it was produced from a ToolMessage).
+ */
+function hasFunctionResponse(content: Gemini.Content): boolean {
+  return content.parts?.some((part) => "functionResponse" in part) === true;
+}
+
+/**
+ * Adjacent same-role contents merge only when they are the same kind of
+ * turn:
+ *
+ * - Both carry functionResponse parts (a run of tool responses answering
+ *   one model turn's parallel calls): the API requires those to share a
+ *   single `user` content whose part count matches the call count.
+ * - Neither does (plain text turns): coalesced as before #11444.
+ *
+ * A functionResponse turn never merges with a plain one: a `user` content
+ * mixing the two is rejected by newer Gemini models and corrupts
+ * generation on older ones.
+ */
+function canMergeInto(
+  prev: Gemini.Content | undefined,
+  content: Gemini.Content
+): boolean {
+  return (
+    prev !== undefined &&
+    prev.role === content.role &&
+    hasFunctionResponse(prev) === hasFunctionResponse(content)
+  );
+}
 
 /**
  * Converts LangChain system messages to Gemini API system instruction format.

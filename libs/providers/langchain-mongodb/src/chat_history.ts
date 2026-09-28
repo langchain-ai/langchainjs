@@ -19,6 +19,8 @@ export interface MongoDBChatMessageHistoryInput {
 /**
  * @example
  * ```typescript
+ * // sessionId must come from a value the server has already validated
+ * // (e.g. an authenticated session), never straight from a request field.
  * const chatHistory = new MongoDBChatMessageHistory({
  *   collection: myCollection,
  *   sessionId: 'unique-session-id',
@@ -38,6 +40,10 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   constructor({ collection, sessionId }: MongoDBChatMessageHistoryInput) {
     super();
+    // TS's `string` type is erased at runtime; verify it here.
+    if (typeof sessionId !== "string" || sessionId.length === 0) {
+      throw new TypeError("sessionId must be a non-empty string");
+    }
     this.collection = collection;
     this.sessionId = sessionId;
     this.collection.db.client.appendMetadata({
@@ -47,7 +53,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   async getMessages(): Promise<BaseMessage[]> {
     const document = await this.collection.findOne({
-      [this.idKey]: this.sessionId,
+      [this.idKey]: { $eq: this.sessionId },
     });
     const messages = document?.messages || [];
     return mapStoredMessagesToChatMessages(messages);
@@ -56,7 +62,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   async addMessage(message: BaseMessage): Promise<void> {
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.collection.updateOne(
-      { [this.idKey]: this.sessionId },
+      { [this.idKey]: { $eq: this.sessionId } },
       {
         $push: { messages: { $each: messages } } as PushOperator<{
           messages: StoredMessage[];
@@ -67,6 +73,6 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   async clear(): Promise<void> {
-    await this.collection.deleteOne({ [this.idKey]: this.sessionId });
+    await this.collection.deleteOne({ [this.idKey]: { $eq: this.sessionId } });
   }
 }
