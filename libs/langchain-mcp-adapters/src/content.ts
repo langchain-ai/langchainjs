@@ -332,7 +332,7 @@ export function convertCallToolResult({
   return [convertedContent, enhancedArtifacts];
 }
 
-/** An empty failed `ToolMessage` is fragile for some providers. */
+/** A failed `ToolMessage` without text is fragile for some providers. */
 function withErrorText(
   content: ExtendedContent,
   sent: CallToolResult["content"]
@@ -350,25 +350,25 @@ function withErrorText(
   )
     return content;
 
-  // Text always reaches the model, so what the server sent beyond blank text
-  // is non-text, and some of it may have been routed to the artifact.
+  // Text is never routed away, so anything else the server sent is non-text.
   const nonText = sent.filter((block) => block.type !== "text").length;
-  if (nonText === 0)
-    return "The MCP tool reported an error with empty content.";
+  if (nonText === 0) return "The MCP tool returned an error with no content.";
 
   const shown = blocks.filter((block) => block.type !== "text");
-  const routed = nonText - shown.length;
-  const text = `The MCP tool reported an error with no text content (${nonText} non-text content block(s)${routed ? `, ${routed} in the tool artifact` : ""}).`;
+  if (shown.length === 0)
+    return "The MCP tool returned an error; its content is in the tool artifact.";
 
-  return shown.length ? [{ type: "text", text }, ...shown] : text;
+  const text =
+    shown.length < nonText
+      ? "The MCP tool returned an error with no text; the rest of its content is in the tool artifact."
+      : "The MCP tool returned an error with no text.";
+
+  return [{ type: "text", text }, ...shown];
 }
 
 /**
- * Convert an `isError` result into failed tool output.
- *
- * For a tool call this is a `ToolMessage` with `status: "error"` carrying the
- * server's converted content, so the model can correct itself even under
- * `wrapToolCall` middleware. A plain-argument invocation throws instead.
+ * Answer a tool call's `isError` result with a `status: "error"` message the
+ * model can act on; a plain-argument call throws `ToolException` instead.
  *
  * @internal
  */
@@ -377,9 +377,9 @@ export function convertCallToolError({
   name,
   ...args
 }: ConvertCallToolResultArgs & {
-  /** The id of the tool call being answered; without one, this throws. */
+  /** Set only for a tool call; without it, this throws. */
   toolCallId?: string;
-  /** The LangChain tool's name, which core also gives its tool messages. */
+  /** The LangChain tool's name, as core uses for tool messages. */
   name: string;
 }): ToolMessage {
   const { serverName, toolName, result } = args;
@@ -397,8 +397,7 @@ export function convertCallToolError({
 
   const [content, artifact] = convertCallToolResult({
     ...args,
-    // The server's error text is what lets the model correct itself, however
-    // successful results are routed.
+    // The model needs the error text to correct itself, whatever the routing.
     outputHandling: {
       ..._resolveDetailedOutputHandling(args.outputHandling),
       text: "content",

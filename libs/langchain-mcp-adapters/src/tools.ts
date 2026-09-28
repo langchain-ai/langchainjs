@@ -74,7 +74,7 @@ type CallToolArgs = {
    */
   toolName: string;
   /**
-   * The LangChain tool's name, which names its tool messages
+   * The LangChain tool's name, used for its tool messages
    */
   langchainToolName: string;
   /**
@@ -82,7 +82,7 @@ type CallToolArgs = {
    */
   args: ToolArguments;
   /**
-   * Optional RunnableConfig with timeout settings and, for a tool call, the call
+   * Optional config with timeout settings and, for a tool call, `toolCall`
    */
   config?: ToolRunnableConfig;
   /**
@@ -405,7 +405,7 @@ async function _callTool(
         );
     }
 
-    // A failed call's output is the server's error, not a result to rewrite.
+    // `afterToolCall` sees successful results only.
     if (result.isError)
       return [
         convertCallToolError({

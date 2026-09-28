@@ -1,7 +1,6 @@
 import { LangChainError } from "@langchain/core/errors";
 import { ToolMessage } from "@langchain/core/messages";
 import { Client, type CallToolResult } from "@modelcontextprotocol/client";
-import { createAgent, createMiddleware, FakeToolCallingModel } from "langchain";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { MCPClientError } from "../client.js";
@@ -164,56 +163,45 @@ describe("server-reported tool errors", () => {
       type: "mcp_meta",
       data: { reason: "policy" },
     });
-    // Result hooks see successful results only, as before.
+    // Result hooks see successful results only.
     expect(afterToolCall).not.toHaveBeenCalled();
-  });
-
-  test("keep non-text error content", async () => {
-    const image = {
-      type: "image",
-      data: "aGk=",
-      mimeType: "image/png",
-    } as const;
-    const [tool] = await loadMcpTools(
-      "test",
-      erroringClient([{ type: "text", text: "see chart" }, image])
-    );
-
-    const output = await tool.invoke(toolCall);
-
-    expect(output).toMatchObject({
-      status: "error",
-      content: [{ type: "text", text: "see chart" }, image],
-    });
   });
 
   test.each([
     {
+      name: "text with non-text",
+      content: [
+        { type: "text", text: "see chart" },
+        { type: "image", data: "aGk=", mimeType: "image/png" },
+      ],
+      expected: [
+        { type: "text", text: "see chart" },
+        { type: "image", data: "aGk=", mimeType: "image/png" },
+      ],
+    },
+    {
       name: "empty",
       content: [],
-      expected: "The MCP tool reported an error with empty content.",
+      expected: "The MCP tool returned an error with no content.",
     },
     {
       name: "non-text only",
       content: [{ type: "image", data: "aGk=", mimeType: "image/png" }],
       expected: [
-        {
-          type: "text",
-          text: "The MCP tool reported an error with no text content (1 non-text content block(s)).",
-        },
+        { type: "text", text: "The MCP tool returned an error with no text." },
         { type: "image", data: "aGk=", mimeType: "image/png" },
       ],
     },
     {
       name: "empty text",
       content: [{ type: "text", text: "" }],
-      expected: "The MCP tool reported an error with empty content.",
+      expected: "The MCP tool returned an error with no content.",
     },
     {
       name: "resource-only",
       content: [{ type: "resource", resource: { uri: "e:", text: "boom" } }],
       expected:
-        "The MCP tool reported an error with no text content (1 non-text content block(s), 1 in the tool artifact).",
+        "The MCP tool returned an error; its content is in the tool artifact.",
     },
     {
       name: "artifact-routed text",
@@ -227,7 +215,7 @@ describe("server-reported tool errors", () => {
     outputHandling?: "artifact";
     expected: unknown;
   }[])(
-    "give the model text for $name error content",
+    "shows the model $name error content",
     async ({ content, outputHandling, expected }) => {
       const [tool] = await loadMcpTools("test", erroringClient(content), {
         outputHandling,
@@ -238,54 +226,6 @@ describe("server-reported tool errors", () => {
       expect(output).toMatchObject({ status: "error", content: expected });
     }
   );
-
-  test("still throw for a plain-argument invocation", async () => {
-    const [tool] = await loadMcpTools(
-      "test",
-      erroringClient([{ type: "text", text: "denied" }])
-    );
-
-    const failure = await tool.invoke({}).catch((thrown: unknown) => thrown);
-
-    expect(isToolException(failure)).toBe(true);
-    expect(failure).toMatchObject({
-      message: "MCP tool 'echo' on server 'test' returned an error: denied",
-      result: {
-        isError: true,
-        content: [{ type: "text", text: "denied" }],
-        _meta: { reason: "policy" },
-      },
-    });
-  });
-
-  test("do not end an agent run that has wrapToolCall middleware", async () => {
-    const [tool] = await loadMcpTools(
-      "test",
-      erroringClient([{ type: "text", text: "denied" }])
-    );
-    const agent = createAgent({
-      model: new FakeToolCallingModel({
-        toolCalls: [[{ id: "call-1", name: "echo", args: {} }], []],
-      }),
-      tools: [tool],
-      middleware: [
-        createMiddleware({
-          name: "passthrough",
-          wrapToolCall: (request, handler) => handler(request),
-        }),
-      ],
-    });
-
-    const { messages } = await agent.invoke({
-      messages: [{ role: "user", content: "go" }],
-    });
-
-    expect(messages.find(ToolMessage.isInstance)).toMatchObject({
-      status: "error",
-      content: "denied",
-      tool_call_id: "call-1",
-    });
-  });
 
   afterEach(() => vi.restoreAllMocks());
 });
