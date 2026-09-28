@@ -12,11 +12,18 @@ export type AnthropicMessageParam = Anthropic.MessageParam;
 export type AnthropicMessageResponse =
   | Anthropic.ContentBlock
   | AnthropicToolResponse;
-export type AnthropicMessageCreateParams =
-  Anthropic.MessageCreateParamsNonStreaming;
-export type AnthropicStreamingMessageCreateParams =
-  Anthropic.MessageCreateParamsStreaming;
-export type AnthropicThinkingConfigParam = Anthropic.ThinkingConfigParam;
+export type AnthropicMessageCreateParams = Omit<
+  Anthropic.MessageCreateParamsNonStreaming,
+  "thinking"
+> & { thinking?: AnthropicThinkingConfigParam };
+export type AnthropicStreamingMessageCreateParams = Omit<
+  Anthropic.MessageCreateParamsStreaming,
+  "thinking"
+> & { thinking?: AnthropicThinkingConfigParam };
+export type AnthropicThinkingConfigParam =
+  | Anthropic.ThinkingConfigParam
+  | { type: "adaptive"; display: "updates" }
+  | { type: "between_tools" };
 export type AnthropicContextManagementConfigParam =
   Anthropic.Beta.BetaContextManagementConfig;
 export type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;

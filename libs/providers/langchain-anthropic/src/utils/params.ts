@@ -77,6 +77,25 @@ export function validateInvocationParamCompatibility(
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
   const fableModel = modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
   const modelName = model ?? "this model";
+  const sonnet55Model = modelStartsWithAnyPrefix(model, ["claude-sonnet-5-5"]);
+
+  if (sonnet55Model && thinkingExplicitlySet && thinking.type === "disabled") {
+    throw new Error(
+      `thinking.type="disabled" is not supported for ${modelName}; use thinking.type="between_tools" or "adaptive" instead`
+    );
+  }
+  if (sonnet55Model && thinking.type === "between_tools") {
+    if (Object.keys(thinking).some((key) => key !== "type")) {
+      throw new Error(
+        'thinking.type="between_tools" accepts no additional fields'
+      );
+    }
+    if (outputConfig?.effort === "xhigh" || outputConfig?.effort === "max") {
+      throw new Error(
+        'thinking.type="between_tools" requires outputConfig.effort="high" or below; use adaptive thinking for "xhigh" or "max"'
+      );
+    }
+  }
 
   if (fableModel && thinkingExplicitlySet && thinking.type === "disabled") {
     throw new Error(

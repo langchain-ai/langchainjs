@@ -68,6 +68,47 @@ function messageFinish(
 }
 
 describe("convertAnthropicStream", () => {
+  test("preserves Sonnet thinking signatures, toolset namespaces, and refusal details", async () => {
+    const stop_details = { type: "refusal", category: "bio" };
+    const blocks = [
+      { type: "thinking", thinking: "", signature: "signed" },
+      {
+        type: "tool_use",
+        id: "call",
+        name: "screenshot",
+        input: {},
+        toolset_name: "computer",
+      },
+      { type: "advisor_redacted_result", data: "encrypted" },
+    ];
+    const source = (async function* () {
+      for (const [index, content_block] of blocks.entries()) {
+        yield { type: "content_block_start", index, content_block };
+      }
+      yield {
+        type: "message_delta",
+        delta: { stop_reason: "refusal", stop_details },
+        usage: { output_tokens: 1 },
+      };
+      yield { type: "message_stop" };
+    })();
+    const events = [];
+    for await (const event of convertAnthropicStream(
+      source as unknown as Parameters<typeof convertAnthropicStream>[0]
+    )) {
+      events.push(event);
+    }
+    expect(events[0]).toMatchObject({
+      content: { type: "reasoning", reasoning: "", signature: "signed" },
+    });
+    expect(events[1]).toMatchObject({ content: { toolset_name: "computer" } });
+    expect(events[2]).toMatchObject({
+      content: { type: "non_standard", value: blocks[2] },
+    });
+    expect(messageFinish(events).responseMetadata.stop_details).toEqual(
+      stop_details
+    );
+  });
   test("surfaces a gateway-provided cost on the message-finish response metadata", async () => {
     const events = await convert({ cost: 0.0123 });
 

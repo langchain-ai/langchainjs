@@ -195,6 +195,9 @@ export function _formatStandardContent(
     } else if (block.type === "tool_call") {
       result.push({
         type: "tool_use",
+        ...(isAnthropicMessage && typeof block.toolset_name === "string"
+          ? { toolset_name: block.toolset_name }
+          : {}),
         id: block.id ?? "",
         name: block.name,
         input: block.args,
@@ -212,6 +215,9 @@ export function _formatStandardContent(
       });
       result.push({
         type: "tool_use",
+        ...(isAnthropicMessage && typeof block.toolset_name === "string"
+          ? { toolset_name: block.toolset_name }
+          : {}),
         id: block.id ?? "",
         name: block.name ?? "",
         input,

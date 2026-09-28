@@ -84,6 +84,32 @@ describe("generator", () => {
   });
 
   describe("generateModelProfiles", () => {
+    it("generates override-only models with array capabilities", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ anthropic: createMockProvider("anthropic", {}) }),
+      });
+      const outputPath = path.join(tempDir, "models.ts");
+      await generateModelProfiles(
+        "anthropic",
+        { imageInputs: true },
+        {
+          "claude-sonnet-5-5": {
+            structuredOutput: true,
+            reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+            reasoningEffortDefault: "high",
+          },
+        },
+        outputPath
+      );
+      const content = fs.readFileSync(outputPath, "utf-8");
+      expect(content).toContain('"claude-sonnet-5-5"');
+      expect(content).toContain(
+        'reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"]'
+      );
+      expect(content).toContain('reasoningEffortDefault: "high"');
+      expect(content).toContain("imageInputs: true");
+    });
     it("should generate TypeScript file with model profiles", async () => {
       const mockProviderData: ProviderMap = {
         openai: createMockProvider("openai", {

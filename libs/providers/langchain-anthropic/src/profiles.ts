@@ -275,5 +275,20 @@ const PROFILES: Record<string, ModelProfile> = {
     pdfToolMessage: true,
     imageToolMessage: true,
   },
+  "claude-sonnet-5-5": {
+    imageUrlInputs: true,
+    pdfInputs: true,
+    pdfToolMessage: true,
+    imageToolMessage: true,
+    structuredOutput: true,
+    maxInputTokens: 1000000,
+    maxOutputTokens: 128000,
+    imageInputs: true,
+    reasoningOutput: true,
+    toolCalling: true,
+    toolChoice: false,
+    reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max"],
+    reasoningEffortDefault: "high",
+  },
 };
 export default PROFILES;

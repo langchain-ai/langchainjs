@@ -69,7 +69,13 @@ export async function* convertAnthropicStream(
           "cost" in data.usage &&
           typeof data.usage.cost === "number"
         ) {
-          responseMetadata = { usage: { cost: data.usage.cost } };
+          responseMetadata = {
+            ...responseMetadata,
+            usage: { cost: data.usage.cost },
+          };
+        }
+        if ("stop_details" in data.delta) {
+          responseMetadata.stop_details = data.delta.stop_details;
         }
         if (shouldStreamUsage && data.usage) {
           if (!usageSnapshot) {
@@ -222,6 +228,9 @@ function mapBlockToContentBlock(
       return {
         type: "reasoning" as const,
         reasoning: block.thinking ?? "",
+        ...(typeof block.signature === "string"
+          ? { signature: block.signature }
+          : {}),
         index,
       };
     case "redacted_thinking":
@@ -232,6 +241,9 @@ function mapBlockToContentBlock(
         id: block.id,
         name: block.name,
         args: "",
+        ...(typeof block.toolset_name === "string"
+          ? { toolset_name: block.toolset_name }
+          : {}),
         index,
       };
     case "server_tool_use":

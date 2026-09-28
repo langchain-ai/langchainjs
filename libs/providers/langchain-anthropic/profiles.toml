@@ -11,3 +11,14 @@ structuredOutput = false
 
 [overrides."claude-fable-5-1"]
 structuredOutput = true
+
+[overrides."claude-sonnet-5-5"]
+maxInputTokens = 1000000
+maxOutputTokens = 128000
+imageInputs = true
+reasoningOutput = true
+structuredOutput = true
+toolCalling = true
+toolChoice = false
+reasoningEffortLevels = ["low", "medium", "high", "xhigh", "max"]
+reasoningEffortDefault = "high"

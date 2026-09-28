@@ -43,6 +43,11 @@ function valueToExpression(value: unknown): ts.Expression {
   if (typeof value === "string") {
     return ts.factory.createStringLiteral(value);
   }
+  if (Array.isArray(value)) {
+    return ts.factory.createArrayLiteralExpression(
+      value.map(valueToExpression)
+    );
+  }
   // Fallback to JSON for complex types
   return ts.factory.createStringLiteral(JSON.stringify(value));
 }
@@ -188,8 +193,12 @@ export async function generateModelProfiles(
 
   const profiles: Record<string, ModelProfile> = {};
 
-  for (const [modelName, modelData] of Object.entries(provider.models)) {
-    const baseProfile = modelToProfile(modelData);
+  for (const modelName of new Set([
+    ...Object.keys(provider.models),
+    ...Object.keys(modelOverrides),
+  ])) {
+    const modelData = provider.models[modelName];
+    const baseProfile = modelData ? modelToProfile(modelData) : {};
     const modelSpecificOverrides = modelOverrides[modelName];
 
     const finalProfile = applyOverrides(
