@@ -122,7 +122,9 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 
 // In your OAuth callback route, with the same provider (same storage) the adapter uses:
 const params = new URL(req.url).searchParams;
-if (params.get("state") !== savedState) throw new Error("state mismatch"); // the SDK doesn't check state
+// The SDK doesn't check state. Consume it once: look it up and delete it.
+if (!(await deletePendingState(params.get("state"))))
+  throw new Error("unknown state");
 const transport = new StreamableHTTPClientTransport(new URL(serverUrl), {
   authProvider,
 });
@@ -147,16 +149,17 @@ redeems the same code twice, and the SDK responds by discarding the
 tokens the first call just saved, logging the user out.
 
 Don't display the SDK's own error text to users. `IssuerMismatchError`
-carries the callback's `iss`, which an attacker controls in a mix-up
-attack, and `OAuthError` can carry the authorization server's
-`error_description`. Catch the callback failure and show your own generic
+(from `@modelcontextprotocol/client`, like `OAuthError`) carries the
+callback's `iss`, which an attacker controls in a mix-up attack, and
+`OAuthError` can carry the authorization server's `error_description`. Catch the callback failure and show your own generic
 message instead.
 
 A connection rejected for credentials throws an `MCPClientError`. Its `cause`
 is the SDK's `UnauthorizedError` when the SDK can't recover on its own (an
 OAuth login is needed, or a token provider has no `onUnauthorized`), or an
-HTTP 401 error (`SdkHttpError`, `status: 401`) when the retry after
-`onUnauthorized` or a token refresh is still rejected.
+HTTP 401 error (`SdkHttpError` from `@modelcontextprotocol/client`,
+`status: 401`) when the retry after `onUnauthorized` or a token refresh is
+still rejected.
 
 Once a provider has a token it replaces a configured `Authorization` header;
 until then the header is sent. The SDK also forwards a configured static
@@ -165,11 +168,12 @@ and token endpoints, not only to the MCP server, so don't pair a secret API
 key with an OAuth provider whose authorization server lives on another
 origin.
 
-A per-call `authProvider` or `headers` override applies to every HTTP and SSE
-server the adapter holds, not only the one you named. Each distinct provider
-object also gets its own connection, kept until `close()`. Reuse one provider
-object per user rather than creating one per call, and use a single-server
-adapter when different users need different credentials.
+An `authProvider` or `headers` passed in a method's options (`listTools()`,
+`listToolsets()`, `getClient()` and the resource methods) applies to every
+HTTP and SSE server the adapter holds, not only the one you named. Each
+distinct provider object also gets its own connection, kept until `close()`.
+Reuse one provider object per user rather than creating one per call, and use
+a single-server adapter when different users need different credentials.
 
 ## Examples
 
