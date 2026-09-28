@@ -91,9 +91,10 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 `outputHandling` controls what reaches the model versus the tool artifact.
 
 A server-reported error (`isError`) reaches the model as a `ToolMessage` with
-`status: "error"` carrying the server's content, including images, even under
-`wrapToolCall` middleware. Invoked with plain arguments rather than a tool
-call, the tool throws a `ToolException` whose `result` is the MCP result.
+`status: "error"`, even under `wrapToolCall` middleware. The server's error
+text always reaches the model; its other content follows `outputHandling`.
+Invoked with plain arguments rather than a tool call, the tool throws a
+`ToolException` whose `result` is the MCP result.
 
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
 [hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)

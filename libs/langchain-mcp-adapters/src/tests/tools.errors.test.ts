@@ -148,7 +148,7 @@ describe("server-reported tool errors", () => {
     const [tool] = await loadMcpTools(
       "test",
       erroringClient([{ type: "text", text: "denied" }]),
-      { afterToolCall }
+      { afterToolCall, prefixToolNameWithServerName: true }
     );
 
     const output = await tool.invoke(toolCall);
@@ -158,7 +158,7 @@ describe("server-reported tool errors", () => {
       status: "error",
       content: "denied",
       tool_call_id: "call-1",
-      name: "echo",
+      name: "test__echo",
     });
     expect(output.artifact).toContainEqual({
       type: "mcp_meta",
@@ -204,14 +204,34 @@ describe("server-reported tool errors", () => {
         { type: "image", data: "aGk=", mimeType: "image/png" },
       ],
     },
+    {
+      name: "empty text",
+      content: [{ type: "text", text: "" }],
+      expected: "The MCP tool reported an error with empty content.",
+    },
+    {
+      name: "resource-only",
+      content: [{ type: "resource", resource: { uri: "e:", text: "boom" } }],
+      expected:
+        "The MCP tool reported an error with no text content (1 non-text content block(s), 1 in the tool artifact).",
+    },
+    {
+      name: "artifact-routed text",
+      content: [{ type: "text", text: "denied" }],
+      outputHandling: "artifact",
+      expected: "denied",
+    },
   ] satisfies {
     name: string;
     content: CallToolResult["content"];
+    outputHandling?: "artifact";
     expected: unknown;
   }[])(
-    "give $name error content placeholder text",
-    async ({ content, expected }) => {
-      const [tool] = await loadMcpTools("test", erroringClient(content));
+    "give the model text for $name error content",
+    async ({ content, outputHandling, expected }) => {
+      const [tool] = await loadMcpTools("test", erroringClient(content), {
+        outputHandling,
+      });
 
       const output = await tool.invoke(toolCall);
 

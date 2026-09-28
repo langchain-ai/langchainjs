@@ -7,11 +7,7 @@ import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
 } from "@modelcontextprotocol/client";
-import {
-  ToolMessage,
-  type ContentBlock,
-  type ToolCall,
-} from "@langchain/core/messages";
+import { ToolMessage, type ContentBlock } from "@langchain/core/messages";
 
 import { ToolException } from "./utils/errors.js";
 
@@ -337,23 +333,34 @@ export function convertCallToolResult({
 }
 
 /** An empty failed `ToolMessage` is fragile for some providers. */
-function withErrorText(content: ExtendedContent): ExtendedContent {
+function withErrorText(
+  content: ExtendedContent,
+  sent: CallToolResult["content"]
+): ExtendedContent {
+  const blocks: ContentBlock[] =
+    typeof content === "string" ? [{ type: "text", text: content }] : content;
+
   if (
-    typeof content === "string" ||
-    content.some((block) => block.type === "text")
+    blocks.some(
+      (block) =>
+        block.type === "text" &&
+        typeof block.text === "string" &&
+        block.text.trim() !== ""
+    )
   )
     return content;
 
-  if (content.length === 0)
+  // Text always reaches the model, so what the server sent beyond blank text
+  // is non-text, and some of it may have been routed to the artifact.
+  const nonText = sent.filter((block) => block.type !== "text").length;
+  if (nonText === 0)
     return "The MCP tool reported an error with empty content.";
 
-  return [
-    {
-      type: "text",
-      text: `The MCP tool reported an error with no text content (${content.length} non-text content block(s)).`,
-    },
-    ...content,
-  ];
+  const shown = blocks.filter((block) => block.type !== "text");
+  const routed = nonText - shown.length;
+  const text = `The MCP tool reported an error with no text content (${nonText} non-text content block(s)${routed ? `, ${routed} in the tool artifact` : ""}).`;
+
+  return shown.length ? [{ type: "text", text }, ...shown] : text;
 }
 
 /**
@@ -366,12 +373,18 @@ function withErrorText(content: ExtendedContent): ExtendedContent {
  * @internal
  */
 export function convertCallToolError({
-  toolCall,
+  toolCallId,
+  name,
   ...args
-}: ConvertCallToolResultArgs & { toolCall?: ToolCall }): ToolMessage {
+}: ConvertCallToolResultArgs & {
+  /** The id of the tool call being answered; without one, this throws. */
+  toolCallId?: string;
+  /** The LangChain tool's name, which core also gives its tool messages. */
+  name: string;
+}): ToolMessage {
   const { serverName, toolName, result } = args;
 
-  if (!toolCall?.id)
+  if (!toolCallId)
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
         .map((content: MCPContentBlock) =>
@@ -382,13 +395,21 @@ export function convertCallToolError({
       result
     );
 
-  const [content, artifact] = convertCallToolResult(args);
+  const [content, artifact] = convertCallToolResult({
+    ...args,
+    // The server's error text is what lets the model correct itself, however
+    // successful results are routed.
+    outputHandling: {
+      ..._resolveDetailedOutputHandling(args.outputHandling),
+      text: "content",
+    },
+  });
 
   return new ToolMessage({
     status: "error",
-    content: withErrorText(content),
+    content: withErrorText(content, result.content),
     artifact,
-    tool_call_id: toolCall.id,
-    name: toolCall.name,
+    tool_call_id: toolCallId,
+    name,
   });
 }
