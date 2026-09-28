@@ -189,18 +189,29 @@ describe("auth failure labeling", () => {
     expect(error.cause).toBeInstanceOf(UnauthorizedError);
   });
 
-  it("labels a 401 without a provider, with the HTTP status on the cause", async () => {
-    const server = await fixture();
-    const error = await failure(
-      adapter({
-        servers: { svc: { transport: "http", url: server.mcpUrl } },
-      }).listTools()
-    );
-    expect(error.message).toMatch(
-      /^Authentication failed for HTTP server "svc"/
-    );
-    expect(getHttpErrorCode(error.cause)).toBe(401);
-  });
+  it.each([
+    ["without a provider", undefined],
+    [
+      "that survives onUnauthorized",
+      { token: async () => "bad", onUnauthorized: async () => {} },
+    ],
+  ])(
+    "labels a 401 %s, with the HTTP status on the cause",
+    async (_label, authProvider) => {
+      const server = await fixture();
+      const error = await failure(
+        adapter({
+          servers: {
+            svc: { transport: "http", url: server.mcpUrl, authProvider },
+          },
+        }).listTools()
+      );
+      expect(error.message).toMatch(
+        /^Authentication failed for HTTP server "svc"/
+      );
+      expect(getHttpErrorCode(error.cause)).toBe(401);
+    }
+  );
 
   it("never falls back to SSE from a legacy-mode provider flow", async () => {
     const server = await fixture();
@@ -290,34 +301,6 @@ describe("auth failures stay retryable", () => {
     token = server.mintAccessToken();
     expect(hasWhoami(await mcp.listTools())).toBe(true);
     expect(onConnectionError).toHaveBeenCalledTimes(1);
-  });
-
-  it("labels a 401 that survives onUnauthorized as an authentication failure, and keeps retrying", async () => {
-    const server = await fixture();
-    const onUnauthorized = vi.fn();
-    const onConnectionError = vi.fn();
-    const mcp = adapter({
-      onConnectionError,
-      servers: {
-        svc: {
-          transport: "http",
-          url: server.mcpUrl,
-          authProvider: { token: async () => "bad", onUnauthorized },
-        },
-      },
-    });
-
-    await mcp.listTools();
-    expect(onUnauthorized).toHaveBeenCalledTimes(1);
-    const [{ error }] = onConnectionError.mock.calls[0];
-    expect(MCPClientError.isInstance(error)).toBe(true);
-    expect((error as MCPClientError).message).toMatch(/^Authentication failed/);
-    expect(getHttpErrorCode((error as MCPClientError).cause)).toBe(401);
-    expect(isAuthenticationError(error)).toBe(true);
-
-    await mcp.listTools();
-    expect(onUnauthorized).toHaveBeenCalledTimes(2);
-    expect(onConnectionError).toHaveBeenCalledTimes(2);
   });
 
   it("retries a legacy-mode server whose HTTP→SSE fallback also 401s", async () => {
