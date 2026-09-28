@@ -306,6 +306,7 @@ export class MCPAdapter {
    *                 If not provided, returns tools from all servers.
    * @param options - Optional connection options for the tool calls, e.g. custom auth provider or headers.
    * @returns A flattened array of tools from the specified servers (or all servers)
+   * @throws {MCPClientError} If the flattened result would contain two tools with the same name
    *
    * @example
    * ```ts
@@ -1181,48 +1182,26 @@ export class MCPAdapter {
 export { MCPAdapter as MultiServerMCPClient };
 
 /**
- * `listTools()` flattens per-server catalogs into one array, so two servers
- * exposing a tool with the same name would otherwise silently collapse into
- * duplicate entries: `ToolNode` routes every call for that name to whichever
- * tool appears first. Throw instead, naming every distinct server that
- * exposes the tool, mirroring FastMCP's `ClientGroup` tool-collision check.
- *
- * Owners are tracked as a `Set` per tool name, not a list, so this only
- * fires on a genuine cross-server collision: a repeated server name in the
- * selection (e.g. `listTools("a", "a")`) collapses to one owner, and a
- * server whose own descriptor list repeats a tool name (a server-side bug,
- * not a multi-server routing hazard) also collapses to one owner and is
- * left exactly as it behaved before this check existed. `additionalToolNamePrefix`
- * is not suggested here: it is one adapter-wide string applied to every
- * server (`types.ts`'s top-level schema, read once in the constructor), so
- * it cannot by itself separate two colliding servers.
+ * `listTools()` flattens catalogs into one list, so a repeated tool name -
+ * from two servers or twice in one server's own list - would let `ToolNode`
+ * route every call for that name to whichever tool appears first. Tool
+ * names are unprefixed by default.
  */
 function assertNoToolNameCollisions(
   catalog: Record<string, DynamicStructuredTool[]>,
   servers: string[]
 ): void {
-  const serversByToolName = new Map<string, Set<string>>();
+  const serverNameByToolName = new Map<string, string>();
 
-  for (const serverName of servers) {
+  for (const serverName of new Set(servers)) {
     for (const tool of catalog[serverName] ?? []) {
-      const owners = serversByToolName.get(tool.name);
-      if (owners) {
-        owners.add(serverName);
-      } else {
-        serversByToolName.set(tool.name, new Set([serverName]));
+      const firstServer = serverNameByToolName.get(tool.name);
+      if (firstServer !== undefined) {
+        throw new MCPClientError(
+          `Tool name collision: a tool named "${tool.name}" is exposed more than once (${firstServer}, ${serverName}). Set "prefixToolNameWithServerName: true" to keep tool names unique across servers.`
+        );
       }
-    }
-  }
-
-  for (const [toolName, owners] of serversByToolName) {
-    if (owners.size > 1) {
-      throw new MCPClientError(
-        `Tool name collision: multiple MCP servers expose a tool named "${toolName}" (${Array.from(
-          owners
-        ).join(
-          ", "
-        )}). Set "prefixToolNameWithServerName: true" to keep tool names unique across servers.`
-      );
+      serverNameByToolName.set(tool.name, serverName);
     }
   }
 }
