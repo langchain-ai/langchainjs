@@ -267,8 +267,8 @@ export class MCPAdapter {
           await this.#onConnectionError({ serverName, error });
         }
 
-        // A login can complete later (finishAuth, a refreshed token), so an
-        // auth failure must not block the server for this adapter's lifetime.
+        // A later login or a refreshed token can succeed, so an auth failure
+        // must not block the server for this adapter's lifetime.
         if (!isAuthenticationError(error)) this.#failedServers.add(key);
       }
     }

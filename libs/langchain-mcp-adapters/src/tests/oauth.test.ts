@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import {
   MCPAdapter,
   MCPClientError,
@@ -146,7 +146,7 @@ describe("token providers", () => {
             },
           },
         })
-    ).toThrow();
+    ).toThrow(ZodError);
   });
 });
 
@@ -292,6 +292,34 @@ describe("auth failures stay retryable", () => {
     expect(onConnectionError).toHaveBeenCalledTimes(1);
   });
 
+  it("labels a 401 that survives onUnauthorized as an authentication failure, and keeps retrying", async () => {
+    const server = await fixture();
+    const onUnauthorized = vi.fn();
+    const onConnectionError = vi.fn();
+    const mcp = adapter({
+      onConnectionError,
+      servers: {
+        svc: {
+          transport: "http",
+          url: server.mcpUrl,
+          authProvider: { token: async () => "bad", onUnauthorized },
+        },
+      },
+    });
+
+    await mcp.listTools();
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+    const [{ error }] = onConnectionError.mock.calls[0];
+    expect(MCPClientError.isInstance(error)).toBe(true);
+    expect((error as MCPClientError).message).toMatch(/^Authentication failed/);
+    expect(getHttpErrorCode((error as MCPClientError).cause)).toBe(401);
+    expect(isAuthenticationError(error)).toBe(true);
+
+    await mcp.listTools();
+    expect(onUnauthorized).toHaveBeenCalledTimes(2);
+    expect(onConnectionError).toHaveBeenCalledTimes(2);
+  });
+
   it("retries a legacy-mode server whose HTTP→SSE fallback also 401s", async () => {
     const server = await fixture();
     const onConnectionError = vi.fn();
@@ -355,5 +383,49 @@ describe("auth failures stay retryable", () => {
     await mcp.listTools();
     await mcp.listTools();
     expect(onConnectionError).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("per-call providers and headers", () => {
+  it("keeps one connection per per-call provider", async () => {
+    const server = await fixture();
+    const [a, b] = [server.mintAccessToken(), server.mintAccessToken()];
+    const providerA = { token: async () => a };
+    const providerB = { token: async () => b };
+    const mcp = adapter({
+      servers: { svc: { transport: "http", url: server.mcpUrl } },
+    });
+    await mcp.listToolsets({ authProvider: providerA });
+    await mcp.listToolsets({ authProvider: providerB });
+    const sent = new Set(
+      server.requests
+        .filter((request) => request.path === "/mcp")
+        .map((request) => request.authorization)
+    );
+    expect(sent).toEqual(new Set([`Bearer ${a}`, `Bearer ${b}`]));
+
+    const clientA = await mcp.getClient("svc", { authProvider: providerA });
+    const clientB = await mcp.getClient("svc", { authProvider: providerB });
+    expect(clientA).toBeDefined();
+    expect(clientB).toBeDefined();
+    expect(clientA).not.toBe(clientB);
+  });
+
+  it("keeps the last spelling when one config repeats Authorization", async () => {
+    const server = await fixture();
+    await failure(
+      adapter({
+        servers: {
+          svc: {
+            transport: "http",
+            url: server.mcpUrl,
+            headers: { authorization: "Bearer a", Authorization: "Bearer b" },
+          },
+        },
+      }).listTools()
+    );
+    expect(
+      server.requests.find((request) => request.path === "/mcp")?.authorization
+    ).toBe("Bearer b");
   });
 });

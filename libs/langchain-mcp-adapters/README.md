@@ -99,17 +99,77 @@ for argument and result hooks.
 `authProvider` takes either SDK provider shape:
 
 - `{ token, onUnauthorized? }` (`AuthProvider`) for tokens your application
-  manages. `token()` runs before every request; `onUnauthorized()` runs once
-  on a 401 before the request is retried.
+  manages. `token()` runs before every request; `onUnauthorized()` runs on a
+  401 before the request is retried. Over SSE the SDK calls it again every
+  time the reconnect is rejected, so throw from it when you have no newer
+  token.
 - An `OAuthClientProvider` for OAuth. The SDK handles discovery, registration,
   exchange and refresh; your application owns storage, redirects and the
   callback. Implement `invalidateCredentials()` so a refresh the server
-  rejects restarts the login instead of failing. When a connection needs a
-  login, the thrown `MCPClientError` has an `UnauthorizedError` as its
-  `cause`.
+  rejects restarts the login instead of failing. Implement
+  `saveDiscoveryState()` / `discoveryState()` too, persisted alongside the
+  code verifier: it's required when the authorization server is only
+  discoverable from the 401 challenge, and it lets the SDK check that the
+  callback comes from the authorization server the login started with.
+
+When a connection needs a login, the SDK calls `redirectToAuthorization()`.
+Complete the redirect with the SDK directly — the adapter has no
+`finishAuth` of its own — using the same provider (the same storage) the
+adapter's server config uses:
+
+```ts
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+
+// In your OAuth callback route, with the same provider (same storage) the adapter uses:
+const params = new URL(req.url).searchParams;
+if (params.get("state") !== savedState) throw new Error("state mismatch"); // the SDK doesn't check state
+const transport = new StreamableHTTPClientTransport(new URL(serverUrl), {
+  authProvider,
+});
+await transport.finishAuth(params); // validates iss (RFC 9207), exchanges the code, saves tokens via the provider
+await transport.close();
+// The next adapter discovery or tool call connects with the saved tokens.
+```
+
+Use `SSEClientTransport` instead for a server configured with
+`transport: "sse"`. `@modelcontextprotocol/client` is a dependency of the
+adapter, but your app still needs its own direct dependency to import it
+(see Install, above).
+
+The callback route doesn't need an `MCPAdapter`, only a provider that reads
+and writes the same durable storage as the one on the adapter's server
+config. Don't start another discovery while a login is pending: it begins
+a new redirect and invalidates the first callback. Make the callback
+single-use: look up and delete the pending `state` before calling
+`finishAuth`, and don't call it for a `state` that's already gone.
+Otherwise a refresh, a double-invoked handler, or a back-button replay
+redeems the same code twice, and the SDK responds by discarding the
+tokens the first call just saved, logging the user out.
+
+Don't display the SDK's own error text to users. `IssuerMismatchError`
+carries the callback's `iss`, which an attacker controls in a mix-up
+attack, and `OAuthError` can carry the authorization server's
+`error_description`. Catch the callback failure and show your own generic
+message instead.
+
+A connection rejected for credentials throws an `MCPClientError`. Its `cause`
+is the SDK's `UnauthorizedError` when the SDK can't recover on its own (an
+OAuth login is needed, or a token provider has no `onUnauthorized`), or an
+HTTP 401 error (`SdkHttpError`, `status: 401`) when the retry after
+`onUnauthorized` or a token refresh is still rejected.
 
 Once a provider has a token it replaces a configured `Authorization` header;
-until then the header is sent.
+until then the header is sent. The SDK also forwards a configured static
+`Authorization` header to the authorization server's discovery, registration
+and token endpoints, not only to the MCP server, so don't pair a secret API
+key with an OAuth provider whose authorization server lives on another
+origin.
+
+A per-call `authProvider` or `headers` override applies to every HTTP and SSE
+server the adapter holds, not only the one you named. Each distinct provider
+object also gets its own connection, kept until `close()`. Reuse one provider
+object per user rather than creating one per call, and use a single-server
+adapter when different users need different credentials.
 
 ## Examples
 

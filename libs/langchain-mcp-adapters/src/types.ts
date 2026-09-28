@@ -302,7 +302,8 @@ const httpOptionsSchema = z
      * Credentials for this server, handed to the SDK transport as-is:
      * - an `AuthProvider` (`{ token, onUnauthorized? }`) for tokens the
      *   application manages;
-     * - an `OAuthClientProvider` for OAuth.
+     * - an `OAuthClientProvider` for OAuth; complete a browser redirect with
+     *   the SDK's `transport.finishAuth(params)`. See the README.
      * Once the provider has a token it replaces a configured `Authorization`
      * header; until then the header is sent (SDK >= 2.1.0).
      */
