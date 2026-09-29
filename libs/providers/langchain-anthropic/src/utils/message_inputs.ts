@@ -80,7 +80,25 @@ function _formatImage(imageUrl: string) {
 function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
   const updatedMsgs = [];
+  const toolsets = new Map<string, string>();
   for (const message of messages) {
+    if (AIMessage.isInstance(message) && Array.isArray(message.content)) {
+      for (const block of message.content) {
+        if (
+          (block.type === "tool_use" ||
+            block.type === "tool_call" ||
+            block.type === "tool_call_chunk") &&
+          typeof block.id === "string" &&
+          typeof block.toolset_name === "string"
+        ) {
+          toolsets.set(block.id, block.toolset_name);
+        }
+      }
+    }
+    const toolsetName = ToolMessage.isInstance(message)
+      ? toolsets.get(message.tool_call_id)
+      : undefined;
+    const toolset = toolsetName ? { toolset_name: toolsetName } : {};
     if (message._getType() === "tool") {
       if (typeof message.content === "string") {
         const previousMessage = updatedMsgs[updatedMsgs.length - 1];
@@ -93,6 +111,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
           // If the previous message was a tool result, we merge this tool message into it.
           (previousMessage.content as MessageContentComplex[]).push({
             type: "tool_result",
+            ...toolset,
             content: message.content,
             tool_use_id: (message as ToolMessage).tool_call_id,
           });
@@ -103,6 +122,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
               content: [
                 {
                   type: "tool_result",
+                  ...toolset,
                   content: message.content,
                   tool_use_id: (message as ToolMessage).tool_call_id,
                 },
@@ -116,6 +136,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
             content: [
               {
                 type: "tool_result",
+                ...toolset,
                 // rare case: message.content could be undefined
                 ...(message.content != null
                   ? { content: _formatContent(message) }
@@ -152,6 +173,7 @@ function* _formatContentBlocks(
   toolCalls?: ToolCall[]
 ): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
+    "advisor_redacted_result",
     "bash_code_execution_tool_result",
     "input_json_delta",
     "server_tool_use",
@@ -313,7 +335,7 @@ function* _formatContentBlocks(
     } else if (_isAnthropicThinkingBlock(contentPart)) {
       const block: AnthropicThinkingBlockParam = {
         type: "thinking" as const, // Explicitly setting the type as "thinking"
-        thinking: contentPart.thinking,
+        thinking: contentPart.thinking ?? "",
         signature: contentPart.signature,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       };
@@ -494,7 +516,7 @@ function _formatSystemContent(
  */
 export function _convertMessagesToAnthropicPayload(
   messages: BaseMessage[]
-): AnthropicMessageCreateParams {
+): Anthropic.MessageCreateParamsNonStreaming {
   const mergedMessages = _ensureMessageContents(messages);
 
   // The contiguous run of system messages starting at index 0 is hoisted into
@@ -604,7 +626,7 @@ export function _convertMessagesToAnthropicPayload(
       formattedMessages as AnthropicMessageCreateParams["messages"]
     ),
     system,
-  } as AnthropicMessageCreateParams;
+  } as Anthropic.MessageCreateParamsNonStreaming;
 }
 
 function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {

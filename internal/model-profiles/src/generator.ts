@@ -43,6 +43,11 @@ function valueToExpression(value: unknown): ts.Expression {
   if (typeof value === "string") {
     return ts.factory.createStringLiteral(value);
   }
+  if (Array.isArray(value)) {
+    return ts.factory.createArrayLiteralExpression(
+      value.map(valueToExpression)
+    );
+  }
   // Fallback to JSON for complex types
   return ts.factory.createStringLiteral(JSON.stringify(value));
 }

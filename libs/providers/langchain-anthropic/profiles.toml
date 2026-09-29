@@ -11,3 +11,9 @@ structuredOutput = false
 
 [overrides."claude-fable-5-1"]
 structuredOutput = true
+
+[overrides."claude-sonnet-5-5"]
+structuredOutput = true
+toolChoice = false
+reasoningEffortLevels = ["low", "medium", "high", "xhigh", "max"]
+reasoningEffortDefault = "high"

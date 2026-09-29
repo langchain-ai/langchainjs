@@ -113,6 +113,12 @@ export interface ModelProfile {
    */
   reasoningOutput?: boolean;
 
+  /** Supported reasoning effort levels. */
+  reasoningEffortLevels?: string[];
+
+  /** Provider-default reasoning effort. */
+  reasoningEffortDefault?: string;
+
   /**
    * Whether the model can generate image outputs.
    *

@@ -58,9 +58,12 @@ export function _makeMessageChunkFromAnthropicEvent(
       total_tokens: data.usage.output_tokens,
     };
     const responseMetadata = iife(() => {
-      const output = {};
+      const output: Record<string, unknown> = {};
       if ("context_management" in data.delta) {
         output["context_management"] = data.delta.context_management;
+      }
+      if ("stop_details" in data.delta) {
+        output["stop_details"] = data.delta.stop_details;
       }
       if (
         "usage" in data &&
@@ -77,6 +80,16 @@ export function _makeMessageChunkFromAnthropicEvent(
         response_metadata: responseMetadata,
         additional_kwargs: { ...data.delta },
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
+      }),
+    };
+  } else if (
+    data.type === "content_block_start" &&
+    String(data.content_block.type) === "advisor_redacted_result"
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: [{ index: data.index, ...data.content_block }],
+        response_metadata,
       }),
     };
   } else if (
@@ -228,12 +241,9 @@ export function _makeMessageChunkFromAnthropicEvent(
     data.type === "content_block_start" &&
     data.content_block.type === "thinking"
   ) {
-    const content = data.content_block.thinking;
     return {
       chunk: new AIMessageChunk({
-        content: fields.coerceContentToString
-          ? content
-          : [{ index: data.index, ...data.content_block }],
+        content: [{ index: data.index, ...data.content_block }],
         response_metadata,
       }),
     };

@@ -1321,14 +1321,38 @@ export class ChatAnthropicMessages<
       cache_control: options?.cache_control,
     };
 
+    if (
+      output.thinking?.type === "adaptive" &&
+      output.thinking.display === "updates"
+    ) {
+      output.betas = _combineBetas(output.betas, [
+        "thinking-display-updates-2026-08-18",
+      ]);
+    }
+
+    const resolved = { ...output, ...this.invocationKwargs };
+    const sonnet55 = resolved.model.startsWith("claude-sonnet-5-5");
+    if (
+      sonnet55 &&
+      (resolved.tool_choice?.type === "any" ||
+        resolved.tool_choice?.type === "tool")
+    ) {
+      throw new Error(
+        `Forced tool choice is not supported for ${resolved.model}; use tool_choice="auto" or withStructuredOutput(..., { method: "jsonSchema" }).`
+      );
+    }
+
     validateInvocationParamCompatibility({
-      model: this.model,
-      thinking: output.thinking ?? this.thinking,
+      model: sonnet55 ? resolved.model : this.model,
+      thinking:
+        (sonnet55 ? resolved.thinking : output.thinking) ?? this.thinking,
       thinkingExplicitlySet: output.thinking !== undefined,
-      outputConfig: mergedOutputConfig,
-      topK: this.topK,
-      topP: this.topP,
-      temperature: this.temperature,
+      outputConfig: sonnet55 ? resolved.output_config : mergedOutputConfig,
+      topK: sonnet55 ? (resolved.top_k ?? this.topK) : this.topK,
+      topP: sonnet55 ? (resolved.top_p ?? this.topP) : this.topP,
+      temperature: sonnet55
+        ? (resolved.temperature ?? this.temperature)
+        : this.temperature,
     });
 
     Object.assign(
@@ -1528,12 +1552,7 @@ export class ChatAnthropicMessages<
   /** @ignore */
   async _generateNonStreaming(
     messages: BaseMessage[],
-    params: Omit<
-      | Anthropic.Messages.MessageCreateParamsNonStreaming
-      | Anthropic.Messages.MessageCreateParamsStreaming,
-      "messages"
-    > &
-      Kwargs,
+    params: AnthropicInvocationParams,
     requestOptions: AnthropicRequestOptions
   ) {
     const formattedMessages = _convertMessagesToAnthropicPayload(messages);
@@ -1633,7 +1652,7 @@ export class ChatAnthropicMessages<
               betas,
               ...this.invocationKwargs,
               stream: true,
-            } as AnthropicStreamingMessageCreateParams,
+            } as Anthropic.MessageCreateParamsStreaming,
             options
           );
           return stream as Stream<Anthropic.Messages.RawMessageStreamEvent>;
@@ -1643,7 +1662,7 @@ export class ChatAnthropicMessages<
             ...rest,
             ...this.invocationKwargs,
             stream: true,
-          } as AnthropicStreamingMessageCreateParams,
+          } as Anthropic.MessageCreateParamsStreaming,
           options
         );
       } catch (e) {
@@ -1682,7 +1701,7 @@ export class ChatAnthropicMessages<
               ...rest,
               ...this.invocationKwargs,
               betas,
-            } as AnthropicMessageCreateParams,
+            } as Anthropic.MessageCreateParamsNonStreaming,
             options
           );
           return response as Anthropic.Messages.Message;
@@ -1691,7 +1710,7 @@ export class ChatAnthropicMessages<
           {
             ...rest,
             ...this.invocationKwargs,
-          } as AnthropicMessageCreateParams,
+          } as Anthropic.MessageCreateParamsNonStreaming,
           options
         );
       } catch (e) {
@@ -1847,14 +1866,14 @@ export class ChatAnthropicMessages<
 
       if (
         this.thinking?.type === "enabled" ||
-        this.thinking?.type === "adaptive"
+        this.thinking?.type === "adaptive" ||
+        this.model.startsWith("claude-sonnet-5-5")
       ) {
         const thinkingAdmonition =
           "Anthropic structured output relies on forced tool calling, " +
-          "which is not supported when `thinking` is enabled. This method will raise " +
-          "OutputParserException if tool calls are not " +
-          "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
-          "the tool is called.";
+          "which is not supported when `thinking` is enabled or on Sonnet 5.5. This method will raise " +
+          'an error if tool calls are not generated. Use method: "jsonSchema" for ' +
+          "native structured output, or adjust your prompt to request the tool call.";
 
         console.warn(thinkingAdmonition);
 

@@ -23,6 +23,8 @@ const MODEL_PROFILE_FIELDS = new Set([
   "pdfToolMessage",
   "maxOutputTokens",
   "reasoningOutput",
+  "reasoningEffortLevels",
+  "reasoningEffortDefault",
   "imageOutputs",
   "audioOutputs",
   "videoOutputs",

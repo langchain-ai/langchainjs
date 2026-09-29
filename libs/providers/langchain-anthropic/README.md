@@ -60,6 +60,30 @@ const response = await model.invoke({
 });
 ```
 
+### Claude Sonnet 5.5
+
+Use `model: "claude-sonnet-5-5"` with `outputConfig: { effort: "medium" }`
+(or `low`, `high`, `xhigh`, or `max`; the provider default is `high`). Adaptive
+thinking runs by default. To disable up-front thinking, set
+`thinking: { type: "between_tools" }` at `high` effort or below, without any
+additional thinking fields. `disabled`, thinking budgets, and non-default
+sampling parameters are not supported.
+
+Sonnet 5.5 does not support forced tool choice. Use `tool_choice: "auto"` for
+tools and `withStructuredOutput(schema, { method: "jsonSchema" })` for native
+structured output. The default `functionCalling` method requests but does not
+force a tool call; parsing fails if the model returns no tool call.
+
+Progress updates can arrive as thinking blocks rather than text. Set
+`thinking: { type: "adaptive", display: "updates" }` to receive updates (the
+required beta is added automatically), or `display: "summarized"` for reasoning
+summaries as well. Preserve signed thinking blocks, including empty blocks, and
+keep conversation history append-only. Use later `SystemMessage` entries for
+instruction/tool changes rather than editing earlier messages.
+
+See the [migration guide](https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide)
+for prefill, computer-toolset, advisor, and platform-specific restrictions.
+
 ### Streaming
 
 ```typescript
