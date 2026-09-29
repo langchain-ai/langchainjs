@@ -72,7 +72,10 @@ Prefix names when servers expose identically named tools. Set `mode: "legacy"`
 to skip probing and enable legacy options such as `onElicitation` and
 `onInitialized`. Set `mode: "modern"` to require MCP revision
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
-without fallback. SDK 2 can serve either protocol.
+without fallback. SDK 2 can serve either protocol. A server that ignores the
+probe instead of rejecting it falls back only after the request timeout (60 s
+by default), and over HTTP a probe that times out or fails with a 403 or 5xx
+fails the connection; set `mode: "legacy"` for those servers.
 
 HTTP servers also accept `headers` for static request headers unrelated to
 `authProvider`. Stdio servers accept `env`, `cwd`, `stderr` and a `restart`
