@@ -997,9 +997,18 @@ const scriptPathStringSchema = z
     args: ["--", value],
   }));
 
+type StringConnectionDescriptor =
+  | { url: string }
+  | { command: string; args: string[] };
+
+const directConnectionSchema = ConnectionSchema as z.ZodType<
+  z.output<typeof ConnectionSchema>,
+  StringConnectionDescriptor
+>;
+
 const stringConnectionSchema = z
   .union([httpUrlStringSchema, scriptPathStringSchema])
-  .pipe(ConnectionSchema);
+  .pipe(directConnectionSchema);
 
 const urlConnectionSchema = z
   .instanceof(URL)
@@ -1007,12 +1016,17 @@ const urlConnectionSchema = z
     error: "MCPAdapter URL inputs must use http: or https:",
   })
   .transform((url) => ({ url: url.toString() }))
-  .pipe(ConnectionSchema);
+  .pipe(directConnectionSchema);
 
 const directAdapterInputSchema = z
   .union([stringConnectionSchema, urlConnectionSchema, ConnectionSchema])
   .transform((connection) => ({ servers: { default: connection } }))
-  .pipe(mcpAdapterConfigSchema);
+  .pipe(
+    mcpAdapterConfigSchema as z.ZodType<
+      ResolvedMCPAdapterConfig,
+      { servers: Record<string, z.input<typeof ConnectionSchema>> }
+    >
+  );
 
 /** All supported constructor inputs produce the same resolved configuration. */
 export const adapterConfigSchema: z.ZodType<

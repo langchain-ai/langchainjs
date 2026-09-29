@@ -661,7 +661,10 @@ describe("MultiServerMCPClient", () => {
       test.each(["stdio", "sse"])(
         "handles background %s reconnection failures",
         async (transportType) => {
-          const lookup = vi.spyOn(ConnectionManager.prototype, "getTransport");
+          const lookup = vi.spyOn(
+            ConnectionManager.prototype,
+            "getOrCreateConnection"
+          );
           const client = new MCPAdapter({
             servers: {
               test:
@@ -683,9 +686,10 @@ describe("MultiServerMCPClient", () => {
 
           try {
             await client.initializeConnections();
-            const transport = lookup.mock.results.find(
+            const opened = await lookup.mock.results.find(
               (result) => result.type === "return"
             )?.value;
+            const transport = opened?.transport;
             if (!transport?.onclose) {
               throw new Error("Expected a transport close handler");
             }

@@ -52,7 +52,7 @@ export async function connectInProcessServer(
     return {
       transport: clientTransport,
       client: connectedClient,
-      transportOptions: server,
+      source: server,
       closeCallback: async () => {
         const results = await Promise.allSettled([
           connectedClient.close(),

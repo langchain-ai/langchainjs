@@ -8,19 +8,22 @@ describe("adapter tool listing", () => {
   afterEach(() => vi.restoreAllMocks());
 
   test("listTools supports server selection and tool invocation", async () => {
-    const clients = new Map<string, ConnectedClient>();
-    vi.spyOn(ConnectionManager.prototype, "get").mockImplementation((key) =>
-      clients.get(typeof key === "string" ? key : key.serverName)
-    );
+    const connections = new Map<
+      string,
+      import("../connection.js").Connection
+    >();
     vi.spyOn(
       ConnectionManager.prototype,
-      "getOrCreateClient"
-    ).mockImplementation(async (serverName) => {
+      "getOrCreateConnection"
+    ).mockImplementation(async (serverName, source) => {
+      const existing = connections.get(serverName);
+      if (existing) return existing;
+
       const client = new Client({ name: serverName, version: "1" });
 
       const connected = Object.assign(client, {
         fork: async () => connected,
-      });
+      }) as ConnectedClient;
 
       vi.spyOn(client, "listTools").mockResolvedValue({
         tools: [{ name: serverName, inputSchema: { type: "object" } }],
@@ -29,9 +32,13 @@ describe("adapter tool listing", () => {
         content: [{ type: "text", text: serverName }],
       });
 
-      clients.set(serverName, connected);
-
-      return connected;
+      const opened = {
+        client: connected,
+        source: source,
+        closeCallback: async () => {},
+      };
+      connections.set(serverName, opened);
+      return opened;
     });
 
     const adapter = new MCPAdapter({

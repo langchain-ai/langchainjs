@@ -35,19 +35,19 @@ describe("connection ownership", () => {
     const manager = new ConnectionManager();
 
     const [first, second] = await Promise.all([
-      manager.getOrCreateClient("test", connection),
-      manager.getOrCreateClient("test", connection),
+      manager.getOrCreateConnection("test", connection),
+      manager.getOrCreateConnection("test", connection),
     ]);
 
     expect(first).toBe(second);
     expect(connect).toHaveBeenCalledTimes(1);
-    expect(await first.fork!({})).toBe(first);
-    const fork = await first.fork!({ tenant: "one" });
-    expect(await first.fork!({ Tenant: "one" })).toBe(fork);
-    expect(await first.fork!({ tenant: "one" })).toBe(fork);
-    expect(manager.get("test")).toBe(first);
+    expect(await first.client.fork!({})).toBe(first.client);
+    const fork = await first.client.fork!({ tenant: "one" });
+    expect(await first.client.fork!({ Tenant: "one" })).toBe(fork);
+    expect(await first.client.fork!({ tenant: "one" })).toBe(fork);
+    expect(manager.getConnection("test")).toBe(first);
     expect(
-      manager.get({ serverName: "test", headers: { tenant: "two" } })
+      manager.getConnection({ serverName: "test", headers: { tenant: "two" } })
     ).toBeUndefined();
     await manager.delete();
     expect(SDKClient.prototype.close).toHaveBeenCalledTimes(2);
@@ -65,7 +65,7 @@ describe("connection ownership", () => {
     connect.mockRejectedValueOnce(failure);
     const manager = new ConnectionManager();
     await expect(
-      manager.getOrCreateClient("test", {
+      manager.getOrCreateConnection("test", {
         ...connection,
         onMessage: () => {},
       })
@@ -75,8 +75,8 @@ describe("connection ownership", () => {
     );
     expect(SDKClient.prototype.close).toHaveBeenCalledTimes(1);
     expect(transportClose).toHaveBeenCalledTimes(1);
-    expect(manager.getAllClients()).toEqual([]);
-    await manager.getOrCreateClient("test", connection);
+    expect(manager.getAllConnections()).toEqual([]);
+    await manager.getOrCreateConnection("test", connection);
     expect(connect).toHaveBeenCalledTimes(2);
     await manager.delete();
   });
@@ -84,20 +84,20 @@ describe("connection ownership", () => {
   test("settles all closes, clears ownership on failure, and tolerates repeated close", async () => {
     mockConnect();
     const manager = new ConnectionManager();
-    const first = await manager.getOrCreateClient("one", connection);
-    const second = await manager.getOrCreateClient("two", connection);
+    const first = await manager.getOrCreateConnection("one", connection);
+    const second = await manager.getOrCreateConnection("two", connection);
 
     const firstClose = vi
       .fn<SDKClient["close"]>()
       .mockRejectedValue(new Error("close failed"));
 
     const secondClose = vi.fn<SDKClient["close"]>().mockResolvedValue();
-    first.close = firstClose;
-    second.close = secondClose;
+    first.client.close = firstClose;
+    second.client.close = secondClose;
     await expect(manager.delete()).rejects.toThrow(AggregateError);
     expect(firstClose).toHaveBeenCalledTimes(1);
     expect(secondClose).toHaveBeenCalledTimes(1);
-    expect(manager.getAllClients()).toEqual([]);
+    expect(manager.getAllConnections()).toEqual([]);
     await manager.delete();
     expect(firstClose).toHaveBeenCalledTimes(1);
   });
@@ -113,16 +113,16 @@ describe("connection ownership", () => {
         })
     );
     const manager = new ConnectionManager();
-    const acquisition = manager.getOrCreateClient("test", connection);
+    const acquisition = manager.getOrCreateConnection("test", connection);
     await vi.waitFor(() => expect(connect).toHaveBeenCalled());
     const closing = manager.delete();
     await expect(
-      manager.getOrCreateClient("other", connection)
+      manager.getOrCreateConnection("other", connection)
     ).rejects.toThrow(/closing/);
     release();
     await acquisition;
     await closing;
-    expect(manager.getAllClients()).toEqual([]);
+    expect(manager.getAllConnections()).toEqual([]);
     expect(SDKClient.prototype.close).toHaveBeenCalledTimes(1);
   });
 
@@ -418,7 +418,7 @@ test.each(["cached", "bypass", "invalidated"])(
     ) => void = SDKClient.prototype.setNotificationHandler;
     const connections = vi.spyOn(
       ConnectionManager.prototype,
-      "getOrCreateClient"
+      "getOrCreateConnection"
     );
     let failRefresh = false;
     const handler = createMcpHandler(
@@ -496,7 +496,7 @@ test.each(["cached", "bypass", "invalidated"])(
         "still connected"
       );
       failRefresh = false;
-      expect(await adapter.getClient("test")).toBe(captured);
+      expect(await adapter.getClient("test")).toBe(captured?.client);
       if (discovery === "cached") {
         expect((await adapter.listTools())[0]).toBe(issued);
       }

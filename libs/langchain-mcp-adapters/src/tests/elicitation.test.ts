@@ -468,10 +468,20 @@ describe("elicitation and logging configuration", () => {
       },
     });
 
-    expect(parsed.servers.defaultOn.elicitation).toBe(true);
-    expect(parsed.servers.explicitOn.elicitation).toBe(true);
-    expect(parsed.servers.optedOut.elicitation).toBe(false);
-    expect(parsed.servers.legacy).not.toHaveProperty("elicitation");
+    const { defaultOn, explicitOn, optedOut, legacy } = parsed.servers;
+    if (
+      !isDescriptorConnection(defaultOn) ||
+      !isDescriptorConnection(explicitOn) ||
+      !isDescriptorConnection(optedOut) ||
+      !isDescriptorConnection(legacy)
+    ) {
+      throw new Error("Expected descriptor connections");
+    }
+
+    expect(defaultOn.elicitation).toBe(true);
+    expect(explicitOn.elicitation).toBe(true);
+    expect(optedOut.elicitation).toBe(false);
+    expect(legacy).not.toHaveProperty("elicitation");
   });
 
   it("uses SDK logging levels", () => {
