@@ -103,8 +103,8 @@ authentication and network failures stay errors.
 
 `authProvider` accepts the SDK's `AuthProvider` (`{ token, onUnauthorized? }`)
 as well as an `OAuthClientProvider`. To finish an OAuth redirect, call the
-SDK's `transport.finishAuth(params)` with the same provider (see the README);
-the adapter reads the saved tokens through the provider. A connection that fails
+SDK's `transport.finishAuth(params)` with the same provider; the adapter reads
+the saved tokens through the provider. A connection that fails
 on provider auth throws an `MCPClientError` whose `cause` is the SDK's
 `UnauthorizedError` (now exported) when a login is needed or an `AuthProvider`
 has no `onUnauthorized`, or an HTTP 401 error when credentials are still
@@ -167,7 +167,8 @@ discovery cache, and a failed refresh restores the previous catalog rather than
 discarding a working one. `listResources()` and `listResourceTemplates()` now
 throw a server's error, where 1.x logged it and returned `[]`; only a server
 without resource templates still lists them as `[]`. `close()` also aborts in-flight
-requests and pending reconnects; the adapter stays reusable.
+requests, pending reconnects and a discovery still opening servers; the adapter
+stays reusable.
 
 ### Server interactions
 
