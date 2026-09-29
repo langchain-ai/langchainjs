@@ -6,6 +6,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   ChatOpenAICompletions,
+  type BaseChatOpenAIFields,
   type ChatOpenAICallOptions,
   type OpenAIChatInput,
   type OpenAIClient,
@@ -27,6 +28,8 @@ type FireworksUnsupportedCallOptions = "functions" | "function_call";
 export interface ChatFireworksInput
   extends
     Partial<Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>>,
+    // `configuration` moved from OpenAIChatInput to BaseChatOpenAIFields.
+    Pick<BaseChatOpenAIFields, "configuration">,
     BaseChatModelParams {
   /**
    * Prefer `apiKey`.
