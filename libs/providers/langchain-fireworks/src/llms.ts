@@ -177,6 +177,11 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     delete request.best_of;
     delete request.logit_bias;
 
+    // Narrow the union so each call matches one of super's overloads.
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
+
     return super.completionWithRetry(request, options);
   }
 }
