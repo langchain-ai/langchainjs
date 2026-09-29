@@ -2,6 +2,8 @@ import { test, expect, beforeEach } from "vitest";
 
 import { env } from "../../../tests/utils.js";
 import { AzureChatOpenAI } from "../index.js";
+import { AzureChatOpenAIResponses } from "../responses.js";
+import { RESPONSES_FILE_MIME_TYPES } from "../../../utils/file_mime_types.js";
 
 beforeEach(() => {
   delete process.env.OPENAI_API_KEY;
@@ -76,5 +78,24 @@ test("Test Azure OpenAI serialization from instance name", async () => {
   });
   expect(JSON.stringify(chat)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","azure_openai","AzureChatOpenAI"],"kwargs":{"azure_open_ai_api_instance_name":"foobar","deployment_name":"gpt-4o","openai_api_version":"2024-08-01-preview","azure_open_ai_api_key":{"lc":1,"type":"secret","id":["AZURE_OPENAI_API_KEY"]},"azure_endpoint":"https://foobar.openai.azure.com/"}}`
+  );
+});
+
+test("AzureChatOpenAI profile follows the Responses API setting", () => {
+  const fields = {
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+  };
+  const completions = new AzureChatOpenAI("gpt-5.5", fields);
+  const responses = new AzureChatOpenAI("gpt-5.5", {
+    ...fields,
+    useResponsesApi: true,
+  });
+  const responsesOnly = new AzureChatOpenAIResponses("gpt-5.5", fields);
+  expect(completions.profile.fileMimeTypes).toBeUndefined();
+  expect(responses.profile.fileMimeTypes).toEqual(RESPONSES_FILE_MIME_TYPES);
+  expect(responsesOnly.profile.fileMimeTypes).toEqual(
+    RESPONSES_FILE_MIME_TYPES
   );
 });

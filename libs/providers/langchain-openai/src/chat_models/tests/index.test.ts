@@ -14,6 +14,8 @@ import {
   _modelPrefersResponsesAPI,
 } from "../../utils/misc.js";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import PROFILES from "../profiles.js";
+import { RESPONSES_FILE_MIME_TYPES } from "../../utils/file_mime_types.js";
 
 const chatOpenAIApis = [
   {
@@ -2137,5 +2139,65 @@ describe("ChatOpenAI", () => {
       const result = await structured.invoke("plan something");
       expect(result).toEqual({ status: "ok", plan: { steps: ["a", "b"] } });
     });
+  });
+});
+
+describe("profile.fileMimeTypes", () => {
+  test("ChatOpenAIResponses includes file MIME types", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toEqual(RESPONSES_FILE_MIME_TYPES);
+    expect(model.profile.maxInputTokens).toBe(
+      PROFILES["gpt-5.5"].maxInputTokens
+    );
+  });
+
+  test("ChatOpenAICompletions omits file MIME types", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+  });
+
+  test("ChatOpenAI omits file MIME types without the Responses API", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+    expect(model.profile).toEqual(PROFILES["gpt-5.5"]);
+  });
+
+  test("ChatOpenAI includes file MIME types with useResponsesApi", () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.5",
+      apiKey: "test",
+      useResponsesApi: true,
+    });
+    expect(model.profile.fileMimeTypes).toEqual(RESPONSES_FILE_MIME_TYPES);
+  });
+
+  test("ChatOpenAI includes file MIME types for Responses-preferring models", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.2-pro", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toEqual(RESPONSES_FILE_MIME_TYPES);
+  });
+
+  test("omits file MIME types for models without file inputs", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-3.5-turbo",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+  });
+
+  test("omits file MIME types for unknown models", () => {
+    const model = new ChatOpenAIResponses({
+      model: "not-a-real-model",
+      apiKey: "test",
+    });
+    expect(model.profile).toEqual({});
+  });
+
+  test("does not mutate the shared profile registry", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toBeDefined();
+    expect(PROFILES["gpt-5.5"].fileMimeTypes).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@ import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { Runnable } from "@langchain/core/runnables";
 import { type OpenAICallOptions, type OpenAIChatInput } from "../types.js";
 import {
@@ -12,6 +13,7 @@ import {
   isOpenAICustomTool,
 } from "../utils/tools.js";
 import { _modelPrefersResponsesAPI } from "../utils/misc.js";
+import { withResponsesFileMimeTypes } from "../utils/file_mime_types.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
 import {
   ChatOpenAICompletions,
@@ -689,6 +691,14 @@ export class ChatOpenAI<
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
+  }
+
+  // Per-call Responses triggers (e.g. built-in tools) can't be known here.
+  override get profile(): ModelProfile {
+    const profile = super.profile;
+    return this._useResponsesApi(undefined)
+      ? withResponsesFileMimeTypes(profile)
+      : profile;
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
