@@ -486,6 +486,59 @@ describe("PGVectorStore", () => {
       expect(queryCall[1]).toContainEqual(["tag1", "tag2"]);
     });
 
+    test("handles 'jsonbContains' operator", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        profile: { jsonbContains: { tier: "gold", region: "eu" } },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("@> $");
+      expect(queryCall[0]).toContain("::jsonb");
+      expect(queryCall[1]).toContain("profile");
+      expect(queryCall[1]).toContain(
+        JSON.stringify({ tier: "gold", region: "eu" })
+      );
+    });
+
+    test("'jsonbContains' does not inline values into the query string", async () => {
+      const payload = "gold'; DROP TABLE users; --";
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        profile: { jsonbContains: { tier: payload } },
+      });
+
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).not.toContain("DROP TABLE");
+      expect(queryCall[1]).toContain(JSON.stringify({ tier: payload }));
+    });
+
+    test("combines 'jsonbContains' with other operators", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        profile: { jsonbContains: { tier: "gold" } },
+        score: { gte: 80 },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("@> $");
+      expect(queryCall[0]).toContain("::numeric >=");
+    });
+
+    test("uses a custom metadata column name in 'jsonbContains'", async () => {
+      const customPool = createMockPool();
+      customPool.query.mockResolvedValue({ rows: [] });
+      const customStore = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool: customPool,
+        columns: { metadataColumnName: "custom_metadata" },
+      });
+
+      await customStore.similaritySearchVectorWithScore([0.1], 5, {
+        profile: { jsonbContains: { tier: "gold" } },
+      });
+
+      const queryCall = customPool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("custom_metadata -> $");
+      expect(queryCall[0]).toContain("@> $");
+    });
+
     test("handles numeric comparison operators", async () => {
       await store.similaritySearchVectorWithScore([0.1], 5, {
         score: { gt: 10, gte: 5, lt: 100, lte: 50 },
@@ -537,6 +590,134 @@ describe("PGVectorStore", () => {
       expect(queryCall[0]).not.toContain(maliciousKey);
       expect(queryCall[1]).toContain(maliciousKey);
       expect(queryCall[1]).toContain("test");
+    });
+  });
+
+  describe("empty in/notIn lists", () => {
+    let pool: ReturnType<typeof createMockPool>;
+    let store: PGVectorStore;
+
+    beforeEach(() => {
+      pool = createMockPool();
+      pool.query.mockResolvedValue({ rows: [] });
+      store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+    });
+
+    test("an empty 'in' list matches nothing without emitting invalid SQL", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: [] },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("FALSE");
+      expect(queryCall[0]).not.toContain("IN ()");
+    });
+
+    test("an empty 'notIn' list omits the clause entirely", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { notIn: [] },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).not.toContain("NOT IN");
+      expect(queryCall[0]).not.toContain("WHERE");
+    });
+
+    test("an empty 'in' list keeps other filters and their parameters intact", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: [] },
+        score: { gte: 50 },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("FALSE");
+      expect(queryCall[0]).toContain(">=");
+      // $1 embedding, $2 k, so the `score` key is the third parameter.
+      expect(queryCall[1][2]).toBe("score");
+      expect(queryCall[1][3]).toBe(50);
+    });
+  });
+
+  describe("unrecognized filter operators", () => {
+    let pool: ReturnType<typeof createMockPool>;
+    let store: PGVectorStore;
+
+    beforeEach(() => {
+      pool = createMockPool();
+      pool.query.mockResolvedValue({ rows: [] });
+      store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+    });
+
+    test("warns when an operator key is not recognized", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { exists: true },
+      } as never);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain("category.exists");
+      expect(warnSpy.mock.calls[0][0]).toContain("jsonbContains");
+
+      warnSpy.mockRestore();
+    });
+
+    test("does not warn for supported operators", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: ["a"], neq: "b", gt: 1, lte: 9, notIn: ["z"] },
+        profile: { jsonbContains: { tier: "gold" } },
+      });
+
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+    });
+
+    test("reports every unknown operator across every key in one warning", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { exists: true, notExists: true },
+        score: { between: [1, 2] },
+      } as never);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const message = warnSpy.mock.calls[0][0] as string;
+      expect(message).toContain("category.exists");
+      expect(message).toContain("category.notExists");
+      expect(message).toContain("score.between");
+
+      warnSpy.mockRestore();
+    });
+
+    test("plain equality filters do not warn", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: "test",
+        score: 5,
+      });
+
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+    });
+
+    test("an empty in list does not warn", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: [] },
+      });
+
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
     });
   });
 

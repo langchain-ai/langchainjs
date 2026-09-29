@@ -27,7 +27,8 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
  *     lt: 100,                            // Less than (numeric)
  *     lte: 100,                           // Less than or equal (numeric)
  *     neq: "unwanted",                    // prop doesn't exist or not equal to value)
- *     arrayContains: ["item1", "item2"]   // Array contains any of these values
+ *     arrayContains: ["item1", "item2"],  // Array contains any of these values
+ *     jsonbContains: { tier: "gold" }     // JSONB at this key contains this object (`@>`)
  *   }
  * }
  * ```
@@ -63,12 +64,63 @@ export type MetadataFilter = Record<
       lte?: number;
       /** Not equal to */
       neq?: string | number | boolean;
+      /**
+       * The JSON value at this key must contain the given object, using
+       * Postgres JSONB containment (`@>`).
+       *
+       * @example
+       * // Matches documents whose `metadata.profile` contains `{ tier: "gold" }`,
+       * // including documents where `profile` also has other keys.
+       * { profile: { jsonbContains: { tier: "gold" } } }
+       */
+      jsonbContains?: Record<string, unknown>;
     }
 >;
 
 type Metadata = Record<string, unknown>;
 
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
+
+/**
+ * Operators understood by {@link PGVectorStore.buildFilterClauses}. A key in a
+ * filter's operator object that is not listed here cannot be translated to SQL,
+ * so it is reported rather than silently dropped.
+ */
+const SUPPORTED_FILTER_OPERATORS = new Set([
+  "in",
+  "notIn",
+  "arrayContains",
+  "gt",
+  "gte",
+  "lt",
+  "lte",
+  "neq",
+  "jsonbContains",
+]);
+
+/**
+ * Finds filter keys whose operator object contains no recognized operator.
+ *
+ * Such filters produce no WHERE clause, so the query runs unfiltered. That is a
+ * silent correctness problem, hence surfacing it to the caller.
+ *
+ * @param filter - The metadata filter object to inspect.
+ * @returns Human-readable `key.operator` strings for each ignored operator.
+ */
+function collectUnrecognizedOperators(filter: MetadataFilter): string[] {
+  const unrecognized: string[] = [];
+  for (const [key, value] of Object.entries(filter)) {
+    if (typeof value !== "object" || value === null) {
+      continue;
+    }
+    for (const operator of Object.keys(value as Record<string, unknown>)) {
+      if (!SUPPORTED_FILTER_OPERATORS.has(operator)) {
+        unrecognized.push(`${key}.${operator}`);
+      }
+    }
+  }
+  return unrecognized;
+}
 
 /**
  * Interface that defines the arguments required to create a
@@ -733,23 +785,33 @@ export class PGVectorStore extends VectorStore {
         const _value = value as Record<string, unknown>;
 
         if (Array.isArray(_value.in)) {
-          const placeholders = _value.in
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
-          );
+          // An empty list can never match. Emitting `IN ()` is a syntax error,
+          // so short-circuit to a clause that is always false instead.
+          if (_value.in.length === 0) {
+            whereClauses.push("FALSE");
+          } else {
+            const placeholders = _value.in
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
+            );
+          }
         }
 
         if (Array.isArray(_value.notIn)) {
-          const placeholders = _value.notIn
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`
-          );
+          // An empty exclusion list excludes nothing, so the clause is a
+          // no-op and is omitted rather than emitted as `NOT IN ()`.
+          if (_value.notIn.length > 0) {
+            const placeholders = _value.notIn
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`
+            );
+          }
         }
 
         if (Array.isArray(_value.arrayContains)) {
@@ -757,6 +819,21 @@ export class PGVectorStore extends VectorStore {
           const valuesPlaceholder = addParameter(_value.arrayContains);
           whereClauses.push(
             `(${this.metadataColumnName} -> ${keyPlaceholder}) ?| ${valuesPlaceholder}::text[]`
+          );
+        }
+
+        if (
+          Object.prototype.hasOwnProperty.call(_value, "jsonbContains") &&
+          typeof _value.jsonbContains === "object" &&
+          _value.jsonbContains !== null &&
+          !Array.isArray(_value.jsonbContains)
+        ) {
+          const keyPlaceholder = addParameter(key);
+          const valuePlaceholder = addParameter(
+            JSON.stringify(_value.jsonbContains)
+          );
+          whereClauses.push(
+            `(${this.metadataColumnName} -> ${keyPlaceholder}) @> ${valuePlaceholder}::jsonb`
           );
         }
 
@@ -794,6 +871,19 @@ export class PGVectorStore extends VectorStore {
           `${this.metadataColumnName} ->> ${keyPlaceholder} = ${valuePlaceholder}`
         );
       }
+    }
+
+    const unrecognized = collectUnrecognizedOperators(filter);
+    if (unrecognized.length > 0) {
+      // Silently ignoring an unknown operator widens the result set to
+      // everything, which is a silent correctness bug for a vector store.
+      // Warn rather than throw so that callers relying on the previous
+      // lenient behaviour are not broken outright.
+      console.warn(
+        `[PGVectorStore] Ignoring unrecognized filter operator(s) for key(s): ${unrecognized.join(
+          ", "
+        )}. Supported operators are: in, notIn, arrayContains, gt, gte, lt, lte, neq, jsonbContains. The query may return more rows than intended.`
+      );
     }
 
     return { whereClauses, parameters, paramCount };
