@@ -6,6 +6,8 @@ import {
 } from "./utils/errors.js";
 import { z } from "zod";
 import {
+  ProtocolError,
+  ProtocolErrorCode,
   SSEClientTransport,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
@@ -161,7 +163,7 @@ export class MCPAdapter {
         elicitation: serverConfig.elicitation,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
-          parsedServerConfig.prefixToolNameWithServerName,
+          parsedServerConfig.prefixToolNameWithServerName ?? true,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
@@ -317,6 +319,7 @@ export class MCPAdapter {
    *                 If not provided, returns tools from all servers.
    * @param options - Optional connection options for the tool calls, e.g. custom auth provider or headers.
    * @returns A flattened array of tools from the specified servers (or all servers)
+   * @throws {MCPClientError} If the flattened result would contain two tools with the same name
    *
    * @example
    * ```ts
@@ -346,10 +349,23 @@ export class MCPAdapter {
   async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
     const { servers, options } = toolSelectionSchema.parse(args);
     const catalog = await this.#discoverToolsets(options);
+    const selectedServers = servers.length ? servers : Object.keys(catalog);
 
-    return (servers.length ? servers : Object.keys(catalog)).flatMap(
-      (name) => catalog[name] ?? []
-    );
+    assertNoToolNameCollisions(catalog, selectedServers);
+
+    return selectedServers.flatMap((name) => catalog[name] ?? []);
+  }
+
+  /** @deprecated Use listTools(). This alias takes the same arguments. */
+  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  /** @deprecated Use listTools(). This alias takes the same arguments. */
+  async getTools(
+    servers: string[],
+    options?: ToolDiscoveryOptions
+  ): Promise<DynamicStructuredTool[]>;
+  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
+    const { servers, options } = toolSelectionSchema.parse(args);
+    return this.listTools(servers, options);
   }
 
   /**
@@ -492,7 +508,8 @@ export class MCPAdapter {
    * @param servers - Optional array of server names to filter resource templates by.
    *                 If not provided, returns resource templates from all servers.
    * @param options - Optional connection options for the resource template listing, e.g. custom auth provider or headers.
-   * @returns A map of server names to their resource templates
+   * @returns A map of server names to their resource templates. A server that
+   *          doesn't implement template listing maps to `[]`.
    *
    * @example
    * ```ts
@@ -532,7 +549,18 @@ export class MCPAdapter {
         continue;
       }
 
-      const templatesList = await client.listResourceTemplates();
+      // Templates are optional even for a server that advertises resources.
+      const templatesList = await client
+        .listResourceTemplates()
+        .catch((error: unknown) => {
+          if (
+            ProtocolError.isInstance(error) &&
+            error.code === ProtocolErrorCode.MethodNotFound
+          ) {
+            return { resourceTemplates: [] };
+          }
+          throw error;
+        });
       result[serverName] = templatesList.resourceTemplates.map((template) => ({
         ...template,
         uriTemplate: template.uriTemplate,
@@ -1189,6 +1217,36 @@ export class MCPAdapter {
 
 /** @deprecated Use MCPAdapter. This alias shares the same implementation. */
 export { MCPAdapter as MultiServerMCPClient };
+
+/**
+ * `listTools()` flattens catalogs into one list, so a repeated tool name -
+ * from two servers or twice in one server's own list - would let `ToolNode`
+ * route every call for that name to whichever tool appears first. Tool
+ * names are unprefixed by default.
+ */
+function assertNoToolNameCollisions(
+  catalog: Record<string, DynamicStructuredTool[]>,
+  servers: string[]
+): void {
+  const serverNameByToolName = new Map<string, string>();
+
+  for (const serverName of new Set(servers)) {
+    for (const tool of catalog[serverName] ?? []) {
+      const firstServer = serverNameByToolName.get(tool.name);
+      if (firstServer === serverName) {
+        throw new MCPClientError(
+          `Tool name collision: server "${serverName}" lists a tool named "${tool.name}" more than once, and prefixing can't separate them. Remove the duplicate on the server, or pick tools from listToolsets() instead.`
+        );
+      }
+      if (firstServer !== undefined) {
+        throw new MCPClientError(
+          `Tool name collision: a tool named "${tool.name}" is exposed more than once (${firstServer}, ${serverName}). Leave "prefixToolNameWithServerName" unset or set it to true to keep tool names unique across servers.`
+        );
+      }
+      serverNameByToolName.set(tool.name, serverName);
+    }
+  }
+}
 
 function createServerSelectionSchema<Options extends z.ZodType>(
   optionsSchema: Options

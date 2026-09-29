@@ -30,7 +30,7 @@ const adapter = new MCPAdapter({
 
 try {
   const tools = await adapter.listTools();
-  const echo = tools.find((tool) => tool.name === "echo");
+  const echo = tools.find((tool) => tool.name === "local__echo");
   if (!echo) throw new Error("The server did not provide echo");
 
   const result = await echo.invoke({ message: "Hello MCP" });
@@ -52,7 +52,6 @@ Omit `mode` to let the SDK negotiate with each server automatically:
 
 ```ts
 const adapter = new MCPAdapter({
-  prefixToolNameWithServerName: true,
   servers: {
     modern: { url: "https://example.com/mcp" },
     legacy: {
@@ -63,7 +62,10 @@ const adapter = new MCPAdapter({
 });
 ```
 
-Prefix names when servers expose identically named tools. Set `mode: "legacy"`
+Tool names are prefixed with their server's name (`modern__echo`), even with a
+single server, so adding a server never renames the tools you already have. Set
+`prefixToolNameWithServerName: false` to keep raw names. `listTools()` throws an
+`MCPClientError` if two tools in the flattened result share a name. Set `mode: "legacy"`
 to skip probing and enable legacy options such as `onElicitation` and
 `onInitialized`. Set `mode: "modern"` to require MCP revision
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
@@ -125,8 +127,7 @@ until then the header is sent.
 
 - [Examples](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples): local servers, mixed modes, agents and hooks.
 
-`MultiServerMCPClient` and `mcpServers` input remain deprecated compatibility APIs.
-Use `MCPAdapter` and `servers` for new code. Replace `getTools()` with `listTools()`
-when upgrading from adapter 1.x.
+`MultiServerMCPClient`, `getTools()` and `mcpServers` input remain deprecated
+compatibility APIs. Use `MCPAdapter`, `listTools()` and `servers` for new code.
 
 MIT licensed.

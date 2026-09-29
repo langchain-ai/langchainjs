@@ -850,13 +850,12 @@ const clientOptionsSchema = z
      * Whether to prefix tool names with the server name. Prefixes are separated by double
      * underscores (example: `calculator_server_1__add`).
      *
-     * @default false
+     * @default true in `MCPAdapter`, false in `loadMcpTools`
      */
     prefixToolNameWithServerName: z
       .boolean()
       .describe("Whether to prefix tool names with the server name")
-      .optional()
-      .default(false),
+      .optional(),
     /**
      * An additional prefix to add to the tool name Prefixes are separated by double underscores
      * (example: `mcp__add`).

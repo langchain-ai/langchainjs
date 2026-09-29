@@ -6,6 +6,8 @@ import { z } from "zod";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   Client as SDKClient,
+  ProtocolError,
+  ProtocolErrorCode,
   StreamableHTTPClientTransport,
   type NotificationMethod,
   type NotificationTypeMap,
@@ -516,6 +518,29 @@ test("resource discovery failure is not an empty catalog", async () => {
 
   try {
     await expect(adapter.listResources()).rejects.toBe(error);
+  } finally {
+    await adapter.close();
+  }
+});
+
+test("a server without resource templates contributes an empty list", async () => {
+  mockConnect();
+  vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({ tools: [] });
+  const template = { uriTemplate: "file:///{path}", name: "files" };
+  vi.spyOn(SDKClient.prototype, "listResourceTemplates")
+    .mockRejectedValueOnce(
+      new ProtocolError(ProtocolErrorCode.MethodNotFound, "Method not found")
+    )
+    .mockResolvedValue({ resourceTemplates: [template] });
+  const adapter = new MCPAdapter({
+    servers: { bare: connection, full: connection },
+  });
+
+  try {
+    expect(await adapter.listResourceTemplates()).toEqual({
+      bare: [],
+      full: [template],
+    });
   } finally {
     await adapter.close();
   }
