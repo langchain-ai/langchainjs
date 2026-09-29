@@ -159,9 +159,9 @@ server. Catalogs and connections are isolated by effective headers and auth
 provider identity, so recreate the adapter when switching the account behind a
 provider. `listTools([], { cacheMode: "refresh" | "bypass" })` drives the SDK's
 discovery cache, and a failed refresh restores the previous catalog rather than
-discarding a working one. `listResources()` and `listResourceTemplates()` still
-list a server that lacks the method as `[]`, but any other server error now
-throws, where 1.x logged it and returned `[]`. `close()` also aborts in-flight
+discarding a working one. `listResources()` and `listResourceTemplates()` now
+throw a server's error, where 1.x logged it and returned `[]`; only a server
+without resource templates still lists them as `[]`. `close()` also aborts in-flight
 requests and pending reconnects; the adapter stays reusable.
 
 ### Server interactions
