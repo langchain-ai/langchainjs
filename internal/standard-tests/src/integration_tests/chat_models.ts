@@ -234,7 +234,9 @@ export abstract class ChatModelIntegrationTests<
           }
         }
       } else {
-        fail("token.content must be a string or ContentBlock[]");
+        // Not `fail()`: that is a jest global, and this suite also runs under
+        // vitest, where the equivalent is `expect.fail`. Throwing works in both.
+        throw new Error("token.content must be a string or ContentBlock[]");
       }
     }
 
