@@ -388,7 +388,12 @@ describe("MultiServerMCPClient", () => {
       expect(Client.prototype.close).not.toHaveBeenCalled();
     });
 
-    test("subscribes supplied modern clients to tool-list changes", async () => {
+    test("preserves supplied clients' tool-change handlers", async () => {
+      const callerHandler = vi.fn();
+      const setNotificationHandler = vi.fn();
+      setNotificationHandler("notifications/tools/list_changed", callerHandler);
+      setNotificationHandler.mockClear();
+      const closeSubscription = vi.fn(async () => {});
       const connectedClient = {
         listTools: vi.fn(async () => ({ tools: [] })),
         callTool: vi.fn(),
@@ -397,21 +402,19 @@ describe("MultiServerMCPClient", () => {
         getServerCapabilities: vi.fn(() => ({
           tools: { listChanged: true },
         })),
-        setNotificationHandler: vi.fn(),
-        listen: vi.fn(async () => {}),
+        setNotificationHandler,
+        listen: vi.fn(async () => ({ close: closeSubscription })),
       } as unknown as import("../connection.js").Client;
       const adapter = new MCPAdapter(connectedClient);
 
       await expect(adapter.listTools()).resolves.toEqual([]);
-      expect(connectedClient.setNotificationHandler).toHaveBeenCalledWith(
-        "notifications/tools/list_changed",
-        expect.any(Function)
-      );
+      expect(setNotificationHandler).not.toHaveBeenCalled();
       expect(connectedClient.listen).toHaveBeenCalledWith({
         toolsListChanged: true,
       });
 
       await adapter.close();
+      expect(closeSubscription).toHaveBeenCalledOnce();
       expect(connectedClient.close).not.toHaveBeenCalled();
     });
 

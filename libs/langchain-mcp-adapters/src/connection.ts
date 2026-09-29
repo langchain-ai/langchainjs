@@ -162,23 +162,19 @@ export class ConnectionManager {
       );
     }
 
-    if (this.onToolsChanged) {
-      client.setNotificationHandler("notifications/tools/list_changed", () =>
-        this.onToolsChanged?.({ serverName })
-      );
-
-      if (
-        protocolEra === "modern" &&
-        client.getServerCapabilities()?.tools?.listChanged
-      ) {
-        await client.listen({ toolsListChanged: true });
-      }
+    let subscription: Awaited<ReturnType<Client["listen"]>> | undefined;
+    if (
+      this.onToolsChanged &&
+      protocolEra === "modern" &&
+      client.getServerCapabilities()?.tools?.listChanged
+    ) {
+      subscription = await client.listen({ toolsListChanged: true });
     }
 
     return {
       client,
       transportOptions: client,
-      closeCallback: async () => {},
+      closeCallback: async () => subscription?.close(),
     };
   }
 
