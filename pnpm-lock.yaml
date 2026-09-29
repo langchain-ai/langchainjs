@@ -1537,6 +1537,9 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
     devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -1608,6 +1611,9 @@ importers:
         specifier: workspace:*
         version: link:../langchain-google-gauth
     devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
       '@langchain/google-common':
         specifier: workspace:*
         version: link:../langchain-google-common
@@ -1645,6 +1651,9 @@ importers:
         specifier: workspace:*
         version: link:../langchain-google-webauth
     devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
       '@langchain/google-common':
         specifier: workspace:*
         version: link:../langchain-google-common
@@ -2167,6 +2176,9 @@ importers:
       '@faker-js/faker':
         specifier: ^10.5.0
         version: 10.5.0
+      '@langchain/classic':
+        specifier: workspace:^
+        version: link:../../langchain-classic
       '@langchain/core':
         specifier: workspace:^
         version: link:../../langchain-core
@@ -2413,6 +2425,9 @@ importers:
         specifier: ^3.14.0
         version: 3.14.0
     devDependencies:
+      '@langchain/classic':
+        specifier: workspace:^
+        version: link:../../langchain-classic
       '@langchain/core':
         specifier: workspace:^
         version: link:../../langchain-core
