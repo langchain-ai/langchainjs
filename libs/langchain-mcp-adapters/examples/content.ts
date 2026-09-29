@@ -10,7 +10,7 @@ const adapter = new MCPAdapter({
 
 try {
   const tools = await adapter.listTools();
-  const inspect = tools.find((tool) => tool.name === "inspect");
+  const inspect = tools.find((tool) => tool.name === "local__inspect");
   if (!inspect) throw new Error("Start modern_server.ts to provide inspect");
   await inspect.invoke({});
 } finally {
