@@ -89,7 +89,7 @@ export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOpti
     };
   }
 
-  get lc_aliases(): { [key: string]: string } | undefined {
+  get lc_aliases(): Record<string, string> {
     return {
       togetherAIApiKey: "together_ai_api_key",
       apiKey: "together_ai_api_key",
@@ -164,6 +164,11 @@ export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOpti
     delete request.presence_penalty;
     delete request.logit_bias;
     delete request.functions;
+
+    // Narrow the union so each call matches one of super's overloads.
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
 
     return super.completionWithRetry(request, options);
   }
