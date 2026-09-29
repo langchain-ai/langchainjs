@@ -7,9 +7,9 @@ import {
   BaseMessage,
   BaseMessageChunk,
   BaseMessageLike,
+  ContentBlock,
   HumanMessage,
   HumanMessageChunk,
-  MessageContentComplex,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -63,7 +63,7 @@ describe("GAuth Chat", () => {
       new AIMessage("T"),
       new HumanMessage("Flip the coin again"),
     ];
-    const res = await model.predictMessages(messages);
+    const res = await model.invoke(messages);
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -185,16 +185,10 @@ describe("GAuth Chat", () => {
     };
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),
-      new AIMessage("", {
+      new AIMessage({
+        content: "",
         tool_calls: [
-          {
-            id: "test",
-            type: "function",
-            function: {
-              name: "test",
-              arguments: '{"testName":"cobalt"}',
-            },
-          },
+          { id: "test", name: "test", args: { testName: "cobalt" } },
         ],
       }),
       new ToolMessage(JSON.stringify(toolResult), "test"),
@@ -262,7 +256,7 @@ describe("GAuth Chat", () => {
       },
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
