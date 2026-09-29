@@ -2,7 +2,7 @@ import {
   callToolWithElicitation,
   type ElicitationRoundParams,
 } from "./elicitation.js";
-import { ToolException, isToolException } from "./utils/errors.js";
+import { ToolException, isToolException, parseConfig } from "./utils/errors.js";
 import {
   convertCallToolResult,
   type ExtendedArtifact,
@@ -459,7 +459,11 @@ export async function loadMcpTools(
   client: MCPInstance,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
-  const parsedOptions = loadMcpToolsOptionsSchema.parse(options ?? {});
+  const parsedOptions = parseConfig(
+    loadMcpToolsOptionsSchema,
+    options ?? {},
+    "loadMcpTools options"
+  );
   const { tools } = await client.listTools();
 
   return convertMcpTools(serverName, client, tools, parsedOptions);

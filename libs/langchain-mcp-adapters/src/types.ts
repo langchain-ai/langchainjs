@@ -202,12 +202,6 @@ const stdioOptionsSchema = z
       .record(z.string(), z.string())
       .describe("The environment to use when spawning the process")
       .optional(),
-    /** @deprecated SDK 2 stdio does not support overriding the encoding. */
-    encoding: z
-      .never({
-        error: "SDK 2 stdio does not support encoding; remove this option",
-      })
-      .optional(),
     /**
      * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
      *
@@ -566,13 +560,6 @@ const notifications = z.object({
 
 export type Notifications = z.output<typeof notifications>;
 
-const removedRootsObserver = z
-  .never({
-    error:
-      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
-  })
-  .optional();
-
 const removedStandardContentBlocks = z
   .never({
     error:
@@ -632,7 +619,6 @@ const modernPolicy = z
     automaticSSEFallback: z
       .never({ error: "automaticSSEFallback requires mode: legacy" })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(serverNotifications.shape);
 
@@ -669,7 +655,6 @@ const legacyPolicy = z
           "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
       })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(notifications.shape)
   .extend({
@@ -896,7 +881,6 @@ const clientOptionsSchema = z
     onResourcesListChanged: serverOnlyCallback,
     onResourcesUpdated: serverOnlyCallback,
     onToolsListChanged: serverOnlyCallback,
-    onRootsListChanged: removedRootsObserver,
     useStandardContentBlocks: removedStandardContentBlocks,
   })
   .strict()

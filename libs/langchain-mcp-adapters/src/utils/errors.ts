@@ -95,3 +95,43 @@ export function createAuthenticationErrorMessage(
     `Original error: ${originalError}`
   );
 }
+
+type Issue = z.core.$ZodIssue;
+
+/** Leaf issues of the union branches closest to matching, with full paths. */
+function closestIssues(issues: Issue[], path: PropertyKey[] = []): Issue[] {
+  // A literal mismatch means the input picked another branch.
+  const cost = (branch: Issue[]) =>
+    branch.length + branch.filter((i) => i.code === "invalid_value").length;
+
+  return issues.flatMap((issue) => {
+    const issuePath = [...path, ...issue.path];
+    if (issue.code !== "invalid_union" || issue.errors.length === 0) {
+      return [{ ...issue, path: issuePath }];
+    }
+    return issue.errors
+      .map((branch) => closestIssues(branch, issuePath))
+      .reduce((best, branch) => (cost(branch) < cost(best) ? branch : best));
+  });
+}
+
+/**
+ * `schema.parse(input)`, except that a failure's message lists only what the
+ * caller must fix: a nested-union ZodError otherwise reports every branch's
+ * mismatch. The thrown error is still the schema's `ZodError`.
+ */
+export function parseConfig<T extends z.ZodType>(
+  schema: T,
+  input: unknown,
+  subject: string
+): z.output<T> {
+  const parsed = schema.safeParse(input);
+  if (parsed.success) return parsed.data;
+
+  const problems = closestIssues(parsed.error.issues).map(
+    ({ path, message }) =>
+      path.length ? `${path.join(".")}: ${message}` : message
+  );
+  parsed.error.message = `Invalid ${subject}: ${problems.join("; ")}`;
+  throw parsed.error;
+}

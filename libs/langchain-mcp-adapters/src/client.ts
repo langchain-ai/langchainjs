@@ -3,6 +3,7 @@ import {
   getHttpErrorCode,
   isAuthenticationError,
   createAuthenticationErrorMessage,
+  parseConfig,
 } from "./utils/errors.js";
 import { z } from "zod";
 import {
@@ -143,7 +144,11 @@ export class MCPAdapter {
   constructor(
     config: MCPAdapterConfig | ClientConfig | Record<string, Connection>
   ) {
-    const parsedServerConfig = adapterConfigSchema.parse(config);
+    const parsedServerConfig = parseConfig(
+      adapterConfigSchema,
+      config,
+      "MCP adapter configuration"
+    );
 
     for (const [serverName, serverConfig] of Object.entries(
       parsedServerConfig.servers
