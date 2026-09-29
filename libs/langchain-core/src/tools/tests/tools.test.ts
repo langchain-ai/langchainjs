@@ -13,6 +13,7 @@ import {
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
+import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { FakeTracer } from "../../utils/testing/index.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
@@ -58,6 +59,34 @@ test("Tool works if responseFormat is content_and_artifact and returns a tuple",
 
   expect(toolResult).not.toBeInstanceOf(ToolMessage);
   expect(toolResult).toBe("msg_content");
+});
+
+test("ToolCall ID is recorded in trace extras through the callback manager", async () => {
+  const collector = new RunCollectorCallbackHandler();
+  const weatherTool = tool((input) => input.location, {
+    name: "weather",
+    schema: z.object({ location: z.string() }),
+  });
+
+  await weatherTool.invoke(
+    {
+      id: "call_abc123",
+      name: "weather",
+      args: { location: "San Francisco" },
+      type: "tool_call",
+    },
+    { callbacks: [collector], metadata: { source: "test" } }
+  );
+  await awaitAllCallbacks();
+
+  expect(collector.tracedRuns).toHaveLength(1);
+  expect(collector.tracedRuns[0]).toMatchObject({
+    run_type: "tool",
+    extra: {
+      tool_call_id: "call_abc123",
+      metadata: { source: "test" },
+    },
+  });
 });
 
 test("ToolMessage content coerces to empty string when tool returns undefined", async () => {
