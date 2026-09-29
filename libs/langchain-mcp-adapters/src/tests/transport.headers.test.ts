@@ -90,7 +90,7 @@ describe("what the transports send", () => {
         authProvider: staticProvider("from-provider"),
       } as never;
 
-      await manager.getOrCreateConnection("svc", connection).catch(() => {
+      await manager.getOrCreateClient("svc", connection).catch(() => {
         // The recording server speaks no MCP; the request is what matters.
       });
 
@@ -118,7 +118,7 @@ describe("what the transports send", () => {
         authProvider: staticProvider(undefined),
       } as never;
 
-      await manager.getOrCreateConnection("svc", connection).catch(() => {});
+      await manager.getOrCreateClient("svc", connection).catch(() => {});
 
       await manager.delete();
       server.close();

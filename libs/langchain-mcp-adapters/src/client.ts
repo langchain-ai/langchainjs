@@ -19,11 +19,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertMcpTools } from "./tools.js";
 import { _resolveAndApplyOverrideHandlingOverrides } from "./content.js";
-import {
-  ConnectionManager,
-  type Client,
-  type Connection as OpenedConnection,
-} from "./connection.js";
+import { ConnectionManager, type Client } from "./connection.js";
 import { mergeHeaders } from "./utils/misc.js";
 import {
   type ClientConfig,
@@ -195,10 +191,10 @@ export class MCPAdapter {
     this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.servers;
     this.#clientConnections = new ConnectionManager((options) => {
-      const connection = this.#clientConnections.getConnection(options);
+      const client = this.#clientConnections.get(options);
 
-      if (connection) {
-        this.#toolsByClient.delete(connection.client);
+      if (client) {
+        this.#toolsByClient.delete(client);
       }
     });
     this.#onConnectionError = parsedServerConfig.onConnectionError;
@@ -256,18 +252,24 @@ export class MCPAdapter {
       }
 
       try {
-        const opened = await this._initializeConnection(
+        await this._initializeConnection(
           serverName,
           connection,
           customTransportOptions
         );
 
-        catalog[serverName] = await this._loadToolsForServer(
-          serverName,
-          opened,
-          customTransportOptions?.cacheMode,
-          signal
+        const client = this.#clientConnections.get(
+          this.#transportOptions(serverName, customTransportOptions)
         );
+
+        if (client) {
+          catalog[serverName] = await this._loadToolsForServer(
+            serverName,
+            client,
+            customTransportOptions?.cacheMode,
+            signal
+          );
+        }
       } catch (error) {
         if (this.#onConnectionError === "throw") {
           throw error;
@@ -400,25 +402,23 @@ export class MCPAdapter {
       ])
       .parse(args);
 
-    const connections =
+    const clients =
       parsed.serverName === undefined
-        ? this.#clientConnections.getAllConnections()
+        ? this.#clientConnections.getAllClients()
         : [
-            this.#clientConnections.getConnection(
+            this.#clientConnections.get(
               this.#transportOptions(parsed.serverName)
             ),
-          ].filter((connection) => connection !== undefined);
+          ].filter((client) => client !== undefined);
 
-    if (
-      connections.some(({ client }) => client.getProtocolEra() === "modern")
-    ) {
+    if (clients.some((client) => client.getProtocolEra() === "modern")) {
       throw new MCPClientError(
         "setLoggingLevel is legacy-only; configure logLevel for modern tool requests"
       );
     }
 
     await Promise.all(
-      connections.map(({ client }) => client.setLoggingLevel(parsed.level))
+      clients.map((client) => client.setLoggingLevel(parsed.level))
     );
   }
 
@@ -435,9 +435,9 @@ export class MCPAdapter {
     const parsedOptions = customHTTPTransportOptionsSchema.parse(options ?? {});
     await this.#discoverToolsets(parsedOptions);
 
-    return this.#clientConnections.getConnection(
+    return this.#clientConnections.get(
       this.#transportOptions(serverName, parsedOptions)
-    )?.client;
+    );
   }
 
   /**
@@ -479,12 +479,14 @@ export class MCPAdapter {
     const result: Record<string, MCPResource[]> = {};
 
     for (const serverName of targetServers) {
-      const connection = this.#clientConnections.getConnection(
+      const client = this.#clientConnections.get(
         this.#transportOptions(serverName, options)
       );
-      if (!connection) continue;
+      if (!client) {
+        continue;
+      }
 
-      const resourcesList = await connection.client.listResources();
+      const resourcesList = await client.listResources();
       result[serverName] = resourcesList.resources.map((resource) => ({
         ...resource,
         uri: resource.uri,
@@ -538,12 +540,14 @@ export class MCPAdapter {
     const result: Record<string, MCPResourceTemplate[]> = {};
 
     for (const serverName of targetServers) {
-      const connection = this.#clientConnections.getConnection(
+      const client = this.#clientConnections.get(
         this.#transportOptions(serverName, options)
       );
-      if (!connection) continue;
+      if (!client) {
+        continue;
+      }
 
-      const templatesList = await connection.client.listResourceTemplates();
+      const templatesList = await client.listResourceTemplates();
       result[serverName] = templatesList.resourceTemplates.map((template) => ({
         ...template,
         uriTemplate: template.uriTemplate,
@@ -654,22 +658,21 @@ export class MCPAdapter {
     serverName: string,
     connection: ResolvedConnection,
     customTransportOptions?: CustomHTTPTransportOptions
-  ): Promise<OpenedConnection> {
+  ): Promise<void> {
     if (!isDescriptorConnection(connection)) {
-      return this.#clientConnections.getOrCreateConnection(
-        serverName,
-        connection
-      );
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
+      return;
     }
 
     if (connection.transport === "stdio") {
       /**
        * check if we already initialized this stdio connection
        */
-      const existing = this.#clientConnections.getConnection(serverName);
-      if (existing) return existing;
+      if (this.#clientConnections.has(serverName)) {
+        return;
+      }
 
-      return this._initializeStdioConnection(serverName, connection);
+      await this._initializeStdioConnection(serverName, connection);
     } else if (
       connection.transport === "http" ||
       connection.transport === "sse"
@@ -692,15 +695,18 @@ export class MCPAdapter {
         headers: updatedConnection.headers,
         authProvider: updatedConnection.authProvider,
       };
-      const existing = this.#clientConnections.getConnection(key);
-      if (existing) return existing;
+      if (this.#clientConnections.has(key)) {
+        return;
+      }
 
-      return updatedConnection.transport === "sse"
-        ? this._initializeSSEConnection(serverName, updatedConnection)
-        : this._initializeStreamableHTTPConnection(
-            serverName,
-            updatedConnection
-          );
+      if (updatedConnection.transport === "sse") {
+        await this._initializeSSEConnection(serverName, updatedConnection);
+      } else {
+        await this._initializeStreamableHTTPConnection(
+          serverName,
+          updatedConnection
+        );
+      }
     } else {
       // This should never happen due to the validation in the constructor
       throw new MCPClientError(
@@ -716,21 +722,19 @@ export class MCPAdapter {
   private async _initializeStdioConnection(
     serverName: string,
     connection: ResolvedStdioConnection
-  ): Promise<OpenedConnection> {
+  ): Promise<void> {
     const { restart } = connection;
 
     try {
-      const opened = await this.#clientConnections.getOrCreateConnection(
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
+      const transport = this.#clientConnections.getTransport({
         serverName,
-        connection
-      );
-      const transport = opened.transport as StdioClientTransport;
+      }) as StdioClientTransport;
 
       // Set up auto-restart if configured
       if (restart?.enabled) {
         this._setupStdioRestart(serverName, transport, connection, restart);
       }
-      return opened;
     } catch (error) {
       throw new MCPClientError(
         `Failed to connect to stdio server "${serverName}" in ${connection.mode} mode: ${error}`,
@@ -756,7 +760,7 @@ export class MCPAdapter {
       }
 
       // Only attempt restart if we haven't cleaned up
-      if (this.#clientConnections.getConnection(serverName)) {
+      if (this.#clientConnections.get(serverName)) {
         await this._attemptReconnect(
           serverName,
           connection,
@@ -787,7 +791,7 @@ export class MCPAdapter {
   private async _initializeStreamableHTTPConnection(
     serverName: string,
     connection: ResolvedStreamableHTTPConnection
-  ): Promise<OpenedConnection> {
+  ): Promise<void> {
     const { url, transport: transportType } = connection;
 
     const automaticSSEFallback =
@@ -805,10 +809,7 @@ export class MCPAdapter {
 
     if (transportType === "http" || transportType == null) {
       try {
-        return await this.#clientConnections.getOrCreateConnection(
-          serverName,
-          connection
-        );
+        await this.#clientConnections.getOrCreateClient(serverName, connection);
       } catch (error) {
         const code = getHttpErrorCode(error);
         if (
@@ -820,7 +821,7 @@ export class MCPAdapter {
         ) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
-            return await this._initializeSSEConnection(
+            await this._initializeSSEConnection(
               serverName,
               SSEConnectionSchema.parse({ ...fallback, transport: "sse" })
             );
@@ -830,7 +831,7 @@ export class MCPAdapter {
 
             if (sseUrl !== url) {
               try {
-                return await this._initializeSSEConnection(
+                await this._initializeSSEConnection(
                   serverName,
                   SSEConnectionSchema.parse({
                     ...fallback,
@@ -916,21 +917,21 @@ export class MCPAdapter {
   private async _initializeSSEConnection(
     serverName: string,
     connection: ResolvedSSEConnection
-  ): Promise<OpenedConnection> {
-    const { url, reconnect } = connection;
+  ): Promise<void> {
+    const { url, headers, reconnect, authProvider } = connection;
 
     try {
-      const opened = await this.#clientConnections.getOrCreateConnection(
+      await this.#clientConnections.getOrCreateClient(serverName, connection);
+      const transport = this.#clientConnections.getTransport({
         serverName,
-        connection
-      );
-      const transport = opened.transport as SSEClientTransport;
+        headers,
+        authProvider,
+      }) as SSEClientTransport;
 
       // Set up auto-reconnect if configured
       if (reconnect?.enabled) {
         this._setupSSEReconnect(serverName, transport, connection, reconnect);
       }
-      return opened;
     } catch (error) {
       // Check if this is already a wrapped error that should be re-thrown
       if (MCPClientError.isInstance(error)) {
@@ -973,7 +974,7 @@ export class MCPAdapter {
 
       // Only attempt reconnect if we haven't cleaned up
       if (
-        this.#clientConnections.getConnection({
+        this.#clientConnections.get({
           serverName,
           headers: connection.headers,
           authProvider: connection.authProvider,
@@ -997,11 +998,10 @@ export class MCPAdapter {
    */
   private async _loadToolsForServer(
     serverName: string,
-    connection: OpenedConnection,
+    client: Client,
     cacheMode: CacheMode = "use",
     signal?: AbortSignal
   ): Promise<DynamicStructuredTool[]> {
-    const { client } = connection;
     const existing = this.#toolsByClient.get(client);
     let previous = existing;
     let replacement:
@@ -1066,7 +1066,7 @@ export class MCPAdapter {
       this.#toolDiscoveryState.delete(client);
 
       try {
-        await this.#clientConnections.release(connection);
+        await this.#clientConnections.release(client);
       } catch (cleanupError) {
         throw new AggregateError(
           [failure, cleanupError],
@@ -1143,7 +1143,7 @@ export class MCPAdapter {
                 authProvider: connection.authProvider,
               }
             : { serverName };
-        if (this.#clientConnections.getConnection(key)) {
+        if (this.#clientConnections.has(key)) {
           connected = true;
           this.#failedServers.delete(this.#clientConnections.identity(key));
         }
@@ -1181,10 +1181,10 @@ export class MCPAdapter {
     headers?: Record<string, string>;
   }): Promise<void> {
     const { serverName, authProvider, headers } = transportOptions;
-    const connection = this.#clientConnections.getConnection(transportOptions);
+    const client = this.#clientConnections.get(transportOptions);
 
-    if (connection) {
-      this.#toolsByClient.delete(connection.client);
+    if (client) {
+      this.#toolsByClient.delete(client);
     }
     await this.#clientConnections.delete({ serverName, authProvider, headers });
   }

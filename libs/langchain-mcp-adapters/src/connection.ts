@@ -50,11 +50,10 @@ type ClientKeyObject = Omit<TransportOptions, "headers"> & {
   headers?: string;
 };
 
-/** An opened connection normalized from a descriptor, client, or server. */
 export interface Connection {
   transport?: Transport;
   client: Client;
-  source: ResolvedConnection;
+  transportOptions: ResolvedConnection;
   closeCallback: () => Promise<void>;
 }
 
@@ -78,26 +77,28 @@ function connectionTransportOptions(
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
   #identities: ClientKeyObject[] = [];
-  #pending = new Map<ClientKeyObject, Promise<Connection>>();
+  #pending = new Map<ClientKeyObject, Promise<Client>>();
   #closing?: Promise<void>;
 
   constructor(
     private readonly onToolsChanged?: (options: TransportOptions) => void
   ) {}
 
-  async getOrCreateConnection(
+  async getOrCreateClient(
     serverName: string,
-    source: ResolvedConnection
-  ): Promise<Connection> {
+    connection: ResolvedConnection
+  ): Promise<Client> {
     if (this.#closing) throw new Error("MCP connections are closing");
-    const key = this.identity(connectionTransportOptions(serverName, source));
-    const existing = this.#connections.get(key);
+    const key = this.identity(
+      connectionTransportOptions(serverName, connection)
+    );
+    const existing = this.#connections.get(key)?.client;
     if (existing) return existing;
 
     const pending = this.#pending.get(key);
     if (pending) return pending;
 
-    const opening = this.#openAndStore(serverName, source, key);
+    const opening = this.#openAndStore(serverName, connection, key);
     this.#pending.set(key, opening);
 
     return opening.finally(() => {
@@ -109,7 +110,7 @@ export class ConnectionManager {
     serverName: string,
     options: ResolvedConnection,
     key: ClientKeyObject
-  ): Promise<Connection> {
+  ): Promise<Client> {
     let connection: Connection;
     if (isDescriptorConnection(options)) {
       connection = await this.#openDescriptor(serverName, options, key);
@@ -129,7 +130,7 @@ export class ConnectionManager {
     }
 
     this.#connections.set(key, connection);
-    return connection;
+    return connection.client;
   }
 
   async #useBorrowedClient(
@@ -176,7 +177,7 @@ export class ConnectionManager {
 
     return {
       client,
-      source: client,
+      transportOptions: client,
       closeCallback: async () => {},
     };
   }
@@ -378,7 +379,7 @@ export class ConnectionManager {
     return {
       transport,
       client,
-      source: options,
+      transportOptions: options,
       closeCallback: async () => client.close(),
     };
   }
@@ -399,7 +400,7 @@ export class ConnectionManager {
 
     if (Object.keys(headers).length === 0)
       return Promise.resolve(connection.client);
-    const options = connection.source;
+    const options = connection.transportOptions;
 
     if (!isDescriptorConnection(options)) {
       throw new Error("Forking a supplied MCP source is not supported");
@@ -416,10 +417,10 @@ export class ConnectionManager {
     // it narrowed rather than through a shared variable.
     const merged = mergeHeaders(options.headers, headers);
 
-    return this.getOrCreateConnection(key.serverName, {
+    return this.getOrCreateClient(key.serverName, {
       ...options,
       headers: merged,
-    }).then((connection) => connection.client);
+    });
   }
 
   /**
@@ -427,22 +428,30 @@ export class ConnectionManager {
    * @param options - The options for the transport
    * @returns The transport
    */
-  getConnection(serverName: string): Connection | undefined;
-  getConnection(options: TransportOptions): Connection | undefined;
-  getConnection(options: TransportOptions | string): Connection | undefined {
-    return typeof options === "string"
-      ? this.#queryConnection({ serverName: options })?.connection
-      : this.#queryConnection(options)?.connection;
+  get(serverName: string): Client | undefined;
+  get(options: TransportOptions): Client | undefined;
+  get(options: TransportOptions | string): Client | undefined {
+    if (typeof options === "string") {
+      return this.#queryConnection({ serverName: options })?.connection.client;
+    }
+
+    return this.#queryConnection(options)?.connection.client;
   }
 
-  /** Get all open connections. */
-  getAllConnections(): Connection[] {
-    return Array.from(this.#connections.values());
+  /**
+   * Get all clients
+   * @returns All clients
+   */
+  getAllClients(): Client[] {
+    return Array.from(this.#connections.values()).map(
+      (connection) => connection.client
+    );
   }
 
   /**
    * Find the connection based on the parameter provided. This approach makes sure
-   * that omitted headers/auth and explicitly undefined values share an identity.
+   * that `this.get({ serverName })` and `this.get({ serverName, headers: undefined, authProvider: undefined })`
+   * will return the same connection.
    *
    * @param options - The options for the transport
    * @returns The connection and the key
@@ -454,6 +463,19 @@ export class ConnectionManager {
     const connection = this.#connections.get(key);
 
     return connection ? { key, connection } : undefined;
+  }
+
+  /**
+   * Check if a client exists based on server name and connection configuration.
+   * @param options - The options for the transport
+   * @returns True if the client exists, false otherwise
+   */
+  has(serverName: string): boolean;
+  has(options: TransportOptions): boolean;
+  has(options: TransportOptions | string): boolean {
+    return Boolean(
+      typeof options === "string" ? this.get(options) : this.get(options)
+    );
   }
 
   /**
@@ -482,14 +504,14 @@ export class ConnectionManager {
     }
   }
 
-  async release(connection: Connection): Promise<void> {
+  async release(client: Client): Promise<void> {
     const entry = [...this.#connections.entries()].find(
-      ([, current]) => current === connection
+      ([, connection]) => connection.client === client
     );
 
     if (!entry) return;
     this.#connections.delete(entry[0]);
-    await connection.closeCallback();
+    await entry[1].closeCallback();
   }
 
   async #closeAll(): Promise<void> {
@@ -508,6 +530,34 @@ export class ConnectionManager {
 
     if (errors.length)
       throw new AggregateError(errors, "Failed to close MCP connections");
+  }
+
+  /**
+   * Get the transport for a specific client
+   * @param client - The client to get the transport for
+   */
+  getTransport(client: Client): Transport | undefined;
+  /**
+   * Get the transport for a specific connection combination
+   * @param options - The options to get the transport for
+   */
+  getTransport(options: TransportOptions): Transport | undefined;
+  getTransport(opts: Client | TransportOptions): Transport | undefined {
+    /**
+     * if a client instance is passed in
+     */
+    if ("listTools" in opts) {
+      const connection = [...this.#connections.values()].find(
+        (connection) => connection.client === opts
+      );
+      return connection?.transport;
+    }
+
+    const result = this.#queryConnection(opts);
+    if (result) {
+      return result.connection.transport;
+    }
+    return undefined;
   }
 
   async #createStreamableHTTPTransport(
