@@ -1010,7 +1010,7 @@ const directAdapterInputSchema = z
   .pipe(
     mcpAdapterConfigSchema as z.ZodType<
       ResolvedMCPAdapterConfig,
-      { servers: Record<string, z.input<typeof ConnectionSchema>> }
+      { servers: { default: z.output<typeof ConnectionSchema> } }
     >
   );
 
