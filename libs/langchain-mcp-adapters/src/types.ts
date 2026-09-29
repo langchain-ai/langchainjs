@@ -560,13 +560,6 @@ const notifications = z.object({
 
 export type Notifications = z.output<typeof notifications>;
 
-const removedStandardContentBlocks = z
-  .never({
-    error:
-      "useStandardContentBlocks was removed: tool content is always standard LangChain content blocks; delete this option",
-  })
-  .optional();
-
 const serverNotifications = notifications.omit({ onInitialized: true }).extend({
   /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
   resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
@@ -763,16 +756,6 @@ export const ConnectionSchema = z.union([
 ]);
 
 /**
- * {@link MultiServerMCPClient} configuration
- */
-const serverOnlyCallback = z
-  .never({
-    error:
-      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
-  })
-  .optional();
-
-/**
  * Custom error handler for connection failures.
  *
  * If the handler throws or rejects, the error is propagated when a caller is
@@ -872,17 +855,6 @@ const clientOptionsSchema = z
   })
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
-  .extend({
-    resourceSubscriptions: serverOnlyCallback,
-    onMessage: serverOnlyCallback,
-    onProgress: serverOnlyCallback,
-    onInitialized: serverOnlyCallback,
-    onPromptsListChanged: serverOnlyCallback,
-    onResourcesListChanged: serverOnlyCallback,
-    onResourcesUpdated: serverOnlyCallback,
-    onToolsListChanged: serverOnlyCallback,
-    useStandardContentBlocks: removedStandardContentBlocks,
-  })
   .strict()
   .describe("Configuration for the MCP client");
 

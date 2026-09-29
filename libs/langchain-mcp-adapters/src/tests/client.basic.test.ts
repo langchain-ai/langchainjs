@@ -2196,7 +2196,7 @@ describe("MultiServerMCPClient", () => {
     });
   });
 
-  test("explains that useStandardContentBlocks was removed", () => {
+  test("rejects the removed useStandardContentBlocks option", () => {
     expect(
       () =>
         new MCPAdapter({
@@ -2205,9 +2205,7 @@ describe("MultiServerMCPClient", () => {
           },
           useStandardContentBlocks: true,
         } as never)
-    ).toThrow(
-      /useStandardContentBlocks was removed: tool content is always standard LangChain content blocks/
-    );
+    ).toThrow(/useStandardContentBlocks/);
   });
 });
 
@@ -2507,7 +2505,6 @@ describe("protocol-specific server configuration", () => {
       onMessage: () => undefined,
     };
 
-    // @ts-expect-error Protocol callbacks belong to a server, even on predeclared configs.
     expect(() => new MCPAdapter(config)).toThrow(/onMessage/);
   });
 
