@@ -527,8 +527,7 @@ export async function convertMcpTools(
           try {
             const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
-            const inputSchema =
-              jsonSchemaParser<ToolArguments>(originalSchema);
+            const inputSchema = jsonSchemaParser<ToolArguments>(originalSchema);
 
             const invocation = createToolInvocation(
               client,
