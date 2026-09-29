@@ -22,10 +22,11 @@ interrupts.
   longer see server-reported errors. The server's error text always reaches the
   model, and an error without text gets a one-line placeholder. Called with plain
   arguments, the tool still throws `ToolException` with the MCP result on `result`.
-- **Several servers prefix tool names by default.** With more than one server,
-  tools are named `{server}__{tool}` unless `prefixToolNameWithServerName` is
-  set; 1.x defaulted it to `false`. A single server keeps its raw names. Set
-  `prefixToolNameWithServerName: false` to keep 1.x names.
+- **Tool names are prefixed with the server name by default.** `MCPAdapter`
+  names tools `{server}__{tool}`, even with a single server, unless
+  `prefixToolNameWithServerName` is set; 1.x defaulted it to `false`. Set
+  `prefixToolNameWithServerName: false` to keep 1.x names. `loadMcpTools` still
+  defaults to `false`.
 - **Duplicate tool names throw.** `listTools()` throws an `MCPClientError` when a
   tool name appears more than once in the flattened list, which now needs
   `prefixToolNameWithServerName: false` across servers or one server listing a
