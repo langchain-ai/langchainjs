@@ -75,10 +75,28 @@ Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
 
-`adapter.config.servers` exposes an isolated configuration snapshot. Changing
-the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
-and auth provider instances retain their identity; the snapshot is runtime configuration,
-not a redacted diagnostic object.
+For a single server named `default`, the constructor also accepts a direct source:
+
+```ts
+new MCPAdapter("https://example.com/mcp"); // Streamable HTTP URL
+new MCPAdapter("./server.mjs"); // Node script over stdio
+new MCPAdapter(new URL("https://example.com/mcp"));
+new MCPAdapter(connectedClient); // already-connected MCP SDK 2 Client
+new MCPAdapter(inProcessServer); // server with connect() and close()
+```
+
+URL and script sources are descriptors: the adapter creates and owns their clients,
+and can reconnect them after `close()`. A supplied client must already be connected;
+the adapter subscribes to tool-list changes but does not close the client. Configure
+authentication on that client because per-call headers and auth providers do not apply.
+An in-process server is connected over linked memory transports and is closed by the
+adapter. In-process server instances are one-shot and cannot be reused after a
+successful connection. Configure each object source under only one server name.
+
+`adapter.config.servers` exposes a configuration snapshot. Changing the snapshot
+does not reconfigure the adapter. Notification callbacks, tool hooks, auth provider
+instances, supplied clients, and in-process servers retain their identity; the snapshot
+is runtime configuration, not a redacted diagnostic object.
 
 Put notification and progress callbacks on the server that should receive them.
 Global tool hooks, naming, output routing and load-error policies remain adapter

@@ -982,28 +982,37 @@ const adapterConfigObjectSchema = z.union([
   })),
 ]);
 
-const stringConnectionSchema = z
+const httpUrlStringSchema = z
   .string()
-  .transform((value) =>
-    ConnectionSchema.parse(
-      /^https?:\/\//iu.test(value)
-        ? { url: value }
-        : { command: process.execPath, args: [value] }
-    )
-  );
+  .url({ protocol: /^https?$/iu })
+  .transform((url) => ({ url }));
+
+const scriptPathStringSchema = z
+  .string()
+  .refine((value) => !/^https?:\/\//iu.test(value), {
+    error: "Invalid HTTP(S) URL",
+  })
+  .transform((value) => ({
+    command: process.execPath,
+    args: ["--", value],
+  }));
+
+const stringConnectionSchema = z
+  .union([httpUrlStringSchema, scriptPathStringSchema])
+  .pipe(ConnectionSchema);
 
 const urlConnectionSchema = z
   .instanceof(URL)
   .refine((url) => url.protocol === "http:" || url.protocol === "https:", {
     error: "MCPAdapter URL inputs must use http: or https:",
   })
-  .transform((url) => ConnectionSchema.parse({ url: url.toString() }));
+  .transform((url) => ({ url: url.toString() }))
+  .pipe(ConnectionSchema);
 
 const directAdapterInputSchema = z
   .union([stringConnectionSchema, urlConnectionSchema, ConnectionSchema])
-  .transform((connection) =>
-    mcpAdapterConfigSchema.parse({ servers: { default: connection } })
-  );
+  .transform((connection) => ({ servers: { default: connection } }))
+  .pipe(mcpAdapterConfigSchema);
 
 /** All supported constructor inputs produce the same resolved configuration. */
 export const adapterConfigSchema: z.ZodType<

@@ -274,7 +274,7 @@ describe("MultiServerMCPClient", () => {
         mode: "auto",
         transport: "http",
         url: "https://example.com/mcp",
-        elicitation: false,
+        elicitation: true,
       });
     });
 
@@ -310,10 +310,23 @@ describe("MultiServerMCPClient", () => {
         mode: "auto",
         transport: "stdio",
         command: process.execPath,
-        args: ["./server.mjs"],
+        args: ["--", "./server.mjs"],
         stderr: "inherit",
-        elicitation: false,
+        elicitation: true,
       });
+    });
+
+    test("protects script paths from Node option injection", () => {
+      const client = new MCPAdapter("--eval=process.exit(1)");
+
+      expect(client.config.servers.default).toMatchObject({
+        command: process.execPath,
+        args: ["--", "--eval=process.exit(1)"],
+      });
+    });
+
+    test("rejects malformed HTTP URL strings instead of treating them as paths", () => {
+      expect(() => new MCPAdapter("https://[invalid")).toThrow(ZodError);
     });
 
     test("connects an in-process server over linked memory transports", async () => {
@@ -331,6 +344,36 @@ describe("MultiServerMCPClient", () => {
       expect(server.close).toHaveBeenCalledOnce();
     });
 
+    test("can retry an in-process server after connection fails", async () => {
+      const server = {
+        connect: vi
+          .fn<() => Promise<void>>()
+          .mockRejectedValueOnce(new Error("not ready"))
+          .mockResolvedValue(undefined),
+        close: vi.fn(async () => {}),
+      };
+      const adapter = new MCPAdapter(server);
+
+      await expect(adapter.listTools()).rejects.toThrow("not ready");
+      await expect(adapter.listTools()).resolves.toHaveLength(2);
+      expect(server.connect).toHaveBeenCalledTimes(2);
+
+      await adapter.close();
+    });
+
+    test("rejects the same object source under multiple server names", () => {
+      const server = {
+        connect: vi.fn(async () => {}),
+        close: vi.fn(async () => {}),
+      };
+
+      expect(
+        () => new MCPAdapter({ servers: { first: server, second: server } })
+      ).toThrow(
+        'same supplied MCP source cannot be configured as both "first" and "second"'
+      );
+    });
+
     test("uses a supplied connected Client without reconnecting or owning it", async () => {
       const connectedClient = new Client(
         { name: "prebuilt", version: "1.0.0" },
@@ -345,6 +388,74 @@ describe("MultiServerMCPClient", () => {
 
       await adapter.close();
       expect(Client.prototype.close).not.toHaveBeenCalled();
+    });
+
+    test("subscribes supplied modern clients to tool-list changes", async () => {
+      const connectedClient = {
+        listTools: vi.fn(async () => ({ tools: [] })),
+        callTool: vi.fn(),
+        close: vi.fn(async () => {}),
+        getProtocolEra: vi.fn(() => "modern" as const),
+        getServerCapabilities: vi.fn(() => ({
+          tools: { listChanged: true },
+        })),
+        setNotificationHandler: vi.fn(),
+        listen: vi.fn(async () => {}),
+      } as unknown as import("../connection.js").Client;
+      const adapter = new MCPAdapter(connectedClient);
+
+      await expect(adapter.listTools()).resolves.toEqual([]);
+      expect(connectedClient.setNotificationHandler).toHaveBeenCalledWith(
+        "notifications/tools/list_changed",
+        expect.any(Function)
+      );
+      expect(connectedClient.listen).toHaveBeenCalledWith({
+        toolsListChanged: true,
+      });
+
+      await adapter.close();
+      expect(connectedClient.close).not.toHaveBeenCalled();
+    });
+
+    test("rejects supplied SDK 1 clients with a specific error", async () => {
+      const legacyClient = {
+        listTools: vi.fn(async () => ({ tools: [] })),
+        callTool: vi.fn(),
+        close: vi.fn(async () => {}),
+      } as unknown as import("../connection.js").Client;
+      const adapter = new MCPAdapter(legacyClient);
+
+      await expect(adapter.listTools()).rejects.toThrow(
+        'Supplied MCP client for "default" must use MCP SDK 2'
+      );
+    });
+
+    test("rejects supplied SDK 2 clients that are not connected", async () => {
+      const disconnectedClient = {
+        listTools: vi.fn(async () => ({ tools: [] })),
+        callTool: vi.fn(),
+        close: vi.fn(async () => {}),
+        getProtocolEra: vi.fn(() => undefined),
+      } as unknown as import("../connection.js").Client;
+      const adapter = new MCPAdapter(disconnectedClient);
+
+      await expect(adapter.listTools()).rejects.toThrow(
+        'Supplied MCP client for "default" must already be connected'
+      );
+    });
+
+    test("rejects per-call authentication for supplied object sources", async () => {
+      const connectedClient = new Client(
+        { name: "prebuilt", version: "1.0.0" },
+        { versionNegotiation: { mode: "legacy" } }
+      );
+      const adapter = new MCPAdapter(connectedClient);
+
+      await expect(
+        adapter.listToolsets({ headers: { Authorization: "Bearer token" } })
+      ).rejects.toThrow(
+        'Per-call headers and authProvider don\'t apply to server "default"'
+      );
     });
 
     test("should throw if initialized with empty connections", () => {

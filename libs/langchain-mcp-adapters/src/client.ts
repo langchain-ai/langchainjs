@@ -148,9 +148,21 @@ export class MCPAdapter {
   constructor(config: MCPAdapterInput) {
     const parsedServerConfig = adapterConfigSchema.parse(config);
 
+    const objectSources = new WeakMap<object, string>();
     for (const [serverName, serverConfig] of Object.entries(
       parsedServerConfig.servers
     )) {
+      if (!isDescriptorConnection(serverConfig)) {
+        const previousName = objectSources.get(serverConfig);
+        if (previousName) {
+          throw new MCPClientError(
+            `The same supplied MCP source cannot be configured as both "${previousName}" and "${serverName}"`,
+            serverName
+          );
+        }
+        objectSources.set(serverConfig, serverName);
+      }
+
       const descriptor = isDescriptorConnection(serverConfig)
         ? serverConfig
         : undefined;
@@ -290,8 +302,20 @@ export class MCPAdapter {
   #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
     const connection = this.#config.servers[serverName];
 
+    if (connection && !isDescriptorConnection(connection)) {
+      const hasPerCallAuth =
+        options?.authProvider !== undefined ||
+        Object.keys(options?.headers ?? {}).length > 0;
+      if (hasPerCallAuth) {
+        throw new MCPClientError(
+          `Per-call headers and authProvider don't apply to server "${serverName}" (a supplied client or in-process server); configure auth on the client instead`,
+          serverName
+        );
+      }
+      return { serverName };
+    }
+
     return !connection ||
-      !isDescriptorConnection(connection) ||
       (connection.transport !== "http" && connection.transport !== "sse")
       ? { serverName }
       : {

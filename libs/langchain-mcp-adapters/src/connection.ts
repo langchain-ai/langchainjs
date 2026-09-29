@@ -117,11 +117,7 @@ export class ConnectionManager {
     } else {
       const client = ClientConnectionSchema.safeParse(options);
       if (client.success) {
-        connection = {
-          client: client.data,
-          transportOptions: client.data,
-          closeCallback: async () => {},
-        };
+        connection = await this.#useBorrowedClient(serverName, client.data);
       } else {
         const server = InProcessConnectionSchema.parse(options);
         connection = await connectInProcessServer(server, {
@@ -135,6 +131,55 @@ export class ConnectionManager {
 
     this.#connections.set(key, connection);
     return connection.client;
+  }
+
+  async #useBorrowedClient(
+    serverName: string,
+    client: Client
+  ): Promise<Connection> {
+    if (typeof client.getProtocolEra !== "function") {
+      throw new MCPClientError(
+        `Supplied MCP client for "${serverName}" must use MCP SDK 2`,
+        serverName
+      );
+    }
+
+    let protocolEra: ReturnType<Client["getProtocolEra"]>;
+    try {
+      protocolEra = client.getProtocolEra();
+    } catch (cause) {
+      throw new MCPClientError(
+        `Supplied MCP client for "${serverName}" must already be connected`,
+        serverName,
+        { cause }
+      );
+    }
+
+    if (protocolEra !== "legacy" && protocolEra !== "modern") {
+      throw new MCPClientError(
+        `Supplied MCP client for "${serverName}" must already be connected`,
+        serverName
+      );
+    }
+
+    if (this.onToolsChanged) {
+      client.setNotificationHandler("notifications/tools/list_changed", () =>
+        this.onToolsChanged?.({ serverName })
+      );
+
+      if (
+        protocolEra === "modern" &&
+        client.getServerCapabilities()?.tools?.listChanged
+      ) {
+        await client.listen({ toolsListChanged: true });
+      }
+    }
+
+    return {
+      client,
+      transportOptions: client,
+      closeCallback: async () => {},
+    };
   }
 
   identity(options: TransportOptions): ClientKeyObject {

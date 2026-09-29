@@ -21,7 +21,6 @@ export async function connectInProcessServer(
       `The MCP connection for "${context.serverName}" has already been closed and cannot be reused`
     );
   }
-  consumedServers.add(server);
 
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -39,6 +38,7 @@ export async function connectInProcessServer(
 
     await server.connect(serverTransport);
     await client.connect(clientTransport);
+    consumedServers.add(server);
 
     if (
       context.onToolsChanged &&
