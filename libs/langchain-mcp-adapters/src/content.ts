@@ -366,8 +366,8 @@ export function convertCallToolError({
 }: ConvertCallToolResultArgs & {
   /** Set only for a tool call; without it, this throws. */
   toolCallId?: string;
-  /** The LangChain tool's name, as core uses for tool messages. */
-  name: string;
+  /** The tool call's name. */
+  name?: string;
 }): ToolMessage {
   const { serverName, toolName, result } = args;
 

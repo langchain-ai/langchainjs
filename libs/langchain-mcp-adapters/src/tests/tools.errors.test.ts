@@ -147,7 +147,7 @@ describe("server-reported tool errors", () => {
     const [tool] = await loadMcpTools(
       "test",
       erroringClient([{ type: "text", text: "denied" }]),
-      { afterToolCall, prefixToolNameWithServerName: true }
+      { afterToolCall }
     );
 
     const output = await tool.invoke(toolCall);
@@ -157,7 +157,7 @@ describe("server-reported tool errors", () => {
       status: "error",
       content: "denied",
       tool_call_id: "call-1",
-      name: "test__echo",
+      name: "echo",
     });
     expect(output.artifact).toContainEqual({
       type: "mcp_meta",

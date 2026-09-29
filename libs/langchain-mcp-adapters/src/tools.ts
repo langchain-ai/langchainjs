@@ -74,10 +74,6 @@ type CallToolArgs = {
    */
   toolName: string;
   /**
-   * The LangChain tool's name, used for its tool messages
-   */
-  langchainToolName: string;
-  /**
    * The arguments to pass to the tool - must conform to the tool's input schema
    */
   args: ToolArguments;
@@ -367,7 +363,6 @@ async function _callTool(
   const {
     serverName,
     toolName,
-    langchainToolName,
     invocation,
     config,
     outputHandling,
@@ -414,7 +409,7 @@ async function _callTool(
           result,
           outputHandling,
           toolCallId: config?.toolCall?.id,
-          name: langchainToolName,
+          name: config?.toolCall?.name,
         }),
         [],
       ];
@@ -534,10 +529,8 @@ export async function convertMcpTools(
               elicitation
             );
 
-            const name = `${toolNamePrefix}${tool.name}`;
-
             return new DynamicStructuredTool({
-              name,
+              name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
               schema: structuredClone(originalSchema),
               responseFormat: "content_and_artifact",
@@ -555,7 +548,6 @@ export async function convertMcpTools(
                   serverName,
                   inputSchema,
                   toolName: tool.name,
-                  langchainToolName: name,
                   args,
                   config,
                   outputHandling,
