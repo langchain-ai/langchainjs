@@ -32,6 +32,7 @@ import type {
   Client as MCPClient,
   Tool as MCPTool,
   RequestOptions,
+  StandardSchemaWithJSON,
 } from "@modelcontextprotocol/client";
 import {
   DynamicStructuredTool,
@@ -225,7 +226,8 @@ function createToolInvocation(
       inBand && outputSchema
         ? z.object({
             structuredContent: jsonSchemaParser(
-              JSONObjectSchema.parse(outputSchema)
+              JSONObjectSchema.parse(outputSchema),
+              `output schema of MCP tool "${descriptor.name}"`
             ),
           })
         : undefined,
@@ -238,17 +240,32 @@ function createToolInvocation(
   };
 }
 
-/** Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary. */
+/**
+ * Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary.
+ *
+ * Compiled on first parse, not at load, so a schema the SDK engine rejects
+ * fails only its own tool's calls rather than the server's discovery.
+ */
 function jsonSchemaParser<T>(
-  jsonSchema: z.output<typeof JSONObjectSchema>
+  jsonSchema: z.output<typeof JSONObjectSchema>,
+  label: string
 ): z.ZodTransform<T, T> {
-  // Scope the SDK engine to this descriptor: its shared cache keys by $id.
-  const validator = fromJsonSchema<T>(
-    jsonSchema,
-    new DefaultJsonSchemaValidator()
-  );
+  let validator: StandardSchemaWithJSON<T, T> | undefined;
 
   return z.transform(async (input: T, ctx) => {
+    try {
+      // Scope the SDK engine to this descriptor: its shared cache keys by $id.
+      validator ??= fromJsonSchema<T>(
+        jsonSchema,
+        new DefaultJsonSchemaValidator()
+      );
+    } catch (error) {
+      throw new ToolException(
+        `Could not compile the ${label}: ${String(error)}`,
+        error
+      );
+    }
+
     const result = await validator["~standard"].validate(input);
 
     if (result.issues) {
@@ -519,7 +536,10 @@ export async function convertMcpTools(
           try {
             const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
-            const inputSchema = jsonSchemaParser<ToolArguments>(originalSchema);
+            const inputSchema = jsonSchemaParser<ToolArguments>(
+              originalSchema,
+              `input schema of MCP tool "${tool.name}"`
+            );
 
             const invocation = createToolInvocation(
               client,
