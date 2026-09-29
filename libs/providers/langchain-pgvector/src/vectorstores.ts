@@ -82,44 +82,68 @@ type Metadata = Record<string, unknown>;
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
 
 /**
- * Operators understood by {@link PGVectorStore.buildFilterClauses}. A key in a
- * filter's operator object that is not listed here cannot be translated to SQL,
- * so it is reported rather than silently dropped.
+ * How each operator understood by {@link PGVectorStore.buildFilterClauses}
+ * decides whether it can be translated to SQL.
+ *
+ * `accepted` mirrors the guard inside `buildFilterClauses`: an operator whose
+ * value fails it emits no clause. An operator missing from this table cannot be
+ * translated at all. Either way the query ends up running unfiltered, so both
+ * cases are reported to the caller.
  */
-const SUPPORTED_FILTER_OPERATORS = new Set([
-  "in",
-  "notIn",
-  "arrayContains",
-  "gt",
-  "gte",
-  "lt",
-  "lte",
-  "neq",
-  "jsonbContains",
-]);
+const FILTER_OPERATORS: Record<
+  string,
+  { accepted: (value: unknown) => boolean }
+> = {
+  in: { accepted: (value) => Array.isArray(value) },
+  notIn: { accepted: (value) => Array.isArray(value) },
+  arrayContains: { accepted: (value) => Array.isArray(value) },
+  gt: { accepted: (value) => typeof value === "number" },
+  gte: { accepted: (value) => typeof value === "number" },
+  lt: { accepted: (value) => typeof value === "number" },
+  lte: { accepted: (value) => typeof value === "number" },
+  // `neq` is guarded by `hasOwnProperty` alone, so any value yields a clause.
+  neq: { accepted: () => true },
+  jsonbContains: {
+    accepted: (value) =>
+      typeof value === "object" && value !== null && !Array.isArray(value),
+  },
+};
 
 /**
- * Finds filter keys whose operator object contains no recognized operator.
+ * Finds filter entries that {@link PGVectorStore.buildFilterClauses} cannot
+ * translate into a WHERE clause.
  *
- * Such filters produce no WHERE clause, so the query runs unfiltered. That is a
- * silent correctness problem, hence surfacing it to the caller.
+ * These fall into two groups: an operator key the builder does not know, and a
+ * known operator whose value fails the builder's type guard. Both produce no
+ * clause, so the query runs unfiltered and returns more rows than intended,
+ * which is a silent correctness problem worth surfacing.
  *
  * @param filter - The metadata filter object to inspect.
- * @returns Human-readable `key.operator` strings for each ignored operator.
+ * @returns Human-readable descriptions of each ignored entry.
  */
-function collectUnrecognizedOperators(filter: MetadataFilter): string[] {
-  const unrecognized: string[] = [];
+function collectUntranslatedFilterEntries(filter: MetadataFilter): string[] {
+  const ignored: string[] = [];
   for (const [key, value] of Object.entries(filter)) {
     if (typeof value !== "object" || value === null) {
       continue;
     }
-    for (const operator of Object.keys(value as Record<string, unknown>)) {
-      if (!SUPPORTED_FILTER_OPERATORS.has(operator)) {
-        unrecognized.push(`${key}.${operator}`);
+    const operators = Object.keys(value as Record<string, unknown>);
+    if (operators.length === 0) {
+      ignored.push(`${key} (empty operator object)`);
+      continue;
+    }
+    for (const operator of operators) {
+      const definition = FILTER_OPERATORS[operator];
+      if (!definition) {
+        ignored.push(`${key}.${operator} (unsupported operator)`);
+      } else if (
+        !definition.accepted((value as Record<string, unknown>)[operator])
+      ) {
+        ignored.push(`${key}.${operator} (invalid value for this operator)`);
       }
     }
   }
-  return unrecognized;
+  return ignored;
 }
 
 /**
@@ -280,7 +304,8 @@ export interface PGVectorStoreArgs {
  * <details>
  * <summary><strong>Similarity search with filter operators</strong></summary>
  *
- * Available filter operators: in, notIn, lte, lt, gte, gt, neq
+ * Available filter operators: in, notIn, arrayContains, lte, lt, gte, gt, neq,
+ * jsonbContains
  *
  * ```typescript
  * const resultsWithFilters = await vectorStore.similaritySearch("thud", 1, {
@@ -296,6 +321,23 @@ export interface PGVectorStoreArgs {
  *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
  * }
  * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search on nested JSONB metadata</strong></summary>
+ *
+ * `jsonbContains` uses Postgres JSONB containment (`@>`), so it matches on a
+ * subset of an object rather than requiring an exact match.
+ *
+ * ```typescript
+ * // Matches documents whose `metadata.profile` contains `{ tier: "gold" }`,
+ * // including documents where `profile` also has other keys.
+ * const goldProfiles = await vectorStore.similaritySearch("thud", 10, {
+ *   profile: { jsonbContains: { tier: "gold" } },
+ * });
  * ```
  * </details>
  *
@@ -873,14 +915,14 @@ export class PGVectorStore extends VectorStore {
       }
     }
 
-    const unrecognized = collectUnrecognizedOperators(filter);
-    if (unrecognized.length > 0) {
-      // Silently ignoring an unknown operator widens the result set to
-      // everything, which is a silent correctness bug for a vector store.
-      // Warn rather than throw so that callers relying on the previous
-      // lenient behaviour are not broken outright.
+    const ignored = collectUntranslatedFilterEntries(filter);
+    if (ignored.length > 0) {
+      // Ignoring an entry widens the result set to everything, which is a
+      // silent correctness bug for a vector store. Warn rather than throw so
+      // that callers relying on the previous lenient behaviour are not broken
+      // outright.
       console.warn(
-        `[PGVectorStore] Ignoring unrecognized filter operator(s) for key(s): ${unrecognized.join(
+        `[PGVectorStore] These filter entries produced no WHERE clause and were ignored: ${ignored.join(
           ", "
         )}. Supported operators are: in, notIn, arrayContains, gt, gte, lt, lte, neq, jsonbContains. The query may return more rows than intended.`
       );

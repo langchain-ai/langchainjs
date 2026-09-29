@@ -588,4 +588,108 @@ describe("PGVectorStore jsonbContains filter (integration)", () => {
     warnSpy.mockRestore();
     await store.end();
   });
+
+  // ------------------------------------------------------------------
+  // Unhappy paths, verified against a live database. Each one confirms
+  // that a filter entry the builder cannot translate is both reported to
+  // the caller and left non-fatal, so existing callers keep working.
+  // ------------------------------------------------------------------
+
+  test("an unknown operator still returns every row rather than erroring", async () => {
+    const store = await createStore();
+
+    await store.addDocuments([
+      new Document({ pageContent: "gold", metadata: { p: { t: "gold" } } }),
+      new Document({ pageContent: "silver", metadata: { p: { t: "silver" } } }),
+    ]);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // `exists` is not supported here, so the clause is dropped. Behaviour is
+    // deliberately unchanged (no throw), but the caller is now told.
+    const results = await store.similaritySearch("x", 10, {
+      p: { exists: true },
+    } as unknown as MetadataFilter);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain("p.exists");
+    expect(results).toHaveLength(2);
+
+    warnSpy.mockRestore();
+    await store.end();
+  });
+
+  test("an operator with a wrong-typed value warns and returns every row", async () => {
+    const store = await createStore();
+
+    await store.addDocuments([
+      new Document({ pageContent: "a", metadata: { score: 10 } }),
+      new Document({ pageContent: "b", metadata: { score: 90 } }),
+    ]);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // `gte` is supported, but a string fails its numeric guard, so the
+    // clause is dropped and the query runs unfiltered.
+    const results = await store.similaritySearch("x", 10, {
+      score: { gte: "50" },
+    } as unknown as MetadataFilter);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain("score.gte");
+    expect(results).toHaveLength(2);
+
+    warnSpy.mockRestore();
+    await store.end();
+  });
+
+  test("an empty operator object warns and returns every row", async () => {
+    const store = await createStore();
+
+    await store.addDocuments([
+      new Document({ pageContent: "a", metadata: { p: { t: 1 } } }),
+      new Document({ pageContent: "b", metadata: { p: { t: 2 } } }),
+    ]);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const results = await store.similaritySearch("x", 10, { p: {} });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain("empty operator object");
+    expect(results).toHaveLength(2);
+
+    warnSpy.mockRestore();
+    await store.end();
+  });
+
+  test("a good entry still filters when a sibling entry is dropped", async () => {
+    const store = await createStore();
+
+    await store.addDocuments([
+      new Document({
+        pageContent: "keep",
+        metadata: { p: { t: "gold" }, n: 1 },
+      }),
+      new Document({
+        pageContent: "drop",
+        metadata: { p: { t: "silver" }, n: 2 },
+      }),
+    ]);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const results = await store.similaritySearch("x", 10, {
+      bad: { gte: "50" },
+      n: { gte: 1 },
+      p: { jsonbContains: { t: "gold" } },
+    } as unknown as MetadataFilter);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(results).toHaveLength(1);
+    expect(results[0].pageContent).toBe("keep");
+
+    warnSpy.mockRestore();
+    await store.end();
+  });
 });

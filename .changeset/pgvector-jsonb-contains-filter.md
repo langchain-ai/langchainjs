@@ -17,6 +17,9 @@ Also fixes two pre-existing problems in the filter builder:
 - `in: []` and `notIn: []` produced invalid SQL (`IN ()`) and threw a raw
   database syntax error. An empty `in` list now matches nothing and an empty
   `notIn` list excludes nothing.
-- Unrecognized filter operators were dropped silently, so a query returned
-  every row instead of the intended subset. The store now emits a `console.warn`
-  naming each ignored operator. Filtering behavior is otherwise unchanged.
+- Filter entries that the builder cannot translate were dropped silently, so a
+  query returned every row instead of the intended subset. The store now emits a
+  `console.warn` naming each ignored entry, whether it was an unknown operator
+  or a known operator given a value of the wrong type. Filtering behavior is
+  otherwise unchanged.
+
