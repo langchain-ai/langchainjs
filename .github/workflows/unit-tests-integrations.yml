@@ -45,7 +45,9 @@ jobs:
     needs: get-changed-files
     runs-on: ubuntu-latest
     env:
-      PACKAGES: "anthropic,aws,cloudflare,core,deepseek,fireworks,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,ibm,mcp-adapters,mistralai,mongodb,neo4j,ollama,openai,perplexity,redis,standard-tests,textsplitters,together-ai,typesafe,xai"
+      # google and pinecone are not listed yet: their unit tests currently fail
+      # on main (6 and 4 tests). Add them once those are fixed.
+      PACKAGES: "anthropic,aws,cloudflare,cohere,core,deepseek,exa,fireworks,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,ibm,mcp-adapters,mistralai,mongodb,neo4j,ollama,openai,openrouter,perplexity,pgvector,qdrant,redis,standard-tests,tavily,textsplitters,together-ai,typesafe,weaviate,xai"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
@@ -65,10 +67,10 @@ jobs:
             first_entry=true
             for package in "${packages[@]}"; do
               if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
               fi
             done
           else
@@ -80,10 +82,10 @@ jobs:
               if echo "$changed_files" | grep -q "$package"; then
                 echo "Package $package found in changed files."
                 if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
               fi
               fi
             done
