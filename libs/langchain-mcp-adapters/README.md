@@ -114,9 +114,9 @@ Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
 [hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
 for argument and result hooks.
 
-A failing tool call throws `ToolException`, whose `result` carries the
-server's MCP result when the server itself reported the failure. Narrow
-catches with `isToolException(error)` instead of checking `error.name`.
+When a tool throws `ToolException`, its `result` carries the server's MCP
+result if the server itself reported the failure. Narrow catches with
+`isToolException(error)` instead of checking `error.name`.
 
 ## Elicitation
 
@@ -160,7 +160,8 @@ if (pending) {
 
 Set `elicitation: false` on an individual modern server to opt out. Legacy
 servers (`mode: "legacy"`) never raise interrupts; configure a per-server
-`onElicitation` handler instead.
+`onElicitation` handler instead. With `toolRetryMiddleware`, use `langchain`
+1.5.15 or later, which passes the interrupt through instead of retrying it.
 
 ## Authentication
 
