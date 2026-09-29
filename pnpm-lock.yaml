@@ -1247,6 +1247,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1283,6 +1286,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1320,6 +1326,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1363,6 +1372,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1434,6 +1446,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1504,6 +1519,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1535,6 +1553,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1569,6 +1590,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1606,6 +1630,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1640,6 +1667,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1683,6 +1713,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -1723,6 +1756,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1806,6 +1842,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -1929,6 +1968,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2024,6 +2066,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dpdm:
         specifier: ^4.3.0
         version: 4.3.0
@@ -2061,6 +2106,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2147,6 +2195,9 @@ importers:
       '@types/flat':
         specifier: ^6.0.1
         version: 6.0.1
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2190,6 +2241,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2230,6 +2284,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2261,6 +2318,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2301,6 +2361,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2338,6 +2401,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       dotenv:
         specifier: ^18.0.9
         version: 18.0.9
@@ -2369,6 +2435,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -2412,6 +2481,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.6
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
