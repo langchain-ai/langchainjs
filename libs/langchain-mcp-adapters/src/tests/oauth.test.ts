@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z, ZodError } from "zod";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
   MCPAdapter,
   MCPClientError,
@@ -12,7 +13,10 @@ import {
   type OAuthFixture,
   type OAuthFixtureOptions,
 } from "./fixtures/oauth-server.js";
-import { createTestOAuthProvider } from "./fixtures/oauth-client.js";
+import {
+  authorizeInBrowser,
+  createTestOAuthProvider,
+} from "./fixtures/oauth-client.js";
 
 const cleanup: Array<() => Promise<unknown>> = [];
 
@@ -410,5 +414,58 @@ describe("per-call providers and headers", () => {
     expect(
       server.requests.find((request) => request.path === "/mcp")?.authorization
     ).toBe("Bearer b");
+  });
+});
+
+describe("OAuthClientProvider login", () => {
+  it("logs in through the SDK's finishAuth, then refreshes an expired access token", async () => {
+    const server = await fixture();
+    const authProvider = createTestOAuthProvider({
+      state: "state-1",
+      persistDiscovery: true,
+    });
+    const mcp = adapter({
+      servers: { svc: { transport: "http", url: server.mcpUrl, authProvider } },
+    });
+    const sentSince = (start: number) =>
+      server.requests
+        .slice(start)
+        .filter((request) => request.path === "/mcp")
+        .map((request) => request.authorization);
+
+    const error = await failure(mcp.listTools());
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
+    expect(authProvider.redirects).toHaveLength(1);
+
+    // The app's callback route, as the README documents it.
+    const params = await authorizeInBrowser(authProvider.redirects[0]);
+    const pendingStates = new Set(["state-1"]);
+    expect(pendingStates.delete(params.get("state") ?? "")).toBe(true);
+    const transport = new StreamableHTTPClientTransport(
+      new URL(server.mcpUrl),
+      { authProvider }
+    );
+    await transport.finishAuth(params);
+    await transport.close();
+
+    const [whoami] = (await mcp.listTools()).filter((tool) =>
+      tool.name.endsWith("whoami")
+    );
+    const login = authProvider.stored.tokens;
+    let start = server.requests.length;
+    expect(await whoami.invoke({})).toBe("authorized");
+    expect(new Set(sentSince(start))).toEqual(
+      new Set([`Bearer ${login?.access_token}`])
+    );
+
+    server.expireAccessTokens();
+    start = server.requests.length;
+    expect(await whoami.invoke({})).toBe("authorized");
+    const refreshed = authProvider.stored.tokens;
+    expect(server.stats.refreshes).toBe(1);
+    expect(refreshed?.access_token).not.toBe(login?.access_token);
+    expect(refreshed?.refresh_token).not.toBe(login?.refresh_token);
+    expect(sentSince(start).at(-1)).toBe(`Bearer ${refreshed?.access_token}`);
+    expect(authProvider.redirects).toHaveLength(1);
   });
 });
