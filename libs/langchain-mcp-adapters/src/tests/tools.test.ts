@@ -1340,7 +1340,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(await good.invoke({})).toBe("ok");
       // Given a `url`, core's own validator rejects the pattern first.
       await expect(bad.invoke({})).rejects.toThrow(
-        /Could not compile the input schema of MCP tool "bad": SyntaxError: Invalid regular expression/
+        /Invalid regular expression/
       );
       expect(mockClient.callTool).toHaveBeenCalledTimes(1);
     });

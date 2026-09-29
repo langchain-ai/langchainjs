@@ -226,8 +226,7 @@ function createToolInvocation(
       inBand && outputSchema
         ? z.object({
             structuredContent: jsonSchemaParser(
-              JSONObjectSchema.parse(outputSchema),
-              `output schema of MCP tool "${descriptor.name}"`
+              JSONObjectSchema.parse(outputSchema)
             ),
           })
         : undefined,
@@ -247,24 +246,16 @@ function createToolInvocation(
  * fails only its own tool's calls rather than the server's discovery.
  */
 function jsonSchemaParser<T>(
-  jsonSchema: z.output<typeof JSONObjectSchema>,
-  label: string
+  jsonSchema: z.output<typeof JSONObjectSchema>
 ): z.ZodTransform<T, T> {
   let validator: StandardSchemaWithJSON<T, T> | undefined;
 
   return z.transform(async (input: T, ctx) => {
-    try {
-      // Scope the SDK engine to this descriptor: its shared cache keys by $id.
-      validator ??= fromJsonSchema<T>(
-        jsonSchema,
-        new DefaultJsonSchemaValidator()
-      );
-    } catch (error) {
-      throw new ToolException(
-        `Could not compile the ${label}: ${String(error)}`,
-        error
-      );
-    }
+    // Scope the SDK engine to this descriptor: its shared cache keys by $id.
+    validator ??= fromJsonSchema<T>(
+      jsonSchema,
+      new DefaultJsonSchemaValidator()
+    );
 
     const result = await validator["~standard"].validate(input);
 
@@ -536,10 +527,8 @@ export async function convertMcpTools(
           try {
             const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
-            const inputSchema = jsonSchemaParser<ToolArguments>(
-              originalSchema,
-              `input schema of MCP tool "${tool.name}"`
-            );
+            const inputSchema =
+              jsonSchemaParser<ToolArguments>(originalSchema);
 
             const invocation = createToolInvocation(
               client,
