@@ -32,10 +32,11 @@
   "devDependencies": {
     "@jest/globals": "^30.5.2",
     "@langchain/core": "workspace:^",
+    "@langchain/tsconfig": "workspace:*",
     "@swc/core": "^1.16.2",
     "@swc/jest": "^0.2.29",
-    "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
+    "@types/node": "^26.6.3",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "jest": "^30.5.2",
