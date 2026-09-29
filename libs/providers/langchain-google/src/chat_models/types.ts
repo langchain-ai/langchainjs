@@ -1,7 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-namespace */
 
 import type { InteropZodType } from "@langchain/core/utils/types";
-import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
+import type { BindToolsInput, ToolChoice } from "@langchain/core/language_models/chat_models";
 import type { Gemini as GeminiBase } from "./api-types.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 
@@ -111,6 +111,14 @@ export interface ChatGoogleFields {
    * Can be LangChain tools, OpenAI tools, or Gemini function declarations.
    */
   tools?: BindToolsInput[];
+
+  /**
+   * Controls which tool (if any) is called by the model.
+   * Can be "auto", "any", a specific tool name string, or a tool object.
+   * When set on the constructor, it serves as the default for all calls
+   * and can be overridden per-call via the `tool_choice` call option.
+   */
+  tool_choice?: ToolChoice;
 
   /**
    * The requested modalities of the response.

@@ -341,9 +341,10 @@ export abstract class BaseChatGoogle<
       ? convertToolsToGeminiTools(fields.tools)
       : undefined;
 
-    // Convert tool choice to Gemini function calling config
+    // Convert tool choice to Gemini function calling config.
+    // Per-call option takes precedence; fall back to constructor default.
     const toolConfig = convertToolChoiceToGeminiConfig(
-      options.tool_choice,
+      options.tool_choice ?? fields.tool_choice,
       !!(tools && tools.length > 0)
     );
 
