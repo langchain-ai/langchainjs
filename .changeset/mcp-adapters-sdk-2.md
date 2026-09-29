@@ -180,7 +180,7 @@ was told about.
 
 ### Fixes
 
-A background reconnection that exhausts its attempts now reports to an
+A stdio `restart` that exhausts its attempts now reports to an
 `onConnectionError` function instead of failing silently. An `Authorization` header
 configured alongside an `authProvider` is no longer joined with the provider's
 token into a value servers reject. An `onProgress` callback that
