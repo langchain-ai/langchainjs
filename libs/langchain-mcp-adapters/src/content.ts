@@ -333,10 +333,7 @@ export function convertCallToolResult({
 }
 
 /** A failed `ToolMessage` without text is fragile for some providers. */
-function withErrorText(
-  content: ExtendedContent,
-  sent: CallToolResult["content"]
-): ExtendedContent {
+function withErrorText(content: ExtendedContent): ExtendedContent {
   const blocks: ContentBlock[] =
     typeof content === "string" ? [{ type: "text", text: content }] : content;
 
@@ -350,20 +347,10 @@ function withErrorText(
   )
     return content;
 
-  // Text is never routed away, so anything else the server sent is non-text.
-  const nonText = sent.filter((block) => block.type !== "text").length;
-  if (nonText === 0) return "The MCP tool returned an error with no content.";
-
+  const text = "The MCP tool returned an error without text content.";
   const shown = blocks.filter((block) => block.type !== "text");
-  if (shown.length === 0)
-    return "The MCP tool returned an error; its content is in the tool artifact.";
 
-  const text =
-    shown.length < nonText
-      ? "The MCP tool returned an error with no text; the rest of its content is in the tool artifact."
-      : "The MCP tool returned an error with no text.";
-
-  return [{ type: "text", text }, ...shown];
+  return shown.length ? [{ type: "text", text }, ...shown] : text;
 }
 
 /**
@@ -406,7 +393,7 @@ export function convertCallToolError({
 
   return new ToolMessage({
     status: "error",
-    content: withErrorText(content, result.content),
+    content: withErrorText(content),
     artifact,
     tool_call_id: toolCallId,
     name,

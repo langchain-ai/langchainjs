@@ -180,28 +180,23 @@ describe("server-reported tool errors", () => {
       ],
     },
     {
-      name: "empty",
-      content: [],
-      expected: "The MCP tool returned an error with no content.",
-    },
-    {
       name: "non-text only",
       content: [{ type: "image", data: "aGk=", mimeType: "image/png" }],
       expected: [
-        { type: "text", text: "The MCP tool returned an error with no text." },
+        {
+          type: "text",
+          text: "The MCP tool returned an error without text content.",
+        },
         { type: "image", data: "aGk=", mimeType: "image/png" },
       ],
     },
     {
-      name: "empty text",
-      content: [{ type: "text", text: "" }],
-      expected: "The MCP tool returned an error with no content.",
-    },
-    {
-      name: "resource-only",
-      content: [{ type: "resource", resource: { uri: "e:", text: "boom" } }],
-      expected:
-        "The MCP tool returned an error; its content is in the tool artifact.",
+      name: "empty text with a resource",
+      content: [
+        { type: "text", text: "" },
+        { type: "resource", resource: { uri: "e:", text: "boom" } },
+      ],
+      expected: "The MCP tool returned an error without text content.",
     },
     {
       name: "artifact-routed text",
