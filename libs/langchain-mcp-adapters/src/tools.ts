@@ -549,10 +549,15 @@ export async function convertMcpTools(
               elicitation
             );
 
+            // Model-facing only: some providers reject an object schema
+            // without `properties`. Validation keeps the server's schema.
+            const schema = structuredClone(originalSchema);
+            schema.properties ??= {};
+
             return new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
-              schema: structuredClone(originalSchema),
+              schema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
               defaultConfig: defaultToolTimeout

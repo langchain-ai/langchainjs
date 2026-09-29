@@ -2821,14 +2821,13 @@ describe("server tool schemas", () => {
       await expect(tool.invoke({ value: 1 })).resolves.toBeDefined();
     });
 
-    it("does not mutate descriptors without properties", async () => {
+    it("gives the model empty properties without mutating the descriptor", async () => {
       const schema = Object.freeze({
         type: "object",
       } satisfies Tool["inputSchema"]);
 
-      await expect(
-        loadMcpTools("test", mockClient(schema))
-      ).resolves.toHaveLength(1);
+      const [tool] = await loadMcpTools("test", mockClient(schema));
+      expect(tool.schema).toEqual({ type: "object", properties: {} });
       expect(schema).toEqual({ type: "object" });
     });
 
