@@ -91,13 +91,20 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
   private async runEmbedding(texts: string[]) {
     return this.caller.call(async () => {
-      const response: AiTextEmbeddingsOutput = await this.ai.run(
+      // `ai.run` is overloaded on `Name extends keyof AiModelList`, but
+      // `model` is a user-supplied string, so the call has to widen it to
+      // `any` and lands on an overload declared to return `ReadableStream`.
+      // Constraining `model` to `keyof AiModelList` would be a breaking change
+      // to this class's public options, so assert the shape this binding
+      // actually returns for text-embeddings models instead. The caller only
+      // reads `.data`.
+      const response = (await this.ai.run(
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         this.model as any,
         {
           text: texts,
         } as AiTextEmbeddingsInput
-      );
+      )) as unknown as AiTextEmbeddingsOutput;
       return response.data;
     });
   }
