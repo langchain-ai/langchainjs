@@ -1006,13 +1006,10 @@ const urlConnectionSchema = z
 
 const directAdapterInputSchema = z
   .union([stringConnectionSchema, urlConnectionSchema, ConnectionSchema])
-  .transform((connection) => ({ servers: { default: connection } }))
-  .pipe(
-    mcpAdapterConfigSchema as z.ZodType<
-      ResolvedMCPAdapterConfig,
-      { servers: { default: z.output<typeof ConnectionSchema> } }
-    >
-  );
+  .transform((connection): z.input<typeof mcpAdapterConfigSchema> => ({
+    servers: { default: connection },
+  }))
+  .pipe(mcpAdapterConfigSchema);
 
 /** All supported constructor inputs produce the same resolved configuration. */
 export const adapterConfigSchema: z.ZodType<
