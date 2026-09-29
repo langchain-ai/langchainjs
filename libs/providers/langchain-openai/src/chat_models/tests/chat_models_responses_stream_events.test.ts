@@ -1,9 +1,11 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
-import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { OpenAI as OpenAIClient } from "openai";
-import { ChatOpenAIResponses } from "../responses.js";
+import {
+  ChatOpenAIResponses,
+  type ChatOpenAIResponsesCallOptions,
+} from "../responses.js";
 
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
 
@@ -157,7 +159,7 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
   test("integration with ChatModelStream.text", async () => {
     const model = new MockStreamChatOpenAIResponses(textEvents());
     const stream = new ChatModelStream(
-      model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      model._streamChatModelEvents([], {} as ChatOpenAIResponsesCallOptions)
     );
     expect(await stream.text).toBe("Hi");
   });
@@ -167,7 +169,7 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
     const events: ChatModelStreamEvent[] = [];
     for await (const event of model._streamChatModelEvents(
       [],
-      {} as BaseChatModelCallOptions
+      {} as ChatOpenAIResponsesCallOptions
     )) {
       events.push(event);
     }
