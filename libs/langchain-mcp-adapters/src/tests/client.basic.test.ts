@@ -303,30 +303,28 @@ describe("MultiServerMCPClient", () => {
       );
     });
 
-    test("accepts a script path as a default stdio server", () => {
-      const client = new MCPAdapter("./server.mjs");
+    test.each(["./server.mjs", "--eval=process.exit(1)", "ftp://example.com"])(
+      "rejects non-HTTP string input %s",
+      (input) => {
+        expect(() => new MCPAdapter(input)).toThrow(ZodError);
+      }
+    );
 
-      expect(client.config.servers.default).toEqual({
-        mode: "auto",
-        transport: "stdio",
-        command: process.execPath,
-        args: ["--", "./server.mjs"],
-        stderr: "inherit",
-        elicitation: true,
-      });
+    test("rejects malformed HTTP URL strings", () => {
+      expect(() => new MCPAdapter("https://[invalid")).toThrow(ZodError);
     });
 
-    test("protects script paths from Node option injection", () => {
-      const client = new MCPAdapter("--eval=process.exit(1)");
+    test("accepts an explicit stdio descriptor", () => {
+      const client = new MCPAdapter({
+        command: process.execPath,
+        args: ["./server.mjs"],
+      });
 
       expect(client.config.servers.default).toMatchObject({
+        transport: "stdio",
         command: process.execPath,
-        args: ["--", "--eval=process.exit(1)"],
+        args: ["./server.mjs"],
       });
-    });
-
-    test("rejects malformed HTTP URL strings instead of treating them as paths", () => {
-      expect(() => new MCPAdapter("https://[invalid")).toThrow(ZodError);
     });
 
     test("connects an in-process server over linked memory transports", async () => {

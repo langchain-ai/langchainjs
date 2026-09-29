@@ -987,28 +987,14 @@ const httpUrlStringSchema = z
   .url({ protocol: /^https?$/iu })
   .transform((url) => ({ url }));
 
-const scriptPathStringSchema = z
-  .string()
-  .refine((value) => !/^https?:\/\//iu.test(value), {
-    error: "Invalid HTTP(S) URL",
-  })
-  .transform((value) => ({
-    command: process.execPath,
-    args: ["--", value],
-  }));
-
-type StringConnectionDescriptor =
-  | { url: string }
-  | { command: string; args: string[] };
+type StringConnectionDescriptor = { url: string };
 
 const directConnectionSchema = ConnectionSchema as z.ZodType<
   z.output<typeof ConnectionSchema>,
   StringConnectionDescriptor
 >;
 
-const stringConnectionSchema = z
-  .union([httpUrlStringSchema, scriptPathStringSchema])
-  .pipe(directConnectionSchema);
+const stringConnectionSchema = httpUrlStringSchema.pipe(directConnectionSchema);
 
 const urlConnectionSchema = z
   .instanceof(URL)

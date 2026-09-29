@@ -79,14 +79,15 @@ For a single server named `default`, the constructor also accepts a direct sourc
 
 ```ts
 new MCPAdapter("https://example.com/mcp"); // Streamable HTTP URL
-new MCPAdapter("./server.mjs"); // Node script over stdio
 new MCPAdapter(new URL("https://example.com/mcp"));
+new MCPAdapter({ command: "node", args: ["./server.mjs"] }); // explicit stdio
 new MCPAdapter(connectedClient); // already-connected MCP SDK 2 Client
 new MCPAdapter(inProcessServer); // server with connect() and close()
 ```
 
-URL and script sources are descriptors: the adapter creates and owns their clients,
-and can reconnect them after `close()`. A supplied client must already be connected;
+String and URL inputs must use HTTP(S) and default to Streamable HTTP. Use an
+explicit descriptor for stdio or legacy SSE. Descriptor sources are owned by the
+adapter and can reconnect after `close()`. A supplied client must already be connected;
 the adapter subscribes to tool-list changes but does not close the client. Configure
 authentication on that client because per-call headers and auth providers do not apply.
 An in-process server is connected over linked memory transports and is closed by the
