@@ -117,8 +117,7 @@ until then the header is sent.
 
 - [Examples](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples): local servers, mixed modes, agents and hooks.
 
-`MultiServerMCPClient` and `mcpServers` input remain deprecated compatibility APIs.
-Use `MCPAdapter` and `servers` for new code. Replace `getTools()` with `listTools()`
-when upgrading from adapter 1.x.
+`MultiServerMCPClient`, `getTools()` and `mcpServers` input remain deprecated
+compatibility APIs. Use `MCPAdapter`, `listTools()` and `servers` for new code.
 
 MIT licensed.

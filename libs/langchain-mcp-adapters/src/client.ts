@@ -345,6 +345,18 @@ export class MCPAdapter {
     return selectedServers.flatMap((name) => catalog[name] ?? []);
   }
 
+  /** @deprecated Use listTools(). This alias takes the same arguments. */
+  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  /** @deprecated Use listTools(). This alias takes the same arguments. */
+  async getTools(
+    servers: string[],
+    options?: ToolDiscoveryOptions
+  ): Promise<DynamicStructuredTool[]>;
+  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
+    const { servers, options } = toolSelectionSchema.parse(args);
+    return this.listTools(servers, options);
+  }
+
   /**
    * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Set the logging level for all servers
