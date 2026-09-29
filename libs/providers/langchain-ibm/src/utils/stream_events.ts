@@ -26,8 +26,6 @@ function watsonxWrapperToOpenAIChunk(
   const usage = data.usage;
   return {
     id: data.id ?? "",
-    object: "chat.completion.chunk",
-    created: data.created ?? 0,
     model: data.model ?? "",
     choices: choice
       ? [

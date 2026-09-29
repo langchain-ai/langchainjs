@@ -51,8 +51,6 @@ function mistralDataToOpenAIChunk(
 
   return {
     id: data.id ?? "",
-    object: "chat.completion.chunk",
-    created: data.created ?? 0,
     model: data.model ?? "",
     choices: [
       {
