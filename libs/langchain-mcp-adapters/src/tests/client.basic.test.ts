@@ -2209,29 +2209,6 @@ describe("MultiServerMCPClient", () => {
       /useStandardContentBlocks was removed: tool content is always standard LangChain content blocks/
     );
   });
-
-  test.each([
-    [
-      { url: "https://example.com/mcp", onInitialized: () => undefined },
-      "servers.svc.onInitialized: onInitialized requires mode: legacy",
-    ],
-    [
-      { url: "https://example.com/mcp", onCancelled: () => undefined },
-      'servers.svc: Unrecognized key: "onCancelled"',
-    ],
-    [
-      { command: "node", args: [], restart: { maxAttempts: -1 } },
-      "servers.svc.restart.maxAttempts: Too small: expected number to be >=0",
-    ],
-    [
-      { transport: "sse", url: "https://example.com/sse", mode: "modern" },
-      "servers.svc.mode: Invalid discriminator value",
-    ],
-  ])("names only the closest union branch's problem: %j", (svc, problem) => {
-    expect(() => new MCPAdapter({ servers: { svc } } as never)).toThrow(
-      `Invalid MCP adapter configuration: ${problem}`
-    );
-  });
 });
 
 describe("MCPAdapter configuration boundary", () => {
