@@ -202,12 +202,6 @@ const stdioOptionsSchema = z
       .record(z.string(), z.string())
       .describe("The environment to use when spawning the process")
       .optional(),
-    /** @deprecated SDK 2 stdio does not support overriding the encoding. */
-    encoding: z
-      .never({
-        error: "SDK 2 stdio does not support encoding; remove this option",
-      })
-      .optional(),
     /**
      * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
      *
@@ -566,20 +560,6 @@ const notifications = z.object({
 
 export type Notifications = z.output<typeof notifications>;
 
-const removedRootsObserver = z
-  .never({
-    error:
-      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
-  })
-  .optional();
-
-const removedStandardContentBlocks = z
-  .never({
-    error:
-      "useStandardContentBlocks was removed: tool content is always standard LangChain content blocks; delete this option",
-  })
-  .optional();
-
 const serverNotifications = notifications.omit({ onInitialized: true }).extend({
   /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
   resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
@@ -632,7 +612,6 @@ const modernPolicy = z
     automaticSSEFallback: z
       .never({ error: "automaticSSEFallback requires mode: legacy" })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(serverNotifications.shape);
 
@@ -669,7 +648,6 @@ const legacyPolicy = z
           "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
       })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(notifications.shape)
   .extend({
@@ -778,16 +756,6 @@ export const ConnectionSchema = z.union([
 ]);
 
 /**
- * {@link MultiServerMCPClient} configuration
- */
-const serverOnlyCallback = z
-  .never({
-    error:
-      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
-  })
-  .optional();
-
-/**
  * Custom error handler for connection failures.
  *
  * If the handler throws or rejects, the error is propagated when a caller is
@@ -886,18 +854,6 @@ const clientOptionsSchema = z
   })
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
-  .extend({
-    resourceSubscriptions: serverOnlyCallback,
-    onMessage: serverOnlyCallback,
-    onProgress: serverOnlyCallback,
-    onInitialized: serverOnlyCallback,
-    onPromptsListChanged: serverOnlyCallback,
-    onResourcesListChanged: serverOnlyCallback,
-    onResourcesUpdated: serverOnlyCallback,
-    onToolsListChanged: serverOnlyCallback,
-    onRootsListChanged: removedRootsObserver,
-    useStandardContentBlocks: removedStandardContentBlocks,
-  })
   .strict()
   .describe("Configuration for the MCP client");
 
