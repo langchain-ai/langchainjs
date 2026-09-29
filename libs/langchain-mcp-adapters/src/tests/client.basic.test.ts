@@ -981,9 +981,8 @@ describe("MultiServerMCPClient", () => {
           (await client.listTools("alpha", "alpha")).map((tool) => tool.name)
         ).toEqual(["search", "search"]);
 
-        // A server's own descriptor list repeating a tool name is also a
-        // collision: `ToolNode` would route every call to whichever entry
-        // comes first, the same hazard as two servers sharing a name.
+        // One server listing a name twice also throws, but prefixing can't
+        // separate those, so the error must not recommend it.
         let gammaError: unknown;
         try {
           await client.listTools("gamma");
@@ -991,7 +990,9 @@ describe("MultiServerMCPClient", () => {
           gammaError = caught;
         }
         expect(gammaError).toBeInstanceOf(MCPClientError);
-        expect((gammaError as Error).message).toContain('"dup"');
+        const gammaMessage = (gammaError as Error).message;
+        expect(gammaMessage).toContain('"dup"');
+        expect(gammaMessage).not.toMatch(/prefixToolNameWithServerName/);
       });
 
       test("does not throw when prefixToolNameWithServerName disambiguates names", async () => {

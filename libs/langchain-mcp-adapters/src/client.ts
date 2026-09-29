@@ -1196,6 +1196,11 @@ function assertNoToolNameCollisions(
   for (const serverName of new Set(servers)) {
     for (const tool of catalog[serverName] ?? []) {
       const firstServer = serverNameByToolName.get(tool.name);
+      if (firstServer === serverName) {
+        throw new MCPClientError(
+          `Tool name collision: server "${serverName}" lists a tool named "${tool.name}" more than once, and prefixing can't separate them. Remove the duplicate on the server, or pick tools from listToolsets() instead.`
+        );
+      }
       if (firstServer !== undefined) {
         throw new MCPClientError(
           `Tool name collision: a tool named "${tool.name}" is exposed more than once (${firstServer}, ${serverName}). Set "prefixToolNameWithServerName: true" to keep tool names unique across servers.`
