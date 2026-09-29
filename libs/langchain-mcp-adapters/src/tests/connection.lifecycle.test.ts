@@ -6,6 +6,8 @@ import { z } from "zod";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   Client as SDKClient,
+  ProtocolError,
+  ProtocolErrorCode,
   StreamableHTTPClientTransport,
   type NotificationMethod,
   type NotificationTypeMap,
@@ -381,6 +383,39 @@ test("resource discovery failure is not an empty catalog", async () => {
 
   try {
     await expect(adapter.listResources()).rejects.toBe(error);
+  } finally {
+    await adapter.close();
+  }
+});
+
+test("a server without resource listing contributes an empty list", async () => {
+  mockConnect();
+  vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({ tools: [] });
+  const missing = new ProtocolError(
+    ProtocolErrorCode.MethodNotFound,
+    "Method not found"
+  );
+  const resource = { uri: "file:///a", name: "a" };
+  const template = { uriTemplate: "file:///{path}", name: "files" };
+  vi.spyOn(SDKClient.prototype, "listResources")
+    .mockRejectedValueOnce(missing)
+    .mockResolvedValue({ resources: [resource] });
+  vi.spyOn(SDKClient.prototype, "listResourceTemplates")
+    .mockRejectedValueOnce(missing)
+    .mockResolvedValue({ resourceTemplates: [template] });
+  const adapter = new MCPAdapter({
+    servers: { bare: connection, full: connection },
+  });
+
+  try {
+    expect(await adapter.listResources()).toEqual({
+      bare: [],
+      full: [resource],
+    });
+    expect(await adapter.listResourceTemplates()).toEqual({
+      bare: [],
+      full: [template],
+    });
   } finally {
     await adapter.close();
   }
