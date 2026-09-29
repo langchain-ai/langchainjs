@@ -52,7 +52,6 @@ Omit `mode` to let the SDK negotiate with each server automatically:
 
 ```ts
 const adapter = new MCPAdapter({
-  prefixToolNameWithServerName: true,
   servers: {
     modern: { url: "https://example.com/mcp" },
     legacy: {
@@ -63,9 +62,10 @@ const adapter = new MCPAdapter({
 });
 ```
 
-Prefix names when servers expose identically named tools. `listTools()` throws
-an `MCPClientError` if two tools in the flattened result share a name; set
-`prefixToolNameWithServerName` to keep names unique. Set `mode: "legacy"`
+With more than one server, tool names are prefixed with their server's name
+(`modern__echo`); a single server keeps its raw names. Set
+`prefixToolNameWithServerName` to choose explicitly. `listTools()` throws an
+`MCPClientError` if two tools in the flattened result share a name. Set `mode: "legacy"`
 to skip probing and enable legacy options such as `onElicitation` and
 `onInitialized`. Set `mode: "modern"` to require MCP revision
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)

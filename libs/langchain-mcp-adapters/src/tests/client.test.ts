@@ -3060,7 +3060,7 @@ describe("protocol negotiation with live servers", () => {
 
     try {
       const tools = await adapter.listTools("modern");
-      const modern = tools.find((tool) => tool.name === "modern_echo");
+      const modern = tools.find((tool) => tool.name === "modern__modern_echo");
 
       if (!modern) throw new Error("Modern tool was not discovered");
       expect(await modern.invoke({ value: "modern response" })).toContain(
@@ -3073,7 +3073,7 @@ describe("protocol negotiation with live servers", () => {
         "legacy"
       );
       const stdio = (await adapter.listToolsets()).stdio.find(
-        (tool) => tool.name === "legacy_tool"
+        (tool) => tool.name === "stdio__legacy_tool"
       );
       if (!stdio) {
         throw new Error("SDK 1 tool was not discovered");

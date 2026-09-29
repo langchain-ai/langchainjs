@@ -163,7 +163,8 @@ export class MCPAdapter {
         elicitation: serverConfig.elicitation,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
-          parsedServerConfig.prefixToolNameWithServerName,
+          parsedServerConfig.prefixToolNameWithServerName ??
+          Object.keys(parsedServerConfig.servers).length > 1,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
@@ -1229,7 +1230,7 @@ function assertNoToolNameCollisions(
       }
       if (firstServer !== undefined) {
         throw new MCPClientError(
-          `Tool name collision: a tool named "${tool.name}" is exposed more than once (${firstServer}, ${serverName}). Set "prefixToolNameWithServerName: true" to keep tool names unique across servers.`
+          `Tool name collision: a tool named "${tool.name}" is exposed more than once (${firstServer}, ${serverName}). Leave "prefixToolNameWithServerName" unset or set it to true to keep tool names unique across servers.`
         );
       }
       serverNameByToolName.set(tool.name, serverName);

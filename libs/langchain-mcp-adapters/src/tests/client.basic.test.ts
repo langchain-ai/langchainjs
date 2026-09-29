@@ -790,23 +790,23 @@ describe("MultiServerMCPClient", () => {
       try {
         // A single server name keeps that server's tools and drops the rest.
         expect((await client.listTools("beta")).map((t) => t.name)).toEqual([
-          "beta1",
-          "beta2",
+          "beta__beta1",
+          "beta__beta2",
         ]);
         expect((await client.listTools("alpha")).map((t) => t.name)).toEqual([
-          "alpha1",
+          "alpha__alpha1",
         ]);
 
         // The array overload filters and preserves the requested order.
         expect(
           (await client.listTools(["beta", "alpha"])).map((t) => t.name)
-        ).toEqual(["beta1", "beta2", "alpha1"]);
+        ).toEqual(["beta__beta1", "beta__beta2", "alpha__alpha1"]);
 
         // Unfiltered discovery still returns every server's tools.
         expect((await client.listTools()).map((t) => t.name)).toEqual([
-          "alpha1",
-          "beta1",
-          "beta2",
+          "alpha__alpha1",
+          "beta__beta1",
+          "beta__beta2",
         ]);
 
         // An unknown server name contributes nothing instead of throwing.
@@ -845,12 +845,12 @@ describe("MultiServerMCPClient", () => {
 
         // It contributes no entries to the flattened list, and no holes either.
         expect((await client.listTools()).map((t) => t.name)).toEqual([
-          "beta1",
+          "beta__beta1",
         ]);
         expect(await client.listTools("empty")).toEqual([]);
         expect(
           (await client.listTools(["empty", "beta"])).map((t) => t.name)
-        ).toEqual(["beta1"]);
+        ).toEqual(["beta__beta1"]);
       } finally {
         await client.close();
       }
@@ -941,24 +941,27 @@ describe("MultiServerMCPClient", () => {
         );
 
         const client = new MultiServerMCPClient({
-          alpha: {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./alpha.py"],
+          mcpServers: {
+            alpha: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./alpha.py"],
+            },
+            beta: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./beta.py"],
+            },
+            gamma: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./gamma.py"],
+            },
           },
-          beta: {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./beta.py"],
-          },
-          gamma: {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./gamma.py"],
-          },
+          prefixToolNameWithServerName: false,
         });
 
         let error: unknown;
@@ -995,7 +998,7 @@ describe("MultiServerMCPClient", () => {
         expect(gammaMessage).not.toMatch(/prefixToolNameWithServerName/);
       });
 
-      test("does not throw when prefixToolNameWithServerName disambiguates names", async () => {
+      test("prefixes names by default when more than one server is configured", async () => {
         mockClientsWithTools(
           [{ name: "search", description: "Search alpha", inputSchema: {} }],
           [{ name: "search", description: "Search beta", inputSchema: {} }]
@@ -1016,7 +1019,6 @@ describe("MultiServerMCPClient", () => {
               args: ["./beta.py"],
             },
           },
-          prefixToolNameWithServerName: true,
         });
 
         const tools = await client.listTools();
@@ -1033,18 +1035,21 @@ describe("MultiServerMCPClient", () => {
         );
 
         const client = new MultiServerMCPClient({
-          alpha: {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./alpha.py"],
+          mcpServers: {
+            alpha: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./alpha.py"],
+            },
+            beta: {
+              mode: "legacy",
+              transport: "stdio",
+              command: "python",
+              args: ["./beta.py"],
+            },
           },
-          beta: {
-            mode: "legacy",
-            transport: "stdio",
-            command: "python",
-            args: ["./beta.py"],
-          },
+          prefixToolNameWithServerName: false,
         });
 
         const toolsets = await client.listToolsets();
@@ -2021,7 +2026,8 @@ describe("MultiServerMCPClient", () => {
 
       const conf = client.config;
       expect(conf.additionalToolNamePrefix).toBe("");
-      expect(conf.prefixToolNameWithServerName).toBe(false);
+      // Unset means "prefix only with more than one server".
+      expect(conf.prefixToolNameWithServerName).toBeUndefined();
 
       await client.initializeConnections();
       const tools = await client.listTools();
@@ -2060,23 +2066,26 @@ describe("MultiServerMCPClient", () => {
 
       // Naming a server keeps only that server's tools.
       const server2Tools = await client.listTools("server2");
-      expect(server2Tools.map((tool) => tool.name)).toEqual(["tool2", "tool3"]);
+      expect(server2Tools.map((tool) => tool.name)).toEqual([
+        "server2__tool2",
+        "server2__tool3",
+      ]);
 
       const server1Tools = await client.listTools("server1");
-      expect(server1Tools.map((tool) => tool.name)).toEqual(["tool1"]);
+      expect(server1Tools.map((tool) => tool.name)).toEqual(["server1__tool1"]);
 
       // The filtered result matches that server's group in the toolset map.
       const toolsets = await client.listToolsets();
       expect(toolsets.server2.map((tool) => tool.name)).toEqual([
-        "tool2",
-        "tool3",
+        "server2__tool2",
+        "server2__tool3",
       ]);
 
       // Unfiltered discovery still spans every server.
       expect((await client.listTools()).map((tool) => tool.name)).toEqual([
-        "tool1",
-        "tool2",
-        "tool3",
+        "server1__tool1",
+        "server2__tool2",
+        "server2__tool3",
       ]);
     });
 
@@ -2109,7 +2118,7 @@ describe("MultiServerMCPClient", () => {
 
       // It contributes nothing to the flattened list, and no undefined holes.
       const tools = await client.listTools();
-      expect(tools.map((tool) => tool.name)).toEqual(["tool1"]);
+      expect(tools.map((tool) => tool.name)).toEqual(["server1__tool1"]);
       expect(await client.listTools("emptyServer")).toEqual([]);
     });
 
