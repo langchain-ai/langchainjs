@@ -3169,7 +3169,7 @@ describe("modern wire boundaries", () => {
     try {
       const tools = await adapter.listTools();
       expect(tools.map((tool) => tool.name)).toEqual(
-        values.map((_, index) => `json_${index}`)
+        values.map((_, index) => `test__json_${index}`)
       );
 
       for (const [index, tool] of tools.entries()) {

@@ -163,8 +163,7 @@ export class MCPAdapter {
         elicitation: serverConfig.elicitation,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
-          parsedServerConfig.prefixToolNameWithServerName ??
-          Object.keys(parsedServerConfig.servers).length > 1,
+          parsedServerConfig.prefixToolNameWithServerName ?? true,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),

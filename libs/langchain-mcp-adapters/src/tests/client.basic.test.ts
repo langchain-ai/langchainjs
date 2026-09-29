@@ -885,6 +885,7 @@ describe("MultiServerMCPClient", () => {
               args: ["./script.py"],
             },
           },
+          prefixToolNameWithServerName: false,
           additionalToolNamePrefix: "mcp",
         });
         const tools = await client.listTools();
@@ -912,7 +913,7 @@ describe("MultiServerMCPClient", () => {
         expect(tools[0].name).toBe("mcp__test-server__tool1");
         expect(tools[1].name).toBe("mcp__test-server__tool2");
       });
-      test("shouldn't apply prefixes by default", async () => {
+      test("prefixes with the server name by default, even with one server", async () => {
         const client = new MultiServerMCPClient({
           "test-server": {
             mode: "legacy",
@@ -924,8 +925,8 @@ describe("MultiServerMCPClient", () => {
         const tools = await client.listTools();
 
         expect(tools.length).toBe(2);
-        expect(tools[0].name).toBe("tool1");
-        expect(tools[1].name).toBe("tool2");
+        expect(tools[0].name).toBe("test-server__tool1");
+        expect(tools[1].name).toBe("test-server__tool2");
       });
     });
 
@@ -2026,7 +2027,7 @@ describe("MultiServerMCPClient", () => {
 
       const conf = client.config;
       expect(conf.additionalToolNamePrefix).toBe("");
-      // Unset means "prefix only with more than one server".
+      // Unset means the adapter prefixes, whatever the server count.
       expect(conf.prefixToolNameWithServerName).toBeUndefined();
 
       await client.initializeConnections();
@@ -2034,8 +2035,8 @@ describe("MultiServerMCPClient", () => {
 
       // Should have 2 tools
       expect(tools.length).toBe(2);
-      expect(tools[0].name).toBe("tool1");
-      expect(tools[1].name).toBe("tool2");
+      expect(tools[0].name).toBe("server1__tool1");
+      expect(tools[1].name).toBe("server1__tool2");
     });
 
     test("should get tools from a specific server", async () => {

@@ -30,7 +30,7 @@ const adapter = new MCPAdapter({
 
 try {
   const tools = await adapter.listTools();
-  const echo = tools.find((tool) => tool.name === "echo");
+  const echo = tools.find((tool) => tool.name === "local__echo");
   if (!echo) throw new Error("The server did not provide echo");
 
   const result = await echo.invoke({ message: "Hello MCP" });
@@ -62,9 +62,9 @@ const adapter = new MCPAdapter({
 });
 ```
 
-With more than one server, tool names are prefixed with their server's name
-(`modern__echo`); a single server keeps its raw names. Set
-`prefixToolNameWithServerName` to choose explicitly. `listTools()` throws an
+Tool names are prefixed with their server's name (`modern__echo`), even with a
+single server, so adding a server never renames the tools you already have. Set
+`prefixToolNameWithServerName: false` to keep raw names. `listTools()` throws an
 `MCPClientError` if two tools in the flattened result share a name. Set `mode: "legacy"`
 to skip probing and enable legacy options such as `onElicitation` and
 `onInitialized`. Set `mode: "modern"` to require MCP revision
