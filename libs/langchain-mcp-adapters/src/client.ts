@@ -436,8 +436,7 @@ export class MCPAdapter {
    * @param servers - Optional array of server names to filter resources by.
    *                 If not provided, returns resources from all servers.
    * @param options - Optional connection options for the resource listing, e.g. custom auth provider or headers.
-   * @returns A map of server names to their resources. A server that doesn't
-   *          implement resource listing maps to `[]`.
+   * @returns A map of server names to their resources
    *
    * @example
    * ```ts
@@ -477,10 +476,7 @@ export class MCPAdapter {
         continue;
       }
 
-      const resourcesList = await emptyIfMethodNotFound(
-        client.listResources(),
-        { resources: [] }
-      );
+      const resourcesList = await client.listResources();
       result[serverName] = resourcesList.resources.map((resource) => ({
         ...resource,
         uri: resource.uri,
@@ -542,10 +538,18 @@ export class MCPAdapter {
         continue;
       }
 
-      const templatesList = await emptyIfMethodNotFound(
-        client.listResourceTemplates(),
-        { resourceTemplates: [] }
-      );
+      // Templates are optional even for a server that advertises resources.
+      const templatesList = await client
+        .listResourceTemplates()
+        .catch((error: unknown) => {
+          if (
+            ProtocolError.isInstance(error) &&
+            error.code === ProtocolErrorCode.MethodNotFound
+          ) {
+            return { resourceTemplates: [] };
+          }
+          throw error;
+        });
       result[serverName] = templatesList.resourceTemplates.map((template) => ({
         ...template,
         uriTemplate: template.uriTemplate,
@@ -1230,29 +1234,6 @@ function assertNoToolNameCollisions(
       }
       serverNameByToolName.set(tool.name, serverName);
     }
-  }
-}
-
-/**
- * A server can advertise `resources` without implementing every list method.
- * MethodNotFound (-32601) lists that server as empty instead of losing every
- * other server's results; any other failure still throws. Servers that don't
- * advertise `resources` never get here, since the SDK returns an empty list.
- */
-async function emptyIfMethodNotFound<T>(
-  request: Promise<T>,
-  empty: T
-): Promise<T> {
-  try {
-    return await request;
-  } catch (error) {
-    if (
-      ProtocolError.isInstance(error) &&
-      error.code === ProtocolErrorCode.MethodNotFound
-    ) {
-      return empty;
-    }
-    throw error;
   }
 }
 
