@@ -187,6 +187,11 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
     delete request.logit_bias;
     delete request.functions;
 
+    // Narrow the union so each call matches one of super's overloads.
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
+
     return super.completionWithRetry(request, options);
   }
 
