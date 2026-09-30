@@ -2396,26 +2396,23 @@ describe("additional_tools input item", () => {
             contentBlocks: [text, { type: "non_standard", value: toolRemoval }],
           }),
       ] as const,
-    ])(
-      "drops a %s block from system content",
-      (_spelling, makeMessage) => {
-        const result = convertMessagesToResponsesInput({
-          messages: [makeMessage()],
-          zdrEnabled: false,
-          model,
-        });
+    ])("drops a %s block from system content", (_spelling, makeMessage) => {
+      const result = convertMessagesToResponsesInput({
+        messages: [makeMessage()],
+        zdrEnabled: false,
+        model,
+      });
 
-        expect(result).toEqual([
-          {
-            type: "message",
-            role: "system",
-            content: [
-              { type: "input_text", text: "Customer lookup is enabled." },
-            ],
-          },
-        ]);
-      }
-    );
+      expect(result).toEqual([
+        {
+          type: "message",
+          role: "system",
+          content: [
+            { type: "input_text", text: "Customer lookup is enabled." },
+          ],
+        },
+      ]);
+    });
 
     it.each([
       [
@@ -2438,24 +2435,21 @@ describe("additional_tools input item", () => {
             ],
           }),
       ],
-    ])(
-      "drops the block from user %s",
-      (_spelling, makeMessage) => {
-        const result = convertMessagesToResponsesInput({
-          messages: [makeMessage()],
-          zdrEnabled: false,
-          model,
-        });
+    ])("drops the block from user %s", (_spelling, makeMessage) => {
+      const result = convertMessagesToResponsesInput({
+        messages: [makeMessage()],
+        zdrEnabled: false,
+        model,
+      });
 
-        expect(result).toEqual([
-          {
-            type: "message",
-            role: "user",
-            content: [{ type: "input_text", text: "Hi" }],
-          },
-        ]);
-      }
-    );
+      expect(result).toEqual([
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "Hi" }],
+        },
+      ]);
+    });
   });
 
   it.each([
