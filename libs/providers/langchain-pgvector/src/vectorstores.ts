@@ -74,24 +74,39 @@ export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
  * How each operator understood by {@link PGVectorStore.buildFilterClauses}
  * decides whether it can be translated to SQL.
  *
- * `accepted` mirrors the guard inside `buildFilterClauses`: an operator whose
- * value fails it emits no clause. An operator missing from this table cannot be
- * translated at all. Either way the query ends up running unfiltered, so both
- * cases are reported to the caller.
+ * `buildFilterClauses` consults `accepted` before emitting each operator's
+ * clause, so this table is the single source of truth for which values are
+ * translatable. A value that fails `accepted` emits no clause; an operator
+ * missing from this table cannot be translated at all. Either way the query
+ * ends up running unfiltered, so both cases are reported to the caller.
  */
-const FILTER_OPERATORS: Record<
-  string,
-  { accepted: (value: unknown) => boolean }
-> = {
-  in: { accepted: (value) => Array.isArray(value) },
-  notIn: { accepted: (value) => Array.isArray(value) },
-  arrayContains: { accepted: (value) => Array.isArray(value) },
-  gt: { accepted: (value) => typeof value === "number" },
-  gte: { accepted: (value) => typeof value === "number" },
-  lt: { accepted: (value) => typeof value === "number" },
-  lte: { accepted: (value) => typeof value === "number" },
+const FILTER_OPERATORS = {
+  in: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  notIn: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  arrayContains: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  gt: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  gte: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  lt: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  lte: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
   // `neq` is guarded by `hasOwnProperty` alone, so any value yields a clause.
   neq: { accepted: () => true },
+};
+type FilterOperator = {
+  accepted: (value: unknown) => boolean;
 };
 
 /**
@@ -118,7 +133,9 @@ function collectUntranslatedFilterEntries(filter: MetadataFilter): string[] {
       continue;
     }
     for (const operator of operators) {
-      const definition = FILTER_OPERATORS[operator];
+      const definition = (FILTER_OPERATORS as Record<string, FilterOperator>)[
+        operator
+      ];
       if (!definition) {
         ignored.push(`${key}.${operator} (unsupported operator)`);
       } else if (
@@ -872,7 +889,7 @@ export class PGVectorStore extends VectorStore {
       if (typeof value === "object" && value !== null) {
         const _value = value as Record<string, unknown>;
 
-        if (Array.isArray(_value.in)) {
+        if (FILTER_OPERATORS.in.accepted(_value.in)) {
           // An empty list can never match. Emitting `IN ()` is a syntax error,
           // so short-circuit to a clause that is always false instead.
           if (_value.in.length === 0) {
@@ -888,21 +905,22 @@ export class PGVectorStore extends VectorStore {
           }
         }
 
-        if (Array.isArray(_value.notIn)) {
+        if (
+          FILTER_OPERATORS.notIn.accepted(_value.notIn) &&
+          _value.notIn.length > 0
+        ) {
           // An empty exclusion list excludes nothing, so the clause is a
           // no-op and is omitted rather than emitted as `NOT IN ()`.
-          if (_value.notIn.length > 0) {
-            const placeholders = _value.notIn
-              .map((item: unknown) => addParameter(item))
-              .join(",");
-            const keyPlaceholder = addParameter(key);
-            whereClauses.push(
-              `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`
-            );
-          }
+          const placeholders = _value.notIn
+            .map((item: unknown) => addParameter(item))
+            .join(",");
+          const keyPlaceholder = addParameter(key);
+          whereClauses.push(
+            `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`
+          );
         }
 
-        if (Array.isArray(_value.arrayContains)) {
+        if (FILTER_OPERATORS.arrayContains.accepted(_value.arrayContains)) {
           const keyPlaceholder = addParameter(key);
           const valuesPlaceholder = addParameter(_value.arrayContains);
           whereClauses.push(
@@ -910,17 +928,18 @@ export class PGVectorStore extends VectorStore {
           );
         }
 
-        const operators = {
-          gt: ">",
-          gte: ">=",
-          lt: "<",
-          lte: "<=",
-        };
+        const numericOperators: Array<[keyof typeof FILTER_OPERATORS, string]> =
+          [
+            ["gt", ">"],
+            ["gte", ">="],
+            ["lt", "<"],
+            ["lte", "<="],
+          ];
 
-        for (const [opKey, sqlOp] of Object.entries(operators)) {
+        for (const [opKey, sqlOp] of numericOperators) {
           if (
             Object.prototype.hasOwnProperty.call(_value, opKey) &&
-            typeof _value[opKey] === "number"
+            FILTER_OPERATORS[opKey].accepted(_value[opKey])
           ) {
             const keyPlaceholder = addParameter(key);
             const valuePlaceholder = addParameter(_value[opKey]);
