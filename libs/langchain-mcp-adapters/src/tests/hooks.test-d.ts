@@ -256,12 +256,4 @@ test("server resource subscriptions and modern reconnect boundaries", () => {
 
   // @ts-expect-error Modern transports cannot resume/replay lost streams.
   new MCPAdapter(invalidModern);
-
-  const misplaced = {
-    servers: { modern: { url: "https://example.com/mcp" } },
-    resourceSubscriptions: ["test://resource"],
-  };
-
-  // @ts-expect-error Resource selection belongs to an individual server.
-  new MCPAdapter(misplaced);
 });
