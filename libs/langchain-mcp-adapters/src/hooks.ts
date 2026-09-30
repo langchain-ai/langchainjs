@@ -1,17 +1,8 @@
-import { z } from "zod/v3";
-import type { Command } from "@langchain/langgraph";
-import type { EmbeddedResource } from "@modelcontextprotocol/sdk/types.js";
-import type { ContentBlock } from "@langchain/core/messages";
+import { z } from "zod";
+import { isCommand, type Command } from "@langchain/langgraph";
 import type { RunnableConfig } from "@langchain/core/runnables";
-import type { ToolMessage } from "@langchain/core/messages";
-
-/**
- * state messages
- *
- * Note: this may not be defined in cases you don't use LangGraph or a LangGraph implementation like `createAgent`.
- * Also state can be defined arbitrarily by the user.
- */
-export type State = Record<string, unknown>;
+import { ToolMessage } from "@langchain/core/messages";
+import { toolResultBeforeSchema, type ToolResultBefore } from "./content.js";
 
 const toolCallRequestSchema = z.object({
   serverName: z.string(),
@@ -19,16 +10,6 @@ const toolCallRequestSchema = z.object({
   args: z.unknown(),
 });
 export type ToolCallRequest = z.output<typeof toolCallRequestSchema>;
-
-const toolResultBeforeSchema = z.tuple([
-  z.custom<string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]>(),
-  z.array(
-    z.union([
-      z.custom<EmbeddedResource>(),
-      z.custom<ContentBlock.Multimodal.Standard>(),
-    ])
-  ),
-]);
 
 /**
  * Tool result schema that users can return within the `afterToolCall` callback
@@ -41,7 +22,7 @@ const toolResultSchema = z.union([
   /**
    * Command from LangGraph
    */
-  z.custom<Command>(),
+  z.custom<Command>(isCommand),
   /**
    * 2-tuple of content, artifact
    */
@@ -49,27 +30,24 @@ const toolResultSchema = z.union([
   /**
    * ToolMessage return
    */
-  z.custom<ToolMessage>(),
+  z.custom<ToolMessage>(ToolMessage.isInstance),
 ]);
 export type ToolResult = z.output<typeof toolResultSchema>;
 
-const toolCallResultSchema = z.object({
-  ...toolCallRequestSchema.shape,
-  result: toolResultBeforeSchema,
-});
-
-const modifiedToolCallResultSchema = z.object({
-  ...toolCallRequestSchema.shape,
+const toolCallResultSchema = toolCallRequestSchema.extend({
   result: toolResultSchema,
 });
-export type ModifiedToolCallResult = z.output<
-  typeof modifiedToolCallResultSchema
->;
 
-const toolCallModificationSchema = z
+export type ModifiedToolCallResult = z.output<typeof toolCallResultSchema>;
+
+export const toolCallResultModificationSchema = z.object({
+  result: toolResultSchema,
+});
+
+export const toolCallModificationSchema = z
   .object({
-    headers: z.record(z.string()),
-    args: z.unknown(),
+    headers: z.record(z.string(), z.string()),
+    args: z.record(z.string(), z.unknown()),
   })
   .partial();
 export type ToolCallModification = z.output<typeof toolCallModificationSchema>;
@@ -95,22 +73,23 @@ export const toolHooksSchema = z.object({
    *         ...toolCallRequest.args,
    *         custom: "Custom Value"
    *       },
-   *       header: { "X-Custom-Header": "Custom Value" }
+   *       headers: { "X-Custom-Header": "Custom Value" }
    *     };
    *   },
    * };
    * ```
    */
   beforeToolCall: z
-    .function()
-    .args(toolCallRequestSchema, z.custom<State>(), z.custom<RunnableConfig>())
-    .returns(
-      z.union([
-        z.promise(toolCallModificationSchema),
-        toolCallModificationSchema,
-        z.void(),
-        z.promise(z.void()),
-      ])
+    .custom<
+      (
+        request: ToolCallRequest,
+        /** Application-owned task input, unchanged; `{}` outside LangGraph. */
+        state: unknown,
+        config: RunnableConfig
+      ) => ToolCallModification | void | Promise<ToolCallModification | void>
+    >(
+      (value) => typeof value === "function",
+      "Expected a beforeToolCall callback"
     )
     .optional(),
 
@@ -130,24 +109,30 @@ export const toolHooksSchema = z.object({
    * const interceptor = {
    *   afterToolCall: (toolCallResult, state, runtime) => {
    *     if (toolCallResult.name === "calculator") {
-   *       return ["Custom Value", []];
+   *       return { result: ["Custom Value", []] };
    *     }
-   *     return toolCallResult.result;
+   *     return { result: toolCallResult.result };
    *   },
    * };
    * ```
    */
   afterToolCall: z
-    .function()
-    .args(toolCallResultSchema, z.custom<State>(), z.custom<RunnableConfig>())
-    .returns(
-      z.union([
-        z.promise(modifiedToolCallResultSchema.pick({ result: true })),
-        modifiedToolCallResultSchema.pick({ result: true }),
-        z.void(),
-        z.promise(z.void()),
-      ])
+    .custom<
+      (
+        request: ToolCallRequest & { result: ToolResultBefore },
+        /** Application-owned task input, unchanged; `{}` outside LangGraph. */
+        state: unknown,
+        config: RunnableConfig
+      ) =>
+        | z.output<typeof toolCallResultModificationSchema>
+        | void
+        | Promise<z.output<typeof toolCallResultModificationSchema> | void>
+    >(
+      (value) => typeof value === "function",
+      "Expected an afterToolCall callback"
     )
     .optional(),
 });
+
+/** Hooks preserve native inputs; awaited modifications are parsed at invocation. */
 export type ToolHooks = z.input<typeof toolHooksSchema>;

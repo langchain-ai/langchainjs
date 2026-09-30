@@ -809,10 +809,12 @@ export class ReactAgent<
       const messages = builtInState.messages;
       const lastMessage = messages[messages.length - 1];
 
-      // Check if we just executed a returnDirect tool
+      // Check if we just executed a returnDirect tool successfully. A failed
+      // call goes back to the model so it can correct itself and retry.
       if (
         ToolMessage.isInstance(lastMessage) &&
         lastMessage.name &&
+        lastMessage.status !== "error" &&
         shouldReturnDirect.has(lastMessage.name)
       ) {
         // If we have a response format, route to agent to generate structured response

@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.4.6
+
+### Patch Changes
+
+- [#11641](https://github.com/langchain-ai/langchainjs/pull/11641) [`12626c2`](https://github.com/langchain-ai/langchainjs/commit/12626c25a9acdd72d2c8a68788479440916d38a1) Thanks [@ccurme](https://github.com/ccurme)! - Add `LANGSMITH_GATEWAY` direct routing for Bedrock Converse and Vertex AI chat models.
+
 ## 1.4.5
 
 ### Patch Changes

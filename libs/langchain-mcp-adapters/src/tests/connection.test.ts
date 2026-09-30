@@ -1,27 +1,22 @@
 import { describe, test, expect, beforeEach, vi, type Mock } from "vitest";
-
-import { Client as SDKClient } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import {
+  Client as SDKClient,
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+  type NotificationMethod,
+  type NotificationTypeMap,
+} from "@modelcontextprotocol/client";
+import type { ResolvedConnection, ServerMessageSource } from "../types.js";
 import { ConnectionManager, type Client } from "../connection.js";
 
 vi.mock(
-  "@modelcontextprotocol/sdk/client/index.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
 vi.mock(
-  "@modelcontextprotocol/sdk/client/stdio.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
-);
-vi.mock(
-  "@modelcontextprotocol/sdk/client/sse.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
-);
-vi.mock(
-  "@modelcontextprotocol/sdk/client/streamableHttp.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 describe("ConnectionManager", () => {
@@ -30,10 +25,121 @@ describe("ConnectionManager", () => {
   });
 
   describe("createClient", () => {
+    test.each(["http", "stdio"] as const)(
+      "isolates notification options for %s clients",
+      async (transport) => {
+        const observed: ResolvedConnection[] = [];
+
+        const mutateOptions = (source: ServerMessageSource) => {
+          const options = source.options;
+          observed.push(options);
+          expect(options.outputHandling).toEqual({ text: "content" });
+
+          if (typeof options.outputHandling === "object")
+            options.outputHandling.text = "artifact";
+
+          if ("command" in options) {
+            expect(options.args).toEqual(["server.js"]);
+            expect(options.env).toEqual({ MODE: "test" });
+            expect(options.restart).toEqual({ enabled: false });
+            options.args.push("changed");
+            options.env!.MODE = "changed";
+            options.restart!.enabled = true;
+          } else {
+            expect(options.url).toBe("https://example.com/mcp");
+            expect(options.headers).toEqual({ "X-Test": "original" });
+            expect(options.reconnect).toEqual({ enabled: false });
+            options.url = "https://example.com/changed";
+            options.headers!["X-Test"] = "changed";
+            options.reconnect!.enabled = true;
+          }
+        };
+
+        const onMessage = vi.fn((_message, source: ServerMessageSource) =>
+          mutateOptions(source)
+        );
+
+        const manager = new ConnectionManager();
+
+        const options: ResolvedConnection =
+          transport === "http"
+            ? {
+                mode: "legacy",
+                transport: "http",
+                url: "https://example.com/mcp",
+                automaticSSEFallback: false,
+                headers: { "X-Test": "original" },
+                reconnect: { enabled: false },
+                outputHandling: { text: "content" },
+                onMessage,
+                onResourcesListChanged: mutateOptions,
+              }
+            : {
+                mode: "legacy",
+                transport: "stdio",
+                command: "node",
+                args: ["server.js"],
+                stderr: "inherit",
+                env: { MODE: "test" },
+                restart: { enabled: false },
+                outputHandling: { text: "content" },
+                onMessage,
+                onResourcesListChanged: mutateOptions,
+              };
+
+        if ("command" in options)
+          await manager.createClient("stdio", "test", options);
+        else await manager.createClient("http", "test", options);
+
+        const registerNotification: <M extends NotificationMethod>(
+          method: M,
+          handler: (
+            notification: NotificationTypeMap[M]
+          ) => void | Promise<void>
+        ) => void = SDKClient.prototype.setNotificationHandler;
+
+        const message = vi
+          .mocked(registerNotification<"notifications/message">)
+          .mock.calls.find(
+            ([method]) => method === "notifications/message"
+          )?.[1];
+
+        const changed = vi
+          .mocked(registerNotification<"notifications/resources/list_changed">)
+          .mock.calls.find(
+            ([method]) => method === "notifications/resources/list_changed"
+          )?.[1];
+
+        if (!message || !changed) {
+          throw new Error("Expected registered notification handlers");
+        }
+
+        const params = {
+          level: "info",
+          data: "test",
+          _meta: { extension: true },
+        } satisfies Parameters<typeof message>[0]["params"];
+
+        try {
+          await message({ method: "notifications/message", params });
+          await message({ method: "notifications/message", params });
+          await changed({ method: "notifications/resources/list_changed" });
+          expect(onMessage.mock.calls[0][0]).toBe(params);
+          expect(options.outputHandling).toEqual({ text: "content" });
+          expect(observed).toHaveLength(3);
+          expect(observed[0]).not.toBe(options);
+          expect(observed[0]).not.toBe(observed[1]);
+        } finally {
+          await manager.delete();
+        }
+      }
+    );
+
     test("creates stdio client and connects", async () => {
       const mgr = new ConnectionManager();
 
       const client = await mgr.createClient("stdio", "stdio-server", {
+        mode: "legacy",
         transport: "stdio",
         command: "python",
         args: ["./script.py"],
@@ -51,6 +157,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const client = await mgr.createClient("stdio", "stdio-server", {
+        mode: "legacy",
         transport: "stdio",
         command: "node",
         args: ["./server.js"],
@@ -72,6 +179,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       await mgr.createClient("http", "http-server", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -97,11 +205,11 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
       const headers = { Authorization: "Bearer token", "X-Test": "1" };
       // minimal authProvider mock
-      const authProvider = {
-        tokens: vi.fn().mockResolvedValue({ access_token: "abc" }),
-      } as never;
+      const tokens = vi.fn().mockResolvedValue({ access_token: "abc" });
+      const authProvider = { tokens } as never;
 
       await mgr.createClient("sse", "sse-server", {
+        mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         automaticSSEFallback: true,
@@ -118,6 +226,11 @@ describe("ConnectionManager", () => {
           authProvider,
         })
       );
+
+      // SDK 2 owns authorization and stream creation. The adapter must pass
+      // both inputs through without reinstating the SDK 1 custom-fetch shim.
+      expect(sseCall[1]).not.toHaveProperty("eventSourceInit");
+      expect(tokens).not.toHaveBeenCalled();
     });
   });
 
@@ -126,12 +239,14 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const c1 = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
       const c2 = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -145,7 +260,7 @@ describe("ConnectionManager", () => {
       expect(mgr.has({ serverName: "svc", headers: { A: "3" } })).toBe(false);
 
       expect(mgr.get({ serverName: "svc", headers: { A: "1" } })).toBeDefined();
-      expect(mgr.get("svc")).toBeDefined(); // ambiguous but returns one
+      expect(mgr.get("svc")).toBeUndefined(); // default identity never selects an override
     });
 
     test("getTransport returns the underlying transport", async () => {
@@ -157,6 +272,7 @@ describe("ConnectionManager", () => {
       };
       const client = await mgr.createClient("stdio", "s", {
         ...config,
+        mode: "legacy",
         transport: "stdio",
       });
 
@@ -174,12 +290,14 @@ describe("ConnectionManager", () => {
     test("deletes specific connection and all connections", async () => {
       const mgr = new ConnectionManager();
       await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
       await mgr.createClient("sse", "svc", {
+        mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         automaticSSEFallback: true,
@@ -199,21 +317,63 @@ describe("ConnectionManager", () => {
     test("forks HTTP client with new headers and creates a new connection", async () => {
       const mgr = new ConnectionManager();
       const base = await mgr.createClient("http", "svc", {
+        mode: "legacy",
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
+        headers: { A: "1", "X-Keep": "base" },
+      });
+
+      const forked = await (base as Client).fork({ A: "2" });
+      expect(forked).not.toBe(base);
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(2);
+      expect(mgr.getAllClients().length).toBe(2);
+
+      const [baseCall, forkedCall] = (StreamableHTTPClientTransport as Mock)
+        .mock.calls;
+
+      // the forked transport overrides the header it was handed and keeps the
+      // rest of the base headers; header names normalise to lower case
+      expect(forkedCall[0]).toEqual(new URL("http://localhost:8000/mcp"));
+      expect(forkedCall[1].requestInit.headers).toEqual({
+        a: "2",
+        "x-keep": "base",
+      });
+
+      // the original connection keeps its own headers and stays reachable
+      expect(baseCall[1].requestInit.headers).toEqual({
+        A: "1",
+        "X-Keep": "base",
+      });
+      expect(
+        mgr.get({ serverName: "svc", headers: { A: "1", "X-Keep": "base" } })
+      ).toBe(base);
+      expect(
+        mgr.get({ serverName: "svc", headers: { A: "2", "X-Keep": "base" } })
+      ).toBe(forked);
+    });
+
+    test("forking with equivalent headers reuses the existing connection", async () => {
+      const mgr = new ConnectionManager();
+      const base = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
 
-      const forked = await (base as Client).fork({ A: "2" });
-      expect(forked).toBeDefined();
-      expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(2);
-      expect(mgr.getAllClients().length).toBe(2);
+      // header names are case-insensitive, so this resolves to the same identity
+      expect(await (base as Client).fork({ a: "1" })).toBe(base);
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(1);
+      expect(mgr.getAllClients().length).toBe(1);
     });
 
     test("forking stdio client is not supported", async () => {
       const mgr = new ConnectionManager();
       const stdio = await mgr.createClient("stdio", "svc", {
+        mode: "legacy",
         transport: "stdio",
         command: "python",
         args: ["./script.py"],
