@@ -486,59 +486,6 @@ describe("PGVectorStore", () => {
       expect(queryCall[1]).toContainEqual(["tag1", "tag2"]);
     });
 
-    test("handles 'jsonbContains' operator", async () => {
-      await store.similaritySearchVectorWithScore([0.1], 5, {
-        profile: { jsonbContains: { tier: "gold", region: "eu" } },
-      });
-      const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("@> $");
-      expect(queryCall[0]).toContain("::jsonb");
-      expect(queryCall[1]).toContain("profile");
-      expect(queryCall[1]).toContain(
-        JSON.stringify({ tier: "gold", region: "eu" })
-      );
-    });
-
-    test("'jsonbContains' does not inline values into the query string", async () => {
-      const payload = "gold'; DROP TABLE users; --";
-
-      await store.similaritySearchVectorWithScore([0.1], 5, {
-        profile: { jsonbContains: { tier: payload } },
-      });
-
-      const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).not.toContain("DROP TABLE");
-      expect(queryCall[1]).toContain(JSON.stringify({ tier: payload }));
-    });
-
-    test("combines 'jsonbContains' with other operators", async () => {
-      await store.similaritySearchVectorWithScore([0.1], 5, {
-        profile: { jsonbContains: { tier: "gold" } },
-        score: { gte: 80 },
-      });
-      const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("@> $");
-      expect(queryCall[0]).toContain("::numeric >=");
-    });
-
-    test("uses a custom metadata column name in 'jsonbContains'", async () => {
-      const customPool = createMockPool();
-      customPool.query.mockResolvedValue({ rows: [] });
-      const customStore = new PGVectorStore(new MockEmbeddings(), {
-        tableName: "test_table",
-        pool: customPool,
-        columns: { metadataColumnName: "custom_metadata" },
-      });
-
-      await customStore.similaritySearchVectorWithScore([0.1], 5, {
-        profile: { jsonbContains: { tier: "gold" } },
-      });
-
-      const queryCall = customPool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("custom_metadata -> $");
-      expect(queryCall[0]).toContain("@> $");
-    });
-
     test("handles numeric comparison operators", async () => {
       await store.similaritySearchVectorWithScore([0.1], 5, {
         score: { gt: 10, gte: 5, lt: 100, lte: 50 },
@@ -660,7 +607,7 @@ describe("PGVectorStore", () => {
 
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy.mock.calls[0][0]).toContain("category.exists");
-      expect(warnSpy.mock.calls[0][0]).toContain("jsonbContains");
+      expect(warnSpy.mock.calls[0][0]).toContain("arrayContains");
 
       warnSpy.mockRestore();
     });
@@ -670,7 +617,7 @@ describe("PGVectorStore", () => {
 
       await store.similaritySearchVectorWithScore([0.1], 5, {
         category: { in: ["a"], neq: "b", gt: 1, lte: 9, notIn: ["z"] },
-        profile: { jsonbContains: { tier: "gold" } },
+        tags: { arrayContains: ["x"] },
       });
 
       expect(warnSpy).not.toHaveBeenCalled();

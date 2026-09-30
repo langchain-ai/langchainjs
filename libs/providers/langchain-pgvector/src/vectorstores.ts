@@ -27,8 +27,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
  *     lt: 100,                            // Less than (numeric)
  *     lte: 100,                           // Less than or equal (numeric)
  *     neq: "unwanted",                    // prop doesn't exist or not equal to value)
- *     arrayContains: ["item1", "item2"],  // Array contains any of these values
- *     jsonbContains: { tier: "gold" }     // JSONB at this key contains this object (`@>`)
+ *     arrayContains: ["item1", "item2"]   // Array contains any of these values
  *   }
  * }
  * ```
@@ -64,16 +63,6 @@ export type MetadataFilter = Record<
       lte?: number;
       /** Not equal to */
       neq?: string | number | boolean;
-      /**
-       * The JSON value at this key must contain the given object, using
-       * Postgres JSONB containment (`@>`).
-       *
-       * @example
-       * // Matches documents whose `metadata.profile` contains `{ tier: "gold" }`,
-       * // including documents where `profile` also has other keys.
-       * { profile: { jsonbContains: { tier: "gold" } } }
-       */
-      jsonbContains?: Record<string, unknown>;
     }
 >;
 
@@ -103,10 +92,6 @@ const FILTER_OPERATORS: Record<
   lte: { accepted: (value) => typeof value === "number" },
   // `neq` is guarded by `hasOwnProperty` alone, so any value yields a clause.
   neq: { accepted: () => true },
-  jsonbContains: {
-    accepted: (value) =>
-      typeof value === "object" && value !== null && !Array.isArray(value),
-  },
 };
 
 /**
@@ -304,8 +289,7 @@ export interface PGVectorStoreArgs {
  * <details>
  * <summary><strong>Similarity search with filter operators</strong></summary>
  *
- * Available filter operators: in, notIn, arrayContains, lte, lt, gte, gt, neq,
- * jsonbContains
+ * Available filter operators: in, notIn, arrayContains, lte, lt, gte, gt, neq
  *
  * ```typescript
  * const resultsWithFilters = await vectorStore.similaritySearch("thud", 1, {
@@ -327,18 +311,55 @@ export interface PGVectorStoreArgs {
  * <br />
  *
  * <details>
- * <summary><strong>Similarity search on nested JSONB metadata</strong></summary>
+ * <summary><strong>Filtering on nested JSONB with a subclass</strong></summary>
  *
- * `jsonbContains` uses Postgres JSONB containment (`@>`), so it matches on a
- * subset of an object rather than requiring an exact match.
+ * `buildFilterClauses` is `protected`, so operators can be added by extending
+ * the store. For example, to match documents whose `metadata.profile` contains
+ * `{ tier: "gold" }` — a partial match, not equality — using Postgres JSONB
+ * containment (`@>`):
  *
  * ```typescript
- * // Matches documents whose `metadata.profile` contains `{ tier: "gold" }`,
- * // including documents where `profile` also has other keys.
- * const goldProfiles = await vectorStore.similaritySearch("thud", 10, {
+ * class JsonbContainsStore extends PGVectorStore {
+ *   protected override buildFilterClauses(filter, paramOffset = 0) {
+ *     const whereClauses: string[] = [];
+ *     const parameters: unknown[] = [];
+ *     let paramCount = paramOffset;
+ *
+ *     const remaining = { ...filter };
+ *     for (const [key, value] of Object.entries(remaining)) {
+ *       if (typeof value !== "object" || value === null || !("jsonbContains" in value)) {
+ *         continue;
+ *       }
+ *       const { jsonbContains, ...rest } = value;
+ *       delete (remaining as Record<string, unknown>)[key];
+ *       if (Object.keys(rest).length > 0) {
+ *         (remaining as Record<string, unknown>)[key] = rest;
+ *       }
+ *
+ *       paramCount += 1;
+ *       parameters.push(key);
+ *       const keyPlaceholder = `$${paramCount}`;
+ *       paramCount += 1;
+ *       parameters.push(JSON.stringify(jsonbContains));
+ *       whereClauses.push(`(${this.metadataColumnName} -> ${keyPlaceholder}) @> $${paramCount}::jsonb`);
+ *     }
+ *
+ *     const base = super.buildFilterClauses(remaining, paramCount);
+ *     return {
+ *       whereClauses: [...whereClauses, ...base.whereClauses],
+ *       parameters: [...parameters, ...base.parameters],
+ *       paramCount: base.paramCount,
+ *     };
+ *   }
+ * }
+ *
+ * const gold = await jsonbStore.similaritySearch("thud", 10, {
  *   profile: { jsonbContains: { tier: "gold" } },
  * });
  * ```
+ *
+ * Remove your own operator from the filter before delegating to `super`, or the
+ * base implementation will warn that it does not recognize it.
  * </details>
  *
  * <br />
@@ -808,11 +829,36 @@ export class PGVectorStore extends VectorStore {
   /**
    * Builds WHERE clause conditions and parameters for metadata filtering.
    *
+   * Subclasses may override this to support additional operators. Three things
+   * matter for an override to behave correctly:
+   *
+   * - **Continue the parameter numbering.** `paramOffset` already accounts for
+   *   the parameters bound before filtering: `$1` the query embedding and `$2`
+   *   the limit in a search, plus `$3` the collection id when the store is
+   *   configured with one. Return the updated `paramCount` so the next call can
+   *   resume from it.
+   * - **Remove your own operators before delegating.** The base implementation
+   *   warns about any operator it does not recognize, so a subclass that adds
+   *   e.g. `regex` must strip that key from a shallow copy of the filter before
+   *   calling `super`, otherwise every query logs a spurious warning.
+   * - **Bind both keys and values as parameters.** Never interpolate filter
+   *   input into the query string.
+   *
+   * Note that {@link PGVectorStore.initialize} constructs a `PGVectorStore`
+   * directly, so calling it on a subclass returns a base instance and silently
+   * discards the override. A subclass has to be constructed with `new` and
+   * initialized by calling `ensureTableInDatabase` (and
+   * `ensureCollectionTableInDatabase`, if applicable) itself.
+   *
    * @param filter - The metadata filter object.
    * @param paramOffset - Starting parameter index offset.
-   * @returns Object containing whereClauses array and parameters array.
+   * @returns The WHERE clauses, the values they bind, and the index of the last
+   *   parameter bound.
    */
-  private buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
+  protected buildFilterClauses(
+    filter: MetadataFilter,
+    paramOffset = 0
+  ): { whereClauses: string[]; parameters: unknown[]; paramCount: number } {
     const whereClauses: string[] = [];
     const parameters: unknown[] = [];
     let paramCount = paramOffset;
@@ -864,21 +910,6 @@ export class PGVectorStore extends VectorStore {
           );
         }
 
-        if (
-          Object.prototype.hasOwnProperty.call(_value, "jsonbContains") &&
-          typeof _value.jsonbContains === "object" &&
-          _value.jsonbContains !== null &&
-          !Array.isArray(_value.jsonbContains)
-        ) {
-          const keyPlaceholder = addParameter(key);
-          const valuePlaceholder = addParameter(
-            JSON.stringify(_value.jsonbContains)
-          );
-          whereClauses.push(
-            `(${this.metadataColumnName} -> ${keyPlaceholder}) @> ${valuePlaceholder}::jsonb`
-          );
-        }
-
         const operators = {
           gt: ">",
           gte: ">=",
@@ -924,7 +955,7 @@ export class PGVectorStore extends VectorStore {
       console.warn(
         `[PGVectorStore] These filter entries produced no WHERE clause and were ignored: ${ignored.join(
           ", "
-        )}. Supported operators are: in, notIn, arrayContains, gt, gte, lt, lte, neq, jsonbContains. The query may return more rows than intended.`
+        )}. Supported operators are: in, notIn, arrayContains, gt, gte, lt, lte, neq. The query may return more rows than intended.`
       );
     }
 

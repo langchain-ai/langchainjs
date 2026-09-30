@@ -44,7 +44,8 @@ describe("filter diagnostics", () => {
   });
 
   const sql = () => pool.query.mock.calls[0][0] as string;
-  const warnings = () => warnSpy.mock.calls.map((c) => c[0] as string);
+  const warnings = () =>
+    warnSpy.mock.calls.map((call: unknown[]) => call[0] as string);
 
   // ---------------------------------------------------------------- happy --
 
@@ -58,7 +59,6 @@ describe("filter diagnostics", () => {
       ["lt", { lt: 9 }],
       ["lte", { lte: 9 }],
       ["neq", { neq: "a" }],
-      ["jsonbContains", { jsonbContains: { tier: "gold" } }],
     ])("%s produces a WHERE clause and no warning", async (_name, op) => {
       await store.similaritySearchVectorWithScore([0.1], 5, {
         k: op,
@@ -95,10 +95,21 @@ describe("filter diagnostics", () => {
       await store.similaritySearchVectorWithScore([0.1], 5, {
         k: { in: ["a"], notIn: ["b"], arrayContains: ["c"], neq: "d" },
         lo: { gt: 1, gte: 1, lt: 9, lte: 9 },
-        p: { jsonbContains: { tier: "gold" } },
       });
       expect(sql()).toContain("WHERE");
       expect(warnings()).toHaveLength(0);
+    });
+
+    test("an operator only a subclass provides warns on the base store", async () => {
+      // The base class cannot translate `jsonbContains`, so it reports it.
+      // A subclass that handles the key first removes it, which is why the
+      // subclass path is warning-free.
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        p: { jsonbContains: { tier: "gold" } },
+      } as never);
+      expect(warnings()).toHaveLength(1);
+      expect(warnings()[0]).toContain("p.jsonbContains");
+      expect(warnings()[0]).toContain("unsupported operator");
     });
 
     test("neq accepts any value, since it is guarded by hasOwnProperty", async () => {
@@ -145,10 +156,6 @@ describe("filter diagnostics", () => {
       ["in", { in: "a" }],
       ["notIn", { notIn: "a" }],
       ["arrayContains", { arrayContains: "a" }],
-      ["jsonbContains null", { jsonbContains: null }],
-      ["jsonbContains array", { jsonbContains: ["a"] }],
-      ["jsonbContains string", { jsonbContains: "a" }],
-      ["jsonbContains number", { jsonbContains: 1 }],
     ])("%s with an invalid value is reported", async (_name, op) => {
       await store.similaritySearchVectorWithScore([0.1], 5, {
         k: op,
@@ -188,7 +195,6 @@ describe("filter diagnostics", () => {
         "lt",
         "lte",
         "neq",
-        "jsonbContains",
       ]) {
         expect(message).toContain(op);
       }
@@ -280,7 +286,7 @@ describe("filter diagnostics", () => {
         store.similaritySearchVectorWithScore(
           [0.1],
           5,
-          filter as MetadataFilter
+          filter as unknown as MetadataFilter
         )
       ).resolves.toBeDefined();
     });
