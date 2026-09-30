@@ -3,7 +3,6 @@ import { test, expect, beforeEach } from "vitest";
 import { env } from "../../../tests/utils.js";
 import { AzureChatOpenAI } from "../index.js";
 import { AzureChatOpenAIResponses } from "../responses.js";
-import { RESPONSES_FILE_MIME_TYPES } from "../../../utils/file_mime_types.js";
 
 beforeEach(() => {
   delete process.env.OPENAI_API_KEY;
@@ -94,8 +93,8 @@ test("AzureChatOpenAI profile follows the Responses API setting", () => {
   });
   const responsesOnly = new AzureChatOpenAIResponses("gpt-5.5", fields);
   expect(completions.profile.fileMimeTypes).toBeUndefined();
-  expect(responses.profile.fileMimeTypes).toEqual(RESPONSES_FILE_MIME_TYPES);
+  expect(responses.profile.fileMimeTypes).toContain("text/plain");
   expect(responsesOnly.profile.fileMimeTypes).toEqual(
-    RESPONSES_FILE_MIME_TYPES
+    responses.profile.fileMimeTypes
   );
 });

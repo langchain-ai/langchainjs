@@ -30,7 +30,7 @@ import {
 import { OpenAIVerbosityParam } from "../types.js";
 import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
 import { normalizePromptCacheRetention } from "../utils/misc.js";
-import { withResponsesFileMimeTypes } from "../utils/file_mime_types.js";
+import { withoutFileMimeTypesUnlessSupported } from "../utils/file_mime_types.js";
 
 export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
@@ -87,7 +87,7 @@ export class ChatOpenAIResponses<
   }
 
   override get profile(): ModelProfile {
-    return withResponsesFileMimeTypes(super.profile);
+    return withoutFileMimeTypesUnlessSupported(super.profile, true);
   }
 
   override invocationParams(
