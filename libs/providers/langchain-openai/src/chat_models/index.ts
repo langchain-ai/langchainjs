@@ -395,6 +395,70 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <br />
  *
  * <details>
+ * <summary><strong>Prompt Caching</strong></summary>
+ *
+ * The default `"implicit"` mode keeps OpenAI's automatic breakpoint and also
+ * uses explicit breakpoints. The `"explicit"` mode uses only the breakpoints
+ * you provide.
+ *
+ * For models that support explicit cache breakpoints, pass request-level cache
+ * options and mark supported content blocks with `prompt_cache_breakpoint`:
+ *
+ * ```typescript
+ * const cachingLlm = new ChatOpenAI({ model: "gpt-5.6-sol" });
+ * const cachedMsg = await cachingLlm.invoke(
+ *   [
+ *     new SystemMessage({
+ *       content: [
+ *         {
+ *           type: "text",
+ *           text: "Stable instructions and examples...",
+ *           prompt_cache_breakpoint: { mode: "explicit" },
+ *         },
+ *       ],
+ *     }),
+ *     new HumanMessage("Current request"),
+ *   ],
+ *   {
+ *     promptCacheKey: "tenant:acme:support-v1",
+ *     promptCacheOptions: { mode: "explicit", ttl: "30m" },
+ *   }
+ * );
+ * ```
+ *
+ * Set `promptCacheOptions` per invocation, as above, or persist it on the
+ * model:
+ *
+ * ```typescript
+ * const persistentCachingLlm = new ChatOpenAI({
+ *   model: "gpt-5.6-sol",
+ *   promptCacheOptions: { mode: "explicit", ttl: "30m" },
+ * });
+ * ```
+ *
+ * `promptCacheOptions.mode` can be `"implicit"` or `"explicit"`. OpenAI limits
+ * how many breakpoints can write to the cache in a single request. In
+ * `"implicit"` mode, the implicit breakpoint on the latest message uses one
+ * write slot, so up to three explicit breakpoints can write. In `"explicit"`
+ * mode, up to four explicit breakpoints can write.
+ *
+ * For models before the GPT-5.6 family that support legacy prompt cache
+ * retention, pass `promptCacheRetention`. See OpenAI's
+ * [prompt caching docs](https://platform.openai.com/docs/guides/prompt-caching)
+ * for the current model support list and retention semantics.
+ *
+ * ```typescript
+ * const retainedMsg = await llm.invoke(input, { promptCacheRetention: "24h" });
+ * ```
+ *
+ * Cache reads are available as `usage_metadata.input_token_details.cache_read`;
+ * cache writes are available as `cache_creation` when the OpenAI response
+ * includes `cache_write_tokens`.
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
  * <summary><strong>Logprobs</strong></summary>
  *
  * ```typescript
