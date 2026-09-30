@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
   AIMessage,
   HumanMessage,
@@ -268,10 +268,9 @@ describe("system messages", () => {
     });
   });
 
-  test("drops an unrecognized system block with a warning", () => {
+  test("drops an unrecognized system block", () => {
     // Anthropic accepts a closed set of system content blocks, so anything
     // else would be rejected by the provider.
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const documentBlock = {
       type: "document",
       source: { type: "text", media_type: "text/plain", data: "Style guide" },
@@ -293,9 +292,6 @@ describe("system messages", () => {
         { role: "system", content: [text] },
       ],
     });
-    expect(warn).toHaveBeenCalledTimes(2);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"document"'));
-    warn.mockRestore();
   });
 
   test("coerces a bare string entry to a text block", () => {
@@ -349,9 +345,7 @@ describe("system messages", () => {
   });
 
   test("omits system content that narrows to nothing", () => {
-    // The provider rejects a system turn with empty content, and the dropped
-    // blocks have already been warned about.
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    // The provider rejects a system turn with empty content.
     const unrecognized = { type: "document", title: "Style guide" };
     const payload = _convertMessagesToAnthropicPayload([
       new SystemMessage({ content: [unrecognized] }),
@@ -367,7 +361,6 @@ describe("system messages", () => {
       ],
     });
     expect(payload.system).toBeUndefined();
-    warn.mockRestore();
   });
 
   test("convertPromptToAnthropic follows the same rule", () => {
@@ -418,7 +411,6 @@ describe("tool-change blocks", () => {
   };
 
   test("does not mutate the input messages", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const content = [
       { type: "text", text: "Tools changed.", id: "lc-1" },
       { type: "non_standard", value: toolRemoval },
@@ -434,7 +426,6 @@ describe("tool-change blocks", () => {
 
     expect(messages[0].content).toEqual(content);
     expect(messages[2].content).toEqual(content);
-    warn.mockRestore();
   });
 
   describe.each([
@@ -510,8 +501,7 @@ describe("non-system content is unaffected by system narrowing", () => {
     expect(payload.messages).toEqual([{ role: "user", content: [image] }]);
   });
 
-  test("drops an unrecognized block on a human message without a warning", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  test("drops an unrecognized block on a human message", () => {
     const payload = _convertMessagesToAnthropicPayload([
       new HumanMessage({
         content: [
@@ -524,8 +514,6 @@ describe("non-system content is unaffected by system narrowing", () => {
     expect(payload.messages).toEqual([
       { role: "user", content: [{ type: "text", text: "Review foo()" }] },
     ]);
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
   });
 
   test("replays a wrapped block on an Anthropic v1 AI message", () => {

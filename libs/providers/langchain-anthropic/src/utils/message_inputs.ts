@@ -525,11 +525,7 @@ function _formatSystemContent(
     }
     // Anthropic accepts a closed set of system content blocks, and rejects
     // the whole request for anything else.
-    console.warn(
-      `Unrecognized system content block ${JSON.stringify(block.type)} was dropped. ` +
-        "Anthropic accepts `text` in any system message, plus `tool_addition` " +
-        "and `tool_removal` on a mid-conversation one."
-    );
+    // Consider warning about the dropped block once we have a proper logging solution
     return [];
   });
 }

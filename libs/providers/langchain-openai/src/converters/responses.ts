@@ -254,26 +254,6 @@ function toHoistedInputItem(
 }
 
 /**
- * Warns that a block was dropped from system content.
- *
- * User content keeps its silent drop: the set of blocks it may carry is open
- * ended, so a warning there would be noise. System content is narrow, and a
- * dropped block there is usually a provider-specific instruction that was
- * meant to take effect.
- */
-function warnDroppedSystemBlock(block: ContentBlock) {
-  const payload = unwrapNonStandard(block);
-  const description =
-    payload === block
-      ? JSON.stringify(block.type)
-      : `${JSON.stringify(payload.type)} (wrapped in \`non_standard\`)`;
-  console.warn(
-    `Unrecognized system content block ${description} was dropped: the ` +
-      "Responses API does not accept it in a system message."
-  );
-}
-
-/**
  * Converts OpenAI Responses API usage statistics to LangChain's UsageMetadata format.
  *
  * This converter transforms token usage information from OpenAI's Responses API into
@@ -1410,9 +1390,8 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } else if (block.type === "non_standard" && isResponsesMessage) {
         yield* flushMessage();
         yield block.value as ResponsesInputItem;
-      } else if (messageRole === "system" || messageRole === "developer") {
-        warnDroppedSystemBlock(block);
       }
+      // Consider warning about the dropped block once we have a proper logging solution
     }
     yield* flushMessage();
 
@@ -1874,9 +1853,7 @@ export const convertMessagesToResponsesInput: Converter<
           ) {
             return item;
           }
-          if (role !== "user") {
-            warnDroppedSystemBlock(item);
-          }
+          // Consider warning about the dropped block once we have a proper logging solution
           return [];
         });
 

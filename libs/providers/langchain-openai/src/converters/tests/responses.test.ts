@@ -2161,10 +2161,8 @@ describe("additional_tools input item", () => {
           }),
       ] as const,
     ])(
-      "drops a %s block from system content with a warning",
+      "drops a %s block from system content",
       (_spelling, makeMessage) => {
-        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
         const result = convertMessagesToResponsesInput({
           messages: [makeMessage()],
           zdrEnabled: false,
@@ -2180,11 +2178,6 @@ describe("additional_tools input item", () => {
             ],
           },
         ]);
-        expect(warn).toHaveBeenCalledTimes(1);
-        expect(warn).toHaveBeenCalledWith(
-          expect.stringContaining('"tool_removal"')
-        );
-        warn.mockRestore();
       }
     );
 
@@ -2210,10 +2203,8 @@ describe("additional_tools input item", () => {
           }),
       ],
     ])(
-      "drops the block from user %s without a warning",
+      "drops the block from user %s",
       (_spelling, makeMessage) => {
-        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
         const result = convertMessagesToResponsesInput({
           messages: [makeMessage()],
           zdrEnabled: false,
@@ -2227,8 +2218,6 @@ describe("additional_tools input item", () => {
             content: [{ type: "input_text", text: "Hi" }],
           },
         ]);
-        expect(warn).not.toHaveBeenCalled();
-        warn.mockRestore();
       }
     );
   });
