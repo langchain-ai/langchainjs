@@ -4,6 +4,7 @@ import {
 } from "./elicitation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
 import {
+  convertCallToolError,
   convertCallToolResult,
   type ExtendedArtifact,
   type ExtendedContent,
@@ -31,8 +32,12 @@ import type {
   Client as MCPClient,
   Tool as MCPTool,
   RequestOptions,
+  StandardSchemaWithJSON,
 } from "@modelcontextprotocol/client";
-import { DynamicStructuredTool } from "@langchain/core/tools";
+import {
+  DynamicStructuredTool,
+  type ToolRunnableConfig,
+} from "@langchain/core/tools";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import type { ToolMessage } from "@langchain/core/messages";
@@ -74,9 +79,9 @@ type CallToolArgs = {
    */
   args: ToolArguments;
   /**
-   * Optional RunnableConfig with timeout settings
+   * Optional config with timeout settings and, for a tool call, `toolCall`
    */
-  config?: RunnableConfig;
+  config?: ToolRunnableConfig;
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
@@ -133,8 +138,8 @@ function createToolInvocation(
   client: MCPInstance,
   serverName: string,
   descriptor: MCPTool,
-  logLevel?: LoggingLevel,
-  elicitation = false
+  logLevel: LoggingLevel | undefined,
+  elicitation: boolean
 ): ToolInvocation {
   const modern = client.getProtocolEra() === "modern";
   // Legacy servers answer elicitation through `onElicitation`, never in band.
@@ -234,17 +239,24 @@ function createToolInvocation(
   };
 }
 
-/** Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary. */
+/**
+ * Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary.
+ *
+ * Compiled on first parse, not at load, so a schema the SDK engine rejects
+ * fails only its own tool's calls rather than the server's discovery.
+ */
 function jsonSchemaParser<T>(
   jsonSchema: z.output<typeof JSONObjectSchema>
 ): z.ZodTransform<T, T> {
-  // Scope the SDK engine to this descriptor: its shared cache keys by $id.
-  const validator = fromJsonSchema<T>(
-    jsonSchema,
-    new DefaultJsonSchemaValidator()
-  );
+  let validator: StandardSchemaWithJSON<T, T> | undefined;
 
   return z.transform(async (input: T, ctx) => {
+    // Scope the SDK engine to this descriptor: its shared cache keys by $id.
+    validator ??= fromJsonSchema<T>(
+      jsonSchema,
+      new DefaultJsonSchemaValidator()
+    );
+
     const result = await validator["~standard"].validate(input);
 
     if (result.issues) {
@@ -396,6 +408,20 @@ async function _callTool(
         );
     }
 
+    // `afterToolCall` sees successful results only.
+    if (result.isError)
+      return [
+        convertCallToolError({
+          serverName,
+          toolName,
+          result,
+          outputHandling,
+          toolCallId: config?.toolCall?.id,
+          name: config?.toolCall?.name,
+        }),
+        [],
+      ];
+
     const { args: finalArgs, state } = prepared;
 
     const [content, artifacts] = convertCallToolResult({
@@ -472,15 +498,18 @@ export async function convertMcpTools(
   mcpTools: MCPTool[],
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
+  const parsedOptions = loadMcpToolsOptionsSchema.parse(options ?? {});
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
     additionalToolNamePrefix,
     outputHandling,
     defaultToolTimeout,
+    logLevel,
+    elicitation,
   } = {
     ...defaultLoadMcpToolsOptions,
-    ...options,
+    ...parsedOptions,
   };
 
   const initialPrefix = additionalToolNamePrefix
@@ -504,14 +533,19 @@ export async function convertMcpTools(
               client,
               serverName,
               tool,
-              options?.logLevel,
-              options?.elicitation
+              logLevel,
+              elicitation
             );
+
+            // Model-facing only: some providers reject an object schema
+            // without `properties`. Validation keeps the server's schema.
+            const schema = structuredClone(originalSchema);
+            schema.properties ??= {};
 
             return new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
-              schema: structuredClone(originalSchema),
+              schema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
               defaultConfig: defaultToolTimeout
@@ -520,7 +554,7 @@ export async function convertMcpTools(
               func: async (
                 args: ToolArguments,
                 _runManager?: CallbackManagerForToolRun,
-                config?: RunnableConfig
+                config?: ToolRunnableConfig
               ) => {
                 return _callTool({
                   invocation,
@@ -530,9 +564,9 @@ export async function convertMcpTools(
                   args,
                   config,
                   outputHandling,
-                  onProgress: options?.onProgress,
-                  beforeToolCall: options?.beforeToolCall,
-                  afterToolCall: options?.afterToolCall,
+                  onProgress: parsedOptions.onProgress,
+                  beforeToolCall: parsedOptions.beforeToolCall,
+                  afterToolCall: parsedOptions.afterToolCall,
                 });
               },
             });

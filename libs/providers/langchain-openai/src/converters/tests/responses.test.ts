@@ -1350,6 +1350,104 @@ describe("convertStandardContentMessageToResponsesInput (role-aware text parts)"
 });
 
 describe("convertMessagesToResponsesInput", () => {
+  it("preserves prompt cache breakpoints on converted content blocks", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Stable prefix",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+        {
+          type: "file",
+          source_type: "id",
+          id: "file_123",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect((result[0] as any).content).toEqual([
+      {
+        type: "input_text",
+        text: "Stable prefix",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+      {
+        type: "input_image",
+        image_url: "https://example.com/image.png",
+        detail: undefined,
+        prompt_cache_breakpoint: null,
+      },
+      {
+        type: "input_file",
+        file_id: "file_123",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+    ]);
+  });
+
+  it("applies prompt cache breakpoints to v1 standard input blocks only", () => {
+    const breakpoint = { prompt_cache_breakpoint: { mode: "explicit" } };
+    const messages = [
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Stable prefix", extras: breakpoint },
+          {
+            type: "image",
+            url: "https://example.com/image.png",
+            extras: breakpoint,
+          },
+          { type: "file", fileId: "file_123", extras: breakpoint },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "Earlier answer", extras: breakpoint }],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const result = convertMessagesToResponsesInput({
+      messages,
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect(result.map((item) => (item as any).content)).toEqual([
+      [
+        {
+          type: "input_text",
+          text: "Stable prefix",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "input_image",
+          detail: "auto",
+          image_url: "https://example.com/image.png",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "input_file",
+          file_id: "file_123",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ],
+      [{ type: "output_text", text: "Earlier answer", annotations: [] }],
+    ]);
+  });
+
   describe("Regression Tests", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
       const messages = [
@@ -1641,6 +1739,144 @@ describe("convertMessagesToResponsesInput", () => {
           output: "Simple string result",
         },
       ]);
+    });
+    it("converts a v1 image into native input_image output", () => {
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_img",
+          id: undefined,
+          output: [
+            {
+              type: "input_image",
+              detail: "auto",
+              image_url: "data:image/png;base64,AAA",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("converts a source_type image with text", () => {
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "text", text: "Read /a.png" },
+              {
+                type: "image",
+                source_type: "base64",
+                mime_type: "image/png",
+                data: "AAA",
+              },
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          { type: "input_text", text: "Read /a.png" },
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+        ],
+      });
+    });
+
+    it("keeps file-only tool content unchanged", () => {
+      const content = [
+        {
+          type: "file",
+          mimeType: "application/zip",
+          data: "AAA",
+        },
+      ];
+      const result = convertMessagesToResponsesInput({
+        messages: [new ToolMessage({ tool_call_id: "call_file", content })],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: JSON.stringify(content),
+      });
+    });
+
+    it("keeps an image without a source as JSON text", () => {
+      const empty = { type: "image", mimeType: "image/png" };
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "image", mimeType: "image/png", data: "AAA" },
+              empty,
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+          { type: "input_text", text: JSON.stringify(empty) },
+        ],
+      });
+    });
+
+    it("keeps non-image blocks as JSON text next to images", () => {
+      const file = { type: "file", mimeType: "application/zip", data: "BBB" };
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "image", mimeType: "image/png", data: "AAA" },
+              file,
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+          { type: "input_text", text: JSON.stringify(file) },
+        ],
+      });
     });
   });
 

@@ -22,7 +22,10 @@ import {
   formatToOpenAIToolChoice,
   _convertToOpenAITool,
 } from "../utils/tools.js";
-import { isReasoningModel } from "../utils/misc.js";
+import {
+  isReasoningModel,
+  normalizePromptCacheRetention,
+} from "../utils/misc.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAICallOptions,
@@ -42,6 +45,34 @@ type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
   "messages"
 >;
+
+const TOOL_IMAGE_HINT =
+  "Chat Completions does not support images in tool messages. " +
+  "Use the Responses API (`useResponsesApi: true`) to send images from tool results.";
+
+/** Points a 400 caused by a tool-result image at the Responses API. */
+function addToolImageHint(
+  error: unknown,
+  messages: OpenAIClient.Chat.ChatCompletionMessageParam[]
+) {
+  const hasToolImage = messages.some(
+    (message) =>
+      message.role === "tool" &&
+      Array.isArray(message.content) &&
+      message.content.some(
+        (part) => (part as { type: string }).type === "image"
+      )
+  );
+  if (
+    hasToolImage &&
+    error instanceof Error &&
+    "status" in error &&
+    error.status === 400
+  ) {
+    error.message = `${error.message}\n\n${TOOL_IMAGE_HINT}`;
+  }
+  return error;
+}
 
 /**
  * OpenAI Completions API implementation.
@@ -130,9 +161,19 @@ export class ChatOpenAICompletions<
         ? { modalities: this.modalities || options?.modalities }
         : {}),
       ...this.modelKwargs,
-      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
-      prompt_cache_retention:
-        options?.promptCacheRetention ?? this.promptCacheRetention,
+      prompt_cache_key:
+        options?.promptCacheKey ??
+        this.modelKwargs?.prompt_cache_key ??
+        this.promptCacheKey,
+      prompt_cache_retention: normalizePromptCacheRetention(
+        options?.promptCacheRetention ??
+          this.modelKwargs?.prompt_cache_retention ??
+          this.promptCacheRetention
+      ),
+      prompt_cache_options:
+        options?.promptCacheOptions ??
+        this.modelKwargs?.prompt_cache_options ??
+        this.promptCacheOptions,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
@@ -555,7 +596,7 @@ export class ChatOpenAICompletions<
         }
       } catch (e) {
         const error = wrapOpenAIClientError(e);
-        throw error;
+        throw addToolImageHint(error, request.messages);
       }
     });
   }

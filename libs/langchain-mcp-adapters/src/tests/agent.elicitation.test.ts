@@ -76,14 +76,14 @@ async function environment(toolCalls?: ToolCall[][]) {
   cleanups.push(() => server.close());
 
   const adapter = new MCPAdapter({
-    servers: { modern: { url: server.url, elicitation: true } },
+    servers: { modern: { url: server.url } },
   });
   cleanups.push(() => adapter.close());
 
   const agent = createAgent({
     model: new FakeToolCallingModel({
       toolCalls: toolCalls ?? [
-        [{ id: "c1", name: "ask", args: { label: "q" } }],
+        [{ id: "c1", name: "modern__ask", args: { label: "q" } }],
         [],
       ],
     }),
@@ -121,8 +121,8 @@ describe("answer targeting", () => {
   it("answers one parallel question without answering its sibling", async () => {
     const { agent, server, config } = await environment([
       [
-        { id: "a", name: "ask", args: { label: "alpha" } },
-        { id: "b", name: "ask", args: { label: "beta" } },
+        { id: "a", name: "modern__ask", args: { label: "alpha" } },
+        { id: "b", name: "modern__ask", args: { label: "beta" } },
       ],
       [],
     ]);
@@ -154,7 +154,7 @@ describe("answer targeting", () => {
 describe("multiple sequential rounds", () => {
   it("answers each question and replays the answered ones", async () => {
     const { agent, server, config } = await environment([
-      [{ id: "c1", name: "ask", args: { label: "q", rounds: 2 } }],
+      [{ id: "c1", name: "modern__ask", args: { label: "q", rounds: 2 } }],
       [],
     ]);
 
