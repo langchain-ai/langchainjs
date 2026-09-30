@@ -35,6 +35,7 @@ export { loadMcpTools, ToolException } from "./tools.js";
 export type { ToolHooks } from "./hooks.js";
 
 export type {
+  MCPElicitationContext,
   MCPElicitationHandler,
   MCPElicitationInterrupt,
   MCPElicitationResponses,
