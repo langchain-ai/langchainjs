@@ -9,14 +9,11 @@
     "build": "exit 0"
   },
   "exports": {
-    "./base.json": "./base.json",
-    "./typecheck.json": "./typecheck.json"
+    "./base.json": "./base.json"
   },
   "files": [
     "base.json",
     "env.d.ts",
-    "typecheck.json",
-    "vitest-matchers.d.ts",
-    "vitest-matchers.typecheck.d.ts"
+    "vitest-matchers.d.ts"
   ]
 }

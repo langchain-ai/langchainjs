@@ -20,12 +20,7 @@
     },
     "typecheck": {
       "dependsOn": ["^build:compile"],
-      "inputs": [
-        "src/**",
-        "tsconfig.json",
-        "tsconfig.typecheck.json",
-        "package.json"
-      ],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "outputs": []
     },
     "test:single": {
