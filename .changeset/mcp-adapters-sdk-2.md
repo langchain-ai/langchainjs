@@ -2,186 +2,66 @@
 "@langchain/mcp-adapters": major
 ---
 
-Rebuild the adapter on the stable MCP TypeScript SDK 2 client packages, negotiate
-the protocol automatically, and answer modern MCP elicitation with LangGraph
-interrupts.
+This release moves to MCP SDK 2, supports modern and legacy MCP servers in the same adapter, and lets servers ask users for input through LangGraph interrupts. It also changes tool names, configuration, and tool results. If you are upgrading from 1.x, review the changes below before updating.
 
-### Upgrading from 1.x
+See the [migration guide](https://docs.langchain.com/oss/javascript/migrate/langchain-mcp-adapters) for more information on migratimg.
 
-- **Elicitation pauses runs by default.** A modern server that asks for input
-  during a tool call now raises a LangGraph `interrupt()`, so the run stops until
-  it's resumed with `createMCPElicitationResume`. Set `elicitation: false` on a
-  server to keep the 1.x behavior (see "Elicitation through interrupts" below).
-- **Standard content blocks are always on.** 1.x defaulted
-  `useStandardContentBlocks` to `false`; 2.0 removes the option and always returns
-  standard blocks (details under "Content and callbacks").
-- **Tool errors come back as messages.** Called with a tool call, as `createAgent`
-  and LangGraph's `ToolNode` do, an MCP result with `isError` returns a
-  `ToolMessage` with `status: "error"` and the server's content instead of
-  throwing `ToolException`, so `toolRetryMiddleware` and `handleToolErrors` no
-  longer see server-reported errors. The server's error text always reaches the
-  model, and an error without text gets a one-line placeholder. Called with plain
-  arguments, the tool still throws `ToolException` with the MCP result on `result`.
-- **Tool names are prefixed with the server name by default.** `MCPAdapter`
-  names tools `{server}__{tool}`, even with a single server, unless
-  `prefixToolNameWithServerName` is set; 1.x defaulted it to `false`. Set
-  `prefixToolNameWithServerName: false` to keep 1.x names. `loadMcpTools` still
-  defaults to `false`.
-- **Duplicate tool names throw.** `listTools()` throws an `MCPClientError` when a
-  tool name appears more than once in the flattened list, which now needs
-  `prefixToolNameWithServerName: false` across servers or one server listing a
-  name twice; pick tools from `listToolsets()` for the latter.
-- **The model no longer sees `structuredContent` or `_meta` beside a single text
-  block.** 1.x serialized them into the content; 2.0 sends only the text and keeps
-  them in the artifact (details under "Content and callbacks").
-- **Client API.** `new MCPAdapter({ servers })` is canonical; `MultiServerMCPClient`,
-  `mcpServers` (or a flat server map), `initializeConnections()` and the
-  `ClientConfig` type (now `MCPAdapterConfig`) still work as deprecated aliases.
-  `getTools()` becomes `listTools()` and stays as a deprecated alias. Read configuration through
-  `adapter.config.servers` — typed `ResolvedMCPAdapterConfig` — which no longer
-  exposes `mcpServers`.
-- **SDK packages.** Import from `@modelcontextprotocol/client`, not
-  `@modelcontextprotocol/sdk`, if you pass an SDK client to `loadMcpTools` or call
-  `getClient`. Server packages stay development-only. The `@langchain/langgraph`
-  peer rises to `^1.4.13`.
-- **Transports.** `SSEConnection` accepts only legacy SSE; use
-  `StreamableHTTPConnection` for HTTP or `Connection` for any transport. Stdio
-  `encoding` is unsupported, retry counts must be nonnegative integers and delays
-  nonnegative. HTTP and SSE `reconnect` require `mode: "legacy"`, and only legacy
-  mode resumes a dropped HTTP stream: `auto` and `modern` connections don't,
-  where 1.x did by default.
-- **Authentication.** `@modelcontextprotocol/client` 2.2 or later is required.
-  Once an `authProvider` has a token it replaces a configured `Authorization`
-  header (1.x sent the configured header instead); until then the header is
-  sent, so a static API key can fall back to OAuth.
-- **Zod 4.** Configuration rejects unknown server and top-level keys (1.x
-  dropped them), conflicting options, unknown output-handling keys, incompatible
-  fields and empty server maps with Zod errors; hook argument
-  overrides must be objects. Tool schemas now preserve the server's original JSON
-  Schema through the MCP core schemas and SDK validator, so automatic
-  simplification is gone.
-- **Content and callbacks.** `useStandardContentBlocks` is gone — tool content is
-  always standard LangChain blocks, so image and audio consumers read `data` and
-  `mimeType`, while artifact-routed blocks keep their MCP format, including through
-  `afterToolCall`. A `resource_link` becomes a standard `file` block whose `url`
-  is the link's URI and whose `mimeType` replaces 1.x's `mime_type`, with `uri`,
-  `name` and `title` in `metadata`; the original block stays in the artifact as
-  `mcp_content`. A single text block is now plain string content even when the
-  result carries `structuredContent` or `_meta`, which 1.x serialized into the
-  content with the text; read them from the `mcp_structured_content` and
-  `mcp_meta` artifacts. Embedded resource URIs are no longer fetched while a
-  result is converted; call `readResource()` for their contents. Hook `state` is typed `unknown`; narrow before use.
-  `readResource()` preserves SDK content metadata, so narrow it with
-  `"text" in content` or `"blob" in content`. Notification and progress callbacks
-  move into each server's configuration, where `onInitialized` and explicit SSE
-  fallback require legacy mode. `onRootsListChanged` is removed: roots
-  notifications come from clients, so that observer never implemented them.
-- **Errors.** Branded `ToolException` and `MCPClientError` require
-  `@langchain/core ^1.2.6`. Both preserve causes — a thrown tool failure keeps the
-  MCP error response in `result` — and must be narrowed with `isToolException()` or
-  `isInstance()`, since name-only lookalikes no longer match across module copies.
-- **Logging.** The internal `debug` dependency is gone, so
-  `DEBUG=@langchain/mcp-adapters:*` emits nothing. Use `onConnectionError` and the
-  per-server notification callbacks.
+### Update your client code
 
-### Protocol negotiation
+Use `MCPAdapter` for new code:
 
-Connections negotiate their revision when `mode` is omitted, so mixed modern and
-legacy servers need no declaration in advance. A server that ignores the probe
-instead of rejecting it falls back only after the request timeout, and an HTTP
-probe that times out or answers 403/5xx fails the connection; declare
-`mode: "legacy"` for those. `mode: "modern"` forbids fallback;
-`mode: "legacy"` skips probing and enables the legacy callbacks. SSE always speaks
-legacy and rejects `mode: "modern"`, and with it `elicitation` and `logLevel`,
-which only a modern server can serve; an `auto` HTTP connection that falls back
-to SSE drops them instead. In `auto` mode only HTTP 404/405 may fall back to
-SSE, while `mode: "legacy"` keeps 1.x's `automaticSSEFallback` on any 4xx;
-authentication and network failures stay errors.
-`setLoggingLevel()` remains legacy-only.
+| 1.x API                           | Recommended API        |
+| --------------------------------- | ---------------------- |
+| `MultiServerMCPClient`            | `MCPAdapter`           |
+| `mcpServers` or a flat server map | `{ servers: { ... } }` |
+| `getTools(...)`                   | `listTools(...)`       |
+| `initializeConnections()`         | `listToolsets()`       |
+| `ClientConfig`                    | `MCPAdapterConfig`     |
 
-### Authentication
+These older APIs still work but are deprecated. `listTools()` returns a flat list of executable LangChain tools; `listToolsets()` groups them by server. Read configuration from `adapter.config.servers`; the returned snapshot no longer has `mcpServers`, and changing it does not reconfigure the adapter.
 
-`authProvider` accepts the SDK's `AuthProvider` (`{ token, onUnauthorized? }`)
-as well as an `OAuthClientProvider`. To finish an OAuth redirect, call the
-SDK's `transport.finishAuth(params)` with the same provider; the adapter reads
-the saved tokens through the provider. A connection that fails
-on provider auth throws an `MCPClientError` whose `cause` is the SDK's
-`UnauthorizedError` (now exported) when a login is needed or an `AuthProvider`
-has no `onUnauthorized`, or an HTTP 401 error when credentials are still
-rejected after `onUnauthorized` or a refresh; a tool call that hits the same
-rejection fails with a `ToolException` instead. Servers that failed on
-authentication are retried on the next discovery.
+The adapter requires `@langchain/core ^1.2.6` and `@langchain/langgraph ^1.4.13`. It includes the MCP SDK client. If you create an SDK client yourself for `loadMcpTools`, switch your client imports from `@modelcontextprotocol/sdk` to `@modelcontextprotocol/client` (or `@modelcontextprotocol/client/stdio` for the stdio transport). `getClient()` now returns an SDK 2 client.
 
-### Elicitation through interrupts
+### Tool names and configuration
 
-Modern in-band elicitation is enabled by default. When a modern `tools/call`
-returns an `input_required` result, the adapter raises each round as a LangGraph
-`interrupt()` whose value is an `MCPElicitationInterrupt`
-(`type: "mcp_elicitation"`, `server`, `tool`, `arguments` and a `requests`
-record keyed by the server's request keys), and you resume with
-`createMCPElicitationResume(interrupt, responses)`. Set `elicitation: false` on
-an individual modern server to opt out. A checkpointer is only required when a
-tool actually elicits, while legacy servers answer elicitation through the new
-`onElicitation` callback. Under `toolRetryMiddleware`, elicitation needs
-`langchain` 1.5.15 or later; earlier versions treat the interrupt as a tool
-failure.
+- **Tool names now include the server name by default**, even with one server: `search` on a server named `docs` becomes `docs__search`. Update code, prompts, and saved examples that refer to tool names, or set `prefixToolNameWithServerName: false` to keep unprefixed names. The standalone `loadMcpTools()` helper keeps its previous default of `false`.
+- **Configuration is validated with Zod 4.** Unknown adapter and server options, conflicting transport settings, empty server maps, and invalid keys now throw. Remove `useStandardContentBlocks`, `onRootsListChanged`, `onCancelled`, and stdio `encoding`.
+- **Move notification and progress callbacks into each server's configuration:**
+  `onMessage`, `onProgress`, `onInitialized`, `onPromptsListChanged`,
+  `onResourcesListChanged`, `onResourcesUpdated`, and `onToolsListChanged`.
+  `beforeToolCall`, `afterToolCall`, and `onConnectionError` remain top-level `MCPAdapter` options.
 
-Resuming replays the tool call from its first round, so the server is asked
-again before it is answered: N questions cost O(N^2) requests, and servers and
-hooks must be replay-safe. `beforeToolCall` runs once per execution, replays
-included, and the adapter promises no exactly-once effects. Each resume gets a
-fresh continuation from that replay, so a pause is not limited by any
-`requestState` lifetime: the one issued before the pause may expire while the
-graph waits.
+### Connections and authentication
 
-Because the call replays, a server that asks something different the second
-time is answered with what the human said the first time; like the Python
-adapter, the adapter does not compare the two. A resume is parsed against the
-question now being asked — exactly the server's keys, each answer against that
-question's requested schema — so a missing, unexpected or malformed answer
-fails the call rather than re-asking, since the caller resuming the graph is
-code and not the human who filled the form.
+Each server negotiates its protocol independently. Omit `mode` to use `"auto"`, set `mode: "modern"` to require the modern protocol, or set `mode: "legacy"` to skip probing a known legacy server.
 
-Rounds go through the SDK's own manual input-required path (the per-call
-`allowInputRequired` request option), so `Mcp-Param-*` mirroring and descriptor
-forwarding are unchanged; the output schema is withheld from the rounds, whose
-`input_required` results carry no structured content, and the terminal result
-is validated against it instead. The elicitation capability is advertised per
-request rather than at initialization, so an `auto` connection that negotiates
-legacy never advertises it. Sampling and roots requests are refused by name,
-state-only responses are refused instead of polled, and calling such a tool
-outside a graph — or inside one with no checkpointer — explains how to answer
-it instead of hanging.
+- **Legacy connection options need `mode: "legacy"`.** This applies to `onInitialized`, `onElicitation`, `automaticSSEFallback`, and HTTP/SSE `reconnect`. HTTP connections in `"auto"` or `"modern"` mode no longer resume a dropped response stream. Use legacy mode if you depend on that behavior.
+- **SSE remains a legacy transport.** It rejects `mode: "modern"`, `elicitation`, and `logLevel`. The `SSEConnection` type now describes SSE only; use `StreamableHTTPConnection` for HTTP or `Connection` for any transport. Automatic HTTP-to-SSE fallback in `"auto"` mode is limited to HTTP 404 and 405.
+- **`authProvider` accepts token providers as well as OAuth providers.** Use `{ token, onUnauthorized? }` for tokens your app manages. Once a provider has a token, it takes precedence over a configured `Authorization` header; until then, the configured header is sent. Complete OAuth redirects through the SDK's `transport.finishAuth(params)` using the same provider storage.
+- **Authentication failures can recover.** Discovery retries an authentication failure on the next call, including with `onConnectionError: "ignore"`. Inspect the `MCPClientError` cause for `UnauthorizedError` (now exported) or an HTTP 401 error.
+- **Tool catalogs are kept separate for different headers and provider objects.** Recreate the adapter if you switch accounts behind the same provider object. Method-level auth overrides apply to all of the adapter's HTTP/SSE servers, even when you select tools from just one server.
 
-### Results, discovery and connections
+See the [connections guide](https://docs.langchain.com/oss/javascript/langchain/mcp/connections) and [authentication guide](https://docs.langchain.com/oss/javascript/langchain/mcp/auth).
 
-Structured output, resource provenance and protocol metadata survive in artifacts;
-`ToolMessage`, `Command` and graph interrupts are returned rather than flattened.
-Every `callTool` forwards the discovered descriptor as `toolDefinition`, so
-`Mcp-Param-*` mirroring and output-schema validation use the definition the
-LangChain tool schema was built from. `listToolsets()` groups executable tools by
-server. Catalogs and connections are isolated by effective headers and auth
-provider identity, so recreate the adapter when switching the account behind a
-provider. `listTools([], { cacheMode: "refresh" | "bypass" })` drives the SDK's
-discovery cache, and a failed refresh restores the previous catalog rather than
-discarding a working one. `listResources()` and `listResourceTemplates()` now
-throw a server's error, where 1.x logged it and returned `[]`; only a server
-without resource templates still lists them as `[]`. `close()` also aborts in-flight
-requests, pending reconnects and a discovery still opening servers; the adapter
-stays reusable.
+### Servers can pause a run to ask for input
 
-### Server interactions
+Modern MCP elicitation is enabled by default. When a tool asks the user to fill in a form or visit a URL, the adapter pauses the run with a LangGraph interrupt. Use a checkpointer and resume with `createMCPElicitationResume(interrupt, responses)` inside a LangGraph `Command`. A tool needs a checkpointer only if it asks for input; otherwise direct invocation still works. Set `elicitation: false` on a server to opt out. Legacy servers can use the new per-server `onElicitation` callback with `mode: "legacy"`.
 
-Per-server `resourceSubscriptions`, `logLevel` and `elicitation`, each rejected
-where the protocol cannot serve them. `onCancelled` is removed: the SDK exposes
-no seam that observes `notifications/cancelled` without displacing its own
-dispatch, and replacing that handler stopped the SDK aborting the request it
-was told about.
+Resuming runs the tool again from the beginning, including `beforeToolCall`. Make sure repeating that work will not duplicate side effects. Answers must cover every request in the interrupt and match the requested form schema. Sampling and roots requests are not handled through these interrupts.
 
-### Fixes
+### Tool results and errors
 
-A stdio `restart` that exhausts its attempts now reports to an
-`onConnectionError` function instead of failing silently. An `Authorization` header
-configured alongside an `authProvider` is no longer joined with the provider's
-token into a value servers reject. An `onProgress` callback that
-throws no longer fails a tool call that already completed.
+- **Multimodal content uses standard LangChain blocks.** Images and audio expose `data` and `mimeType`; resource links become `file` blocks with `url`, `mimeType`, and resource metadata. Update consumers of `image_url`, `mime_type`, or `source_type`. Blocks routed to the artifact keep their MCP format, including when passed to `afterToolCall`.
+- **Structured output and protocol metadata stay in the artifact.** Read `structuredContent` from the `mcp_structured_content` entry and `_meta` from `mcp_meta`. A single text block now becomes plain string content even when those fields are present, so they are no longer included in what the model sees. Original resource blocks and content metadata are retained in `mcp_content` entries when conversion would otherwise lose them.
+- **Resource conversion no longer fetches URIs.** Call `readResource()` explicitly when you need to fetch a resource. When routed to model content, embedded text resources become text blocks; embedded binary resources become image, audio, or file blocks according to their MIME type. `readResource()` preserves SDK metadata; narrow its results with `"text" in content` or `"blob" in content`.
+- **Server-reported tool errors now reach the agent as error messages.** When a tool is invoked with a tool call, an MCP result with `isError` returns a `ToolMessage` with `status: "error"`. Its error text reaches the model even if `outputHandling` routes text to the artifact. These results no longer trigger exception-based handling such as `toolRetryMiddleware` or `handleToolErrors`. If you invoke the tool with plain arguments, it still throws `ToolException`, with the MCP response in `error.result`.
+- **Other tool failures still throw.** Transport and validation errors retain their underlying cause. Use `isToolException(error)` and `MCPClientError.isInstance(error)` to recognize adapter errors across module copies; objects with a matching `name` alone no longer pass these checks.
+- **Hooks preserve `ToolMessage` and LangGraph `Command` results.** They are no longer flattened or rejected. Hook `state` is now typed `unknown`; narrow it before use, and return an object when overriding arguments. `afterToolCall` receives successful results only.
+
+### Discovery, cleanup, and diagnostics
+
+- `listTools([], { cacheMode: "refresh" })` refreshes discovery; `cacheMode: "bypass"` skips the cache. A failed refresh keeps previously returned tools usable.
+- Keep the adapter open while using its tools, then await `close()`. Closing stops active discovery and pending reconnects and clears connections and caches. You can reuse the adapter by discovering fresh tools afterwards.
+- `listResources()` and `listResourceTemplates()` now surface server errors instead of silently returning empty lists. A server that does not implement resource-template listing still contributes `[]`.
+- `DEBUG=@langchain/mcp-adapters:*` no longer emits logs; use `onConnectionError` and the per-server notification callbacks.
+- Exhausted background stdio restart attempts report through an `onConnectionError` callback. A throwing or rejecting `onProgress` callback no longer fails the tool call.
