@@ -2186,6 +2186,20 @@ describe("profile.fileMimeTypes", () => {
     );
   });
 
+  // "o1" and "o3" are valid bare JS identifiers, so the generated profiles.ts
+  // emits their keys unquoted (`o1: {`) unlike every other model name — a
+  // shape worth covering directly since it has tripped up tooling before.
+  test.each(["o1", "o3"])(
+    "ChatOpenAIResponses includes file MIME types for %s",
+    (model) => {
+      const chatModel = new ChatOpenAIResponses({ model, apiKey: "test" });
+      expect(chatModel.profile.fileMimeTypes).toEqual(
+        PROFILES[model].fileMimeTypes
+      );
+      expect(chatModel.profile.fileMimeTypes).toBeDefined();
+    }
+  );
+
   test("omits file MIME types for models without file inputs", () => {
     const model = new ChatOpenAIResponses({
       model: "gpt-3.5-turbo",

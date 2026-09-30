@@ -414,6 +414,7 @@ const PROFILES: Record<string, ModelProfile> = {
     pdfToolMessage: true,
     imageToolMessage: true,
     toolChoice: true,
+    fileMimeTypes: FILE_MIME_TYPES,
   },
   "gpt-4o": {
     maxInputTokens: 128000,
@@ -964,6 +965,7 @@ const PROFILES: Record<string, ModelProfile> = {
     pdfToolMessage: true,
     imageToolMessage: true,
     toolChoice: true,
+    fileMimeTypes: FILE_MIME_TYPES,
   },
   "o3-pro": {
     maxInputTokens: 200000,
