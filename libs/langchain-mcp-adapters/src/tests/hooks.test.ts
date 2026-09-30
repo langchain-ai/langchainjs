@@ -383,7 +383,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         tags: [],
         metadata: {},
         recursionLimit: 25,
-        runName: "test_tool",
+        runName: "http__test_tool",
       });
     } finally {
       await client.close();
@@ -433,7 +433,9 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
 
   test("hooks have access to state and runtime with LangGraph", async () => {
     const model = new FakeToolCallingModel({
-      toolCalls: [[{ name: "test_tool", args: { input: "orig" }, id: "1" }]],
+      toolCalls: [
+        [{ name: "http__test_tool", args: { input: "orig" }, id: "1" }],
+      ],
     });
     const { baseUrl } = await servers.createHTTP("http-interceptor", {
       testHeaders: true,
@@ -481,7 +483,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       for (const runtime of runtimeCalls) {
         expect(runtime as Record<string, unknown>).toMatchObject({
           toolCallId: "1",
-          toolCall: { name: "test_tool", id: "1" },
+          toolCall: { name: "http__test_tool", id: "1" },
         });
       }
 

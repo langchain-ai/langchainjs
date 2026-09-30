@@ -30,7 +30,7 @@ const adapter = new MCPAdapter({
 
 try {
   const tools = await adapter.listTools();
-  const echo = tools.find((tool) => tool.name === "echo");
+  const echo = tools.find((tool) => tool.name === "local__echo");
   if (!echo) throw new Error("The server did not provide echo");
 
   const result = await echo.invoke({ message: "Hello MCP" });
@@ -52,7 +52,6 @@ Omit `mode` to let the SDK negotiate with each server automatically:
 
 ```ts
 const adapter = new MCPAdapter({
-  prefixToolNameWithServerName: true,
   servers: {
     modern: { url: "https://example.com/mcp" },
     legacy: {
@@ -63,7 +62,10 @@ const adapter = new MCPAdapter({
 });
 ```
 
-Prefix names when servers expose identically named tools. Set `mode: "legacy"`
+Tool names are prefixed with their server's name (`modern__echo`), even with a
+single server, so adding a server never renames the tools you already have. Set
+`prefixToolNameWithServerName: false` to keep raw names. `listTools()` throws an
+`MCPClientError` if two tools in the flattened result share a name. Set `mode: "legacy"`
 to skip probing and enable legacy options such as `onElicitation` and
 `onInitialized`. Set `mode: "modern"` to require MCP revision
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
@@ -74,6 +76,10 @@ without fallback. SDK 2 can serve either protocol.
 Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
+
+`close()` cancels active discovery before it can open remaining servers, even
+when connection errors are ignored or handled asynchronously. The adapter can
+be reused afterwards; a later discovery opens fresh connections.
 
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
 the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
@@ -90,9 +96,15 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 `mimeType`; artifact-routed blocks retain their MCP representation.
 `outputHandling` controls what reaches the model versus the tool artifact.
 
+A server-reported error (`isError`) reaches the model as a `ToolMessage` with
+`status: "error"`, even under `wrapToolCall` middleware. The server's error
+text always reaches the model; its other content follows `outputHandling`.
+Invoked with plain arguments rather than a tool call, the tool throws a
+`ToolException` whose `result` is the MCP result.
+
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
 [hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
-for argument and result hooks.
+for argument and result hooks. `afterToolCall` sees successful results only.
 
 ## Authentication
 
@@ -115,8 +127,7 @@ until then the header is sent.
 
 - [Examples](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples): local servers, mixed modes, agents and hooks.
 
-`MultiServerMCPClient` and `mcpServers` input remain deprecated compatibility APIs.
-Use `MCPAdapter` and `servers` for new code. Replace `getTools()` with `listTools()`
-when upgrading from adapter 1.x.
+`MultiServerMCPClient`, `getTools()` and `mcpServers` input remain deprecated
+compatibility APIs. Use `MCPAdapter`, `listTools()` and `servers` for new code.
 
 MIT licensed.
