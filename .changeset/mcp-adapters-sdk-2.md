@@ -4,7 +4,7 @@
 
 This release moves to MCP SDK 2, supports modern and legacy MCP servers in the same adapter, and lets servers ask users for input through LangGraph interrupts. It also changes tool names, configuration, and tool results. If you are upgrading from 1.x, review the changes below before updating.
 
-See the [migration guide](https://docs.langchain.com/oss/javascript/migrate/langchain-mcp-adapters) for more information on migratimg.
+See the [migration guide](https://docs.langchain.com/oss/javascript/migrate/langchain-mcp-adapters) for more information on migrating.
 
 ### Update your client code
 
@@ -54,8 +54,8 @@ Resuming runs the tool again from the beginning, including `beforeToolCall`. Mak
 - **Multimodal content uses standard LangChain blocks.** Images and audio expose `data` and `mimeType`; resource links become `file` blocks with `url`, `mimeType`, and resource metadata. Update consumers of `image_url`, `mime_type`, or `source_type`. Blocks routed to the artifact keep their MCP format, including when passed to `afterToolCall`.
 - **Structured output and protocol metadata stay in the artifact.** Read `structuredContent` from the `mcp_structured_content` entry and `_meta` from `mcp_meta`. A single text block now becomes plain string content even when those fields are present, so they are no longer included in what the model sees. Original resource blocks and content metadata are retained in `mcp_content` entries when conversion would otherwise lose them.
 - **Resource conversion no longer fetches URIs.** Call `readResource()` explicitly when you need to fetch a resource. When routed to model content, embedded text resources become text blocks; embedded binary resources become image, audio, or file blocks according to their MIME type. `readResource()` preserves SDK metadata; narrow its results with `"text" in content` or `"blob" in content`.
-- **Server-reported tool errors now reach the agent as error messages.** When a tool is invoked with a tool call, an MCP result with `isError` returns a `ToolMessage` with `status: "error"`. Its error text reaches the model even if `outputHandling` routes text to the artifact. These results no longer trigger exception-based handling such as `toolRetryMiddleware` or `handleToolErrors`. If you invoke the tool with plain arguments, it still throws `ToolException`, with the MCP response in `error.result`.
-- **Other tool failures still throw.** Transport and validation errors retain their underlying cause. Use `isToolException(error)` and `MCPClientError.isInstance(error)` to recognize adapter errors across module copies; objects with a matching `name` alone no longer pass these checks.
+- **Server-reported failures return an error message.** When an MCP server returns a tool result with `isError`, the adapter returns a `ToolMessage` with `status: "error"` for an agent's tool call. Direct invocation with plain arguments still throws `ToolException`, with the MCP response in `error.result`.
+- **Connection and validation failures still throw.** Network errors and invalid tool inputs or outputs raise exceptions. Read the exception's `message` for details; `cause` is not always set.
 - **Hooks preserve `ToolMessage` and LangGraph `Command` results.** They are no longer flattened or rejected. Hook `state` is now typed `unknown`; narrow it before use, and return an object when overriding arguments. `afterToolCall` receives successful results only.
 
 ### Discovery, cleanup, and diagnostics
