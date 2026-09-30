@@ -32,13 +32,6 @@ const toolResultSchema = z.union([
    */
   z.custom<ToolMessage>(ToolMessage.isInstance),
 ]);
-export type ToolResult = z.output<typeof toolResultSchema>;
-
-const toolCallResultSchema = toolCallRequestSchema.extend({
-  result: toolResultSchema,
-});
-
-export type ModifiedToolCallResult = z.output<typeof toolCallResultSchema>;
 
 export const toolCallResultModificationSchema = z.object({
   result: toolResultSchema,
