@@ -24,7 +24,7 @@ The adapter requires `@langchain/core ^1.2.6` and `@langchain/langgraph ^1.4.13`
 
 ### Tool names and configuration
 
-- **Tool names now include the server name by default**, even with one server: `search` on a server named `docs` becomes `docs__search`. Update code, prompts, and saved examples that refer to tool names, or set `prefixToolNameWithServerName: false` to keep unprefixed names. Check approval rules in particular: `humanInTheLoopMiddleware` and `createDeepAgent` match `interruptOn` keys by exact tool name without warning, so a rule for `delete_repo` stops pausing `github__delete_repo`. The standalone `loadMcpTools()` helper keeps its previous default of `false`.
+- **Tool names now include the server name by default**, even with one server: `search` on a server named `docs` becomes `docs__search`. Update code, prompts, and saved examples that refer to tool names, or set `prefixToolNameWithServerName: false` to keep unprefixed names. Update `interruptOn` approval rules to the prefixed names; a rule for `delete_repo` no longer matches `github__delete_repo`. The standalone `loadMcpTools()` helper keeps its previous default of `false`.
 - **Configuration is validated with Zod 4.** Unknown adapter and server options, conflicting transport settings, empty server maps, and invalid keys now throw. Remove `useStandardContentBlocks`, `onRootsListChanged`, `onCancelled`, and stdio `encoding`.
 - **Move notification and progress callbacks into each server's configuration:**
   `onMessage`, `onProgress`, `onInitialized`, `onPromptsListChanged`,
@@ -48,8 +48,6 @@ See the [connections guide](https://docs.langchain.com/oss/javascript/langchain/
 Modern MCP elicitation is enabled by default. When a tool asks the user to fill in a form or visit a URL, the adapter pauses the run with a LangGraph interrupt. Use a checkpointer and resume with `createMCPElicitationResume(interrupt, responses)` inside a LangGraph `Command`. A tool needs a checkpointer only if it asks for input; otherwise direct invocation still works. Set `elicitation: false` on a server to opt out. Legacy servers can use the new per-server `onElicitation` callback with `mode: "legacy"`.
 
 Resuming runs the tool again from the beginning, including `beforeToolCall`. Make sure repeating that work will not duplicate side effects. Answers must cover every request in the interrupt and match the requested form schema. Sampling and roots requests are not handled through these interrupts.
-
-Give each eliciting tool call its own graph task. `createAgent` does this by default; parallel calls in one hand-built `ToolNode` step, or under `createAgent({ version: "v1" })`, share a task, so LangGraph matches their answers by position. Dispatch those calls with `Send` instead.
 
 ### Tool results and errors
 
