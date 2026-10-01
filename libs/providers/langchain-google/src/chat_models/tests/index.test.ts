@@ -915,6 +915,36 @@ describe("Google Mock", () => {
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
     },
+    {
+      model: "gemini-3.5-flash-lite",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.6-flash",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.7-flash",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.8-flash",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.8-flash",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
   ];
   const testReasoning25Effort: TestReasoning[] = [
     {
@@ -1086,6 +1116,18 @@ describe("Google Mock", () => {
       reasoningEffort: "high",
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.8-flash",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.8-flash",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
     },
   ];
 
