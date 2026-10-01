@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.2.9
+
+### Patch Changes
+
+- [#11806](https://github.com/langchain-ai/langchainjs/pull/11806) [`241a046`](https://github.com/langchain-ai/langchainjs/commit/241a046a2b8750df1c18ad8a013c0a038c9c99d7) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): send thinkingLevel LOW instead of MINIMAL to Gemini 3 models that reject MINIMAL (e.g. gemini-3.7-flash, gemini-3.8-flash), so `thinkingBudget: 0` and `reasoningEffort: "minimal"` no longer 400
+
 ## 0.2.8
 
 ### Patch Changes
