@@ -14,6 +14,7 @@ import {
   _modelPrefersResponsesAPI,
 } from "../../utils/misc.js";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import PROFILES from "../profiles.js";
 
 const chatOpenAIApis = [
   {
@@ -2137,5 +2138,93 @@ describe("ChatOpenAI", () => {
       const result = await structured.invoke("plan something");
       expect(result).toEqual({ status: "ok", plan: { steps: ["a", "b"] } });
     });
+  });
+});
+
+describe("profile.fileMimeTypes", () => {
+  test("ChatOpenAIResponses includes file MIME types", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toEqual(
+      PROFILES["gpt-5.5"].fileMimeTypes
+    );
+    expect(model.profile.maxInputTokens).toBe(
+      PROFILES["gpt-5.5"].maxInputTokens
+    );
+  });
+
+  test("ChatOpenAICompletions omits file MIME types", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+  });
+
+  test("ChatOpenAI omits file MIME types without the Responses API", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.5", apiKey: "test" });
+    const { fileMimeTypes: _fileMimeTypes, ...expectedProfile } =
+      PROFILES["gpt-5.5"];
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+    expect(model.profile).toEqual(expectedProfile);
+  });
+
+  test("ChatOpenAI includes file MIME types with useResponsesApi", () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.5",
+      apiKey: "test",
+      useResponsesApi: true,
+    });
+    expect(model.profile.fileMimeTypes).toEqual(
+      PROFILES["gpt-5.5"].fileMimeTypes
+    );
+  });
+
+  test("ChatOpenAI includes file MIME types for Responses-preferring models", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.2-pro", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toEqual(
+      PROFILES["gpt-5.2-pro"].fileMimeTypes
+    );
+  });
+
+  // "o1" and "o3" are valid bare JS identifiers, so the generated profiles.ts
+  // emits their keys unquoted (`o1: {`) unlike every other model name — a
+  // shape worth covering directly since it has tripped up tooling before.
+  test.each(["o1", "o3"])(
+    "ChatOpenAIResponses includes file MIME types for %s",
+    (model) => {
+      const chatModel = new ChatOpenAIResponses({ model, apiKey: "test" });
+      expect(chatModel.profile.fileMimeTypes).toEqual(
+        PROFILES[model].fileMimeTypes
+      );
+      expect(chatModel.profile.fileMimeTypes).toBeDefined();
+    }
+  );
+
+  test("omits file MIME types for models without file inputs", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-3.5-turbo",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+  });
+
+  test("omits file MIME types for unknown models", () => {
+    const model = new ChatOpenAIResponses({
+      model: "not-a-real-model",
+      apiKey: "test",
+    });
+    expect(model.profile).toEqual({});
+  });
+
+  test("does not mutate the shared profile registry", () => {
+    // Completions strips fileMimeTypes from the instance's own profile...
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+    // ...but the shared static table still has it, proving nothing was
+    // deleted in place.
+    expect(PROFILES["gpt-5.5"].fileMimeTypes).toBeDefined();
   });
 });
