@@ -5,11 +5,19 @@ import { Index } from "@pinecone-database/pinecone";
 import { PineconeStore } from "../vectorstores.js";
 
 // Record the arguments PineconeStore constructs its Index with, while still
-// building a real Index.
+// building a real Index. Returning the instance from the implementation makes
+// `new Index(...)` give a real Index rather than one with the mock's prototype.
 vi.mock("@pinecone-database/pinecone", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@pinecone-database/pinecone")>();
-  return { ...actual, Index: vi.fn(actual.Index) };
+  return {
+    ...actual,
+    Index: vi.fn(function (
+      ...args: ConstructorParameters<typeof actual.Index>
+    ) {
+      return new actual.Index(...args);
+    }),
+  };
 });
 
 test("PineconeStore with external ids", async () => {
@@ -216,4 +224,41 @@ test("PineconeStore throws when config and index is passed", async () => {
         },
       })
   ).toThrow();
+});
+
+describe("PineconeStore.delete", () => {
+  const storeWithDeleteMany = () => {
+    const pineconeIndex = new Index(
+      { name: "indexName" },
+      { apiKey: "apiKey" }
+    );
+    vi.spyOn(pineconeIndex, "namespace").mockReturnValue(pineconeIndex);
+    const deleteMany = vi
+      .spyOn(pineconeIndex, "deleteMany")
+      .mockResolvedValue(undefined);
+    const store = new PineconeStore(new FakeEmbeddings(), { pineconeIndex });
+    return { store, deleteMany };
+  };
+
+  it("passes ids to deleteMany as { ids }, in batches of 1000", async () => {
+    const { store, deleteMany } = storeWithDeleteMany();
+    const ids = Array.from({ length: 1001 }, (_, i) => `id${i}`);
+
+    await store.delete({ ids });
+
+    expect(deleteMany).toHaveBeenCalledTimes(2);
+    expect(deleteMany).toHaveBeenNthCalledWith(1, { ids: ids.slice(0, 1000) });
+    expect(deleteMany).toHaveBeenNthCalledWith(2, { ids: ids.slice(1000) });
+  });
+
+  it("passes a filter to deleteMany as { filter }", async () => {
+    const { store, deleteMany } = storeWithDeleteMany();
+
+    await store.delete({ filter: { genre: { $eq: "drama" } } });
+
+    expect(deleteMany).toHaveBeenCalledTimes(1);
+    expect(deleteMany).toHaveBeenCalledWith({
+      filter: { genre: { $eq: "drama" } },
+    });
+  });
 });
