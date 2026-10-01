@@ -1058,7 +1058,6 @@ export class ChatGroq extends BaseChatModel<
       dangerouslyAllowBrowser: true,
       baseURL: params.baseUrl,
       timeout: params.timeout,
-      httpAgent: params.httpAgent,
       fetch: params.fetch,
       maxRetries: 0,
       defaultHeaders,
