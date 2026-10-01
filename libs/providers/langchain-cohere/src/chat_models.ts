@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Cohere, CohereClient } from "cohere-ai";
-import { ToolResult } from "cohere-ai/api/index.js";
 import {
   AIMessage,
   type BaseMessage,
@@ -135,7 +134,7 @@ function convertToDocuments(
 
 function convertMessageToCohereMessage(
   message: BaseMessage,
-  toolResults: ToolResult[]
+  toolResults: Cohere.ToolResult[]
 ): Cohere.Message {
   const getRole = (role: MessageType) => {
     switch (role) {
@@ -1147,7 +1146,7 @@ export class ChatCohere<
     );
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
     const abortableStream = async function* (
-      source: AsyncIterable<Record<string, unknown>>,
+      source: AsyncIterable<Cohere.StreamedChatResponse>,
       signal?: AbortSignal
     ) {
       for await (const chunk of source) {
