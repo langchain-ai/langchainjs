@@ -14,10 +14,6 @@ export {
   type ImportMapPluginOptions,
   importMapPlugin,
 } from "./plugins/import-map.ts";
-export {
-  type SecretPluginOptions,
-  lcSecretsPlugin,
-} from "./plugins/lc-secrets.ts";
 
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
