@@ -259,7 +259,9 @@ describe("answering a modern question", () => {
     const questions = questionsIn(await graph.getState(h.config));
     expect(questions).toHaveLength(1);
     // The question carries the effective arguments, never the server's state.
-    expect(JSON.stringify(questions)).toContain("effective");
+    expect(questions[0].value).toHaveProperty("arguments", {
+      label: "effective",
+    });
     expect(JSON.stringify(questions)).not.toContain("opaque");
     expect(h.calls).toEqual(["effective"]);
     expect(h.before).toHaveBeenCalledTimes(1);
@@ -381,7 +383,7 @@ describe("rejecting what cannot be answered", () => {
 
     await expect(
       h.createGraph().invoke({ done: false }, h.config)
-    ).rejects.toThrow(/with a checkpointer/);
+    ).rejects.toThrow(/with a checkpointer.*No checkpointer set/);
     expect(h.calls).toHaveLength(1);
   });
 });
@@ -392,7 +394,7 @@ describe("invoking outside a graph", () => {
     const [tool] = await h.live.adapter.listTools();
 
     await expect(tool.invoke({ label: "original" })).rejects.toThrow(
-      /inside a LangGraph with a checkpointer/
+      /elicitation\. Called interrupt\(\) outside the context of a graph/
     );
     expect(h.calls).toHaveLength(1);
   });
@@ -878,6 +880,44 @@ describe("real stdio servers", () => {
       }
     }
   );
+
+  it("does not pause for a server configured with elicitation: false", async () => {
+    const adapter = new MCPAdapter({
+      servers: {
+        modern: {
+          transport: "stdio",
+          command: process.execPath,
+          args: [
+            "--import",
+            "tsx",
+            join(__dirname, "fixtures", "modern-stdio-server.ts"),
+          ],
+          elicitation: false,
+        },
+      },
+    });
+
+    try {
+      const [tool] = await adapter.listTools();
+      const State = Annotation.Root({ result: Annotation<string>() });
+      const graph = new StateGraph(State)
+        .addNode("call", async () => ({ result: await tool.invoke({}) }))
+        .addEdge(START, "call")
+        .addEdge("call", END)
+        .compile({ checkpointer: new MemorySaver() });
+      const config = { configurable: { thread_id: "elicitation-off" } };
+
+      // Without the capability the server refuses to ask, so the call fails
+      // instead of pausing, even though a checkpointer could hold an interrupt.
+      await expect(graph.invoke({ result: "" }, config)).rejects.toThrow(
+        /client capabilities do not declare the required capability/
+      );
+      const state = await graph.getState(config);
+      expect(state.tasks.flatMap((task) => task.interrupts ?? [])).toEqual([]);
+    } finally {
+      await adapter.close();
+    }
+  });
 });
 
 describe("refusing what an interrupt cannot carry", () => {

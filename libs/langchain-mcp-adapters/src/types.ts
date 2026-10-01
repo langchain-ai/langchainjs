@@ -15,31 +15,10 @@ import type {
   Progress,
   ResourceUpdatedNotificationParams,
 } from "@modelcontextprotocol/client";
-import type {
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-} from "@langchain/core/messages";
-import type { RunnableConfig } from "@langchain/core/runnables";
-import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema } from "./hooks.js";
 import { outputHandlingSchema } from "./content.js";
-export {
-  callToolResultContentTypes,
-  outputHandlingSchema,
-  type CallToolResultContentType,
-  type DetailedOutputHandling,
-  type OutputHandling,
-} from "./content.js";
-export type {
-  Command,
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-  RunnableConfig,
-  CommandParams,
-};
+export type { CallToolResultContentType, OutputHandling } from "./content.js";
 
 /**
  * Preserve the SDK-owned service and its prototype. Property checks validate
@@ -930,9 +909,6 @@ export type ResolvedSSEConnection = z.output<typeof SSEConnectionSchema>;
 /** Configuration for a URL-based Streamable HTTP or legacy SSE connection. */
 export type HTTPConnection = z.input<typeof HTTPConnectionSchema>;
 
-/** {@link HTTPConnection} with defaults applied. */
-export type ResolvedHTTPConnection = z.output<typeof HTTPConnectionSchema>;
-
 /** Union type for all supported MCP connection transports. */
 export type Connection = z.input<typeof ConnectionSchema>;
 
@@ -951,11 +927,6 @@ export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
  * Type for {@link Connection} with default values applied.
  */
 export type ResolvedConnection = z.output<typeof ConnectionSchema>;
-
-/**
- * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
- */
-export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
 
 export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .pick({

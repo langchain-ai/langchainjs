@@ -47,9 +47,6 @@
       "optional": false
     }
   },
-  "optionalDependencies": {
-    "extended-eventsource": "^2.1.0"
-  },
   "devDependencies": {
     "@langchain/core": "workspace:^",
     "@langchain/langgraph": "^1.4.13",
@@ -57,19 +54,14 @@
     "@langchain/tsconfig": "workspace:*",
     "@modelcontextprotocol/node": "^2.1.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@modelcontextprotocol/server": "^2.1.0",
-    "@modelcontextprotocol/server-legacy": "^2.1.0",
-    "@tsconfig/recommended": "^1.0.10",
+    "@modelcontextprotocol/server": "^2.2.0",
+    "@modelcontextprotocol/server-legacy": "^2.2.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.0",
     "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.4.2",
-    "dpdm": "^4.3.0",
-    "eventsource": "^5.1.1",
     "express": "^5.2.1",
     "langchain": "workspace:*",
-    "npm-run-all2": "^9.0.3",
-    "ts-node": "^10.9.2",
     "typescript": "~7.0.2",
     "vitest": "^4.1.11"
   },
