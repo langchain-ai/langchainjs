@@ -740,7 +740,10 @@ export interface ChatBedrockConverseCallOptions
  */
 export class ChatBedrockConverse
   extends BaseChatModel<ChatBedrockConverseCallOptions, AIMessageChunk>
-  implements ChatBedrockConverseInput
+  // The `profile` input names an AWS credentials profile and is only passed to
+  // `defaultProvider`; the `profile` getter inherited from `BaseChatModel`
+  // returns the model profile.
+  implements Omit<ChatBedrockConverseInput, "profile">
 {
   // Used for tracing, replace with the same name as your class
   static lc_name() {
