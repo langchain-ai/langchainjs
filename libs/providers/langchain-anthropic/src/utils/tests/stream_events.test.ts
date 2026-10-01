@@ -119,8 +119,10 @@ describe("convertAnthropicStream", () => {
       total_tokens: 143,
       input_token_details: { cache_creation: 0, cache_read: 0 },
     });
-    for (const event of events.filter((event) => event.usage)) {
-      expect(event.usage).not.toHaveProperty("cost");
+    for (const event of events) {
+      if ("usage" in event && event.usage) {
+        expect(event.usage).not.toHaveProperty("cost");
+      }
     }
   });
 
