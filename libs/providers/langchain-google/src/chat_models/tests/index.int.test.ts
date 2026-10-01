@@ -195,6 +195,18 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
+    model: "gemini-3.8-flash-tts",
+    testConfig: {
+      isTts: true,
+    }
+  },
+  {
+    model: "gemini-3.8-flash-lite-tts",
+    testConfig: {
+      isTts: true,
+    }
+  },
+  {
     model: "lyria-3-clip-preview",
     testConfig: {
       isAudio: true,
@@ -294,58 +306,9 @@ function expandAllModelInfo(): ModelInfo[] {
   return ret;
 }
 
-function wrapInWavHeader(
-  buffer: Buffer,
-  sampleRate = 24000
-): Buffer<ArrayBuffer> {
-  const numChannels = 1;
-  const bitsPerSample = 16;
-  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-  const blockAlign = (numChannels * bitsPerSample) / 8;
-  const dataSize = buffer.length;
-  const headerSize = 44;
-  const totalSize = headerSize + dataSize - 8;
-
-  const header = Buffer.alloc(headerSize);
-  let offset = 0;
-
-  // RIFF chunk
-  header.write("RIFF", offset);
-  offset += 4;
-  header.writeUInt32LE(totalSize, offset);
-  offset += 4;
-  header.write("WAVE", offset);
-  offset += 4;
-
-  // fmt sub-chunk
-  header.write("fmt ", offset);
-  offset += 4;
-  header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
-  offset += 4;
-  header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
-  offset += 2;
-  header.writeUInt16LE(numChannels, offset);
-  offset += 2;
-  header.writeUInt32LE(sampleRate, offset);
-  offset += 4;
-  header.writeUInt32LE(byteRate, offset);
-  offset += 4;
-  header.writeUInt16LE(blockAlign, offset);
-  offset += 2;
-  header.writeUInt16LE(bitsPerSample, offset);
-  offset += 2;
-
-  // data sub-chunk
-  header.write("data", offset);
-  offset += 4;
-  header.writeUInt32LE(dataSize, offset);
-  offset += 4;
-
-  return Buffer.concat([header, buffer]);
-}
-
 async function openFileCommon(
   block: ContentBlock.Multimodal.File,
+  now: number,
   testSeq: number,
   imageSeq: number
 ) {
@@ -355,7 +318,9 @@ async function openFileCommon(
   const buffer = Buffer.from(block.data as string, "base64");
   const fullMimeType = block.mimeType ?? "";
   const mimeType = fullMimeType.split(";")[0].trim().toLowerCase();
-  const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq}`;
+  const nowStr = now.toString();
+  const padSeq = ("000000"+imageSeq).substring(imageSeq.toString(10).length);
+  const basename = `langchain-gemini-test-${nowStr}-${testSeq}-${padSeq}`;
 
   let outBuffer = buffer;
   let ext = "bin";
@@ -363,15 +328,18 @@ async function openFileCommon(
   if (parts.length === 2) {
     ext = parts[1];
   }
-  if (mimeType === "audio/l16") {
-    ext = "wav";
-    outBuffer = wrapInWavHeader(buffer);
-  }
+  // if (mimeType === "audio/l16" && imageSeq === 0) {
+  //   ext = "wav";
+  //   outBuffer = wrapInWavHeader(buffer);
+  // }
 
   const filePath = path.join(os.tmpdir(), `${basename}.${ext}`);
   await fs.writeFile(filePath, outBuffer);
+  console.log("File logged to: ", filePath);
   if (mimeType.startsWith("audio/")) {
-    exec(`afplay "${filePath}"`);
+    if (mimeType !== "audio/l16") {
+      exec(`afplay "${filePath}"`);
+    }
   } else {
     exec(`open "${filePath}"`);
   }
@@ -2103,20 +2071,57 @@ describe.sequential.each(ttsModelInfo)(
       warnSpy.mockRestore();
     });
 
-    async function openFile(block: ContentBlock.Multimodal.File) {
-      await openFileCommon(block, testSeq, imageSeq++);
+    async function openFile(block: ContentBlock.Multimodal.File, optNow?: number) {
+      const now = optNow || Date.now();
+      await openFileCommon(block, now, testSeq, imageSeq++);
     }
 
-    async function handleResult(blocks: ContentBlock.Standard[]) {
+    async function handleResult(blocks: ContentBlock.Standard[], optNow?: number) {
       for (const block of blocks) {
         if (block.type === "file") {
-          await openFile(block as ContentBlock.Multimodal.File);
+          await openFile(block as ContentBlock.Multimodal.File, optNow);
         } else if (block.type === "text") {
           // no-op
         } else {
           // no-op
         }
       }
+    }
+
+    function promptToMessages(prompt: string): BaseMessage[] {
+      const ret: BaseMessage[] = [];
+
+      const promptLines = prompt.split("\n").map((line) => {
+        const t = line.trim();
+        if (t.match(/^[a-zA-Z]+:/)) {
+          return t;
+        } else {
+          return "";
+        }
+      });
+      const contentBlocks: ContentBlock.Text[] = promptLines.reduce((acc, val) => {
+        const ret = acc;
+        if (val.length > 0) {
+          const [speaker,text] = val.split(":", 2);
+          console.log('speaker,text',speaker, text);
+          ret.push({
+            type: "text",
+            text,
+            speechMetadata: {
+              speaker
+            }
+          });
+        }
+        return ret;
+      }, [] as ContentBlock.Text[]);
+      const humanMessage = new HumanMessage({
+        contentBlocks,
+      })
+      console.log('message', humanMessage);
+
+      ret.push(humanMessage);
+
+      return ret;
     }
 
     test("single", async () => {
@@ -2134,11 +2139,11 @@ describe.sequential.each(ttsModelInfo)(
         speechConfig: [
           {
             speaker: "Joe",
-            name: "Kore",
+            name: "Puck",
           },
           {
             speaker: "Jane",
-            name: "Puck",
+            name: "Kore",
           },
         ],
       });
@@ -2147,7 +2152,8 @@ describe.sequential.each(ttsModelInfo)(
         Joe: Hows it going today, Jane?
         Jane: Not too bad, how about you?
       `;
-      const res = await model.invoke(prompt);
+      const messages = promptToMessages(prompt);
+      const res = await model.invoke(messages);
       const content = res?.contentBlocks;
       await handleResult(content);
     });
@@ -2174,7 +2180,8 @@ describe.sequential.each(ttsModelInfo)(
         Joe: [Sighs and sounds tired] It has been a rough day.
         Joe: [Perks up] But the week should improve!
       `;
-      const res = await model.invoke(prompt);
+      const messages = promptToMessages(prompt);
+      const res = await model.invoke(messages);
       const content = res?.contentBlocks;
       await handleResult(content);
     });
@@ -2203,10 +2210,12 @@ describe.sequential.each(ttsModelInfo)(
         Jane: Well, I guess we should see about the outcome of this test, then.
         Joe: Wait, this is a test?
       `;
-      const res = await model.stream(prompt);
+      const messages = promptToMessages(prompt);
+      const res = await model.stream(messages);
+      const now = Date.now();
       for await (const chunk of res) {
         const content = chunk?.contentBlocks;
-        await handleResult(content);
+        await handleResult(content, now);
       }
     }, 60000);
   }
@@ -2275,8 +2284,8 @@ describe.sequential.each(audioModelInfo)(
       warnSpy.mockRestore();
     });
 
-    async function openFile(block: ContentBlock.Multimodal.File) {
-      await openFileCommon(block, testSeq, imageSeq++);
+    async function openFile(block: ContentBlock.Multimodal.File, optNow?: number) {
+      await openFileCommon(block, optNow, testSeq, imageSeq++);
     }
 
     async function handleResult(blocks: ContentBlock.Standard[]) {

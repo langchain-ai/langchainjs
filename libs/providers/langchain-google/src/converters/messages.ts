@@ -26,6 +26,27 @@ import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
 
 /**
+ * Extracts speechMetadata from a content block or message item if present.
+ * Returns an object with speechMetadata, or an empty object suitable for object spreading.
+ */
+function getSpeechMetadata(
+  source: ContentBlock
+): { speechMetadata: Gemini.SpeechMetadata } | Record<string, never> {
+  if (typeof source === "object" && source !== null) {
+    const src = source as Record<string, unknown>;
+    const speechMetadata =
+      src.speechMetadata ||
+      (typeof src.metadata === "object" &&
+        src.metadata !== null &&
+        (src.metadata as Record<string, unknown>).speechMetadata);
+    if (speechMetadata) {
+      return { speechMetadata: speechMetadata as Gemini.SpeechMetadata };
+    }
+  }
+  return {};
+}
+
+/**
  * Standard content block converter for Google Gemini API.
  * Converts deprecated Data content blocks to Gemini Part format.
  *
@@ -41,7 +62,10 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
   providerName: "ChatGoogle",
 
   fromStandardTextBlock(block: Data.StandardTextBlock): Gemini.Part {
-    return { text: block.text };
+    return {
+      text: block.text,
+      ...getSpeechMetadata(block),
+    };
   },
 
   fromStandardImageBlock(block: Data.StandardImageBlock): Gemini.Part {
@@ -422,19 +446,24 @@ function convertStandardVideoContentBlockToGeminiPart(
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
+  let part: Gemini.Part | null = null;
   switch (block.type) {
     case "text":
-      return { text: block.text };
+      part = { text: block.text };
+      break;
     case "image":
     case "audio":
     case "text-plain":
     case "file":
-      return convertStandardDataContentBlockToGeminiPart(block);
+      part = convertStandardDataContentBlockToGeminiPart(block);
+      break;
     case "video":
-      return convertStandardVideoContentBlockToGeminiPart(block);
+      part = convertStandardVideoContentBlockToGeminiPart(block);
+      break;
     default:
       return null;
   }
+  return part ? { ...part, ...getSpeechMetadata(block) } : null;
 }
 
 /**
@@ -491,7 +520,7 @@ function convertStandardContentMessageToGeminiContent(
   contentBlocks.forEach((block: ContentBlock.Standard) => {
     const contentBlock =
       (message.additional_kwargs
-        .originalTextContentBlock as ContentBlock.Standard) || block;
+        ?.originalTextContentBlock as ContentBlock.Standard) || block;
 
     // Filter out server-side media processing steps on replay
     const rawBlock = contentBlock as unknown as Record<string, unknown>;
@@ -843,11 +872,19 @@ function convertLegacyContentMessageToGeminiContent(
         ) {
           continue;
         } else if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
+          parts.push({
+            text: item.text,
+            ...getSpeechMetadata(item),
+          });
         } else if (isDataContentBlock(item)) {
-          parts.push(
-            convertToProviderContentBlock(item, geminiContentBlockConverter)
+          const part = convertToProviderContentBlock(
+            item,
+            geminiContentBlockConverter
           );
+          parts.push({
+            ...part,
+            ...getSpeechMetadata(item),
+          });
         } else if (item?.type === "functionCall") {
           const { type, functionCall, ...etc } = item;
           parts.push({
@@ -966,6 +1003,7 @@ export const convertMessagesToGeminiContents: Converter<
     // const content: Gemini.Content | null = convertContentMessageToGeminiContent(message, messages);
     const content: Gemini.Content | null = iife(() => {
       const outputVersion =
+        message.response_metadata &&
         "output_version" in message.response_metadata
           ? (message.response_metadata?.output_version as string)
           : "v0";

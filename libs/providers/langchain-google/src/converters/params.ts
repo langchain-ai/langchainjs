@@ -185,6 +185,15 @@ export function getModelVersion(model: string): string {
 }
 
 /**
+ * Returns the model version as a value that can be compared numerically.
+ * @param model
+ */
+export function getModelVersionValue(model: string): number {
+  const version = getModelVersion(model) ?? "";
+  return parseFloat(version);
+}
+
+/**
  * Returns the model level from a Gemini model name.
  * e.g. "gemini-2.5-flash" → "flash", "gemini-2.5-flash-lite" → "flash-lite"
  */
@@ -308,6 +317,16 @@ export function convertFieldsToThinkingConfig(
   return thinkingConfig;
 }
 
+export function speechConfigVersion(model: string): number {
+  const modelVersion = getModelVersionValue(model);
+  if (modelVersion < 3.8){
+    return 1;
+  } else {
+    // Starting with version 3.8
+    return 2;
+  }
+}
+
 /**
  * Builds the `speechConfig` object for the Gemini `generationConfig`,
  * normalising the user-friendly simplified forms into the wire format.
@@ -317,6 +336,7 @@ export function convertFieldsToThinkingConfig(
  *          when no speech config was provided.
  */
 export function convertFieldsToSpeechConfig(
+  model: string,
   fields: ChatGoogleFields
 ): Gemini.SpeechConfig | undefined {
   const config: Gemini.SpeechConfig | SimplifiedSpeechConfig | undefined =
@@ -366,13 +386,22 @@ export function convertFieldsToSpeechConfig(
 
   if (typeof voice === "string") {
     // They just provided the prebuilt voice configuration name. Use it.
-    ret = {
-      voiceConfig: {
-        prebuiltVoiceConfig: {
-          voiceName: voice,
+    const version = speechConfigVersion(model);
+    if (version === 1){
+      ret = {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: voice,
+          },
         },
-      },
-    };
+      };
+    } else {
+      ret = {
+        voiceConfig: {
+          voice: voice,
+        }
+      }
+    }
   } else {
     // This is multi-speaker, so we have speaker/name pairs
     // If we have just one (why?), turn it into an array for the moment
