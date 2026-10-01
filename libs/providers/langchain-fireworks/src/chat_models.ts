@@ -6,6 +6,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   ChatOpenAICompletions,
+  type BaseChatOpenAIFields,
   type ChatOpenAICallOptions,
   type OpenAIChatInput,
   type OpenAIClient,
@@ -27,6 +28,8 @@ type FireworksUnsupportedCallOptions = "functions" | "function_call";
 export interface ChatFireworksInput
   extends
     Partial<Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>>,
+    // `configuration` moved from OpenAIChatInput to BaseChatOpenAIFields.
+    Pick<BaseChatOpenAIFields, "configuration">,
     BaseChatModelParams {
   /**
    * Prefer `apiKey`.
@@ -183,6 +186,11 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
     delete request.presence_penalty;
     delete request.logit_bias;
     delete request.functions;
+
+    // Narrow the union so each call matches one of super's overloads.
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
 
     return super.completionWithRetry(request, options);
   }
