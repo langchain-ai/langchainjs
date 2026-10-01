@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { expect } from "vitest";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { RunnableLambda } from "@langchain/core/runnables";
