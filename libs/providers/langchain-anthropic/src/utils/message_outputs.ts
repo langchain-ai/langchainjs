@@ -33,7 +33,9 @@ export function _mergeStreamUsage<T extends object>(
 }
 
 export function _makeMessageChunkFromAnthropicEvent(
-  data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
+  data:
+    | Anthropic.Messages.RawMessageStreamEvent
+    | Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
@@ -68,7 +70,7 @@ export function _makeMessageChunkFromAnthropicEvent(
     const { input_tokens, output_tokens, ...usage } = deltaUsage;
     const usageMetadata = buildUsageMetadata(deltaUsage);
     const responseMetadata = iife(() => {
-      const output = {};
+      const output: Record<string, unknown> = {};
       if ("context_management" in data.delta) {
         output["context_management"] = data.delta.context_management;
       }
