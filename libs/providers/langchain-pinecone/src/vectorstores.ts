@@ -1,5 +1,5 @@
 import { v4 as uuid } from "@langchain/core/utils/uuid";
-import flatten from "flat";
+import { flatten } from "flat";
 
 import {
   RecordMetadata,
@@ -45,7 +45,7 @@ export interface PineconeStoreParams extends AsyncCallerParams {
    * Either this or pineconeIndex must be provided.
    */
   pineconeConfig?: {
-    indexName: ConstructorParameters<typeof PineconeIndex>[0];
+    indexName: string;
     config: ConstructorParameters<typeof PineconeIndex>[1];
     namespace?: string;
     indexHostUrl?: string;
@@ -240,14 +240,16 @@ export class PineconeStore extends VectorStore {
       this.pineconeIndex = pineconeIndex;
     } else if (pineconeConfig) {
       this.pineconeIndex = new PineconeIndex(
-        pineconeConfig.indexName,
+        {
+          name: pineconeConfig.indexName,
+          namespace: pineconeConfig.namespace,
+          host: pineconeConfig.indexHostUrl,
+          additionalHeaders: pineconeConfig.additionalHeaders,
+        },
         {
           ...pineconeConfig.config,
           sourceTag: "langchainjs",
-        },
-        pineconeConfig.namespace,
-        pineconeConfig.indexHostUrl,
-        pineconeConfig.additionalHeaders
+        }
       );
     }
 
@@ -341,7 +343,7 @@ export class PineconeStore extends VectorStore {
     const batchRequests = chunkedVectors.map((chunk) =>
       this.caller.call(async () => {
         try {
-          await namespace.upsert(chunk);
+          await namespace.upsert({ records: chunk });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           if (e.message.includes("404")) {
