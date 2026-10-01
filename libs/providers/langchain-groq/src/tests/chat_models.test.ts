@@ -91,6 +91,40 @@ describe("reasoningEffort", () => {
   });
 });
 
+describe("reasoningFormat", () => {
+  test("passes reasoning_format through invocationParams", () => {
+    const model = new ChatGroq({
+      apiKey: "foo",
+      model: "qwen/qwen3-32b",
+      reasoningFormat: "parsed",
+    });
+    expect(model.reasoningFormat).toBe("parsed");
+    const params = model.invocationParams({});
+    expect(params.reasoning_format).toBe("parsed");
+  });
+
+  test("is undefined when not set", () => {
+    const model = new ChatGroq({
+      apiKey: "foo",
+      model: "qwen/qwen3-32b",
+    });
+    const params = model.invocationParams({});
+    expect(params.reasoning_format).toBeUndefined();
+  });
+});
+
+test("passes topLogprobs through invocationParams", () => {
+  const model = new ChatGroq({
+    apiKey: "foo",
+    model: "llama-3.3-70b-versatile",
+    logprobs: true,
+    topLogprobs: 3,
+  });
+  expect(model.topLogprobs).toBe(3);
+  const params = model.invocationParams({});
+  expect(params.top_logprobs).toBe(3);
+});
+
 describe("withStructuredOutput - StandardSchema", () => {
   function makeSerializableSchema() {
     return {

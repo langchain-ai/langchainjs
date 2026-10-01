@@ -299,6 +299,14 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * @see https://console.groq.com/docs/reasoning#options-for-reasoning-effort
    */
   reasoningEffort?: "none" | "default" | "low" | "medium" | "high" | null;
+
+  /**
+   * How the model outputs reasoning tokens: `"parsed"` returns them in a
+   * separate `reasoning` field, `"raw"` inline in `<think>` tags, and
+   * `"hidden"` not at all.
+   * @see https://console.groq.com/docs/reasoning
+   */
+  reasoningFormat?: ChatCompletionsAPI.ChatCompletionCreateParamsBase["reasoning_format"];
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -1104,6 +1112,8 @@ export class ChatGroq extends BaseChatModel<
     this.logitBias = params.logitBias;
     this.user = params.user;
     this.reasoningEffort = params.reasoningEffort;
+    this.reasoningFormat = params.reasoningFormat;
+    this.topLogprobs = params.topLogprobs;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
