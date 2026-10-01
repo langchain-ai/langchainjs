@@ -146,7 +146,7 @@ describe("token providers", () => {
             },
           },
         })
-    ).toThrow();
+    ).toThrow(/authProvider/);
   });
 });
 
