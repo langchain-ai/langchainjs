@@ -5,7 +5,6 @@ import {
   AIMessageChunk,
   HumanMessage,
   AIMessage,
-  ToolMessage,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
@@ -114,7 +113,9 @@ describe("tool calling", () => {
     expect(aiMsg.tool_calls!.length).toBeGreaterThanOrEqual(1);
     const toolCall = aiMsg.tool_calls![0];
 
-    const toolResult = await weatherTool.invoke(toolCall.args);
+    // Invoked with the whole tool call, the tool returns a ToolMessage
+    // carrying the call's id.
+    const toolMessage = await weatherTool.invoke(toolCall);
 
     const finalRes = await model.invoke([
       new HumanMessage("What's the weather in Paris?"),
@@ -122,10 +123,7 @@ describe("tool calling", () => {
         content: aiMsg.content,
         tool_calls: aiMsg.tool_calls,
       }),
-      new ToolMessage({
-        tool_call_id: toolCall.id!,
-        content: toolResult,
-      }),
+      toolMessage,
     ]);
 
     expect(typeof finalRes.content).toBe("string");
