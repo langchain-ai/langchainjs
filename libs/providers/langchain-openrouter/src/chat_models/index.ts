@@ -503,7 +503,7 @@ export class ChatOpenRouter extends BaseChatModel<
       }
     }
 
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    const shouldStreamUsage = this.streamUsage;
     yield* convertOpenRouterStream(readChunks(), {
       streamUsage: shouldStreamUsage,
     });
