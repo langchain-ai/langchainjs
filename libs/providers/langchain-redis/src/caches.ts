@@ -1,4 +1,7 @@
-import type { createCluster, createClient } from "redis";
+import type {
+  RedisClientType as RedisNodeClientType,
+  RedisClusterType,
+} from "redis";
 
 import {
   BaseCache,
@@ -11,9 +14,7 @@ import { Generation } from "@langchain/core/outputs";
  * Represents the type of the Redis client used to interact with the Redis
  * database.
  */
-type RedisClientType =
-  | ReturnType<typeof createClient>
-  | ReturnType<typeof createCluster>;
+type RedisClientType = RedisNodeClientType | RedisClusterType;
 
 /**
  * @deprecated This class is deprecated.
