@@ -1,3 +1,4 @@
+import type Anthropic from "@anthropic-ai/sdk";
 import { test, expect, describe } from "vitest";
 import { _makeMessageChunkFromAnthropicEvent } from "../message_outputs.js";
 
@@ -104,6 +105,59 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
       expect(result!.chunk.response_metadata).toEqual({});
     }
   );
+
+  describe("message_delta context_management", () => {
+    const contextManagement: Anthropic.Beta.Messages.BetaContextManagementResponse =
+      {
+        applied_edits: [
+          {
+            type: "clear_tool_uses_20250919",
+            cleared_tool_uses: 2,
+            cleared_input_tokens: 5000,
+          },
+        ],
+      };
+    const messageDelta = (
+      context_management: Anthropic.Beta.Messages.BetaContextManagementResponse | null
+    ): Anthropic.Beta.Messages.BetaRawMessageDeltaEvent => ({
+      type: "message_delta",
+      delta: {
+        container: null,
+        stop_details: null,
+        stop_reason: "end_turn",
+        stop_sequence: null,
+      },
+      usage: {
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+        fallback_credit: null,
+        input_tokens: null,
+        iterations: null,
+        output_tokens: 42,
+        output_tokens_details: null,
+        server_tool_use: null,
+      },
+      context_management,
+    });
+
+    test("is surfaced on response_metadata", () => {
+      const result = _makeMessageChunkFromAnthropicEvent(
+        messageDelta(contextManagement),
+        fields
+      );
+      expect(result!.chunk.response_metadata).toEqual({
+        context_management: contextManagement,
+      });
+    });
+
+    test("is left out when null", () => {
+      const result = _makeMessageChunkFromAnthropicEvent(
+        messageDelta(null),
+        fields
+      );
+      expect(result!.chunk.response_metadata).toEqual({});
+    });
+  });
 
   test("message_delta cost is preserved when streamUsage is false", () => {
     const event = {
