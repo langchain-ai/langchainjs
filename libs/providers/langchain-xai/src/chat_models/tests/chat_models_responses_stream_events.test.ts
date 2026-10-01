@@ -1,13 +1,11 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
-import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
-import {
-  ChatXAIResponses,
-  type XAIResponsesCreateParams,
-  type XAIResponsesCreateParamsStreaming,
-} from "../responses.js";
+import { ChatXAIResponses } from "../responses.js";
 import type {
+  XAIResponsesCreateParams,
+  XAIResponsesCreateParamsNonStreaming,
+  XAIResponsesCreateParamsStreaming,
   XAIResponsesStreamEvent,
   XAIResponse,
 } from "../responses-types.js";
@@ -25,12 +23,12 @@ class MockStreamChatXAIResponses extends ChatXAIResponses {
   }
 
   protected override async _makeRequest(
-    request: XAIResponsesCreateParamsStreaming
-  ): Promise<AsyncIterable<XAIResponsesStreamEvent>>;
+    request: XAIResponsesCreateParamsNonStreaming
+  ): Promise<XAIResponse>;
 
   protected override async _makeRequest(
-    request: XAIResponsesCreateParams
-  ): Promise<XAIResponse | AsyncIterable<XAIResponsesStreamEvent>>;
+    request: XAIResponsesCreateParamsStreaming
+  ): Promise<AsyncIterable<XAIResponsesStreamEvent>>;
 
   protected override async _makeRequest(
     request: XAIResponsesCreateParams
@@ -96,6 +94,8 @@ function reasoningEvents(): XAIResponsesStreamEvent[] {
       type: "response.completed",
       response: {
         id: "resp_reasoning",
+        object: "response",
+        created_at: 0,
         status: "completed",
         model: "grok-3",
         output: [],
@@ -107,19 +107,14 @@ function reasoningEvents(): XAIResponsesStreamEvent[] {
 describe("ChatXAIResponses._streamChatModelEvents", () => {
   test("ChatModelStream.text end-to-end", async () => {
     const model = new MockStreamChatXAIResponses(textEvents());
-    const stream = new ChatModelStream(
-      model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
-    );
+    const stream = new ChatModelStream(model._streamChatModelEvents([], {}));
     expect(await stream.text).toBe("Hello");
   });
 
   test("emits lifecycle events", async () => {
     const model = new MockStreamChatXAIResponses(textEvents());
     const events: ChatModelStreamEvent[] = [];
-    for await (const event of model._streamChatModelEvents(
-      [],
-      {} as BaseChatModelCallOptions
-    )) {
+    for await (const event of model._streamChatModelEvents([], {})) {
       events.push(event);
     }
     expect(events.map((e) => e.event)).toContain("message-start");
