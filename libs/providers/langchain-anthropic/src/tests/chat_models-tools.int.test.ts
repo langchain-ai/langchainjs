@@ -1049,8 +1049,7 @@ test("partial tool input is correctly merged before calling Anthropic API", asyn
   const messages = [
     new HumanMessage("What's the weather in Seattle tomorrow?"),
     new AIMessage({
-      response_metadata: { output_version: "v2" },
-      contentBlocks: [
+      content: [
         { index: 1, type: "text", text: "I need to call the get_weather tool" },
         {
           index: 2,

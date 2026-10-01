@@ -12,6 +12,7 @@ import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
 import { ContentBlockParam as AnthropicContentBlockParam } from "@anthropic-ai/sdk/resources";
+import type { BetaOutputConfig } from "@anthropic-ai/sdk/resources/beta";
 import {
   ChatAnthropic,
   type ChatAnthropicInput,
@@ -2526,14 +2527,15 @@ describe("Opus 4.7 and 5", () => {
   );
 
   test("auto-adds task budget beta when outputConfig.task_budget is provided", () => {
+    // `task_budget` is beta-only: the GA `OutputConfig` doesn't declare it.
+    const outputConfig: BetaOutputConfig = {
+      effort: "high",
+      task_budget: { type: "tokens", total: 128000 },
+    };
     const model = new ChatAnthropic({
       model: "claude-opus-4-7",
       apiKey: "testing",
-      outputConfig: {
-        effort: "high",
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        task_budget: { type: "tokens", total: 128000 } as any,
-      },
+      outputConfig,
     });
 
     const params = model.invocationParams({});
