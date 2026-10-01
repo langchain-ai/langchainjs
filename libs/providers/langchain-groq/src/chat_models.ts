@@ -46,7 +46,6 @@ import type {
   ChatCompletionCreateParamsStreaming,
   ChatCompletionTool,
 } from "groq-sdk/resources/chat/completions";
-import type { RequestOptions } from "groq-sdk/core";
 import { Runnable } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
@@ -1099,17 +1098,17 @@ export class ChatGroq extends BaseChatModel<
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
-    options?: RequestOptions
+    options?: Groq.RequestOptions
   ): Promise<AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsNonStreaming,
-    options?: RequestOptions
+    options?: Groq.RequestOptions
   ): Promise<ChatCompletion>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParams,
-    options?: RequestOptions
+    options?: Groq.RequestOptions
   ): Promise<
     AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk> | ChatCompletion
   > {
