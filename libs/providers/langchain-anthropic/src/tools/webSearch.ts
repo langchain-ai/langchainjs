@@ -27,7 +27,7 @@ export interface WebSearch20250305Options {
    * Parameters for the user's location. Used to provide more relevant search
    * results.
    */
-  userLocation?: Anthropic.Beta.BetaWebSearchTool20250305.UserLocation;
+  userLocation?: Anthropic.Beta.BetaUserLocation;
   /**
    * If true, tool will not be included in initial system prompt. Only loaded when
    * returned via tool_reference from tool search.

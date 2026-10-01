@@ -58,8 +58,18 @@ export const AnthropicToolExtrasSchema = z.object({
     .optional()
     .nullable(),
   defer_loading: z.boolean().optional(),
-  input_examples: z.array(z.unknown()).optional(),
-  allowed_callers: z.array(z.unknown()).optional(),
+  input_examples: z
+    .array(
+      z.custom<NonNullable<Anthropic.Messages.Tool["input_examples"]>[number]>()
+    )
+    .optional(),
+  allowed_callers: z
+    .array(
+      z.custom<
+        NonNullable<Anthropic.Messages.Tool["allowed_callers"]>[number]
+      >()
+    )
+    .optional(),
   strict: z.boolean().optional(),
 });
 
