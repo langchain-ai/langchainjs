@@ -25,9 +25,11 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1121.0",
+    "@aws-sdk/client-bedrock-agentcore": "^3.1121.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1121.0",
     "@aws-sdk/client-kendra": "^3.1121.0",
-    "@aws-sdk/credential-provider-node": "^3.972.81"
+    "@aws-sdk/credential-provider-node": "^3.972.81",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -43,8 +45,7 @@
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11",
-    "zod": "^3.25.76"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"
