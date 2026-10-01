@@ -137,25 +137,25 @@ test("Pinecone Store Self Query Retriever Test With Default Filter Or Merge Oper
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Which movies are either comedy or drama and are less than 90 minutes?"
   );
-  const query5 = await selfQueryRetriever.getRelevantDocuments(
+  const query5 = await selfQueryRetriever.invoke(
     "Awawawawa hello hello hello huh where am i?"
   );
   // console.log(query1, query2, query3, query4, query5); // query 5 should return documents
@@ -291,25 +291,25 @@ test("Pinecone Store Self Query Retriever Test With Default Filter And Merge Ope
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Which movies are either comedy or drama and are less than 90 minutes?"
   );
-  const query5 = await selfQueryRetriever.getRelevantDocuments(
+  const query5 = await selfQueryRetriever.invoke(
     "Awawawawa hello hello hello huh where am i?"
   );
   // console.log(query1, query2, query3, query4, query5); // query 5 should return documents
