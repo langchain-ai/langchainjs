@@ -76,20 +76,20 @@ export class PineconeEmbeddings
     let embeddings: EmbeddingsList;
     if (this.params) {
       embeddings = await this.caller.call(async () => {
-        const result: EmbeddingsList = await this.client.inference.embed(
-          this.model,
-          texts,
-          this.params
-        );
+        const result: EmbeddingsList = await this.client.inference.embed({
+          model: this.model,
+          inputs: texts,
+          parameters: this.params,
+        });
         return result;
       });
     } else {
       embeddings = await this.caller.call(async () => {
-        const result: EmbeddingsList = await this.client.inference.embed(
-          this.model,
-          texts,
-          {}
-        );
+        const result: EmbeddingsList = await this.client.inference.embed({
+          model: this.model,
+          inputs: texts,
+          parameters: {},
+        });
         return result;
       });
     }
@@ -118,15 +118,19 @@ export class PineconeEmbeddings
     let embeddings: EmbeddingsList;
     if (this.params) {
       embeddings = await this.caller.call(async () => {
-        return await this.client.inference.embed(
-          this.model,
-          [text],
-          this.params
-        );
+        return await this.client.inference.embed({
+          model: this.model,
+          inputs: [text],
+          parameters: this.params,
+        });
       });
     } else {
       embeddings = await this.caller.call(async () => {
-        return await this.client.inference.embed(this.model, [text], {});
+        return await this.client.inference.embed({
+          model: this.model,
+          inputs: [text],
+          parameters: {},
+        });
       });
     }
     if ("values" in embeddings.data[0]) {
