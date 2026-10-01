@@ -511,6 +511,15 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         continue;
       }
 
+      // Assistant deltas arrive as AIMessageChunks, but a stream that never
+      // sends a role yields ChatMessageChunks. Only AI chunks carry tool calls.
+      const toolCallFields = AIMessageChunk.isInstance(chunk.message)
+        ? {
+            tool_calls: chunk.message.tool_calls,
+            tool_call_chunks: chunk.message.tool_call_chunks,
+          }
+        : {};
+
       // Append text to buffer to handle split tags
       tokensBuffer += text;
 
@@ -533,8 +542,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
               content: beforeThink,
               additional_kwargs: chunk.message.additional_kwargs,
               response_metadata: chunk.message.response_metadata,
-              tool_calls: chunk.message.tool_calls,
-              tool_call_chunks: chunk.message.tool_call_chunks,
+              ...toolCallFields,
               id: chunk.message.id,
             }),
             text: beforeThink,
@@ -562,8 +570,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
               reasoning_content: thoughtContent,
             },
             response_metadata: chunk.message.response_metadata,
-            tool_calls: chunk.message.tool_calls,
-            tool_call_chunks: chunk.message.tool_call_chunks,
+            ...toolCallFields,
             id: chunk.message.id,
           }),
           text: "",
@@ -581,8 +588,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
               content: tokensBuffer,
               additional_kwargs: chunk.message.additional_kwargs,
               response_metadata: chunk.message.response_metadata,
-              tool_calls: chunk.message.tool_calls,
-              tool_call_chunks: chunk.message.tool_call_chunks,
+              ...toolCallFields,
               id: chunk.message.id,
             }),
             text: tokensBuffer,
@@ -616,8 +622,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
                   reasoning_content: safeToYield,
                 },
                 response_metadata: chunk.message.response_metadata,
-                tool_calls: chunk.message.tool_calls,
-                tool_call_chunks: chunk.message.tool_call_chunks,
+                ...toolCallFields,
                 id: chunk.message.id,
               }),
               text: "",
@@ -637,8 +642,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
                   reasoning_content: tokensBuffer,
                 },
                 response_metadata: chunk.message.response_metadata,
-                tool_calls: chunk.message.tool_calls,
-                tool_call_chunks: chunk.message.tool_call_chunks,
+                ...toolCallFields,
                 id: chunk.message.id,
               }),
               text: "",
@@ -669,8 +673,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
                 content: safeToYield,
                 additional_kwargs: chunk.message.additional_kwargs,
                 response_metadata: chunk.message.response_metadata,
-                tool_calls: chunk.message.tool_calls,
-                tool_call_chunks: chunk.message.tool_call_chunks,
+                ...toolCallFields,
                 id: chunk.message.id,
               }),
               text: safeToYield,
@@ -687,8 +690,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
                 content: tokensBuffer,
                 additional_kwargs: chunk.message.additional_kwargs,
                 response_metadata: chunk.message.response_metadata,
-                tool_calls: chunk.message.tool_calls,
-                tool_call_chunks: chunk.message.tool_call_chunks,
+                ...toolCallFields,
                 id: chunk.message.id,
               }),
               text: tokensBuffer,
