@@ -1032,13 +1032,13 @@ export class ChatGroq extends BaseChatModel<
   );
   constructor(fields: ChatGroqInput);
   constructor(
-    modelOrFields?: string | ChatGroqInput,
+    modelOrFields: string | ChatGroqInput,
     fields?: Omit<ChatGroqInput, "model">
   ) {
     const params =
       typeof modelOrFields === "string"
         ? { ...(fields ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
+        : modelOrFields;
     super(params);
     this._addVersion("@langchain/groq", __PKG_VERSION__);
 
