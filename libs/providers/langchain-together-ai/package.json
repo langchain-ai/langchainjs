@@ -1,6 +1,6 @@
 {
   "name": "@langchain/together-ai",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Together AI integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
