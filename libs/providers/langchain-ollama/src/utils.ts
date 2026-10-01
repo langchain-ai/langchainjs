@@ -2,6 +2,7 @@ import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
+  ChatMessage,
   HumanMessage,
   MessageContentText,
   SystemMessage,
@@ -120,7 +121,7 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
 }
 
 function convertHumanGenericMessagesToOllama(
-  message: HumanMessage
+  message: HumanMessage | ChatMessage
 ): OllamaMessage[] {
   if (typeof message.content === "string") {
     return [
@@ -131,7 +132,7 @@ function convertHumanGenericMessagesToOllama(
     ];
   }
   return message.content.map((c) => {
-    if (c.type === "text") {
+    if (c.type === "text" && typeof c.text === "string") {
       return {
         role: "user",
         content: c.text,
@@ -143,7 +144,13 @@ function convertHumanGenericMessagesToOllama(
           content: "",
           images: [extractBase64FromDataUrl(c.image_url)],
         };
-      } else if (c.image_url.url && typeof c.image_url.url === "string") {
+      } else if (
+        typeof c.image_url === "object" &&
+        c.image_url !== null &&
+        "url" in c.image_url &&
+        c.image_url.url &&
+        typeof c.image_url.url === "string"
+      ) {
         return {
           role: "user",
           content: "",
@@ -197,14 +204,14 @@ export function convertToOllamaMessages(
   messages: BaseMessage[]
 ): OllamaMessage[] {
   return messages.flatMap((msg) => {
-    if (["human", "generic"].includes(msg._getType())) {
+    if (HumanMessage.isInstance(msg) || ChatMessage.isInstance(msg)) {
       return convertHumanGenericMessagesToOllama(msg);
-    } else if (msg._getType() === "ai") {
+    } else if (AIMessage.isInstance(msg)) {
       return convertAMessagesToOllama(msg);
-    } else if (msg._getType() === "system") {
+    } else if (SystemMessage.isInstance(msg)) {
       return convertSystemMessageToOllama(msg);
-    } else if (msg._getType() === "tool") {
-      return convertToolMessageToOllama(msg as ToolMessage);
+    } else if (ToolMessage.isInstance(msg)) {
+      return convertToolMessageToOllama(msg);
     } else {
       throw new Error(`Unsupported message type: ${msg._getType()}`);
     }
