@@ -561,16 +561,6 @@ importers:
         specifier: ~7.0.2
         version: 7.0.2
 
-  internal/test-helpers:
-    dependencies:
-      '@jest/globals':
-        specifier: ^30.5.2
-        version: 30.5.2
-    devDependencies:
-      '@langchain/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-
   internal/tsconfig: {}
 
   libs/create-langchain-integration:
