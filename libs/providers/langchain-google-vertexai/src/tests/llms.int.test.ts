@@ -2,8 +2,8 @@ import { test } from "vitest";
 import {
   AIMessage,
   BaseMessage,
+  ContentBlock,
   HumanMessageChunk,
-  MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { VertexAI } from "../llms.js";
@@ -56,7 +56,7 @@ describe("GAuth LLM", () => {
     const model = new VertexAI({
       modelName: "gemini-pro-vision",
     });
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -81,7 +81,7 @@ describe("GAuth LLM", () => {
     const model = new VertexAI({
       modelName: "gemini-pro-vision",
     });
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -172,7 +172,7 @@ describe("GAuth LLM gai", () => {
       platformType: "gai",
       modelName: "gemini-pro-vision",
     });
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -198,7 +198,7 @@ describe("GAuth LLM gai", () => {
       platformType: "gai",
       modelName: "gemini-pro-vision",
     });
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
