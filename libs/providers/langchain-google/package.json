@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "eventsource-parser": "^4.1.0",
-    "google-auth-library": "^11.0.2",
+    "google-auth-library": "^11.1.0",
     "jose": "^6.2.10"
   },
   "peerDependencies": {
