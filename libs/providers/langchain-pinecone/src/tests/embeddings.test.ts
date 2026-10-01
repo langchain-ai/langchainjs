@@ -1,4 +1,5 @@
-import { test, expect, beforeAll } from "vitest";
+import { test, expect, beforeAll, vi } from "vitest";
+import type { EmbeddingsList } from "@pinecone-database/pinecone";
 
 import { PineconeEmbeddings } from "../embeddings.js";
 
@@ -44,4 +45,45 @@ test("confirm instance sets custom model and params when provided", () => {
     inputType: "passage",
     customParam: "value",
   });
+});
+
+const embeddingsList: EmbeddingsList = {
+  model: "multilingual-e5-large",
+  vectorType: "dense",
+  data: [{ vectorType: "dense", values: [0.1, 0.2] }],
+  usage: { totalTokens: 1 },
+};
+
+test("embedDocuments passes the model, inputs and parameters to inference.embed as one options object", async () => {
+  const model = new PineconeEmbeddings();
+  const embed = vi
+    .spyOn(model.client.inference, "embed")
+    .mockResolvedValue(embeddingsList);
+
+  const result = await model.embedDocuments(["hello", "world"]);
+
+  expect(embed).toHaveBeenCalledTimes(1);
+  expect(embed).toHaveBeenCalledWith({
+    model: "multilingual-e5-large",
+    inputs: ["hello", "world"],
+    parameters: { inputType: "passage" },
+  });
+  expect(result).toEqual([[0.1, 0.2]]);
+});
+
+test("embedQuery passes the model, input and query parameters to inference.embed as one options object", async () => {
+  const model = new PineconeEmbeddings();
+  const embed = vi
+    .spyOn(model.client.inference, "embed")
+    .mockResolvedValue(embeddingsList);
+
+  const result = await model.embedQuery("hello");
+
+  expect(embed).toHaveBeenCalledTimes(1);
+  expect(embed).toHaveBeenCalledWith({
+    model: "multilingual-e5-large",
+    inputs: ["hello"],
+    parameters: { inputType: "query" },
+  });
+  expect(result).toEqual([0.1, 0.2]);
 });
