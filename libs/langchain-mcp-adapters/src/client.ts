@@ -6,8 +6,9 @@ import {
 } from "./utils/errors.js";
 import { z } from "zod";
 import {
+  ProtocolError,
+  ProtocolErrorCode,
   SSEClientTransport,
-  StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import type {
   AuthProvider,
@@ -93,11 +94,6 @@ export class MCPAdapter {
   >();
 
   /**
-   * Configured MCP servers
-   */
-  #mcpServers?: Record<string, ResolvedConnection>;
-
-  /**
    * Cached map of server names to load tools options
    */
   #loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
@@ -161,7 +157,7 @@ export class MCPAdapter {
         elicitation: serverConfig.elicitation,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
-          parsedServerConfig.prefixToolNameWithServerName,
+          parsedServerConfig.prefixToolNameWithServerName ?? true,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
@@ -177,7 +173,6 @@ export class MCPAdapter {
     }
 
     this.#config = parsedServerConfig;
-    this.#mcpServers = parsedServerConfig.servers;
     this.#clientConnections = new ConnectionManager((options) => {
       const client = this.#clientConnections.get(options);
 
@@ -216,10 +211,6 @@ export class MCPAdapter {
   async #discoverToolsets(
     customTransportOptions?: ToolDiscoveryOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
-    if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
-      throw new MCPClientError("No connections to initialize");
-    }
-
     // A discovery that arrives mid-close waits for teardown and then runs
     // against the fresh epoch, which matches the documented reuse contract
     // better than failing a caller for a close it never saw.
@@ -228,9 +219,14 @@ export class MCPAdapter {
     }
 
     const { signal } = this.#epoch;
+    const { servers } = this.#config;
     const catalog: Record<string, DynamicStructuredTool[]> = {};
 
-    for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
+    for (const [serverName, connection] of Object.entries(servers)) {
+      // A completed close may already have installed a fresh epoch. This
+      // discovery must not acquire connections owned by that later epoch.
+      if (signal.aborted) break;
+
       const key = this.#clientConnections.identity(
         this.#transportOptions(serverName, customTransportOptions)
       );
@@ -246,6 +242,8 @@ export class MCPAdapter {
           customTransportOptions
         );
 
+        if (signal.aborted) break;
+
         const client = this.#clientConnections.get(
           this.#transportOptions(serverName, customTransportOptions)
         );
@@ -259,6 +257,8 @@ export class MCPAdapter {
           );
         }
       } catch (error) {
+        if (signal.aborted) break;
+
         if (this.#onConnectionError === "throw") {
           throw error;
         }
@@ -267,15 +267,18 @@ export class MCPAdapter {
           await this.#onConnectionError({ serverName, error });
         }
 
+        // An async error handler may outlive close(). Do not write failures
+        // into the reused adapter or continue discovery after it returns.
+        if (signal.aborted) break;
+
         // A login can complete later (finishAuth, a refreshed token), so an
         // auth failure must not block the server for this adapter's lifetime.
         if (!isAuthenticationError(error)) this.#failedServers.add(key);
       }
     }
 
-    // The per-server policy above swallows failures, an aborted request
-    // included, so cancellation has to be re-checked here or a close during
-    // discovery would surface as a successful partial catalog.
+    // This also covers a close while discovering the final server, where
+    // there is no next iteration to check before returning the catalog.
     if (signal.aborted) {
       throw new MCPClientError(
         "MCP connections closed during discovery",
@@ -306,6 +309,7 @@ export class MCPAdapter {
    *                 If not provided, returns tools from all servers.
    * @param options - Optional connection options for the tool calls, e.g. custom auth provider or headers.
    * @returns A flattened array of tools from the specified servers (or all servers)
+   * @throws {MCPClientError} If the flattened result would contain two tools with the same name
    *
    * @example
    * ```ts
@@ -335,10 +339,23 @@ export class MCPAdapter {
   async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
     const { servers, options } = toolSelectionSchema.parse(args);
     const catalog = await this.#discoverToolsets(options);
+    const selectedServers = servers.length ? servers : Object.keys(catalog);
 
-    return (servers.length ? servers : Object.keys(catalog)).flatMap(
-      (name) => catalog[name] ?? []
-    );
+    assertNoToolNameCollisions(catalog, selectedServers);
+
+    return selectedServers.flatMap((name) => catalog[name] ?? []);
+  }
+
+  /** @deprecated Use listTools(). This alias takes the same arguments. */
+  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  /** @deprecated Use listTools(). This alias takes the same arguments. */
+  async getTools(
+    servers: string[],
+    options?: ToolDiscoveryOptions
+  ): Promise<DynamicStructuredTool[]>;
+  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
+    const { servers, options } = toolSelectionSchema.parse(args);
+    return this.listTools(servers, options);
   }
 
   /**
@@ -481,7 +498,8 @@ export class MCPAdapter {
    * @param servers - Optional array of server names to filter resource templates by.
    *                 If not provided, returns resource templates from all servers.
    * @param options - Optional connection options for the resource template listing, e.g. custom auth provider or headers.
-   * @returns A map of server names to their resource templates
+   * @returns A map of server names to their resource templates. A server that
+   *          doesn't implement template listing maps to `[]`.
    *
    * @example
    * ```ts
@@ -521,7 +539,18 @@ export class MCPAdapter {
         continue;
       }
 
-      const templatesList = await client.listResourceTemplates();
+      // Templates are optional even for a server that advertises resources.
+      const templatesList = await client
+        .listResourceTemplates()
+        .catch((error: unknown) => {
+          if (
+            ProtocolError.isInstance(error) &&
+            error.code === ProtocolErrorCode.MethodNotFound
+          ) {
+            return { resourceTemplates: [] };
+          }
+          throw error;
+        });
       result[serverName] = templatesList.resourceTemplates.map((template) => ({
         ...template,
         uriTemplate: template.uriTemplate,
@@ -641,10 +670,7 @@ export class MCPAdapter {
       }
 
       await this._initializeStdioConnection(serverName, connection);
-    } else if (
-      connection.transport === "http" ||
-      connection.transport === "sse"
-    ) {
+    } else {
       /**
        * Users may want to use different connection options for tool calls or tool discovery.
        */
@@ -675,12 +701,6 @@ export class MCPAdapter {
           updatedConnection
         );
       }
-    } else {
-      // This should never happen due to the validation in the constructor
-      throw new MCPClientError(
-        `Unsupported transport type for server "${serverName}"`,
-        serverName
-      );
     }
   }
 
@@ -728,7 +748,7 @@ export class MCPAdapter {
     const originalOnClose = transport.onclose;
     const handleClose = async () => {
       if (originalOnClose) {
-        await originalOnClose();
+        originalOnClose();
       }
 
       // Only attempt restart if we haven't cleaned up
@@ -938,14 +958,14 @@ export class MCPAdapter {
    */
   private _setupSSEReconnect(
     serverName: string,
-    transport: SSEClientTransport | StreamableHTTPClientTransport,
+    transport: SSEClientTransport,
     connection: ResolvedSSEConnection,
     reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
     const handleClose = async () => {
       if (originalOnClose) {
-        await originalOnClose();
+        originalOnClose();
       }
 
       // Only attempt reconnect if we haven't cleaned up
@@ -1069,7 +1089,7 @@ export class MCPAdapter {
    */
   private async _attemptReconnect(
     serverName: string,
-    connection: ResolvedConnection,
+    connection: ResolvedStdioConnection | ResolvedSSEConnection,
     maxAttempts = 3,
     delayMs = 1000
   ): Promise<void> {
@@ -1086,10 +1106,7 @@ export class MCPAdapter {
       await this.#cleanupServerResources({ serverName });
     }
 
-    while (
-      !connected &&
-      (maxAttempts === undefined || attempts < maxAttempts)
-    ) {
+    while (!connected && attempts < maxAttempts) {
       attempts += 1;
 
       try {
@@ -1106,18 +1123,8 @@ export class MCPAdapter {
         // Initialize just this connection based on its type
         if (connection.transport === "stdio") {
           await this._initializeStdioConnection(serverName, connection);
-        } else if (
-          connection.transport === "http" ||
-          connection.transport === "sse"
-        ) {
-          if (connection.transport === "sse") {
-            await this._initializeSSEConnection(serverName, connection);
-          } else {
-            await this._initializeStreamableHTTPConnection(
-              serverName,
-              connection
-            );
-          }
+        } else {
+          await this._initializeSSEConnection(serverName, connection);
         }
 
         // Check if connected
@@ -1178,6 +1185,36 @@ export class MCPAdapter {
 
 /** @deprecated Use MCPAdapter. This alias shares the same implementation. */
 export { MCPAdapter as MultiServerMCPClient };
+
+/**
+ * `listTools()` flattens catalogs into one list, so a repeated tool name -
+ * from two servers or twice in one server's own list - would let `ToolNode`
+ * route every call for that name to whichever tool appears first. Tool
+ * names are prefixed with their server name by default.
+ */
+function assertNoToolNameCollisions(
+  catalog: Record<string, DynamicStructuredTool[]>,
+  servers: string[]
+): void {
+  const serverNameByToolName = new Map<string, string>();
+
+  for (const serverName of new Set(servers)) {
+    for (const tool of catalog[serverName] ?? []) {
+      const firstServer = serverNameByToolName.get(tool.name);
+      if (firstServer === serverName) {
+        throw new MCPClientError(
+          `Tool name collision: server "${serverName}" lists a tool named "${tool.name}" more than once, and prefixing can't separate them. Remove the duplicate on the server, or pick tools from listToolsets() instead.`
+        );
+      }
+      if (firstServer !== undefined) {
+        throw new MCPClientError(
+          `Tool name collision: a tool named "${tool.name}" is exposed more than once (${firstServer}, ${serverName}). Leave "prefixToolNameWithServerName" unset or set it to true to keep tool names unique across servers.`
+        );
+      }
+      serverNameByToolName.set(tool.name, serverName);
+    }
+  }
+}
 
 function createServerSelectionSchema<Options extends z.ZodType>(
   optionsSchema: Options

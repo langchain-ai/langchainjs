@@ -1,5 +1,12 @@
 # @langchain/xai
 
+## 1.4.16
+
+### Patch Changes
+
+- Updated dependencies [[`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a)]:
+  - @langchain/openai@1.6.1
+
 ## 1.4.15
 
 ### Patch Changes

@@ -6,6 +6,8 @@ import { z } from "zod";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   Client as SDKClient,
+  ProtocolError,
+  ProtocolErrorCode,
   StreamableHTTPClientTransport,
   type NotificationMethod,
   type NotificationTypeMap,
@@ -197,6 +199,141 @@ describe("connection ownership", () => {
     await closed;
   });
 
+  test.each(["resolve", "reject"] as const)(
+    "does not acquire another server when discovery settles after close (%s)",
+    async (outcome) => {
+      const connect = mockConnect();
+      let startList = () => {};
+      const listing = new Promise<void>((resolve) => {
+        startList = resolve;
+      });
+      let releaseList = () => {};
+      const held = new Promise<void>((resolve) => {
+        releaseList = resolve;
+      });
+      const catalog = {
+        tools: [{ name: "echo", inputSchema: { type: "object" as const } }],
+      };
+      vi.spyOn(SDKClient.prototype, "listTools")
+        .mockImplementation(async (_params, options) => {
+          options?.signal?.throwIfAborted();
+          return catalog;
+        })
+        .mockImplementationOnce(async () => {
+          startList();
+          await held;
+          if (outcome === "reject") throw new Error("discovery failed");
+          return catalog;
+        });
+
+      const adapter = new MCPAdapter({
+        servers: { first: connection, second: connection },
+        prefixToolNameWithServerName: true,
+        onConnectionError: "ignore",
+      });
+      const discovery = adapter.listTools();
+      const rejected = expect(discovery).rejects.toThrow(
+        /closed during discovery/
+      );
+
+      try {
+        await listing;
+        await adapter.close();
+        releaseList();
+        await rejected;
+        expect.soft(connect).toHaveBeenCalledTimes(1);
+        expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
+          "first__echo",
+          "second__echo",
+        ]);
+        expect(connect).toHaveBeenCalledTimes(3);
+      } finally {
+        releaseList();
+        await adapter.close();
+      }
+    }
+  );
+
+  test("stops discovery when close completes during an async error handler", async () => {
+    const connect = mockConnect();
+    vi.spyOn(SDKClient.prototype, "listTools")
+      .mockRejectedValueOnce(new Error("discovery failed"))
+      .mockImplementation(async (_params, options) => {
+        options?.signal?.throwIfAborted();
+        return { tools: [{ name: "echo", inputSchema: { type: "object" } }] };
+      });
+    let startHandler = () => {};
+    const handling = new Promise<void>((resolve) => {
+      startHandler = resolve;
+    });
+    let releaseHandler = () => {};
+    const held = new Promise<void>((resolve) => {
+      releaseHandler = resolve;
+    });
+    const onConnectionError = vi.fn(async () => {
+      startHandler();
+      await held;
+    });
+    const adapter = new MCPAdapter({
+      servers: { first: connection, second: connection },
+      prefixToolNameWithServerName: true,
+      onConnectionError,
+    });
+    const discovery = adapter.listTools();
+    const rejected = expect(discovery).rejects.toThrow(
+      /closed during discovery/
+    );
+
+    try {
+      await handling;
+      await adapter.close();
+      releaseHandler();
+      await rejected;
+      expect.soft(connect).toHaveBeenCalledTimes(1);
+      expect.soft(onConnectionError).toHaveBeenCalledTimes(1);
+      expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
+        "first__echo",
+        "second__echo",
+      ]);
+    } finally {
+      releaseHandler();
+      await adapter.close();
+    }
+  });
+
+  test.each(["ignore", "handler"] as const)(
+    "continues to healthy servers when discovery fails without closing (%s)",
+    async (policy) => {
+      const connect = mockConnect();
+      vi.spyOn(SDKClient.prototype, "listTools")
+        .mockRejectedValueOnce(new Error("discovery failed"))
+        .mockResolvedValue({
+          tools: [{ name: "echo", inputSchema: { type: "object" } }],
+        });
+      const handler = vi.fn(async () => {
+        await Promise.resolve();
+      });
+      const adapter = new MCPAdapter({
+        servers: { first: connection, second: connection },
+        prefixToolNameWithServerName: true,
+        onConnectionError: policy === "ignore" ? "ignore" : handler,
+      });
+
+      try {
+        expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
+          "second__echo",
+        ]);
+        expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
+          "second__echo",
+        ]);
+        expect(connect).toHaveBeenCalledTimes(2);
+        expect(handler).toHaveBeenCalledTimes(policy === "handler" ? 1 : 0);
+      } finally {
+        await adapter.close();
+      }
+    }
+  );
+
   test("a closed adapter is reusable and rebuilds its clients", async () => {
     const connect = mockConnect();
     vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
@@ -381,6 +518,29 @@ test("resource discovery failure is not an empty catalog", async () => {
 
   try {
     await expect(adapter.listResources()).rejects.toBe(error);
+  } finally {
+    await adapter.close();
+  }
+});
+
+test("a server without resource templates contributes an empty list", async () => {
+  mockConnect();
+  vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({ tools: [] });
+  const template = { uriTemplate: "file:///{path}", name: "files" };
+  vi.spyOn(SDKClient.prototype, "listResourceTemplates")
+    .mockRejectedValueOnce(
+      new ProtocolError(ProtocolErrorCode.MethodNotFound, "Method not found")
+    )
+    .mockResolvedValue({ resourceTemplates: [template] });
+  const adapter = new MCPAdapter({
+    servers: { bare: connection, full: connection },
+  });
+
+  try {
+    expect(await adapter.listResourceTemplates()).toEqual({
+      bare: [],
+      full: [template],
+    });
   } finally {
     await adapter.close();
   }

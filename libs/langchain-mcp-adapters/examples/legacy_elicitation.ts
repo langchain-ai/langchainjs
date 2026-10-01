@@ -25,7 +25,7 @@ const adapter = new MCPAdapter({
 
 try {
   const tools = await adapter.listTools();
-  const approve = tools.find((tool) => tool.name === "approve");
+  const approve = tools.find((tool) => tool.name === "calculator__approve");
   if (!approve)
     throw new Error("Start calculator_server_shttp_sse.ts to provide approve");
   console.log(await approve.invoke({ mode: "form" }));

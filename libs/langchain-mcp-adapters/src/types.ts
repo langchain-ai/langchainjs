@@ -15,31 +15,10 @@ import type {
   Progress,
   ResourceUpdatedNotificationParams,
 } from "@modelcontextprotocol/client";
-import type {
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-} from "@langchain/core/messages";
-import type { RunnableConfig } from "@langchain/core/runnables";
-import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema } from "./hooks.js";
 import { outputHandlingSchema } from "./content.js";
-export {
-  callToolResultContentTypes,
-  outputHandlingSchema,
-  type CallToolResultContentType,
-  type DetailedOutputHandling,
-  type OutputHandling,
-} from "./content.js";
-export type {
-  Command,
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-  RunnableConfig,
-  CommandParams,
-};
+export type { CallToolResultContentType, OutputHandling } from "./content.js";
 
 /**
  * Preserve the SDK-owned service and its prototype. Property checks validate
@@ -201,12 +180,6 @@ const stdioOptionsSchema = z
     env: z
       .record(z.string(), z.string())
       .describe("The environment to use when spawning the process")
-      .optional(),
-    /** @deprecated SDK 2 stdio does not support overriding the encoding. */
-    encoding: z
-      .never({
-        error: "SDK 2 stdio does not support encoding; remove this option",
-      })
       .optional(),
     /**
      * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
@@ -566,20 +539,6 @@ const notifications = z.object({
 
 export type Notifications = z.output<typeof notifications>;
 
-const removedRootsObserver = z
-  .never({
-    error:
-      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
-  })
-  .optional();
-
-const removedStandardContentBlocks = z
-  .never({
-    error:
-      "useStandardContentBlocks was removed: tool content is always standard LangChain content blocks; delete this option",
-  })
-  .optional();
-
 const serverNotifications = notifications.omit({ onInitialized: true }).extend({
   /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
   resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
@@ -632,7 +591,6 @@ const modernPolicy = z
     automaticSSEFallback: z
       .never({ error: "automaticSSEFallback requires mode: legacy" })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(serverNotifications.shape);
 
@@ -669,7 +627,6 @@ const legacyPolicy = z
           "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
       })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(notifications.shape)
   .extend({
@@ -778,16 +735,6 @@ export const ConnectionSchema = z.union([
 ]);
 
 /**
- * {@link MultiServerMCPClient} configuration
- */
-const serverOnlyCallback = z
-  .never({
-    error:
-      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
-  })
-  .optional();
-
-/**
  * Custom error handler for connection failures.
  *
  * If the handler throws or rejects, the error is propagated when a caller is
@@ -850,13 +797,12 @@ const clientOptionsSchema = z
      * Whether to prefix tool names with the server name. Prefixes are separated by double
      * underscores (example: `calculator_server_1__add`).
      *
-     * @default false
+     * @default true in `MCPAdapter`, false in `loadMcpTools`
      */
     prefixToolNameWithServerName: z
       .boolean()
       .describe("Whether to prefix tool names with the server name")
-      .optional()
-      .default(false),
+      .optional(),
     /**
      * An additional prefix to add to the tool name Prefixes are separated by double underscores
      * (example: `mcp__add`).
@@ -887,18 +833,6 @@ const clientOptionsSchema = z
   })
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
-  .extend({
-    resourceSubscriptions: serverOnlyCallback,
-    onMessage: serverOnlyCallback,
-    onProgress: serverOnlyCallback,
-    onInitialized: serverOnlyCallback,
-    onPromptsListChanged: serverOnlyCallback,
-    onResourcesListChanged: serverOnlyCallback,
-    onResourcesUpdated: serverOnlyCallback,
-    onToolsListChanged: serverOnlyCallback,
-    onRootsListChanged: removedRootsObserver,
-    useStandardContentBlocks: removedStandardContentBlocks,
-  })
   .strict()
   .describe("Configuration for the MCP client");
 
@@ -975,9 +909,6 @@ export type ResolvedSSEConnection = z.output<typeof SSEConnectionSchema>;
 /** Configuration for a URL-based Streamable HTTP or legacy SSE connection. */
 export type HTTPConnection = z.input<typeof HTTPConnectionSchema>;
 
-/** {@link HTTPConnection} with defaults applied. */
-export type ResolvedHTTPConnection = z.output<typeof HTTPConnectionSchema>;
-
 /** Union type for all supported MCP connection transports. */
 export type Connection = z.input<typeof ConnectionSchema>;
 
@@ -996,11 +927,6 @@ export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
  * Type for {@link Connection} with default values applied.
  */
 export type ResolvedConnection = z.output<typeof ConnectionSchema>;
-
-/**
- * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
- */
-export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
 
 export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .pick({
