@@ -1,6 +1,7 @@
 import { test, expect } from "vitest";
 import {
   AIMessageChunk,
+  type BaseMessage,
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -165,7 +166,7 @@ test("Test model tool calling", async () => {
   const tools = [webSearchTool];
   const modelWithTools = model.bindTools(tools);
 
-  const messages = [
+  const messages: BaseMessage[] = [
     new HumanMessage(
       "Who is the president of Singapore?? USE TOOLS TO SEARCH INTERNET!!!!"
     ),
@@ -181,7 +182,11 @@ test("Test model tool calling", async () => {
   );
   expect(res.tool_calls).toBeDefined();
   expect(res.tool_calls?.length).toBe(1);
-  const tool_id = res.response_metadata.toolCalls[0].id;
+  const tool_id = res.tool_calls?.[0].id;
+  expect(tool_id).toBeDefined();
+  if (!tool_id) {
+    return;
+  }
   messages.push(res);
   messages.push(
     new ToolMessage(
