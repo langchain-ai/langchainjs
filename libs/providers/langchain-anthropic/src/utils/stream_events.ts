@@ -91,15 +91,13 @@ export async function* convertAnthropicStream(
           }
           yield { event: "usage" as const, usage: usageSnapshot };
         }
-        if (
-          "context_management" in data.delta &&
-          data.delta.context_management
-        ) {
+        // A field of the beta `message_delta` event itself, not of its `delta`.
+        if ("context_management" in data && data.context_management) {
           yield {
             event: "provider" as const,
             provider: "anthropic",
             name: "context_management",
-            payload: data.delta.context_management,
+            payload: data.context_management,
           };
         }
         break;

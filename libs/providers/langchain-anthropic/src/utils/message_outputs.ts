@@ -61,8 +61,9 @@ export function _makeMessageChunkFromAnthropicEvent(
     };
     const responseMetadata = iife(() => {
       const output: Record<string, unknown> = {};
-      if ("context_management" in data.delta) {
-        output["context_management"] = data.delta.context_management;
+      // A field of the beta `message_delta` event itself, not of its `delta`.
+      if ("context_management" in data && data.context_management != null) {
+        output["context_management"] = data.context_management;
       }
       if (
         "usage" in data &&
