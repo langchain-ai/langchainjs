@@ -1,5 +1,3 @@
-export const iife = <T>(fn: () => T): T => fn();
-
 /**
  * A utility function that serializes the headers object to a string
  * and orders the keys alphabetically so that the same headers object
