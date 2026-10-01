@@ -10,3 +10,10 @@ declarations imported a module that doesn't resolve: projects that check
 library types got TS2307, and the rest saw the options as `any`. They are now
 `Groq.RequestOptions`, which groq-sdk exports from its client. The import was
 type-only, so the JavaScript is unchanged.
+
+The constructor's first argument is now required in its implementation too, as
+both public overloads already require it. The `{}` fallback it replaces built a
+`ChatGroq` whose `model` was `undefined` when called with no arguments from
+JavaScript; such a call now throws a `TypeError` from the base class
+constructor, as it did before the string shorthand was added. Calls that match
+an overload behave as before.
