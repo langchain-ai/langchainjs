@@ -22,3 +22,8 @@ The `httpAgent` field is no longer passed to the groq-sdk client. groq-sdk 1.x
 dropped that client option and ignores it, so `httpAgent` has had no effect
 since `@langchain/groq` 1.2.0 moved to groq-sdk 1.x; requests use the `fetch`
 implementation, which the `fetch` field can still replace.
+
+`streamEvents` now maps each Groq chunk's null `x_groq.usage` and
+`delta.reasoning` to `undefined` before handing it to the OpenAI-compatible
+stream converter, whose types don't admit null. The converter already treated
+null like a missing value, so the emitted events are the same.
