@@ -2,10 +2,10 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type {
-  createClient,
-  createCluster,
+  RedisClientType,
+  RedisClusterType,
   RediSearchSchema,
-  SearchOptions,
+  FtSearchOptions,
 } from "redis";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { SCHEMA_FIELD_TYPE, SCHEMA_VECTOR_FIELD_ALGORITHM } from "redis";
@@ -72,9 +72,7 @@ export type { MetadataFieldSchema };
  * For basic filtering with string[] or string filters, use RedisVectorStore instead.
  */
 export interface FluentRedisVectorStoreConfig {
-  redisClient:
-    | ReturnType<typeof createClient>
-    | ReturnType<typeof createCluster>;
+  redisClient: RedisClientType | RedisClusterType;
   indexName: string;
   indexOptions?: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
   createIndexOptions?: Omit<RedisVectorStoreIndexOptions, "PREFIX">; // PREFIX must be set with keyPrefix
@@ -148,9 +146,7 @@ export type FluentRedisVectorStoreFilterType = FilterExpression;
 export class FluentRedisVectorStore extends VectorStore {
   declare FilterType: FluentRedisVectorStoreFilterType;
 
-  private redisClient:
-    | ReturnType<typeof createClient>
-    | ReturnType<typeof createCluster>;
+  private redisClient: RedisClientType | RedisClusterType;
 
   indexName: string;
 
@@ -540,7 +536,7 @@ export class FluentRedisVectorStore extends VectorStore {
     query: number[],
     k: number,
     filter?: FilterExpression
-  ): [string, SearchOptions] {
+  ): [string, FtSearchOptions] {
     const vectorScoreField = "vector_score";
 
     let hybridFields = "*";
@@ -559,7 +555,7 @@ export class FluentRedisVectorStore extends VectorStore {
       }
     }
 
-    const options: SearchOptions = {
+    const options: FtSearchOptions = {
       PARAMS: {
         vector: this.getFloat32Buffer(query),
       },

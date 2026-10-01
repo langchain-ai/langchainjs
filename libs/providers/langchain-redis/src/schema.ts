@@ -7,8 +7,14 @@
  * @see https://redis.io/docs/latest/develop/ai/search-and-query/vectors/
  */
 
-import type { createClient, RediSearchSchema } from "redis";
-import { SCHEMA_FIELD_TYPE, SCHEMA_VECTOR_FIELD_ALGORITHM } from "redis";
+import type {
+  createClient,
+  RediSearchSchema,
+  SchemaFieldType,
+  SchemaVectorFieldAlgorithm,
+  SCHEMA_VECTOR_FIELD_ALGORITHM,
+} from "redis";
+import { SCHEMA_FIELD_TYPE } from "redis";
 import type { Document } from "@langchain/core/documents";
 
 /**
@@ -40,7 +46,7 @@ export const DEFAULT_TAG_SEPARATOR = ",";
  * ```
  */
 export interface CustomSchemaField {
-  type: SCHEMA_FIELD_TYPE;
+  type: SchemaFieldType;
   required?: boolean;
   SORTABLE?: boolean | "UNF";
   NOINDEX?: boolean;
@@ -58,7 +64,7 @@ export interface CustomSchemaField {
  * @see https://redis.io/docs/latest/develop/ai/search-and-query/vectors/#search-with-vectors
  */
 export type CreateSchemaVectorField<
-  T extends SCHEMA_VECTOR_FIELD_ALGORITHM,
+  T extends SchemaVectorFieldAlgorithm,
   A extends Record<string, unknown>,
 > = {
   /** The vector indexing algorithm to use */
@@ -85,7 +91,7 @@ export type CreateSchemaVectorField<
  * ```
  */
 export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
-  SCHEMA_VECTOR_FIELD_ALGORITHM.FLAT,
+  typeof SCHEMA_VECTOR_FIELD_ALGORITHM.FLAT,
   {
     /** Block size for the flat index */
     BLOCK_SIZE?: number;
@@ -110,7 +116,7 @@ export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
  * ```
  */
 export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
-  SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
+  typeof SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
   {
     /** Number of outgoing edges per node (default: 16) */
     M?: number;
@@ -126,7 +132,7 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
  * Extracted from the Redis client's ft.create method signature.
  */
 export type CreateIndexOptions = NonNullable<
-  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
+  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[2]
 >;
 
 /**
