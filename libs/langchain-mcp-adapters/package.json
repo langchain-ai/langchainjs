@@ -53,7 +53,7 @@
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@modelcontextprotocol/node": "^2.1.0",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@modelcontextprotocol/server": "^2.2.0",
     "@modelcontextprotocol/server-legacy": "^2.2.0",
     "@types/express": "^5.0.6",
