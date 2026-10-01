@@ -1,6 +1,7 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { isOpenAITool as isOpenAIFunctionTool } from "@langchain/core/language_models/base";
@@ -29,6 +30,7 @@ import {
 import { OpenAIVerbosityParam } from "../types.js";
 import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
 import { normalizePromptCacheRetention } from "../utils/misc.js";
+import { withoutFileMimeTypesUnlessSupported } from "../utils/file_mime_types.js";
 
 export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
@@ -82,6 +84,10 @@ export class ChatOpenAIResponses<
     fieldsArg?: Omit<BaseChatOpenAIFields, "model">
   ) {
     super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
+  override get profile(): ModelProfile {
+    return withoutFileMimeTypesUnlessSupported(super.profile, true);
   }
 
   override invocationParams(
