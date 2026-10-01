@@ -17,3 +17,8 @@ both public overloads already require it. The `{}` fallback it replaces built a
 JavaScript; such a call now throws a `TypeError` from the base class
 constructor, as it did before the string shorthand was added. Calls that match
 an overload behave as before.
+
+The `httpAgent` field is no longer passed to the groq-sdk client. groq-sdk 1.x
+dropped that client option and ignores it, so `httpAgent` has had no effect
+since `@langchain/groq` 1.2.0 moved to groq-sdk 1.x; requests use the `fetch`
+implementation, which the `fetch` field can still replace.
