@@ -1,4 +1,8 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type {
+  AzureClientOptions,
+  ClientOptions,
+  OpenAI as OpenAIClient,
+} from "openai";
 import type { OpenAICacheRetentionParam } from "../types.js";
 import {
   AIMessage,
@@ -137,7 +141,7 @@ export function getFilenameFromMetadata(
   block:
     | ContentBlock.Multimodal.File
     | ContentBlock.Multimodal.Video
-    | Data.StandardFileBlock
+    | Data.DataContentBlock
 ): string | undefined {
   return (block.metadata?.filename ??
     block.metadata?.name ??
@@ -150,7 +154,7 @@ export function getRequiredFilenameFromMetadata(
   block:
     | ContentBlock.Multimodal.File
     | ContentBlock.Multimodal.Video
-    | Data.StandardFileBlock
+    | Data.DataContentBlock
 ): string {
   const filename = (block.metadata?.filename ??
     block.metadata?.name ??
@@ -190,6 +194,35 @@ export function messageToOpenAIRole(
     }
     default:
       throw new Error(`Unknown message type: ${type}`);
+  }
+}
+
+/**
+ * Throws if `options` sets a client option that `AzureOpenAI` rejects.
+ *
+ * `AzureClientOptions` types the OpenAI-only `provider`, `dataResidency`,
+ * `credential` and `x509Transport` options as `never` and accepts only
+ * subject-token workload identities; the SDK throws at construction when any
+ * of these is set.
+ */
+export function assertAzureClientOptions(
+  options: Omit<ClientOptions, "apiKey">
+): asserts options is Omit<AzureClientOptions, "apiKey"> {
+  const unsupported = Object.entries({
+    provider: options.provider,
+    dataResidency: options.dataResidency,
+    credential: options.credential,
+    x509Transport: options.x509Transport,
+  })
+    .filter(([, value]) => value != null)
+    .map(([key]) => key);
+  if (options.workloadIdentity && "type" in options.workloadIdentity) {
+    unsupported.push("workloadIdentity (X.509)");
+  }
+  if (unsupported.length > 0) {
+    throw new Error(
+      `Azure OpenAI does not support these client options: ${unsupported.join(", ")}`
+    );
   }
 }
 

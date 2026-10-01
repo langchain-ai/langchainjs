@@ -18,8 +18,16 @@ class MockStreamChatOpenAIResponses extends ChatOpenAIResponses {
   }
 
   override async completionWithRetry(
-    request: OpenAIClient.Responses.ResponseCreateParamsStreaming
-  ): Promise<AsyncIterable<RawEvent>> {
+    _request: OpenAIClient.Responses.ResponseCreateParamsStreaming
+  ): Promise<AsyncIterable<RawEvent>>;
+
+  override async completionWithRetry(
+    _request: OpenAIClient.Responses.ResponseCreateParamsNonStreaming
+  ): Promise<OpenAIClient.Responses.Response>;
+
+  override async completionWithRetry(
+    _request: OpenAIClient.Responses.ResponseCreateParams
+  ): Promise<AsyncIterable<RawEvent> | OpenAIClient.Responses.Response> {
     const events = this.mockEvents;
     return {
       async *[Symbol.asyncIterator]() {
@@ -29,6 +37,34 @@ class MockStreamChatOpenAIResponses extends ChatOpenAIResponses {
       },
     };
   }
+}
+
+function completedResponse(
+  overrides: Partial<OpenAIClient.Responses.Response>
+): RawEvent {
+  return {
+    type: "response.completed",
+    sequence_number: 0,
+    response: {
+      id: "resp_test",
+      object: "response",
+      created_at: 0,
+      status: "completed",
+      model: "gpt-4o-mini",
+      output: [],
+      output_text: "",
+      error: null,
+      incomplete_details: null,
+      instructions: null,
+      metadata: null,
+      parallel_tool_calls: true,
+      temperature: null,
+      tool_choice: "auto",
+      tools: [],
+      top_p: null,
+      ...overrides,
+    },
+  };
 }
 
 function textEvents(): RawEvent[] {
@@ -43,25 +79,16 @@ function textEvents(): RawEvent[] {
       content_index: 0,
       output_index: 0,
     } as RawEvent,
-    {
-      type: "response.completed",
-      response: {
-        id: "resp_test",
-        object: "response",
-        created_at: 0,
-        status: "completed",
-        model: "gpt-4o-mini",
-        output: [],
-        parallel_tool_calls: true,
-        tool_choice: "auto",
-        tools: [],
-        usage: {
-          input_tokens: 1,
-          output_tokens: 1,
-          total_tokens: 2,
-        },
+    completedResponse({
+      id: "resp_test",
+      usage: {
+        input_tokens: 1,
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
+        output_tokens: 1,
+        output_tokens_details: { reasoning_tokens: 0 },
+        total_tokens: 2,
       },
-    } as RawEvent,
+    }),
   ];
 }
 
@@ -83,20 +110,7 @@ function reasoningEvents(): RawEvent[] {
       summary_index: 0,
       output_index: 0,
     } as RawEvent,
-    {
-      type: "response.completed",
-      response: {
-        id: "resp_reasoning",
-        object: "response",
-        created_at: 0,
-        status: "completed",
-        model: "o3",
-        output: [],
-        parallel_tool_calls: true,
-        tool_choice: "auto",
-        tools: [],
-      },
-    } as RawEvent,
+    completedResponse({ id: "resp_reasoning", model: "o3" }),
   ];
 }
 
@@ -138,20 +152,7 @@ function toolEvents(): RawEvent[] {
         arguments: '{"query":"weather"}',
       },
     } as RawEvent,
-    {
-      type: "response.completed",
-      response: {
-        id: "resp_tools",
-        object: "response",
-        created_at: 0,
-        status: "completed",
-        model: "gpt-4o-mini",
-        output: [],
-        parallel_tool_calls: true,
-        tool_choice: "auto",
-        tools: [],
-      },
-    } as RawEvent,
+    completedResponse({ id: "resp_tools" }),
   ];
 }
 
