@@ -4,15 +4,16 @@
  * @module
  */
 
+import type { Cohere } from "cohere-ai";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
 import type {
   ChatModelStreamEvent,
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import * as uuid from "@langchain/core/utils/uuid";
 
-// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-export type CohereStreamChunk = Record<string, any>;
+export type CohereStreamChunk = Cohere.StreamedChatResponse;
 
 export interface ConvertCohereStreamOptions {
   streamUsage?: boolean;
@@ -28,11 +29,7 @@ export async function* convertCohereStream(
   let textStarted = false;
   let accumulatedText = "";
   let usageSnapshot: UsageMetadata | undefined;
-  const toolBlocks = new Map<
-    number,
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    Record<string, any>
-  >();
+  const toolBlocks = new Map<number, ContentBlock.Tools.ToolCallChunk>();
 
   for await (const chunk of source) {
     if (!messageStarted) {
@@ -59,7 +56,8 @@ export async function* convertCohereStream(
         delta: { type: "text-delta" as const, text: chunk.text },
       };
     } else if (chunk.eventType === "stream-end") {
-      const response = chunk.response ?? {};
+      const response: Partial<Cohere.NonStreamedChatResponse> =
+        chunk.response ?? {};
       if (shouldStreamUsage && response.meta?.tokens) {
         const input = response.meta.tokens.inputTokens ?? 0;
         const output = response.meta.tokens.outputTokens ?? 0;
@@ -75,22 +73,20 @@ export async function* convertCohereStream(
       for (let i = 0; i < toolCalls.length; i++) {
         const tc = toolCalls[i];
         const index = textStarted ? i + 1 : i;
-        const args =
-          typeof tc.function?.arguments === "string"
-            ? tc.function.arguments
-            : JSON.stringify(tc.function?.arguments ?? {});
-        const initial = {
-          type: "tool_call_chunk" as const,
-          id: tc.id,
-          name: tc.function?.name,
-          args,
+        const initial: ContentBlock.Tools.ToolCallChunk = {
+          type: "tool_call_chunk",
+          // Cohere's tool calls carry no id; generate one the way
+          // `ChatCohere._formatCohereToolCalls` does.
+          id: uuid.v4().substring(0, 32),
+          name: tc.name,
+          args: JSON.stringify(tc.parameters ?? {}),
           index,
         };
         toolBlocks.set(index, { ...initial });
         yield {
           event: "content-block-start" as const,
           index,
-          content: initial as ContentBlock,
+          content: initial,
         };
       }
     } else {
@@ -115,7 +111,7 @@ export async function* convertCohereStream(
     yield {
       event: "content-block-finish" as const,
       index,
-      content: finalizeContentBlock(acc as ContentBlock),
+      content: finalizeContentBlock(acc),
     };
   }
 
