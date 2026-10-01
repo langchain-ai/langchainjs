@@ -396,8 +396,6 @@ export class ChatXAIResponses<
       stream: true,
     } as XAIResponsesCreateParamsStreaming);
 
-    const shouldStreamUsage = options.streamUsage ?? true;
-
     const abortableStream = async function* (
       source: AsyncIterable<XAIResponsesStreamEvent>,
       signal?: AbortSignal
@@ -411,8 +409,7 @@ export class ChatXAIResponses<
     };
 
     yield* convertXAIResponsesStream(
-      abortableStream(streamIterable, options.signal),
-      { streamUsage: shouldStreamUsage }
+      abortableStream(streamIterable, options.signal)
     );
   }
 
