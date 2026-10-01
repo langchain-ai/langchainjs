@@ -56,7 +56,7 @@ describe("MCP credential tracing", () => {
       headers: "**REDACTED**",
       authorization: "**REDACTED**",
     });
-    expect(traceOptions.temperature).toBe(options.temperature);
+    expect(traceOptions).toHaveProperty("temperature", options.temperature);
     expect(traceOptions.tools?.[0]).toBe(functionTool);
     expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
       "secret"
@@ -189,10 +189,10 @@ describe("tool search support", () => {
       ],
     });
 
-    const tools = params.tools as Array<Record<string, unknown>>;
+    const tools = params.tools;
     expect(tools).toHaveLength(2);
-    expect(tools[0]).toEqual({ type: "tool_search" });
-    expect(tools[1]).toHaveProperty("type", "function");
+    expect(tools?.[0]).toEqual({ type: "tool_search" });
+    expect(tools?.[1]).toHaveProperty("type", "function");
   });
 
   it("tool_search with client execution passes through", () => {
@@ -211,9 +211,9 @@ describe("tool search support", () => {
       ],
     });
 
-    const tools = params.tools as Array<Record<string, unknown>>;
+    const tools = params.tools;
     expect(tools).toHaveLength(1);
-    expect(tools[0]).toEqual({
+    expect(tools?.[0]).toEqual({
       type: "tool_search",
       execution: "client",
       description: "Search tools",
@@ -241,10 +241,10 @@ describe("tool search support", () => {
       ],
     });
 
-    const tools = params.tools as Array<Record<string, unknown>>;
+    const tools = params.tools;
     expect(tools).toHaveLength(2);
-    expect(tools[1]).toHaveProperty("defer_loading", true);
-    expect(tools[1]).toHaveProperty("type", "function");
-    expect(tools[1]).toHaveProperty("name", "get_weather");
+    expect(tools?.[1]).toHaveProperty("defer_loading", true);
+    expect(tools?.[1]).toHaveProperty("type", "function");
+    expect(tools?.[1]).toHaveProperty("name", "get_weather");
   });
 });

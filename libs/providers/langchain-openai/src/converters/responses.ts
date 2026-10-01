@@ -706,7 +706,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   const content: ContentBlock[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
-  const tool_call_chunks: ToolCallChunk[] = [];
+  const tool_call_chunks: OpenAICustomToolCallChunk[] = [];
   const response_metadata: Record<string, unknown> = {
     model_provider: "openai",
   };
@@ -1507,6 +1507,7 @@ export const convertMessagesToResponsesInput: Converter<
       const additional_kwargs =
         lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
           [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+          [_CUSTOM_TOOL_CALL_IDS_MAP_KEY]?: Record<string, string>;
           reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
           type?: string;
           refusal?: string;

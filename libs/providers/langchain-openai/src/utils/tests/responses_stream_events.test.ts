@@ -23,9 +23,12 @@ async function collectEvents(
   return out;
 }
 
-function completedResponse(overrides: Record<string, unknown> = {}): RawEvent {
+function completedResponse(
+  overrides: Partial<OpenAIClient.Responses.Response> = {}
+): RawEvent {
   return {
     type: "response.completed",
+    sequence_number: 0,
     response: {
       id: "resp_done",
       object: "response",
@@ -33,17 +36,26 @@ function completedResponse(overrides: Record<string, unknown> = {}): RawEvent {
       status: "completed",
       model: "gpt-4o-mini",
       output: [],
+      output_text: "",
+      error: null,
+      incomplete_details: null,
+      instructions: null,
+      metadata: null,
       parallel_tool_calls: true,
+      temperature: null,
       tool_choice: "auto",
       tools: [],
+      top_p: null,
       usage: {
         input_tokens: 10,
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens: 5,
+        output_tokens_details: { reasoning_tokens: 0 },
         total_tokens: 15,
       },
       ...overrides,
     },
-  } as RawEvent;
+  };
 }
 
 describe("convertOpenAIResponsesStream", () => {
@@ -251,7 +263,7 @@ describe("convertOpenAIResponsesStream", () => {
           input_tokens: 100,
           output_tokens: 20,
           total_tokens: 120,
-          input_tokens_details: { cached_tokens: 40 },
+          input_tokens_details: { cache_write_tokens: 0, cached_tokens: 40 },
           output_tokens_details: { reasoning_tokens: 5 },
         },
       }),

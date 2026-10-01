@@ -6,6 +6,7 @@ import {
   AIMessageChunk,
   ContentBlock,
   HumanMessage,
+  RawInputToolCallChunk,
   SystemMessage,
   ToolCallChunk,
   ToolMessage,
@@ -551,7 +552,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
           index: 0,
           isCustomTool: true,
         },
-      ] as ToolCallChunk[]);
+      ] as RawInputToolCallChunk[]);
     });
   });
 
@@ -2555,7 +2556,7 @@ describe("convertResponsesMessageToAIMessage", () => {
         input_tokens: 10,
         output_tokens: 5,
         total_tokens: 15,
-        input_tokens_details: { cached_tokens: 0 },
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens_details: { reasoning_tokens: 0 },
       },
     };
@@ -2618,7 +2619,7 @@ describe("convertResponsesMessageToAIMessage", () => {
         input_tokens: 10,
         output_tokens: 5,
         total_tokens: 15,
-        input_tokens_details: { cached_tokens: 0 },
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens_details: { reasoning_tokens: 0 },
       },
     };
@@ -2678,7 +2679,7 @@ describe("convertResponsesMessageToAIMessage", () => {
         input_tokens: 10,
         output_tokens: 5,
         total_tokens: 15,
-        input_tokens_details: { cached_tokens: 0 },
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens_details: { reasoning_tokens: 0 },
       },
     };
@@ -3260,7 +3261,7 @@ describe("tool_search support", () => {
 
       const message = convertResponsesMessageToAIMessage(response);
       expect(message.tool_calls).toHaveLength(1);
-      expect(message.tool_calls[0].name).toBe("get_weather");
+      expect(message.tool_calls?.[0].name).toBe("get_weather");
       expect(message.additional_kwargs.tool_outputs).toHaveLength(2);
       expect((message.additional_kwargs.tool_outputs as any[])[0].type).toBe(
         "tool_search_call"
@@ -3433,8 +3434,8 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
     // No parsed content since the model only returned a tool call
     expect(message.additional_kwargs.parsed).toBeUndefined();
     // Usage metadata should still be populated
-    expect(result!.message.usage_metadata).toBeDefined();
-    expect(result!.message.usage_metadata!.input_tokens).toBe(50);
+    expect(message.usage_metadata).toBeDefined();
+    expect(message.usage_metadata!.input_tokens).toBe(50);
   });
 
   it("should parse text correctly when response.completed has json_schema format with actual text", () => {
@@ -3575,8 +3576,8 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing
     expect(message.additional_kwargs.parsed).toBeUndefined();
     // Usage metadata should still flow through so the caller can account
     // for the tokens that were spent on the bad payload.
-    expect(result!.message.usage_metadata).toBeDefined();
-    expect(result!.message.usage_metadata!.input_tokens).toBe(30);
+    expect(message.usage_metadata).toBeDefined();
+    expect(message.usage_metadata!.input_tokens).toBe(30);
   });
 
   it("should still parse cleanly when response text is well-formed JSON", () => {

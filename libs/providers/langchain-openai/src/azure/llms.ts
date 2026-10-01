@@ -1,4 +1,8 @@
-import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
+import {
+  type AzureClientOptions,
+  type ClientOptions,
+  AzureOpenAI as AzureOpenAIClient,
+} from "openai";
 import { type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI } from "../llms.js";
@@ -7,6 +11,7 @@ import {
   getEndpoint,
   getHeadersWithUserAgent,
 } from "../utils/azure.js";
+import { assertAzureClientOptions } from "../utils/misc.js";
 import type {
   OpenAIInput,
   AzureOpenAIInput,
@@ -116,7 +121,8 @@ export class AzureOpenAI extends OpenAI {
       const endpoint = getEndpoint(openAIEndpointConfig);
 
       const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
-      const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+      assertAzureClientOptions(clientConfigRest);
+      const params: Omit<AzureClientOptions, "apiKey"> & { apiKey?: string } = {
         ...clientConfigRest,
         baseURL: endpoint,
         timeout: this.timeout,

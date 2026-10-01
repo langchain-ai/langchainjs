@@ -11,9 +11,6 @@ type RawChunk = OpenAIClient.Chat.Completions.ChatCompletionChunk;
 
 class MockStreamChatOpenAICompletions extends ChatOpenAICompletions {
   private mockChunks: RawChunk[];
-  capturedRequest:
-    | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
-    | undefined;
 
   constructor(mockChunks: RawChunk[]) {
     super({ apiKey: "fake-key", model: "gpt-4o-mini", streaming: true });
@@ -21,9 +18,18 @@ class MockStreamChatOpenAICompletions extends ChatOpenAICompletions {
   }
 
   override async completionWithRetry(
-    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
-  ): Promise<AsyncIterable<RawChunk>> {
-    this.capturedRequest = request;
+    _request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
+  ): Promise<AsyncIterable<RawChunk>>;
+
+  override async completionWithRetry(
+    _request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming
+  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
+
+  override async completionWithRetry(
+    _request: OpenAIClient.Chat.ChatCompletionCreateParams
+  ): Promise<
+    AsyncIterable<RawChunk> | OpenAIClient.Chat.Completions.ChatCompletion
+  > {
     const chunks = this.mockChunks;
     return {
       async *[Symbol.asyncIterator]() {
@@ -86,6 +92,18 @@ function textOnlyChunks(): RawChunk[] {
   ];
 }
 
+type RawDelta = RawChunk["choices"][number]["delta"];
+
+/**
+ * `reasoning_content` is an OpenAI-compatible extension the stream converter
+ * reads; the OpenAI SDK's delta type does not declare it.
+ */
+function reasoningDelta(
+  delta: RawDelta & { reasoning_content: string }
+): RawDelta {
+  return delta;
+}
+
 function reasoningPlusTextChunks(): RawChunk[] {
   return [
     {
@@ -97,11 +115,11 @@ function reasoningPlusTextChunks(): RawChunk[] {
       choices: [
         {
           index: 0,
-          delta: {
+          delta: reasoningDelta({
             role: "assistant",
             content: "",
             reasoning_content: "Let me",
-          },
+          }),
           finish_reason: null,
           logprobs: null,
         },
@@ -116,7 +134,7 @@ function reasoningPlusTextChunks(): RawChunk[] {
       choices: [
         {
           index: 0,
-          delta: { reasoning_content: " reason..." },
+          delta: reasoningDelta({ reasoning_content: " reason..." }),
           finish_reason: null,
           logprobs: null,
         },
@@ -324,11 +342,8 @@ function usageChunks(): RawChunk[] {
         prompt_tokens: 100,
         completion_tokens: 3,
         total_tokens: 103,
-        prompt_tokens_details: { cached_tokens: 50, audio_tokens: null },
-        completion_tokens_details: {
-          reasoning_tokens: 2,
-          audio_tokens: null,
-        },
+        prompt_tokens_details: { cached_tokens: 50 },
+        completion_tokens_details: { reasoning_tokens: 2 },
       },
     },
   ];
@@ -562,12 +577,12 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       );
       expect(toolArgDeltas.length).toBe(2);
       expect(
-        (toolArgDeltas[0] as { delta: { fields: { args: string } } }).delta
-          .fields.args
+        (toolArgDeltas[0] as { delta: { fields?: { args?: string } } }).delta
+          .fields?.args
       ).toBe('{"query"');
       expect(
-        (toolArgDeltas[1] as { delta: { fields: { args: string } } }).delta
-          .fields.args
+        (toolArgDeltas[1] as { delta: { fields?: { args?: string } } }).delta
+          .fields?.args
       ).toBe('{"query":"weather"}');
     });
 
