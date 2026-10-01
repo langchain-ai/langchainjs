@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { AmazonKendraRetriever } from "../kendra.js";
 
 test.skip("AmazonKendraRetriever", async () => {
