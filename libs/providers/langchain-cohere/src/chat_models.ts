@@ -71,9 +71,8 @@ export interface BaseChatCohereInput extends BaseChatModelParams {
   streaming?: boolean;
   /**
    * Whether or not to include token usage when streaming.
-   * This will include an extra chunk at the end of the stream
-   * with `eventType: "stream-end"` and the token usage in
-   * `usage_metadata`.
+   * The token usage is set as `usage_metadata` on the last chunk
+   * of the stream, the one with `eventType: "stream-end"`.
    * @default {true}
    */
   streamUsage?: boolean;
@@ -1011,7 +1010,9 @@ export class ChatCohere<
         id: uuid.v4().substring(0, 32),
         function: {
           name: toolCall.name,
-          arguments: toolCall.parameters, // Convert arguments to string
+          // Kept as Cohere's parameters object: `_generate` uses it as the
+          // tool call's args, and streaming serializes it for the chunk.
+          arguments: toolCall.parameters,
         },
         type: "function",
       });
@@ -1209,37 +1210,33 @@ export class ChatCohere<
             ...chunk,
           },
         });
-      } else if (
-        chunk.eventType === "stream-end" &&
-        (this.streamUsage || options.streamUsage)
-      ) {
-        // stream-end events contain the final token count
+      } else if (chunk.eventType === "stream-end") {
+        // stream-end events contain the tool calls and the final token count.
+        // streamUsage gates only the token count, never the tool calls.
         const input_tokens = chunk.response.meta?.tokens?.inputTokens ?? 0;
         const output_tokens = chunk.response.meta?.tokens?.outputTokens ?? 0;
         const chunkGenerationInfo: Record<string, any> = {
           ...chunk.response,
         };
 
-        if (chunk.response.toolCalls && chunk.response.toolCalls.length > 0) {
+        const toolCalls = this._formatCohereToolCalls(chunk.response.toolCalls);
+        if (toolCalls.length > 0) {
           // Only populate tool_calls when 1) present on the response and
           // 2) has one or more calls.
-          chunkGenerationInfo.toolCalls = this._formatCohereToolCalls(
-            chunk.response.toolCalls
-          );
+          chunkGenerationInfo.toolCalls = toolCalls;
         }
 
-        let toolCallChunks: ToolCallChunk[] = [];
-        const toolCalls = chunkGenerationInfo.toolCalls ?? [];
-
-        if (toolCalls.length > 0) {
-          toolCallChunks = toolCalls.map((toolCall: any) => ({
+        // A tool call chunk's args are a JSON string, and Cohere sends each
+        // tool call whole, so its position is its index.
+        const toolCallChunks: ToolCallChunk[] = toolCalls.map(
+          (toolCall, index) => ({
             name: toolCall.function.name,
-            args: toolCall.function.arguments,
+            args: JSON.stringify(toolCall.function.arguments ?? {}),
             id: toolCall.id,
-            index: toolCall.index,
+            index,
             type: "tool_call_chunk",
-          }));
-        }
+          })
+        );
 
         yield new ChatGenerationChunk({
           text: "",
@@ -1249,11 +1246,14 @@ export class ChatCohere<
               eventType: "stream-end",
             },
             tool_call_chunks: toolCallChunks,
-            usage_metadata: {
-              input_tokens,
-              output_tokens,
-              total_tokens: input_tokens + output_tokens,
-            },
+            usage_metadata:
+              this.streamUsage || options.streamUsage
+                ? {
+                    input_tokens,
+                    output_tokens,
+                    total_tokens: input_tokens + output_tokens,
+                  }
+                : undefined,
           }),
           generationInfo: {
             eventType: "stream-end",
