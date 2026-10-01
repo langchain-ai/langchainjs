@@ -1,7 +1,6 @@
 import {
   getBuildConfig,
   cjsCompatPlugin,
-  lcSecretsPlugin,
   importMapPlugin,
   importConstantsPlugin,
 } from "@langchain/build";
@@ -109,7 +108,6 @@ export default getBuildConfig({
     cjsCompatPlugin({
       files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
     }),
-    lcSecretsPlugin(),
     importMapPlugin({
       omitFromImportMap: ["hub/index", "hub/node", "load/index"],
       extraEntries: [
