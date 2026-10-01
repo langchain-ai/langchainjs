@@ -2,7 +2,10 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertOpenAICompletionsStream } from "@langchain/core/language_models/openai_completions_stream";
+import {
+  convertOpenAICompletionsStream,
+  type OpenAICompletionsStreamChunk,
+} from "@langchain/core/language_models/openai_completions_stream";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -519,6 +522,26 @@ function _convertDeltaToMessageChunk(
   } else {
     return new ChatMessageChunk({ content, role, response_metadata });
   }
+}
+
+/**
+ * groq-sdk types `x_groq.usage` and `delta.reasoning` as nullable, where
+ * `convertOpenAICompletionsStream` takes them as optional. The converter skips
+ * a null value of either just as it skips a missing one, so map null to
+ * `undefined` and keep every other field as it is.
+ */
+function _groqChunkToOpenAICompletionsChunk(
+  chunk: ChatCompletionsAPI.ChatCompletionChunk
+): OpenAICompletionsStreamChunk {
+  const { x_groq, choices, ...rest } = chunk;
+  return {
+    ...rest,
+    x_groq: x_groq && { ...x_groq, usage: x_groq.usage ?? undefined },
+    choices: choices.map(({ delta, ...choice }) => ({
+      ...choice,
+      delta: delta && { ...delta, reasoning: delta.reasoning ?? undefined },
+    })),
+  };
 }
 
 /*
@@ -1200,7 +1223,7 @@ export class ChatGroq extends BaseChatModel<
         if (signal?.aborted) {
           return;
         }
-        yield data;
+        yield _groqChunkToOpenAICompletionsChunk(data);
       }
     };
     yield* convertOpenAICompletionsStream(
