@@ -484,8 +484,13 @@ export abstract class BaseChatOpenAI<
     }
     return {
       ...params,
-      tools: params.tools.map((tool) => {
-        if (tool?.type !== "mcp") {
+      tools: params.tools.map((tool: unknown) => {
+        if (
+          typeof tool !== "object" ||
+          tool === null ||
+          !("type" in tool) ||
+          tool.type !== "mcp"
+        ) {
           return tool;
         }
         const redactedTool: Record<string, unknown> = { ...tool };
