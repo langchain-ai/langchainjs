@@ -886,19 +886,23 @@ function convertLegacyContentMessageToGeminiContent(
             ...getSpeechMetadata(item),
           });
         } else if (item?.type === "functionCall") {
-          const { type, functionCall, ...etc } = item;
+          const { type, functionCall, extras, ...etc } = item;
+          const thoughtSignature =
+            (etc as { thoughtSignature?: string }).thoughtSignature ??
+            (extras as Record<string, unknown> | undefined)?.signature;
           parts.push({
             ...etc,
+            ...(thoughtSignature ? { thoughtSignature } : {}),
             functionCall,
           } as Gemini.Part.FunctionCall);
         } else if (item?.type === "executableCode") {
-          const { type, executableCode, ...etc } = item;
+          const { type, executableCode, extras, ...etc } = item;
           parts.push({
             ...etc,
             executableCode,
           } as Gemini.Part.ExecutableCode);
         } else if (item?.type === "codeExecutionResult") {
-          const { type, codeExecutionResult, ...etc } = item;
+          const { type, codeExecutionResult, extras, ...etc } = item;
           parts.push({
             ...etc,
             codeExecutionResult,
@@ -908,7 +912,8 @@ function convertLegacyContentMessageToGeminiContent(
         } else if (isMessageContentMedia(item)) {
           parts.push(messageContentMedia(item));
         } else {
-          parts.push(item as Gemini.Part);
+          const { extras, ...cleanPart } = item as Record<string, unknown>;
+          parts.push(cleanPart as Gemini.Part);
         }
       }
     }

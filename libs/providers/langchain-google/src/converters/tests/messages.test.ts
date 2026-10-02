@@ -1440,4 +1440,46 @@ describe("mediaProcessing (Agentic Video Understanding)", () => {
       "What color was the cat?"
     );
   });
+
+  test("rebuilding functionCall Gemini.Part strips extras while preserving thoughtSignature", () => {
+    const aiMessage = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "get_weather",
+            args: { location: "Boston" },
+          },
+          thoughtSignature: "sig_abc123",
+          extras: {
+            signature: "sig_abc123",
+          },
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { location: "Boston" },
+          id: "call_1",
+        },
+      ],
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("What is the weather?"),
+      aiMessage,
+    ]);
+
+    expect(contents).toHaveLength(2);
+    expect(contents[1].role).toBe("model");
+    expect(contents[1].parts).toHaveLength(1);
+    const part = contents[1].parts![0] as Record<string, unknown>;
+    expect(part.functionCall).toEqual({
+      name: "get_weather",
+      args: { location: "Boston" },
+    });
+    expect(part.thoughtSignature).toBe("sig_abc123");
+    expect(part.extras).toBeUndefined();
+  });
 });
+
