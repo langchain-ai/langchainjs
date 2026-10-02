@@ -44,6 +44,23 @@ describe("convertToolChoiceToGeminiConfig", () => {
     });
   });
 
+  test('maps "validated" to VALIDATED mode', () => {
+    const result = convertToolChoiceToGeminiConfig("validated", true);
+    expect(result).toEqual({
+      functionCallingConfig: { mode: "VALIDATED" },
+    });
+  });
+
+  test('maps object mode "validated" to VALIDATED mode', () => {
+    const result = convertToolChoiceToGeminiConfig(
+      { mode: "validated" } as never,
+      true
+    );
+    expect(result).toEqual({
+      functionCallingConfig: { mode: "VALIDATED" },
+    });
+  });
+
   test("maps a function name string to ANY mode with allowedFunctionNames", () => {
     const result = convertToolChoiceToGeminiConfig("my_function", true);
     expect(result).toEqual({
