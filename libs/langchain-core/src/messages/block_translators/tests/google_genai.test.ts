@@ -150,4 +150,60 @@ describe("ChatGoogleGenAITranslator", () => {
       },
     ]);
   });
+
+  // Regression test for https://github.com/langchain-ai/langchainjs/issues/11110 —
+  // Gemini's native functionCall blocks carry an id field, but
+  // ChatGoogleGenAITranslator was using `message.id` (the AIMessage's
+  // top-level id) instead. The result: `contentBlocks[i].id` was
+  // undefined for every tool_call while `tool_calls[i].id` had the
+  // Gemini id. Agents matching tool calls by contentBlock.id failed.
+  it("should preserve functionCall.id on the tool_call content block", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            id: "abc123",
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      response_metadata: { model_provider: "google-genai" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "abc123",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
+
+  it("should fall back to message.id when functionCall.id is missing", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      id: "msg_42",
+      response_metadata: { model_provider: "google-genai" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "msg_42",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
 });
