@@ -257,8 +257,10 @@ export class LangChainTracer
 
     this.client = runTree.client ?? this.client;
     this.replicas = runTree.replicas ?? this.replicas;
-    this.projectName = runTree.project_name ?? this.projectName;
-    this.address = runTree.address ?? this.address;
+    if (runTree.project_name || runTree.address) {
+      this.projectName = runTree.project_name;
+      this.address = runTree.address;
+    }
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
     this.fields = {
       ...this.fields,
