@@ -442,24 +442,34 @@ function convertStandardVideoContentBlockToGeminiPart(
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
-  let part: Gemini.Part | null = null;
-  switch (block.type) {
-    case "text":
-      part = { text: block.text };
-      break;
-    case "image":
-    case "audio":
-    case "text-plain":
-    case "file":
-      part = convertStandardDataContentBlockToGeminiPart(block);
-      break;
-    case "video":
-      part = convertStandardVideoContentBlockToGeminiPart(block);
-      break;
-    default:
-      return null;
+
+  function baseGeminiPart(): Gemini.Part | null {
+    switch( block.type ){
+      case "text":
+        return {text: block.text};
+      case "image":
+      case "audio":
+      case "text-plain":
+      case "file":
+        return convertStandardDataContentBlockToGeminiPart( block );
+      case "video":
+        return convertStandardVideoContentBlockToGeminiPart( block );
+      default:
+        return null;
+    }
   }
-  return part ? { ...part, ...getSpeechMetadata(block) } : null;
+
+  const ret: Gemini.Part | null = baseGeminiPart();
+  if (ret) {
+    if ("thoughtSignature" in block) {
+      ret.thoughtSignature = block.thoughtSignature! as string;
+    }
+    const speechMetadataObject = getSpeechMetadata(block);
+    if ("speechMetadata" in speechMetadataObject) {
+      ret.speechMetadata = speechMetadataObject.speechMetadata;
+    }
+  }
+  return ret;
 }
 
 /**
