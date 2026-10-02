@@ -171,7 +171,7 @@
     "hdb": "^0.19.8",
     "ioredis": "^6.0.0",
     "langchain": "workspace:*",
-    "langsmith": ">=0.4.0 <1.0.0",
+    "langsmith": ">=0.10.7 <1.0.0",
     "lorem-ipsum": "^3.0.0",
     "lunary": "^1.0.18",
     "mariadb": "^3.5.3",
@@ -224,7 +224,7 @@
     "zod": "^3.25.76 || ^4"
   },
   "optionalDependencies": {
-    "langsmith": ">=0.4.0 <1.0.0"
+    "langsmith": ">=0.10.7 <1.0.0"
   },
   "publishConfig": {
     "access": "public"

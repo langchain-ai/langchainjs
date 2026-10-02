@@ -1,7 +1,8 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 
-import { vi, test, expect, describe } from "vitest";
+import { vi, test, expect, describe, afterEach } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { RunTree } from "langsmith/run_trees";
 import * as uuid from "../../utils/uuid/index.js";
 
 import { RunnableLambda } from "../../runnables/base.js";
@@ -111,6 +112,186 @@ const serialized: Serialized = {
   id: ["test"],
   kwargs: {},
 };
+
+describe("LangChainTracer code and environment destinations", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const CODE_ADDRESS = {
+    agentId: "code-agent",
+    agentEnvironment: "production",
+  };
+
+  function caseFor(inputs: {
+    codeProject: boolean;
+    codeAddress: boolean;
+    envProject: boolean;
+    envAddress: boolean;
+  }) {
+    // Expected outcome: code defined overrides supersede env vars
+    if (inputs.codeProject && inputs.codeAddress) {
+      return {
+        kind: "conflict",
+        description: "confict",
+        error: /A run is sent to a project .* or to an address .* not both/,
+      } as const;
+    }
+
+    if (inputs.codeProject) {
+      return {
+        kind: "traced",
+        description: "traced code-project",
+        payload: { session_name: "code-project", address: undefined },
+      } as const;
+    }
+
+    if (inputs.codeAddress) {
+      return {
+        kind: "traced",
+        description: "traced code-agent",
+        payload: { session_name: undefined, address: CODE_ADDRESS },
+      } as const;
+    }
+
+    if (inputs.envProject && inputs.envAddress)
+      return { kind: "untraced", description: "untraced" } as const;
+
+    if (inputs.envProject) {
+      return {
+        kind: "traced",
+        description: "traced env-project",
+        payload: { session_name: "env-project", address: undefined },
+      } as const;
+    }
+
+    if (inputs.envAddress) {
+      return {
+        kind: "traced",
+        description: "traced env-agent",
+        payload: {
+          session_name: undefined,
+          address: { agentId: "env-agent", agentEnvironment: "staging" },
+        },
+      } as const;
+    }
+
+    return {
+      kind: "traced",
+      description: "traced default",
+      payload: { session_name: "default", address: undefined },
+    } as const;
+  }
+
+  const cases = [false, true].flatMap((codeProject) =>
+    [false, true].flatMap((codeAddress) =>
+      [false, true].flatMap((envProject) =>
+        [false, true].map((envAddress) => {
+          const inputs = { codeProject, codeAddress, envProject, envAddress };
+          const outcome = caseFor(inputs);
+          const bool = (v: boolean) => (v ? "1" : "0");
+          const title = `project(code: ${bool(codeProject)}, env: ${bool(envProject)}) + address(code: ${bool(codeAddress)}; env: ${bool(envAddress)}) -> ${outcome.description}`;
+          return [title, { ...inputs, outcome }] as const;
+        })
+      )
+    )
+  );
+
+  test.each(cases)(
+    "%s",
+    async (
+      _,
+      { codeProject, codeAddress, envProject, envAddress, outcome }
+    ) => {
+      vi.stubEnv("LANGSMITH_PROJECT", envProject ? "env-project" : undefined);
+      vi.stubEnv("LANGCHAIN_PROJECT", undefined);
+      vi.stubEnv("LANGCHAIN_SESSION", undefined);
+      vi.stubEnv("LANGSMITH_AGENT_ID", envAddress ? "env-agent" : undefined);
+      vi.stubEnv(
+        "LANGSMITH_AGENT_ENVIRONMENT",
+        envAddress ? "staging" : undefined
+      );
+      vi.stubEnv("LANGSMITH_TRACING", "true");
+
+      const persistedCreateRun = vi.fn();
+      const persistedUpdateRun = vi.fn();
+      const tracerState: { tracer?: LangChainTracer } = {};
+      // Client payloads do not carry tracingEnabled. Read it from the SDK's
+      // configured RunTree so this mock respects its destination resolution.
+      const mockClient = {
+        createRun: vi.fn(async (run: { id?: string }) => {
+          if (
+            run.id &&
+            tracerState.tracer?.getRunTreeWithTracingConfig(run.id)
+              ?.tracingEnabled !== false
+          ) {
+            persistedCreateRun(run);
+          }
+        }),
+        updateRun: vi.fn(async (id: string, run: unknown) => {
+          if (
+            tracerState.tracer?.getRunTreeWithTracingConfig(id)
+              ?.tracingEnabled !== false
+          ) {
+            persistedUpdateRun(id, run);
+          }
+        }),
+      };
+      const tracer = new LangChainTracer({
+        client: mockClient,
+        projectName: codeProject ? "code-project" : undefined,
+        address: codeAddress ? CODE_ADDRESS : undefined,
+      });
+      tracerState.tracer = tracer;
+      const runId = uuid.v4();
+      const start = tracer.handleLLMStart(serialized, ["test prompt"], runId);
+
+      if (outcome.kind === "conflict") {
+        await expect(start).rejects.toThrow(outcome.error);
+        expect(mockClient.createRun).not.toHaveBeenCalled();
+        return;
+      }
+
+      await start;
+      await tracer.handleLLMEnd({ generations: [[{ text: "ok" }]] }, runId);
+
+      if (outcome.kind === "untraced") {
+        // An invalid environment destination leaves the run untraced.
+        expect(persistedCreateRun).not.toHaveBeenCalled();
+        expect(persistedUpdateRun).not.toHaveBeenCalled();
+        return;
+      }
+
+      expect(persistedCreateRun).toHaveBeenCalledTimes(1);
+      expect(persistedUpdateRun).toHaveBeenCalledTimes(1);
+      expect(persistedCreateRun).toHaveBeenCalledWith(
+        expect.objectContaining(outcome.payload)
+      );
+      expect(persistedUpdateRun).toHaveBeenCalledWith(
+        runId,
+        expect.objectContaining(outcome.payload)
+      );
+    }
+  );
+});
+
+test("LangChainTracer inherits an addressed parent without assigning a project", () => {
+  const tracer = new LangChainTracer();
+  const address = { agentId: "support", agentEnvironment: "production" };
+
+  const parent = new RunTree({ name: "parent", address });
+
+  expect(tracer.projectName).toBeUndefined();
+  expect(parent.project_name).toBeUndefined();
+
+  tracer.updateFromRunTree(parent);
+
+  // Reconstructing the inherited run must not introduce a project/address conflict.
+  const runTree = tracer.getRunTreeWithTracingConfig(parent.id);
+  expect(runTree).toBeDefined();
+  expect(runTree?.address).toEqual(address);
+  expect(runTree?.project_name).toBeUndefined();
+});
 
 describe("LangChainTracer usage_metadata extraction", () => {
   test("onLLMEnd extracts usage_metadata and stores in run.extra.metadata", async () => {
