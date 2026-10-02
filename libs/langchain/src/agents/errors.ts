@@ -63,7 +63,7 @@ export class ToolInvocationError extends Error {
       toolError instanceof Error ? toolError : new Error(String(toolError));
     const toolArgs = JSON.stringify(toolCall.args);
     super(
-      `Error invoking tool '${toolCall.name}' with kwargs ${toolArgs} with error: ${error.stack}\n Please fix the error and try again.`
+      `Error invoking tool '${toolCall.name}' with kwargs ${toolArgs} with error: ${error.message}\n Please fix the error and try again.`
     );
 
     this.toolCall = toolCall;
