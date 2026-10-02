@@ -343,8 +343,7 @@ function extractMediaProcessing(
     const upper = raw.toUpperCase();
     if (
       upper === "AGENTIC" ||
-      upper === "STATIC" ||
-      upper === "MEDIA_PROCESSING_UNSPECIFIED"
+      upper === "STATIC"
     ) {
       return upper;
     }
