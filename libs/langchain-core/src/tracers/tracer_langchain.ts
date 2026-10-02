@@ -2,7 +2,6 @@ import {
   type Client,
   type Address,
   type LangSmithTracingClientInterface,
-  getDefaultProjectName,
 } from "langsmith";
 import { RunTree, type RunTreeConfig } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
@@ -122,7 +121,7 @@ export class LangChainTracer
       tags,
     } = fields;
 
-    this.projectName = projectName ?? getDefaultProjectName();
+    this.projectName = projectName;
     this.address = address;
     this.replicas = replicas;
     this.exampleId = exampleId;
@@ -260,10 +259,6 @@ export class LangChainTracer
     this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
     this.address = runTree.address ?? this.address;
-    if (this.projectName === getDefaultProjectName() && this.address != null) {
-      this.projectName = undefined;
-    }
-
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
     this.fields = {
       ...this.fields,
@@ -278,9 +273,6 @@ export class LangChainTracer
   getRunTreeWithTracingConfig(id: string): RunTree | undefined {
     const runTree = this.runTreeMap.get(id);
     if (!runTree) return undefined;
-    if (this.projectName === getDefaultProjectName() && this.address != null) {
-      this.projectName = undefined;
-    }
 
     return new RunTree({
       ...runTree,
