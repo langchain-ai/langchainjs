@@ -20,7 +20,7 @@ import type {
   ResolvedSSEConnection,
   ResolvedStdioConnection,
 } from "./types.js";
-import { iife, mergeHeaders, serializeHeaders } from "./utils/misc.js";
+import { mergeHeaders, serializeHeaders } from "./utils/misc.js";
 
 export interface Client extends MCPClient {
   /**
@@ -51,10 +51,7 @@ export interface Connection {
     | ResolvedStdioConnection
     | ResolvedStreamableHTTPConnection
     | ResolvedSSEConnection;
-  closeCallback: () => Promise<void>;
 }
-
-const transportTypes = ["http", "sse", "stdio"] as const;
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -151,22 +148,19 @@ export class ConnectionManager {
     key: ClientKeyObject
   ): Promise<Client> {
     const [type, serverName, options] = args;
-    if (!transportTypes.includes(type)) {
-      throw new Error(`Invalid transport type: ${type}`);
-    }
 
     const transport =
       type === "http"
         ? await this.#createStreamableHTTPTransport(options)
         : type === "sse"
           ? await this.#createSSETransport(options)
-          : await this.#createStdioTransport(options);
+          : this.#createStdioTransport(options);
 
     const identity = {
       name: "@langchain/mcp-adapters",
       version: __PKG_VERSION__,
     };
-    const clientOptions = iife<ClientOptions>(() => {
+    const clientOptions: ClientOptions = (() => {
       if (options.mode === "legacy" || options.transport === "sse") {
         if (options.onElicitation) {
           return {
@@ -183,7 +177,7 @@ export class ConnectionManager {
           mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
         },
       };
-    });
+    })();
 
     const mcpClient = new MCPClient(identity, clientOptions);
 
@@ -325,7 +319,6 @@ export class ConnectionManager {
       transport,
       client,
       transportOptions: options,
-      closeCallback: async () => client.close(),
     });
 
     return client;
@@ -379,10 +372,10 @@ export class ConnectionManager {
   get(options: TransportOptions): Client | undefined;
   get(options: TransportOptions | string): Client | undefined {
     if (typeof options === "string") {
-      return this.#queryConnection({ serverName: options })?.connection.client;
+      return this.#queryConnection({ serverName: options })?.client;
     }
 
-    return this.#queryConnection(options)?.connection.client;
+    return this.#queryConnection(options)?.client;
   }
 
   /**
@@ -401,15 +394,10 @@ export class ConnectionManager {
    * will return the same connection.
    *
    * @param options - The options for the transport
-   * @returns The connection and the key
+   * @returns The connection
    */
-  #queryConnection(
-    options: TransportOptions
-  ): { key: ClientKeyObject; connection: Connection } | undefined {
-    const key = this.identity(options);
-    const connection = this.#connections.get(key);
-
-    return connection ? { key, connection } : undefined;
+  #queryConnection(options: TransportOptions): Connection | undefined {
+    return this.#connections.get(this.identity(options));
   }
 
   /**
@@ -437,7 +425,7 @@ export class ConnectionManager {
       await this.#pending.get(key)?.catch(() => undefined);
       const connection = this.#connections.get(key);
       this.#connections.delete(key);
-      await connection?.closeCallback();
+      await connection?.client.close();
 
       return;
     }
@@ -458,7 +446,7 @@ export class ConnectionManager {
 
     if (!entry) return;
     this.#connections.delete(entry[0]);
-    await entry[1].closeCallback();
+    await entry[1].client.close();
   }
 
   async #closeAll(): Promise<void> {
@@ -468,7 +456,7 @@ export class ConnectionManager {
     this.#identities = [];
 
     const results = await Promise.allSettled(
-      connections.map((connection) => connection.closeCallback())
+      connections.map((connection) => connection.client.close())
     );
 
     const errors = results.flatMap((result) =>
@@ -480,17 +468,6 @@ export class ConnectionManager {
   }
 
   /**
-   * Get the transport for a specific client
-   * @param client - The client to get the transport for
-   */
-  getTransport(
-    client: Client
-  ):
-    | StreamableHTTPClientTransport
-    | SSEClientTransport
-    | StdioClientTransport
-    | undefined;
-  /**
    * Get the transport for a specific connection combination
    * @param options - The options to get the transport for
    */
@@ -500,29 +477,8 @@ export class ConnectionManager {
     | StreamableHTTPClientTransport
     | SSEClientTransport
     | StdioClientTransport
-    | undefined;
-  getTransport(
-    opts: Client | TransportOptions
-  ):
-    | StreamableHTTPClientTransport
-    | SSEClientTransport
-    | StdioClientTransport
     | undefined {
-    /**
-     * if a client instance is passed in
-     */
-    if ("listTools" in opts) {
-      const connection = [...this.#connections.values()].find(
-        (connection) => connection.client === opts
-      );
-      return connection?.transport;
-    }
-
-    const result = this.#queryConnection(opts);
-    if (result) {
-      return result.connection.transport;
-    }
-    return undefined;
+    return this.#queryConnection(options)?.transport;
   }
 
   async #createStreamableHTTPTransport(

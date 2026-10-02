@@ -1782,6 +1782,15 @@ describe.each(thinkingModelInfo)(
       warnSpy.mockRestore();
     });
 
+    test.each([{ maxReasoningTokens: 0 }, { reasoningEffort: "minimal" }])(
+      "minimal thinking %o",
+      async (fields) => {
+        const llm = newChatGoogle(fields as DefaultGoogleParams);
+        const result = await llm.invoke("What is 1 + 1?");
+        expect(result.text.length).toBeGreaterThan(0);
+      }
+    );
+
     test("thought signature - text", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "low",

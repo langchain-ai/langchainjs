@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.15
+
+### Patch Changes
+
+- [#11649](https://github.com/langchain-ai/langchainjs/pull/11649) [`17b6bba`](https://github.com/langchain-ai/langchainjs/commit/17b6bba8343bdd3f3dfc5c59578e0b72337ec740) Thanks [@byhow](https://github.com/byhow)! - Preserve LangGraph interrupts in `toolRetryMiddleware` instead of retrying them or converting them into tool errors. Interrupted tool calls can pause and resume through their checkpointer without being treated as failures.
+
 ## 1.5.14
 
 ### Patch Changes

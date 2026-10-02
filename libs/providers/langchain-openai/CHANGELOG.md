@@ -1,5 +1,22 @@
 # @langchain/openai
 
+## 1.6.2
+
+### Patch Changes
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): support `additional_tools` on the Responses API. An `additional_tools` block on a `SystemMessage`, either bare in `content` or wrapped in a `non_standard` block, is sent verbatim as a top-level input item preceding the message.
+
+  `additional_tools` cannot work anywhere else, so it now throws instead of being dropped: on Chat Completions (set `useResponsesApi: true`), or on any message other than a `SystemMessage`. Assistant messages are exempt.
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - fix(openai): accept `non_standard`-wrapped `configuration_update` and `mcp_approval_response` blocks. Previously only a bare block in `content` was hoisted to a top-level Responses API input item; a wrapped block, or one on a message built with `contentBlocks`, was silently dropped. Chat Completions now also sends the payload of a `non_standard` block rather than the wrapper.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11771](https://github.com/langchain-ai/langchainjs/pull/11771) [`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `fileMimeTypes` to `ModelProfile` so models can advertise the MIME types they accept as generic file inputs. OpenAI Responses API models now report the file types `input_file` supports;
+  Chat Completions profiles are unchanged.
+
 ## 1.6.0
 
 ### Minor Changes
