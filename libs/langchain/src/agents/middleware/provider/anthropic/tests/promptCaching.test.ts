@@ -16,6 +16,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
 import { createAgent } from "../../../../index.js";
+import { createMiddleware } from "../../../../middleware.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Anthropic model
@@ -89,6 +90,92 @@ describe("anthropicPromptCachingMiddleware", () => {
     expect(bindToolsOptions?.cache_control).toEqual({
       type: "ephemeral",
       ttl: "5m",
+    });
+  });
+
+  it("should preserve cache_control already supplied by earlier model settings", async () => {
+    const model = createMockModel();
+
+    const existingCacheControlMiddleware = createMiddleware({
+      name: "ExistingCacheControlMiddleware",
+      wrapModelCall: (request, handler) =>
+        handler({
+          ...request,
+          modelSettings: {
+            ...request.modelSettings,
+            cache_control: {
+              type: "ephemeral" as const,
+              ttl: "1h",
+            },
+          },
+        }),
+    });
+
+    const middleware = anthropicPromptCachingMiddleware({
+      ttl: "5m",
+      minMessagesToCache: 3,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [existingCacheControlMiddleware, middleware],
+    });
+
+    const messages = [
+      new SystemMessage("You are a helpful assistant"),
+      new HumanMessage("Hello"),
+      new AIMessage("Hi there!"),
+      new HumanMessage("How are you?"),
+      new AIMessage("I'm doing well, thanks!"),
+      new HumanMessage("What's the weather like?"),
+    ];
+
+    await agent.invoke({ messages });
+
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions?.cache_control).toEqual({
+      type: "ephemeral",
+      ttl: "1h",
+    });
+  });
+
+  it("should preserve constructor-level cache_control from the model", async () => {
+    const model = Object.assign(createMockModel(), {
+      invocationKwargs: {
+        cache_control: {
+          type: "ephemeral" as const,
+          ttl: "1h",
+        },
+      },
+    });
+
+    const middleware = anthropicPromptCachingMiddleware({
+      ttl: "5m",
+      minMessagesToCache: 3,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const messages = [
+      new SystemMessage("You are a helpful assistant"),
+      new HumanMessage("Hello"),
+      new AIMessage("Hi there!"),
+      new HumanMessage("How are you?"),
+      new AIMessage("I'm doing well, thanks!"),
+      new HumanMessage("What's the weather like?"),
+    ];
+
+    await agent.invoke({ messages });
+
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions?.cache_control).toEqual({
+      type: "ephemeral",
+      ttl: "1h",
     });
   });
 
