@@ -1911,6 +1911,80 @@ describe("convertMessagesToResponsesInput", () => {
       ]);
     });
 
+    it("keeps unindexed reasoning summary parts separate", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: {
+            id: "rs_123",
+            type: "reasoning",
+            summary: [
+              { type: "summary_text", text: "First step" },
+              { type: "summary_text", text: "Second step" },
+            ],
+          },
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3",
+      });
+
+      expect(result).toEqual([
+        {
+          id: "rs_123",
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "First step" },
+            { type: "summary_text", text: "Second step" },
+          ],
+        },
+      ]);
+    });
+
+    it("joins streamed reasoning summary parts by index without changing the message", () => {
+      const summary = [
+        { type: "summary_text" as const, text: "First ", index: 0 },
+        { type: "summary_text" as const, text: "part", index: 0 },
+        { type: "summary_text" as const, text: "Second ", index: 1 },
+        { type: "summary_text" as const, text: "part", index: 1 },
+      ];
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: { id: "rs_123", type: "reasoning", summary },
+        },
+      });
+      const expected = [
+        {
+          id: "rs_123",
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "First part" },
+            { type: "summary_text", text: "Second part" },
+          ],
+        },
+      ];
+      const original = structuredClone(summary);
+
+      const first = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3",
+      });
+      const second = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3",
+      });
+
+      expect(first).toEqual(expected);
+      expect(second).toEqual(expected);
+      expect(summary).toEqual(original);
+    });
+
     it("uses fast path when response_metadata.output is available", () => {
       const output = [
         {
