@@ -13,6 +13,7 @@ import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../../chat_models/types.js";
 import { promptBlockedError } from "../../utils/errors.js";
+import { convertGeminiGenerateContentResponseToUsageMetadata } from "./messages.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
 
@@ -70,13 +71,11 @@ export async function* convertGoogleGeminiStream(
         }
       ).usage_metadata;
     if (shouldStreamUsage && usageMetadata) {
-      const input = usageMetadata.promptTokenCount ?? 0;
-      const output = usageMetadata.candidatesTokenCount ?? 0;
-      usageSnapshot = {
-        input_tokens: input,
-        output_tokens: output,
-        total_tokens: usageMetadata.totalTokenCount ?? input + output,
-      };
+      // Gemini's counts are cumulative, so each chunk's is a full snapshot.
+      usageSnapshot = convertGeminiGenerateContentResponseToUsageMetadata({
+        ...response,
+        usageMetadata,
+      });
       yield { event: "usage" as const, usage: usageSnapshot };
     }
 
