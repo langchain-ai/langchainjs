@@ -71,7 +71,9 @@ function convertToV1FromChatGoogleMessage(
         ) {
           return {
             type: "tool_call",
-            id: message.id,
+            id: _isString(block.functionCall.id)
+              ? block.functionCall.id
+              : message.id,
             name: block.functionCall.name,
             args: block.functionCall.args,
           };
