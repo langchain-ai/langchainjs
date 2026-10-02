@@ -349,6 +349,68 @@ function extractMediaProcessing(
   return undefined;
 }
 
+/**
+ * Determines whether a content block or part represents a server-side media processing
+ * step (e.g. Agentic Video Understanding toolCall/toolResponse) that should be omitted
+ * when sending conversation history back to the Gemini API.
+ */
+function isMediaProcessingBlock(item: unknown): boolean {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  const rawItem = item as Record<string, unknown>;
+
+  // Standard content block format: server_tool_call
+  if (
+    rawItem.type === "server_tool_call" &&
+    (rawItem.name === "media_processing" ||
+      rawItem.toolName === "media_processing")
+  ) {
+    return true;
+  }
+
+  // Standard content block format: server_tool_call_result
+  if (
+    rawItem.type === "server_tool_call_result" ||
+    rawItem.type === "server_tool_result"
+  ) {
+    const extras = rawItem.extras as Record<string, unknown> | undefined;
+    if (
+      extras?.block_type === "media_processing" ||
+      extras?.blockType === "media_processing" ||
+      rawItem.name === "media_processing" ||
+      rawItem.toolName === "media_processing"
+    ) {
+      return true;
+    }
+  }
+
+  // Raw Gemini Part format: toolCall
+  if ("toolCall" in rawItem && rawItem.toolCall) {
+    const tc = rawItem.toolCall as Record<string, unknown>;
+    if (
+      tc.toolName === "media_processing" ||
+      !tc.toolType ||
+      String(tc.toolType).toLowerCase() === "media_processing"
+    ) {
+      return true;
+    }
+  }
+
+  // Raw Gemini Part format: toolResponse
+  if ("toolResponse" in rawItem && rawItem.toolResponse) {
+    const tr = rawItem.toolResponse as Record<string, unknown>;
+    if (
+      !tr.toolType ||
+      String(tr.toolType).toLowerCase() === "media_processing"
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function convertStandardDataContentBlockToGeminiPart(
   block: ContentBlock.Multimodal.Data
 ): Gemini.Part | null {
@@ -464,6 +526,9 @@ function convertStandardReasoningBlockToGeminiPart(
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
+  if (isMediaProcessingBlock(block)) {
+    return null;
+  }
   function baseGeminiPart(): Gemini.Part | null {
     switch (block.type) {
       case "text":
@@ -545,29 +610,16 @@ function convertStandardContentMessageToGeminiContent(
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
     ? message.contentBlocks
-    : [];
+    : Array.isArray(message.content)
+      ? (message.content as ContentBlock.Standard[])
+      : [];
   contentBlocks.forEach((block: ContentBlock.Standard) => {
     const contentBlock =
       (message.additional_kwargs
         ?.originalTextContentBlock as ContentBlock.Standard) || block;
 
     // Filter out server-side media processing steps on replay
-    const rawBlock = contentBlock as unknown as Record<string, unknown>;
-    if (
-      rawBlock.type === "server_tool_call" &&
-      (rawBlock.name === "media_processing" ||
-        rawBlock.toolName === "media_processing")
-    ) {
-      return;
-    }
-    if (
-      (rawBlock.type === "server_tool_call_result" ||
-        rawBlock.type === "server_tool_result") &&
-      ((rawBlock.extras as Record<string, unknown> | undefined)?.block_type ===
-        "media_processing" ||
-        (rawBlock.extras as Record<string, unknown> | undefined)?.blockType ===
-          "media_processing")
-    ) {
+    if (isMediaProcessingBlock(contentBlock)) {
       return;
     }
 
@@ -650,7 +702,10 @@ function convertStandardContentMessageToGeminiContent(
 
 function convertLegacyPartToGeminiPart(
   item: string | ContentBlock | Text
-): Gemini.Part {
+): Gemini.Part | null {
+  if (isMediaProcessingBlock(item)) {
+    return null;
+  }
   /**
    * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
    */
@@ -943,8 +998,28 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
+      if (isMediaProcessingBlock(item)) {
+        continue;
+      }
       const part = convertLegacyPartToGeminiPart(item);
-      parts.push(part);
+      if (part) {
+        parts.push(part);
+      }
+    }
+  } else if (
+    Array.isArray(
+      (message as { contentBlocks?: ContentBlock[] }).contentBlocks
+    )
+  ) {
+    for (const item of (message as { contentBlocks: ContentBlock[] })
+      .contentBlocks) {
+      if (isMediaProcessingBlock(item)) {
+        continue;
+      }
+      const part = convertLegacyPartToGeminiPart(item);
+      if (part) {
+        parts.push(part);
+      }
     }
   }
 

@@ -1694,6 +1694,68 @@ describe("mediaProcessing (Agentic Video Understanding)", () => {
     );
   });
 
+  test("drops server_tool_call and server_tool_call_result for media_processing on roundtrip (legacy / default path)", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "media",
+            data: "AAAA",
+            mimeType: "video/mp4",
+            mediaProcessing: "AGENTIC",
+          },
+          { type: "text", text: "What happens in this video?" },
+        ],
+      }),
+      new AIMessage({
+        content: [
+          {
+            type: "server_tool_call",
+            name: "media_processing",
+            id: "call_media_1",
+            args: { start_offset_sec: 10 },
+          },
+          {
+            type: "server_tool_call_result",
+            toolCallId: "call_media_1",
+            status: "success",
+            output: { frames: 10 },
+            extras: { block_type: "media_processing" },
+          },
+          {
+            type: "text",
+            text: "A cat jumps on the table.",
+          },
+        ],
+      }),
+      new HumanMessage({
+        content: "What color was the cat?",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    // 3 turns: user, model, user
+    expect(contents).toHaveLength(3);
+
+    // Turn 1: user with video (mediaProcessing retained) and text
+    expect(contents[0].role).toBe("user");
+    expect(contents[0].parts![0].mediaProcessing).toBe("AGENTIC");
+
+    // Turn 2: model should ONLY have the text part; server tool call & result dropped
+    expect(contents[1].role).toBe("model");
+    expect(contents[1].parts).toHaveLength(1);
+    expect((contents[1].parts![0] as Gemini.Part.Text).text).toBe(
+      "A cat jumps on the table."
+    );
+
+    // Turn 3: user follow-up
+    expect(contents[2].role).toBe("user");
+    expect((contents[2].parts![0] as Gemini.Part.Text).text).toBe(
+      "What color was the cat?"
+    );
+  });
+
   test("rebuilding functionCall Gemini.Part strips extras while preserving thoughtSignature", () => {
     const aiMessage = new AIMessage({
       content: [
