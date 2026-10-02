@@ -827,7 +827,7 @@ export class ChatOllama
     }
 
     // Yield the `response_metadata` as the final chunk.
-    yield new ChatGenerationChunk({
+    const finalChunk = new ChatGenerationChunk({
       text: "",
       message: new AIMessageChunk({
         content: "",
@@ -838,6 +838,19 @@ export class ChatOllama
         usage_metadata: usageMetadata,
       }),
     });
+    yield finalChunk;
+    // Fire the callback for the final chunk too: on_chat_model_stream events
+    // (streamEvents, LangGraph's "messages" stream mode) are built from
+    // handleLLMNewToken, so without this the usage_metadata never reaches
+    // streaming consumers.
+    await runManager?.handleLLMNewToken(
+      "",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { chunk: finalChunk }
+    );
   }
 
   withStructuredOutput<
