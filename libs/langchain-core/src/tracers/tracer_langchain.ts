@@ -1,5 +1,6 @@
 import {
   type Client,
+  type Address,
   type LangSmithTracingClientInterface,
   getDefaultProjectName,
 } from "langsmith";
@@ -42,6 +43,7 @@ export interface RunUpdate extends BaseRunUpdate {
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
+  address?: Address;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
   metadata?: Record<string, unknown>;
@@ -94,6 +96,8 @@ export class LangChainTracer
 
   projectName?: string;
 
+  address?: Address;
+
   exampleId?: string;
 
   client: LangSmithTracingClientInterface;
@@ -108,9 +112,18 @@ export class LangChainTracer
 
   constructor(protected fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client, replicas, metadata, tags } = fields;
+    const {
+      exampleId,
+      projectName,
+      address,
+      client,
+      replicas,
+      metadata,
+      tags,
+    } = fields;
 
     this.projectName = projectName ?? getDefaultProjectName();
+    this.address = address;
     this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
@@ -246,12 +259,18 @@ export class LangChainTracer
     this.client = runTree.client ?? this.client;
     this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
+    this.address = runTree.address ?? this.address;
+    if (this.projectName === getDefaultProjectName() && this.address != null) {
+      this.projectName = undefined;
+    }
+
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
     this.fields = {
       ...this.fields,
       client: this.client,
       replicas: this.replicas,
       projectName: this.projectName,
+      address: this.address,
       exampleId: this.exampleId,
     };
   }
@@ -259,11 +278,15 @@ export class LangChainTracer
   getRunTreeWithTracingConfig(id: string): RunTree | undefined {
     const runTree = this.runTreeMap.get(id);
     if (!runTree) return undefined;
+    if (this.projectName === getDefaultProjectName() && this.address != null) {
+      this.projectName = undefined;
+    }
 
     return new RunTree({
       ...runTree,
       client: this.client as Client,
       project_name: this.projectName,
+      address: this.address,
       replicas: this.replicas,
       reference_example_id: this.exampleId,
       tracingEnabled: true,

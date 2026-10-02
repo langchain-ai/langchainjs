@@ -2,6 +2,7 @@
 
 import { vi, test, expect, describe } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { RunTree } from "langsmith/run_trees";
 import * as uuid from "../../utils/uuid/index.js";
 
 import { RunnableLambda } from "../../runnables/base.js";
@@ -111,6 +112,43 @@ const serialized: Serialized = {
   id: ["test"],
   kwargs: {},
 };
+
+test("LangChainTracer rejects address and projectName together via LangSmith", async () => {
+  const mockClient = {
+    createRun: vi.fn(async () => {}),
+    updateRun: vi.fn(async () => {}),
+  };
+  const tracer = new LangChainTracer({
+    client: mockClient,
+    projectName: "test-project",
+    address: { agentId: "test-agent", agentEnvironment: "production" },
+  });
+
+  await expect(
+    tracer.handleLLMStart(serialized, ["test prompt"], uuid.v4())
+  ).rejects.toThrow(
+    /A run is sent to a project .* or to an address .* not both/
+  );
+  expect(mockClient.createRun).not.toHaveBeenCalled();
+});
+
+test("LangChainTracer inherits an addressed parent without retaining its default project", () => {
+  const tracer = new LangChainTracer(); // This sets default projectName
+  const address = { agentId: "support", agentEnvironment: "production" };
+
+  const parent = new RunTree({ name: "parent", address });
+
+  expect(tracer.projectName).toBeDefined();
+  expect(parent.project_name).toBeUndefined();
+
+  tracer.updateFromRunTree(parent);
+
+  // Reconstructing the inherited run must not introduce a project/address conflict.
+  const runTree = tracer.getRunTreeWithTracingConfig(parent.id);
+  expect(runTree).toBeDefined();
+  expect(runTree?.address).toEqual(address);
+  expect(runTree?.project_name).toBeUndefined();
+});
 
 describe("LangChainTracer usage_metadata extraction", () => {
   test("onLLMEnd extracts usage_metadata and stores in run.extra.metadata", async () => {
