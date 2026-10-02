@@ -9,7 +9,9 @@
       "default": "./src/index.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit --composite false --incremental false"
+  },
   "type": "module",
   "keywords": [],
   "author": "",

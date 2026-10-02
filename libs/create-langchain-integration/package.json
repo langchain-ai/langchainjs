@@ -9,7 +9,8 @@
   "bin": "./dist/index.js",
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
-    "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register && cp ./template/.env.example ./template/.release-it.json ./dist/template"
+    "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register && cp ./template/.env.example ./template/.release-it.json ./dist/template",
+    "typecheck": "tsc --noEmit --composite false --incremental false"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
