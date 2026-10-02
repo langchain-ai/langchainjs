@@ -508,7 +508,9 @@ export function finalizeContentBlock(block: ContentBlock): ContentBlock {
     const chunk = block as ContentBlock.Tools.ToolCallChunk;
     let parsedArgs: unknown;
     try {
-      parsedArgs = JSON.parse(chunk.args ?? "{}");
+      // Empty string is the seeded default when a provider never sends arg
+      // deltas (zero-arg tools). `??` would leave "" and JSON.parse("") throws.
+      parsedArgs = JSON.parse(chunk.args || "{}");
     } catch {
       return {
         type: "invalid_tool_call" as const,
