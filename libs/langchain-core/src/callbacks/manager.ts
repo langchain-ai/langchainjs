@@ -1067,7 +1067,7 @@ export class CallbackManager
 
   async handleToolStart(
     tool: Serialized,
-    input: string,
+    input: string | Record<string, unknown>,
     runId = uuidv7(),
     _parentRunId: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
@@ -1098,7 +1098,7 @@ export class CallbackManager
           try {
             await handler.handleToolStart?.(
               tool,
-              input,
+              typeof input === "string" ? input : JSON.stringify(input),
               runId,
               this._parentRunId,
               this.tags,

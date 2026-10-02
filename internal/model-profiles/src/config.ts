@@ -21,6 +21,7 @@ const MODEL_PROFILE_FIELDS = new Set([
   "videoInputs",
   "imageToolMessage",
   "pdfToolMessage",
+  "fileMimeTypes",
   "maxOutputTokens",
   "reasoningOutput",
   "imageOutputs",

@@ -433,6 +433,28 @@ function convertStandardVideoContentBlockToGeminiPart(
   return ret;
 }
 
+function convertStandardReasoningBlockToGeminiPart(
+  block: ContentBlock.Reasoning
+): Gemini.Part | null {
+  // Reasoning blocks created from Gemini should contain the base
+  // standard block they would be if "thought" wasn't set to true.
+  // If it exists, we'll use that. Otherwise, we'll assume it was
+  // originally a text block.
+  const ret =
+    "reasoningContentBlock" in block && block.reasoningContentBlock
+      ? convertStandardContentBlockToGeminiPart(
+          block.reasoningContentBlock as ContentBlock.Standard
+        )
+      : { text: block.reasoning };
+
+  // Then add that this came from the thinking process
+  if (ret) {
+    ret.thought = true;
+  }
+
+  return ret;
+}
+
 /**
  * Converts a single LangChain standard content block (v1 format)
  * into a Gemini.Part.
@@ -442,18 +464,19 @@ function convertStandardVideoContentBlockToGeminiPart(
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
-
   function baseGeminiPart(): Gemini.Part | null {
-    switch( block.type ){
+    switch (block.type) {
       case "text":
-        return {text: block.text};
+        return { text: block.text };
+      case "reasoning":
+        return convertStandardReasoningBlockToGeminiPart(block);
       case "image":
       case "audio":
       case "text-plain":
       case "file":
-        return convertStandardDataContentBlockToGeminiPart( block );
+        return convertStandardDataContentBlockToGeminiPart(block);
       case "video":
-        return convertStandardVideoContentBlockToGeminiPart( block );
+        return convertStandardVideoContentBlockToGeminiPart(block);
       default:
         return null;
     }
@@ -555,15 +578,35 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert tool_calls to functionCall parts, reading thoughtSignature from the matching content block, falling back to the tool_call itself.
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    const signaturesById: Record<string, string> = {};
+    for (const block of contentBlocks) {
+      if (
+        block.type === "tool_call" &&
+        block.id &&
+        "thoughtSignature" in block &&
+        typeof block.thoughtSignature === "string"
+      ) {
+        signaturesById[block.id] = block.thoughtSignature;
+      }
+    }
     for (const toolCall of message.tool_calls) {
-      parts.push({
+      const part = {
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-      } as Gemini.Part.FunctionCall);
+      } as Gemini.Part.FunctionCall;
+      const thoughtSignature =
+        (toolCall.id && signaturesById[toolCall.id]) ??
+        ("thoughtSignature" in toolCall
+          ? (toolCall.thoughtSignature as string)
+          : undefined);
+      if (thoughtSignature) {
+        part.thoughtSignature = thoughtSignature;
+      }
+      parts.push(part);
     }
   }
 
@@ -605,21 +648,9 @@ function convertStandardContentMessageToGeminiContent(
   return { role, parts };
 }
 
-/**
- * Converts a single LangChain message with legacy content blocks (v0 format) to Gemini Content.
- * This handles messages that have `response_metadata.output_version === "v0"`.
- *
- * This is intended to be called from `convertMessagesToGeminiContent`
- */
-function convertLegacyContentMessageToGeminiContent(
-  message: BaseMessage,
-  messages: BaseMessage[]
-): Gemini.Content | null {
-  // Skip system messages - they're handled separately
-  if (SystemMessage.isInstance(message)) {
-    return null;
-  }
-
+function convertLegacyPartToGeminiPart(
+  item: string | ContentBlock | Text
+): Gemini.Part {
   /**
    * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
    */
@@ -797,6 +828,67 @@ function convertLegacyContentMessageToGeminiContent(
     return ret;
   }
 
+  function baseGeminiPart(): Gemini.Part {
+    if (typeof item === "string") {
+      return { text: item };
+    } else if (typeof item === "object" && item !== null) {
+      if (isMessageContentText(item)) {
+        return { text: item.text };
+      } else if (isDataContentBlock(item)) {
+        return convertToProviderContentBlock(item, geminiContentBlockConverter);
+      } else if ("type" in item && item?.type === "functionCall") {
+        const { type, functionCall, ...etc } = item;
+        return {
+          ...etc,
+          functionCall,
+        } as Gemini.Part.FunctionCall;
+      } else if ("type" in item && item?.type === "executableCode") {
+        const { type, executableCode, ...etc } = item;
+        return {
+          ...etc,
+          executableCode,
+        } as Gemini.Part.ExecutableCode;
+      } else if ("type" in item && item?.type === "codeExecutionResult") {
+        const { type, codeExecutionResult, ...etc } = item;
+        return {
+          ...etc,
+          codeExecutionResult,
+        } as Gemini.Part.CodeExecutionResult;
+      } else if (isMessageContentImageUrl(item)) {
+        return messageContentImageUrl(item);
+      } else if (isMessageContentMedia(item)) {
+        return messageContentMedia(item);
+      }
+    }
+    return item as Gemini.Part;
+  }
+
+  const ret = baseGeminiPart();
+  const itemRecord = item as Record<string, unknown>;
+  if ("thought" in itemRecord) {
+    ret.thought = itemRecord.thought as boolean;
+  }
+  if ("thoughtSignature" in itemRecord) {
+    ret.thoughtSignature = itemRecord.thoughtSignature as string;
+  }
+  return ret;
+}
+
+/**
+ * Converts a single LangChain message with legacy content blocks (v0 format) to Gemini Content.
+ * This handles messages that have `response_metadata.output_version === "v0"`.
+ *
+ * This is intended to be called from `convertMessagesToGeminiContent`
+ */
+function convertLegacyContentMessageToGeminiContent(
+  message: BaseMessage,
+  messages: BaseMessage[]
+): Gemini.Content | null {
+  // Skip system messages - they're handled separately
+  if (SystemMessage.isInstance(message)) {
+    return null;
+  }
+
   const role: Gemini.Role = iife(() => {
     if (HumanMessage.isInstance(message)) {
       return "user";
@@ -839,90 +931,8 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
-      if (typeof item === "string") {
-        parts.push({ text: item });
-      } else if (typeof item === "object" && item !== null) {
-        const rawItem = item as Record<string, unknown>;
-        if (
-          rawItem.type === "server_tool_call" &&
-          (rawItem.name === "media_processing" ||
-            rawItem.toolName === "media_processing")
-        ) {
-          continue;
-        } else if (
-          (rawItem.type === "server_tool_call_result" ||
-            rawItem.type === "server_tool_result") &&
-          ((rawItem.extras as Record<string, unknown> | undefined)
-            ?.block_type === "media_processing" ||
-            (rawItem.extras as Record<string, unknown> | undefined)
-              ?.blockType === "media_processing")
-        ) {
-          continue;
-        } else if (
-          "toolCall" in rawItem &&
-          rawItem.toolCall &&
-          ((rawItem.toolCall as Record<string, unknown>).toolName ===
-            "media_processing" ||
-            !(rawItem.toolCall as Record<string, unknown>).toolType ||
-            String(
-              (rawItem.toolCall as Record<string, unknown>).toolType
-            ).toLowerCase() === "media_processing")
-        ) {
-          continue;
-        } else if (
-          "toolResponse" in rawItem &&
-          rawItem.toolResponse &&
-          (!(rawItem.toolResponse as Record<string, unknown>).toolType ||
-            String(
-              (rawItem.toolResponse as Record<string, unknown>).toolType
-            ).toLowerCase() === "media_processing")
-        ) {
-          continue;
-        } else if (isMessageContentText(item)) {
-          parts.push({
-            text: item.text,
-            ...getSpeechMetadata(item),
-          });
-        } else if (isDataContentBlock(item)) {
-          const part = convertToProviderContentBlock(
-            item,
-            geminiContentBlockConverter
-          );
-          parts.push({
-            ...part,
-            ...getSpeechMetadata(item),
-          });
-        } else if (item?.type === "functionCall") {
-          const { type, functionCall, extras, ...etc } = item;
-          const thoughtSignature =
-            (etc as { thoughtSignature?: string }).thoughtSignature ??
-            (extras as Record<string, unknown> | undefined)?.signature;
-          parts.push({
-            ...etc,
-            ...(thoughtSignature ? { thoughtSignature } : {}),
-            functionCall,
-          } as Gemini.Part.FunctionCall);
-        } else if (item?.type === "executableCode") {
-          const { type, executableCode, extras, ...etc } = item;
-          parts.push({
-            ...etc,
-            executableCode,
-          } as Gemini.Part.ExecutableCode);
-        } else if (item?.type === "codeExecutionResult") {
-          const { type, codeExecutionResult, extras, ...etc } = item;
-          parts.push({
-            ...etc,
-            codeExecutionResult,
-          } as Gemini.Part.CodeExecutionResult);
-        } else if (isMessageContentImageUrl(item)) {
-          parts.push(messageContentImageUrl(item));
-        } else if (isMessageContentMedia(item)) {
-          parts.push(messageContentMedia(item));
-        } else {
-          const { extras, ...cleanPart } = item as Record<string, unknown>;
-          parts.push(cleanPart as Gemini.Part);
-        }
-      }
+      const part = convertLegacyPartToGeminiPart(item);
+      parts.push(part);
     }
   }
 

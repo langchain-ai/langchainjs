@@ -222,6 +222,21 @@ export function getModelSpecialty(model: string): string {
   }
 }
 
+// Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".
+// TODO: Move this to model profile.
+const MINIMAL_THINKING_LEVEL_MODELS = [
+  "gemini-3-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
+];
+
+function supportsMinimalThinkingLevel(model: string): boolean {
+  return MINIMAL_THINKING_LEVEL_MODELS.some((prefix) =>
+    model.startsWith(prefix)
+  );
+}
+
 /**
  * Builds the `thinkingConfig` object for the Gemini `generationConfig`,
  * translating user-facing reasoning fields into the wire format.
@@ -272,18 +287,16 @@ export function convertFieldsToThinkingConfig(
   if (thinkingLevel === "MINIMAL") {
     includeThoughts = false;
   }
-  if (model.startsWith("gemini-3-pro")) {
+  if (
+    thinkingLevel === "MINIMAL" &&
+    model.startsWith("gemini-3") &&
+    !supportsMinimalThinkingLevel(model)
+  ) {
+    thinkingLevel = "LOW";
+  }
+  if (model.startsWith("gemini-3-pro") && thinkingLevel === "MEDIUM") {
     // Gemini 3 Pro has only low and high.
-    if (thinkingLevel === "MINIMAL") {
-      thinkingLevel = "LOW";
-    } else if (thinkingLevel === "MEDIUM") {
-      thinkingLevel = "HIGH";
-    }
-  } else if (model.startsWith("gemini-3.1-pro")) {
-    // Gemini 3.1 Pro does not have "minimal"
-    if (thinkingLevel === "MINIMAL") {
-      thinkingLevel = "LOW";
-    }
+    thinkingLevel = "HIGH";
   }
 
   // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)

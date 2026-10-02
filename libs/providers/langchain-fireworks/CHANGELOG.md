@@ -1,5 +1,47 @@
 # @langchain/fireworks
 
+## 0.2.17
+
+### Patch Changes
+
+- Updated dependencies [[`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289), [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289)]:
+  - @langchain/openai@1.6.2
+
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [[`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a)]:
+  - @langchain/openai@1.6.1
+
+## 0.2.15
+
+### Patch Changes
+
+- Updated dependencies [[`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34), [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c)]:
+  - @langchain/openai@1.6.0
+
+## 0.2.14
+
+### Patch Changes
+
+- Updated dependencies [[`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d), [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771), [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be)]:
+  - @langchain/openai@1.5.14
+
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [[`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c)]:
+  - @langchain/openai@1.5.13
+
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies [[`6bd3a18`](https://github.com/langchain-ai/langchainjs/commit/6bd3a182a4dc558f3a5d3c87da69f17d9a35f934), [`7d6e1b0`](https://github.com/langchain-ai/langchainjs/commit/7d6e1b098723690bd1b98bc36ed18c75fa5a85ed), [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a)]:
+  - @langchain/openai@1.5.12
+
 ## 0.2.12-rc.0
 
 ### Patch Changes
