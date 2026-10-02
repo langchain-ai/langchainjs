@@ -624,7 +624,7 @@ importers:
         specifier: ^1.1.5
         version: 1.1.5(@langchain/core@libs+langchain-core)
       langsmith:
-        specifier: '>=0.5.0 <1.0.0'
+        specifier: '>=0.10.7 <1.0.0'
         version: 0.10.7(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
       zod:
         specifier: ^3.25.76 || ^4
@@ -1008,7 +1008,7 @@ importers:
         version: 3.25.2(zod@4.3.6)
     optionalDependencies:
       langsmith:
-        specifier: '>=0.4.0 <1.0.0'
+        specifier: '>=0.10.7 <1.0.0'
         version: 0.10.7(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
 
   libs/langchain-core:
@@ -1023,7 +1023,7 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       langsmith:
-        specifier: '>=0.5.0 <1.0.0'
+        specifier: '>=0.10.7 <1.0.0'
         version: 0.10.7(@opentelemetry/api@1.9.1)(openai@7.10.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
       mustache:
         specifier: ^4.2.0
