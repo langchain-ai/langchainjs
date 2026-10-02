@@ -2,7 +2,10 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import * as fs from "node:fs";
 import { ApiClient } from "../../clients/index.js";
 import { ChatGoogle } from "../index.js";
-import { ChatGoogle as ChatGoogleNode } from "../node.js";
+import {
+  ChatGoogle as ChatGoogleNode,
+  type ChatGoogleParams as ChatGoogleNodeParams,
+} from "../node.js";
 import { applyGeminiGatewayParams } from "../base.js";
 
 /**
@@ -47,7 +50,9 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
+      model: "gemini-2.5-flash",
+    });
 
     // Scheme-less host + provider path; the URL builders prepend `https://`.
     expect(params.endpoint).toBe("gateway.smith.langchain.com/gemini");
@@ -58,7 +63,9 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "https://gw.example.com/");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
+      model: "gemini-2.5-flash",
+    });
 
     expect(params.endpoint).toBe("gw.example.com/gemini");
   });
@@ -68,7 +75,9 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "");
     vi.stubEnv("LANGSMITH_API_KEY", "ls-key");
 
-    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
+      model: "gemini-2.5-flash",
+    });
 
     expect(params.apiKey).toBe("ls-key");
   });
@@ -77,7 +86,7 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    const params = applyGeminiGatewayParams({
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
       model: "gemini-2.5-flash",
       apiKey: "user-key",
     });
@@ -90,7 +99,7 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    const params = applyGeminiGatewayParams({
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
       model: "gemini-2.5-flash",
       endpoint: "my.proxy.example.com",
       apiKey: "user-key",
@@ -104,7 +113,7 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    const params = applyGeminiGatewayParams({
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
       model: "gemini-2.5-flash",
       vertexai: true,
     });
@@ -119,7 +128,7 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
     const googleAuthOptions = { projectId: "test-project" };
-    const params = applyGeminiGatewayParams({
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
       model: "gemini-2.5-flash",
       googleAuthOptions,
     });
@@ -134,7 +143,9 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "http://localhost:8080/custom");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
+      model: "gemini-2.5-flash",
+    });
 
     // Scheme preserved (host+port+path) so the URL builder does not force TLS.
     expect(params.endpoint).toBe("http://localhost:8080/custom/gemini");
@@ -143,7 +154,9 @@ describe("applyGeminiGatewayParams", () => {
   test("no-op when the gateway is disabled", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "false");
 
-    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+    const params = applyGeminiGatewayParams<ChatGoogleNodeParams>({
+      model: "gemini-2.5-flash",
+    });
 
     expect(params.endpoint).toBeUndefined();
   });
