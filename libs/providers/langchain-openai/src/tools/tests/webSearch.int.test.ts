@@ -11,6 +11,12 @@ import { ChatOpenAI } from "../../chat_models/index.js";
 describe("OpenAI Web Search Tool Tests", () => {
   it(
     "webSearch creates a basic valid tool definition",
+    {
+      /**
+       * for some reason the location not always is taken into account, so we retry a few times
+       */
+      retry: 5,
+    },
     async () => {
       const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
       const llmWithWebSearch = llm.bindTools([
@@ -38,12 +44,6 @@ describe("OpenAI Web Search Tool Tests", () => {
             block.type === "text" && block.text?.includes("San Francisco")
         )
       ).toBeTruthy();
-    },
-    {
-      /**
-       * for some reason the location not always is taken into account, so we retry a few times
-       */
-      retry: 5,
     }
   );
 });
