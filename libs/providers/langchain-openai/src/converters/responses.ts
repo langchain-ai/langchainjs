@@ -606,6 +606,7 @@ export const convertResponsesMessageToAIMessage: Converter<
  * - This converter is primarily used when reconstructing complete reasoning items from
  *   streaming chunks, where summary parts may arrive incrementally with index markers
  * - Summary parts with the same index are concatenated in the order they appear
+ * - Summary parts without an index (from non-streamed responses) are kept separate
  * - If the reasoning summary contains only one part, no reduction is performed
  * - The index field is used internally during streaming to track which summary parts
  *   belong together, but is removed from the final output as it's not part of the
@@ -620,23 +621,26 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
   // combine summary parts that have the same index and then remove the indexes
   const summary = (
     reasoning.summary.length > 1
-      ? reasoning.summary.reduce(
+      ? reasoning.summary.reduce<ChatOpenAIReasoningSummary["summary"]>(
           (acc, curr) => {
             const last = acc[acc.length - 1];
 
-            if (last!.index === curr.index) {
-              last!.text += curr.text;
+            if (
+              last !== undefined &&
+              curr.index !== undefined &&
+              last.index === curr.index
+            ) {
+              last.text += curr.text;
             } else {
-              acc.push(curr);
+              // copy, so that merging never mutates the message's summary
+              acc.push({ ...curr });
             }
             return acc;
           },
-          [{ ...reasoning.summary[0] }]
+          []
         )
       : reasoning.summary
-  ).map((s) =>
-    Object.fromEntries(Object.entries(s).filter(([k]) => k !== "index"))
-  ) as OpenAIClient.Responses.ResponseReasoningItem.Summary[];
+  ).map(({ index: _index, ...part }) => part);
 
   return {
     ...reasoning,
