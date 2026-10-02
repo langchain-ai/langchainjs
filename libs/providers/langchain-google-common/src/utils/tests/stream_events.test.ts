@@ -6,7 +6,12 @@ async function collectEvents(
   chunks: Record<string, unknown>[]
 ): Promise<ChatModelStreamEvent[]> {
   const out: ChatModelStreamEvent[] = [];
-  for await (const event of convertGoogleGeminiStream(chunks)) {
+  async function* source() {
+    for (const chunk of chunks) {
+      yield chunk;
+    }
+  }
+  for await (const event of convertGoogleGeminiStream(source())) {
     out.push(event);
   }
   return out;
