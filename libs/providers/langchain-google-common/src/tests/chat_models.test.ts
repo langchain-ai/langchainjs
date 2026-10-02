@@ -12,7 +12,6 @@ import {
 } from "@langchain/core/messages";
 import { InMemoryStore } from "@langchain/core/stores";
 import { CallbackHandlerMethods } from "@langchain/core/callbacks/base";
-import { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -2004,23 +2003,8 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const callbacks: CallbackHandlerMethods[] = [
       {
-        handleChatModelStart(
-          llm: Serialized,
-          messages: BaseMessage[][],
-          runId: string,
-          _parentRunId?: string,
-          _extraParams?: Record<string, unknown>,
-          _tags?: string[],
-          _metadata?: Record<string, unknown>,
-          _runName?: string
-        ): any {},
-        handleCustomEvent(
-          eventName: string,
-          data: any,
-          runId: string,
-          tags?: string[],
-          metadata?: Record<string, any>
-        ): any {},
+        handleChatModelStart() {},
+        handleCustomEvent() {},
       },
     ];
     const model = new ChatGoogle({
@@ -2637,11 +2621,9 @@ describe("Mock ChatGoogle - Gemini", () => {
         tool_calls: [
           {
             id: "test",
-            type: "function",
-            function: {
-              name: "test",
-              arguments: '{"testName":"cobalt"}',
-            },
+            type: "tool_call",
+            name: "test",
+            args: { testName: "cobalt" },
           },
         ],
       }),
@@ -2649,6 +2631,9 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
     const result = await model.invoke(messages);
     expect(result).toBeDefined();
+    expect(record.opts.data.contents[1].parts[0]).toEqual({
+      functionCall: { name: "test", args: { testName: "cobalt" } },
+    });
   });
 
   test("4-5. Functions - conversation with signature", async () => {
@@ -3012,7 +2997,14 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
     expect(result.response_metadata).toHaveProperty("logprobs");
     expect(result.response_metadata.logprobs).toHaveProperty("content");
-    const logprobs = result.response_metadata.logprobs.content;
+    const { content: logprobs } = result.response_metadata.logprobs as {
+      content: {
+        token: string;
+        logprob: number;
+        bytes: number[];
+        top_logprobs: unknown[];
+      }[];
+    };
     expect(Array.isArray(logprobs)).toBeTruthy();
     expect(logprobs).toHaveLength(303);
     const first = logprobs[0];
