@@ -625,8 +625,8 @@ importers:
         specifier: ^1.1.5
         version: 1.1.5(@langchain/core@libs+langchain-core)
       langsmith:
-        specifier: '>=0.5.0 <1.0.0'
-        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0))
+        specifier: '>=0.10.7 <1.0.0'
+        version: 0.10.8(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0))
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -1009,8 +1009,8 @@ importers:
         version: 3.25.2(zod@4.3.6)
     optionalDependencies:
       langsmith:
-        specifier: '>=0.4.0 <1.0.0'
-        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0))
+        specifier: '>=0.10.7 <1.0.0'
+        version: 0.10.8(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0))
 
   libs/langchain-core:
     dependencies:
@@ -1024,8 +1024,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       langsmith:
-        specifier: '>=0.5.0 <1.0.0'
-        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0))
+        specifier: '>=0.10.7 <1.0.0'
+        version: 0.10.8(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -8677,26 +8677,6 @@ packages:
 
   langsmith@0.10.8:
     resolution: {integrity: sha512-svLrSnytr4cwZvx5XAel93fXRB1/OmC/u7tfXhnmyMpxIazPLDKKaMQYxGIjCvCRGhprmp9P4RiKM8ecZU46Mg==}
-    peerDependencies:
-      '@opentelemetry/api': '*'
-      '@opentelemetry/exporter-trace-otlp-proto': '*'
-      '@opentelemetry/sdk-trace-base': '*'
-      openai: '*'
-      ws: '>=8.20.1'
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-      '@opentelemetry/exporter-trace-otlp-proto':
-        optional: true
-      '@opentelemetry/sdk-trace-base':
-        optional: true
-      openai:
-        optional: true
-      ws:
-        optional: true
-
-  langsmith@0.9.0:
-    resolution: {integrity: sha512-tlg/aG7qezAKY6G3fgADSX7PkRj+JKoF3z7QNkCMsAOvwvuzhiwP9Amn1Z+zAIxuKoWuXQdIjtFN0LVmUC1oUQ==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -18433,14 +18413,6 @@ snapshots:
       ws: 5.2.7(bufferutil@4.1.0)
 
   langsmith@0.10.8(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0)):
-    dependencies:
-      p-queue: 6.6.2
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-      openai: 7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6)
-      ws: 8.22.0(bufferutil@4.1.0)
-
-  langsmith@0.9.0(@opentelemetry/api@1.9.1)(openai@7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.22.0(bufferutil@4.1.0)):
     dependencies:
       p-queue: 6.6.2
     optionalDependencies:

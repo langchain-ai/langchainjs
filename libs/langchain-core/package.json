@@ -27,7 +27,7 @@
     "@cfworker/json-schema": "^4.0.2",
     "@standard-schema/spec": "^1.1.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": ">=0.5.0 <1.0.0",
+    "langsmith": ">=0.10.7 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "zod": "^3.25.76 || ^4"
