@@ -837,19 +837,19 @@ function convertLegacyPartToGeminiPart(
       } else if (isDataContentBlock(item)) {
         return convertToProviderContentBlock(item, geminiContentBlockConverter);
       } else if ("type" in item && item?.type === "functionCall") {
-        const { type, functionCall, ...etc } = item;
+        const { type, functionCall, extras, ...etc } = item;
         return {
           ...etc,
           functionCall,
         } as Gemini.Part.FunctionCall;
       } else if ("type" in item && item?.type === "executableCode") {
-        const { type, executableCode, ...etc } = item;
+        const { type, executableCode, extras, ...etc } = item;
         return {
           ...etc,
           executableCode,
         } as Gemini.Part.ExecutableCode;
       } else if ("type" in item && item?.type === "codeExecutionResult") {
-        const { type, codeExecutionResult, ...etc } = item;
+        const { type, codeExecutionResult, extras, ...etc } = item;
         return {
           ...etc,
           codeExecutionResult,
@@ -860,7 +860,8 @@ function convertLegacyPartToGeminiPart(
         return messageContentMedia(item);
       }
     }
-    return item as Gemini.Part;
+    const { extras, ...cleanPart } = item as unknown as Record<string, unknown>;
+    return cleanPart as Gemini.Part;
   }
 
   const ret = baseGeminiPart();
@@ -870,6 +871,17 @@ function convertLegacyPartToGeminiPart(
   }
   if ("thoughtSignature" in itemRecord) {
     ret.thoughtSignature = itemRecord.thoughtSignature as string;
+  } else if (
+    "extras" in itemRecord &&
+    typeof itemRecord.extras === "object" &&
+    itemRecord.extras !== null &&
+    "signature" in itemRecord.extras
+  ) {
+    ret.thoughtSignature = (itemRecord.extras as Record<string, unknown>)
+      .signature as string;
+  }
+  if ("extras" in ret) {
+    delete (ret as Record<string, unknown>).extras;
   }
   return ret;
 }
