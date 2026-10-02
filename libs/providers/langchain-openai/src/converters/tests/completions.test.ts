@@ -301,6 +301,15 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
         url: "data:image/png;base64,aGVsbG8=",
       },
+      {
+        name: "binary",
+        image: {
+          type: "image" as const,
+          data: new Uint8Array([255, 137, 80, 78, 71, 255]).subarray(1, 5),
+          mimeType: "image/png",
+        },
+        url: "data:image/png;base64,iVBORw==",
+      },
     ])(
       "converts unversioned standard $name images without mutating input",
       ({ image, url }) => {
@@ -325,6 +334,28 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         expect(message.content).toEqual(original);
       }
     );
+
+    it("encodes binary images in versioned content blocks", () => {
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "image",
+            data: new Uint8Array([137, 80, 78, 71]),
+            mimeType: "image/png",
+          },
+        ],
+      });
+
+      expect(
+        convertMessagesToCompletionsMessageParams({ messages: [message] })[0]
+          .content
+      ).toEqual([
+        {
+          type: "image_url",
+          image_url: { url: "data:image/png;base64,iVBORw==" },
+        },
+      ]);
+    });
 
     it("preserves prompt cache breakpoints on unversioned standard images", () => {
       const message = new HumanMessage({

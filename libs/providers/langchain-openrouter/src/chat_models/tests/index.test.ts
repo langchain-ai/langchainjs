@@ -76,6 +76,11 @@ describe("standard multimodal request content", () => {
           content: [
             { type: "text" as const, text: "Describe the picture" },
             { type: "image" as const, url },
+            {
+              type: "image" as const,
+              mimeType: "image/png",
+              data: new Uint8Array([137, 80, 78, 71]),
+            },
           ],
         },
       ];
@@ -101,6 +106,10 @@ describe("standard multimodal request content", () => {
               content: [
                 { type: "text", text: "Describe the picture" },
                 { type: "image_url", image_url: { url } },
+                {
+                  type: "image_url",
+                  image_url: { url: "data:image/png;base64,iVBORw==" },
+                },
               ],
             },
           ],

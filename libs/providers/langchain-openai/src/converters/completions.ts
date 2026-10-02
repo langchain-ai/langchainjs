@@ -528,10 +528,18 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
         },
       };
     } else if (block.data) {
+      const data =
+        typeof block.data === "string"
+          ? block.data
+          : btoa(
+              Array.from(block.data, (byte) => String.fromCharCode(byte)).join(
+                ""
+              )
+            );
       return {
         type: "image_url",
         image_url: {
-          url: `data:${block.mimeType};base64,${block.data}`,
+          url: `data:${block.mimeType};base64,${data}`,
         },
       };
     }
