@@ -1339,9 +1339,7 @@ describe("mediaProcessing (Agentic Video Understanding)", () => {
 
     const aiMessage = convertGeminiCandidateToAIMessage(candidate);
     expect(Array.isArray(aiMessage.content)).toBe(true);
-    const contentBlocks = aiMessage.content as Array<
-      Record<string, unknown>
-    >;
+    const contentBlocks = aiMessage.content as Array<Record<string, unknown>>;
     expect(contentBlocks).toHaveLength(3);
 
     // Server tool call block
@@ -1482,4 +1480,3 @@ describe("mediaProcessing (Agentic Video Understanding)", () => {
     expect(part.extras).toBeUndefined();
   });
 });
-

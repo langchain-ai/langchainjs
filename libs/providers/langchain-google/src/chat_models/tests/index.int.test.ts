@@ -198,13 +198,13 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3.8-flash-tts",
     testConfig: {
       isTts: true,
-    }
+    },
   },
   {
     model: "gemini-3.8-flash-lite-tts",
     testConfig: {
       isTts: true,
-    }
+    },
   },
   {
     model: "lyria-3-clip-preview",
@@ -319,7 +319,7 @@ async function openFileCommon(
   const fullMimeType = block.mimeType ?? "";
   const mimeType = fullMimeType.split(";")[0].trim().toLowerCase();
   const nowStr = now.toString();
-  const padSeq = ("000000"+imageSeq).substring(imageSeq.toString(10).length);
+  const padSeq = ("000000" + imageSeq).substring(imageSeq.toString(10).length);
   const basename = `langchain-gemini-test-${nowStr}-${testSeq}-${padSeq}`;
 
   let outBuffer = buffer;
@@ -1925,7 +1925,7 @@ describe.each(imageModelInfo)(
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
-      await openFileCommon(block, testSeq, imageSeq++);
+      await openFileCommon(block, Date.now(), testSeq, imageSeq++);
     }
 
     async function handleResult(
@@ -2071,12 +2071,18 @@ describe.sequential.each(ttsModelInfo)(
       warnSpy.mockRestore();
     });
 
-    async function openFile(block: ContentBlock.Multimodal.File, optNow?: number) {
+    async function openFile(
+      block: ContentBlock.Multimodal.File,
+      optNow?: number
+    ) {
       const now = optNow || Date.now();
       await openFileCommon(block, now, testSeq, imageSeq++);
     }
 
-    async function handleResult(blocks: ContentBlock.Standard[], optNow?: number) {
+    async function handleResult(
+      blocks: ContentBlock.Standard[],
+      optNow?: number
+    ) {
       for (const block of blocks) {
         if (block.type === "file") {
           await openFile(block as ContentBlock.Multimodal.File, optNow);
@@ -2099,25 +2105,28 @@ describe.sequential.each(ttsModelInfo)(
           return "";
         }
       });
-      const contentBlocks: ContentBlock.Text[] = promptLines.reduce((acc, val) => {
-        const ret = acc;
-        if (val.length > 0) {
-          const [speaker,text] = val.split(":", 2);
-          console.log('speaker,text',speaker, text);
-          ret.push({
-            type: "text",
-            text,
-            speechMetadata: {
-              speaker
-            }
-          });
-        }
-        return ret;
-      }, [] as ContentBlock.Text[]);
+      const contentBlocks: ContentBlock.Text[] = promptLines.reduce(
+        (acc, val) => {
+          const ret = acc;
+          if (val.length > 0) {
+            const [speaker, text] = val.split(":", 2);
+            console.log("speaker,text", speaker, text);
+            ret.push({
+              type: "text",
+              text,
+              speechMetadata: {
+                speaker,
+              },
+            });
+          }
+          return ret;
+        },
+        [] as ContentBlock.Text[]
+      );
       const humanMessage = new HumanMessage({
         contentBlocks,
-      })
-      console.log('message', humanMessage);
+      });
+      console.log("message", humanMessage);
 
       ret.push(humanMessage);
 
@@ -2284,8 +2293,12 @@ describe.sequential.each(audioModelInfo)(
       warnSpy.mockRestore();
     });
 
-    async function openFile(block: ContentBlock.Multimodal.File, optNow?: number) {
-      await openFileCommon(block, optNow, testSeq, imageSeq++);
+    async function openFile(
+      block: ContentBlock.Multimodal.File,
+      optNow?: number
+    ) {
+      const now = optNow ?? Date.now();
+      await openFileCommon(block, now, testSeq, imageSeq++);
     }
 
     async function handleResult(blocks: ContentBlock.Standard[]) {

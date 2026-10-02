@@ -542,19 +542,20 @@ export abstract class BaseChatGoogle<
     };
   }
 
-  getBody(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
-  ) {
-    const systemInstruction = convertMessagesToGeminiSystemInstruction(messages);
+  getBody(messages: BaseMessage[], options: this["ParsedCallOptions"]) {
+    const systemInstruction =
+      convertMessagesToGeminiSystemInstruction(messages);
     const contents = convertMessagesToGeminiContents(messages);
 
     const speechVersion = speechConfigVersion(this.model);
     if (speechVersion < 2) {
       // Pre gemini-3.8, "speechMetadata" isn't valid
       const len = contents?.[0]?.parts?.length || 0;
-      for (let i=0; i<len; i++) {
-        if (contents?.[0]?.parts?.[i] && "speechMetadata" in contents[0].parts[i]) {
+      for (let i = 0; i < len; i++) {
+        if (
+          contents?.[0]?.parts?.[i] &&
+          "speechMetadata" in contents[0].parts[i]
+        ) {
           delete contents[0].parts[i].speechMetadata;
         }
       }

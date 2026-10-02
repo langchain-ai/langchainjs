@@ -341,10 +341,7 @@ function extractMediaProcessing(
     (block.metadata as Record<string, unknown> | undefined)?.media_processing;
   if (typeof raw === "string") {
     const upper = raw.toUpperCase();
-    if (
-      upper === "AGENTIC" ||
-      upper === "STATIC"
-    ) {
+    if (upper === "AGENTIC" || upper === "STATIC") {
       return upper;
     }
     return raw as Gemini.Part["mediaProcessing"];
@@ -525,7 +522,8 @@ function convertStandardContentMessageToGeminiContent(
     const rawBlock = contentBlock as unknown as Record<string, unknown>;
     if (
       rawBlock.type === "server_tool_call" &&
-      (rawBlock.name === "media_processing" || rawBlock.toolName === "media_processing")
+      (rawBlock.name === "media_processing" ||
+        rawBlock.toolName === "media_processing")
     ) {
       return;
     }
@@ -844,10 +842,10 @@ function convertLegacyContentMessageToGeminiContent(
         } else if (
           (rawItem.type === "server_tool_call_result" ||
             rawItem.type === "server_tool_result") &&
-          ((rawItem.extras as Record<string, unknown> | undefined)?.block_type ===
-            "media_processing" ||
-            (rawItem.extras as Record<string, unknown> | undefined)?.blockType ===
-              "media_processing")
+          ((rawItem.extras as Record<string, unknown> | undefined)
+            ?.block_type === "media_processing" ||
+            (rawItem.extras as Record<string, unknown> | undefined)
+              ?.blockType === "media_processing")
         ) {
           continue;
         } else if (
@@ -1244,9 +1242,7 @@ export const convertGeminiPartToContentBlock: Converter<
       const tc = part.toolCall;
       const toolName =
         tc.toolName ||
-        (tc.toolType
-          ? String(tc.toolType).toLowerCase()
-          : "media_processing");
+        (tc.toolType ? String(tc.toolType).toLowerCase() : "media_processing");
       return {
         type: "server_tool_call",
         name: toolName,
@@ -1279,7 +1275,9 @@ export const convertGeminiPartToContentBlock: Converter<
   };
   if (part.thoughtSignature) {
     ret.extras = {
-      ...(typeof ret.extras === "object" && ret.extras !== null ? ret.extras : {}),
+      ...(typeof ret.extras === "object" && ret.extras !== null
+        ? ret.extras
+        : {}),
       signature: part.thoughtSignature,
     };
   }

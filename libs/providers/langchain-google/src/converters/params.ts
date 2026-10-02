@@ -319,7 +319,7 @@ export function convertFieldsToThinkingConfig(
 
 export function speechConfigVersion(model: string): number {
   const modelVersion = getModelVersionValue(model);
-  if (modelVersion < 3.8){
+  if (modelVersion < 3.8) {
     return 1;
   } else {
     // Starting with version 3.8
@@ -387,7 +387,7 @@ export function convertFieldsToSpeechConfig(
   if (typeof voice === "string") {
     // They just provided the prebuilt voice configuration name. Use it.
     const version = speechConfigVersion(model);
-    if (version === 1){
+    if (version === 1) {
       ret = {
         voiceConfig: {
           prebuiltVoiceConfig: {
@@ -399,8 +399,8 @@ export function convertFieldsToSpeechConfig(
       ret = {
         voiceConfig: {
           voice: voice,
-        }
-      }
+        },
+      };
     }
   } else {
     // This is multi-speaker, so we have speaker/name pairs
