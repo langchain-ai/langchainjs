@@ -274,7 +274,7 @@ export class LangChainTracer
     const runTree = this.runTreeMap.get(id);
     if (!runTree) return undefined;
 
-    return new RunTree({
+    const config: RunTreeConfig = {
       ...runTree,
       client: this.client as Client,
       project_name: this.projectName,
@@ -282,7 +282,13 @@ export class LangChainTracer
       replicas: this.replicas,
       reference_example_id: this.exampleId,
       tracingEnabled: true,
-    });
+    };
+
+    // Older SDKs merge the config over their defaults, so an explicit undefined
+    // would erase the project instead of letting the SDK resolve it.
+    if (config.project_name == null) delete config.project_name;
+    if (config.address == null) delete config.address;
+    return new RunTree(config);
   }
 
   static getTraceableRunTree(): RunTree | undefined {
