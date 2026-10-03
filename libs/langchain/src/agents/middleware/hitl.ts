@@ -675,7 +675,7 @@ export function humanInTheLoopMiddleware(
     name: "HumanInTheLoopMiddleware",
     contextSchema,
     afterModel: {
-      canJumpTo: ["model"],
+      canJumpTo: ["model", "tools"],
       hook: async (state, runtime) => {
         const config = interopParse(contextSchema, {
           ...options,
@@ -850,7 +850,7 @@ export function humanInTheLoopMiddleware(
         }
 
         const jumpTo: JumpToTarget | undefined = hasRejectedToolCalls
-          ? "model"
+          ? "tools"
           : undefined;
         return {
           messages: [lastMessage, ...artificialToolMessages],
