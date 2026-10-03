@@ -25,15 +25,32 @@ export type StreamingChunkData = OpenRouter.ChatStreamingResponseChunk["data"];
  * Delegates to the OpenAI completions converter since OpenRouter's chat
  * API is wire-compatible with OpenAI's. This gives us full support for
  * standard content blocks, reasoning-model developer role mapping,
- * multi-modal inputs, and all edge cases handled upstream.
+ * multi-modal inputs, and all edge cases handled upstream. Assistant reasoning
+ * is restored afterward so tool-call continuations retain OpenRouter context.
  */
 export function convertMessagesToOpenRouterParams(
   messages: BaseMessage[],
   model?: string
 ): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
-  return convertMessagesToCompletionsMessageParams({
-    messages,
-    model,
+  return messages.flatMap((message) => {
+    // Convert each source message separately: audio can expand a single message
+    // into multiple API messages, so input and output indices need not match.
+    const params = convertMessagesToCompletionsMessageParams({
+      messages: [message],
+      model,
+    });
+    const assistant = params[0];
+    if (assistant?.role === "assistant") {
+      const { reasoning_content, reasoning_details } =
+        message.additional_kwargs;
+      if (typeof reasoning_content === "string") {
+        Object.assign(assistant, { reasoning: reasoning_content });
+      }
+      if (Array.isArray(reasoning_details)) {
+        Object.assign(assistant, { reasoning_details });
+      }
+    }
+    return params;
   });
 }
 
