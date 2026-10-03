@@ -229,7 +229,7 @@ describe("openaiTranslator", () => {
           args: { code: "print('hello')" },
         },
         {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           toolCallId: "call_456",
           status: "success",
           output: {
@@ -355,7 +355,7 @@ describe("openaiTranslator", () => {
           args: {},
         },
         {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           toolCallId: "ws_abc123",
           status: "success",
           output: {},
@@ -394,7 +394,7 @@ describe("openaiTranslator", () => {
           args: { query: "melbourne australia news today" },
         },
         {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           toolCallId: "ws_abc456",
           status: "success",
           output: {
@@ -435,7 +435,7 @@ describe("openaiTranslator", () => {
         (b) => b.type === "server_tool_call"
       );
       const serverToolCallResults = blocks.filter(
-        (b) => b.type === "server_tool_call_result"
+        (b) => b.type === "server_tool_result"
       );
 
       expect(serverToolCalls).toHaveLength(2);
@@ -483,7 +483,7 @@ describe("openaiTranslator", () => {
           args: { queries: ["quarterly report", "revenue 2025"] },
         },
         {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           toolCallId: "fs_abc123",
           status: "success",
           output: {
@@ -521,7 +521,7 @@ describe("openaiTranslator", () => {
       const blocks = message.contentBlocks;
       const serverToolCall = blocks.find((b) => b.type === "server_tool_call");
       const serverToolCallResult = blocks.find(
-        (b) => b.type === "server_tool_call_result"
+        (b) => b.type === "server_tool_result"
       );
 
       expect(serverToolCall).toEqual({
@@ -531,7 +531,7 @@ describe("openaiTranslator", () => {
         args: { queries: ["test query"] },
       });
       expect(serverToolCallResult).toEqual({
-        type: "server_tool_call_result",
+        type: "server_tool_result",
         toolCallId: "fs_abc456",
         status: "success",
         output: {},
@@ -554,17 +554,17 @@ describe("openaiTranslator", () => {
       });
 
       const blocks = message.contentBlocks;
-      const result = blocks.find((b) => b.type === "server_tool_call_result");
+      const result = blocks.find((b) => b.type === "server_tool_result");
 
       expect(result).toEqual({
-        type: "server_tool_call_result",
+        type: "server_tool_result",
         toolCallId: "ws_fail",
         status: "error",
         output: {},
       });
     });
 
-    it("should not emit server_tool_call_result for in_progress web_search_call", () => {
+    it("should not emit server_tool_result for in_progress web_search_call", () => {
       const message = new AIMessage({
         content: [],
         additional_kwargs: {
@@ -581,7 +581,7 @@ describe("openaiTranslator", () => {
 
       const blocks = message.contentBlocks;
       const serverToolCall = blocks.find((b) => b.type === "server_tool_call");
-      const result = blocks.find((b) => b.type === "server_tool_call_result");
+      const result = blocks.find((b) => b.type === "server_tool_result");
 
       expect(serverToolCall).toBeDefined();
       expect(result).toBeUndefined();
@@ -651,7 +651,7 @@ describe("openaiTranslator", () => {
       });
     });
 
-    it("should translate tool_search_output to server_tool_call_result", () => {
+    it("should translate tool_search_output to server_tool_result", () => {
       const message = new AIMessage({
         content: [],
         additional_kwargs: {
@@ -679,8 +679,8 @@ describe("openaiTranslator", () => {
 
       const blocks = message.contentBlocks;
       const result = blocks.find(
-        (b) => b.type === "server_tool_call_result"
-      ) as ContentBlock.Tools.ServerToolCallResult;
+        (b) => b.type === "server_tool_result"
+      ) as ContentBlock.Tools.ServerToolResult;
       expect(result).toBeDefined();
       expect(result.status).toBe("success");
       expect(result.toolCallId).toBe("tso_001");

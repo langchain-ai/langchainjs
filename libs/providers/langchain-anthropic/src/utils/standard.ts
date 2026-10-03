@@ -238,7 +238,7 @@ export function _formatStandardContent(
           input: block.args,
         });
       }
-    } else if (block.type === "server_tool_call_result" && isAnthropicMessage) {
+    } else if (block.type === "server_tool_result" && isAnthropicMessage) {
       if (block.name === "web_search" && Array.isArray(block.output.urls)) {
         const content = block.output.urls.map((url) => ({
           type: "web_search_result" as const,
