@@ -25,6 +25,27 @@ import {
 } from "../types.js";
 import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
+/**
+ * Bedrock guardrail selective input tagging.
+ *
+ * Matches both the raw Converse shape `{ guardContent }` — what the API
+ * accepts, and what the Python `langchain-aws` binding sends — and the
+ * `{ type: "guard_content", guardContent }` shape this package's own output
+ * converter emits, so an assistant turn can be fed straight back in. The
+ * `type` field, when present, carries no extra information here.
+ */
+function isGuardContentBlock(
+  block: unknown
+): block is { guardContent: Bedrock.GuardrailConverseContentBlock } {
+  return (
+    typeof block === "object" &&
+    block !== null &&
+    "guardContent" in block &&
+    typeof (block as { guardContent: unknown }).guardContent === "object" &&
+    (block as { guardContent: unknown }).guardContent !== null
+  );
+}
+
 function isDefaultCachePoint(
   block: unknown
 ): block is { cachePoint: Bedrock.CachePointBlock } {
@@ -541,6 +562,10 @@ function convertLangChainContentBlockToConverseContentBlock<
 
   if (isDefaultCachePoint(block)) {
     return convertCachePointBlock(block);
+  }
+
+  if (isGuardContentBlock(block)) {
+    return { guardContent: block.guardContent };
   }
 
   if (onUnknown === "throw") {
