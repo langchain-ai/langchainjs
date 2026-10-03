@@ -10,6 +10,7 @@ import type {
   ProviderEvent,
   StreamErrorEvent,
 } from "../event.js";
+import { finalizeContentBlock } from "../compat.js";
 
 describe("ChatModelStreamEvent types", () => {
   test("MessageStartEvent", () => {
@@ -312,5 +313,93 @@ describe("interleaving semantics", () => {
 
     expect(blockStates.get(0)).toBe("finished");
     expect(blockStates.get(1)).toBe("finished");
+  });
+});
+
+describe("finalizeContentBlock", () => {
+
+  test("finalizes a tool call chunk with empty args as an empty object", () => {
+    const result = finalizeContentBlock({
+      type: "tool_call_chunk",
+      id: "c1",
+      name: "list_accounts",
+      args: "",
+      index: 0,
+    });
+
+    expect(result).toEqual({
+      type: "tool_call",
+      id: "c1",
+      name: "list_accounts",
+      args: {},
+    });
+  });
+
+  test("finalizes a tool call chunk with undefined args as an empty object", () => {
+    const result = finalizeContentBlock({
+      type: "tool_call_chunk",
+      id: "c1",
+      name: "list_accounts",
+      index: 0,
+    });
+
+    expect(result).toEqual({
+      type: "tool_call",
+      id: "c1",
+      name: "list_accounts",
+      args: {},
+    });
+  });
+
+  test("finalizes a tool call chunk with whitespace-only args as an empty object", () => {
+    const result = finalizeContentBlock({
+      type: "tool_call_chunk",
+      id: "c1",
+      name: "list_accounts",
+      args: "   ",
+      index: 0,
+    });
+
+    expect(result).toEqual({
+      type: "tool_call",
+      id: "c1",
+      name: "list_accounts",
+      args: {},
+    });
+  });
+
+  test("finalizes a tool call chunk with valid JSON args", () => {
+    const result = finalizeContentBlock({
+      type: "tool_call_chunk",
+      id: "c1",
+      name: "search",
+      args: '{"q":"test"}',
+      index: 0,
+    });
+
+    expect(result).toEqual({
+      type: "tool_call",
+      id: "c1",
+      name: "search",
+      args: { q: "test" },
+    });
+  });
+
+  test("keeps invalid JSON args as an invalid tool call", () => {
+    const result = finalizeContentBlock({
+      type: "tool_call_chunk",
+      id: "c1",
+      name: "search",
+      args: '{"q"',
+      index: 0,
+    });
+
+    expect(result).toEqual({
+      type: "invalid_tool_call",
+      id: "c1",
+      name: "search",
+      args: '{"q"',
+      error: "Failed to parse tool call arguments as JSON",
+    });
   });
 });
