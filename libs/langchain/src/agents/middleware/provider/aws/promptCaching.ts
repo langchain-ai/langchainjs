@@ -122,14 +122,16 @@ class BedrockPromptCachingMiddlewareError extends Error {
  *   ]
  * });
  *
- * // Disable caching for specific requests
+ * // Disable caching for a specific request (canonical invoke context)
  * await agent.invoke(
  *   { messages: [new HumanMessage("Process this without caching")] },
- *   {
- *     configurable: {
- *       middleware_context: { enableCaching: false }
- *     }
- *   }
+ *   { context: { enableCaching: false } }
+ * );
+ *
+ * // Equivalent: `configurable.middleware_context` is also honored
+ * await agent.invoke(
+ *   { messages: [new HumanMessage("Process this without caching")] },
+ *   { configurable: { middleware_context: { enableCaching: false } } }
  * );
  * ```
  *
