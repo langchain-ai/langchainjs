@@ -4,7 +4,7 @@ import { RunnableSequence } from "../../runnables/base.js";
 import { RunnablePassthrough } from "../../runnables/passthrough.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { JsonOutputParser } from "../json.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
 
 async function acc(iter: AsyncGenerator<object>): Promise<object[]> {
   const acc = [];
@@ -657,5 +657,137 @@ describe("JsonOutputParser with ContentBlock messages", () => {
 
     const result = await parser.invoke(message);
     expect(result).toEqual({ simple: "string" });
+  });
+});
+
+describe("JsonOutputParser streaming ContentBlock messages", () => {
+  async function* messages(chunks: (AIMessage | AIMessageChunk)[]) {
+    yield* chunks;
+  }
+
+  test.each([
+    ["AIMessage", AIMessage],
+    ["AIMessageChunk", AIMessageChunk],
+  ] as const)("parses incremental text blocks in %s", async (_, Message) => {
+    const parser = new JsonOutputParser();
+    const result = await acc(
+      parser.transform(
+        messages([
+          new Message({
+            content: [{ type: "text", text: '{"answer":"hel' }],
+          }),
+          new Message({ content: [{ type: "text", text: 'lo"}' }] }),
+        ]),
+        {}
+      )
+    );
+
+    expect(result).toEqual([{ answer: "hel" }, { answer: "hello" }]);
+    await expect(
+      parser.invoke(
+        new Message({
+          content: [{ type: "text", text: '{"answer":"hello"}' }],
+        })
+      )
+    ).resolves.toEqual(result.at(-1));
+  });
+
+  test("joins multiple text blocks within and across chunks", async () => {
+    const parser = new JsonOutputParser();
+    const result = await acc(
+      parser.transform(
+        messages([
+          new AIMessageChunk({
+            content: [
+              { type: "text", text: '{"answer":' },
+              { type: "text", text: '"hel' },
+            ],
+          }),
+          new AIMessageChunk({
+            content: [
+              { type: "text", text: "lo" },
+              { type: "text", text: '"}' },
+            ],
+          }),
+        ]),
+        {}
+      )
+    );
+    expect(result).toEqual([{ answer: "hel" }, { answer: "hello" }]);
+  });
+
+  test("ignores empty and non-text blocks without duplicating output", async () => {
+    const parser = new JsonOutputParser();
+    const result = await acc(
+      parser.transform(
+        messages([
+          new AIMessageChunk({ content: [] }),
+          new AIMessageChunk({
+            content: [{ type: "reasoning", reasoning: "not JSON" }],
+          }),
+          new AIMessageChunk({
+            content: [
+              { type: "reasoning", reasoning: "still not JSON" },
+              { type: "text", text: '{"answer":"hel' },
+            ],
+          }),
+          new AIMessageChunk({ content: [{ type: "text", text: "" }] }),
+          new AIMessageChunk({ content: [{ type: "text", text: 'lo"}' }] }),
+          new AIMessageChunk({ content: [] }),
+        ]),
+        {}
+      )
+    );
+    expect(result).toEqual([{ answer: "hel" }, { answer: "hello" }]);
+  });
+
+  test("does not emit JSON for a stream containing only non-text blocks", async () => {
+    const parser = new JsonOutputParser();
+    const result = await acc(
+      parser.transform(
+        messages([
+          new AIMessageChunk({ content: [] }),
+          new AIMessageChunk({
+            content: [{ type: "reasoning", reasoning: '{"hidden":true}' }],
+          }),
+        ]),
+        {}
+      )
+    );
+    expect(result).toEqual([]);
+  });
+
+  test("emits JSON patches for text block chunks", async () => {
+    const parser = new JsonOutputParser({ diff: true });
+    const result = await acc(
+      parser.transform(
+        messages([
+          new AIMessageChunk({
+            content: [{ type: "text", text: '{"answer":"hel' }],
+          }),
+          new AIMessageChunk({ content: [{ type: "text", text: 'lo"}' }] }),
+        ]),
+        {}
+      )
+    );
+    expect(result).toEqual([
+      [{ op: "replace", path: "", value: { answer: "hel" } }],
+      [{ op: "replace", path: "/answer", value: "hello" }],
+    ]);
+  });
+
+  test("supports alternating string content and text block content", async () => {
+    const parser = new JsonOutputParser();
+    const result = await acc(
+      parser.transform(
+        messages([
+          new AIMessageChunk({ content: '{"answer":"hel' }),
+          new AIMessageChunk({ content: [{ type: "text", text: "lo" }] }),
+          new AIMessageChunk({ content: '"}' }),
+        ]),
+        {}
+      )
+    );
+    expect(result).toEqual([{ answer: "hel" }, { answer: "hello" }]);
   });
 });
