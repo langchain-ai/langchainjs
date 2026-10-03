@@ -107,6 +107,25 @@ export class MiddlewareError extends Error {
 
     if (error instanceof Error) {
       this.cause = error;
+
+      // Preserve custom fields and the original prototype so middleware can
+      // inspect the original failure (for example, in retry predicates).
+      Object.setPrototypeOf(this, Object.getPrototypeOf(error));
+      for (const key of Reflect.ownKeys(error)) {
+        if (
+          key === "name" ||
+          key === "message" ||
+          key === "cause" ||
+          key === "stack" ||
+          key === "~brand"
+        ) {
+          continue;
+        }
+        const descriptor = Object.getOwnPropertyDescriptor(error, key);
+        if (descriptor) {
+          Object.defineProperty(this, key, descriptor);
+        }
+      }
     }
   }
 
