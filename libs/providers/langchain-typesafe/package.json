@@ -41,7 +41,7 @@
     "dotenv": "^17.4.2",
     "langchain": "workspace:^",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.2"
   },
   "publishConfig": {
     "access": "public"

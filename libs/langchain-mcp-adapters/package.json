@@ -58,12 +58,12 @@
     "@modelcontextprotocol/server-legacy": "^2.2.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.3",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.2"
   },
   "engines": {
     "node": ">=20.10.0"
