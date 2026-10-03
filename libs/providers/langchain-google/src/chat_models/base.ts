@@ -11,7 +11,10 @@ import {
   BaseMessage,
   type UsageMetadata,
 } from "@langchain/core/messages";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import {
+  CallbackManager,
+  CallbackManagerForLLMRun,
+} from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertGoogleGeminiStream } from "../utils/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
@@ -703,7 +706,7 @@ export abstract class BaseChatGoogle<
   async *_streamChatModelEvents(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
     const body = {
       ...this.invocationParams(options),
@@ -713,19 +716,48 @@ export abstract class BaseChatGoogle<
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
+    const moduleName = this.constructor.name;
+    const eventManager =
+      runManager ??
+      (await CallbackManager.configure(undefined, this.callbacks));
 
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
+    await eventManager?.handleCustomEvent(`google-request-${moduleName}`, {
+      url,
+      headers,
+      body,
+    });
+
+    let response: Response;
+    try {
+      response = await this.apiClient.fetch(
+        new Request(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+          signal: options.signal,
+        })
+      );
+    } catch (error) {
+      await eventManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      });
+      throw error;
+    }
 
     if (!response.ok) {
-      throw await RequestError.fromResponse(response);
+      const error = await RequestError.fromResponse(response);
+      await eventManager?.handleCustomEvent(`google-response-${moduleName}`, {
+        error,
+      });
+      throw error;
     }
+
+    await eventManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    });
 
     if (!response.body) {
       return;
@@ -764,12 +796,18 @@ export abstract class BaseChatGoogle<
       }
     }
 
-    yield* convertGoogleGeminiStream(
-      geminiChunks(eventStream, options.signal),
-      {
-        streamUsage: shouldStreamUsage,
+    async function* trackedGeminiChunks() {
+      for await (const chunk of geminiChunks(eventStream, options.signal)) {
+        await eventManager?.handleCustomEvent(`google-chunk-${moduleName}`, {
+          chunk,
+        });
+        yield chunk;
       }
-    );
+    }
+
+    yield* convertGoogleGeminiStream(trackedGeminiChunks(), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   async *_streamResponseChunks(
