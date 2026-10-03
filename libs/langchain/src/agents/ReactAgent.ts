@@ -315,7 +315,7 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
-        beforeAgentNode = new BeforeAgentNode(m);
+        beforeAgentNode = new BeforeAgentNode(m, toolClasses);
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
           index: i,
@@ -329,7 +329,7 @@ export class ReactAgent<
         );
       }
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m);
+        beforeModelNode = new BeforeModelNode(m, toolClasses);
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -343,7 +343,7 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m);
+        afterModelNode = new AfterModelNode(m, toolClasses);
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -357,7 +357,7 @@ export class ReactAgent<
         );
       }
       if (m.afterAgent) {
-        afterAgentNode = new AfterAgentNode(m);
+        afterAgentNode = new AfterAgentNode(m, toolClasses);
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
           index: i,
