@@ -566,6 +566,52 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
+      name: "tool_call content blocks are skipped when tool_calls is present",
+      input: [
+        new HumanMessage("What's the weather in SF?"),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Let me check the weather for you." },
+            {
+              type: "tool_call",
+              id: "call_123",
+              name: "get_weather",
+              args: { location: "San Francisco" },
+            },
+          ],
+          tool_calls: [
+            {
+              id: "call_123",
+              name: "get_weather",
+              args: { location: "San Francisco" },
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseSystem: [],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [{ text: "What's the weather in SF?" }],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              { text: "Let me check the weather for you." },
+              {
+                toolUse: {
+                  toolUseId: "call_123",
+                  name: "get_weather",
+                  input: { location: "San Francisco" },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       name: "standard v1 format with tool_call blocks (e.g., from Anthropic provider)",
       input: [
         new SystemMessage("You're an advanced AI assistant."),
