@@ -146,3 +146,58 @@ describe("message output usage metadata conversion", () => {
     });
   });
 });
+
+describe("streaming text delta content block index", () => {
+  test("merges same-index text deltas into a single block", () => {
+    const first = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Hello, " },
+    });
+    const second = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "world!" },
+    });
+
+    const result = concat(first.message, second.message);
+
+    expect(result.content).toEqual([
+      { type: "text", text: "Hello, world!", index: 1 },
+    ]);
+  });
+
+  test("keeps different-index text deltas as separate blocks", () => {
+    const first = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { text: "before" },
+    });
+    const second = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "after" },
+    });
+
+    const result = concat(first.message, second.message);
+
+    expect(result.content).toEqual([
+      { type: "text", text: "before", index: 0 },
+      { type: "text", text: "after", index: 1 },
+    ]);
+  });
+
+  test("keeps reasoning and text blocks separated by index", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "think" } },
+    });
+    const text = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "answer" },
+    });
+
+    const result = concat(reasoning.message, text.message);
+
+    expect(result.content).toEqual([
+      { type: "reasoning", reasoning: "think", index: 0 },
+      { type: "text", text: "answer", index: 1 },
+    ]);
+  });
+});
