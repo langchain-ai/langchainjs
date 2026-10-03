@@ -762,3 +762,15 @@ describe("ChatModelStream", () => {
     });
   });
 });
+
+test("retains provider message fields from the finish event", async () => {
+  const additionalKwargs = { provider_token: "opaque", parsed: { answer: 42 } };
+  const events = textStreamEvents();
+  const finish = events[events.length - 1];
+  if (finish.event !== "message-finish")
+    throw new Error("Expected finish fixture");
+  events[events.length - 1] = { ...finish, additionalKwargs };
+  const message = await new ChatModelStream(iterEvents(events));
+  expect(message.additional_kwargs).toMatchObject(additionalKwargs);
+  expect(message.text).toBe("Hello world");
+});
