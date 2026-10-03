@@ -336,6 +336,87 @@ describe("AIMessageChunk", () => {
       ]);
     });
 
+    describe("truncated streams (finish_reason: length)", () => {
+      it("moves repaired partial JSON to invalid_tool_calls", () => {
+        const result = new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [
+            {
+              name: "write",
+              args: '{"path":"/etc/hosts","content":"line1',
+              id: "c1",
+              index: 0,
+              type: "tool_call_chunk",
+            },
+          ],
+          response_metadata: { finish_reason: "length" },
+        });
+
+        expect(result.tool_calls?.length).toBe(0);
+        expect(result.invalid_tool_calls).toEqual([
+          {
+            type: "invalid_tool_call",
+            id: "c1",
+            name: "write",
+            args: '{"path":"/etc/hosts","content":"line1',
+            error: "Truncated tool call args.",
+          },
+        ]);
+      });
+
+      it("keeps strictly-complete args in tool_calls", () => {
+        const result = new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [
+            {
+              name: "get_weather",
+              args: '{"city":"SF"}',
+              id: "call_1",
+              index: 0,
+              type: "tool_call_chunk",
+            },
+          ],
+          response_metadata: { finish_reason: "length" },
+        });
+
+        expect(result.tool_calls).toEqual([
+          {
+            type: "tool_call",
+            id: "call_1",
+            name: "get_weather",
+            args: { city: "SF" },
+          },
+        ]);
+        expect(result.invalid_tool_calls?.length).toBe(0);
+      });
+
+      it("still repairs partial args for non-truncated streams", () => {
+        const result = new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [
+            {
+              name: "write",
+              args: '{"path":"/etc/hosts","content":"line1',
+              id: "c1",
+              index: 0,
+              type: "tool_call_chunk",
+            },
+          ],
+          response_metadata: { finish_reason: "stop" },
+        });
+
+        expect(result.tool_calls).toEqual([
+          {
+            type: "tool_call",
+            id: "c1",
+            name: "write",
+            args: { path: "/etc/hosts", content: "line1" },
+          },
+        ]);
+        expect(result.invalid_tool_calls?.length).toBe(0);
+      });
+    });
+
     it("can concatenate tool call chunks without IDs", () => {
       const chunk = new AIMessageChunk({
         id: "chatcmpl-x",
