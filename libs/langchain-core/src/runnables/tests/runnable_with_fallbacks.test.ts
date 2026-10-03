@@ -34,6 +34,38 @@ test("RunnableWithFallbacks batch", async () => {
   expect(result2).toEqual(["What up 1", "What up 2", "What up 3"]);
 });
 
+test("RunnableWithFallbacks batch returns per-input results and errors", async () => {
+  const primary = RunnableLambda.from((input: string) => {
+    if (input !== "primary-success") {
+      throw new Error(`Primary failed for ${input}`);
+    }
+    return `Primary handled ${input}`;
+  });
+  const fallbackInputs: string[] = [];
+  const fallback = RunnableLambda.from((input: string) => {
+    fallbackInputs.push(input);
+    if (input === "all-fail") {
+      throw new Error(`Fallback failed for ${input}`);
+    }
+    return `Fallback handled ${input}`;
+  });
+
+  const results = await primary
+    .withFallbacks([fallback])
+    .batch(["primary-success", "fallback-success", "all-fail"], undefined, {
+      returnExceptions: true,
+    });
+
+  expect(results[0]).toBe("Primary handled primary-success");
+  expect(results[1]).toBe("Fallback handled fallback-success");
+  expect(results[2]).toBeInstanceOf(Error);
+  if (!(results[2] instanceof Error)) {
+    throw new Error("Expected the failed input to return an error.");
+  }
+  expect(results[2].message).toBe("Primary failed for all-fail");
+  expect(fallbackInputs).toEqual(["fallback-success", "all-fail"]);
+});
+
 test("RunnableWithFallbacks stream", async () => {
   const llm = new FakeStreamingLLM({
     thrownErrorString: "Bad error!",
