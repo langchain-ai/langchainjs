@@ -632,7 +632,7 @@ importers:
     devDependencies:
       '@hono/node-server':
         specifier: '>=2.0.12'
-        version: 2.1.1(hono@4.13.7)
+        version: 2.1.1(hono@4.13.12)
       '@langchain/anthropic':
         specifier: workspace:*
         version: link:../providers/langchain-anthropic
@@ -683,7 +683,7 @@ importers:
         version: 4.3.0
       hono:
         specifier: '>=4.12.33'
-        version: 4.13.7
+        version: 4.13.12
       openai:
         specifier: ^7.8.0
         version: 7.8.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
@@ -8080,10 +8080,6 @@ packages:
     resolution: {integrity: sha512-6E2QDAc9Ick9Sq77ZrGS/dk2WUYni91aufTw6LJKpV7w8kW5/GxVUc650FOADOmlwg3K+f7Pun6XlV+pYmW6gw==}
     engines: {node: '>=16.9.0'}
 
-  hono@4.13.7:
-    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
-    engines: {node: '>=16.9.0'}
-
   hookable@6.1.1:
     resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
 
@@ -12897,13 +12893,9 @@ snapshots:
     dependencies:
       hono: 4.13.12
 
-  '@hono/node-server@2.1.1(hono@4.13.7)':
+  '@hono/node-ws@1.3.1(@hono/node-server@2.1.1(hono@4.13.12))(bufferutil@4.1.0)(hono@4.13.12)':
     dependencies:
-      hono: 4.13.7
-
-  '@hono/node-ws@1.3.1(@hono/node-server@2.1.1(hono@4.13.7))(bufferutil@4.1.0)(hono@4.13.12)':
-    dependencies:
-      '@hono/node-server': 2.1.1(hono@4.13.7)
+      '@hono/node-server': 2.1.1(hono@4.13.12)
       hono: 4.13.12
       ws: 8.21.3(bufferutil@4.1.0)
     transitivePeerDependencies:
@@ -13494,7 +13486,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.29.7
       '@hono/node-server': 2.1.1(hono@4.13.12)
-      '@hono/node-ws': 1.3.1(@hono/node-server@2.1.1(hono@4.13.7))(bufferutil@4.1.0)(hono@4.13.12)
+      '@hono/node-ws': 1.3.1(@hono/node-server@2.1.1(hono@4.13.12))(bufferutil@4.1.0)(hono@4.13.12)
       '@hono/zod-validator': 0.7.6(hono@4.13.12)(zod@4.4.3)
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph': 1.4.18(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
@@ -17682,8 +17674,6 @@ snapshots:
       node-addon-api: 8.7.0
 
   hono@4.13.12: {}
-
-  hono@4.13.7: {}
 
   hookable@6.1.1: {}
 
