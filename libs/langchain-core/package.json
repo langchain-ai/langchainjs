@@ -35,7 +35,7 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "ml-matrix": "^6.15.0",
