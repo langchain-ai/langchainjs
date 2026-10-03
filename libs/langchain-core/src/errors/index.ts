@@ -197,6 +197,13 @@ export class ContextOverflowError extends ns.brand(
    */
   cause?: Error;
 
+  /**
+   * HTTP status of the underlying error, preserved by
+   * {@link ContextOverflowError.fromError} so retry logic and callers can
+   * still inspect it after wrapping.
+   */
+  status?: number;
+
   constructor(message?: string) {
     super(message ?? "Input exceeded the model's context window.");
     // The same oversized input fails identically; it needs trimming, not another attempt.
@@ -222,9 +229,20 @@ export class ContextOverflowError extends ns.brand(
    * }
    * ```
    */
-  static fromError(obj: Error): ContextOverflowError {
+  static fromError(
+    obj: Error & { status?: number | string; statusCode?: number | string }
+  ): ContextOverflowError {
     const error = new ContextOverflowError(obj.message);
     error.cause = obj;
+    // Preserve the underlying HTTP status so downstream retry logic and
+    // callers can still see it (e.g. AsyncCaller's no-retry check). The
+    // other branches in wrapAnthropicClientError keep the SDK error (and its
+    // status) intact; this branch must not silently drop it.
+    if (typeof obj.status === "number") {
+      error.status = obj.status;
+    } else if (typeof obj.statusCode === "number") {
+      error.status = obj.statusCode;
+    }
     return error;
   }
 }
