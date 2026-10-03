@@ -57,7 +57,7 @@
     "@modelcontextprotocol/server": "^2.2.0",
     "@modelcontextprotocol/server-legacy": "^2.2.0",
     "@types/express": "^5.0.6",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
