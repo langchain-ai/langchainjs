@@ -478,6 +478,7 @@ export interface BuiltInState<
    *
    * - "model_request": Jump back to the model for another LLM call
    * - "tools": Jump to tool execution (requires tools to be available)
+   * - "end": End the run early; afterAgent middleware still runs before termination
    */
   jumpTo?: JumpToTarget;
 }
