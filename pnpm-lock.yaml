@@ -632,7 +632,7 @@ importers:
     devDependencies:
       '@hono/node-server':
         specifier: '>=2.0.12'
-        version: 2.1.1(hono@4.13.10)
+        version: 2.1.1(hono@4.13.12)
       '@langchain/anthropic':
         specifier: workspace:*
         version: link:../providers/langchain-anthropic
@@ -683,7 +683,7 @@ importers:
         version: 4.3.0
       hono:
         specifier: '>=4.12.33'
-        version: 4.13.10
+        version: 4.13.12
       openai:
         specifier: ^7.23.0
         version: 7.25.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.4)(undici@8.11.2)(ws@8.22.0(bufferutil@4.1.0))(zod@4.3.6)
@@ -8125,10 +8125,6 @@ packages:
   hnswlib-node@3.0.0:
     resolution: {integrity: sha512-fypn21qvVORassppC8/qNfZ5KAOspZpm/IbUkAtlqvbtDNnF5VVk5RWF7O5V6qwr7z+T3s1ePej6wQt5wRQ4Cg==}
 
-  hono@4.13.10:
-    resolution: {integrity: sha512-dQuLsa5oO+47QVMVMaaD9cIv8ctmVtK1iRvwWngkfloFJMeFeuoUFDswIqZGxmGX3hrRzREgEArjkK9OgsQEhA==}
-    engines: {node: '>=16.9.0'}
-
   hono@4.13.12:
     resolution: {integrity: sha512-6E2QDAc9Ick9Sq77ZrGS/dk2WUYni91aufTw6LJKpV7w8kW5/GxVUc650FOADOmlwg3K+f7Pun6XlV+pYmW6gw==}
     engines: {node: '>=16.9.0'}
@@ -12860,10 +12856,6 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.6.6
       yargs: 17.7.3
-
-  '@hono/node-server@2.1.1(hono@4.13.10)':
-    dependencies:
-      hono: 4.13.10
 
   '@hono/node-server@2.1.1(hono@4.13.12)':
     dependencies:
@@ -17678,8 +17670,6 @@ snapshots:
     dependencies:
       bindings: 1.5.0
       node-addon-api: 8.7.0
-
-  hono@4.13.10: {}
 
   hono@4.13.12: {}
 
