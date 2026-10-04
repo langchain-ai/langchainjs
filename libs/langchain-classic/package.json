@@ -1,6 +1,6 @@
 {
   "name": "@langchain/classic",
-  "version": "1.0.48",
+  "version": "1.0.52",
   "description": "Old abstractions from LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -104,7 +104,7 @@
     "test:integration": "vitest --mode int"
   },
   "devDependencies": {
-    "@aws-sdk/dsql-signer": "^3.1121.0",
+    "@aws-sdk/dsql-signer": "^3.1141.0",
     "@azure/identity": "^4.13.2",
     "@browserbasehq/stagehand": "^4.0.2",
     "@clickhouse/client": "^1.23.1",
@@ -128,7 +128,7 @@
     "@langchain/google-vertexai": "workspace:*",
     "@langchain/google-vertexai-web": "workspace:*",
     "@langchain/groq": "workspace:*",
-    "@langchain/langgraph": "1.4.13",
+    "@langchain/langgraph": "1.4.18",
     "@langchain/mistralai": "workspace:*",
     "@langchain/mongodb": "workspace:*",
     "@langchain/ollama": "workspace:*",
@@ -153,7 +153,7 @@
     "@upstash/redis": "^1.38.3",
     "@upstash/vector": "^1.2.2",
     "@vercel/kv": "^3.0.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.2",
     "@xata.io/client": "^0.30.1",
     "@zilliz/milvus2-sdk-node": "^3.0.5",
     "axios": "^1.20.0",
@@ -190,7 +190,7 @@
     "typeorm": "^1.1.0",
     "typescript": "~7.0.2",
     "typesense": "^3.0.5",
-    "vitest": "^4.1.11",
+    "vitest": "^5.0.2",
     "voy-search": "0.6.3",
     "weaviate-client": "^3.14.0",
     "zod-to-json-schema": "^3.25.2",

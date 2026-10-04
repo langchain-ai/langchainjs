@@ -1,5 +1,44 @@
 # @langchain/openai
 
+## 1.6.2
+
+### Patch Changes
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): support `additional_tools` on the Responses API. An `additional_tools` block on a `SystemMessage`, either bare in `content` or wrapped in a `non_standard` block, is sent verbatim as a top-level input item preceding the message.
+
+  `additional_tools` cannot work anywhere else, so it now throws instead of being dropped: on Chat Completions (set `useResponsesApi: true`), or on any message other than a `SystemMessage`. Assistant messages are exempt.
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - fix(openai): accept `non_standard`-wrapped `configuration_update` and `mcp_approval_response` blocks. Previously only a bare block in `content` was hoisted to a top-level Responses API input item; a wrapped block, or one on a message built with `contentBlocks`, was silently dropped. Chat Completions now also sends the payload of a `non_standard` block rather than the wrapper.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11771](https://github.com/langchain-ai/langchainjs/pull/11771) [`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `fileMimeTypes` to `ModelProfile` so models can advertise the MIME types they accept as generic file inputs. OpenAI Responses API models now report the file types `input_file` supports;
+  Chat Completions profiles are unchanged.
+
+## 1.6.0
+
+### Minor Changes
+
+- [#11232](https://github.com/langchain-ai/langchainjs/pull/11232) [`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34) Thanks [@ccurme](https://github.com/ccurme)! - feat(openai): support explicit prompt cache options and content-block breakpoints
+
+### Patch Changes
+
+- [#11735](https://github.com/langchain-ai/langchainjs/pull/11735) [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(openai): send `promptCacheRetention: "in-memory"` as `"in_memory"` (the API rejects the hyphenated value), and apply `promptCacheKey`/`promptCacheRetention` in the same order as `promptCacheOptions`: per-call option, then `modelKwargs`, then the constructor field. On Chat Completions, `modelKwargs` values are no longer dropped and now take precedence over the constructor field.
+
+## 1.5.14
+
+### Patch Changes
+
+- [#11625](https://github.com/langchain-ai/langchainjs/pull/11625) [`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d) Thanks [@chiliec](https://github.com/chiliec)! - Recognize gpt-6 models as reasoning models so explicit `reasoning` config is forwarded.
+
+- [#11690](https://github.com/langchain-ai/langchainjs/pull/11690) [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Send image tool results on the Responses API as native `input_image` items in `function_call_output` instead of serializing them as JSON text, so the model can see them.
+  On Chat Completions, when OpenAI rejects a request with a 400 and a tool message contains an image, the error message now explains that Chat Completions does not support images in tool messages and points to `useResponsesApi: true`.
+  Messages with `output_version: "v1"` are unchanged.
+
+- [#11536](https://github.com/langchain-ai/langchainjs/pull/11536) [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be) Thanks [@hntrl](https://github.com/hntrl)! - Route the full GPT-5.6 model family to the Responses API for function tools with reasoning.
+
 ## 1.5.13
 
 ### Patch Changes

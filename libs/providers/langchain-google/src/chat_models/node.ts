@@ -24,18 +24,17 @@ class ChatGoogleNode extends BaseChatGoogle {
     paramsArg?: Omit<ChatGoogleNodeParams, "model">
   ) {
     let params = getGoogleChatModelParams(modelOrParams, paramsArg);
-    if (!params.googleAuthOptions) {
-      // Route through the LangSmith gateway (Gemini Developer API path) when
-      // configured, before falling back to the provider API-key env var so the
-      // gateway key can take precedence. Skipped when Vertex OAuth
-      // (`googleAuthOptions`) is used, which the gateway does not proxy.
-      params = applyGeminiGatewayParams(params);
-      params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
-    }
+    params = applyGeminiGatewayParams(params);
+    params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     const requiredScopes: string[] = getRequiredAuthScopes(params);
-    if (params.googleAuthOptions) {
+    const usesImplicitGoogleAuth =
+      !params.apiClient &&
+      !params.apiKey &&
+      !params.credentials &&
+      !getEnvironmentVariable("GOOGLE_CLOUD_CREDENTIALS");
+    if (params.googleAuthOptions || usesImplicitGoogleAuth) {
       params.googleAuthOptions = ensureAuthScopes(
-        params.googleAuthOptions,
+        params.googleAuthOptions ?? {},
         requiredScopes
       );
     }

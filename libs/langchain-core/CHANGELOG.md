@@ -1,5 +1,24 @@
 # @langchain/core
 
+## 1.2.14
+
+### Patch Changes
+
+- [#11771](https://github.com/langchain-ai/langchainjs/pull/11771) [`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `fileMimeTypes` to `ModelProfile` so models can advertise the MIME types they accept as generic file inputs. OpenAI Responses API models now report the file types `input_file` supports;
+  Chat Completions profiles are unchanged.
+
+## 1.2.13
+
+### Patch Changes
+
+- [#11714](https://github.com/langchain-ai/langchainjs/pull/11714) [`a83dfb1`](https://github.com/langchain-ai/langchainjs/commit/a83dfb14f8e17fcb66dc7a915f0cf8ed7b0dffa1) Thanks [@ccurme](https://github.com/ccurme)! - Abbreviate long tool-call IDs when formatting chat messages as strings, keeping original messages unchanged.
+
+## 1.2.12
+
+### Patch Changes
+
+- [#11675](https://github.com/langchain-ai/langchainjs/pull/11675) [`030a726`](https://github.com/langchain-ai/langchainjs/commit/030a726639e0147488bc8c23c063a2e72b004c2e) Thanks [@hntrl](https://github.com/hntrl)! - Preserve structured tool arguments in tracer run inputs.
+
 ## 1.2.11
 
 ### Patch Changes

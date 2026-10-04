@@ -1,17 +1,120 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAICacheRetentionParam } from "../types.js";
 import {
+  AIMessage,
   BaseMessage,
   ChatMessage,
   ContentBlock,
   Data,
+  SystemMessage,
 } from "@langchain/core/messages";
 
 export const iife = <T>(fn: () => T) => fn();
+
+/**
+ * Returns the provider payload a content block carries: the `value` of a
+ * `non_standard` wrapper, or the block itself.
+ */
+export function unwrapNonStandard(block: ContentBlock): ContentBlock {
+  if (
+    block.type === "non_standard" &&
+    typeof block.value === "object" &&
+    block.value !== null
+  ) {
+    return block.value as ContentBlock;
+  }
+  return block;
+}
+
+const ADDITIONAL_TOOLS_PLACEMENT_ERROR =
+  "`additional_tools` must be carried on a `SystemMessage`. OpenAI restricts " +
+  'the input item to `role: "developer"`, so it cannot be sent on any other ' +
+  "message.";
+
+const ADDITIONAL_TOOLS_TRANSPORT_ERROR =
+  "`additional_tools` requires the Responses API and cannot be sent via Chat " +
+  "Completions. Set `useResponsesApi: true`.";
+
+/**
+ * Throws if `message` carries an `additional_tools` block, in either spelling,
+ * that cannot reach the wire.
+ *
+ * OpenAI takes `additional_tools` only as a Responses API input item with
+ * `role: "developer"`, so only a `SystemMessage` sent via the Responses API
+ * can carry it. Assistant messages are exempt: their content is replayed model
+ * output, not an instruction from the caller.
+ */
+export function assertAdditionalToolsPlacement(
+  message: BaseMessage,
+  api: "responses" | "chat/completions"
+): void {
+  if (
+    AIMessage.isInstance(message) ||
+    !Array.isArray(message.content) ||
+    !message.content.some(
+      (block) => unwrapNonStandard(block).type === "additional_tools"
+    )
+  ) {
+    return;
+  }
+  if (!SystemMessage.isInstance(message)) {
+    throw new Error(ADDITIONAL_TOOLS_PLACEMENT_ERROR);
+  }
+  if (api === "chat/completions") {
+    throw new Error(ADDITIONAL_TOOLS_TRANSPORT_ERROR);
+  }
+}
+
+export function normalizePromptCacheRetention(
+  retention: OpenAICacheRetentionParam | undefined
+): Exclude<OpenAICacheRetentionParam, "in-memory"> | undefined {
+  return retention === "in-memory" ? "in_memory" : retention;
+}
+
+export function applyPromptCacheBreakpoint<T extends object>(
+  source: Record<string, unknown>,
+  target: T
+): T {
+  if ("prompt_cache_breakpoint" in source) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.prompt_cache_breakpoint,
+    };
+  }
+  if (hasExtrasPromptCacheBreakpoint(source)) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.extras.prompt_cache_breakpoint,
+    };
+  }
+  return target;
+}
+
+export function hasExtrasPromptCacheBreakpoint(
+  block: Record<string, unknown>
+): block is { extras: { prompt_cache_breakpoint: unknown } } {
+  const { extras } = block;
+  return (
+    typeof extras === "object" &&
+    extras !== null &&
+    "prompt_cache_breakpoint" in extras
+  );
+}
+
+export function liftExtrasPromptCacheBreakpoint<T extends object>(block: T): T {
+  const source = block as Record<string, unknown>;
+  if (!hasExtrasPromptCacheBreakpoint(source)) {
+    return block;
+  }
+  const { extras: _extras, ...rest } = source;
+  return applyPromptCacheBreakpoint(source, rest) as T;
+}
 
 export function isReasoningModel(model?: string) {
   if (!model) return false;
   if (/^o\d/.test(model ?? "")) return true;
   if (model.startsWith("gpt-5") && !model.startsWith("gpt-5-chat")) return true;
+  if (model.startsWith("gpt-6") && !model.startsWith("gpt-6-chat")) return true;
   return false;
 }
 
@@ -94,7 +197,7 @@ export function _modelPrefersResponsesAPI(model: string): boolean {
   if (model.includes("gpt-5.2-pro")) return true;
   if (model.includes("gpt-5.4-pro")) return true;
   if (model.includes("gpt-5.5-pro")) return true;
-  if (model.includes("gpt-5.6-sol")) return true;
+  if (model.includes("gpt-5.6")) return true;
   // Codex models are Responses API only
   if (model.includes("codex")) return true;
   return false;
