@@ -2484,6 +2484,7 @@ const ttsModelInfo: ModelInfo[] = filterTestableModels([
 
 describe.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
+  { concurrent: false },
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
@@ -2656,6 +2657,7 @@ console.log(audioModelInfo);
 // Audio tests fail on Vertex
 describe.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
+  { concurrent: false },
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
