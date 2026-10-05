@@ -59,7 +59,7 @@ function _convertAgentStepToMessages(
 ) {
   if (isFunctionsAgentAction(action) && action.messageLog !== undefined) {
     return action.messageLog?.concat(
-      new FunctionMessage(observation, action.tool)
+      new FunctionMessage({ content: observation, name: action.tool })
     );
   } else {
     return [new AIMessage(action.log)];
