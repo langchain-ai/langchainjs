@@ -7,7 +7,12 @@ import type { ChainValues } from "@langchain/core/utils/types";
 import type { Generation } from "@langchain/core/outputs";
 import type { BaseMessage } from "@langchain/core/messages";
 import type { BasePromptValueInterface } from "@langchain/core/prompt_values";
-import { BasePromptTemplate } from "@langchain/core/prompts";
+import {
+  BasePromptTemplate,
+  FewShotPromptTemplate,
+  PromptTemplate,
+  type SerializedBasePromptTemplate,
+} from "@langchain/core/prompts";
 import {
   BaseLLMOutputParser,
   BaseOutputParser,
@@ -51,6 +56,37 @@ export interface LLMChainInput<
 
 function isBaseLanguageModel(llmLike: unknown): llmLike is BaseLanguageModel {
   return typeof (llmLike as BaseLanguageModelInterface)._llmType === "function";
+}
+
+/**
+ * Core v1 removed `serialize()` from `BasePromptTemplate`; only some prompt
+ * classes (e.g. `PromptTemplate`, `FewShotPromptTemplate`) still have it.
+ */
+function isSerializablePrompt(
+  prompt: BasePromptTemplate
+): prompt is BasePromptTemplate & {
+  serialize(): SerializedBasePromptTemplate;
+} {
+  return "serialize" in prompt && typeof prompt.serialize === "function";
+}
+
+/**
+ * Core v1 removed `BasePromptTemplate.deserialize()`; dispatch to the prompt
+ * classes that can still deserialize themselves, as it did.
+ */
+async function deserializePrompt(
+  data: SerializedBasePromptTemplate
+): Promise<BasePromptTemplate> {
+  const promptType: string | undefined = data._type;
+  switch (data._type) {
+    case "few_shot":
+      return FewShotPromptTemplate.deserialize(data);
+    case "prompt":
+    case undefined:
+      return PromptTemplate.deserialize({ ...data, _type: "prompt" });
+    default:
+      throw new Error(`Invalid prompt type in config: ${promptType}`);
+  }
 }
 
 function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
@@ -263,7 +299,7 @@ export class LLMChain<
 
     return new LLMChain({
       llm: await BaseLanguageModel.deserialize(llm),
-      prompt: await BasePromptTemplate.deserialize(prompt),
+      prompt: await deserializePrompt(prompt),
     });
   }
 
@@ -271,6 +307,11 @@ export class LLMChain<
   serialize(): SerializedLLMChain {
     const serialize =
       "serialize" in this.llm ? this.llm.serialize() : undefined;
+    if (!isSerializablePrompt(this.prompt)) {
+      throw new Error(
+        `LLMChain cannot serialize a "${this.prompt._getPromptType()}" prompt. Use .toJSON() instead.`
+      );
+    }
     return {
       _type: `${this._chainType()}_chain`,
       llm: serialize,
