@@ -47,6 +47,20 @@ export interface SqlColumn {
   isNullable?: boolean;
 }
 
+/**
+ * typeorm 1.x replaced its "sqlite" driver with "better-sqlite3", but
+ * typeorm is a peer dependency, so a typeorm 0.3 data source can still
+ * report "sqlite". Compare as a string so all SQLite drivers match.
+ */
+const SQLITE_DATA_SOURCE_TYPES: ReadonlySet<string> = new Set([
+  "sqlite",
+  "better-sqlite3",
+  "sqljs",
+]);
+
+const isSqliteDataSource = (appDataSource: DataSource): boolean =>
+  SQLITE_DATA_SOURCE_TYPES.has(appDataSource.options.type);
+
 export const verifyListTablesExistInDatabase = (
   tablesFromDatabase: Array<SqlTable>,
   listTables: Array<string>,
@@ -145,11 +159,7 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
-  if (
-    appDataSource.options.type === "sqlite" ||
-    appDataSource.options.type === "better-sqlite3" ||
-    appDataSource.options.type === "sqljs"
-  ) {
+  if (isSqliteDataSource(appDataSource)) {
     sql =
       "SELECT \n" +
       "   m.name AS table_name,\n" +
@@ -375,7 +385,7 @@ export const getPromptTemplateFromDataSource = (
     return SQL_POSTGRES_PROMPT;
   }
 
-  if (appDataSource.options.type === "sqlite") {
+  if (isSqliteDataSource(appDataSource)) {
     return SQL_SQLITE_PROMPT;
   }
 
