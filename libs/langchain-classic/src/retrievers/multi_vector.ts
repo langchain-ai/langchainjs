@@ -4,8 +4,17 @@ import {
 } from "@langchain/core/retrievers";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { BaseStore, type BaseStoreInterface } from "@langchain/core/stores";
+import { BaseStore } from "@langchain/core/stores";
 import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
+
+/**
+ * The key-value methods of a `BaseStore` that the retriever calls on its
+ * document store, so any object with these methods can be the `docstore`.
+ */
+type DocumentStore = Pick<
+  BaseStore<string, Document>,
+  "mget" | "mset" | "mdelete" | "yieldKeys"
+>;
 
 /**
  * Arguments for the MultiVectorRetriever class.
@@ -13,7 +22,7 @@ import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
   vectorstore: VectorStoreInterface;
   /** @deprecated Prefer `byteStore`. */
-  docstore?: BaseStoreInterface<string, Document>;
+  docstore?: DocumentStore;
   byteStore?: BaseStore<string, Uint8Array>;
   idKey?: string;
   childK?: number;
@@ -47,7 +56,7 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   public vectorstore: VectorStoreInterface;
 
-  public docstore: BaseStoreInterface<string, Document>;
+  public docstore: DocumentStore;
 
   protected idKey: string;
 
