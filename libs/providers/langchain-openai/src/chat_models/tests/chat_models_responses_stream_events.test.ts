@@ -47,6 +47,7 @@ function completedResponse(
     sequence_number: 0,
     response: {
       id: "resp_test",
+      access_programs: null,
       object: "response",
       created_at: 0,
       status: "completed",
