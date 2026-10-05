@@ -12,5 +12,4 @@ reading `model.service_tier` can return `"ultrafast"`.
 `ChatOpenAI` sends `"ultrafast"` through the Responses API, switching to it
 automatically as it does for other Responses-only options.
 `ChatOpenAICompletions` used directly throws a clear error for `"ultrafast"`,
-because Chat Completions has no such tier. A per-call `service_tier` overrides
-the constructor's on both APIs; the Responses API used to ignore it.
+because Chat Completions has no such tier.
