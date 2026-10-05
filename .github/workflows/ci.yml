@@ -58,7 +58,10 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        # Only packages that declare a `typecheck` script participate. A package
-        # joins once its own type errors reach zero.
+        # `pnpm typecheck` runs each package's own `typecheck` script, so every
+        # workspace package with a tsconfig must declare one.
+      - name: Check every package declares a typecheck script
+        run: .github/workflows/scripts/check-typecheck-scripts.sh
+        # `--continue` (in the root script) reports every failing package.
       - name: Check types
         run: pnpm run typecheck
