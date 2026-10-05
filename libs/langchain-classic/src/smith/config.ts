@@ -259,7 +259,8 @@ export type Criteria = EvalConfig & {
   criteria?: CriteriaType | Record<string, string>;
 
   /**
-   * The language model to use as the evaluator, defaults to GPT-4
+   * The language model to use as the evaluator. Required: there is no
+   * default model.
    */
   llm?: BaseLanguageModel;
 };
@@ -354,7 +355,8 @@ export type LabeledCriteria = EvalConfig & {
   criteria?: CriteriaType | Record<string, string>;
 
   /**
-   * The language model to use as the evaluator, defaults to GPT-4
+   * The language model to use as the evaluator. Required: there is no
+   * default model.
    */
   llm?: BaseLanguageModel;
 };
