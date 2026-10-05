@@ -17,6 +17,7 @@
     "build": "pnpm --filter @langchain/build compile @langchain/INTEGRATION_NAME",
     "clean": "rm -rf .turbo dist/",
     "prepack": "pnpm build",
+    "typecheck": "tsc --noEmit --composite false --incremental false",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
