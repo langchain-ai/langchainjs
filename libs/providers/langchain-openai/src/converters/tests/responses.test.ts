@@ -2602,6 +2602,7 @@ describe("convertResponsesMessageToAIMessage", () => {
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     const mockResponse: ResponsesCreateInvoke = {
       id: "resp_123",
+      access_programs: null,
       model: "gpt-4",
       created_at: 1234567890,
       status: "completed",
@@ -2665,6 +2666,7 @@ describe("convertResponsesMessageToAIMessage", () => {
   it("should not add image content block when result is null", () => {
     const mockResponse: ResponsesCreateInvoke = {
       id: "resp_123",
+      access_programs: null,
       model: "gpt-4",
       created_at: 1234567890,
       status: "in_progress",
@@ -2712,6 +2714,7 @@ describe("convertResponsesMessageToAIMessage", () => {
   it("should handle multiple output items including image_generation_call", () => {
     const mockResponse: ResponsesCreateInvoke = {
       id: "resp_123",
+      access_programs: null,
       model: "gpt-4",
       created_at: 1234567890,
       status: "completed",
