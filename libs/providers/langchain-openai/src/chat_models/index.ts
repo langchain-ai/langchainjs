@@ -713,12 +713,19 @@ export class ChatOpenAI<
     const hasCustomTools =
       options?.tools?.some(isOpenAICustomTool) ||
       options?.tools?.some(isCustomTool);
+    const serviceTier =
+      options?.service_tier !== undefined
+        ? options.service_tier
+        : this.service_tier;
+    // Chat Completions has no "ultrafast" tier.
+    const usesResponsesOnlyServiceTier = serviceTier === "ultrafast";
 
     return (
       this.useResponsesApi ||
       usesBuiltInTools ||
       hasResponsesOnlyKwargs ||
       hasCustomTools ||
+      usesResponsesOnlyServiceTier ||
       _modelPrefersResponsesAPI(this.model)
     );
   }
