@@ -63,10 +63,11 @@ test("Throw Error when include tables are not there", () => {
   ).toThrow();
 });
 
-test.skip("return sqlite template when the DataSource is sqlite", () => {
+test("return sqlite template when the DataSource is better-sqlite3", () => {
+  // typeorm 1.x removed the "sqlite" driver; "better-sqlite3" replaces it.
   const datasource = new DataSource({
-    type: "sqlite",
-    database: "Chinook.db",
+    type: "better-sqlite3",
+    database: ":memory:",
   });
 
   const promptTemplate = getPromptTemplateFromDataSource(datasource);
