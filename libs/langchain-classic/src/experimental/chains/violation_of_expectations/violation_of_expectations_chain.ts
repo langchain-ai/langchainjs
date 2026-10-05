@@ -313,10 +313,10 @@ export class ViolationOfExpectationsChain
    *
    * @param {Object} params - The parameters for the method.
    * @param {PredictNextUserMessageResponse} params.userPredictions - The predicted user message, user state, and insights.
-   * @param {BaseMessage} [params.userResponse] - The actual user response.
+   * @param {HumanMessage} [params.userResponse] - The actual user response.
    * @param {CallbackManagerForChainRun} [params.runManager] - Optional callback manager for the chain run.
    *
-   * @returns {Promise<{ userResponse: BaseMessage | undefined; revisedPrediction: string; explainedPredictionErrors: Array<string>; }>} A promise that resolves to an object containing the actual user response, the revised prediction, and the explained prediction errors.
+   * @returns {Promise<{ userResponse: HumanMessage | undefined; revisedPrediction: string; explainedPredictionErrors: Array<string>; }>} A promise that resolves to an object containing the actual user response, the revised prediction, and the explained prediction errors.
    *
    * @throws {Error} If the response from the language model does not contain the expected keys: 'violationExplanation', 'explainedPredictionErrors', and 'accuratePrediction'.
    */
@@ -326,7 +326,7 @@ export class ViolationOfExpectationsChain
     runManager,
   }: {
     userPredictions: PredictNextUserMessageResponse;
-    userResponse?: BaseMessage;
+    userResponse?: HumanMessage;
     runManager?: CallbackManagerForChainRun;
   }): Promise<GetPredictionViolationsResponse> {
     const llmWithFunctions = this.llm
