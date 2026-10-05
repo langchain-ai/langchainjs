@@ -21,9 +21,10 @@ import { TrajectoryEvalChain } from "./agents/index.js";
 
 export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
   /**
-   * The language model to use for the evaluator.
+   * The language model to use for the evaluator. Every evaluator except the
+   * embedding distance ones requires it; there is no default model.
    */
-  llm: BaseLanguageModelInterface;
+  llm?: BaseLanguageModelInterface;
   /**
    * The options to pass to the evaluator chain.
    */
@@ -52,34 +53,47 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
   options: LoadEvaluatorOptions
 ): Promise<EvaluatorType[T]> {
   const { llm, chainOptions, criteria, agentTools } = options;
+  const requireLlm = (): BaseLanguageModelInterface => {
+    if (llm === undefined) {
+      throw new Error(
+        `The "${type}" evaluator requires an \`llm\`. Pass one in the evaluator options.`
+      );
+    }
+    return llm;
+  };
 
   let evaluator: unknown;
   switch (type) {
     case "criteria":
-      evaluator = await CriteriaEvalChain.fromLLM(llm, criteria, chainOptions);
+      evaluator = await CriteriaEvalChain.fromLLM(
+        requireLlm(),
+        criteria,
+        chainOptions
+      );
       break;
     case "labeled_criteria":
       evaluator = await LabeledCriteriaEvalChain.fromLLM(
-        llm,
+        requireLlm(),
         criteria,
         chainOptions
       );
       break;
     case "pairwise_string":
       evaluator = await PairwiseStringEvalChain.fromLLM(
-        llm,
+        requireLlm(),
         criteria,
         chainOptions
       );
       break;
     case "labeled_pairwise_string":
       evaluator = await LabeledPairwiseStringEvalChain.fromLLM(
-        llm,
+        requireLlm(),
         criteria,
         chainOptions
       );
       break;
     case "trajectory":
+      requireLlm();
       // oxlint-disable-next-line no-instanceof/no-instanceof
       if (!(llm instanceof BaseChatModel)) {
         throw new Error("LLM must be an instance of a base chat model.");
