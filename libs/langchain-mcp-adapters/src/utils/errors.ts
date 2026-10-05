@@ -73,9 +73,7 @@ const MAX_CAUSE_WALK_DEPTH = 3;
 /**
  * Whether `error`, or a cause up to {@link MAX_CAUSE_WALK_DEPTH} hops down
  * its `.cause` chain, means the server wants credentials: the SDK's
- * `UnauthorizedError` (provider flows, no HTTP status) or an HTTP 401. Two
- * hops handles the legacy HTTP→SSE fallback, which wraps its own
- * `MCPClientError` around the SSE 401.
+ * `UnauthorizedError` (provider flows, no HTTP status) or an HTTP 401.
  */
 export function isAuthenticationError(error: unknown): boolean {
   const matches = (value: unknown) =>
