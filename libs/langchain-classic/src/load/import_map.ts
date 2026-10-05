@@ -47,7 +47,6 @@ export * as experimental__openai_files from "../experimental/openai_files/index.
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
 export * as experimental__prompts__custom_format from "../experimental/prompts/custom_format.js";
 export * as experimental__prompts__handlebars from "../experimental/prompts/handlebars.js";
-export * as index from "../index.js";
 export * as indexes from "../indexes/index.js";
 export * as load__serializable from "../load/serializable.js";
 export * as memory__chat_memory from "../memory/chat_memory.js";
