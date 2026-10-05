@@ -32,7 +32,9 @@ test("Runnable variant", async () => {
     steps.flatMap(({ action, observation }) => {
       if ("messageLog" in action && action.messageLog !== undefined) {
         const log = action.messageLog as BaseMessage[];
-        return log.concat(new FunctionMessage(observation, action.tool));
+        return log.concat(
+          new FunctionMessage({ content: observation, name: action.tool })
+        );
       } else {
         return [new AIMessage(action.log)];
       }
@@ -86,7 +88,9 @@ test("Runnable variant executor astream log", async () => {
     steps.flatMap(({ action, observation }) => {
       if ("messageLog" in action && action.messageLog !== undefined) {
         const log = action.messageLog as BaseMessage[];
-        return log.concat(new FunctionMessage(observation, action.tool));
+        return log.concat(
+          new FunctionMessage({ content: observation, name: action.tool })
+        );
       } else {
         return [new AIMessage(action.log)];
       }
