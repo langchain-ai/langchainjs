@@ -504,13 +504,14 @@ export function convertToolChoiceToGeminiConfig(
     toolChoiceMode = toolChoice;
   }
 
-  if (toolChoiceMode === "auto") {
+  const normalizedMode = toolChoiceMode?.toLowerCase();
+  if (normalizedMode === "auto") {
     mode = "AUTO";
-  } else if (toolChoiceMode === "any" || toolChoiceMode === "required") {
+  } else if (normalizedMode === "any" || normalizedMode === "required") {
     mode = "ANY";
-  } else if (toolChoiceMode === "none") {
+  } else if (normalizedMode === "none") {
     mode = "NONE";
-  } else if (toolChoiceMode === "validated") {
+  } else if (normalizedMode === "validated") {
     mode = "VALIDATED";
   } else if (typeof toolChoiceMode === "string") {
     mode = "ANY";
