@@ -7,7 +7,7 @@ import { SQL_SQLITE_PROMPT } from "../sql_db/sql_db_prompt.js";
 
 test("Test SqlDatabaseChain", async () => {
   const datasource = new DataSource({
-    type: "sqlite",
+    type: "better-sqlite3",
     database: ":memory:",
     synchronize: true,
   });
@@ -47,7 +47,7 @@ test("Test SqlDatabaseChain", async () => {
 
 test("Test SqlDatabaseChain with sqlOutputKey", async () => {
   const datasource = new DataSource({
-    type: "sqlite",
+    type: "better-sqlite3",
     database: ":memory:",
     synchronize: true,
   });
@@ -110,7 +110,7 @@ Aliquam ex velit, porta sit amet augue vulputate, rhoncus fermentum magna. Integ
 
 test.skip("Test token limit SqlDatabaseChain", async () => {
   const datasource = new DataSource({
-    type: "sqlite",
+    type: "better-sqlite3",
     database: ":memory:",
     synchronize: true,
   });

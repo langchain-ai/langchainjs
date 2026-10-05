@@ -2,7 +2,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import OpenAI from "openai";
-import wiki from "wikipedia";
 import { Client, Dataset, RunTree, RunTreeConfig } from "langsmith";
 import { DynamicRunEvaluatorParams, RunEvalConfig } from "../config.js";
 
@@ -68,21 +67,36 @@ test(`Chat model dataset`, async () => {
       inputs: { query },
     });
     try {
-      const { results } = await wiki.search(query, { limit: 10 });
+      // Call Wikipedia's public APIs directly; classic does not depend on
+      // the `wikipedia` package.
+      const searchUrl = new URL(
+        "https://en.wikipedia.org/w/rest.php/v1/search/page"
+      );
+      searchUrl.searchParams.set("q", query);
+      searchUrl.searchParams.set("limit", "10");
+      const { pages }: { pages: Array<{ key: string }> } = await (
+        await fetch(searchUrl)
+      ).json();
       const finalResults: Array<{ summary: string; url: string }> = [];
 
-      for (const result of results) {
+      for (const result of pages) {
         if (finalResults.length >= 2) {
           // Just return the top 2 pages for now
           break;
         }
-        const page = await wiki.page(result.title, {
-          autoSuggest: false,
-        });
-        const summary = await page.summary();
+        const summary: {
+          extract: string;
+          content_urls: { desktop: { page: string } };
+        } = await (
+          await fetch(
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+              result.key
+            )}`
+          )
+        ).json();
         finalResults.push({
           summary: summary.extract,
-          url: page.fullurl,
+          url: summary.content_urls.desktop.page,
         });
       }
       childRun.end({
