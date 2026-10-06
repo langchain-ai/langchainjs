@@ -10,6 +10,7 @@ import {
   detectIP,
   detectMacAddress,
   detectUrl,
+  resolveRedactionRule,
   type PIIMatch,
 } from "../pii.js";
 import { createAgent } from "../../index.js";
@@ -739,6 +740,32 @@ describe("Custom Detector", () => {
       HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toContain("[REDACTED_API_KEY]");
+  });
+
+  it("should find every match with a non-global RegExp detector", () => {
+    const { detector } = resolveRedactionRule({
+      piiType: "ssn",
+      strategy: "redact",
+      detector: /\d{3}-\d{2}-\d{4}/,
+    });
+
+    const matches = detector("SSNs: 123-45-6789 and 987-65-4321");
+
+    expect(matches.map((m) => m.text)).toEqual(["123-45-6789", "987-65-4321"]);
+  });
+
+  it("should ignore stale lastIndex on a global RegExp detector", () => {
+    const pattern = /\d{3}-\d{2}-\d{4}/g;
+    // Leaves pattern.lastIndex past the start of the next input
+    pattern.test("previous 123-45-6789 text");
+
+    const { detector } = resolveRedactionRule({
+      piiType: "ssn",
+      strategy: "redact",
+      detector: pattern,
+    });
+
+    expect(detector("123-45-6789").map((m) => m.text)).toEqual(["123-45-6789"]);
   });
 
   it("should work with custom callable detector", async () => {
