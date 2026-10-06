@@ -1,15 +1,18 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   InferInteropZodInput,
   interopParse,
 } from "@langchain/core/utils/types";
-import { interrupt } from "@langchain/langgraph";
+import { Command, interrupt, isCommand } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 import type { JumpToTarget } from "../constants.js";
+import type { Interrupt } from "../types.js";
 import type { ToolCallRequest } from "./types.js";
 
 const WhenFunctionSchema = z
@@ -25,7 +28,12 @@ const WhenFunctionSchema = z
  *
  * The request is constructed with `tool` set to `undefined` and `runtime` set to
  * the node-level {@link Runtime}, so it reflects the batch (`afterModel`) context
- * rather than a per-call tool execution.
+ * rather than a per-call tool execution. In `"per_call"` mode the predicate runs
+ * in `wrapToolCall` and receives the real request, with `tool` set.
+ *
+ * In both modes the predicate runs again when the run resumes, so it must return
+ * the same answer for the same call. If it returns `false` on resume, the
+ * reviewer's answer is skipped and the tool runs, even if they rejected it.
  *
  * @param request - The tool call request being evaluated
  * @returns `true` to interrupt for the tool call, `false` to auto-approve it.
@@ -73,8 +81,12 @@ export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
 /**
  * The type of decision a human can make.
  */
-const ALLOWED_DECISIONS = ["approve", "edit", "reject"] as const;
-const DecisionType = z.enum(ALLOWED_DECISIONS);
+const DECISION_TYPES = ["approve", "edit", "reject", "respond"] as const;
+/**
+ * What `true` in `interruptOn` allows in batched mode.
+ */
+const BATCHED_DEFAULT_DECISIONS = ["approve", "edit", "reject"] as const;
+const DecisionType = z.enum(DECISION_TYPES);
 export type DecisionType = z.infer<typeof DecisionType>;
 
 const InterruptOnConfigSchema = z.object({
@@ -128,6 +140,10 @@ const InterruptOnConfigSchema = z.object({
   description: z.union([z.string(), DescriptionFunctionSchema]).optional(),
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
+   *
+   * In `"per_call"` mode this only changes what's shown under `edited_action.args` in
+   * `responseSchema`; edits are still checked against the tool's own schema when
+   * it's a Zod v4 object.
    */
   argsSchema: z.record(z.any()).optional(),
   /**
@@ -137,7 +153,9 @@ const InterruptOnConfigSchema = z.object({
    * `false` to auto-approve the tool call.
    *
    * The request is constructed with `tool` set to `undefined` and `runtime` set
-   * to the node-level {@link Runtime}, so `request.tool` is not available.
+   * to the node-level {@link Runtime}, so `request.tool` is not available. In
+   * `"per_call"` mode the predicate runs in `wrapToolCall` and receives the real
+   * request, with `tool` set.
    *
    * @example
    * ```typescript
@@ -267,9 +285,44 @@ export interface RejectDecision {
 }
 
 /**
+ * Response when a human answers on behalf of the tool, which doesn't run.
+ */
+export interface RespondDecision {
+  type: "respond";
+  /**
+   * The answer the model gets as the tool's result.
+   */
+  message: string;
+}
+
+/**
  * Union of all possible decision types.
  */
-export type Decision = ApproveDecision | EditDecision | RejectDecision;
+export type Decision =
+  | ApproveDecision
+  | EditDecision
+  | RejectDecision
+  | RespondDecision;
+
+/**
+ * The message the model gets in place of the tool's result.
+ */
+function answerMessage(
+  toolCall: ToolCall,
+  decision: RejectDecision | RespondDecision
+): ToolMessage {
+  // `respond` skips the tool: the human answers on its behalf.
+  const respond = decision.type === "respond";
+  return new ToolMessage({
+    content: respond
+      ? decision.message
+      : (decision.message ??
+        `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`),
+    name: toolCall.name,
+    tool_call_id: toolCall.id!,
+    status: respond ? "success" : "error",
+  });
+}
 
 /**
  * Response payload for a HITLRequest.
@@ -281,12 +334,124 @@ export interface HITLResponse {
   decisions: Decision[];
 }
 
+const ToolApprovalRequestSchema = z4.object({
+  /** Always `"tool_approval"`; tells clients how to read this interrupt. */
+  type: z4.literal("tool_approval"),
+  /** ID of the model's tool call this approval is about. */
+  tool_call_id: z4.string(),
+  /** Tool name, as the model requested it. */
+  name: z4.string(),
+  /** Tool arguments, as the model requested them. */
+  args: z4.record(z4.string(), z4.unknown()),
+  /** Text shown to the reviewer. */
+  description: z4.string(),
+});
+
+/**
+ * Interrupt value raised once per gated tool call in `"per_call"` mode. Keys are
+ * snake_case, as in Python.
+ */
+export type ToolApprovalRequest = z4.infer<typeof ToolApprovalRequestSchema>;
+
+// The answers a reviewer can give in `"per_call"` mode, one schema per decision type
+const ToolApprovalDecisionSchemas = {
+  approve: z4.object({ type: z4.literal("approve") }),
+  // Unknown fields are rejected, so a typo fails instead of being dropped.
+  edit: z4.strictObject({
+    type: z4.literal("edit"),
+    edited_action: z4.strictObject({
+      name: z4.string(),
+      args: z4.record(z4.string(), z4.unknown()),
+    }),
+  }),
+  reject: z4.object({
+    type: z4.literal("reject"),
+    message: z4.string().optional(),
+  }),
+  respond: z4.object({ type: z4.literal("respond"), message: z4.string() }),
+};
+
+/**
+ * A reviewer's answer to a `"per_call"` tool approval.
+ */
+export type ToolApprovalDecision = z4.infer<
+  (typeof ToolApprovalDecisionSchemas)[keyof typeof ToolApprovalDecisionSchemas]
+>;
+
+/**
+ * Whether an interrupt is a `"per_call"` tool approval, e.g.
+ * `result.__interrupt__?.filter(isToolApprovalInterrupt)`.
+ */
+export function isToolApprovalInterrupt(
+  interrupt: Interrupt | undefined
+): interrupt is Interrupt<ToolApprovalRequest> {
+  return ToolApprovalRequestSchema.safeParse(interrupt?.value).success;
+}
+
+/**
+ * What an edit's `args` must look like: the tool's schema, if it's a Zod v4 object.
+ *
+ * Unknown args are rejected unless the tool's schema accepts them (`z.looseObject`,
+ * `.passthrough()` or `.catchall()`). Anything else (a Zod v3 or JSON schema, or no
+ * tool) is shown but not checked. `override` is the config's `argsSchema`; it only
+ * changes what's shown.
+ */
+function editArgs(
+  tool: ToolCallRequest["tool"],
+  override?: Record<string, unknown>
+): z4.ZodType {
+  const schema = tool && "schema" in tool ? tool.schema : undefined;
+  if (schema instanceof z4.ZodObject) {
+    const checked = schema._zod.def.catchall ? schema : schema.strict();
+    return override ? checked.meta(override) : checked;
+  }
+  const { $schema: _, ...shown }: Record<string, unknown> =
+    override ?? (schema ? toJsonSchema(schema) : { type: "object" });
+  return z4.record(z4.string(), z4.unknown()).meta(shown);
+}
+
+/**
+ * The per-call `responseSchema`: today's decision types, limited to `allowed`.
+ *
+ * The edit branch is built for this tool: its name is pinned, so an edit can't switch
+ * tools, and its args follow the tool's own schema. An answer is checked only against
+ * the branch its `type` names, so a bad one gets a single error about what's wrong.
+ * A one-decision tool gets that decision's plain object schema.
+ */
+function decisionSchema(
+  allowed: readonly DecisionType[],
+  name: string,
+  tool?: ToolCallRequest["tool"],
+  override?: Record<string, unknown>
+): z4.ZodType<ToolApprovalDecision> {
+  const byType = {
+    ...ToolApprovalDecisionSchemas,
+    edit: ToolApprovalDecisionSchemas.edit.extend({
+      edited_action: z4.strictObject({
+        name: z4.literal(name),
+        args: editArgs(tool, override),
+      }),
+    }),
+  };
+  // Drop duplicates, keeping order: a discriminated union can't repeat a `type`.
+  const [first, ...rest] = [...new Set(allowed)].map((d) => byType[d]);
+  if (first === undefined) {
+    throw new Error("allowedDecisions must list at least one decision.");
+  }
+  // Built at runtime from the allowed decisions; each branch parses into one of the
+  // `ToolApprovalDecision` shapes.
+  return (
+    rest.length ? z4.discriminatedUnion("type", [first, ...rest]) : first
+  ) as z4.ZodType<ToolApprovalDecision>;
+}
+
 const contextSchema = z.object({
   /**
    * Mapping of tool name to allowed reviewer responses.
    * If a tool doesn't have an entry, it's auto-approved by default.
    *
-   * - `true` -> pause for approval and allow approve/edit/reject decisions
+   * - `true` -> pause for approval and allow approve/edit/reject decisions (all four,
+   *   including respond, in `"per_call"` mode)
    * - `false` -> auto-approve (no human review)
    * - `InterruptOnConfig` -> explicitly specify which decisions are allowed for this tool
    */
@@ -305,7 +470,135 @@ const contextSchema = z.object({
 });
 export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
->;
+> & {
+  /**
+   * How the middleware pauses for review. Set at construction only; not read from
+   * runtime context.
+   *
+   * - `"batched"` (default): one interrupt per model turn for all gated tool calls.
+   * - `"per_call"`: one interrupt per gated call, answered by interrupt ID, with
+   *   `type: "tool_approval"` and a typed `responseSchema` (see
+   *   {@link ToolApprovalRequest} and {@link ToolApprovalDecision}). An edit can't
+   *   switch tools, and its args are checked against the tool's schema when that's
+   *   a Zod v4 object; for other tools they're shown in `responseSchema` but not
+   *   checked. An invalid answer throws a `ZodError` without being saved, so it can
+   *   be sent again. When one resume answers several interrupts, each answer is
+   *   applied on its own: an invalid one throws and stays pending while the others
+   *   may already have run. After an error, resend only the invalid answers;
+   *   resending one that was already applied has no effect.
+   *
+   * In `"per_call"` mode:
+   * - List this middleware before tool retry or error-handling middleware so it
+   *   wraps them.
+   * - On resume, each paused tool call runs its middleware again up to this one, so
+   *   middleware listed before it must not have side effects before calling
+   *   `handler`. The tool itself runs only after the answer.
+   * - The agent has a `wrapToolCall` middleware, so (as with any such middleware
+   *   today) a tool that throws fails the run instead of returning an error
+   *   `ToolMessage`.
+   * - `createAgent` must use version `"v2"` (the default).
+   */
+  interruptMode?: "batched" | "per_call";
+  /**
+   * `"per_call"` mode only: text prepended to the result of a tool call a reviewer
+   * edited, so the model knows the call it made isn't the one that ran. Pass `null`
+   * to add nothing.
+   */
+  editNotice?: string | null;
+};
+
+const DEFAULT_EDIT_NOTICE =
+  "Note: a human reviewer replaced this tool call before it ran. The call recorded in " +
+  "your message is the one you produced, not the one that executed. This was " +
+  "intentional and authorized. Do not re-issue your original call.";
+
+/**
+ * Resolve `interruptOn`: `true` allows `allowedByTrue`; `false` and missing entries
+ * auto-approve.
+ */
+function resolveInterruptOn(
+  interruptOn: NonNullable<HumanInTheLoopMiddlewareConfig>["interruptOn"],
+  allowedByTrue: readonly DecisionType[]
+): Record<string, InterruptOnConfig> {
+  const resolved: Record<string, InterruptOnConfig> = {};
+  for (const [toolName, toolConfig] of Object.entries(interruptOn ?? {})) {
+    if (typeof toolConfig === "boolean") {
+      if (toolConfig === true) {
+        resolved[toolName] = { allowedDecisions: [...allowedByTrue] };
+      }
+    } else if (toolConfig.allowedDecisions) {
+      resolved[toolName] = toolConfig as InterruptOnConfig;
+    }
+  }
+  return resolved;
+}
+
+/**
+ * Return `message` with the reviewer-edit notice prepended, stating the call that ran.
+ */
+function prependNotice(
+  message: ToolMessage,
+  notice: string,
+  executed: Action
+): ToolMessage {
+  const hasContent = message.content.length > 0;
+  const text = `${notice} Executed instead: ${executed.name} with arguments ${JSON.stringify(
+    executed.args
+  )}.${hasContent ? "\n\nTool response:" : ""}`;
+  return new ToolMessage({
+    content:
+      typeof message.content === "string"
+        ? `${text}${hasContent ? "\n" : ""}${message.content}`
+        : [{ type: "text", text }, ...message.content],
+    tool_call_id: message.tool_call_id,
+    name: message.name,
+    status: message.status,
+    artifact: message.artifact,
+    id: message.id,
+    additional_kwargs: message.additional_kwargs,
+    response_metadata: message.response_metadata,
+  });
+}
+
+/**
+ * Tell the model a reviewer replaced the call, and with what.
+ */
+function withEditNotice(
+  result: ToolMessage | Command,
+  toolCallId: string,
+  executed: Action,
+  notice: string | null
+): ToolMessage | Command {
+  if (!notice) {
+    return result;
+  }
+  if (ToolMessage.isInstance(result)) {
+    return prependNotice(result, notice, executed);
+  }
+  // A `Command` carries the `ToolMessage` in its state update.
+  const update: unknown = isCommand(result) ? result.update : undefined;
+  if (
+    typeof update !== "object" ||
+    update === null ||
+    !("messages" in update) ||
+    !Array.isArray(update.messages)
+  ) {
+    return result;
+  }
+  return new Command({
+    update: {
+      ...update,
+      messages: update.messages.map((message: unknown) =>
+        ToolMessage.isInstance(message) && message.tool_call_id === toolCallId
+          ? prependNotice(message, notice, executed)
+          : message
+      ),
+    },
+    resume: result.resume,
+    goto: result.goto,
+    graph: result.graph,
+  });
+}
 
 /**
  * Creates a Human-in-the-Loop (HITL) middleware for tool approval and oversight.
@@ -350,7 +643,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * ## Features
  *
  * - **Selective Tool Approval**: Configure which tools require human approval
- * - **Multiple Decision Types**: Approve, edit, or reject tool calls
+ * - **Multiple Decision Types**: Approve, edit, reject, or respond to tool calls
  * - **Asynchronous Workflow**: Uses LangGraph's interrupt mechanism for non-blocking approval
  * - **Custom Approval Messages**: Provide context-specific descriptions for approval requests
  *
@@ -360,6 +653,8 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * - `approve`: Execute the tool with original arguments
  * - `edit`: Modify the tool name and/or arguments before execution
  * - `reject`: Provide a manual response instead of executing the tool
+ * - `respond`: Answer on behalf of the tool, which doesn't run; the model gets the
+ *   message as the tool's result
  *
  * @param options - Configuration options for the middleware
  * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
@@ -509,8 +804,9 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @remarks
  * - Tool calls are processed in the order they appear in the AI message
  * - Auto-approved tools execute immediately without interruption
- * - Multiple tools requiring approval are bundled into a single interrupt request
- * - The middleware operates in the `afterModel` phase, intercepting before tool execution
+ * - In the default `"batched"` mode, multiple tools requiring approval are bundled into a
+ *   single interrupt request, raised in the `afterModel` phase before any tool runs. In
+ *   `"per_call"` mode, each gated call raises its own interrupt from `wrapToolCall`
  * - Requires a checkpointer to maintain state across interruptions
  *
  * @see {@link createAgent} for agent creation
@@ -646,19 +942,17 @@ export function humanInTheLoopMiddleware(
         );
       }
 
-      // Create a tool message with the human's text response
-      const content =
-        decision.message ??
-        `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
+      return {
+        revisedToolCall: toolCall,
+        toolMessage: answerMessage(toolCall, decision),
+      };
+    }
 
-      const toolMessage = new ToolMessage({
-        content,
-        name: toolCall.name,
-        tool_call_id: toolCall.id!,
-        status: "error",
-      });
-
-      return { revisedToolCall: toolCall, toolMessage };
+    if (decision.type === "respond" && allowedDecisions.includes("respond")) {
+      return {
+        revisedToolCall: toolCall,
+        toolMessage: answerMessage(toolCall, decision),
+      };
     }
 
     const msg = `Unexpected human decision: ${JSON.stringify(
@@ -671,12 +965,111 @@ export function humanInTheLoopMiddleware(
     throw new Error(msg);
   };
 
+  const interruptMode = options.interruptMode ?? "batched";
+  if (interruptMode !== "batched" && interruptMode !== "per_call") {
+    throw new Error(
+      `interruptMode must be "batched" or "per_call", got ${JSON.stringify(interruptMode)}.`
+    );
+  }
+  if (interruptMode === "per_call") {
+    for (const [toolName, toolConfig] of Object.entries(
+      options.interruptOn ?? {}
+    )) {
+      if (
+        typeof toolConfig === "object" &&
+        !toolConfig.allowedDecisions?.length
+      ) {
+        throw new Error(
+          `Invalid interruptOn config for tool "${toolName}": allowedDecisions must list at least one decision.`
+        );
+      }
+    }
+  }
+  const editNotice =
+    options.editNotice === undefined ? DEFAULT_EDIT_NOTICE : options.editNotice;
+
   return createMiddleware({
     name: "HumanInTheLoopMiddleware",
     contextSchema,
+    /**
+     * Per-call mode: pause for each gated tool call as it's about to run.
+     */
+    wrapToolCall:
+      interruptMode === "per_call"
+        ? async (request, handler) => {
+            const config = interopParse(contextSchema, {
+              ...options,
+              ...(request.runtime.context || {}),
+            });
+            const { toolCall } = request;
+            const toolConfig = config
+              ? resolveInterruptOn(config.interruptOn, DECISION_TYPES)[
+                  toolCall.name
+                ]
+              : undefined;
+            if (
+              !toolConfig ||
+              (toolConfig.when && !(await toolConfig.when(request)))
+            ) {
+              return handler(request);
+            }
+            // Only a missing ID: an empty one still runs, so per-call keeps working
+            // where batched does.
+            if (toolCall.id == null) {
+              throw new Error(
+                `Tool call \`${toolCall.name}\` has no ID, so its result can't be matched to it. Make sure the chat model returns tool call IDs.`
+              );
+            }
+
+            const { actionRequest, reviewConfig } = await createActionAndConfig(
+              toolCall,
+              toolConfig,
+              request.state,
+              request.runtime
+            );
+            const value: ToolApprovalRequest = {
+              type: "tool_approval",
+              tool_call_id: toolCall.id,
+              name: toolCall.name,
+              args: toolCall.args,
+              description: actionRequest.description ?? "",
+            };
+            // LangGraph parses the answer against `responseSchema` before saving it, so
+            // it comes back as one of this tool's allowed decisions.
+            const decision = interrupt<
+              ToolApprovalRequest,
+              ToolApprovalDecision
+            >(value, {
+              responseSchema: decisionSchema(
+                toolConfig.allowedDecisions,
+                toolCall.name,
+                request.tool,
+                reviewConfig.argsSchema
+              ),
+            });
+            if (decision.type === "approve") {
+              return handler(request);
+            }
+            if (decision.type === "edit") {
+              // The schema pinned the tool name, so this is always the same tool. Zod's
+              // parse fills in schema defaults, which the tool would apply anyway.
+              const executed = decision.edited_action;
+              const result = await handler({
+                ...request,
+                toolCall: { ...toolCall, args: executed.args },
+              });
+              return withEditNotice(result, toolCall.id, executed, editNotice);
+            }
+            return answerMessage(toolCall, decision);
+          }
+        : undefined,
     afterModel: {
       canJumpTo: ["model"],
       hook: async (state, runtime) => {
+        if (interruptMode === "per_call") {
+          // Interrupts are raised per tool call, in `wrapToolCall`.
+          return;
+        }
         const config = interopParse(contextSchema, {
           ...options,
           ...(runtime.context || {}),
@@ -708,22 +1101,12 @@ export function humanInTheLoopMiddleware(
         }
 
         /**
-         * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
+         * Resolve per-tool configs (boolean true -> approve/edit/reject allowed; false -> auto-approve)
          */
-        const resolvedConfigs: Record<string, InterruptOnConfig> = {};
-        for (const [toolName, toolConfig] of Object.entries(
-          config.interruptOn
-        )) {
-          if (typeof toolConfig === "boolean") {
-            if (toolConfig === true) {
-              resolvedConfigs[toolName] = {
-                allowedDecisions: [...ALLOWED_DECISIONS],
-              };
-            }
-          } else if (toolConfig.allowedDecisions) {
-            resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
-          }
-        }
+        const resolvedConfigs = resolveInterruptOn(
+          config.interruptOn,
+          BATCHED_DEFAULT_DECISIONS
+        );
 
         const interruptToolCalls: ToolCall[] = [];
         const autoApprovedToolCalls: ToolCall[] = [];
