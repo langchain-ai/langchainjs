@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.16
+
+### Patch Changes
+
+- [#11847](https://github.com/langchain-ai/langchainjs/pull/11847) [`bb50952`](https://github.com/langchain-ai/langchainjs/commit/bb509527d4ef07617db5359c93753934c9fc2ba1) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): expose branded class type for provider declarations
+
 ## 1.2.15
 
 ### Patch Changes
