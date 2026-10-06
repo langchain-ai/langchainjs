@@ -515,7 +515,7 @@ export async function convertMcpTools(
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
     : "";
-  const serverPrefix = prefixToolNameWithServerName ? `${serverName}__` : "";
+  const serverPrefix = prefixToolNameWithServerName ? `${serverName}_` : "";
   const toolNamePrefix = `${initialPrefix}${serverPrefix}`;
 
   // Filter out tools without names and convert in a single map operation

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "author": "LangChain",
   "license": "MIT",
@@ -37,7 +37,7 @@
   },
   "peerDependencies": {
     "@langchain/core": "^1.2.6",
-    "@langchain/langgraph": "^1.4.13"
+    "@langchain/langgraph": "^1.4.18"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
@@ -49,21 +49,21 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/langgraph": "^1.4.13",
+    "@langchain/langgraph": "^1.4.18",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@modelcontextprotocol/node": "^2.1.0",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@modelcontextprotocol/server": "^2.2.0",
     "@modelcontextprotocol/server-legacy": "^2.2.0",
     "@types/express": "^5.0.6",
-    "@types/node": "^26.4.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@types/node": "^26.6.3",
+    "@vitest/coverage-v8": "^5.0.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.2"
   },
   "engines": {
     "node": ">=20.10.0"

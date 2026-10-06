@@ -1,6 +1,6 @@
 {
   "name": "@langchain/together-ai",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Together AI integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -38,11 +38,11 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.2",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11",
+    "vitest": "^5.0.2",
     "zod": "^3.25.76 || ^4"
   },
   "publishConfig": {
