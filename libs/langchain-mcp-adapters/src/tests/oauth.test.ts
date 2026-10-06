@@ -146,7 +146,7 @@ describe("token providers", () => {
             },
           },
         })
-    ).toThrow();
+    ).toThrow(/authProvider/);
   });
 });
 
@@ -220,6 +220,21 @@ describe("auth failure labeling", () => {
     expect(server.requests.some((request) => request.path === "/sse")).toBe(
       false
     );
+  });
+
+  it("keeps UnauthorizedError as the cause after an HTTP→SSE fallback", async () => {
+    const server = await fixture();
+    const error = await failure(
+      adapter({
+        servers: {
+          svc: { url: server.sseUrl, authProvider: createTestOAuthProvider() },
+        },
+      }).listTools()
+    );
+    // POST /sse 404s, so the adapter falls back to an SSE GET.
+    const sent = server.requests.map((r) => `${r.method} ${r.path}`);
+    expect(sent).toEqual(expect.arrayContaining(["POST /sse", "GET /sse"]));
+    expect(error.cause).toBeInstanceOf(UnauthorizedError);
   });
 
   it("keeps a throwing token() as the cause and does not call it an auth failure", async () => {
@@ -315,9 +330,8 @@ describe("auth failures stay retryable", () => {
 
     const [{ error }] = onConnectionError.mock.calls[0];
     expect(MCPClientError.isInstance(error)).toBe(true);
-    expect(MCPClientError.isInstance((error as MCPClientError).cause)).toBe(
-      true
-    );
+    // The SSE attempt's 401, one level down as on a direct connection.
+    expect(getHttpErrorCode((error as MCPClientError).cause)).toBe(401);
     expect(isAuthenticationError(error)).toBe(true);
 
     expect(await mcp.listTools()).toEqual([]);

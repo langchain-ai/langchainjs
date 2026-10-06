@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@langchain/openai": "workspace:*",
-    "eventsource-parser": "^4.1.0",
-    "openai": "^7.8.0"
+    "eventsource-parser": "^4.1.1",
+    "openai": "^7.23.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

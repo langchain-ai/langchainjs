@@ -1,5 +1,23 @@
 # @langchain/core
 
+## 1.2.17
+
+### Patch Changes
+
+- [#11849](https://github.com/langchain-ai/langchainjs/pull/11849) [`b1d9c7a`](https://github.com/langchain-ai/langchainjs/commit/b1d9c7acf82b545c102c5178eb57b16f7a7f5710) Thanks [@KyleCodes](https://github.com/KyleCodes)! - Preserve runtime context in ambient runnable config across tool calls, nested runnables, and streaming.
+
+## 1.2.16
+
+### Patch Changes
+
+- [#11847](https://github.com/langchain-ai/langchainjs/pull/11847) [`bb50952`](https://github.com/langchain-ai/langchainjs/commit/bb509527d4ef07617db5359c93753934c9fc2ba1) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): expose branded class type for provider declarations
+
+## 1.2.15
+
+### Patch Changes
+
+- [#11753](https://github.com/langchain-ai/langchainjs/pull/11753) [`e58ef38`](https://github.com/langchain-ai/langchainjs/commit/e58ef38ddba9df3ecd5b95f426ffa00cfef7accf) Thanks [@emil-lc](https://github.com/emil-lc)! - Record tool call IDs in traced tool run extras.
+
 ## 1.2.14
 
 ### Patch Changes

@@ -24,7 +24,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260830.1",
+    "@cloudflare/workers-types": "^5.20260928.1",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
