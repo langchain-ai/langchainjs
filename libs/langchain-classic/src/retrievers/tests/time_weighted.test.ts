@@ -337,3 +337,46 @@ describe("Test invoke", () => {
     expect(resultsDocs).toStrictEqual(expected);
   });
 });
+
+describe("Test number of returned documents", () => {
+  const contents = ["aaa", "bbb", "ccc", "ddd", "eee", "fff"];
+
+  const createRetriever = async (k?: number) => {
+    const retriever = new TimeWeightedVectorStoreRetriever({
+      vectorStore: new MemoryVectorStore(new FakeEmbeddings()),
+      memoryStream: [],
+      k,
+    });
+    await retriever.addDocuments(
+      contents.map((pageContent) => ({ pageContent, metadata: {} }))
+    );
+    return retriever;
+  };
+
+  test.each([1, 2, 3, 5])(
+    "Should return exactly k = %i documents",
+    async (k) => {
+      const retriever = await createRetriever(k);
+      const resultsDocs = await retriever.invoke("aaa");
+      expect(resultsDocs).toHaveLength(k);
+    }
+  );
+
+  test("Should return exactly 4 documents by default", async () => {
+    const retriever = await createRetriever();
+    const resultsDocs = await retriever.invoke("aaa");
+    expect(resultsDocs).toHaveLength(4);
+  });
+
+  test("Should return no documents when k = 0", async () => {
+    const retriever = await createRetriever(0);
+    const resultsDocs = await retriever.invoke("aaa");
+    expect(resultsDocs).toHaveLength(0);
+  });
+
+  test("Should return all documents when k is greater than the number of documents", async () => {
+    const retriever = await createRetriever(10);
+    const resultsDocs = await retriever.invoke("aaa");
+    expect(resultsDocs).toHaveLength(contents.length);
+  });
+});
