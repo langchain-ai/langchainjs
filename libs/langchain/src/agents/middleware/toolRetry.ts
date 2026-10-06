@@ -9,6 +9,8 @@ import { createMiddleware } from "../middleware.js";
 import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
+import { markToolErrorAsFatal } from "./toolErrorContext.js";
+import type { ToolCallRequest } from "./types.js";
 
 /**
  * Configuration options for the Tool Retry Middleware.
@@ -250,15 +252,22 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
     toolName: string,
     toolCallId: string,
     error: Error,
-    attemptsMade: number
+    attemptsMade: number,
+    request: ToolCallRequest
   ): ToolMessage => {
     if (onFailure === "error") {
+      markToolErrorAsFatal(request, error);
       throw error;
     }
 
     let content: string;
     if (typeof onFailure === "function") {
-      content = onFailure(error);
+      try {
+        content = onFailure(error);
+      } catch (callbackError) {
+        markToolErrorAsFatal(request, callbackError);
+        throw callbackError;
+      }
     } else {
       content = formatFailureMessage(toolName, error, attemptsMade);
     }
@@ -289,7 +298,7 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
         try {
           return await handler(request);
         } catch (error) {
-          if (isGraphBubbleUp(error)) {
+          if (error != null && isGraphBubbleUp(error)) {
             throw error;
           }
 
@@ -301,10 +310,24 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
               ? (error as Error)
               : new Error(String(error));
 
-          // Check if we should retry this exception
-          if (!shouldRetryException(err)) {
+          // A callback can deliberately rethrow the same downstream value.
+          // Keep that middleware-origin failure distinct from passthrough.
+          let retryable: boolean;
+          try {
+            retryable = shouldRetryException(err);
+          } catch (callbackError) {
+            markToolErrorAsFatal(request, callbackError);
+            throw callbackError;
+          }
+          if (!retryable) {
             // Exception is not retryable, handle failure immediately
-            return handleFailure(toolName, toolCallId, err, attemptsMade);
+            return handleFailure(
+              toolName,
+              toolCallId,
+              err,
+              attemptsMade,
+              request
+            );
           }
 
           // Check if we have more retries left
@@ -321,7 +344,13 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
             // Continue to next retry
           } else {
             // No more retries, handle failure
-            return handleFailure(toolName, toolCallId, err, attemptsMade);
+            return handleFailure(
+              toolName,
+              toolCallId,
+              err,
+              attemptsMade,
+              request
+            );
           }
         }
       }
