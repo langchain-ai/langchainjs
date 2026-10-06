@@ -215,6 +215,24 @@ describe("drawMermaidImage", () => {
     );
   });
 
+  test("should UTF-8 encode non-ASCII node labels", async () => {
+    const mockBlob = new Blob(["mock image data"], { type: "image/png" });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: async () => mockBlob,
+    } as Response);
+
+    const mermaidSyntax = "graph TD;\n\tretrieve(检索)\n\trésumé(Résumé 🚀)";
+    const result = await drawMermaidImage(mermaidSyntax);
+
+    expect(result).toBe(mockBlob);
+    const expectedEncodedSyntax = Buffer.from(mermaidSyntax, "utf8").toString(
+      "base64url"
+    );
+    const expectedUrl = `https://mermaid.ink/img/${expectedEncodedSyntax}?bgColor=!white&type=png`;
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl);
+  });
+
   test("nests deep subgraphs correctly", () => {
     const data = {} as RunnableInterface;
 
