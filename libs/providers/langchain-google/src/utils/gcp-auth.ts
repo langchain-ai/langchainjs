@@ -8,6 +8,7 @@
 
 import { AuthError } from "../utils/errors.js";
 import { iife } from "../utils/misc.js";
+import { VERTEX_AI_AUTH_SCOPES } from "../const.js";
 
 type JoseModule = typeof import("jose");
 
@@ -132,24 +133,36 @@ export async function getGCPPrivateKey(credentials: GCPCredentials) {
  * Token flow as specified by RFC 7523.
  *
  * @param credentials - The GCP service account credentials used to sign the JWT
+ * @param scopes - The OAuth scopes the resulting access token should carry.
+ *                 Google requires these on the assertion itself: the claim set
+ *                 for an access token request must include `scope`, "a
+ *                 space-delimited list of the permissions that the application
+ *                 requests". Omitting it makes the exchange fail with
+ *                 `Invalid OAuth scope or ID token audience provided`.
  * @returns A Promise that resolves to the signed JWT string
  *
  * @throws {Error} If the private key cannot be imported or the JWT cannot be signed
  *
  * @see https://datatracker.ietf.org/doc/html/rfc7523
+ * @see https://developers.google.com/identity/protocols/oauth2/service-account
  * @see https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials
  *
  * @example
  * ```typescript
  * const credentials = normalizeGCPCredentials(credentialsJson);
- * const customToken = await getGCPCustomToken(credentials);
+ * const customToken = await getGCPCustomToken(credentials, [
+ *   "https://www.googleapis.com/auth/cloud-platform",
+ * ]);
  * // Use customToken to request an access token
  * ```
  */
-export async function getGCPCustomToken(credentials: GCPCredentials) {
+export async function getGCPCustomToken(
+  credentials: GCPCredentials,
+  scopes: string[] = VERTEX_AI_AUTH_SCOPES
+) {
   const { SignJWT } = await getJose();
   const privateKey = await getGCPPrivateKey(credentials);
-  const customToken = await new SignJWT()
+  const customToken = await new SignJWT({ scope: scopes.join(" ") })
     .setIssuer(credentials.client_email)
     .setAudience(credentials.token_uri)
     .setSubject(credentials.client_email)
@@ -203,12 +216,16 @@ export async function getGCPCustomToken(credentials: GCPCredentials) {
  * will trigger a refresh request.
  */
 export async function getGCPCredentialsAccessToken(
-  credentials: GCPCredentials
+  credentials: GCPCredentials,
+  scopes: string[] = VERTEX_AI_AUTH_SCOPES
 ): Promise<string> {
   const tokenUrl = credentials.token_uri;
 
   const cacheKeyUrl = new URL(tokenUrl);
   cacheKeyUrl.searchParams.set("key", credentials.private_key_id);
+  // The scopes are baked into the token that comes back, so a token minted for
+  // one scope set must not be handed to a caller that asked for another.
+  cacheKeyUrl.searchParams.set("scope", [...scopes].sort().join(" "));
   const cacheKey = cacheKeyUrl.toString();
 
   // Attempt to retrieve the token from the cache
@@ -242,7 +259,7 @@ export async function getGCPCredentialsAccessToken(
     now = Math.floor(Date.now() / 1000);
 
     // Request a new token from the Google Cloud API
-    const jwt = await getGCPCustomToken(credentials);
+    const jwt = await getGCPCustomToken(credentials, scopes);
     const body = new URLSearchParams();
     body.append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
     body.append("assertion", jwt);

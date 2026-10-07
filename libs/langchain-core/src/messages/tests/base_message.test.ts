@@ -23,6 +23,15 @@ import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
 import type { RawInputToolCallChunk } from "../utils.js";
 
+describe("BaseMessage.text", () => {
+  it("treats a text block with no text value as empty, not the string 'undefined'", () => {
+    const message = new SystemMessage({
+      content: [{ type: "text" } as unknown as { type: "text"; text: string }],
+    });
+    expect(message.text).toBe("");
+  });
+});
+
 describe("message type instanceof checks", () => {
   it("distinguishes FunctionMessage instances", () => {
     expect(new FunctionMessage({ content: "", name: "test" })).toBeInstanceOf(

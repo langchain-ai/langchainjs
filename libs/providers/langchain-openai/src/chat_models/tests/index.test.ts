@@ -5,15 +5,136 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
+import type { BaseChatOpenAIFields } from "../base.js";
+import { ChatOpenAICompletions } from "../completions.js";
+import { ChatOpenAIResponses } from "../responses.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
 import {
   isReasoningModel,
   _modelPrefersResponsesAPI,
 } from "../../utils/misc.js";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import PROFILES from "../profiles.js";
+
+const chatOpenAIApis = [
+  {
+    api: "completions",
+    make: (fields: BaseChatOpenAIFields) => new ChatOpenAICompletions(fields),
+  },
+  {
+    api: "responses",
+    make: (fields: BaseChatOpenAIFields) => new ChatOpenAIResponses(fields),
+  },
+];
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
+    it("forwards and overrides prompt cache options", () => {
+      const chat = new ChatOpenAI({
+        model: "gpt-5.6",
+        promptCacheOptions: { mode: "explicit", ttl: "30m" },
+      });
+
+      expect(chat.invocationParams().prompt_cache_options).toEqual({
+        mode: "explicit",
+        ttl: "30m",
+      });
+      expect(
+        chat.invocationParams({
+          promptCacheOptions: { mode: "implicit" },
+        }).prompt_cache_options
+      ).toEqual({ mode: "implicit" });
+    });
+
+    it.each(chatOpenAIApis)(
+      "gives prompt cache options call > modelKwargs > field precedence ($api)",
+      ({ make }) => {
+        const kwargsOnly = make({
+          model: "gpt-5.6-sol",
+          apiKey: "test",
+          modelKwargs: { prompt_cache_options: { mode: "implicit" } },
+        });
+        expect(kwargsOnly.invocationParams().prompt_cache_options).toEqual({
+          mode: "implicit",
+        });
+        expect(
+          kwargsOnly.invocationParams({
+            promptCacheOptions: { mode: "explicit" },
+          }).prompt_cache_options
+        ).toEqual({ mode: "explicit" });
+
+        const withField = make({
+          model: "gpt-5.6-sol",
+          apiKey: "test",
+          promptCacheOptions: { mode: "explicit" },
+          modelKwargs: { prompt_cache_options: { mode: "implicit" } },
+        });
+        expect(withField.invocationParams().prompt_cache_options).toEqual({
+          mode: "implicit",
+        });
+      }
+    );
+
+    it.each(chatOpenAIApis)(
+      "gives prompt cache key and retention call > modelKwargs > field precedence ($api)",
+      ({ make }) => {
+        const kwargsOnly = make({
+          model: "gpt-4o-mini",
+          apiKey: "test",
+          modelKwargs: {
+            prompt_cache_key: "kwargs-key",
+            prompt_cache_retention: "24h",
+          },
+        });
+        expect(kwargsOnly.invocationParams()).toMatchObject({
+          prompt_cache_key: "kwargs-key",
+          prompt_cache_retention: "24h",
+        });
+        expect(
+          kwargsOnly.invocationParams({
+            promptCacheKey: "call-key",
+            promptCacheRetention: "in-memory",
+          })
+        ).toMatchObject({
+          prompt_cache_key: "call-key",
+          prompt_cache_retention: "in_memory",
+        });
+
+        const withField = make({
+          model: "gpt-4o-mini",
+          apiKey: "test",
+          promptCacheKey: "field-key",
+          promptCacheRetention: "in-memory",
+          modelKwargs: {
+            prompt_cache_key: "kwargs-key",
+            prompt_cache_retention: "24h",
+          },
+        });
+        expect(withField.invocationParams()).toMatchObject({
+          prompt_cache_key: "kwargs-key",
+          prompt_cache_retention: "24h",
+        });
+      }
+    );
+
+    it.each(chatOpenAIApis)(
+      "sends the legacy in-memory retention as in_memory ($api)",
+      ({ make }) => {
+        const model = make({
+          model: "gpt-4o-mini",
+          apiKey: "test",
+          promptCacheRetention: "in-memory",
+        });
+        expect(model.invocationParams().prompt_cache_retention).toBe(
+          "in_memory"
+        );
+        expect(
+          model.invocationParams({ promptCacheRetention: "in-memory" })
+            .prompt_cache_retention
+        ).toBe("in_memory");
+      }
+    );
+
     it("supports string model shorthand", () => {
       const chat = new ChatOpenAI("gpt-4o-mini", { temperature: 0.2 });
       expect(chat.model).toBe("gpt-4o-mini");
@@ -899,8 +1020,14 @@ describe("ChatOpenAI", () => {
       expect(isReasoningModel("gpt-5.3-codex")).toBe(true);
     });
 
+    it("should return true for gpt-6 family models", () => {
+      expect(isReasoningModel("gpt-6-astra")).toBe(true);
+      expect(isReasoningModel("gpt-6")).toBe(true);
+    });
+
     it("should return false for gpt-5-chat models", () => {
       expect(isReasoningModel("gpt-5-chat-latest")).toBe(false);
+      expect(isReasoningModel("gpt-6-chat-latest")).toBe(false);
     });
 
     it("should return false for non-reasoning models", () => {
@@ -934,6 +1061,13 @@ describe("ChatOpenAI", () => {
 
     it("should return true for gpt-5.5-pro", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
+    });
+
+    it("should return true for gpt-5.6 models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.6")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-terra")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-luna")).toBe(true);
     });
 
     it("should return true for codex models", () => {
@@ -1487,6 +1621,40 @@ describe("ChatOpenAI", () => {
       }
     });
 
+    it("should forward explicit reasoning for gpt-6-astra on the Responses API", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-6-astra",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        reasoning: { effort: "high", summary: "auto" },
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      await expect(model.invoke("Test message")).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        expect(body.reasoning).toEqual({ effort: "high", summary: "auto" });
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+
     it("should not apply reasoningEffort for non-reasoning models", async () => {
       const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
       mockFetch.mockImplementation((url, options) => {
@@ -1970,5 +2138,93 @@ describe("ChatOpenAI", () => {
       const result = await structured.invoke("plan something");
       expect(result).toEqual({ status: "ok", plan: { steps: ["a", "b"] } });
     });
+  });
+});
+
+describe("profile.fileMimeTypes", () => {
+  test("ChatOpenAIResponses includes file MIME types", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toEqual(
+      PROFILES["gpt-5.5"].fileMimeTypes
+    );
+    expect(model.profile.maxInputTokens).toBe(
+      PROFILES["gpt-5.5"].maxInputTokens
+    );
+  });
+
+  test("ChatOpenAICompletions omits file MIME types", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+  });
+
+  test("ChatOpenAI omits file MIME types without the Responses API", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.5", apiKey: "test" });
+    const { fileMimeTypes: _fileMimeTypes, ...expectedProfile } =
+      PROFILES["gpt-5.5"];
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+    expect(model.profile).toEqual(expectedProfile);
+  });
+
+  test("ChatOpenAI includes file MIME types with useResponsesApi", () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.5",
+      apiKey: "test",
+      useResponsesApi: true,
+    });
+    expect(model.profile.fileMimeTypes).toEqual(
+      PROFILES["gpt-5.5"].fileMimeTypes
+    );
+  });
+
+  test("ChatOpenAI includes file MIME types for Responses-preferring models", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.2-pro", apiKey: "test" });
+    expect(model.profile.fileMimeTypes).toEqual(
+      PROFILES["gpt-5.2-pro"].fileMimeTypes
+    );
+  });
+
+  // "o1" and "o3" are valid bare JS identifiers, so the generated profiles.ts
+  // emits their keys unquoted (`o1: {`) unlike every other model name — a
+  // shape worth covering directly since it has tripped up tooling before.
+  test.each(["o1", "o3"])(
+    "ChatOpenAIResponses includes file MIME types for %s",
+    (model) => {
+      const chatModel = new ChatOpenAIResponses({ model, apiKey: "test" });
+      expect(chatModel.profile.fileMimeTypes).toEqual(
+        PROFILES[model].fileMimeTypes
+      );
+      expect(chatModel.profile.fileMimeTypes).toBeDefined();
+    }
+  );
+
+  test("omits file MIME types for models without file inputs", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-3.5-turbo",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+  });
+
+  test("omits file MIME types for unknown models", () => {
+    const model = new ChatOpenAIResponses({
+      model: "not-a-real-model",
+      apiKey: "test",
+    });
+    expect(model.profile).toEqual({});
+  });
+
+  test("does not mutate the shared profile registry", () => {
+    // Completions strips fileMimeTypes from the instance's own profile...
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.fileMimeTypes).toBeUndefined();
+    // ...but the shared static table still has it, proving nothing was
+    // deleted in place.
+    expect(PROFILES["gpt-5.5"].fileMimeTypes).toBeDefined();
   });
 });
