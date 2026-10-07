@@ -622,6 +622,45 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
   ]);
 });
 
+test("Test ChatModel v1 outputVersion does not nest lc_kwargs when serializing invoke output", async () => {
+  const model = new FakeListChatModel({
+    responses: ["Hello world!"],
+  });
+
+  const response = await model.invoke("Hello there!", {
+    outputVersion: "v1",
+  });
+
+  // Regression: castStandardMessageContent spread the message instance, so the
+  // old lc_kwargs was nested inside the new one and toJSON() repeated the content.
+  expect(JSON.stringify(response.toJSON())).not.toContain("lc_kwargs");
+  expect(response.response_metadata.output_version).toBe("v1");
+  expect(response.content).toEqual([
+    {
+      type: "text",
+      text: "Hello world!",
+    },
+  ]);
+});
+
+test("Test ChatModel v1 outputVersion does not nest lc_kwargs when serializing streamed chunks", async () => {
+  const model = new FakeListChatModel({
+    responses: ["Hi!"],
+  });
+
+  const stream = await model.stream("Hello there!", {
+    outputVersion: "v1",
+  });
+
+  let chunkCount = 0;
+  for await (const chunk of stream) {
+    chunkCount += 1;
+    expect(JSON.stringify(chunk.toJSON())).not.toContain("lc_kwargs");
+    expect(chunk.response_metadata.output_version).toBe("v1");
+  }
+  expect(chunkCount).toBeGreaterThan(0);
+});
+
 class DeltaUsageChatModel extends BaseChatModel {
   _llmType() {
     return "delta-usage-fake";
