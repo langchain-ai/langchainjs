@@ -2,7 +2,6 @@
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   InferInteropZodInput,
   interopParse,
@@ -311,23 +310,18 @@ const ToolApprovalRequestSchema = z4.object({
 export type ToolApprovalRequest = z4.infer<typeof ToolApprovalRequestSchema>;
 
 /**
- * What an edit's `args` must look like: the tool's schema, if it's a Zod v4 object.
- *
- * Unknown args are rejected unless the tool's schema accepts them (`z.looseObject`,
- * `.passthrough()` or `.catchall()`). Anything else (a Zod v3 or JSON schema, or no
- * tool) is shown but not checked.
+ * What an edit's `args` must look like: the tool's schema if it's a Zod v4 object,
+ * with unknown args rejected unless the tool accepts them (`z.looseObject`,
+ * `.catchall()`). Any other tool takes any object, and checks it when it runs.
  */
 function editArgs(
   tool?: ToolCallRequest["tool"]
 ): z4.ZodType<Record<string, unknown>> {
   const schema = tool && "schema" in tool ? tool.schema : undefined;
-  if (schema instanceof z4.ZodObject) {
-    return schema._zod.def.catchall ? schema : schema.strict();
+  if (!(schema instanceof z4.ZodObject)) {
+    return z4.record(z4.string(), z4.unknown());
   }
-  const { $schema: _, ...shown }: Record<string, unknown> = schema
-    ? toJsonSchema(schema)
-    : { type: "object" };
-  return z4.record(z4.string(), z4.unknown()).meta(shown);
+  return schema.def.catchall ? schema : schema.strict();
 }
 
 /**

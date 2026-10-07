@@ -2505,9 +2505,9 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
     await loose.send({ to: "b", cc: "c" });
     expect(loose.ran).toEqual([["send_email", { to: "b", cc: "c" }]]);
 
-    // A Zod v3 schema is shown but not checked; the tool's own validation rejects it
+    // Other schemas take any object; the tool's own validation rejects it
     const v3 = await setup(z.object({ to: z.string() }));
-    expect([v3.shown.required, "$schema" in v3.shown]).toEqual([["to"], false]);
+    expect([v3.shown.type, v3.shown.properties]).toEqual(["object", undefined]);
     const final = await v3.send({ to: 5 });
     expect([v3.ran, toolMessages(final).call_email.status]).toEqual([
       [],
