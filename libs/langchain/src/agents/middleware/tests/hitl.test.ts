@@ -2201,15 +2201,26 @@ describe("humanInTheLoopMiddleware", () => {
 // --- Per-call mode (interruptMode: "per_call") ---
 
 type Ran = [string, Record<string, unknown>][];
-type ScriptedCall = { id: string; name: string; args: Record<string, unknown> };
-type JsonSchema = {
-  oneOf?: JsonSchema[];
-  type?: string;
-  const?: string;
-  properties?: Record<string, JsonSchema>;
-  required?: string[];
-  additionalProperties?: unknown;
+type ScriptedCall = {
+  id?: string;
+  name: string;
+  args: Record<string, unknown>;
 };
+
+/** The parts of a JSON schema the per-call tests read. */
+const JsonSchema = z4.looseObject({
+  get oneOf() {
+    return z4.array(JsonSchema).optional();
+  },
+  type: z4.string().optional(),
+  const: z4.string().optional(),
+  get properties() {
+    return z4.record(z4.string(), JsonSchema).optional();
+  },
+  required: z4.array(z4.string()).optional(),
+  additionalProperties: z4.unknown().optional(),
+});
+type JsonSchema = z4.infer<typeof JsonSchema>;
 
 /** A Zod v4 tool that records each call in `ran`. */
 const recordingTool = (
@@ -2235,6 +2246,11 @@ const INTERRUPT_ON: Record<string, boolean | InterruptOnConfig> = {
   send_email: {
     allowedDecisions: ["approve", "edit", "reject"],
     description: "Email",
+    // Not used in per-call mode: the edit's args come from the tool itself.
+    argsSchema: {
+      type: "object",
+      properties: { recipient: { type: "string" } },
+    },
   },
   delete_file: {
     allowedDecisions: ["approve", "reject"],
@@ -2300,17 +2316,16 @@ const edit = (
 ) => ({ type: "edit", edited_action: { name, args, ...extra } });
 
 /** The interrupt's `response_schema`, as the JSON schema clients receive. */
-const schemaOf = (intr: Interrupt) =>
-  intr.response_schema as unknown as JsonSchema;
+const schemaOf = (intr: Interrupt) => JsonSchema.parse(intr.response_schema);
 /** Decision type -> its branch. */
 const branches = (schema: JsonSchema) =>
   Object.fromEntries(
-    (schema.oneOf ?? [schema]).map((b) => [b.properties!.type.const!, b])
+    (schema.oneOf ?? [schema]).map((b) => [`${b.properties?.type?.const}`, b])
   );
 /** The edit branch's `edited_action` schema and its `args` schema. */
 const editParts = (schema: JsonSchema) => {
-  const edited = branches(schema).edit.properties!.edited_action;
-  return [edited, edited.properties!.args] as const;
+  const edited = branches(schema).edit?.properties?.edited_action ?? {};
+  return [edited, edited.properties?.args ?? {}] as const;
 };
 /** `name`, starred when `schema` requires it. */
 const starred = (schema: JsonSchema, name: string) =>
@@ -2357,7 +2372,7 @@ function normalize(intr: Interrupt<ToolApprovalRequest>) {
     decisions: Object.fromEntries(
       Object.entries(byType).map(([type, branch]) => [
         type,
-        Object.keys(branch.properties!)
+        Object.keys(branch.properties ?? {})
           .filter((f) => f !== "type")
           .map((f) => starred(branch, f))
           .sort(),
@@ -2367,9 +2382,9 @@ function normalize(intr: Interrupt<ToolApprovalRequest>) {
   if (byType.edit) {
     const [edited, args] = editParts(schema);
     normalized.edited_action = {
-      name: edited.properties!.name.const,
+      name: edited.properties?.name?.const,
       args: Object.fromEntries(
-        Object.entries(args.properties!).map(([k, v]) => [
+        Object.entries(args.properties ?? {}).map(([k, v]) => [
           starred(args, k),
           v.type,
         ])
@@ -2384,14 +2399,14 @@ function normalize(intr: Interrupt<ToolApprovalRequest>) {
 
 /** The validation issues behind a rejected resume, as `"code path"` strings. */
 async function issuesOf(resumed: Promise<unknown>) {
-  const error = await resumed.then(
+  const error: unknown = await resumed.then(
     () => expect.fail("expected the answer to be rejected"),
-    (e: { cause?: unknown }) => e.cause ?? e
+    (e: Error) => e.cause ?? e
   );
-  const { issues } = error as {
-    issues: { code: string; path: PropertyKey[] }[];
-  };
-  return issues.map((i) => `${i.code} ${i.path.join(".")}`.trim());
+  if (!(error instanceof z4.core.$ZodError)) {
+    throw error;
+  }
+  return error.issues.map((i) => `${i.code} ${i.path.join(".")}`.trim());
 }
 
 describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
@@ -2474,13 +2489,10 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
   });
 
   it("checks edits only against a Zod v4 tool schema", async () => {
-    const setup = async (
-      schema: z4.ZodObject | z.AnyZodObject,
-      argsSchema?: Record<string, unknown>
-    ) => {
+    const setup = async (schema: z4.ZodObject | z.AnyZodObject) => {
       const ran: Ran = [];
       const agent = perCallAgent(ran, EMAIL, {
-        interruptOn: { send_email: { allowedDecisions: ["edit"], argsSchema } },
+        interruptOn: { send_email: { allowedDecisions: ["edit"] } },
         tools: [recordingTool(ran, "send_email", schema)],
       });
       const [intr] = await pause(agent);
@@ -2493,15 +2505,6 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
     const loose = await setup(z4.looseObject({ to: z4.string() }));
     await loose.send({ to: "b", cc: "c" });
     expect(loose.ran).toEqual([["send_email", { to: "b", cc: "c" }]]);
-
-    // A config argsSchema only changes what's shown
-    const email = { type: "string", format: "email" };
-    const shown = await setup(z4.object({ to: z4.string() }), {
-      type: "object",
-      properties: { to: email },
-    });
-    expect(shown.shown.properties!.to).toEqual(email);
-    await expect(shown.send({})).rejects.toThrow(/edited_action/);
 
     // A Zod v3 schema is shown but not checked; the tool's own validation rejects it
     const v3 = await setup(z.object({ to: z.string() }));
@@ -2527,9 +2530,7 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
   it("needs a tool call ID but accepts an empty one", async () => {
     const ran: Ran = [];
     const noId = { name: "send_email", args: { to: "alice" } };
-    // The fake model's types require an ID; real models can leave it out.
-    const withoutId = [noId] as unknown as ScriptedCall[];
-    await expect(pause(perCallAgent(ran, withoutId))).rejects.toThrow(
+    await expect(pause(perCallAgent(ran, [noId]))).rejects.toThrow(
       /`send_email` has no ID/
     );
 
@@ -2570,7 +2571,7 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
         { messages: [new HumanMessage("go")] },
         CFG
       );
-      const [intr] = result.__interrupt__!;
+      const [intr] = result.__interrupt__ ?? [];
       const final = await resume(
         agent,
         mode === "per_call" ? { [intr.id]: answer } : { decisions: [answer] }
@@ -2674,7 +2675,8 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
 
   it("checks its options, and leaves batched mode without wrapToolCall", () => {
     expect(() =>
-      humanInTheLoopMiddleware({ interruptMode: "sometimes" as "per_call" })
+      // @ts-expect-error JavaScript callers can pass anything
+      humanInTheLoopMiddleware({ interruptMode: "sometimes" })
     ).toThrow(/interruptMode must be "batched" or "per_call", got "sometimes"/);
     expect(() =>
       humanInTheLoopMiddleware({

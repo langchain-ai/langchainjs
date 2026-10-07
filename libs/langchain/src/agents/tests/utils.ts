@@ -332,7 +332,7 @@ export class MemorySaverAssertImmutable extends MemorySaver {
 interface ToolCall {
   name: string;
   args: Record<string, any>;
-  id: string;
+  id?: string;
   type?: "tool_call";
 }
 

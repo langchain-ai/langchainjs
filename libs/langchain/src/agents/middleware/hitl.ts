@@ -140,10 +140,6 @@ const InterruptOnConfigSchema = z.object({
   description: z.union([z.string(), DescriptionFunctionSchema]).optional(),
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
-   *
-   * In `"per_call"` mode this only changes what's shown under `edited_action.args` in
-   * `responseSchema`; edits are still checked against the tool's own schema when
-   * it's a Zod v4 object.
    */
   argsSchema: z.record(z.any()).optional(),
   /**
@@ -308,7 +304,8 @@ export type Decision =
  * The message the model gets in place of the tool's result.
  */
 function answerMessage(
-  toolCall: ToolCall,
+  name: string,
+  toolCallId: string,
   decision: RejectDecision | RespondDecision
 ): ToolMessage {
   // `respond` skips the tool: the human answers on its behalf.
@@ -317,9 +314,9 @@ function answerMessage(
     content: respond
       ? decision.message
       : (decision.message ??
-        `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`),
-    name: toolCall.name,
-    tool_call_id: toolCall.id!,
+        `User rejected the tool call for \`${name}\` with id ${toolCallId}`),
+    name,
+    tool_call_id: toolCallId,
     status: respond ? "success" : "error",
   });
 }
@@ -353,15 +350,42 @@ const ToolApprovalRequestSchema = z4.object({
  */
 export type ToolApprovalRequest = z4.infer<typeof ToolApprovalRequestSchema>;
 
-// The answers a reviewer can give in `"per_call"` mode, one schema per decision type
-const ToolApprovalDecisionSchemas = {
+/**
+ * What an edit's `args` must look like: the tool's schema, if it's a Zod v4 object.
+ *
+ * Unknown args are rejected unless the tool's schema accepts them (`z.looseObject`,
+ * `.passthrough()` or `.catchall()`). Anything else (a Zod v3 or JSON schema, or no
+ * tool) is shown but not checked.
+ */
+function editArgs(
+  tool?: ToolCallRequest["tool"]
+): z4.ZodType<Record<string, unknown>> {
+  const schema = tool && "schema" in tool ? tool.schema : undefined;
+  if (schema instanceof z4.ZodObject) {
+    return schema._zod.def.catchall ? schema : schema.strict();
+  }
+  const { $schema: _, ...shown }: Record<string, unknown> = schema
+    ? toJsonSchema(schema)
+    : { type: "object" };
+  return z4.record(z4.string(), z4.unknown()).meta(shown);
+}
+
+/**
+ * The answers a reviewer can give to a `"per_call"` approval of tool `name`, by type.
+ *
+ * The edit can't switch tools (its `name` is pinned), and unknown fields in it are
+ * rejected, so a typo fails instead of being dropped.
+ */
+const toolApprovalDecisions = (
+  name: string,
+  tool?: ToolCallRequest["tool"]
+) => ({
   approve: z4.object({ type: z4.literal("approve") }),
-  // Unknown fields are rejected, so a typo fails instead of being dropped.
   edit: z4.strictObject({
     type: z4.literal("edit"),
     edited_action: z4.strictObject({
-      name: z4.string(),
-      args: z4.record(z4.string(), z4.unknown()),
+      name: z4.literal(name),
+      args: editArgs(tool),
     }),
   }),
   reject: z4.object({
@@ -369,13 +393,13 @@ const ToolApprovalDecisionSchemas = {
     message: z4.string().optional(),
   }),
   respond: z4.object({ type: z4.literal("respond"), message: z4.string() }),
-};
+});
 
 /**
  * A reviewer's answer to a `"per_call"` tool approval.
  */
 export type ToolApprovalDecision = z4.infer<
-  (typeof ToolApprovalDecisionSchemas)[keyof typeof ToolApprovalDecisionSchemas]
+  ReturnType<typeof toolApprovalDecisions>[DecisionType]
 >;
 
 /**
@@ -389,60 +413,23 @@ export function isToolApprovalInterrupt(
 }
 
 /**
- * What an edit's `args` must look like: the tool's schema, if it's a Zod v4 object.
+ * The per-call `responseSchema`: the `allowed` decisions for tool `name`.
  *
- * Unknown args are rejected unless the tool's schema accepts them (`z.looseObject`,
- * `.passthrough()` or `.catchall()`). Anything else (a Zod v3 or JSON schema, or no
- * tool) is shown but not checked. `override` is the config's `argsSchema`; it only
- * changes what's shown.
- */
-function editArgs(
-  tool: ToolCallRequest["tool"],
-  override?: Record<string, unknown>
-): z4.ZodType {
-  const schema = tool && "schema" in tool ? tool.schema : undefined;
-  if (schema instanceof z4.ZodObject) {
-    const checked = schema._zod.def.catchall ? schema : schema.strict();
-    return override ? checked.meta(override) : checked;
-  }
-  const { $schema: _, ...shown }: Record<string, unknown> =
-    override ?? (schema ? toJsonSchema(schema) : { type: "object" });
-  return z4.record(z4.string(), z4.unknown()).meta(shown);
-}
-
-/**
- * The per-call `responseSchema`: today's decision types, limited to `allowed`.
- *
- * The edit branch is built for this tool: its name is pinned, so an edit can't switch
- * tools, and its args follow the tool's own schema. An answer is checked only against
- * the branch its `type` names, so a bad one gets a single error about what's wrong.
- * A one-decision tool gets that decision's plain object schema.
+ * An answer is checked only against the branch its `type` names, so a bad one gets a
+ * single error. A one-decision tool gets that decision's plain object schema.
  */
 function decisionSchema(
   allowed: readonly DecisionType[],
   name: string,
-  tool?: ToolCallRequest["tool"],
-  override?: Record<string, unknown>
+  tool?: ToolCallRequest["tool"]
 ): z4.ZodType<ToolApprovalDecision> {
-  const byType = {
-    ...ToolApprovalDecisionSchemas,
-    edit: ToolApprovalDecisionSchemas.edit.extend({
-      edited_action: z4.strictObject({
-        name: z4.literal(name),
-        args: editArgs(tool, override),
-      }),
-    }),
-  };
+  const byType = toolApprovalDecisions(name, tool);
   // Drop duplicates, keeping order: a discriminated union can't repeat a `type`.
   const [first, ...rest] = [...new Set(allowed)].map((d) => byType[d]);
   if (first === undefined) {
     throw new Error("allowedDecisions must list at least one decision.");
   }
-  // Built at runtime from the allowed decisions; each branch parses into one of the
-  // `ToolApprovalDecision` shapes.
-  return (
-    rest.length ? z4.discriminatedUnion("type", [first, ...rest]) : first
-  ) as z4.ZodType<ToolApprovalDecision>;
+  return rest.length ? z4.discriminatedUnion("type", [first, ...rest]) : first;
 }
 
 const contextSchema = z.object({
@@ -472,31 +459,14 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
 > & {
   /**
-   * How the middleware pauses for review. Set at construction only; not read from
-   * runtime context.
+   * How the middleware pauses for review. Set at construction only.
    *
    * - `"batched"` (default): one interrupt per model turn for all gated tool calls.
-   * - `"per_call"`: one interrupt per gated call, answered by interrupt ID, with
-   *   `type: "tool_approval"` and a typed `responseSchema` (see
-   *   {@link ToolApprovalRequest} and {@link ToolApprovalDecision}). An edit can't
-   *   switch tools, and its args are checked against the tool's schema when that's
-   *   a Zod v4 object; for other tools they're shown in `responseSchema` but not
-   *   checked. An invalid answer throws a `ZodError` without being saved, so it can
-   *   be sent again. When one resume answers several interrupts, each answer is
-   *   applied on its own: an invalid one throws and stays pending while the others
-   *   may already have run. After an error, resend only the invalid answers;
-   *   resending one that was already applied has no effect.
-   *
-   * In `"per_call"` mode:
-   * - List this middleware before tool retry or error-handling middleware so it
-   *   wraps them.
-   * - On resume, each paused tool call runs its middleware again up to this one, so
-   *   middleware listed before it must not have side effects before calling
-   *   `handler`. The tool itself runs only after the answer.
-   * - The agent has a `wrapToolCall` middleware, so (as with any such middleware
-   *   today) a tool that throws fails the run instead of returning an error
-   *   `ToolMessage`.
-   * - `createAgent` must use version `"v2"` (the default).
+   * - `"per_call"`: one {@link ToolApprovalRequest} interrupt per gated call, with a
+   *   typed `responseSchema`. An invalid answer throws a `ZodError` and isn't saved.
+   *   To answer several at once, check each against its `responseSchema` first, or
+   *   send them one at a time. List this middleware before tool retry or
+   *   error-handling middleware.
    */
   interruptMode?: "batched" | "per_call";
   /**
@@ -527,7 +497,7 @@ function resolveInterruptOn(
         resolved[toolName] = { allowedDecisions: [...allowedByTrue] };
       }
     } else if (toolConfig.allowedDecisions) {
-      resolved[toolName] = toolConfig as InterruptOnConfig;
+      resolved[toolName] = toolConfig;
     }
   }
   return resolved;
@@ -944,14 +914,14 @@ export function humanInTheLoopMiddleware(
 
       return {
         revisedToolCall: toolCall,
-        toolMessage: answerMessage(toolCall, decision),
+        toolMessage: answerMessage(toolCall.name, toolCall.id!, decision),
       };
     }
 
     if (decision.type === "respond" && allowedDecisions.includes("respond")) {
       return {
         revisedToolCall: toolCall,
-        toolMessage: answerMessage(toolCall, decision),
+        toolMessage: answerMessage(toolCall.name, toolCall.id!, decision),
       };
     }
 
@@ -997,31 +967,27 @@ export function humanInTheLoopMiddleware(
     wrapToolCall:
       interruptMode === "per_call"
         ? async (request, handler) => {
-            const config = interopParse(contextSchema, {
+            const { toolCall } = request;
+            const { interruptOn } = interopParse(contextSchema, {
               ...options,
               ...(request.runtime.context || {}),
             });
-            const { toolCall } = request;
-            const toolConfig = config
-              ? resolveInterruptOn(config.interruptOn, DECISION_TYPES)[
-                  toolCall.name
-                ]
-              : undefined;
+            const toolConfig = resolveInterruptOn(interruptOn, DECISION_TYPES)[
+              toolCall.name
+            ];
             if (
               !toolConfig ||
               (toolConfig.when && !(await toolConfig.when(request)))
             ) {
               return handler(request);
             }
-            // Only a missing ID: an empty one still runs, so per-call keeps working
-            // where batched does.
+            // Only a missing ID: an empty one still runs, as in batched mode.
             if (toolCall.id == null) {
               throw new Error(
                 `Tool call \`${toolCall.name}\` has no ID, so its result can't be matched to it. Make sure the chat model returns tool call IDs.`
               );
             }
-
-            const { actionRequest, reviewConfig } = await createActionAndConfig(
+            const { actionRequest } = await createActionAndConfig(
               toolCall,
               toolConfig,
               request.state,
@@ -1034,33 +1000,30 @@ export function humanInTheLoopMiddleware(
               args: toolCall.args,
               description: actionRequest.description ?? "",
             };
+            const responseSchema = decisionSchema(
+              toolConfig.allowedDecisions,
+              toolCall.name,
+              request.tool
+            );
             // LangGraph parses the answer against `responseSchema` before saving it, so
             // it comes back as one of this tool's allowed decisions.
             const decision = interrupt<
               ToolApprovalRequest,
               ToolApprovalDecision
-            >(value, {
-              responseSchema: decisionSchema(
-                toolConfig.allowedDecisions,
-                toolCall.name,
-                request.tool,
-                reviewConfig.argsSchema
-              ),
-            });
+            >(value, { responseSchema });
             if (decision.type === "approve") {
               return handler(request);
             }
-            if (decision.type === "edit") {
-              // The schema pinned the tool name, so this is always the same tool. Zod's
-              // parse fills in schema defaults, which the tool would apply anyway.
-              const executed = decision.edited_action;
-              const result = await handler({
-                ...request,
-                toolCall: { ...toolCall, args: executed.args },
-              });
-              return withEditNotice(result, toolCall.id, executed, editNotice);
+            if (decision.type !== "edit") {
+              return answerMessage(toolCall.name, toolCall.id, decision);
             }
-            return answerMessage(toolCall, decision);
+            // The schema pinned the tool name, so this is always the same tool.
+            const executed = decision.edited_action;
+            const result = await handler({
+              ...request,
+              toolCall: { ...toolCall, args: executed.args },
+            });
+            return withEditNotice(result, toolCall.id, executed, editNotice);
           }
         : undefined,
     afterModel: {
