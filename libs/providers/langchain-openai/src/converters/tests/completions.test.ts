@@ -286,6 +286,69 @@ describe("convertCompletionsMessageToBaseMessage", () => {
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it.each([
+      {
+        name: "URL",
+        image: { type: "image" as const, url: "https://example.com/image.png" },
+        url: "https://example.com/image.png",
+      },
+      {
+        name: "base64",
+        image: {
+          type: "image" as const,
+          data: "aGVsbG8=",
+          mimeType: "image/png",
+        },
+        url: "data:image/png;base64,aGVsbG8=",
+      },
+    ])(
+      "converts unversioned standard $name images without mutating input",
+      ({ image, url }) => {
+        const text = { type: "text" as const, text: "Describe these images" };
+        const legacy = {
+          type: "image_url" as const,
+          image_url: { url: "https://example.com/legacy.png", detail: "low" },
+        };
+        const message = new HumanMessage({ content: [text, image, legacy] });
+        const original = structuredClone(message.content);
+
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [message],
+        });
+
+        expect(result).toEqual([
+          {
+            role: "user",
+            content: [text, { type: "image_url", image_url: { url } }, legacy],
+          },
+        ]);
+        expect(message.content).toEqual(original);
+      }
+    );
+
+    it("preserves prompt cache breakpoints on unversioned standard images", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            url: "https://example.com/image.png",
+            extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+          },
+        ],
+      });
+
+      expect(
+        convertMessagesToCompletionsMessageParams({ messages: [message] })[0]
+          .content
+      ).toEqual([
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
     it("preserves prompt cache breakpoints and drops other extras", () => {
       const message = new HumanMessage({
         content: [

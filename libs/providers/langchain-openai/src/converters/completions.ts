@@ -836,6 +836,14 @@ export const convertMessagesToCompletionsMessageParams: Converter<
                 )
               );
             }
+            if (role === "user" && m.type === "image") {
+              const image = convertStandardContentBlockToCompletionsContentPart(
+                m as ContentBlock.Multimodal.Image
+              );
+              if (image) {
+                return applyPromptCacheBreakpoint(m, image);
+              }
+            }
             if (m.type === "text") {
               return liftExtrasPromptCacheBreakpoint(m);
             }
