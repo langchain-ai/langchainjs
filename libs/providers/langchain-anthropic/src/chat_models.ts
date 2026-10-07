@@ -265,6 +265,7 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
   const builtInToolPrefixes = [
     "text_editor_",
     "computer_",
+    "browser_",
     "bash_",
     "web_search_",
     "web_fetch_",
@@ -279,7 +280,10 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
-    ("name" in tool || "mcp_server_name" in tool) &&
+    ("name" in tool ||
+      "mcp_server_name" in tool ||
+      tool.type === "computer_toolset_20260801" ||
+      tool.type === "browser_toolset_20260801") &&
     typeof tool.type === "string" &&
     builtInToolPrefixes.some(
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
@@ -1455,7 +1459,7 @@ export class ChatAnthropicMessages<
       ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
-    const coerceContentToString =
+    let coerceContentToString =
       !_toolsInParams(payload) &&
       !_documentsInParams(payload) &&
       !_thinkingInParams(payload) &&
@@ -1471,6 +1475,13 @@ export class ChatAnthropicMessages<
       if (options.signal?.aborted) {
         stream.controller.abort();
         return;
+      }
+      if (
+        data.type === "content_block_start" &&
+        (data.content_block.type === "thinking" ||
+          data.content_block.type === "redacted_thinking")
+      ) {
+        coerceContentToString = false;
       }
       const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
@@ -1878,8 +1889,9 @@ export class ChatAnthropicMessages<
       );
 
       if (
-        this.thinking?.type === "enabled" ||
-        this.thinking?.type === "adaptive"
+        !this.model.startsWith("claude-haiku-5-5") &&
+        (this.thinking?.type === "enabled" ||
+          this.thinking?.type === "adaptive")
       ) {
         const thinkingAdmonition =
           "Anthropic structured output relies on forced tool calling, " +

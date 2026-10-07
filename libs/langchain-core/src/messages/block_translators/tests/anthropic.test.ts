@@ -4,6 +4,30 @@ import { ContentBlock } from "../../content/index.js";
 import { HumanMessage } from "../../human.js";
 
 describe("anthropicTranslator", () => {
+  it("preserves toolset namespaces on tool calls", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_click",
+          name: "click",
+          toolset_name: "computer",
+          input: { x: 1, y: 2 },
+        },
+      ],
+      response_metadata: { model_provider: "anthropic" },
+    });
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "toolu_click",
+        name: "click",
+        toolset_name: "computer",
+        args: { x: 1, y: 2 },
+      },
+    ]);
+  });
+
   it("should translate anthropic message to standard content blocks", () => {
     const message = new AIMessage({
       content: [

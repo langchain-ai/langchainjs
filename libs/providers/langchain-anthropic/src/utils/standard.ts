@@ -198,6 +198,9 @@ export function _formatStandardContent(
         id: block.id ?? "",
         name: block.name,
         input: block.args,
+        ...(typeof block.toolset_name === "string"
+          ? { toolset_name: block.toolset_name }
+          : {}),
       });
     } else if (block.type === "tool_call_chunk") {
       const input = iife(() => {
@@ -215,6 +218,9 @@ export function _formatStandardContent(
         id: block.id ?? "",
         name: block.name ?? "",
         input,
+        ...(typeof block.toolset_name === "string"
+          ? { toolset_name: block.toolset_name }
+          : {}),
       });
     } else if (block.type === "reasoning" && isAnthropicMessage) {
       result.push({

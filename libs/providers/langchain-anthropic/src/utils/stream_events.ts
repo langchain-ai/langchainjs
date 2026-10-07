@@ -185,6 +185,8 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
       return "tool_use";
     case "max_tokens":
       return "length";
+    case "refusal":
+      return "content_filter";
     default:
       return "stop";
   }
@@ -233,6 +235,7 @@ function mapBlockToContentBlock(
         name: block.name,
         args: "",
         index,
+        ...(block.toolset_name ? { toolset_name: block.toolset_name } : {}),
       };
     case "server_tool_use":
       return {
@@ -375,6 +378,9 @@ function finalizeBlock(
       id: accumulated.id,
       name: accumulated.name,
       args: parsedArgs,
+      ...(accumulated.toolset_name
+        ? { toolset_name: accumulated.toolset_name }
+        : {}),
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   }

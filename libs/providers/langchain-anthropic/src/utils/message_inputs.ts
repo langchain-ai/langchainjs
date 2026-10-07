@@ -152,6 +152,7 @@ function* _formatContentBlocks(
   toolCalls?: ToolCall[]
 ): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
+    "browser_state",
     "bash_code_execution_tool_result",
     "input_json_delta",
     "server_tool_use",
@@ -651,6 +652,28 @@ export function _convertMessagesToAnthropicPayload(
       };
     }
   });
+  const toolsets = new Map<string, string>();
+  for (const message of formattedMessages) {
+    if (!message || !Array.isArray(message.content)) continue;
+    for (const block of message.content) {
+      if (
+        block.type === "tool_use" &&
+        "toolset_name" in block &&
+        typeof block.toolset_name === "string" &&
+        "id" in block
+      ) {
+        toolsets.set(block.id, block.toolset_name);
+      } else if (block.type === "tool_result" && "tool_use_id" in block) {
+        const toolsetName = toolsets.get(block.tool_use_id);
+        if (
+          toolsetName &&
+          (!("toolset_name" in block) || block.toolset_name == null)
+        ) {
+          Object.assign(block, { toolset_name: toolsetName });
+        }
+      }
+    }
+  }
   return {
     messages: mergeMessages(
       formattedMessages.filter(
