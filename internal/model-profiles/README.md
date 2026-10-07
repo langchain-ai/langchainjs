@@ -1,6 +1,6 @@
 # Model Profiles Generator
 
-A CLI tool for automatically generating TypeScript model profile files from the [models.dev](https://models.dev) API. This tool fetches model capabilities and constraints, applies provider-level and model-specific overrides, and generates type-safe TypeScript files using the TypeScript AST API.
+A CLI tool for automatically generating TypeScript model profile files from the [models.dev](https://models.dev) API. This tool fetches model capabilities and constraints, applies provider-level and model-specific overrides, and generates TypeScript files matching the `ModelProfile` interface.
 
 ## Overview
 
@@ -11,8 +11,8 @@ The model-profiles generator simplifies the process of maintaining model capabil
 - 🔄 **Automatic Data Fetching**: Fetches latest model data from the models.dev API
 - 🎯 **Provider-Level Overrides**: Apply overrides to all models for a provider
 - 🔧 **Model-Specific Overrides**: Fine-tune individual model profiles
-- 📝 **TypeScript AST Generation**: Uses TypeScript compiler API for type-safe code generation
-- 🎨 **Prettier Integration**: Automatically formats generated code using your project's Prettier config
+- 📝 **Deterministic Generation**: Sorts model IDs and preserves models defined only in overrides
+- 🎨 **Oxfmt Integration**: Automatically formats generated code using the project's Oxfmt config
 - 📦 **Monorepo Friendly**: Works seamlessly with pnpm workspaces and `--filter` commands
 - ✅ **Type Safety**: Generates code that matches the `ModelProfile` interface from `@langchain/core`
 
@@ -55,6 +55,21 @@ pnpm --filter @langchain/model-profiles make --config profiles.toml
 # Or if running from within a provider package
 pnpm --filter @langchain/model-profiles make --config profiles.toml
 ```
+
+### Refresh All Providers
+
+From the repository root:
+
+```bash
+pnpm --filter @langchain/model-profiles refresh
+pnpm --filter @langchain/model-profiles refresh --provider openai,anthropic
+```
+
+The refresh command discovers every `libs/providers/*/profiles.toml` rather than maintaining a separate provider list. Filters use models.dev IDs: `google` refreshes both Google configurations, while `google-vertex` refreshes Google Common. Invalid filters fail before generation; generation failures are collected and make the command exit unsuccessfully.
+
+The [refresh workflow](../../.github/workflows/refresh-model-profiles.yml) runs daily at 08:00 UTC and supports manual dispatch with the same provider filter. It creates or updates `bot/refresh-model-profiles` with only generated profile files, skips unchanged data, and never auto-merges. Any provider failure prevents pull request publication.
+
+The workflow requires repository secrets `MODEL_PROFILE_BOT_CLIENT_ID` and `MODEL_PROFILE_BOT_PRIVATE_KEY`, matching the Python automation. The GitHub App must be installed on `langchain-ai/langchainjs` with contents and pull-request write permissions; an App token lets the generated pull request trigger CI.
 
 ### Configuration File Format
 

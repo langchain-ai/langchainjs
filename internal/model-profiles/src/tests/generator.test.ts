@@ -5,14 +5,15 @@ import type { ProviderMap } from "../api-schema.js";
 import { findMonorepoRoot } from "../config.js";
 
 const formatMock = vi.hoisted(() =>
-  vi.fn(async (_fileName: string, code: string) => ({
-    code,
-    errors: [],
+  vi.fn((_command: string, _args: string[], options: { input: string }) => ({
+    status: 0,
+    stdout: options.input,
+    stderr: "",
   }))
 );
 
-vi.mock("oxfmt", () => ({
-  format: formatMock,
+vi.mock("node:child_process", () => ({
+  spawnSync: formatMock,
 }));
 
 const { generateModelProfiles } = await import("../generator.js");
@@ -68,6 +69,12 @@ describe("generator", () => {
   let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
+    formatMock.mockReset();
+    formatMock.mockImplementation((_command, _args, options) => ({
+      status: 0,
+      stdout: options.input,
+      stderr: "",
+    }));
     // Create temp directory within the monorepo to satisfy path validation
     const monorepoRoot = findMonorepoRoot();
     const testTempDir = path.join(monorepoRoot, ".test-temp");
@@ -294,6 +301,20 @@ describe("generator", () => {
       ).rejects.toThrow('Provider "nonexistent" not found');
     });
 
+    it("does not overwrite profiles when upstream models are empty", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ openai: createMockProvider("openai", {}) }),
+      });
+      const outputPath = path.join(tempDir, "models.ts");
+      fs.writeFileSync(outputPath, "previous profiles");
+      await expect(
+        generateModelProfiles("openai", {}, {}, outputPath)
+      ).rejects.toThrow('Provider "openai" has no valid model data');
+      expect(fs.readFileSync(outputPath, "utf8")).toBe("previous profiles");
+      expect(formatMock).not.toHaveBeenCalled();
+    });
+
     it("should throw error if API fetch fails", async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
@@ -307,8 +328,106 @@ describe("generator", () => {
       ).rejects.toThrow("Failed to fetch models.dev API");
     });
 
+    it("sorts model IDs independently of API order", async () => {
+      const models = {
+        "z-model": createMockModel(),
+        "a-model": createMockModel(),
+      };
+      const outputPath = path.join(tempDir, "models.ts");
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ openai: createMockProvider("openai", models) }),
+      });
+      await generateModelProfiles("openai", {}, {}, outputPath);
+      const first = fs.readFileSync(outputPath, "utf8");
+      expect(first.indexOf('"a-model"')).toBeLessThan(
+        first.indexOf('"z-model"')
+      );
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          openai: createMockProvider(
+            "openai",
+            Object.fromEntries(Object.entries(models).reverse())
+          ),
+        }),
+      });
+      await generateModelProfiles("openai", {}, {}, outputPath);
+      expect(fs.readFileSync(outputPath, "utf8")).toBe(first);
+    });
+
+    it("preserves augmentation-only models and false overrides", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          openai: createMockProvider("openai", {
+            "upstream-model": createMockModel(),
+          }),
+        }),
+      });
+      const outputPath = path.join(tempDir, "models.ts");
+      await generateModelProfiles(
+        "openai",
+        { toolCalling: true, maxInputTokens: 1000 },
+        { "custom-model": { toolCalling: false, maxOutputTokens: 500 } },
+        outputPath
+      );
+      const content = fs.readFileSync(outputPath, "utf8");
+      expect(content).toContain(
+        '"custom-model": {\ntoolCalling: false,\nmaxInputTokens: 1000,\nmaxOutputTokens: 500\n}'
+      );
+      expect(content).toContain("toolCalling: true");
+    });
+
+    it("hoists repeated arrays without interpolating string contents", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          openai: createMockProvider("openai", {
+            "a-model": createMockModel(),
+            "b-model": createMockModel(),
+          }),
+        }),
+      });
+      const outputPath = path.join(tempDir, "models.ts");
+      const mimeTypes = ['text/plain"; throw new Error("unsafe"); //'];
+      await generateModelProfiles(
+        "openai",
+        { fileMimeTypes: mimeTypes },
+        {},
+        outputPath
+      );
+      const content = fs.readFileSync(outputPath, "utf8");
+      expect(content).toContain(
+        `const FILE_MIME_TYPES = ${JSON.stringify(mimeTypes)};`
+      );
+      expect(content.match(/fileMimeTypes: FILE_MIME_TYPES/g)).toHaveLength(2);
+    });
+
+    it("does not overwrite profiles when formatting fails", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          openai: createMockProvider("openai", {
+            "test-model": createMockModel(),
+          }),
+        }),
+      });
+      const outputPath = path.join(tempDir, "models.ts");
+      fs.writeFileSync(outputPath, "previous profiles");
+      formatMock.mockReturnValueOnce({
+        status: 1,
+        stdout: "",
+        stderr: "invalid formatter configuration",
+      });
+      await expect(
+        generateModelProfiles("openai", {}, {}, outputPath)
+      ).rejects.toThrow("invalid formatter configuration");
+      expect(fs.readFileSync(outputPath, "utf8")).toBe("previous profiles");
+    });
+
     it("should format output with oxfmt", async () => {
-      const oxfmt = await import("oxfmt");
+      const { spawnSync } = await import("node:child_process");
       const mockProviderData: ProviderMap = {
         openai: createMockProvider("openai", {
           "gpt-4": createMockModel({
@@ -327,11 +446,14 @@ describe("generator", () => {
 
       await generateModelProfiles("openai", {}, {}, outputPath);
 
-      expect(oxfmt.format).toHaveBeenCalled();
-      expect(oxfmt.format).toHaveBeenCalledWith(
-        outputPath,
-        expect.any(String),
-        expect.anything()
+      expect(spawnSync).toHaveBeenCalledWith(
+        process.execPath,
+        [expect.stringMatching(/bin\/oxfmt$/), "--stdin-filepath", outputPath],
+        expect.objectContaining({
+          cwd: findMonorepoRoot(),
+          input: expect.any(String),
+          encoding: "utf8",
+        })
       );
     });
   });
