@@ -2456,13 +2456,12 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
     });
     const paused = byName(await pause(agent));
     expect(Object.keys(branches(schemaOf(paused.send_email))).sort()).toEqual(
-      ["approve", "edit", "reject", "respond"] // `true` allows all four
+      ["approve", "edit", "reject"] // `true` allows all three
     );
     const editEmail = (args: object, extra = {}) =>
       edit("send_email", { ...args }, extra);
     const badAnswers = [
       [{ type: "edit" }, "invalid_type edited_action"],
-      [{ type: "respond" }, "invalid_type message"],
       [editEmail({}), "invalid_type edited_action.args.to"],
       [editEmail({ to: 5 }), "invalid_type edited_action.args.to"],
       [edit("delete_file", { to: "b" }), "invalid_value edited_action.name"],
@@ -2557,33 +2556,6 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
     expect(ran).toEqual([["send_email", { to: "alice" }]]);
     expect(toolMessages(final).e2.status).toBe("error");
   });
-
-  it.each(["per_call", "batched"] as const)(
-    "answers for the tool with a respond decision (%s)",
-    async (mode) => {
-      const ran: Ran = [];
-      const agent = perCallAgent(ran, EMAIL, {
-        interruptOn: { send_email: { allowedDecisions: ["respond"] } },
-        mode,
-      });
-      const answer = { type: "respond", message: "already sent" };
-      const result = await agent.invoke(
-        { messages: [new HumanMessage("go")] },
-        CFG
-      );
-      const [intr] = result.__interrupt__ ?? [];
-      const final = await resume(
-        agent,
-        mode === "per_call" ? { [intr.id]: answer } : { decisions: [answer] }
-      );
-      const message = toolMessages(final).call_email;
-      expect([message.content, message.status]).toEqual([
-        "already sent",
-        "success",
-      ]);
-      expect(ran).toEqual([]);
-    }
-  );
 
   it("applies each answer of a multi-answer resume on its own", async () => {
     const ran: Ran = [];

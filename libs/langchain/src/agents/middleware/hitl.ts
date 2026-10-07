@@ -81,12 +81,8 @@ export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
 /**
  * The type of decision a human can make.
  */
-const DECISION_TYPES = ["approve", "edit", "reject", "respond"] as const;
-/**
- * What `true` in `interruptOn` allows in batched mode.
- */
-const BATCHED_DEFAULT_DECISIONS = ["approve", "edit", "reject"] as const;
-const DecisionType = z.enum(DECISION_TYPES);
+const ALLOWED_DECISIONS = ["approve", "edit", "reject"] as const;
+const DecisionType = z.enum(ALLOWED_DECISIONS);
 export type DecisionType = z.infer<typeof DecisionType>;
 
 const InterruptOnConfigSchema = z.object({
@@ -281,45 +277,9 @@ export interface RejectDecision {
 }
 
 /**
- * Response when a human answers on behalf of the tool, which doesn't run.
- */
-export interface RespondDecision {
-  type: "respond";
-  /**
-   * The answer the model gets as the tool's result.
-   */
-  message: string;
-}
-
-/**
  * Union of all possible decision types.
  */
-export type Decision =
-  | ApproveDecision
-  | EditDecision
-  | RejectDecision
-  | RespondDecision;
-
-/**
- * The message the model gets in place of the tool's result.
- */
-function answerMessage(
-  name: string,
-  toolCallId: string,
-  decision: RejectDecision | RespondDecision
-): ToolMessage {
-  // `respond` skips the tool: the human answers on its behalf.
-  const respond = decision.type === "respond";
-  return new ToolMessage({
-    content: respond
-      ? decision.message
-      : (decision.message ??
-        `User rejected the tool call for \`${name}\` with id ${toolCallId}`),
-    name,
-    tool_call_id: toolCallId,
-    status: respond ? "success" : "error",
-  });
-}
+export type Decision = ApproveDecision | EditDecision | RejectDecision;
 
 /**
  * Response payload for a HITLRequest.
@@ -392,7 +352,6 @@ const toolApprovalDecisions = (
     type: z4.literal("reject"),
     message: z4.string().optional(),
   }),
-  respond: z4.object({ type: z4.literal("respond"), message: z4.string() }),
 });
 
 /**
@@ -437,8 +396,7 @@ const contextSchema = z.object({
    * Mapping of tool name to allowed reviewer responses.
    * If a tool doesn't have an entry, it's auto-approved by default.
    *
-   * - `true` -> pause for approval and allow approve/edit/reject decisions (all four,
-   *   including respond, in `"per_call"` mode)
+   * - `true` -> pause for approval and allow approve/edit/reject decisions
    * - `false` -> auto-approve (no human review)
    * - `InterruptOnConfig` -> explicitly specify which decisions are allowed for this tool
    */
@@ -483,18 +441,17 @@ const DEFAULT_EDIT_NOTICE =
   "intentional and authorized. Do not re-issue your original call.";
 
 /**
- * Resolve `interruptOn`: `true` allows `allowedByTrue`; `false` and missing entries
+ * Resolve `interruptOn`: `true` allows all decisions; `false` and missing entries
  * auto-approve.
  */
 function resolveInterruptOn(
-  interruptOn: NonNullable<HumanInTheLoopMiddlewareConfig>["interruptOn"],
-  allowedByTrue: readonly DecisionType[]
+  interruptOn: NonNullable<HumanInTheLoopMiddlewareConfig>["interruptOn"]
 ): Record<string, InterruptOnConfig> {
   const resolved: Record<string, InterruptOnConfig> = {};
   for (const [toolName, toolConfig] of Object.entries(interruptOn ?? {})) {
     if (typeof toolConfig === "boolean") {
       if (toolConfig === true) {
-        resolved[toolName] = { allowedDecisions: [...allowedByTrue] };
+        resolved[toolName] = { allowedDecisions: [...ALLOWED_DECISIONS] };
       }
     } else if (toolConfig.allowedDecisions) {
       resolved[toolName] = toolConfig;
@@ -613,7 +570,7 @@ function withEditNotice(
  * ## Features
  *
  * - **Selective Tool Approval**: Configure which tools require human approval
- * - **Multiple Decision Types**: Approve, edit, reject, or respond to tool calls
+ * - **Multiple Decision Types**: Approve, edit, or reject tool calls
  * - **Asynchronous Workflow**: Uses LangGraph's interrupt mechanism for non-blocking approval
  * - **Custom Approval Messages**: Provide context-specific descriptions for approval requests
  *
@@ -623,8 +580,6 @@ function withEditNotice(
  * - `approve`: Execute the tool with original arguments
  * - `edit`: Modify the tool name and/or arguments before execution
  * - `reject`: Provide a manual response instead of executing the tool
- * - `respond`: Answer on behalf of the tool, which doesn't run; the model gets the
- *   message as the tool's result
  *
  * @param options - Configuration options for the middleware
  * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
@@ -912,17 +867,19 @@ export function humanInTheLoopMiddleware(
         );
       }
 
-      return {
-        revisedToolCall: toolCall,
-        toolMessage: answerMessage(toolCall.name, toolCall.id!, decision),
-      };
-    }
+      // Create a tool message with the human's text response
+      const content =
+        decision.message ??
+        `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
 
-    if (decision.type === "respond" && allowedDecisions.includes("respond")) {
-      return {
-        revisedToolCall: toolCall,
-        toolMessage: answerMessage(toolCall.name, toolCall.id!, decision),
-      };
+      const toolMessage = new ToolMessage({
+        content,
+        name: toolCall.name,
+        tool_call_id: toolCall.id!,
+        status: "error",
+      });
+
+      return { revisedToolCall: toolCall, toolMessage };
     }
 
     const msg = `Unexpected human decision: ${JSON.stringify(
@@ -972,9 +929,7 @@ export function humanInTheLoopMiddleware(
               ...options,
               ...(request.runtime.context || {}),
             });
-            const toolConfig = resolveInterruptOn(interruptOn, DECISION_TYPES)[
-              toolCall.name
-            ];
+            const toolConfig = resolveInterruptOn(interruptOn)[toolCall.name];
             if (
               !toolConfig ||
               (toolConfig.when && !(await toolConfig.when(request)))
@@ -1014,8 +969,15 @@ export function humanInTheLoopMiddleware(
             if (decision.type === "approve") {
               return handler(request);
             }
-            if (decision.type !== "edit") {
-              return answerMessage(toolCall.name, toolCall.id, decision);
+            if (decision.type === "reject") {
+              return new ToolMessage({
+                content:
+                  decision.message ??
+                  `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`,
+                name: toolCall.name,
+                tool_call_id: toolCall.id,
+                status: "error",
+              });
             }
             // The schema pinned the tool name, so this is always the same tool.
             const executed = decision.edited_action;
@@ -1064,12 +1026,9 @@ export function humanInTheLoopMiddleware(
         }
 
         /**
-         * Resolve per-tool configs (boolean true -> approve/edit/reject allowed; false -> auto-approve)
+         * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
          */
-        const resolvedConfigs = resolveInterruptOn(
-          config.interruptOn,
-          BATCHED_DEFAULT_DECISIONS
-        );
+        const resolvedConfigs = resolveInterruptOn(config.interruptOn);
 
         const interruptToolCalls: ToolCall[] = [];
         const autoApprovedToolCalls: ToolCall[] = [];
