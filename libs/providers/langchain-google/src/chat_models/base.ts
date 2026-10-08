@@ -574,7 +574,9 @@ export abstract class BaseChatGoogle<
             .originalTextContentBlock as Record<string, unknown>
         ).text = finalChunk.message.content;
       }
-      const usageMetadata = finalChunk?.message?.usage_metadata;
+      const usageMetadata = AIMessageChunk.isInstance(finalChunk?.message)
+        ? finalChunk.message.usage_metadata
+        : undefined;
       return {
         generations: finalChunk ? [finalChunk] : [],
         ...(usageMetadata
@@ -738,9 +740,6 @@ export abstract class BaseChatGoogle<
         new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
       );
 
-    const shouldStreamUsage =
-      this.streamUsage !== false && options.streamUsage !== false;
-
     async function* geminiChunks(
       stream: ReadableStream<Gemini.GenerateContentResponse | null>,
       signal?: AbortSignal
@@ -767,7 +766,7 @@ export abstract class BaseChatGoogle<
     yield* convertGoogleGeminiStream(
       geminiChunks(eventStream, options.signal),
       {
-        streamUsage: shouldStreamUsage,
+        streamUsage: this.streamUsage,
       }
     );
   }

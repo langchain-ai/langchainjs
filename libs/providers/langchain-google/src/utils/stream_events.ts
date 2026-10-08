@@ -59,7 +59,7 @@ export async function* convertGoogleGeminiStream(
       yield { event: "message-start" as const };
     }
 
-    const usageMetadata = response.usageMetadata ?? response.usage_metadata;
+    const usageMetadata = response.usageMetadata;
     if (shouldStreamUsage && usageMetadata) {
       const input = usageMetadata.promptTokenCount ?? 0;
       const output = usageMetadata.candidatesTokenCount ?? 0;

@@ -55,6 +55,21 @@ describe("RequestError.fromResponse", () => {
     expect(error.message).toBe("Request failed with status code 504");
     expect(error.data).toBe("Upstream gateway timed out");
   });
+
+  test("falls back to the status code when no message field is a string", async () => {
+    const response = new Response(
+      JSON.stringify({ error: { code: 503, status: "UNAVAILABLE" } }),
+      {
+        status: 503,
+        statusText: "Service Unavailable",
+        headers: { "content-type": "application/json" },
+      }
+    );
+
+    const error = await RequestError.fromResponse(response);
+
+    expect(error.message).toBe("Request failed with status code 503");
+  });
 });
 
 describe("AuthError.fromResponse", () => {

@@ -1128,9 +1128,11 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke(
         "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
       );
-      expect(result.tool_calls?.some((c) => c.name === "custom_tool")).toBe(
-        true
-      );
+      expect(
+        result.tool_calls?.some(
+          (c: { name: string }) => c.name === "custom_tool"
+        )
+      ).toBe(true);
     });
 
     test(`function - stream tools`, async () => {
@@ -1897,7 +1899,7 @@ describe.each(thinkingModelInfo)(
         new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
       ]);
       const modelTurn = contents.find((c) => c.role === "model");
-      const sentFunctionCallPart = modelTurn?.parts.find(
+      const sentFunctionCallPart = modelTurn?.parts?.find(
         (p): p is Gemini.Part.FunctionCall => "functionCall" in p
       );
 
@@ -2197,8 +2199,9 @@ const ttsModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true,
 ]);
 
-describe.sequential.each(ttsModelInfo)(
+describe.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
+  { concurrent: false },
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
@@ -2369,8 +2372,9 @@ const audioModelInfo: ModelInfo[] = filterTestableModels([
 console.log(audioModelInfo);
 
 // Audio tests fail on Vertex
-describe.sequential.each(audioModelInfo)(
+describe.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
+  { concurrent: false },
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
