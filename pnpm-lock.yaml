@@ -1161,8 +1161,8 @@ importers:
   libs/providers/langchain-anthropic:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: ^0.129.0
-        version: 0.129.0(zod@4.3.6)
+        specifier: ^0.132.0
+        version: 0.132.0(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -2430,8 +2430,8 @@ packages:
   '@andrewbranch/untar.js@1.0.3':
     resolution: {integrity: sha512-Jh15/qVmrLGhkKJBdXlK1+9tY4lZruYjsgkDFj08ZmDiWVBLJcqkok7Z0/R0In+i1rScBpJlSvrTS2Lm41Pbnw==}
 
-  '@anthropic-ai/sdk@0.129.0':
-    resolution: {integrity: sha512-MH7LB20kNpGLUpPTe2OG5XvL/KhX8HUO9XyBaFjgFk6TLS4Xjt0VPIuMKywe7POKKPslX+QxSlVok9e+8kG5Nw==}
+  '@anthropic-ai/sdk@0.132.0':
+    resolution: {integrity: sha512-hsKXmb+GjIgGpaJRF7rf2yKFa1SPyVJPQhZLNPDYA4J5YRrcVh4jn/aozLRKHWXGCGM9MPw16S+ry+zKIKCr7Q==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -11576,7 +11576,7 @@ snapshots:
 
   '@andrewbranch/untar.js@1.0.3': {}
 
-  '@anthropic-ai/sdk@0.129.0(zod@4.3.6)':
+  '@anthropic-ai/sdk@0.132.0(zod@4.3.6)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
@@ -11585,7 +11585,7 @@ snapshots:
 
   '@anthropic-ai/vertex-sdk@0.20.0(zod@4.3.6)':
     dependencies:
-      '@anthropic-ai/sdk': 0.129.0(zod@4.3.6)
+      '@anthropic-ai/sdk': 0.132.0(zod@4.3.6)
       google-auth-library: 10.9.1
     transitivePeerDependencies:
       - supports-color
