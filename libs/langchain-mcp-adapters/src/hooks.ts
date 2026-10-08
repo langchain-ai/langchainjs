@@ -67,7 +67,7 @@ export const toolHooksSchema = z.object({
    *         ...toolCallRequest.args,
    *         custom: "Custom Value"
    *       },
-   *       headers: { "X-Custom-Header": "Custom Value" }
+   *       headers: { "X-Custom-Header": "Custom Value" },
    *       _meta: {
    *         "com.example/traceId": runtime.configurable?.traceId,
    *         "com.example/spanId": crypto.randomUUID()
