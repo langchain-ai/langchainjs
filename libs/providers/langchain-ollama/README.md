@@ -30,6 +30,27 @@ const model = new ChatOllama({
 const result = await model.invoke(["human", "Hello, how are you?"]);
 ```
 
+### Image inputs
+
+With a vision model such as `llava`, `ChatOllama` accepts standard `image` content blocks containing a base64 string, a `Uint8Array`, or a base64 data URL. HTTP URLs and file IDs are not supported; supply the image data instead. Existing `image_url` blocks containing data URLs remain supported.
+
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
+import { ChatOllama } from "@langchain/ollama";
+
+const model = new ChatOllama({ model: "llava" });
+const result = await model.invoke([
+  new HumanMessage({
+    contentBlocks: [
+      { type: "text", text: "What is in this image?" },
+      { type: "image", data: imageBase64, mimeType: "image/png" },
+    ],
+  }),
+]);
+```
+
+Here, `imageBase64` is the base64-encoded image without a data URL prefix. The same input works with `stream()` and `streamEvents()`.
+
 ## Development
 
 To develop the `@langchain/ollama` package, you'll need to follow these instructions:
