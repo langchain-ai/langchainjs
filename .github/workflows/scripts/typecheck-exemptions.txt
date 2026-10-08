@@ -23,7 +23,6 @@
 @langchain/ibm # #11691
 @langchain/mistralai # #11691
 @langchain/neo4j # #11691
-@langchain/ollama # #11813
 @langchain/openai # #11851
 @langchain/openrouter # #11808
 @langchain/perplexity # #11772
