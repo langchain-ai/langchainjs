@@ -15,7 +15,6 @@
 @langchain/google # #11855
 @langchain/google-common # #11853
 @langchain/google-gauth # #11692
-@langchain/google-genai # #11857
 @langchain/google-vertexai # #11781
 @langchain/google-vertexai-web # #11692
 @langchain/google-webauth # #11854
