@@ -22,14 +22,18 @@ export type ToolsAgentStep = AgentStep & {
 };
 
 export function parseAIMessageToToolAction(
-  message: AIMessage
+  message: BaseMessage
 ): ToolsAgentAction[] | AgentFinish {
   const stringifiedMessageContent =
     typeof message.content === "string"
       ? message.content
       : JSON.stringify(message.content);
   let toolCalls: ToolCall[] = [];
-  if (message.tool_calls !== undefined && message.tool_calls.length > 0) {
+  if (
+    AIMessage.isInstance(message) &&
+    message.tool_calls !== undefined &&
+    message.tool_calls.length > 0
+  ) {
     toolCalls = message.tool_calls;
   } else {
     if (
