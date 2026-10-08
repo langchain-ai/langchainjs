@@ -9,7 +9,9 @@ import {
 class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatGroqCallOptions,
   AIMessageChunk,
-  ChatGroqInput
+  // The constructor-args type must be a `Record<string, unknown>`, which an
+  // interface isn't, and can't be the default, since `model` is required.
+  ChatGroqInput & Record<string, unknown>
 > {
   constructor() {
     if (!process.env.GROQ_API_KEY) {

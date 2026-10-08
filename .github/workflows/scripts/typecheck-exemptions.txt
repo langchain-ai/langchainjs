@@ -19,7 +19,6 @@
 @langchain/google-vertexai # #11781
 @langchain/google-vertexai-web # #11692
 @langchain/google-webauth # #11854
-@langchain/groq # #11817
 @langchain/ibm # #11691
 @langchain/mistralai # #11691
 @langchain/neo4j # #11691
