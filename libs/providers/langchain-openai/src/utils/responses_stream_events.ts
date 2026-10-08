@@ -15,7 +15,10 @@ import {
   type ContentBlock,
   type UsageMetadata,
 } from "@langchain/core/messages";
-import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import {
+  convertOpenAIAnnotationToLangChain,
+  convertResponsesUsageToUsageMetadata,
+} from "../converters/responses.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -130,6 +133,32 @@ export async function* convertOpenAIResponsesStream(
         index,
         delta: { type: "text-delta" as const, text: event.delta },
       };
+      continue;
+    }
+
+    if (event.type === "response.output_text.annotation.added") {
+      yield* ensureMessageStart();
+      const key: BlockKey = `text:${event.output_index}:${event.content_index}`;
+      const { index, isNew } = getOrCreateBlockIndex(key, {
+        type: "text",
+        text: "",
+      });
+      if (isNew) {
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: { type: "text", text: "" } as ContentBlock,
+        };
+      }
+      const acc = blockAccumulators.get(index)!;
+      acc.annotations ??= [];
+      acc.annotations.push(
+        convertOpenAIAnnotationToLangChain(
+          event.annotation as Parameters<
+            typeof convertOpenAIAnnotationToLangChain
+          >[0]
+        )
+      );
       continue;
     }
 

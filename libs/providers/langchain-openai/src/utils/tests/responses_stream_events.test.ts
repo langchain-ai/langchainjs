@@ -590,4 +590,86 @@ describe("convertOpenAIResponsesStream", () => {
       ]);
     });
   });
+
+  describe("text annotations", () => {
+    const textDelta = (delta: string): RawEvent =>
+      ({
+        type: "response.output_text.delta",
+        delta,
+        content_index: 0,
+        output_index: 0,
+      }) as RawEvent;
+    const annotationAdded = (
+      annotationIndex: number,
+      annotation: Record<string, unknown>
+    ): RawEvent =>
+      ({
+        type: "response.output_text.annotation.added",
+        output_index: 0,
+        content_index: 0,
+        annotation_index: annotationIndex,
+        item_id: "msg_1",
+        sequence_number: 0,
+        annotation,
+      }) as unknown as RawEvent;
+
+    test("finished text block carries url and file citations", async () => {
+      const events = await collectEvents([
+        textDelta("Sunny, see report."),
+        annotationAdded(0, {
+          type: "url_citation",
+          url: "https://example.com",
+          title: "Weather",
+          start_index: 0,
+          end_index: 5,
+        }),
+        annotationAdded(1, {
+          type: "file_citation",
+          file_id: "file_1",
+          filename: "report.pdf",
+          index: 17,
+        }),
+        completedResponse(),
+      ]);
+
+      expect(finishes(events)).toEqual([
+        {
+          event: "content-block-finish",
+          index: 0,
+          content: {
+            type: "text",
+            text: "Sunny, see report.",
+            annotations: [
+              {
+                type: "citation",
+                source: "url_citation",
+                url: "https://example.com",
+                title: "Weather",
+                startIndex: 0,
+                endIndex: 5,
+              },
+              {
+                type: "citation",
+                source: "file_citation",
+                title: "report.pdf",
+                startIndex: 17,
+                file_id: "file_1",
+              },
+            ],
+          },
+        },
+      ]);
+    });
+
+    test("text without annotations has no annotations key", async () => {
+      const events = await collectEvents([
+        textDelta("Hello"),
+        completedResponse(),
+      ]);
+
+      expect(finishes(events).map((e) => e.content)).toEqual([
+        { type: "text", text: "Hello" },
+      ]);
+    });
+  });
 });

@@ -1349,6 +1349,113 @@ describe("convertStandardContentMessageToResponsesInput (role-aware text parts)"
   });
 });
 
+describe("convertStandardContentMessageToResponsesInput (text annotations)", () => {
+  const textWith = (annotations: ContentBlock.Text["annotations"]) =>
+    ({ type: "text", text: "See sources.", annotations }) as ContentBlock.Text;
+
+  it("replays citations on Responses messages as OpenAI annotations", () => {
+    const message = new AIMessage({
+      contentBlocks: [
+        textWith([
+          {
+            type: "citation",
+            source: "url_citation",
+            url: "https://example.com",
+            title: "Example",
+            startIndex: 0,
+            endIndex: 4,
+          },
+          {
+            type: "citation",
+            source: "file_citation",
+            title: "notes.txt",
+            startIndex: 7,
+            file_id: "file-1",
+          } as ContentBlock.Citation,
+        ]),
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "output_text",
+            text: "See sources.",
+            annotations: [
+              {
+                type: "url_citation",
+                url: "https://example.com",
+                title: "Example",
+                start_index: 0,
+                end_index: 4,
+              },
+              {
+                type: "file_citation",
+                file_id: "file-1",
+                filename: "notes.txt",
+                index: 7,
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("drops citations without a source", () => {
+    const message = new AIMessage({
+      contentBlocks: [
+        textWith([
+          { type: "citation", url: "https://example.com", title: "Example" },
+        ]),
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "message",
+        role: "assistant",
+        content: [
+          { type: "output_text", text: "See sources.", annotations: [] },
+        ],
+      },
+    ]);
+  });
+
+  it("sends no annotations for messages from other providers", () => {
+    const message = new AIMessage({
+      contentBlocks: [
+        textWith([
+          {
+            type: "citation",
+            source: "url_citation",
+            url: "https://example.com",
+            title: "Example",
+            startIndex: 0,
+            endIndex: 4,
+          },
+        ]),
+      ],
+      response_metadata: { model_provider: "anthropic" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "message",
+        role: "assistant",
+        content: [
+          { type: "output_text", text: "See sources.", annotations: [] },
+        ],
+      },
+    ]);
+  });
+});
+
 describe("convertMessagesToResponsesInput", () => {
   it("preserves prompt cache breakpoints on converted content blocks", () => {
     const message = new HumanMessage({

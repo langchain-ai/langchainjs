@@ -67,7 +67,7 @@ type OpenAIAnnotation =
  *
  * This function maps them to LangChain's Citation format or preserves them as non-standard blocks.
  */
-function convertOpenAIAnnotationToLangChain(
+export function convertOpenAIAnnotationToLangChain(
   annotation: OpenAIAnnotation
 ): ContentBlock.Citation | ContentBlock.NonStandard {
   if (annotation.type === "url_citation") {
@@ -1141,10 +1141,20 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         : applyPromptCacheBreakpoint(block, part);
 
     const makeTextPart = (
-      text: string
+      text: string,
+      annotations?: ContentBlock.Text["annotations"]
     ): ResponseInputMessageContentList[number] =>
       (messageRole === "assistant"
-        ? { type: "output_text", text, annotations: [] }
+        ? {
+            type: "output_text",
+            text,
+            annotations: isResponsesMessage
+              ? (annotations ?? [])
+                  .map(convertLangChainAnnotationToOpenAI)
+                  // a citation the inverse can't map comes back unchanged
+                  .filter((a) => (a.type as string) !== "citation")
+              : [],
+          }
         : {
             type: "input_text",
             text,
@@ -1353,7 +1363,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
             .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
         });
         pushMessageContent(
-          [withBreakpoint(block, makeTextPart(block.text))],
+          [withBreakpoint(block, makeTextPart(block.text, block.annotations))],
           phase
         );
       } else if (block.type === "invalid_tool_call") {
