@@ -8,7 +8,6 @@
 @langchain/build # #11801
 @langchain/classic # #11858-#11867, then its enrolment PR
 @langchain/cloudflare # #11691
-@langchain/cohere # #11807
 @langchain/deepseek # #11815
 @langchain/exa # #11691
 @langchain/fireworks # #11693
