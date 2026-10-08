@@ -10,8 +10,15 @@ import type {
   ChatModelStreamEvent,
   FinishReason,
 } from "@langchain/core/language_models/event";
-import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
-import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import {
+  AIMessage,
+  type ContentBlock,
+  type UsageMetadata,
+} from "@langchain/core/messages";
+import {
+  convertOpenAIAnnotationToLangChain,
+  convertResponsesUsageToUsageMetadata,
+} from "../converters/responses.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -19,9 +26,16 @@ export interface ConvertOpenAIResponsesStreamOptions {
 }
 
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
+
+const SERVER_TOOL_ITEM_TYPES = new Set([
+  "web_search_call",
+  "file_search_call",
+  "tool_search_call",
+  "tool_search_output",
+]);
 type BlockKey =
   | `text:${number}:${number}`
-  | `reasoning:${number}:${number}`
+  | `reasoning:${number}`
   | `tool:${number}`;
 
 export async function* convertOpenAIResponsesStream(
@@ -122,9 +136,35 @@ export async function* convertOpenAIResponsesStream(
       continue;
     }
 
+    if (event.type === "response.output_text.annotation.added") {
+      yield* ensureMessageStart();
+      const key: BlockKey = `text:${event.output_index}:${event.content_index}`;
+      const { index, isNew } = getOrCreateBlockIndex(key, {
+        type: "text",
+        text: "",
+      });
+      if (isNew) {
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: { type: "text", text: "" } as ContentBlock,
+        };
+      }
+      const acc = blockAccumulators.get(index)!;
+      acc.annotations ??= [];
+      acc.annotations.push(
+        convertOpenAIAnnotationToLangChain(
+          event.annotation as Parameters<
+            typeof convertOpenAIAnnotationToLangChain
+          >[0]
+        )
+      );
+      continue;
+    }
+
     if (event.type === "response.reasoning_summary_text.delta") {
       yield* ensureMessageStart();
-      const key: BlockKey = `reasoning:${event.output_index}:${event.summary_index}`;
+      const key: BlockKey = `reasoning:${event.output_index}`;
       const { index, isNew } = getOrCreateBlockIndex(key, {
         type: "reasoning",
         reasoning: "",
@@ -282,6 +322,48 @@ export async function* convertOpenAIResponsesStream(
     }
 
     if (
+      event.type === "response.output_item.done" &&
+      event.item.type === "reasoning"
+    ) {
+      yield* ensureMessageStart();
+      const key: BlockKey = `reasoning:${event.output_index}`;
+      const { index, isNew } = getOrCreateBlockIndex(key, {
+        type: "reasoning",
+        reasoning: "",
+      });
+      if (isNew) {
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: { type: "reasoning", reasoning: "" } as ContentBlock,
+        };
+      }
+      const acc = blockAccumulators.get(index)!;
+      if (event.item.id) {
+        acc.id = event.item.id;
+      }
+      if (typeof event.item.encrypted_content === "string") {
+        acc.encrypted_content = event.item.encrypted_content;
+      }
+      acc.summary = event.item.summary;
+      yield* finalizeBlock(index);
+      continue;
+    }
+
+    if (
+      event.type === "response.output_item.done" &&
+      event.item.type !== "message"
+    ) {
+      yield* ensureMessageStart();
+      for (const content of outputItemToBlocks(event.item)) {
+        const index = nextBlockIndex++;
+        yield { event: "content-block-start" as const, index, content };
+        yield { event: "content-block-finish" as const, index, content };
+      }
+      continue;
+    }
+
+    if (
       event.type === "response.completed" ||
       event.type === "response.incomplete"
     ) {
@@ -335,6 +417,26 @@ export async function* convertOpenAIResponsesStream(
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
   };
+}
+
+/**
+ * Server tool items go through core's translator; any other item is kept raw
+ * as `non_standard`.
+ */
+function outputItemToBlocks(
+  item: OpenAIClient.Responses.ResponseOutputItem
+): ContentBlock[] {
+  if (SERVER_TOOL_ITEM_TYPES.has(item.type)) {
+    // Always "openai": xAI reuses this converter, but the item shape is OpenAI's.
+    return new AIMessage({
+      content: [],
+      additional_kwargs: { tool_outputs: [item] },
+      response_metadata: { model_provider: "openai" },
+    }).contentBlocks;
+  }
+  const value: Record<string, unknown> = { ...item };
+  delete value.created_by;
+  return [{ type: "non_standard", value }];
 }
 
 function mapResponseStatusToFinishReason(
