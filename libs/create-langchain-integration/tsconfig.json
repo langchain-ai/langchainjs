@@ -4,6 +4,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
+  "files": [],
   "include": ["*.ts", "helpers/**/*.ts"],
   "exclude": ["dist", "node_modules", "template"]
 }
