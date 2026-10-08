@@ -21,7 +21,7 @@ export interface ConvertOpenAIResponsesStreamOptions {
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
 type BlockKey =
   | `text:${number}:${number}`
-  | `reasoning:${number}:${number}`
+  | `reasoning:${number}`
   | `tool:${number}`;
 
 export async function* convertOpenAIResponsesStream(
@@ -124,7 +124,7 @@ export async function* convertOpenAIResponsesStream(
 
     if (event.type === "response.reasoning_summary_text.delta") {
       yield* ensureMessageStart();
-      const key: BlockKey = `reasoning:${event.output_index}:${event.summary_index}`;
+      const key: BlockKey = `reasoning:${event.output_index}`;
       const { index, isNew } = getOrCreateBlockIndex(key, {
         type: "reasoning",
         reasoning: "",
@@ -277,6 +277,35 @@ export async function* convertOpenAIResponsesStream(
         acc.id = event.item.call_id;
         acc.name = event.item.name;
       }
+      yield* finalizeBlock(index);
+      continue;
+    }
+
+    if (
+      event.type === "response.output_item.done" &&
+      event.item.type === "reasoning"
+    ) {
+      yield* ensureMessageStart();
+      const key: BlockKey = `reasoning:${event.output_index}`;
+      const { index, isNew } = getOrCreateBlockIndex(key, {
+        type: "reasoning",
+        reasoning: "",
+      });
+      if (isNew) {
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: { type: "reasoning", reasoning: "" } as ContentBlock,
+        };
+      }
+      const acc = blockAccumulators.get(index)!;
+      if (event.item.id) {
+        acc.id = event.item.id;
+      }
+      if (typeof event.item.encrypted_content === "string") {
+        acc.encrypted_content = event.item.encrypted_content;
+      }
+      acc.summary = event.item.summary;
       yield* finalizeBlock(index);
       continue;
     }

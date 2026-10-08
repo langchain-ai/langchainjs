@@ -46,6 +46,31 @@ function completedResponse(overrides: Record<string, unknown> = {}): RawEvent {
   } as RawEvent;
 }
 
+function reasoningDone(
+  outputIndex: number,
+  item: { id: string } & Record<string, unknown>
+): RawEvent {
+  return {
+    type: "response.output_item.done",
+    output_index: outputIndex,
+    sequence_number: 0,
+    item: { type: "reasoning", summary: [], ...item },
+  } as RawEvent;
+}
+
+function summaryDelta(
+  outputIndex: number,
+  summaryIndex: number,
+  delta: string
+): RawEvent {
+  return {
+    type: "response.reasoning_summary_text.delta",
+    delta,
+    summary_index: summaryIndex,
+    output_index: outputIndex,
+  } as RawEvent;
+}
+
 describe("convertOpenAIResponsesStream", () => {
   test("text-only lifecycle", async () => {
     const events = await collectEvents([
@@ -183,6 +208,128 @@ describe("convertOpenAIResponsesStream", () => {
         content: { type: "reasoning", reasoning: "Second thought" },
       },
     ]);
+  });
+
+  describe("reasoning items", () => {
+    const reasoningFinishes = (events: ChatModelStreamEvent[]) =>
+      events.filter(
+        (e) =>
+          e.event === "content-block-finish" && e.content.type === "reasoning"
+      );
+
+    test("emits a block at done when summaries are off", async () => {
+      const events = await collectEvents([
+        reasoningDone(0, { id: "rs_1", encrypted_content: "enc_1" }),
+        completedResponse(),
+      ]);
+
+      expect(
+        events.filter(
+          (e) =>
+            e.event === "content-block-start" && e.content.type === "reasoning"
+        )
+      ).toMatchObject([{ index: 0, content: { reasoning: "" } }]);
+      expect(reasoningFinishes(events)).toMatchObject([
+        {
+          index: 0,
+          content: {
+            type: "reasoning",
+            reasoning: "",
+            id: "rs_1",
+            encrypted_content: "enc_1",
+            summary: [],
+          },
+        },
+      ]);
+    });
+
+    test("finishes a one-part summary with id and encrypted content", async () => {
+      const summary = [{ type: "summary_text", text: "Let me think" }];
+      const events = await collectEvents([
+        summaryDelta(0, 0, "Let me"),
+        summaryDelta(0, 0, " think"),
+        reasoningDone(0, { id: "rs_1", encrypted_content: "enc_1", summary }),
+        completedResponse(),
+      ]);
+
+      expect(reasoningFinishes(events)).toMatchObject([
+        {
+          index: 0,
+          content: {
+            reasoning: "Let me think",
+            id: "rs_1",
+            encrypted_content: "enc_1",
+            summary,
+          },
+        },
+      ]);
+    });
+
+    test("streams all summary parts into one block per item", async () => {
+      const summary = [
+        { type: "summary_text", text: "Part one." },
+        { type: "summary_text", text: "Part two." },
+      ];
+      const events = await collectEvents([
+        summaryDelta(0, 0, "Part one."),
+        summaryDelta(0, 1, "Part two."),
+        reasoningDone(0, { id: "rs_1", encrypted_content: "enc_1", summary }),
+        completedResponse(),
+      ]);
+
+      expect(
+        events.filter(
+          (e) =>
+            e.event === "content-block-start" && e.content.type === "reasoning"
+        )
+      ).toHaveLength(1);
+      expect(reasoningFinishes(events)).toMatchObject([
+        {
+          index: 0,
+          content: {
+            reasoning: "Part one.Part two.",
+            id: "rs_1",
+            encrypted_content: "enc_1",
+            summary,
+          },
+        },
+      ]);
+    });
+
+    test("omits encrypted_content when the item has none", async () => {
+      const events = await collectEvents([
+        summaryDelta(0, 0, "Thinking"),
+        reasoningDone(0, { id: "rs_1", encrypted_content: null }),
+        completedResponse(),
+      ]);
+
+      const [finish] = reasoningFinishes(events);
+      expect(finish).toMatchObject({ content: { id: "rs_1" } });
+      expect(finish).not.toHaveProperty("content.encrypted_content");
+    });
+
+    test("keeps two reasoning items and a following text block in order", async () => {
+      const events = await collectEvents([
+        summaryDelta(0, 0, "First"),
+        reasoningDone(0, { id: "rs_1", encrypted_content: "enc_1" }),
+        reasoningDone(1, { id: "rs_2", encrypted_content: "enc_2" }),
+        {
+          type: "response.output_text.delta",
+          delta: "Answer",
+          content_index: 0,
+          output_index: 2,
+        } as RawEvent,
+        completedResponse(),
+      ]);
+
+      expect(
+        events.filter((e) => e.event === "content-block-finish")
+      ).toMatchObject([
+        { index: 0, content: { reasoning: "First", id: "rs_1" } },
+        { index: 1, content: { reasoning: "", id: "rs_2" } },
+        { index: 2, content: { type: "text", text: "Answer" } },
+      ]);
+    });
   });
 
   test("tool call streaming and finalization", async () => {
