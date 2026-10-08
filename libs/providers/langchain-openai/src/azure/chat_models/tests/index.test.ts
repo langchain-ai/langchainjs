@@ -98,3 +98,16 @@ test("AzureChatOpenAI profile follows the Responses API setting", () => {
     responses.profile.fileMimeTypes
   );
 });
+
+test("AzureChatOpenAI rejects client options AzureOpenAI does not support", async () => {
+  const chat = new AzureChatOpenAI({
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiDeploymentName: "gpt-4o",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+    configuration: { dataResidency: "us" },
+  });
+  await expect(chat.invoke("Hello")).rejects.toThrow(
+    "Azure OpenAI does not support these client options: dataResidency"
+  );
+});

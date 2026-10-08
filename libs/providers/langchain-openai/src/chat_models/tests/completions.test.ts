@@ -9,6 +9,7 @@ import {
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
+import { ChatOpenAI } from "../index.js";
 
 describe("ChatOpenAICompletions constructor", () => {
   it("supports string model shorthand", () => {
@@ -444,5 +445,39 @@ describe("ChatOpenAICompletions tool image errors", () => {
     ).catch((e) => e);
 
     expect(error.message).not.toContain("does not support images");
+  });
+});
+
+describe("ChatOpenAICompletions service_tier", () => {
+  it("rejects the Responses-only ultrafast tier", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      service_tier: "ultrafast",
+    });
+
+    expect(() => model.invocationParams()).toThrow(
+      '`service_tier: "ultrafast"` requires the Responses API'
+    );
+  });
+
+  it("lets a per-call service_tier replace an ultrafast default", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      service_tier: "ultrafast",
+    });
+
+    expect(model.invocationParams({ service_tier: "flex" }).service_tier).toBe(
+      "flex"
+    );
+  });
+
+  it("still sends ultrafast through ChatOpenAI on the Responses API", () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      service_tier: "ultrafast",
+      useResponsesApi: true,
+    });
+
+    expect(model.invocationParams().service_tier).toBe("ultrafast");
   });
 });

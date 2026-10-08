@@ -352,7 +352,7 @@ export abstract class BaseChatOpenAI<
    * Service tier to use for this request. Can be "auto", "default", or "flex" or "priority".
    * Specifies the service tier for prioritization and latency optimization.
    */
-  service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
+  service_tier?: OpenAIChatInput["service_tier"];
 
   /**
    * Used by OpenAI to cache responses for similar requests to optimize your cache
@@ -484,8 +484,13 @@ export abstract class BaseChatOpenAI<
     }
     return {
       ...params,
-      tools: params.tools.map((tool) => {
-        if (tool?.type !== "mcp") {
+      tools: params.tools.map((tool: unknown) => {
+        if (
+          typeof tool !== "object" ||
+          tool === null ||
+          !("type" in tool) ||
+          tool.type !== "mcp"
+        ) {
           return tool;
         }
         const redactedTool: Record<string, unknown> = { ...tool };

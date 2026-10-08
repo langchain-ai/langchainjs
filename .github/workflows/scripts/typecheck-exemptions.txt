@@ -24,7 +24,6 @@
 @langchain/mistralai # #11691
 @langchain/neo4j # #11691
 @langchain/ollama # #11813
-@langchain/openai # #11851
 @langchain/openrouter # #11808
 @langchain/pinecone # #11816
 @langchain/redis # #11821

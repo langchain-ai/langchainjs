@@ -6,6 +6,7 @@ import {
   AIMessageChunk,
   ContentBlock,
   HumanMessage,
+  RawInputToolCallChunk,
   SystemMessage,
   ToolCallChunk,
   ToolMessage,
@@ -551,7 +552,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
           index: 0,
           isCustomTool: true,
         },
-      ] as ToolCallChunk[]);
+      ] as RawInputToolCallChunk[]);
     });
   });
 
@@ -1910,6 +1911,80 @@ describe("convertMessagesToResponsesInput", () => {
       ]);
     });
 
+    it("keeps unindexed reasoning summary parts separate", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: {
+            id: "rs_123",
+            type: "reasoning",
+            summary: [
+              { type: "summary_text", text: "First step" },
+              { type: "summary_text", text: "Second step" },
+            ],
+          },
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3",
+      });
+
+      expect(result).toEqual([
+        {
+          id: "rs_123",
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "First step" },
+            { type: "summary_text", text: "Second step" },
+          ],
+        },
+      ]);
+    });
+
+    it("joins streamed reasoning summary parts by index without changing the message", () => {
+      const summary = [
+        { type: "summary_text" as const, text: "First ", index: 0 },
+        { type: "summary_text" as const, text: "part", index: 0 },
+        { type: "summary_text" as const, text: "Second ", index: 1 },
+        { type: "summary_text" as const, text: "part", index: 1 },
+      ];
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: { id: "rs_123", type: "reasoning", summary },
+        },
+      });
+      const expected = [
+        {
+          id: "rs_123",
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "First part" },
+            { type: "summary_text", text: "Second part" },
+          ],
+        },
+      ];
+      const original = structuredClone(summary);
+
+      const first = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3",
+      });
+      const second = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3",
+      });
+
+      expect(first).toEqual(expected);
+      expect(second).toEqual(expected);
+      expect(summary).toEqual(original);
+    });
+
     it("uses fast path when response_metadata.output is available", () => {
       const output = [
         {
@@ -2527,6 +2602,7 @@ describe("convertResponsesMessageToAIMessage", () => {
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     const mockResponse: ResponsesCreateInvoke = {
       id: "resp_123",
+      access_programs: null,
       model: "gpt-4",
       created_at: 1234567890,
       status: "completed",
@@ -2555,7 +2631,7 @@ describe("convertResponsesMessageToAIMessage", () => {
         input_tokens: 10,
         output_tokens: 5,
         total_tokens: 15,
-        input_tokens_details: { cached_tokens: 0 },
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens_details: { reasoning_tokens: 0 },
       },
     };
@@ -2590,6 +2666,7 @@ describe("convertResponsesMessageToAIMessage", () => {
   it("should not add image content block when result is null", () => {
     const mockResponse: ResponsesCreateInvoke = {
       id: "resp_123",
+      access_programs: null,
       model: "gpt-4",
       created_at: 1234567890,
       status: "in_progress",
@@ -2618,7 +2695,7 @@ describe("convertResponsesMessageToAIMessage", () => {
         input_tokens: 10,
         output_tokens: 5,
         total_tokens: 15,
-        input_tokens_details: { cached_tokens: 0 },
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens_details: { reasoning_tokens: 0 },
       },
     };
@@ -2637,6 +2714,7 @@ describe("convertResponsesMessageToAIMessage", () => {
   it("should handle multiple output items including image_generation_call", () => {
     const mockResponse: ResponsesCreateInvoke = {
       id: "resp_123",
+      access_programs: null,
       model: "gpt-4",
       created_at: 1234567890,
       status: "completed",
@@ -2678,7 +2756,7 @@ describe("convertResponsesMessageToAIMessage", () => {
         input_tokens: 10,
         output_tokens: 5,
         total_tokens: 15,
-        input_tokens_details: { cached_tokens: 0 },
+        input_tokens_details: { cache_write_tokens: 0, cached_tokens: 0 },
         output_tokens_details: { reasoning_tokens: 0 },
       },
     };
@@ -3260,7 +3338,7 @@ describe("tool_search support", () => {
 
       const message = convertResponsesMessageToAIMessage(response);
       expect(message.tool_calls).toHaveLength(1);
-      expect(message.tool_calls[0].name).toBe("get_weather");
+      expect(message.tool_calls?.[0].name).toBe("get_weather");
       expect(message.additional_kwargs.tool_outputs).toHaveLength(2);
       expect((message.additional_kwargs.tool_outputs as any[])[0].type).toBe(
         "tool_search_call"
@@ -3433,8 +3511,8 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
     // No parsed content since the model only returned a tool call
     expect(message.additional_kwargs.parsed).toBeUndefined();
     // Usage metadata should still be populated
-    expect(result!.message.usage_metadata).toBeDefined();
-    expect(result!.message.usage_metadata!.input_tokens).toBe(50);
+    expect(message.usage_metadata).toBeDefined();
+    expect(message.usage_metadata!.input_tokens).toBe(50);
   });
 
   it("should parse text correctly when response.completed has json_schema format with actual text", () => {
@@ -3575,8 +3653,8 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing
     expect(message.additional_kwargs.parsed).toBeUndefined();
     // Usage metadata should still flow through so the caller can account
     // for the tokens that were spent on the bad payload.
-    expect(result!.message.usage_metadata).toBeDefined();
-    expect(result!.message.usage_metadata!.input_tokens).toBe(30);
+    expect(message.usage_metadata).toBeDefined();
+    expect(message.usage_metadata!.input_tokens).toBe(30);
   });
 
   it("should still parse cleanly when response text is well-formed JSON", () => {

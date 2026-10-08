@@ -782,12 +782,12 @@ describe("ChatOpenAI", () => {
     // @ts-expect-error - defaultOptions is protected
     const tools = modelWithTools.defaultOptions.tools;
     expect(tools).toHaveLength(2);
-    expect(tools[0]).toHaveProperty("defer_loading", true);
-    expect(tools[0]).toHaveProperty("type", "function");
-    expect(tools[0].function.name).toBe("deferred_tool");
-    expect(tools[1]).not.toHaveProperty("defer_loading");
-    expect(tools[1]).toHaveProperty("type", "function");
-    expect(tools[1].function.name).toBe("normal_tool");
+    expect(tools?.[0]).toHaveProperty("defer_loading", true);
+    expect(tools?.[0]).toHaveProperty("type", "function");
+    expect(tools?.[0]).toHaveProperty("function.name", "deferred_tool");
+    expect(tools?.[1]).not.toHaveProperty("defer_loading");
+    expect(tools?.[1]).toHaveProperty("type", "function");
+    expect(tools?.[1]).toHaveProperty("function.name", "normal_tool");
   });
 
   test("bindTools passes through tool_search as built-in tool", async () => {
@@ -802,7 +802,7 @@ describe("ChatOpenAI", () => {
     // @ts-expect-error - defaultOptions is protected
     const tools = modelWithTools.defaultOptions.tools;
     expect(tools).toHaveLength(1);
-    expect(tools[0]).toEqual({ type: "tool_search" });
+    expect(tools?.[0]).toEqual({ type: "tool_search" });
   });
 
   // https://github.com/langchain-ai/langchainjs/issues/8586

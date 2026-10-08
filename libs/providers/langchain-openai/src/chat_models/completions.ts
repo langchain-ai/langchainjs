@@ -52,6 +52,10 @@ const TOOL_IMAGE_HINT =
   "Chat Completions does not support images in tool messages. " +
   "Use the Responses API (`useResponsesApi: true`) to send images from tool results.";
 
+const ULTRAFAST_SERVICE_TIER_ERROR =
+  '`service_tier: "ultrafast"` requires the Responses API and cannot be sent ' +
+  "via Chat Completions. Set `useResponsesApi: true`.";
+
 /** Points a 400 caused by a tool-result image at the Responses API. */
 function addToolImageHint(
   error: unknown,
@@ -185,11 +189,15 @@ export class ChatOpenAICompletions<
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
     }
-    if (this.service_tier !== undefined) {
-      params.service_tier = this.service_tier;
+    const serviceTier =
+      options?.service_tier !== undefined
+        ? options.service_tier
+        : this.service_tier;
+    if (serviceTier === "ultrafast") {
+      throw new Error(ULTRAFAST_SERVICE_TIER_ERROR);
     }
-    if (options?.service_tier !== undefined) {
-      params.service_tier = options.service_tier;
+    if (serviceTier !== undefined) {
+      params.service_tier = serviceTier;
     }
     const reasoning = this._getReasoningParams(options);
     if (reasoning !== undefined && reasoning.effort !== undefined) {
