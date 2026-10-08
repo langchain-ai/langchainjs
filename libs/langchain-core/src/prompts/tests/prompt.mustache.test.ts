@@ -93,6 +93,18 @@ is a test.`);
   expect(promptWithRepeats.inputVariables).toEqual(["foo", "bar"]);
 });
 
+test("inverted section variables", async () => {
+  const template = "{{^items}}No items for {{name}}.{{/items}}";
+  const prompt = PromptTemplate.fromTemplate(template, {
+    templateFormat: "mustache",
+  });
+
+  expect(await prompt.format({ items: [], name: "Bob" })).toBe(
+    "No items for Bob."
+  );
+  expect(prompt.inputVariables).toEqual(["items", "name"]);
+});
+
 test("Escaped variables", async () => {
   const template = `test: {{{text}}}`;
   const parsed = parseTemplate(template, "mustache");
