@@ -1456,6 +1456,262 @@ describe("convertStandardContentMessageToResponsesInput (text annotations)", () 
   });
 });
 
+describe("convertStandardContentMessageToResponsesInput (built-in server tools)", () => {
+  const webSearchAction = {
+    type: "search",
+    query: "weather in Berlin",
+    sources: [{ type: "url", url: "https://example.com" }],
+  };
+  const webSearchBlocks: ContentBlock.Standard[] = [
+    {
+      type: "server_tool_call",
+      id: "ws_1",
+      name: "web_search",
+      args: { query: "weather in Berlin" },
+    },
+    {
+      type: "server_tool_call_result",
+      toolCallId: "ws_1",
+      status: "success",
+      output: { action: webSearchAction },
+    },
+  ];
+
+  it("rebuilds web_search_call with sources stripped and consumes the result", () => {
+    const message = new AIMessage({
+      contentBlocks: webSearchBlocks,
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "web_search_call",
+        id: "ws_1",
+        status: "completed",
+        action: { type: "search", query: "weather in Berlin" },
+      },
+    ]);
+  });
+
+  it("maps a failed web search result to status failed", () => {
+    const message = new AIMessage({
+      contentBlocks: [
+        webSearchBlocks[0],
+        { ...webSearchBlocks[1], status: "error" } as ContentBlock.Standard,
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "web_search_call",
+        id: "ws_1",
+        status: "failed",
+        action: { type: "search", query: "weather in Berlin" },
+      },
+    ]);
+  });
+
+  it("rebuilds file_search_call from the call and its result", () => {
+    const results = [{ file_id: "file-1", filename: "a.txt", score: 0.9 }];
+    const message = new AIMessage({
+      contentBlocks: [
+        {
+          type: "server_tool_call",
+          id: "fs_1",
+          name: "file_search",
+          args: { queries: ["termination clause"] },
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "fs_1",
+          status: "success",
+          output: { results },
+        },
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "file_search_call",
+        id: "fs_1",
+        status: "completed",
+        queries: ["termination clause"],
+        results,
+      },
+    ]);
+  });
+
+  it("rebuilds tool_search_call and tool_search_output", () => {
+    const tools = [
+      {
+        type: "function",
+        name: "get_weather",
+        parameters: { type: "object", properties: {} },
+        strict: null,
+      },
+    ];
+    const message = new AIMessage({
+      contentBlocks: [
+        {
+          type: "server_tool_call",
+          id: "ts_1",
+          name: "tool_search",
+          args: { query: "weather" },
+          extras: { execution: "server", status: "completed", call_id: "c_1" },
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "tso_1",
+          status: "success",
+          output: { tools },
+          extras: { name: "tool_search", execution: "server" },
+        },
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "tool_search_call",
+        id: "ts_1",
+        arguments: { query: "weather" },
+        execution: "server",
+        status: "completed",
+        call_id: "c_1",
+      },
+      {
+        type: "tool_search_output",
+        id: "tso_1",
+        execution: "server",
+        status: "completed",
+        tools,
+      },
+    ]);
+  });
+
+  it("skips a built-in call that has no result", () => {
+    const message = new AIMessage({
+      contentBlocks: [webSearchBlocks[0], { type: "text", text: "Searching." }],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "message",
+        role: "assistant",
+        content: [{ type: "output_text", text: "Searching.", annotations: [] }],
+      },
+    ]);
+  });
+
+  it.each([
+    ["another provider", { model_provider: "anthropic" }, "srvtoolu_1"],
+    ["no model_provider", {}, "ws_1"],
+  ])(
+    "keeps function_call items for a web_search pair from %s",
+    (_label, response_metadata, id) => {
+      const message = new AIMessage({
+        contentBlocks: [
+          {
+            type: "server_tool_call",
+            id,
+            name: "web_search",
+            args: { query: "q" },
+          },
+          {
+            type: "server_tool_call_result",
+            toolCallId: id,
+            status: "success",
+            output: { content: [] },
+          },
+        ],
+        response_metadata,
+      });
+
+      expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+        {
+          type: "function_call",
+          call_id: id,
+          name: "web_search",
+          arguments: '{"query":"q"}',
+        },
+        {
+          type: "function_call_output",
+          call_id: id,
+          output: '{"content":[]}',
+          status: "completed",
+        },
+      ]);
+    }
+  );
+
+  it("keeps function_call items for an unknown server tool name", () => {
+    const message = new AIMessage({
+      contentBlocks: [
+        {
+          type: "server_tool_call",
+          id: "ci_1",
+          name: "code_interpreter",
+          args: { code: "1+1" },
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "ci_1",
+          status: "success",
+          output: { stdout: "2" },
+        },
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    expect(convertStandardContentMessageToResponsesInput(message)).toEqual([
+      {
+        type: "function_call",
+        call_id: "ci_1",
+        name: "code_interpreter",
+        arguments: '{"code":"1+1"}',
+      },
+      {
+        type: "function_call_output",
+        call_id: "ci_1",
+        output: '{"stdout":"2"}',
+        status: "completed",
+      },
+    ]);
+  });
+
+  it("changes classic outputVersion v1 replay: web search now goes back as web_search_call", () => {
+    const message = new AIMessage({
+      content: [...webSearchBlocks, { type: "text", text: "It is sunny." }],
+      response_metadata: { model_provider: "openai", output_version: "v1" },
+    });
+
+    expect(
+      convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "gpt-5",
+      })
+    ).toEqual([
+      {
+        type: "web_search_call",
+        id: "ws_1",
+        status: "completed",
+        action: { type: "search", query: "weather in Berlin" },
+      },
+      {
+        type: "message",
+        role: "assistant",
+        content: [
+          { type: "output_text", text: "It is sunny.", annotations: [] },
+        ],
+      },
+    ]);
+  });
+});
+
 describe("convertMessagesToResponsesInput", () => {
   it("preserves prompt cache breakpoints on converted content blocks", () => {
     const message = new HumanMessage({

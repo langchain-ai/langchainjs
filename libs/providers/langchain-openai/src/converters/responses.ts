@@ -1332,6 +1332,77 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       };
     };
 
+    const toNativeStatus = (block: ContentBlock.Tools.ServerToolCallResult) =>
+      block.status === "success" ? "completed" : "failed";
+
+    /**
+     * Rebuilds a native `web_search_call` / `file_search_call` from a server
+     * tool call and its result, inverting core's OpenAI block translator.
+     */
+    const convertBuiltInServerToolCall = (
+      call: ContentBlock.Tools.ServerToolCall,
+      result: ContentBlock.Tools.ServerToolCallResult
+    ): ResponsesInputItem | undefined => {
+      const output = (result.output ?? {}) as Record<string, unknown>;
+      if (call.name === "web_search") {
+        if (typeof output.action !== "object" || output.action === null) {
+          return undefined;
+        }
+        // The API rejects `sources` on input.
+        const { sources: _sources, ...action } = output.action as Record<
+          string,
+          unknown
+        >;
+        return {
+          type: "web_search_call",
+          id: call.id ?? "",
+          status: toNativeStatus(result),
+          action:
+            action as unknown as OpenAIClient.Responses.ResponseFunctionWebSearch["action"],
+        };
+      }
+      const args = (call.args ?? {}) as Record<string, unknown>;
+      return {
+        type: "file_search_call",
+        id: call.id ?? "",
+        status: toNativeStatus(result),
+        queries: Array.isArray(args.queries) ? args.queries : [],
+        ...(Array.isArray(output.results)
+          ? {
+              results:
+                output.results as OpenAIClient.Responses.ResponseFileSearchToolCall["results"],
+            }
+          : {}),
+      };
+    };
+
+    const convertToolSearchCall = (
+      block: ContentBlock.Tools.ServerToolCall
+    ): ResponsesInputItem =>
+      ({
+        type: "tool_search_call",
+        ...(block.id ? { id: block.id } : {}),
+        arguments: block.args ?? {},
+        ...(block.extras as Record<string, unknown> | undefined),
+      }) as ResponsesInputItem;
+
+    const convertToolSearchOutput = (
+      block: ContentBlock.Tools.ServerToolCallResult
+    ): ResponsesInputItem => {
+      const { name: _name, ...extras } = (block.extras ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const output = (block.output ?? {}) as Record<string, unknown>;
+      return {
+        type: "tool_search_output",
+        ...(block.toolCallId ? { id: block.toolCallId } : {}),
+        ...extras,
+        ...(block.status === "success" ? { status: "completed" } : {}),
+        tools: Array.isArray(output.tools) ? output.tools : [],
+      } as ResponsesInputItem;
+    };
+
     // Hoisted items are emitted ahead of the message rather than at their
     // position within it, matching the non-v1 branch, so a message produces the
     // same input however its content was written. Assistant content is replayed
@@ -1344,6 +1415,32 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         yield hoisted;
       } else {
         contentBlocks.push(block);
+      }
+    }
+
+    // Built-in server tool pairs from OpenAI replay as their native items;
+    // anything else falls back to function_call / function_call_output.
+    const builtInResults = new Map<
+      string,
+      ContentBlock.Tools.ServerToolCallResult
+    >();
+    if (isResponsesMessage) {
+      const builtInCallIds = new Set(
+        contentBlocks
+          .filter(
+            (block) =>
+              block.type === "server_tool_call" &&
+              (block.name === "web_search" || block.name === "file_search")
+          )
+          .map((block) => block.id)
+      );
+      for (const block of contentBlocks) {
+        if (
+          block.type === "server_tool_call_result" &&
+          builtInCallIds.has(block.toolCallId)
+        ) {
+          builtInResults.set(block.toolCallId, block);
+        }
       }
     }
 
@@ -1400,7 +1497,18 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           serverFunctionCallIdsWithBlocks.add(id);
           pendingServerFunctionChunks.delete(id);
         }
-        yield convertFunctionCall(block);
+        if (isResponsesMessage && block.name === "tool_search") {
+          yield convertToolSearchCall(block);
+        } else if (
+          isResponsesMessage &&
+          (block.name === "web_search" || block.name === "file_search")
+        ) {
+          const result = builtInResults.get(id);
+          const item = result && convertBuiltInServerToolCall(block, result);
+          if (item) yield item;
+        } else {
+          yield convertFunctionCall(block);
+        }
       } else if (block.type === "server_tool_call_chunk") {
         if (block.id) {
           const existing = pendingServerFunctionChunks.get(block.id) ?? {
@@ -1412,8 +1520,17 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           pendingServerFunctionChunks.set(block.id, existing);
         }
       } else if (block.type === "server_tool_call_result") {
+        if (builtInResults.get(block.toolCallId) === block) continue;
         yield* flushMessage();
-        yield convertFunctionCallOutput(block);
+        if (
+          isResponsesMessage &&
+          (block.extras as Record<string, unknown> | undefined)?.name ===
+            "tool_search"
+        ) {
+          yield convertToolSearchOutput(block);
+        } else {
+          yield convertFunctionCallOutput(block);
+        }
       } else if (block.type === "audio") {
         // no-op
       } else if (block.type === "file") {
