@@ -4,11 +4,15 @@ import { convertAnthropicStream } from "../stream_events.js";
 
 interface StreamOverrides {
   cost?: unknown;
+  contextManagement?: unknown;
   streamUsage?: boolean;
 }
 
-/** One response's raw Anthropic events, optionally with a gateway `cost` on the terminal usage. */
-function rawEvents({ cost }: StreamOverrides = {}) {
+/**
+ * One response's raw Anthropic events, optionally with a gateway `cost` on the
+ * terminal usage and a `context_management` on the `message_delta` event.
+ */
+function rawEvents({ cost, contextManagement }: StreamOverrides = {}) {
   return [
     {
       type: "message_start" as const,
@@ -41,14 +45,21 @@ function rawEvents({ cost }: StreamOverrides = {}) {
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
       },
+      ...(contextManagement === undefined
+        ? {}
+        : { context_management: contextManagement }),
     },
     { type: "message_stop" as const },
   ];
 }
 
-async function convert({ cost, streamUsage }: StreamOverrides = {}) {
+async function convert({
+  cost,
+  contextManagement,
+  streamUsage,
+}: StreamOverrides = {}) {
   const source = (async function* () {
-    yield* rawEvents({ cost });
+    yield* rawEvents({ cost, contextManagement });
   })();
   const events = [];
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -95,6 +106,50 @@ describe("convertAnthropicStream", () => {
       model_provider: "anthropic",
     });
   });
+
+  test("forwards the message_delta event's context_management", async () => {
+    const contextManagement = {
+      applied_edits: [
+        {
+          type: "clear_tool_uses_20250919",
+          cleared_tool_uses: 2,
+          cleared_input_tokens: 5000,
+        },
+      ],
+    };
+    const events = await convert({ contextManagement });
+
+    expect(
+      events.filter(
+        (event) =>
+          event.event === "provider" && event.name === "context_management"
+      )
+    ).toEqual([
+      {
+        event: "provider",
+        provider: "anthropic",
+        name: "context_management",
+        payload: contextManagement,
+      },
+    ]);
+  });
+
+  test.each([
+    { case: "absent", contextManagement: undefined },
+    { case: "null", contextManagement: null },
+  ])(
+    "forwards no context_management when it is $case",
+    async ({ contextManagement }) => {
+      const events = await convert({ contextManagement });
+
+      expect(
+        events.some(
+          (event) =>
+            event.event === "provider" && event.name === "context_management"
+        )
+      ).toBe(false);
+    }
+  );
 
   test("leaves the rest of the message-finish event untouched", async () => {
     const events = await convert({ cost: 0.0123 });
