@@ -6,6 +6,7 @@ import {
   ChatAnthropic,
   type ChatAnthropicCallOptions,
 } from "../chat_models.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type {
   AnthropicMessageStreamEvent,
@@ -731,6 +732,31 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       );
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("msg_01ABC");
+    });
+
+    test("assembled message keeps its thinking block when sent back", async () => {
+      const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
+      const message = await new ChatModelStream(
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
+      );
+
+      const { messages } = _convertMessagesToAnthropicPayload([
+        new HumanMessage("What is the answer?"),
+        message,
+        new HumanMessage("Why?"),
+      ]);
+      expect(messages[1]).toEqual({
+        role: "assistant",
+        content: [
+          {
+            type: "thinking",
+            thinking: "Let me reason...",
+            signature: "sig_abc",
+          },
+          { type: "text", text: "The answer is 42." },
+        ],
+      });
+      expect(message.response_metadata.model_provider).toBe("anthropic");
     });
 
     test("sequential sub-stream consumption", async () => {

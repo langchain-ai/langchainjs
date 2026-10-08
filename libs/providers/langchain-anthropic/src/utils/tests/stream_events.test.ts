@@ -73,13 +73,16 @@ describe("convertAnthropicStream", () => {
 
     expect(messageFinish(events).responseMetadata).toEqual({
       usage: { cost: 0.0123 },
+      model_provider: "anthropic",
     });
   });
 
-  test("adds no response metadata when no cost is present", async () => {
+  test("adds only the model provider when no cost is present", async () => {
     const events = await convert();
 
-    expect(messageFinish(events).responseMetadata).toEqual({});
+    expect(messageFinish(events).responseMetadata).toEqual({
+      model_provider: "anthropic",
+    });
   });
 
   test.each([
@@ -88,16 +91,15 @@ describe("convertAnthropicStream", () => {
   ])("ignores $case", async ({ cost }) => {
     const events = await convert({ cost });
 
-    expect(messageFinish(events).responseMetadata).toEqual({});
+    expect(messageFinish(events).responseMetadata).toEqual({
+      model_provider: "anthropic",
+    });
   });
 
   test("leaves the rest of the message-finish event untouched", async () => {
     const events = await convert({ cost: 0.0123 });
 
     expect(messageFinish(events).reason).toBe("stop");
-    expect(messageFinish(events).metadata).toEqual({
-      model_provider: "anthropic",
-    });
   });
 
   test("preserves the cost when streamUsage is false", async () => {
@@ -105,6 +107,7 @@ describe("convertAnthropicStream", () => {
 
     expect(messageFinish(events).responseMetadata).toEqual({
       usage: { cost: 0.0123 },
+      model_provider: "anthropic",
     });
     expect(messageFinish(events).usage).toBeUndefined();
   });
@@ -119,12 +122,14 @@ describe("convertAnthropicStream", () => {
       total_tokens: 143,
       input_token_details: { cache_creation: 0, cache_read: 0 },
     });
-    for (const event of events.filter((event) => event.usage)) {
-      expect(event.usage).not.toHaveProperty("cost");
+    for (const event of events) {
+      if ("usage" in event && event.usage) {
+        expect(event.usage).not.toHaveProperty("cost");
+      }
     }
   });
 
-  test("an empty response metadata leaves the assembled message alone", async () => {
+  test("no cost adds no usage to the assembled message", async () => {
     const source = (async function* () {
       yield* rawEvents();
     })();
@@ -134,6 +139,7 @@ describe("convertAnthropicStream", () => {
     );
 
     expect(message.response_metadata).not.toHaveProperty("usage");
+    expect(message.response_metadata.model_provider).toBe("anthropic");
   });
 
   test("the cost reaches the assembled message", async () => {

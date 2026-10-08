@@ -110,8 +110,10 @@ export async function* convertAnthropicStream(
           event: "message-finish" as const,
           reason: mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
-          metadata: { model_provider: "anthropic" },
-          responseMetadata,
+          responseMetadata: {
+            ...responseMetadata,
+            model_provider: "anthropic",
+          },
         };
         break;
       }
@@ -162,11 +164,14 @@ export async function* convertAnthropicStream(
 
       // ── Unhandled → provider passthrough ───────────────────
       default: {
+        // The cases above cover every stream event type the SDK declares, so
+        // `data` is `never` here; this forwards anything else the stream yields.
+        const unknownEvent: { type: string } = data;
         yield {
           event: "provider" as const,
           provider: "anthropic",
-          name: data.type,
-          payload: data,
+          name: unknownEvent.type,
+          payload: unknownEvent,
         };
         break;
       }
@@ -213,8 +218,7 @@ function mapBlockToContentBlock(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   block: any,
   index: number
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): ContentBlock {
   switch (block.type) {
     case "text":
       return { type: "text" as const, text: block.text ?? "", index };

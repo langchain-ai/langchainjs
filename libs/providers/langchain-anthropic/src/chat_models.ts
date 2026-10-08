@@ -249,10 +249,11 @@ function _thinkingInParams(
   );
 }
 
-function _compactionInParams(
-  params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
-): boolean {
-  const cm = params.context_management;
+function _compactionInParams(params: AnthropicInvocationParams): boolean {
+  // `context_management` is a beta param: the GA params type doesn't declare
+  // it, so it reaches the request through `Kwargs`.
+  const cm: AnthropicContextManagementConfigParam | null | undefined =
+    params.context_management;
   return !!cm?.edits?.some((e) => e.type === "compact_20260112");
 }
 
@@ -1387,7 +1388,9 @@ export class ChatAnthropicMessages<
   protected override _getInvocationParamsForTracing(
     options?: this["ParsedCallOptions"]
   ): ReturnType<this["invocationParams"]> {
-    const params = this.invocationParams(options);
+    // Unlike `this.invocationParams()`, `super`'s result is typed as
+    // `ReturnType<this["invocationParams"]>`, which this method must return.
+    const params = super._getInvocationParamsForTracing(options);
     if (!Array.isArray(params.mcp_servers)) {
       return params;
     }

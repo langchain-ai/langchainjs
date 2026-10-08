@@ -3,7 +3,6 @@
 # without the script is missing from this list, or if a listed package has the
 # script, so the list can only shrink: when a package passes, add its
 # `typecheck` script and delete its line here.
-@langchain/anthropic # #11818
 @langchain/aws # #11820
 @langchain/build # #11801
 @langchain/classic # #11858-#11867, then its enrolment PR
