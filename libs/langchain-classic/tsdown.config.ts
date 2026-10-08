@@ -111,7 +111,7 @@ export default getBuildConfig({
     }),
     lcSecretsPlugin(),
     importMapPlugin({
-      omitFromImportMap: ["hub/index", "hub/node", "load/index"],
+      omitFromImportMap: ["index", "hub/index", "hub/node", "load/index"],
       extraEntries: [
         {
           modules: ["StringOutputParser"],
