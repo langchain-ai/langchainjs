@@ -18,6 +18,7 @@
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit --composite false --incremental false",
     "test:watch": "vitest",
     "test:single": "vitest run",
     "test:int": "vitest run --mode int",
@@ -30,6 +31,7 @@
     "google-auth-library": "^11.1.0"
   },
   "devDependencies": {
+    "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/node": "^26.6.3",

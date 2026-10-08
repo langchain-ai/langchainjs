@@ -65,7 +65,7 @@ describe("Google APIKey Chat", () => {
       new AIMessage("T"),
       new HumanMessage("Flip the coin again"),
     ];
-    const res = await model.predictMessages(messages);
+    const res = await model.invoke(messages);
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -160,7 +160,7 @@ describe("Google Webauth Chat", () => {
       new AIMessage("T"),
       new HumanMessage("Flip the coin again"),
     ];
-    const res = await model.predictMessages(messages);
+    const res = await model.invoke(messages);
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
