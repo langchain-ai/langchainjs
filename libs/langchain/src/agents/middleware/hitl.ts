@@ -5,6 +5,8 @@ import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
 import {
   InferInteropZodInput,
   interopParse,
+  interopZodTransformInputSchema,
+  isZodSchemaV4,
 } from "@langchain/core/utils/types";
 import { Command, interrupt, isCommand } from "@langchain/langgraph";
 
@@ -135,6 +137,9 @@ const InterruptOnConfigSchema = z.object({
   description: z.union([z.string(), DescriptionFunctionSchema]).optional(),
   /**
    * JSON schema for the arguments associated with the action, if edits are allowed.
+   *
+   * Not used in `"per_call"` mode: an edit's `args` are checked against the tool's
+   * own schema there.
    */
   argsSchema: z.record(z.any()).optional(),
   /**
@@ -310,34 +315,36 @@ const ToolApprovalRequestSchema = z4.object({
 export type ToolApprovalRequest = z4.infer<typeof ToolApprovalRequestSchema>;
 
 /**
- * What an edit's `args` must look like: the tool's schema if it's a Zod v4 object,
- * with unknown args rejected unless the tool accepts them (`z.looseObject`,
- * `.catchall()`). Any other tool takes any object, and checks it when it runs.
+ * What an edit's `args` must look like: the input side of the tool's schema, if it's
+ * a Zod v4 object. Transforms are left out, so they run once, when the tool does.
+ * Args the tool doesn't declare are handled as the tool handles them from the model.
+ * Any other tool takes any object, and checks it when it runs.
  */
 function editArgs(
   tool?: ToolCallRequest["tool"]
 ): z4.ZodType<Record<string, unknown>> {
   const schema = tool && "schema" in tool ? tool.schema : undefined;
-  if (!(schema instanceof z4.ZodObject)) {
-    return z4.record(z4.string(), z4.unknown());
-  }
-  return schema.def.catchall ? schema : schema.strict();
+  const input = isZodSchemaV4(schema)
+    ? interopZodTransformInputSchema(schema, true)
+    : undefined;
+  return input instanceof z4.ZodObject
+    ? input
+    : z4.record(z4.string(), z4.unknown());
 }
 
 /**
  * The answers a reviewer can give to a `"per_call"` approval of tool `name`, by type.
  *
- * The edit can't switch tools (its `name` is pinned), and unknown fields in it are
- * rejected, so a typo fails instead of being dropped.
+ * The edit can't switch tools: its `name` is pinned.
  */
 const toolApprovalDecisions = (
   name: string,
   tool?: ToolCallRequest["tool"]
 ) => ({
   approve: z4.object({ type: z4.literal("approve") }),
-  edit: z4.strictObject({
+  edit: z4.object({
     type: z4.literal("edit"),
-    edited_action: z4.strictObject({
+    edited_action: z4.object({
       name: z4.literal(name),
       args: editArgs(tool),
     }),
@@ -415,10 +422,27 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
    *
    * - `"batched"` (default): one interrupt per model turn for all gated tool calls.
    * - `"per_call"`: one {@link ToolApprovalRequest} interrupt per gated call, with a
-   *   typed `responseSchema`. An invalid answer throws a `ZodError` and isn't saved.
-   *   To answer several at once, check each against its `responseSchema` first, or
-   *   send them one at a time. List this middleware before tool retry or
-   *   error-handling middleware.
+   *   typed `responseSchema`, answered with a single decision keyed by interrupt ID.
+   *
+   * In `"per_call"` mode, LangGraph checks each answer before saving it:
+   *
+   * - An edit can't switch tools, and its args must match the tool's argument
+   *   types. Args the tool doesn't declare are handled as they are when the model
+   *   sends them. For a tool without a Zod v4 object schema, any object is accepted
+   *   and the tool checks it when it runs.
+   * - An invalid answer throws a `ZodError` and isn't saved, so the same interrupt
+   *   can be answered again.
+   *
+   * If one of several answers sent together is invalid, the others' tools may
+   * already have run even if they still show as pending, and answering them again
+   * would run them twice. Check answers against `responseSchema` before sending them
+   * together, or send one at a time.
+   *
+   * The review happens as the tool call starts, inside the tool-call middleware
+   * chain. List this middleware before tool retry or error-handling middleware so it
+   * wraps them. On resume, each paused tool call runs the middleware listed before
+   * this one again up to the pause, so that middleware must not have side effects
+   * before calling `handler`. The tool itself runs only after the answer.
    */
   interruptMode?: "batched" | "per_call";
   /**

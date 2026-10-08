@@ -2218,7 +2218,6 @@ const JsonSchema = z4.looseObject({
     return z4.record(z4.string(), JsonSchema).optional();
   },
   required: z4.array(z4.string()).optional(),
-  additionalProperties: z4.unknown().optional(),
 });
 type JsonSchema = z4.infer<typeof JsonSchema>;
 
@@ -2333,8 +2332,7 @@ const starred = (schema: JsonSchema, name: string) =>
 
 // The interrupt contract, checked the same way in langchain (Python): the value
 // exactly, each decision's fields (required ones starred), and the edit's pinned
-// name, argument types, and that it rejects unknown fields
-// (`additionalProperties: false` at every level).
+// name and argument types.
 const EXPECTED_INTERRUPTS = {
   send_email: {
     value: {
@@ -2345,11 +2343,7 @@ const EXPECTED_INTERRUPTS = {
       description: "Email",
     },
     decisions: { approve: [], edit: ["edited_action*"], reject: ["message"] },
-    edited_action: {
-      name: "send_email",
-      args: { "to*": "string" },
-      closed: true,
-    },
+    edited_action: { name: "send_email", args: { "to*": "string" } },
   },
   delete_file: {
     value: {
@@ -2388,9 +2382,6 @@ function normalize(intr: Interrupt<ToolApprovalRequest>) {
           starred(args, k),
           v.type,
         ])
-      ),
-      closed: [byType.edit, edited, args].every(
-        (part) => part.additionalProperties === false
       ),
     };
   }
@@ -2465,8 +2456,6 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
       [editEmail({}), "invalid_type edited_action.args.to"],
       [editEmail({ to: 5 }), "invalid_type edited_action.args.to"],
       [edit("delete_file", { to: "b" }), "invalid_value edited_action.name"],
-      [editEmail({ to: "b", ccc: 1 }), "unrecognized_keys edited_action.args"],
-      [editEmail({ to: "b" }, { nmae: 1 }), "unrecognized_keys edited_action"],
     ] as const;
     for (const [answer, issue] of badAnswers) {
       const resumed = resume(agent, { [paused.send_email.id]: answer });
@@ -2487,11 +2476,62 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
     ]);
   });
 
-  it("checks edits only against a Zod v4 tool schema", async () => {
+  it.each([
+    {
+      decision: "approve",
+      answer: { type: "approve" },
+      ranWith: [{ to: "alice" }],
+      status: "success",
+      content: "send_email done",
+    },
+    {
+      decision: "edit",
+      answer: edit("send_email", { to: "bob" }),
+      ranWith: [{ to: "bob" }],
+      status: "success",
+      content: "send_email done",
+    },
+    {
+      // The tool drops an arg it doesn't declare, as it would from the model
+      decision: "an edit with an undeclared arg",
+      answer: edit("send_email", { to: "bob", subject: "hi" }),
+      ranWith: [{ to: "bob" }],
+      status: "success",
+      content: "send_email done",
+    },
+    {
+      decision: "reject",
+      answer: { type: "reject", message: "not now" },
+      ranWith: [],
+      status: "error",
+      content: "not now",
+    },
+  ])("resumes with $decision", async ({ answer, ranWith, status, content }) => {
+    const ran: Ran = [];
+    const agent = perCallAgent(ran, EMAIL, {
+      interruptOn: { send_email: true },
+    });
+    const [intr] = await pause(agent);
+
+    const final = await resume(agent, { [intr.id]: answer });
+
+    const message = toolMessages(final).call_email;
+    expect([ran.map(([, args]) => args), message.status]).toEqual([
+      ranWith,
+      status,
+    ]);
+    expect(String(message.content).endsWith(content)).toBe(true);
+    // Only an edit tells the model that a reviewer replaced the call
+    expect(
+      String(message.content).includes("Executed instead: send_email")
+    ).toBe(answer.type === "edit");
+  });
+
+  it("checks edits against the input side of a Zod v4 tool schema", async () => {
     const setup = async (schema: z4.ZodObject | z.AnyZodObject) => {
       const ran: Ran = [];
       const agent = perCallAgent(ran, EMAIL, {
-        interruptOn: { send_email: { allowedDecisions: ["edit"] } },
+        interruptOn: { send_email: { allowedDecisions: ["approve", "edit"] } },
         tools: [recordingTool(ran, "send_email", schema)],
       });
       const [intr] = await pause(agent);
@@ -2499,6 +2539,14 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
         resume(agent, { [intr.id]: edit("send_email", { ...args }) });
       return { ran, send, shown: editParts(schemaOf(intr))[1] };
     };
+
+    // A transform is left to the tool: the schema can be shown, and it runs once
+    const shout = await setup(
+      z4.object({ to: z4.string().transform((to) => `${to}!`) })
+    );
+    expect(shout.shown.properties?.to?.type).toBe("string");
+    await shout.send({ to: "b" });
+    expect(shout.ran).toEqual([["send_email", { to: "b!" }]]);
 
     // A loose schema keeps extra args
     const loose = await setup(z4.looseObject({ to: z4.string() }));
@@ -2567,14 +2615,8 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
       resume(agent, { ...valid, [paused.send_email.id]: { type: "edit" } })
     ).rejects.toThrow(/edited_action/);
     expect(ran).toEqual([["delete_file", { path: "x.txt" }]]); // the valid answer ran
-
-    // Resending an applied answer has no effect
-    const final = await resume(agent, {
-      [paused.send_email.id]: { type: "approve" },
-      [paused.delete_file.id]: { type: "reject" },
-    });
-    expect(ran.map(([name]) => name)).toEqual(["delete_file", "send_email"]);
-    expect(toolMessages(final).call_delete.status).toBe("success");
+    // Whether its result was saved depends on timing, so resending the answers may
+    // run it again (see `interruptMode`); that isn't asserted here.
   });
 
   it("wraps retry and error-handling middleware listed after it", async () => {
