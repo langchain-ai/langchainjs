@@ -1,5 +1,4 @@
-import { CohereClient } from "cohere-ai";
-import type { EmbedRequest } from "cohere-ai/api/client/index.js";
+import { Cohere, CohereClient } from "cohere-ai";
 
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -145,7 +144,7 @@ export class CohereEmbeddings
     }
   }
 
-  async embed(request: EmbedRequest): Promise<number[]> {
+  async embed(request: Cohere.EmbedRequest): Promise<number[]> {
     const { embeddings } = await this.embeddingWithRetry(request);
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];
