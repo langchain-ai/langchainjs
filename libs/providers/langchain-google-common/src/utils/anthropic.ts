@@ -7,6 +7,8 @@ import {
   BaseMessage,
   BaseMessageChunk,
   AIMessageChunk,
+  ContentBlock,
+  Data,
   MessageContentComplex,
   MessageContentText,
   MessageContent,
@@ -15,10 +17,6 @@ import {
   AIMessageChunkFields,
   AIMessage,
   StandardContentBlockConverter,
-  StandardImageBlock,
-  StandardTextBlock,
-  StandardFileBlock,
-  DataContentBlock,
   isDataContentBlock,
   convertToProviderContentBlock,
   parseBase64DataUrl,
@@ -126,7 +124,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     textContent: AnthropicContentText
   ): AIMessageFields {
     return {
-      content: [textContent],
+      content: [{ ...textContent }],
     };
   }
 
@@ -150,7 +148,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   ): AIMessageFields {
     // TODO: Once a reasoning/thinking type is defined in LangChain, use it
     return {
-      content: [thinkingContent],
+      content: [{ ...thinkingContent }],
     };
   }
 
@@ -159,7 +157,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   ): AIMessageFields {
     // TODO: Once a reasoning/thinking type is defined in LangChain, use it
     return {
-      content: [thinkingContent],
+      content: [{ ...thinkingContent }],
     };
   }
 
@@ -185,14 +183,12 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   function contentToMessage(
     anthropicContent: AnthropicContent[]
   ): BaseMessageChunk {
-    const complexContent: MessageContentComplex[] = [];
+    const complexContent: ContentBlock[] = [];
     const toolCalls: ToolCall[] = [];
     anthropicContent.forEach((ac) => {
       const messageFields = anthropicContentToMessageFields(ac);
-      if (messageFields?.content) {
-        complexContent.push(
-          ...(messageFields.content as MessageContentComplex[])
-        );
+      if (Array.isArray(messageFields?.content)) {
+        complexContent.push(...messageFields.content);
       }
       if (messageFields?.tool_calls) {
         toolCalls.push(...messageFields.tool_calls);
@@ -294,7 +290,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
     const toolChunks: ToolCallChunk[] = [toolChunk];
 
-    const content: MessageContentComplex[] = [
+    const content: ContentBlock[] = [
       {
         index: event.index,
         ...contentBlock,
@@ -352,7 +348,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         args: delta.partial_json,
       },
     ];
-    const content: MessageContentComplex[] = [
+    const content: ContentBlock[] = [
       {
         index: event.index,
         ...delta,
@@ -436,7 +432,10 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       return chunk.content;
     } else if (chunk.content.length === 0) {
       return "";
-    } else if (chunk.content[0].type === "text") {
+    } else if (
+      chunk.content[0].type === "text" &&
+      typeof chunk.content[0].text === "string"
+    ) {
       return chunk.content[0].text;
     } else {
       throw new Error(`Unexpected chunk: ${chunk}`);
@@ -580,7 +579,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     providerName: "anthropic",
 
     fromStandardTextBlock(
-      block: StandardTextBlock
+      block: Data.StandardTextBlock
     ): AnthropicMessageContentText {
       return {
         type: "text",
@@ -595,7 +594,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     },
 
     fromStandardImageBlock(
-      block: StandardImageBlock
+      block: Data.StandardImageBlock
     ): AnthropicMessageContentImage {
       if (block.source_type === "url") {
         const data = parseBase64DataUrl({
@@ -649,7 +648,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     },
 
     fromStandardFileBlock(
-      block: StandardFileBlock
+      block: Data.StandardFileBlock
     ): AnthropicMessageContentDocument {
       const mime_type = (block.mime_type ?? "").split(";")[0];
 
@@ -803,7 +802,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   };
 
   function contentToAnthropicContent(
-    content: MessageContent | DataContentBlock[]
+    content: MessageContent | Data.DataContentBlock[]
   ): AnthropicMessageContent[] {
     const ca =
       typeof content === "string" ? [{ type: "text", text: content }] : content;

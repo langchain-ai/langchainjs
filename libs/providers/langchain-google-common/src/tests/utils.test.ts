@@ -414,8 +414,12 @@ describe("schemaToGeminiParameters", () => {
     });
 
     const convertedSchema = schemaToGeminiParameters(zodSchema);
-    expect(convertedSchema.properties?.price?.minimum).toBe(0.01);
-    expect(convertedSchema.properties?.price?.exclusiveMinimum).toBeUndefined();
+    // GeminiFunctionSchema doesn't declare the numeric constraints, so check
+    // the converted property's keys.
+    expect(convertedSchema.properties?.price).toHaveProperty("minimum", 0.01);
+    expect(convertedSchema.properties?.price).not.toHaveProperty(
+      "exclusiveMinimum"
+    );
   });
 });
 

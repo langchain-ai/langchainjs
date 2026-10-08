@@ -15,6 +15,15 @@ type GroundingInfo = {
   supports: GeminiGroundingSupport[];
 };
 
+/**
+ * The grounding fields the Gemini converter puts in `generationInfo`,
+ * which the chat model copies into the message's `response_metadata`.
+ */
+type GroundingResponseMetadata = {
+  groundingMetadata?: GeminiGroundingMetadata;
+  groundingSupport?: GeminiGroundingSupport[];
+};
+
 export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<string> {
   lc_namespace: string[] = ["google_common", "output_parsers"];
 
@@ -22,7 +31,8 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
     generation: Generation | ChatGeneration
   ): GroundingInfo | undefined {
     if ("message" in generation) {
-      const responseMetadata = generation?.message?.response_metadata;
+      const responseMetadata: GroundingResponseMetadata | undefined =
+        generation?.message?.response_metadata;
       const metadata = responseMetadata?.groundingMetadata;
       const supports =
         responseMetadata?.groundingSupport ?? metadata?.groundingSupports ?? [];
@@ -58,8 +68,8 @@ export abstract class BaseGoogleSearchOutputParser extends BaseLLMOutputParser<s
       } else {
         return content
           .map((c) => {
-            if (c?.type === "text") {
-              return c?.text ?? "";
+            if (c?.type === "text" && typeof c.text === "string") {
+              return c.text;
             } else {
               return "";
             }
