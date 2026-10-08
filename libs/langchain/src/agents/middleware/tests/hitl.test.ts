@@ -1,6 +1,7 @@
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { tool } from "@langchain/core/tools";
+import { tool, type ClientTool } from "@langchain/core/tools";
 import {
   AIMessage,
   BaseMessage,
@@ -13,10 +14,15 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { createAgent } from "../../index.js";
 import {
   humanInTheLoopMiddleware,
+  isToolApprovalInterrupt,
   type HITLRequest,
   type HITLResponse,
   type Decision,
+  type InterruptOnConfig,
+  type ToolApprovalRequest,
 } from "../hitl.js";
+import { toolErrorMiddleware } from "../toolError.js";
+import { toolRetryMiddleware } from "../toolRetry.js";
 import {
   FakeToolCallingModel,
   _AnyIdHumanMessage,
@@ -24,7 +30,7 @@ import {
   _AnyIdAIMessage,
 } from "../../tests/utils.js";
 import type { Interrupt } from "../../types.js";
-import type { ToolCallRequest } from "../types.js";
+import type { AgentMiddleware, ToolCallRequest } from "../types.js";
 
 const writeFileFn = vi.fn(
   async ({ filename, content }: { filename: string; content: string }) => {
@@ -2189,5 +2195,524 @@ describe("humanInTheLoopMiddleware", () => {
       expect(request.runtime).toBeDefined();
       expect(request.runtime.configurable?.thread_id).toBe("test-when-args");
     });
+  });
+});
+
+// --- Per-call mode (interruptMode: "per_call") ---
+
+type Ran = [string, Record<string, unknown>][];
+type ScriptedCall = {
+  id?: string;
+  name: string;
+  args: Record<string, unknown>;
+};
+
+/** The parts of a JSON schema the per-call tests read. */
+const JsonSchema = z4.looseObject({
+  get oneOf() {
+    return z4.array(JsonSchema).optional();
+  },
+  type: z4.string().optional(),
+  const: z4.string().optional(),
+  get properties() {
+    return z4.record(z4.string(), JsonSchema).optional();
+  },
+  required: z4.array(z4.string()).optional(),
+});
+type JsonSchema = z4.infer<typeof JsonSchema>;
+
+/** A Zod v4 tool that records each call in `ran`. */
+const recordingTool = (
+  ran: Ran,
+  name: string,
+  schema: z4.ZodObject | z.AnyZodObject
+) =>
+  tool(
+    async (args: Record<string, unknown>) => {
+      ran.push([name, args]);
+      return `${name} done`;
+    },
+    { name, description: `Run ${name}.`, schema }
+  );
+
+const perCallTools = (ran: Ran) => [
+  recordingTool(ran, "send_email", z4.object({ to: z4.string() })),
+  recordingTool(ran, "delete_file", z4.object({ path: z4.string() })),
+  recordingTool(ran, "read_file", z4.object({ path: z4.string() })),
+];
+
+const INTERRUPT_ON: Record<string, boolean | InterruptOnConfig> = {
+  send_email: {
+    allowedDecisions: ["approve", "edit", "reject"],
+    description: "Email",
+    // Not used in per-call mode: the edit's args come from the tool itself.
+    argsSchema: {
+      type: "object",
+      properties: { recipient: { type: "string" } },
+    },
+  },
+  delete_file: {
+    allowedDecisions: ["approve", "reject"],
+    description: "Delete",
+  },
+};
+
+const THREE_CALLS: ScriptedCall[] = [
+  { id: "call_email", name: "send_email", args: { to: "alice" } },
+  { id: "call_delete", name: "delete_file", args: { path: "x.txt" } },
+  { id: "call_read", name: "read_file", args: { path: "y.txt" } },
+];
+const EMAIL = THREE_CALLS.slice(0, 1);
+const CFG = { configurable: { thread_id: "per-call" } }; // one checkpointer per agent
+
+function perCallAgent(
+  ran: Ran,
+  toolCalls: ScriptedCall[],
+  {
+    interruptOn = INTERRUPT_ON,
+    tools = perCallTools(ran),
+    after = [],
+    mode = "per_call",
+  }: {
+    interruptOn?: Record<string, boolean | InterruptOnConfig>;
+    tools?: ClientTool[];
+    after?: AgentMiddleware[];
+    mode?: "batched" | "per_call";
+  } = {}
+) {
+  return createAgent({
+    model: new FakeToolCallingModel({ toolCalls: [toolCalls, []] }),
+    tools,
+    middleware: [
+      humanInTheLoopMiddleware({ interruptOn, interruptMode: mode }),
+      ...after,
+    ],
+    checkpointer: new MemorySaver(),
+  });
+}
+
+type PerCallAgent = ReturnType<typeof perCallAgent>;
+type Result = { messages: BaseMessage[]; __interrupt__?: Interrupt[] };
+
+const approvals = (result: Result) =>
+  (result.__interrupt__ ?? []).filter(isToolApprovalInterrupt);
+const pause = async (agent: PerCallAgent) =>
+  approvals(await agent.invoke({ messages: [new HumanMessage("go")] }, CFG));
+const resume = (agent: PerCallAgent, answers: Record<string, unknown>) =>
+  agent.invoke(new Command({ resume: answers }), CFG);
+const byName = (interrupts: Interrupt<ToolApprovalRequest>[]) =>
+  Object.fromEntries(interrupts.map((i) => [i.value.name, i]));
+const toolMessages = (result: Result) =>
+  Object.fromEntries(
+    result.messages
+      .filter(ToolMessage.isInstance)
+      .map((m) => [m.tool_call_id, m])
+  );
+const edit = (
+  name: string,
+  args: Record<string, unknown>,
+  extra: Record<string, unknown> = {}
+) => ({ type: "edit", edited_action: { name, args, ...extra } });
+
+/** The interrupt's `response_schema`, as the JSON schema clients receive. */
+const schemaOf = (intr: Interrupt) => JsonSchema.parse(intr.response_schema);
+/** Decision type -> its branch. */
+const branches = (schema: JsonSchema) =>
+  Object.fromEntries(
+    (schema.oneOf ?? [schema]).map((b) => [`${b.properties?.type?.const}`, b])
+  );
+/** The edit branch's `edited_action` schema and its `args` schema. */
+const editParts = (schema: JsonSchema) => {
+  const edited = branches(schema).edit?.properties?.edited_action ?? {};
+  return [edited, edited.properties?.args ?? {}] as const;
+};
+/** `name`, starred when `schema` requires it. */
+const starred = (schema: JsonSchema, name: string) =>
+  schema.required?.includes(name) ? `${name}*` : name;
+
+// The interrupt contract, checked the same way in langchain (Python): the value
+// exactly, each decision's fields (required ones starred), and the edit's pinned
+// name and argument types.
+const EXPECTED_INTERRUPTS = {
+  send_email: {
+    value: {
+      type: "tool_approval",
+      tool_call_id: "call_email",
+      name: "send_email",
+      args: { to: "alice" },
+      description: "Email",
+    },
+    decisions: { approve: [], edit: ["edited_action*"], reject: ["message"] },
+    edited_action: { name: "send_email", args: { "to*": "string" } },
+  },
+  delete_file: {
+    value: {
+      type: "tool_approval",
+      tool_call_id: "call_delete",
+      name: "delete_file",
+      args: { path: "x.txt" },
+      description: "Delete",
+    },
+    decisions: { approve: [], reject: ["message"] },
+  },
+};
+
+/** The parts of an interrupt the contract covers. */
+function normalize(intr: Interrupt<ToolApprovalRequest>) {
+  const schema = schemaOf(intr);
+  const byType = branches(schema);
+  const normalized: Record<string, unknown> = {
+    value: intr.value,
+    decisions: Object.fromEntries(
+      Object.entries(byType).map(([type, branch]) => [
+        type,
+        Object.keys(branch.properties ?? {})
+          .filter((f) => f !== "type")
+          .map((f) => starred(branch, f))
+          .sort(),
+      ])
+    ),
+  };
+  if (byType.edit) {
+    const [edited, args] = editParts(schema);
+    normalized.edited_action = {
+      name: edited.properties?.name?.const,
+      args: Object.fromEntries(
+        Object.entries(args.properties ?? {}).map(([k, v]) => [
+          starred(args, k),
+          v.type,
+        ])
+      ),
+    };
+  }
+  return normalized;
+}
+
+/** The validation issues behind a rejected resume, as `"code path"` strings. */
+async function issuesOf(resumed: Promise<unknown>) {
+  const error: unknown = await resumed.then(
+    () => expect.fail("expected the answer to be rejected"),
+    (e: Error) => e.cause ?? e
+  );
+  if (!(error instanceof z4.core.$ZodError)) {
+    throw error;
+  }
+  return error.issues.map((i) => `${i.code} ${i.path.join(".")}`.trim());
+}
+
+describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
+  it("pauses once per gated call and applies answers by ID", async () => {
+    const ran: Ran = [];
+    const agent = perCallAgent(ran, THREE_CALLS);
+    const paused = byName(await pause(agent));
+    expect(
+      Object.fromEntries(
+        Object.entries(paused).map(([name, i]) => [name, normalize(i)])
+      )
+    ).toEqual(EXPECTED_INTERRUPTS);
+    expect(paused.send_email.id).not.toBe(paused.delete_file.id);
+    expect(ran).toEqual([["read_file", { path: "y.txt" }]]); // the ungated call already ran
+    expect(
+      isToolApprovalInterrupt({ id: "i", value: { type: "tool_approval" } })
+    ).toBe(false);
+
+    const [pending] = approvals(
+      await resume(agent, {
+        [paused.send_email.id]: edit("send_email", { to: "bob" }),
+      })
+    );
+    expect(pending.value.name).toBe("delete_file");
+    const final = await resume(agent, {
+      [pending.id]: { type: "reject", message: "keep it" },
+    });
+
+    expect(ran).toEqual([
+      ["read_file", { path: "y.txt" }],
+      ["send_email", { to: "bob" }],
+    ]);
+    const messages = toolMessages(final);
+    expect(String(messages.call_email.content)).toContain(
+      'Executed instead: send_email with arguments {"to":"bob"}.'
+    );
+    expect([messages.call_delete.content, messages.call_delete.status]).toEqual(
+      ["keep it", "error"]
+    );
+    expect(approvals(final)).toEqual([]);
+  });
+
+  it("rejects each bad answer with one error at the problem, without saving it", async () => {
+    const ran: Ran = [];
+    const agent = perCallAgent(ran, THREE_CALLS.slice(0, 2), {
+      interruptOn: { ...INTERRUPT_ON, send_email: true },
+    });
+    const paused = byName(await pause(agent));
+    expect(Object.keys(branches(schemaOf(paused.send_email))).sort()).toEqual(
+      ["approve", "edit", "reject"] // `true` allows all three
+    );
+    const editEmail = (args: object, extra = {}) =>
+      edit("send_email", { ...args }, extra);
+    const badAnswers = [
+      [{ type: "edit" }, "invalid_type edited_action"],
+      [editEmail({}), "invalid_type edited_action.args.to"],
+      [editEmail({ to: 5 }), "invalid_type edited_action.args.to"],
+      [edit("delete_file", { to: "b" }), "invalid_value edited_action.name"],
+    ] as const;
+    for (const [answer, issue] of badAnswers) {
+      const resumed = resume(agent, { [paused.send_email.id]: answer });
+      expect(await issuesOf(resumed)).toEqual([issue]);
+    }
+    const notAllowed = edit("delete_file", { path: "y" }); // delete_file: approve/reject
+    const resumed = resume(agent, { [paused.delete_file.id]: notAllowed });
+    expect(await issuesOf(resumed)).toEqual(["invalid_union type"]);
+    expect(ran).toEqual([]);
+
+    await resume(agent, {
+      [paused.send_email.id]: { type: "approve" },
+      [paused.delete_file.id]: { type: "approve" },
+    });
+    expect(ran.map(([name]) => name).sort()).toEqual([
+      "delete_file",
+      "send_email",
+    ]);
+  });
+
+  it.each([
+    {
+      decision: "approve",
+      answer: { type: "approve" },
+      ranWith: [{ to: "alice" }],
+      status: "success",
+      content: "send_email done",
+    },
+    {
+      decision: "edit",
+      answer: edit("send_email", { to: "bob" }),
+      ranWith: [{ to: "bob" }],
+      status: "success",
+      content: "send_email done",
+    },
+    {
+      // The tool drops an arg it doesn't declare, as it would from the model
+      decision: "an edit with an undeclared arg",
+      answer: edit("send_email", { to: "bob", subject: "hi" }),
+      ranWith: [{ to: "bob" }],
+      status: "success",
+      content: "send_email done",
+    },
+    {
+      decision: "reject",
+      answer: { type: "reject", message: "not now" },
+      ranWith: [],
+      status: "error",
+      content: "not now",
+    },
+  ])("resumes with $decision", async ({ answer, ranWith, status, content }) => {
+    const ran: Ran = [];
+    const agent = perCallAgent(ran, EMAIL, {
+      interruptOn: { send_email: true },
+    });
+    const [intr] = await pause(agent);
+
+    const final = await resume(agent, { [intr.id]: answer });
+
+    const message = toolMessages(final).call_email;
+    expect([ran.map(([, args]) => args), message.status]).toEqual([
+      ranWith,
+      status,
+    ]);
+    expect(String(message.content).endsWith(content)).toBe(true);
+    // Only an edit tells the model that a reviewer replaced the call
+    expect(
+      String(message.content).includes("Executed instead: send_email")
+    ).toBe(answer.type === "edit");
+  });
+
+  it("checks edits against the input side of a Zod v4 tool schema", async () => {
+    const setup = async (schema: z4.ZodObject | z.AnyZodObject) => {
+      const ran: Ran = [];
+      const agent = perCallAgent(ran, EMAIL, {
+        interruptOn: { send_email: { allowedDecisions: ["approve", "edit"] } },
+        tools: [recordingTool(ran, "send_email", schema)],
+      });
+      const [intr] = await pause(agent);
+      const send = (args: object) =>
+        resume(agent, { [intr.id]: edit("send_email", { ...args }) });
+      return { ran, send, shown: editParts(schemaOf(intr))[1] };
+    };
+
+    // A transform is left to the tool: the schema can be shown, and it runs once
+    const shout = await setup(
+      z4.object({ to: z4.string().transform((to) => `${to}!`) })
+    );
+    expect(shout.shown.properties?.to?.type).toBe("string");
+    await shout.send({ to: "b" });
+    expect(shout.ran).toEqual([["send_email", { to: "b!" }]]);
+
+    // A loose schema keeps extra args
+    const loose = await setup(z4.looseObject({ to: z4.string() }));
+    await loose.send({ to: "b", cc: "c" });
+    expect(loose.ran).toEqual([["send_email", { to: "b", cc: "c" }]]);
+
+    // Other schemas take any object; the tool's own validation rejects it
+    const v3 = await setup(z.object({ to: z.string() }));
+    expect([v3.shown.type, v3.shown.properties]).toEqual(["object", undefined]);
+    const final = await v3.send({ to: 5 });
+    expect([v3.ran, toolMessages(final).call_email.status]).toEqual([
+      [],
+      "error",
+    ]);
+  });
+
+  it("skips the interrupt when `when` returns false", async () => {
+    const ran: Ran = [];
+    const when = (request: ToolCallRequest) =>
+      request.toolCall.args.to !== "alice";
+    const agent = perCallAgent(ran, EMAIL, {
+      interruptOn: { send_email: { allowedDecisions: ["approve"], when } },
+    });
+    expect(await pause(agent)).toEqual([]);
+    expect(ran).toEqual([["send_email", { to: "alice" }]]);
+  });
+
+  it("needs a tool call ID but accepts an empty one", async () => {
+    const ran: Ran = [];
+    const noId = { name: "send_email", args: { to: "alice" } };
+    await expect(pause(perCallAgent(ran, [noId]))).rejects.toThrow(
+      /`send_email` has no ID/
+    );
+
+    const agent = perCallAgent(ran, [{ ...noId, id: "" }]);
+    const [intr] = await pause(agent); // an empty ID still runs, as in batched mode
+    expect(intr.value.tool_call_id).toBe("");
+    await resume(agent, { [intr.id]: { type: "approve" } });
+    expect(ran).toEqual([["send_email", { to: "alice" }]]);
+  });
+
+  it("routes each answer to its own call when the same tool is called twice", async () => {
+    const ran: Ran = [];
+    const agent = perCallAgent(ran, [
+      { id: "e1", name: "send_email", args: { to: "alice" } },
+      { id: "e2", name: "send_email", args: { to: "alice" } },
+    ]);
+    const ids = Object.fromEntries(
+      (await pause(agent)).map((i) => [i.value.tool_call_id, i.id])
+    );
+    const final = await resume(agent, {
+      [ids.e1]: { type: "approve" },
+      [ids.e2]: { type: "reject" },
+    });
+    expect(ran).toEqual([["send_email", { to: "alice" }]]);
+    expect(toolMessages(final).e2.status).toBe("error");
+  });
+
+  it("applies each answer of a multi-answer resume on its own", async () => {
+    const ran: Ran = [];
+    const agent = perCallAgent(ran, THREE_CALLS.slice(0, 2));
+    const paused = byName(await pause(agent));
+    const valid = { [paused.delete_file.id]: { type: "approve" } };
+
+    await expect(
+      resume(agent, { ...valid, [paused.send_email.id]: { type: "edit" } })
+    ).rejects.toThrow(/edited_action/);
+    expect(ran).toEqual([["delete_file", { path: "x.txt" }]]); // the valid answer ran
+    // Whether its result was saved depends on timing, so resending the answers may
+    // run it again (see `interruptMode`); that isn't asserted here.
+  });
+
+  it("wraps retry and error-handling middleware listed after it", async () => {
+    let attempts = 0;
+    const flaky = tool(
+      async ({ to }) => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("mail server unavailable");
+        return `sent to ${to}`;
+      },
+      {
+        name: "send_email",
+        description: "Send an email.",
+        schema: z4.object({ to: z4.string() }),
+      }
+    );
+    const agent = perCallAgent([], EMAIL, {
+      tools: [flaky],
+      after: [toolRetryMiddleware({ initialDelayMs: 0 })],
+    });
+    const [intr] = await pause(agent);
+    // A bad answer still reaches the caller instead of being retried
+    expect(
+      await issuesOf(resume(agent, { [intr.id]: { type: "edit" } }))
+    ).toEqual(["invalid_type edited_action"]);
+    const final = await resume(agent, { [intr.id]: { type: "approve" } });
+    expect(approvals(final)).toEqual([]); // the retry didn't ask the reviewer again
+    expect([attempts, toolMessages(final).call_email.content]).toEqual([
+      2,
+      "sent to alice",
+    ]);
+
+    const caught = perCallAgent([], EMAIL, {
+      after: [toolErrorMiddleware({ onError: () => "x" })],
+    });
+    const [paused] = await pause(caught);
+    expect(
+      await issuesOf(resume(caught, { [paused.id]: { type: "edit" } }))
+    ).toEqual(["invalid_type edited_action"]);
+  });
+
+  it("adds the edit notice to a tool that returns a Command", async () => {
+    const setFlag = tool(
+      async ({ value }, { toolCall }) => {
+        const message = new ToolMessage({
+          content: `flag=${value}`,
+          tool_call_id: toolCall?.id ?? "",
+        });
+        return new Command({ update: { messages: [message] } });
+      },
+      {
+        name: "set_flag",
+        description: "Set a flag.",
+        schema: z4.object({ value: z4.string() }),
+      }
+    );
+    const call = { id: "f1", name: "set_flag", args: { value: "a" } };
+    const agent = perCallAgent([], [call], {
+      interruptOn: { set_flag: true },
+      tools: [setFlag],
+    });
+    const [intr] = await pause(agent);
+    const final = await resume(agent, {
+      [intr.id]: edit("set_flag", { value: "b" }),
+    });
+    expect(String(toolMessages(final).f1.content)).toMatch(
+      /^Note: .* Executed instead: set_flag with arguments {"value":"b"}\.[\s\S]*flag=b$/
+    );
+  });
+
+  it("checks its options, and leaves batched mode without wrapToolCall", () => {
+    expect(() =>
+      // @ts-expect-error JavaScript callers can pass anything
+      humanInTheLoopMiddleware({ interruptMode: "sometimes" })
+    ).toThrow(/interruptMode must be "batched" or "per_call", got "sometimes"/);
+    expect(() =>
+      humanInTheLoopMiddleware({
+        interruptOn: { send_email: { allowedDecisions: [] } },
+        interruptMode: "per_call",
+      })
+    ).toThrow(/allowedDecisions/);
+    const perCall = humanInTheLoopMiddleware({
+      interruptOn: { send_email: true },
+      interruptMode: "per_call",
+    });
+    expect(() =>
+      createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [] }),
+        tools: perCallTools([]),
+        version: "v1",
+        middleware: [perCall],
+      })
+    ).toThrow(/version "v2"/);
+    // A `wrapToolCall` would change how batched mode handles tool crashes
+    expect(
+      humanInTheLoopMiddleware({ interruptOn: INTERRUPT_ON }).wrapToolCall
+    ).toBeUndefined();
   });
 });
