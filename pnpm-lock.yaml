@@ -787,6 +787,9 @@ importers:
       '@langchain/cloudflare':
         specifier: workspace:*
         version: link:../providers/langchain-cloudflare
+      '@langchain/cohere':
+        specifier: workspace:*
+        version: link:../providers/langchain-cohere
       '@langchain/core':
         specifier: workspace:^
         version: link:../langchain-core
