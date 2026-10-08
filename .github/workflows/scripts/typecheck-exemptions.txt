@@ -26,7 +26,6 @@
 @langchain/ollama # #11813
 @langchain/openai # #11851
 @langchain/openrouter # #11808
-@langchain/perplexity # #11772
 @langchain/pinecone # #11816
 @langchain/redis # #11821
 @langchain/tavily # #11691
