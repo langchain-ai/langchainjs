@@ -2,11 +2,39 @@
 import { describe, test, expect } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
-import { JsonOutputKeyToolsParser } from "../json_output_tools_parsers.js";
+import {
+  JsonOutputKeyToolsParser,
+  JsonOutputToolsParser,
+} from "../json_output_tools_parsers.js";
 import { OutputParserException } from "../../base.js";
 import { AIMessage, AIMessageChunk } from "../../../messages/ai.js";
 import { RunnableLambda } from "../../../runnables/base.js";
 import { InteropZodType } from "../../../utils/types/zod.js";
+
+test("JSONOutputToolsParser preserves tool call chunks alongside content blocks", async () => {
+  const outputParser = new JsonOutputToolsParser({ returnId: true });
+  async function* input() {
+    yield new AIMessageChunk({
+      content: [{ type: "reasoning", reasoning: "Preparing a tool call" }],
+      tool_call_chunks: [
+        { index: 0, id: "test", name: "testing", args: '{"testKey":"test' },
+      ],
+    });
+    yield new AIMessageChunk({ content: [] });
+    yield new AIMessageChunk({
+      content: [{ type: "text", text: "Calling the tool" }],
+      tool_call_chunks: [{ index: 0, args: 'val"}' }],
+    });
+  }
+  const chunks = [];
+  for await (const chunk of outputParser.transform(input(), {})) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual([
+    [{ id: "test", type: "testing", args: { testKey: "test" } }],
+    [{ id: "test", type: "testing", args: { testKey: "testval" } }],
+  ]);
+});
 
 test("JSONOutputKeyToolsParser invoke", async () => {
   const outputParser = new JsonOutputKeyToolsParser({
