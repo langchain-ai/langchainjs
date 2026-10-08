@@ -1564,7 +1564,8 @@ describe("Simplified Tool Adapter Tests", () => {
           name: "ping",
           arguments: { message: "hello" },
           _meta: { trace_id: "t-1", span_id: "s-1" },
-        })
+        }),
+        expect.anything()
       );
     });
 
@@ -1581,7 +1582,7 @@ describe("Simplified Tool Adapter Tests", () => {
       await tools[0].invoke({ message: "hello" });
 
       const callArgs = mockClient.callTool.mock.calls[0][0];
-      expect(callArgs).not.toHaveProperty("_meta");
+      expect(callArgs._meta).toBeUndefined();
     });
 
     test("does not include _meta when beforeToolCall omits it", async () => {
@@ -1601,7 +1602,7 @@ describe("Simplified Tool Adapter Tests", () => {
       await tools[0].invoke({ message: "hello" });
 
       const callArgs = mockClient.callTool.mock.calls[0][0];
-      expect(callArgs).not.toHaveProperty("_meta");
+      expect(callArgs._meta).toBeUndefined();
     });
 
     test("derives _meta per call from the RunnableConfig passed to invoke", async () => {
@@ -1633,6 +1634,38 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(mockClient.callTool.mock.calls[1][0]).toEqual(
         expect.objectContaining({ _meta: { trace_id: "trace-b" } })
       );
+    });
+
+    test("merges hook _meta with the adapter's protocol keys, which take precedence", async () => {
+      mockClient.getProtocolEra.mockReturnValue("modern");
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({ tools: [pingTool] })
+      );
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "pong" }],
+      });
+
+      const tools = await loadMcpTools("mockServer", mockClient as Client, {
+        logLevel: "info",
+        elicitation: true,
+        beforeToolCall: () => ({
+          _meta: {
+            trace_id: "t-1",
+            "io.modelcontextprotocol/logLevel": "debug",
+            "io.modelcontextprotocol/clientCapabilities": {},
+          },
+        }),
+      });
+
+      await tools[0].invoke({ message: "hello" });
+
+      expect(mockClient.callTool.mock.calls[0][0]._meta).toEqual({
+        trace_id: "t-1",
+        "io.modelcontextprotocol/logLevel": "info",
+        "io.modelcontextprotocol/clientCapabilities": {
+          elicitation: { form: {}, url: {} },
+        },
+      });
     });
   });
 });
