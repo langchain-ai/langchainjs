@@ -2378,6 +2378,42 @@ test("Runnable streamEvents v2 should respect timeout option", async () => {
   expect(Date.now() - start).toBeLessThan(1500);
 });
 
+test("Runnable streamEvents v2 should not throw when the consumer breaks early", async () => {
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+    sleep: 5,
+  });
+  const chain = ChatPromptTemplate.fromTemplate("{question}").pipe(model);
+  const events: StreamEvent[] = [];
+  for await (const event of chain.streamEvents(
+    { question: "hello" },
+    { version: "v2" }
+  )) {
+    events.push(event);
+    if (event.event === "on_chat_model_stream") break;
+  }
+  expect(events.at(-1)?.data.chunk.content).toBe("a");
+});
+
+test("Runnable streamEvents v2 should stop the run when the consumer breaks early", async () => {
+  let produced = 0;
+  const lambda = RunnableLambda.from(async function* () {
+    for (let i = 0; i < 100; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      produced += 1;
+      yield `chunk-${i}`;
+    }
+  });
+  const events: StreamEvent[] = [];
+  for await (const event of lambda.streamEvents("hello", { version: "v2" })) {
+    events.push(event);
+    if (event.event === "on_chain_stream") break;
+  }
+  expect(events.at(-1)?.event).toBe("on_chain_stream");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  expect(produced).toBeLessThan(5);
+});
+
 test("streamEvents method handles errors", async () => {
   let caughtError: unknown;
   const model = new FakeListChatModel({
