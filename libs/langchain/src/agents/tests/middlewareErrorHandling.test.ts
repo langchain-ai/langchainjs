@@ -336,6 +336,21 @@ describe("Middleware Error Handling", () => {
       expect((wrapped as MiddlewareError).cause).toBe(error);
     });
 
+    it("should preserve custom properties and the original prototype", () => {
+      class CustomError extends Error {
+        code = "ECONNRESET";
+        $retryable = true;
+      }
+
+      const error = new CustomError("test error");
+      const wrapped = MiddlewareError.wrap(error, "testMiddleware");
+
+      expect(wrapped).toBeInstanceOf(CustomError);
+      expect((wrapped as CustomError).code).toBe("ECONNRESET");
+      expect((wrapped as CustomError).$retryable).toBe(true);
+      expect((wrapped as MiddlewareError).cause).toBe(error);
+    });
+
     it("should wrap non-Error values in MiddlewareError", () => {
       const wrapped = MiddlewareError.wrap("string error", "testMiddleware");
 
