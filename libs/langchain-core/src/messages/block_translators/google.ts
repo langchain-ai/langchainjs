@@ -36,7 +36,10 @@ function convertToV1FromChatGoogleMessage(
             for (let i = result.length - 1; i >= 0; i--) {
               const block = result[i] as Record<string, unknown>;
               if (block.type === "text" && !block.thought) {
-                block.thoughtSignature = originalBlock.thoughtSignature;
+                result[i] = {
+                  ...result[i],
+                  thoughtSignature: originalBlock.thoughtSignature,
+                };
                 return result;
               }
             }
