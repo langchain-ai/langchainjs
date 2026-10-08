@@ -35,4 +35,3 @@
 @langchain/typesafe # #11850
 @langchain/weaviate # #11692
 @langchain/xai # #11814
-create-langchain-integration # #11803
