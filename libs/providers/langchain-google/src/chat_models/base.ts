@@ -717,9 +717,17 @@ export abstract class BaseChatGoogle<
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
     const moduleName = this.constructor.name;
+
     const eventManager =
       runManager ??
-      (await CallbackManager.configure(undefined, this.callbacks));
+      CallbackManager._configureSync(
+        this.callbacks,
+        options.callbacks,
+        this.tags,
+        options.tags,
+        this.metadata,
+        options.metadata
+      );
 
     await eventManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
@@ -729,13 +737,24 @@ export abstract class BaseChatGoogle<
 
     let response: Response;
     try {
-      response = await this.apiClient.fetch(
-        new Request(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(body),
-          signal: options.signal,
-        })
+      response = await this.caller.callWithOptions(
+        { signal: options.signal, maxRetries: options.maxRetries },
+        async () => {
+          const nextResponse = await this.apiClient.fetch(
+            new Request(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+              signal: options.signal,
+            })
+          );
+
+          if (!nextResponse.ok) {
+            throw await RequestError.fromResponse(nextResponse);
+          }
+
+          return nextResponse;
+        }
       );
     } catch (error) {
       await eventManager?.handleCustomEvent(`google-response-${moduleName}`, {
@@ -744,17 +763,9 @@ export abstract class BaseChatGoogle<
       throw error;
     }
 
-    if (!response.ok) {
-      const error = await RequestError.fromResponse(response);
-      await eventManager?.handleCustomEvent(`google-response-${moduleName}`, {
-        error,
-      });
-      throw error;
-    }
-
     await eventManager?.handleCustomEvent(`google-response-${moduleName}`, {
       url: response.url,
-      headers: response.headers,
+      headers: Array.from(response.headers.entries()),
       status: response.status,
       statusText: response.statusText,
     });

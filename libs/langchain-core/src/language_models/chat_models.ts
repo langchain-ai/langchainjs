@@ -726,7 +726,8 @@ export abstract class BaseChatModel<
         const runManager = runManagers?.[0];
         const events = this._streamChatModelEvents(
           baseMessages[0],
-          parsedOptions
+          parsedOptions,
+          runManager
         );
         const forwardedEvents = {
           async *[Symbol.asyncIterator]() {
