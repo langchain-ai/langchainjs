@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "exit 0"
+    "build": "exit 0",
+    "typecheck": "tsc --noEmit --composite false --incremental false"
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.5",

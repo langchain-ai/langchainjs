@@ -5,7 +5,6 @@
 # `typecheck` script and delete its line here.
 @langchain/anthropic # #11818
 @langchain/aws # #11820
-@langchain/build # #11801
 @langchain/classic # #11858-#11867, then its enrolment PR
 @langchain/cloudflare # #11691
 @langchain/cohere # #11807
