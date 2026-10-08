@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.17
+
+### Patch Changes
+
+- [#11849](https://github.com/langchain-ai/langchainjs/pull/11849) [`b1d9c7a`](https://github.com/langchain-ai/langchainjs/commit/b1d9c7acf82b545c102c5178eb57b16f7a7f5710) Thanks [@KyleCodes](https://github.com/KyleCodes)! - Preserve runtime context in ambient runnable config across tool calls, nested runnables, and streaming.
+
 ## 1.2.16
 
 ### Patch Changes
