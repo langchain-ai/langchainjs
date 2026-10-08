@@ -1,7 +1,9 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { AIMessage } from "@langchain/core/messages";
+import { ChatModelStream } from "@langchain/core/language_models/stream";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { OpenAI as OpenAIClient } from "openai";
+import { convertMessagesToResponsesInput } from "../../converters/responses.js";
 import { convertOpenAIResponsesStream } from "../responses_stream_events.js";
 
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
@@ -671,5 +673,120 @@ describe("convertOpenAIResponsesStream", () => {
         { type: "text", text: "Hello" },
       ]);
     });
+  });
+
+  test("replays a streamed turn as native Responses input", async () => {
+    const summary = [
+      { type: "summary_text", text: "Search first." },
+      { type: "summary_text", text: "Then look it up." },
+    ];
+    const message = await new ChatModelStream(
+      convertOpenAIResponsesStream(
+        asAsyncIterable([
+          {
+            type: "response.created",
+            response: { id: "resp_rt", model: "gpt-5.4-mini" },
+          } as RawEvent,
+          summaryDelta(0, 0, "Search first."),
+          summaryDelta(0, 1, "Then look it up."),
+          reasoningDone(0, { id: "rs_1", encrypted_content: "enc_1", summary }),
+          itemDone(1, {
+            type: "web_search_call",
+            id: "ws_1",
+            status: "completed",
+            action: {
+              type: "search",
+              query: "weather berlin",
+              sources: [{ type: "url", url: "https://example.com" }],
+            },
+          }),
+          {
+            type: "response.output_text.delta",
+            delta: "Sunny.",
+            content_index: 0,
+            output_index: 2,
+          } as RawEvent,
+          {
+            type: "response.output_text.annotation.added",
+            output_index: 2,
+            content_index: 0,
+            annotation_index: 0,
+            item_id: "msg_1",
+            sequence_number: 0,
+            annotation: {
+              type: "url_citation",
+              url: "https://example.com",
+              title: "Weather",
+              start_index: 0,
+              end_index: 5,
+            },
+          } as unknown as RawEvent,
+          itemDone(3, {
+            type: "function_call",
+            id: "fc_1",
+            call_id: "call_1",
+            name: "lookup",
+            arguments: '{"city":"Berlin"}',
+          }),
+          completedResponse({ id: "resp_rt" }),
+        ])
+      )
+    );
+
+    const input = convertMessagesToResponsesInput({
+      messages: [
+        new HumanMessage("Weather in Berlin?"),
+        message,
+        new ToolMessage({ content: "18C", tool_call_id: "call_1" }),
+      ],
+      zdrEnabled: true,
+      model: "gpt-5.4-mini",
+    });
+
+    expect(input).toEqual([
+      { type: "message", role: "user", content: "Weather in Berlin?" },
+      {
+        type: "reasoning",
+        id: "rs_1",
+        summary,
+        encrypted_content: "enc_1",
+      },
+      {
+        type: "web_search_call",
+        id: "ws_1",
+        status: "completed",
+        action: { type: "search", query: "weather berlin" },
+      },
+      {
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "output_text",
+            text: "Sunny.",
+            annotations: [
+              {
+                type: "url_citation",
+                url: "https://example.com",
+                title: "Weather",
+                start_index: 0,
+                end_index: 5,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "function_call",
+        call_id: "call_1",
+        name: "lookup",
+        arguments: '{"city":"Berlin"}',
+      },
+      { type: "function_call_output", call_id: "call_1", output: "18C" },
+    ]);
+    const ids = input.flatMap((item) =>
+      "id" in item && item.id ? [item.id] : []
+    );
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
