@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
+import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import {
   convertConverseMessageToLangChainMessage,
@@ -131,11 +132,16 @@ describe("message output usage metadata conversion", () => {
           cacheReadInputTokens: 9,
           cacheWriteInputTokens: 6,
         },
+        metrics: { latencyMs: 0 },
       },
       { streamUsage: true }
     );
 
-    expect(result.message.usage_metadata).toEqual({
+    const { message } = result;
+    if (!AIMessageChunk.isInstance(message)) {
+      throw new Error("Message is not an AIMessageChunk");
+    }
+    expect(message.usage_metadata).toEqual({
       input_tokens: 35,
       output_tokens: 4,
       total_tokens: 39,

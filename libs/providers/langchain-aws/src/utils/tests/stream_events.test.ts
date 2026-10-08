@@ -1,9 +1,10 @@
 import { describe, test, expect } from "vitest";
+import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertBedrockConverseStream } from "../stream_events.js";
 
 async function collectEvents(
-  events: Record<string, unknown>[]
+  events: Bedrock.ConverseStreamOutput[]
 ): Promise<ChatModelStreamEvent[]> {
   const out: ChatModelStreamEvent[] = [];
   async function* source() {
@@ -52,6 +53,7 @@ describe("convertBedrockConverseStream", () => {
             outputTokens: 2,
             totalTokens: 7,
           },
+          metrics: { latencyMs: 0 },
         },
       },
     ]);
