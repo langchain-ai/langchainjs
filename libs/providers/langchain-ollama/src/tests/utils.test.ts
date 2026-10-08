@@ -1,9 +1,101 @@
 import { test, expect } from "vitest";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
 } from "../utils.js";
+
+const IMAGE_BASE64 = "iVBORw0KGgo=";
+const IMAGE_DATA_URL = `data:image/png;base64,${IMAGE_BASE64}`;
+const IMAGE_BYTES = new Uint8Array([
+  255, 137, 80, 78, 71, 13, 10, 26, 10, 255,
+]).subarray(1, 9);
+
+test.each([
+  {
+    name: "standard base64 image",
+    block: { type: "image", data: IMAGE_BASE64, mimeType: "image/png" },
+    image: IMAGE_BASE64,
+  },
+  {
+    name: "standard binary image with a non-zero byte offset",
+    block: { type: "image", data: IMAGE_BYTES, mimeType: "image/png" },
+    image: IMAGE_BYTES,
+  },
+  {
+    name: "standard data URL image",
+    block: { type: "image", url: IMAGE_DATA_URL },
+    image: IMAGE_BASE64,
+  },
+  {
+    name: "legacy standard base64 image",
+    block: {
+      type: "image",
+      source_type: "base64",
+      data: IMAGE_BASE64,
+      mime_type: "image/png",
+    },
+    image: IMAGE_BASE64,
+  },
+  {
+    name: "legacy standard data URL image",
+    block: { type: "image", source_type: "url", url: IMAGE_DATA_URL },
+    image: IMAGE_BASE64,
+  },
+  {
+    name: "image_url string",
+    block: { type: "image_url", image_url: IMAGE_DATA_URL },
+    image: IMAGE_BASE64,
+  },
+  {
+    name: "image_url object",
+    block: { type: "image_url", image_url: { url: IMAGE_DATA_URL } },
+    image: IMAGE_BASE64,
+  },
+])("convertToOllamaMessages accepts $name", ({ block, image }) => {
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "Describe this image." },
+      block,
+      { type: "text", text: "Be concise." },
+    ],
+  });
+
+  expect(convertToOllamaMessages([message])).toEqual([
+    { role: "user", content: "Describe this image." },
+    { role: "user", content: "", images: [image] },
+    { role: "user", content: "Be concise." },
+  ]);
+});
+
+test.each([
+  { type: "image", url: "https://example.com/image.png" },
+  { type: "image", url: "file:///image.png" },
+  { type: "image", fileId: "image-123" },
+  { type: "image", source_type: "id", id: "image-123" },
+  { type: "image" },
+  { type: "image", data: [137, 80, 78, 71] },
+])("convertToOllamaMessages rejects unsupported image sources: %j", (block) => {
+  expect(() =>
+    convertToOllamaMessages([new HumanMessage({ content: [block] })])
+  ).toThrow(/Ollama only supports images with base64 data or Uint8Array data/);
+});
+
+test("convertToOllamaMessages accepts images supplied through contentBlocks", () => {
+  const message = new HumanMessage({
+    contentBlocks: [
+      { type: "text", text: "Compare these images." },
+      { type: "image", data: IMAGE_BASE64, mimeType: "image/png" },
+      { type: "image", data: IMAGE_BYTES, mimeType: "image/png" },
+    ],
+  });
+
+  expect(convertToOllamaMessages([message])).toEqual([
+    { role: "user", content: "Compare these images." },
+    { role: "user", content: "", images: [IMAGE_BASE64] },
+    { role: "user", content: "", images: [IMAGE_BYTES] },
+  ]);
+});
 
 test("convertOllamaMessagesToLangChain separates thinking into reasoning_content", () => {
   const msg = {
