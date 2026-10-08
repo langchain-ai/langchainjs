@@ -28,7 +28,6 @@
 @langchain/openrouter # #11808
 @langchain/perplexity # #11772
 @langchain/pinecone # #11816
-@langchain/redis # #11821
 @langchain/tavily # #11691
 @langchain/test-helpers # deleted by #11802
 @langchain/together-ai # #11693

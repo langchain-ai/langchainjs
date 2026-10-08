@@ -2,10 +2,10 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type {
-  createClient,
-  createCluster,
+  RedisClientType,
+  RedisClusterType,
   RediSearchSchema,
-  SearchOptions,
+  FtSearchOptions,
 } from "redis";
 import { SCHEMA_VECTOR_FIELD_ALGORITHM, SCHEMA_FIELD_TYPE } from "redis";
 import {
@@ -40,9 +40,7 @@ export type {
  * metadata key, vector key, filter and ttl.
  */
 export interface RedisVectorStoreConfig {
-  redisClient:
-    | ReturnType<typeof createClient>
-    | ReturnType<typeof createCluster>;
+  redisClient: RedisClientType | RedisClusterType;
   indexName: string;
   indexOptions?: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
   createIndexOptions?: Omit<RedisVectorStoreIndexOptions, "PREFIX">; // PREFIX must be set with keyPrefix
@@ -95,9 +93,7 @@ export type RedisVectorStoreFilterType = string[] | string;
 export class RedisVectorStore extends VectorStore {
   declare FilterType: RedisVectorStoreFilterType;
 
-  private redisClient:
-    | ReturnType<typeof createClient>
-    | ReturnType<typeof createCluster>;
+  private redisClient: RedisClientType | RedisClusterType;
 
   indexName: string;
 
@@ -244,13 +240,9 @@ export class RedisVectorStore extends VectorStore {
     await this.createIndex(vectors[0].length);
 
     const info = await this.redisClient.ft.info(this.indexName);
-    const lastKeyCount =
-      parseInt(
-        info.numDocs ||
-          // @ts-expect-error - num_docs is not typed as not used by all redis connectors
-          info.num_docs,
-        10
-      ) || 0;
+    // node-redis 4 clients report the count as `numDocs`, later versions as `num_docs`
+    const numDocs = "numDocs" in info ? info.numDocs : info.num_docs;
+    const lastKeyCount = parseInt(String(numDocs), 10) || 0;
 
     // Validate all metadata against custom schema first
     if (this.customSchema) {
@@ -629,7 +621,7 @@ export class RedisVectorStore extends VectorStore {
     query: number[],
     k: number,
     filter?: RedisVectorStoreFilterType
-  ): [string, SearchOptions] {
+  ): [string, FtSearchOptions] {
     const vectorScoreField = "vector_score";
 
     let hybridFields = "*";
@@ -650,7 +642,7 @@ export class RedisVectorStore extends VectorStore {
       }
     }
 
-    const options: SearchOptions = {
+    const options: FtSearchOptions = {
       PARAMS: {
         vector: this.getFloat32Buffer(query),
       },
@@ -677,7 +669,7 @@ export class RedisVectorStore extends VectorStore {
     query: number[],
     k: number,
     metadataFilter?: Record<string, unknown>
-  ): [string, SearchOptions] {
+  ): [string, FtSearchOptions] {
     const vectorScoreField = "vector_score";
 
     let hybridFields = "*";
@@ -788,7 +780,7 @@ export class RedisVectorStore extends VectorStore {
       }
     }
 
-    const options: SearchOptions = {
+    const options: FtSearchOptions = {
       PARAMS: {
         vector: this.getFloat32Buffer(query),
       },
