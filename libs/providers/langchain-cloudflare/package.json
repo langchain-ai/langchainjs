@@ -17,6 +17,8 @@
     "build": "turbo build:compile --filter @langchain/cloudflare --output-logs new-only",
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --composite false --incremental false",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
     "test:standard:unit": "vitest run --mode standard-unit",
