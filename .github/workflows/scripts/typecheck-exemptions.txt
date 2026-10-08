@@ -13,7 +13,6 @@
 @langchain/exa # #11691
 @langchain/fireworks # #11693
 @langchain/google # #11855
-@langchain/google-common # #11853
 @langchain/google-gauth # #11692
 @langchain/google-genai # #11857
 @langchain/google-vertexai # #11781
