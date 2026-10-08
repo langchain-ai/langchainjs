@@ -11,7 +11,6 @@
 @langchain/cohere # #11807
 @langchain/deepseek # #11815
 @langchain/exa # #11691
-@langchain/fireworks # #11693
 @langchain/google # #11855
 @langchain/google-common # #11853
 @langchain/google-gauth # #11692
@@ -31,7 +30,6 @@
 @langchain/redis # #11821
 @langchain/tavily # #11691
 @langchain/test-helpers # deleted by #11802
-@langchain/together-ai # #11693
 @langchain/typesafe # #11850
 @langchain/weaviate # #11692
 @langchain/xai # #11814
