@@ -2,15 +2,15 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "gemini": {
-      "path": "src/openapi/gemini-openapi.json",
-    },
+      "path": "src/openapi/gemini-openapi.json"
+    }
   },
   "outputs": [
     {
       "path": "./src/chat_models/api-types.ts",
       "format": "typescript",
       "options": {
-        "widenEnums": true,
+        "widenEnums": true
       },
       "contents": [
         {
@@ -26,6 +26,7 @@
             "gemini:SpeakerVoiceConfig",
             "gemini:ImageConfig",
             "gemini:Part",
+            "gemini:SpeechMetadata",
             "gemini:VideoMetadata",
             "gemini:CodeExecutionResult",
             "gemini:ExecutableCode",
@@ -46,7 +47,13 @@
                 "gemini:ToolConfig",
                 // mapped as GeminiFunctionSchema
                 "gemini:Schema",
-              ],
+                "gemini:LatLng",
+                "gemini:Interval",
+                "gemini:SearchTypes",
+                "gemini:Type",
+                "gemini:WebSearch",
+                "gemini:ImageSearch"
+              ]
             },
             // in/out types
             "gemini:GenerateContentRequest",
@@ -73,9 +80,46 @@
             "gemini:UsageMetadata",
             "gemini:PromptFeedback",
             "gemini:GenerateContentResponse",
-          ],
-        },
-      ],
-    },
-  ],
+            "gemini:TranslationConfig",
+            "gemini:CitationSource",
+            "gemini:Image",
+            "gemini:PrebuiltVoiceConfig",
+            "gemini:FunctionResponse",
+            "gemini:V1mainMediaResolution",
+            "gemini:ServiceTier",
+            "gemini:Tool",
+            "gemini:GroundingChunkCustomMetadata",
+            "gemini:Blob",
+            "gemini:AudioTranscriptionConfig",
+            "gemini:ResponseFormatConfig",
+            "gemini:ToolResponse",
+            "gemini:SearchEntryPoint",
+            "gemini:Web",
+            "gemini:ModelStatus",
+            "gemini:AudioTranscription",
+            "gemini:FileData",
+            "gemini:ToolCall",
+            "gemini:Maps",
+            "gemini:FunctionCall",
+            "gemini:McpServer",
+            "gemini:AudioResponseFormat",
+            "gemini:TextResponseFormat",
+            "gemini:FunctionResponsePart",
+            "gemini:LanguageAuto",
+            "gemini:LanguageHints",
+            "gemini:V1mainToolType",
+            "gemini:ModelStage",
+            "gemini:PlaceAnswerSources",
+            "gemini:GroundingChunkStringList",
+            "gemini:ImageResponseFormat",
+            "gemini:WordInfo",
+            "gemini:GoogleSearchRetrieval",
+            "gemini:StreamableHttpTransport",
+            "gemini:FunctionResponseBlob",
+            "gemini:ReviewSnippet",
+            "gemini:DynamicRetrievalConfig"          ]
+        }
+      ]
+    }
+  ]
 }

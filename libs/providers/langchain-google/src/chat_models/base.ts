@@ -63,6 +63,7 @@ import {
   convertFieldsToSpeechConfig,
   convertFieldsToThinkingConfig,
   convertFieldsToServiceTier,
+  speechConfigVersion,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
 import { subtractUsageMetadata } from "../utils/metadata.js";
@@ -331,7 +332,7 @@ export abstract class BaseChatGoogle<
     } else if (this.platform === "gai") {
       return "v1beta";
     } else {
-      return "v1";
+      return "v1beta1";
     }
   }
 
@@ -508,7 +509,7 @@ export abstract class BaseChatGoogle<
           ? { enableEnhancedCivicAnswers: fields.enableEnhancedCivicAnswers }
           : {}),
         thinkingConfig: convertFieldsToThinkingConfig(this.model, fields),
-        speechConfig: convertFieldsToSpeechConfig(fields),
+        speechConfig: convertFieldsToSpeechConfig(this.model, fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
         ...(mediaResolution ? { mediaResolution } : {}),
       },
@@ -545,6 +546,34 @@ export abstract class BaseChatGoogle<
       ...this._customHeaders,
       ...options.customHeaders,
     };
+  }
+
+  getBody(messages: BaseMessage[], options: this["ParsedCallOptions"]) {
+    const systemInstruction =
+      convertMessagesToGeminiSystemInstruction(messages);
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const speechVersion = speechConfigVersion(this.model);
+    if (speechVersion < 2) {
+      // Pre gemini-3.8, "speechMetadata" isn't valid
+      const len = contents?.[0]?.parts?.length || 0;
+      for (let i = 0; i < len; i++) {
+        if (
+          contents?.[0]?.parts?.[i] &&
+          "speechMetadata" in contents[0].parts[i]
+        ) {
+          delete contents[0].parts[i].speechMetadata;
+        }
+      }
+    }
+
+    const body = {
+      ...this.invocationParams(options),
+      systemInstruction,
+      contents,
+    };
+
+    return body;
   }
 
   async _generate(
@@ -590,11 +619,7 @@ export abstract class BaseChatGoogle<
 
     const url = await this.buildUrl();
     const headers = this.getHeaders(options);
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.getBody(messages, options);
 
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
@@ -705,11 +730,7 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.getBody(messages, options);
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
@@ -779,11 +800,7 @@ export abstract class BaseChatGoogle<
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamUsage: boolean = this.streamUsage ?? true;
 
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.getBody(messages, options);
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
