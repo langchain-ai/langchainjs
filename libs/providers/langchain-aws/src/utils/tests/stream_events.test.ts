@@ -43,6 +43,44 @@ describe("convertBedrockConverseStream", () => {
     });
   });
 
+  test("preserves reasoning signatures", async () => {
+    const events = await collectEvents([
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: { reasoningContent: { text: "Let me check. " } },
+        },
+      },
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: { reasoningContent: { signature: "sig-abc-123" } },
+        },
+      },
+    ]);
+
+    expect(
+      events.find(
+        (event) =>
+          event.event === "content-block-delta" &&
+          event.delta.type === "block-delta"
+      )
+    ).toMatchObject({
+      delta: {
+        fields: { type: "reasoning", signature: "sig-abc-123" },
+      },
+    });
+    expect(
+      events.find((event) => event.event === "content-block-finish")
+    ).toMatchObject({
+      content: {
+        type: "reasoning",
+        reasoning: "Let me check. ",
+        signature: "sig-abc-123",
+      },
+    });
+  });
+
   test("usage metadata", async () => {
     const events = await collectEvents([
       {
