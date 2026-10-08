@@ -88,6 +88,7 @@ describe("toolErrorMiddleware", () => {
     await expect(
       agent.invoke({ messages: [new HumanMessage("Use the failing tool")] })
     ).rejects.toBe(originalError);
+    expect(onError).toHaveBeenCalledOnce();
     expect(onError.mock.calls[0][0]).toBe(originalError);
     expect(originalError).toBeInstanceOf(SecretToolError);
   });
@@ -189,9 +190,15 @@ describe("toolErrorMiddleware", () => {
       middleware: [toolErrorMiddleware({ tools: ["other_tool"], onError })],
     });
 
-    await expect(
-      agent.invoke({ messages: [new HumanMessage("Use the failing tool")] })
-    ).rejects.toThrow("secret detail: x");
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Use the failing tool")],
+    });
+    expect(result.messages.filter(ToolMessage.isInstance)[0]).toMatchObject({
+      content: "SecretToolError: secret detail: x\n Please fix your mistakes.",
+      status: "error",
+      name: "failing_tool",
+      tool_call_id: "call_1",
+    });
     expect(onError).not.toHaveBeenCalled();
   });
 

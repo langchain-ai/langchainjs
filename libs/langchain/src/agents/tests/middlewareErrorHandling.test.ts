@@ -7,12 +7,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { GraphInterrupt, MemorySaver } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 import { MiddlewareError } from "../errors.js";
+import { toolRetryMiddleware } from "../middleware/toolRetry.js";
 
 describe("Middleware Error Handling", () => {
   describe("GraphInterrupt propagation with checkpointer", () => {
@@ -202,38 +203,67 @@ describe("Middleware Error Handling", () => {
       expect(result.__interrupt__?.[0].value).toBe("subagent-interrupt");
     });
 
-    it("should preserve errors from the downstream handler", async () => {
-      const originalError = new Error("regular error");
-      const errorTool = tool(
-        async () => {
-          throw originalError;
-        },
-        {
+    it.each([1, 2, "filtered retry"])(
+      "recovers tool errors through %s middleware layers",
+      async (layers) => {
+        const originalError = new Error("regular error");
+        const errorTool = tool(
+          async () => {
+            throw originalError;
+          },
+          {
+            name: "error_tool",
+            description: "A tool that throws a regular error",
+            schema: z.object({}),
+          }
+        );
+
+        const observed: unknown[] = [];
+        const middleware = createMiddleware({
+          name: "testMiddleware",
+          wrapToolCall: async (request, handler) => {
+            try {
+              return await handler(request);
+            } catch (error) {
+              observed.push(error);
+              throw error;
+            }
+          },
+        });
+
+        const model = new FakeToolCallingModel({
+          toolCalls: [[{ name: "error_tool", args: {}, id: "call_1" }]],
+        });
+
+        const agent = createAgent({
+          model,
+          tools: [errorTool],
+          middleware:
+            layers === "filtered retry"
+              ? [toolRetryMiddleware({ tools: ["other"], onFailure: "error" })]
+              : Array.from({ length: layers as number }, (_, index) => ({
+                  ...middleware,
+                  name: `passthrough${index}`,
+                })),
+        });
+
+        const result = await agent.invoke({
+          messages: [new HumanMessage("test")],
+        });
+        const toolMessages = result.messages.filter(ToolMessage.isInstance);
+        expect(toolMessages).toHaveLength(1);
+        expect(toolMessages[0]).toMatchObject({
+          content: "Error: regular error\n Please fix your mistakes.",
           name: "error_tool",
-          description: "A tool that throws a regular error",
-          schema: z.object({}),
+          tool_call_id: "call_1",
+          status: "error",
+        });
+        if (typeof layers === "number") {
+          expect(observed).toHaveLength(layers);
+          expect(observed.every((error) => error === originalError)).toBe(true);
         }
-      );
-
-      const middleware = createMiddleware({
-        name: "testMiddleware",
-        wrapToolCall: async (request, handler) => handler(request),
-      });
-
-      const model = new FakeToolCallingModel({
-        toolCalls: [[{ name: "error_tool", args: {}, id: "call_1" }]],
-      });
-
-      const agent = createAgent({
-        model,
-        tools: [errorTool],
-        middleware: [middleware],
-      });
-
-      await expect(
-        agent.invoke({ messages: [new HumanMessage("test")] })
-      ).rejects.toBe(originalError);
-    });
+      }
+    );
 
     it("should wrap errors thrown by middleware", async () => {
       const middlewareError = new Error("middleware failed");
