@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { AIMessage } from "@langchain/core/messages";
 import { OpenAI as OpenAIClient } from "openai";
 import { convertOpenAIResponsesStream } from "../responses_stream_events.js";
 
@@ -70,6 +71,29 @@ function summaryDelta(
     output_index: outputIndex,
   } as RawEvent;
 }
+
+function itemDone(
+  outputIndex: number,
+  item: Record<string, unknown>
+): RawEvent {
+  return {
+    type: "response.output_item.done",
+    output_index: outputIndex,
+    sequence_number: 0,
+    item,
+  } as unknown as RawEvent;
+}
+
+function translatorBlocks(item: Record<string, unknown>) {
+  return new AIMessage({
+    content: [],
+    additional_kwargs: { tool_outputs: [item] },
+    response_metadata: { model_provider: "openai" },
+  }).contentBlocks;
+}
+
+const finishes = (events: ChatModelStreamEvent[]) =>
+  events.filter((e) => e.event === "content-block-finish");
 
 describe("convertOpenAIResponsesStream", () => {
   test("text-only lifecycle", async () => {
@@ -426,5 +450,144 @@ describe("convertOpenAIResponsesStream", () => {
       out.push(event);
     }
     expect(out.filter((e) => e.event === "usage")).toHaveLength(0);
+  });
+
+  describe("server tool and other output items", () => {
+    const webSearchCall = {
+      type: "web_search_call",
+      id: "ws_1",
+      status: "completed",
+      action: {
+        type: "search",
+        query: "weather berlin",
+        sources: [{ type: "url", url: "https://example.com" }],
+      },
+    };
+
+    test.each([
+      ["web_search_call", webSearchCall],
+      [
+        "file_search_call",
+        {
+          type: "file_search_call",
+          id: "fs_1",
+          status: "completed",
+          queries: ["contract terms"],
+          results: [{ file_id: "file_1", filename: "a.pdf", text: "terms" }],
+        },
+      ],
+      [
+        "tool_search_call",
+        {
+          type: "tool_search_call",
+          id: "ts_1",
+          call_id: "call_ts_1",
+          status: "completed",
+          execution: "server",
+          arguments: { query: "weather" },
+        },
+      ],
+      [
+        "tool_search_output",
+        {
+          type: "tool_search_output",
+          id: "tso_1",
+          status: "completed",
+          execution: "server",
+          tools: [],
+        },
+      ],
+    ])("%s yields the translator's blocks", async (_type, item) => {
+      const events = await collectEvents([
+        itemDone(0, item),
+        completedResponse(),
+      ]);
+
+      const expected = translatorBlocks(item);
+      expect(expected.length).toBeGreaterThan(0);
+      expect(
+        events
+          .filter((e) => e.event === "content-block-start")
+          .map((e) => e.content)
+      ).toEqual(expected);
+      expect(finishes(events).map((e) => e.content)).toEqual(expected);
+    });
+
+    test("code_interpreter_call becomes non_standard without created_by", async () => {
+      const item = {
+        type: "code_interpreter_call",
+        id: "ci_1",
+        status: "completed",
+        code: "print(1)",
+        container_id: "cntr_1",
+        outputs: [{ type: "logs", logs: "1" }],
+        created_by: "user_1",
+      };
+      const events = await collectEvents([
+        itemDone(0, item),
+        completedResponse(),
+      ]);
+
+      const { created_by: _createdBy, ...value } = item;
+      expect(finishes(events)).toEqual([
+        {
+          event: "content-block-finish",
+          index: 0,
+          content: { type: "non_standard", value },
+        },
+      ]);
+    });
+
+    test("unknown item type becomes non_standard", async () => {
+      const item = { type: "future_call", id: "fut_1", created_by: "user_1" };
+      const events = await collectEvents([
+        itemDone(0, item),
+        completedResponse(),
+      ]);
+
+      expect(finishes(events).map((e) => e.content)).toEqual([
+        { type: "non_standard", value: { type: "future_call", id: "fut_1" } },
+      ]);
+    });
+
+    test("keeps block indexes in output order", async () => {
+      const events = await collectEvents([
+        reasoningDone(0, { id: "rs_1", encrypted_content: "enc_1" }),
+        itemDone(1, webSearchCall),
+        {
+          type: "response.output_text.delta",
+          delta: "Sunny",
+          content_index: 0,
+          output_index: 2,
+        } as RawEvent,
+        itemDone(2, {
+          type: "message",
+          id: "msg_1",
+          role: "assistant",
+          status: "completed",
+          content: [{ type: "output_text", text: "Sunny", annotations: [] }],
+        }),
+        itemDone(3, {
+          type: "function_call",
+          id: "fc_1",
+          call_id: "call_1",
+          name: "lookup",
+          arguments: "{}",
+        }),
+        completedResponse(),
+      ]);
+
+      expect(
+        events
+          .filter((e) => e.event === "content-block-start")
+          .map((e) => [e.index, e.content.type])
+      ).toEqual([
+        [0, "reasoning"],
+        [1, "server_tool_call"],
+        [2, "server_tool_call_result"],
+        [3, "text"],
+        [4, "tool_call_chunk"],
+      ]);
+    });
   });
 });
