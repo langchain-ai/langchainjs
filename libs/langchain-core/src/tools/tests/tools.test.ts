@@ -5,6 +5,7 @@ import { z as z4 } from "zod/v4";
 import {
   DynamicStructuredTool,
   DynamicTool,
+  StructuredTool,
   StructuredToolParams,
   ToolInputParsingException,
   isStructuredToolParams,
@@ -903,5 +904,83 @@ describe("Generator tools (async function*)", () => {
     );
 
     expect(generatorCleanupRan).toBe(true);
+  });
+});
+
+describe("Tool callbacks on input the schema rejects", () => {
+  const zodTool = tool((input) => JSON.stringify(input), {
+    name: "echo",
+    description: "Echoes its input.",
+    schema: z.object({ a: z.number() }),
+  });
+
+  const jsonSchemaTool = tool((input) => JSON.stringify(input), {
+    name: "echo",
+    description: "Echoes its input.",
+    schema: {
+      type: "object",
+      properties: { a: { type: "number" } },
+      required: ["a"],
+    },
+  });
+
+  const rejectedCall: ToolCall = {
+    id: "call_1",
+    name: "echo",
+    args: { a: "one" },
+    type: "tool_call",
+  };
+
+  test.each<[string, StructuredTool]>([
+    ["a Zod", zodTool],
+    ["a JSON", jsonSchemaTool],
+  ])(
+    "reports the rejection of %s schema to handleToolStart and handleToolError",
+    async (_label, testTool) => {
+      const events: string[] = [];
+
+      await expect(
+        testTool.invoke(rejectedCall, {
+          callbacks: [
+            {
+              handleToolStart() {
+                events.push("start");
+              },
+              handleToolEnd() {
+                events.push("end");
+              },
+              handleToolError(err: unknown) {
+                expect(err).toBeInstanceOf(ToolInputParsingException);
+                events.push("error");
+              },
+            },
+          ],
+        })
+      ).rejects.toThrow(ToolInputParsingException);
+
+      await awaitAllCallbacks();
+
+      expect(events).toEqual(["start", "error"]);
+    }
+  );
+
+  test("records the rejected call as a failed tool run", async () => {
+    const tracer = new FakeTracer();
+
+    await expect(
+      zodTool.invoke(rejectedCall, { callbacks: [tracer] })
+    ).rejects.toThrow(ToolInputParsingException);
+
+    await awaitAllCallbacks();
+
+    expect(tracer.runs).toHaveLength(1);
+    expect(tracer.runs[0]).toMatchObject({
+      name: "echo",
+      run_type: "tool",
+      inputs: { a: "one" },
+      error: expect.stringContaining(
+        "Received tool input did not match expected schema"
+      ),
+    });
   });
 });
