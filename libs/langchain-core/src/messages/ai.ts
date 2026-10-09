@@ -337,10 +337,7 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
-      // Don't collapse tool call chunks here: it re-parses all accumulated
-      // tool args, and constructing a chunk per streamed delta (via `concat`)
-      // would make stream aggregation O(n²). The `tool_calls` /
-      // `invalid_tool_calls` getters collapse lazily on first read.
+      // Collapsed lazily on first read; see _defineLazyToolCallGetters.
       initParams = {
         ...fields,
         usage_metadata:
@@ -360,7 +357,9 @@ export class AIMessageChunk<
       fields.tool_call_chunks !== undefined &&
       fields.tool_call_chunks.length > 0
     ) {
-      this._defineLazyToolCallGetters(fields.tool_call_chunks);
+      this._defineLazyToolCallGetters(
+        fields.tool_call_chunks.map((chunk) => ({ ...chunk }))
+      );
     } else {
       this.tool_calls = initParams.tool_calls ?? this.tool_calls;
       this.invalid_tool_calls =
@@ -370,17 +369,9 @@ export class AIMessageChunk<
   }
 
   /**
-   * Defers `collapseToolCallChunks` until `tool_calls` or
-   * `invalid_tool_calls` is actually read. Collapsing re-parses all
-   * accumulated tool args, so doing it eagerly in the constructor makes
-   * streaming aggregation (one `concat` per delta) O(n²) over the stream.
-   *
-   * Implemented as own-property getters (rather than prototype accessors) so
-   * the instance keeps the same own enumerable properties as before: helpers
-   * like `_chunkToMsg` snapshot messages with `Object.entries`, which invokes
-   * the getters and sees the collapsed values. The getters are also installed
-   * on `lc_kwargs` so serialization matches the eager behavior, where the
-   * constructor stored the collapsed values in its kwargs.
+   * Lazily collapses tool_call_chunks into tool_calls / invalid_tool_calls on first read.
+   * Own-property getters (not prototype accessors) so spread / Object.entries still see
+   * the values; mirrored on lc_kwargs so serialized output matches the eager behavior.
    */
   private _defineLazyToolCallGetters(toolCallChunks: ToolCallChunk[]) {
     let collapsed: ReturnType<typeof collapseToolCallChunks> | undefined;
@@ -510,10 +501,7 @@ export class AIMessageChunk<
         combinedFields.tool_call_chunks = rawToolCalls as ToolCallChunk[];
       }
     }
-    // Only merge `tool_calls` when there are no tool call chunks: when chunks
-    // are present the constructor derives `tool_calls` from them anyway, and
-    // reading `this.tool_calls` here would force a collapse per concat,
-    // making streaming aggregation O(n²).
+    // Skip when chunks exist: the constructor derives tool_calls, and reading here forces a collapse.
     if (
       (combinedFields.tool_call_chunks === undefined ||
         combinedFields.tool_call_chunks.length === 0) &&
