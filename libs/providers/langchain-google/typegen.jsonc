@@ -2,7 +2,7 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "gemini": {
-      "path": "src/openapi/gemini-openapi.json"
+      "path": "src/openapi/generate-content-openapi.json"
     }
   },
   "outputs": [
