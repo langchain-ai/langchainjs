@@ -148,6 +148,11 @@ export async function* convertChunksToEvents(
     number,
     { type: string; accumulated: ContentBlock }
   >();
+  // Map from a tool_call chunk's provider index/id to its remapped content
+  // block index. Provider tool_call indices are scoped to the tool_call list,
+  // so we can't reuse them as the content-block index (would collide with
+  // text at the same indices). See #11074.
+  const toolCallBlockIndexes = new Map<string, number>();
   let messageStarted = false;
   let lastUsage:
     | { input_tokens: number; output_tokens: number; total_tokens: number }
@@ -238,11 +243,26 @@ export async function* convertChunksToEvents(
       msg.tool_call_chunks &&
       msg.tool_call_chunks.length > 0
     ) {
+      // Provider tool-call indexes are scoped to the tool-call list, not to
+      // all content blocks. Without remapping, a streamed tool_call with
+      // index 0 collides with the text block (also index 0) and the second
+      // tool_call's index 1 collides with whatever happens to be at index 1.
+      // Remap tool_call chunks to fresh block indices so text and tool_calls
+      // share no block index. #11074
       for (const toolChunk of msg.tool_call_chunks) {
-        const blockIndex =
+        const toolCallKey =
           typeof toolChunk.index === "number"
-            ? toolChunk.index
-            : activeBlocks.size;
+            ? `index:${toolChunk.index}`
+            : typeof toolChunk.id === "string"
+              ? `id:${toolChunk.id}`
+              : `next:${toolCallBlockIndexes.size}`;
+
+        let blockIndex = toolCallBlockIndexes.get(toolCallKey);
+
+        if (blockIndex === undefined) {
+          blockIndex = nextBlockIndex(activeBlocks);
+          toolCallBlockIndexes.set(toolCallKey, blockIndex);
+        }
 
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock = {
