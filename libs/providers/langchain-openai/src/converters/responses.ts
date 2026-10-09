@@ -23,6 +23,10 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages/tool";
 import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
+import {
+  toResponseInputItems,
+  type ResponseInputItemLike,
+} from "openai/lib/responses/ResponseInputItems.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
 import {
   isComputerToolCall,
@@ -31,11 +35,14 @@ import {
   parseCustomToolCall,
 } from "../utils/tools.js";
 import {
+  applyPromptCacheBreakpoint,
+  assertAdditionalToolsPlacement,
   getFilenameFromMetadata,
   getRequiredFilenameFromMetadata,
   iife,
   isReasoningModel,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
@@ -206,6 +213,46 @@ export type ResponsesParseInvoke = ExcludeController<
 >;
 
 export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
+
+/**
+ * Provider-native blocks that the Responses API takes as top-level input items
+ * rather than as message content, keyed by block type. Each is hoisted out of
+ * the message carrying it, to an item immediately preceding that message.
+ */
+const HOISTED_INPUT_ITEMS = new Map<
+  string,
+  (block: ContentBlock) => ResponsesInputItem
+>([
+  [
+    "mcp_approval_response",
+    (block) => ({
+      type: "mcp_approval_response",
+      approval_request_id: block.approval_request_id as string,
+      approve: block.approve as boolean,
+    }),
+  ],
+  [
+    "configuration_update",
+    (block) =>
+      ({
+        type: "configuration_update",
+        reasoning: block.reasoning,
+      }) as unknown as ResponsesInputItem,
+  ],
+  // Sent verbatim: the tool definitions are the caller's to shape.
+  ["additional_tools", (block) => block as unknown as ResponsesInputItem],
+]);
+
+/**
+ * Returns the top-level input item a content block is hoisted to, in either
+ * spelling, or `undefined` if the block is not one the Responses API hoists.
+ */
+function toHoistedInputItem(
+  block: ContentBlock
+): ResponsesInputItem | undefined {
+  const payload = unwrapNonStandard(block);
+  return HOISTED_INPUT_ITEMS.get(payload.type)?.(payload);
+}
 
 /**
  * Converts OpenAI Responses API usage statistics to LangChain's UsageMetadata format.
@@ -732,6 +779,16 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     };
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "reasoning" &&
+    event.item.encrypted_content
+  ) {
+    // Encrypted reasoning content is only complete on the done event. Emit it
+    // separately so it merges with the id and summary from output_item.added.
+    additional_kwargs.reasoning = {
+      encrypted_content: event.item.encrypted_content,
+    };
+  } else if (
+    event.type === "response.output_item.done" &&
     event.item.type === "computer_call"
   ) {
     // Handle computer_call as a tool call so ToolNode can process it
@@ -941,6 +998,71 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   });
 };
 
+function resolveImageItem(
+  block: ContentBlock.Multimodal.Image
+): OpenAIClient.Responses.ResponseInputImage | undefined {
+  const detail = iife(() => {
+    const raw = block.metadata?.detail;
+    if (raw === "low" || raw === "high" || raw === "auto") {
+      return raw;
+    }
+    return "auto";
+  });
+  if (block.fileId) {
+    return {
+      type: "input_image",
+      detail,
+      file_id: block.fileId,
+    };
+  }
+  if (block.url) {
+    return {
+      type: "input_image",
+      detail,
+      image_url: block.url,
+    };
+  }
+  if (block.data) {
+    const base64Data =
+      typeof block.data === "string"
+        ? block.data
+        : Buffer.from(block.data).toString("base64");
+    const mimeType = block.mimeType ?? "image/png";
+    return {
+      type: "input_image",
+      detail,
+      image_url: `data:${mimeType};base64,${base64Data}`,
+    };
+  }
+  return undefined;
+}
+
+type ToolOutputItem =
+  OpenAIClient.Responses.ResponseFunctionCallOutputItemList[number];
+
+/** Converts tool content with images into a native `function_call_output` list. */
+function convertToolContentToResponsesOutput(
+  message: ToolMessage
+): OpenAIClient.Responses.ResponseFunctionCallOutputItemList | undefined {
+  if (!Array.isArray(message.content)) {
+    return undefined;
+  }
+  const blocks = message.contentBlocks;
+  if (!blocks.some((block) => block.type === "image")) {
+    return undefined;
+  }
+  return blocks.map((block): ToolOutputItem => {
+    if (block.type === "text") {
+      return { type: "input_text", text: block.text };
+    }
+    if (block.type === "image") {
+      const image = resolveImageItem(block);
+      if (image) return image;
+    }
+    return { type: "input_text", text: JSON.stringify(block) };
+  });
+}
+
 /**
  * Converts a single LangChain BaseMessage to OpenAI Responses API input format.
  *
@@ -984,6 +1106,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
   BaseMessage,
   OpenAIClient.Responses.ResponseInputItem[]
 > = (message) => {
+  assertAdditionalToolsPlacement(message, "responses");
   const isResponsesMessage =
     AIMessage.isInstance(message) &&
     message.response_metadata?.model_provider === "openai";
@@ -1009,6 +1132,14 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     // Text parts must match the message role: assistant content uses
     // `output_text` (the Responses API rejects `input_text` for assistant
     // messages), every other role uses `input_text`.
+    const withBreakpoint = <T extends object>(
+      block: Record<string, unknown>,
+      part: T
+    ): T =>
+      messageRole === "assistant"
+        ? part
+        : applyPromptCacheBreakpoint(block, part);
+
     const makeTextPart = (
       text: string
     ): ResponseInputMessageContentList[number] =>
@@ -1077,45 +1208,6 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } catch {
         return "{}";
       }
-    };
-
-    const resolveImageItem = (
-      block: ContentBlock.Multimodal.Image
-    ): OpenAIClient.Responses.ResponseInputImage | undefined => {
-      const detail = iife(() => {
-        const raw = block.metadata?.detail;
-        if (raw === "low" || raw === "high" || raw === "auto") {
-          return raw;
-        }
-        return "auto";
-      });
-      if (block.fileId) {
-        return {
-          type: "input_image",
-          detail,
-          file_id: block.fileId,
-        };
-      }
-      if (block.url) {
-        return {
-          type: "input_image",
-          detail,
-          image_url: block.url,
-        };
-      }
-      if (block.data) {
-        const base64Data =
-          typeof block.data === "string"
-            ? block.data
-            : Buffer.from(block.data).toString("base64");
-        const mimeType = block.mimeType ?? "image/png";
-        return {
-          type: "input_image",
-          detail,
-          image_url: `data:${mimeType};base64,${base64Data}`,
-        };
-      }
-      return undefined;
     };
 
     const resolveFileItem = (
@@ -1188,10 +1280,18 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       // a populated `content` array on input (`400 Invalid 'input[n].content':
       // array too long. Expected an array with maximum length 0`). The reasoning
       // text is already represented in `summary`, so we do not forward `content`.
+      //
+      // `encrypted_content` is required to replay this item under Zero Data
+      // Retention, so forward it when the block carries one.
+      const encryptedContent = (block as { encrypted_content?: unknown })
+        .encrypted_content;
       return {
         type: "reasoning",
         ...(block.id ? { id: block.id } : {}),
         summary,
+        ...(typeof encryptedContent === "string"
+          ? { encrypted_content: encryptedContent }
+          : {}),
       } as OpenAIClient.Responses.ResponseReasoningItem;
     };
 
@@ -1222,7 +1322,22 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       };
     };
 
+    // Hoisted items are emitted ahead of the message rather than at their
+    // position within it, matching the non-v1 branch, so a message produces the
+    // same input however its content was written. Assistant content is replayed
+    // model output and is never hoisted.
+    const contentBlocks: ContentBlock.Standard[] = [];
     for (const block of message.contentBlocks) {
+      const hoisted =
+        messageRole === "assistant" ? undefined : toHoistedInputItem(block);
+      if (hoisted) {
+        yield hoisted;
+      } else {
+        contentBlocks.push(block);
+      }
+    }
+
+    for (const block of contentBlocks) {
       if (block.type === "text") {
         const phase = iife(() => {
           if (
@@ -1237,7 +1352,10 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           return block.extras
             .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
         });
-        pushMessageContent([makeTextPart(block.text)], phase);
+        pushMessageContent(
+          [withBreakpoint(block, makeTextPart(block.text))],
+          phase
+        );
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1291,26 +1409,27 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } else if (block.type === "file") {
         const fileItem = resolveFileItem(block);
         if (fileItem) {
-          pushMessageContent([fileItem]);
+          pushMessageContent([withBreakpoint(block, fileItem)]);
         }
       } else if (block.type === "image") {
         const imageItem = resolveImageItem(block);
         if (imageItem) {
-          pushMessageContent([imageItem]);
+          pushMessageContent([withBreakpoint(block, imageItem)]);
         }
       } else if (block.type === "video") {
         const videoItem = resolveFileItem(block);
         if (videoItem) {
-          pushMessageContent([videoItem]);
+          pushMessageContent([withBreakpoint(block, videoItem)]);
         }
       } else if (block.type === "text-plain") {
         if (block.text) {
-          pushMessageContent([makeTextPart(block.text)]);
+          pushMessageContent([withBreakpoint(block, makeTextPart(block.text))]);
         }
       } else if (block.type === "non_standard" && isResponsesMessage) {
         yield* flushMessage();
         yield block.value as ResponsesInputItem;
       }
+      // Consider warning about the dropped block once we have a proper logging solution
     }
     yield* flushMessage();
 
@@ -1383,6 +1502,7 @@ export const convertMessagesToResponsesInput: Converter<
       if (responseMetadata?.output_version === "v1") {
         return convertStandardContentMessageToResponsesInput(lcMsg);
       }
+      assertAdditionalToolsPlacement(lcMsg, "responses");
 
       const additional_kwargs =
         lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
@@ -1488,28 +1608,44 @@ export const convertMessagesToResponsesInput: Converter<
                 item.type === "input_text")
           );
 
+        const attachmentOutput = isProviderNativeContent
+          ? undefined
+          : convertToolContentToResponsesOutput(toolMessage);
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
           output: isProviderNativeContent
             ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
-            : typeof toolMessage.content !== "string"
-              ? JSON.stringify(toolMessage.content)
-              : toolMessage.content,
+            : (attachmentOutput ??
+              (typeof toolMessage.content !== "string"
+                ? JSON.stringify(toolMessage.content)
+                : toolMessage.content)),
         };
       }
 
       if (role === "assistant") {
-        // if we have the original response items, just reuse them
+        // If we have the original response items, reuse their canonical order.
+        // This is especially important under ZDR, where independently rebuilding
+        // reasoning and tool-call items loses multiple reasoning payloads and
+        // their interleaving.
         if (
-          !zdrEnabled &&
           responseMetadata?.output != null &&
-          Array.isArray(responseMetadata?.output) &&
-          responseMetadata?.output.length > 0 &&
-          responseMetadata?.output.every((item) => "type" in item)
+          Array.isArray(responseMetadata.output) &&
+          responseMetadata.output.length > 0 &&
+          responseMetadata.output.every(
+            (item) =>
+              typeof item === "object" &&
+              item != null &&
+              "type" in item &&
+              typeof item.type === "string"
+          )
         ) {
-          return responseMetadata?.output;
+          const output = responseMetadata.output as ResponseInputItemLike[];
+          return zdrEnabled
+            ? toResponseInputItems(output)
+            : (output as ResponsesInputItem[]);
         }
 
         // otherwise, try to reconstruct the response from what we have
@@ -1520,9 +1656,10 @@ export const convertMessagesToResponsesInput: Converter<
         const reasoning = additional_kwargs?.reasoning;
         const hasEncryptedContent = !!reasoning?.encrypted_content;
         /**
-         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
-         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
-         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
+         * replay, so only send reasoning items when that payload is available.
+         * With ZDR disabled, include reasoning item IDs so OpenAI can reference
+         * the stored items.
          */
         if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
           const reasoningItem =
@@ -1672,14 +1809,14 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const messages: ResponsesInputItem[] = [];
-        const content = (lcMsg.content as ContentBlock[]).flatMap((item) => {
-          if (item.type === "mcp_approval_response") {
-            messages.push({
-              type: "mcp_approval_response",
-              approval_request_id: item.approval_request_id as string,
-              approve: item.approve as boolean,
-            });
+        const content = (lcMsg.content as ContentBlock[]).flatMap((block) => {
+          const hoisted = toHoistedInputItem(block);
+          if (hoisted) {
+            // Hoisted to a top-level item preceding the message.
+            messages.push(hoisted);
+            return [];
           }
+          const item = unwrapNonStandard(block);
           if (isDataContentBlock(item)) {
             // The Responses API supports file URLs natively, but the Chat
             // Completions converter rejects URL file blocks. Convert standard
@@ -1688,38 +1825,41 @@ export const convertMessagesToResponsesInput: Converter<
             if (item.type === "file") {
               const filename = getFilenameFromMetadata(item);
               if (item.source_type === "url") {
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_url: item.url,
                   ...(filename ? { filename } : {}),
-                };
+                });
               }
               if (item.source_type === "id") {
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_id: item.id,
                   ...(filename ? { filename } : {}),
-                };
+                });
               }
               if (item.source_type === "base64") {
                 const mimeType = item.mime_type ?? "";
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_data: `data:${mimeType};base64,${item.data}`,
                   filename: getRequiredFilenameFromMetadata(item),
-                };
+                });
               }
             }
-            return convertToProviderContentBlock(
+            return applyPromptCacheBreakpoint(
               item,
-              completionsApiContentBlockConverter
+              convertToProviderContentBlock(
+                item,
+                completionsApiContentBlockConverter
+              )
             );
           }
           if (item.type === "text") {
-            return {
+            return applyPromptCacheBreakpoint(item, {
               type: "input_text",
               text: item.text,
-            };
+            });
           }
           if (item.type === "image_url") {
             const imageUrl = iife(() => {
@@ -1746,11 +1886,11 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return undefined;
             });
-            return {
+            return applyPromptCacheBreakpoint(item, {
               type: "input_image",
               image_url: imageUrl,
               detail,
-            };
+            });
           }
           if (
             item.type === "input_text" ||
@@ -1759,6 +1899,7 @@ export const convertMessagesToResponsesInput: Converter<
           ) {
             return item;
           }
+          // Consider warning about the dropped block once we have a proper logging solution
           return [];
         });
 

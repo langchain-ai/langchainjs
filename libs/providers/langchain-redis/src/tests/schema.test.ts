@@ -1,6 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, test, expect } from "vitest";
-import { SchemaFieldTypes } from "redis";
+import { SCHEMA_FIELD_TYPE } from "redis";
 import { Document } from "@langchain/core/documents";
 import {
   buildMetadataSchema,
@@ -24,7 +24,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.category).toEqual({
-      type: SchemaFieldTypes.TAG,
+      type: SCHEMA_FIELD_TYPE.TAG,
       SEPARATOR: DEFAULT_TAG_SEPARATOR,
     });
   });
@@ -38,7 +38,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.category).toEqual({
-      type: SchemaFieldTypes.TAG,
+      type: SCHEMA_FIELD_TYPE.TAG,
       SEPARATOR: ",",
     });
   });
@@ -52,7 +52,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.category).toEqual({
-      type: SchemaFieldTypes.TAG,
+      type: SCHEMA_FIELD_TYPE.TAG,
       SEPARATOR: DEFAULT_TAG_SEPARATOR,
       CASESENSITIVE: true,
     });
@@ -67,7 +67,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.category).toEqual({
-      type: SchemaFieldTypes.TAG,
+      type: SCHEMA_FIELD_TYPE.TAG,
       SEPARATOR: DEFAULT_TAG_SEPARATOR,
       NOINDEX: true,
     });
@@ -82,7 +82,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.description).toEqual({
-      type: SchemaFieldTypes.TEXT,
+      type: SCHEMA_FIELD_TYPE.TEXT,
     });
   });
 
@@ -95,7 +95,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.description).toEqual({
-      type: SchemaFieldTypes.TEXT,
+      type: SCHEMA_FIELD_TYPE.TEXT,
       WEIGHT: 2.0,
     });
   });
@@ -109,7 +109,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.description).toEqual({
-      type: SchemaFieldTypes.TEXT,
+      type: SCHEMA_FIELD_TYPE.TEXT,
       NOSTEM: true,
     });
   });
@@ -123,7 +123,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.description).toEqual({
-      type: SchemaFieldTypes.TEXT,
+      type: SCHEMA_FIELD_TYPE.TEXT,
       NOINDEX: true,
     });
   });
@@ -137,7 +137,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.price).toEqual({
-      type: SchemaFieldTypes.NUMERIC,
+      type: SCHEMA_FIELD_TYPE.NUMERIC,
     });
   });
 
@@ -150,7 +150,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.price).toEqual({
-      type: SchemaFieldTypes.NUMERIC,
+      type: SCHEMA_FIELD_TYPE.NUMERIC,
       SORTABLE: true,
     });
   });
@@ -164,7 +164,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.price).toEqual({
-      type: SchemaFieldTypes.NUMERIC,
+      type: SCHEMA_FIELD_TYPE.NUMERIC,
       NOINDEX: true,
     });
   });
@@ -178,7 +178,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.location).toEqual({
-      type: SchemaFieldTypes.GEO,
+      type: SCHEMA_FIELD_TYPE.GEO,
     });
   });
 
@@ -191,7 +191,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.location).toEqual({
-      type: SchemaFieldTypes.GEO,
+      type: SCHEMA_FIELD_TYPE.GEO,
       NOINDEX: true,
     });
   });
@@ -223,7 +223,7 @@ describe("buildMetadataSchema", () => {
     const result = buildMetadataSchema(metadataSchema, schema);
 
     expect(result.unknown).toEqual({
-      type: SchemaFieldTypes.TEXT,
+      type: SCHEMA_FIELD_TYPE.TEXT,
     });
   });
 
@@ -232,7 +232,7 @@ describe("buildMetadataSchema", () => {
       { name: "category", type: "tag" },
     ];
     const schema: any = {
-      existingField: { type: SchemaFieldTypes.TEXT },
+      existingField: { type: SCHEMA_FIELD_TYPE.TEXT },
     };
 
     const result = buildMetadataSchema(metadataSchema, schema);
@@ -836,7 +836,7 @@ describe("checkForSchemaMismatch", () => {
 describe("convertLegacySchema", () => {
   test("converts legacy TAG field to new format", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      category: { type: SchemaFieldTypes.TAG },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -846,7 +846,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy TAG field with separator", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      tags: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
+      tags: { type: SCHEMA_FIELD_TYPE.TAG, SEPARATOR: "|" },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -858,7 +858,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy TAG field with case sensitive option", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      category: { type: SchemaFieldTypes.TAG, CASESENSITIVE: true },
+      category: { type: SCHEMA_FIELD_TYPE.TAG, CASESENSITIVE: true },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -874,7 +874,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy TEXT field to new format", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      description: { type: SchemaFieldTypes.TEXT },
+      description: { type: SCHEMA_FIELD_TYPE.TEXT },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -884,7 +884,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy TEXT field with weight and nostem", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      description: { type: SchemaFieldTypes.TEXT, WEIGHT: 2.0, NOSTEM: true },
+      description: { type: SCHEMA_FIELD_TYPE.TEXT, WEIGHT: 2.0, NOSTEM: true },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -900,7 +900,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy NUMERIC field to new format", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      price: { type: SchemaFieldTypes.NUMERIC },
+      price: { type: SCHEMA_FIELD_TYPE.NUMERIC },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -910,7 +910,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy NUMERIC field with sortable option", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+      price: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -922,7 +922,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy NUMERIC field with UNF sortable option", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: "UNF" },
+      price: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: "UNF" },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -934,7 +934,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy GEO field to new format", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      location: { type: SchemaFieldTypes.GEO },
+      location: { type: SCHEMA_FIELD_TYPE.GEO },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -944,7 +944,7 @@ describe("convertLegacySchema", () => {
 
   test("converts legacy field with NOINDEX option", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      internal: { type: SchemaFieldTypes.TEXT, NOINDEX: true },
+      internal: { type: SCHEMA_FIELD_TYPE.TEXT, NOINDEX: true },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -956,10 +956,10 @@ describe("convertLegacySchema", () => {
 
   test("converts multiple legacy fields", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      category: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
-      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
-      description: { type: SchemaFieldTypes.TEXT, WEIGHT: 2.0 },
-      location: { type: SchemaFieldTypes.GEO },
+      category: { type: SCHEMA_FIELD_TYPE.TAG, SEPARATOR: "|" },
+      price: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
+      description: { type: SCHEMA_FIELD_TYPE.TEXT, WEIGHT: 2.0 },
+      location: { type: SCHEMA_FIELD_TYPE.GEO },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);
@@ -985,9 +985,9 @@ describe("convertLegacySchema", () => {
 
   test("handles fields with no options", () => {
     const legacySchema: Record<string, CustomSchemaField> = {
-      simpleTag: { type: SchemaFieldTypes.TAG },
-      simpleText: { type: SchemaFieldTypes.TEXT },
-      simpleNumeric: { type: SchemaFieldTypes.NUMERIC },
+      simpleTag: { type: SCHEMA_FIELD_TYPE.TAG },
+      simpleText: { type: SCHEMA_FIELD_TYPE.TEXT },
+      simpleNumeric: { type: SCHEMA_FIELD_TYPE.NUMERIC },
     };
 
     const result = convertLegacySchema("metadata", legacySchema);

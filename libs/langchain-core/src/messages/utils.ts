@@ -355,6 +355,8 @@ function _contentBlockToString(
   }
 }
 
+const TOOL_CALL_ID_DISPLAY_LIMIT = 64;
+
 /**
  * This function is used by memory classes to get a string representation
  * of the chat message history, based on the message content and role.
@@ -367,6 +369,7 @@ function _contentBlockToString(
  * ```
  *
  * This avoids token inflation from metadata when stringifying message objects directly.
+ * Tool-call IDs longer than 64 characters are shortened only in the rendered string.
  */
 export function getBufferString(
   messages: BaseMessage[],
@@ -405,7 +408,21 @@ export function getBufferString(
     if (m.type === "ai") {
       const aiMessage = m as AIMessage;
       if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        message += JSON.stringify(aiMessage.tool_calls);
+        const toolCalls = aiMessage.tool_calls;
+        message += JSON.stringify(
+          toolCalls.some(
+            (call) => (call.id?.length ?? 0) > TOOL_CALL_ID_DISPLAY_LIMIT
+          )
+            ? toolCalls.map((call) =>
+                call.id && call.id.length > TOOL_CALL_ID_DISPLAY_LIMIT
+                  ? {
+                      ...call,
+                      id: `${call.id.slice(0, TOOL_CALL_ID_DISPLAY_LIMIT)}...`,
+                    }
+                  : call
+              )
+            : toolCalls
+        );
       } else if (
         aiMessage.additional_kwargs &&
         "function_call" in aiMessage.additional_kwargs

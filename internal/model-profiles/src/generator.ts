@@ -43,25 +43,103 @@ function valueToExpression(value: unknown): ts.Expression {
   if (typeof value === "string") {
     return ts.factory.createStringLiteral(value);
   }
+  if (Array.isArray(value)) {
+    return ts.factory.createArrayLiteralExpression(
+      value.map((item) => valueToExpression(item)),
+      false
+    );
+  }
   // Fallback to JSON for complex types
   return ts.factory.createStringLiteral(JSON.stringify(value));
+}
+
+/**
+ * Converts a camelCase field name to a CONSTANT_CASE identifier.
+ */
+function toConstantName(key: string): string {
+  return key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
+}
+
+/**
+ * Array-valued fields (e.g. `fileMimeTypes`) are often identical across many
+ * models. Rather than duplicating the literal in every model's object,
+ * assign each distinct repeated array a shared top-level constant and
+ * reference it by name wherever it appears.
+ */
+function hoistSharedArrayConstants(models: Record<string, ModelProfile>): {
+  declarations: ts.Statement[];
+  identifierFor: Map<string, string>;
+} {
+  const groups = new Map<
+    string,
+    { key: string; value: unknown[]; count: number }
+  >();
+  for (const profile of Object.values(models)) {
+    for (const [key, value] of Object.entries(profile)) {
+      if (!Array.isArray(value)) continue;
+      const groupKey = `${key}\u0000${JSON.stringify(value)}`;
+      const existing = groups.get(groupKey);
+      if (existing) existing.count += 1;
+      else groups.set(groupKey, { key, value, count: 1 });
+    }
+  }
+
+  const usedNames = new Map<string, number>();
+  const identifierFor = new Map<string, string>();
+  const declarations: ts.Statement[] = [];
+  for (const [groupKey, group] of groups) {
+    if (group.count < 2) continue; // not worth hoisting a one-off value
+    const baseName = toConstantName(group.key);
+    const suffix = usedNames.get(baseName) ?? 0;
+    usedNames.set(baseName, suffix + 1);
+    const identifier = suffix === 0 ? baseName : `${baseName}_${suffix + 1}`;
+    identifierFor.set(groupKey, identifier);
+    declarations.push(
+      ts.factory.createVariableStatement(
+        undefined,
+        ts.factory.createVariableDeclarationList(
+          [
+            ts.factory.createVariableDeclaration(
+              ts.factory.createIdentifier(identifier),
+              undefined,
+              undefined,
+              valueToExpression(group.value)
+            ),
+          ],
+          ts.NodeFlags.Const
+        )
+      )
+    );
+  }
+  return { declarations, identifierFor };
 }
 
 /**
  * Generates TypeScript code for model profiles using the TypeScript AST API.
  */
 function generateTypeScript(models: Record<string, ModelProfile>): string {
+  const { declarations: sharedConstantDeclarations, identifierFor } =
+    hoistSharedArrayConstants(models);
+
   // Create property assignments for each profile
   const modelProfiles = Object.entries(models).map(([modelName, profile]) => {
     // Create property assignments for the profile
     const profileProperties = Object.entries(profile)
       .filter(([, value]) => value !== undefined)
-      .map(([key, value]) =>
-        ts.factory.createPropertyAssignment(
+      .map(([key, value]) => {
+        const groupKey = Array.isArray(value)
+          ? `${key}\u0000${JSON.stringify(value)}`
+          : undefined;
+        const sharedIdentifier = groupKey
+          ? identifierFor.get(groupKey)
+          : undefined;
+        return ts.factory.createPropertyAssignment(
           ts.factory.createIdentifier(key),
-          valueToExpression(value)
-        )
-      );
+          sharedIdentifier
+            ? ts.factory.createIdentifier(sharedIdentifier)
+            : valueToExpression(value)
+        );
+      });
 
     return ts.factory.createPropertyAssignment(
       ts.factory.createStringLiteral(modelName),
@@ -128,7 +206,12 @@ function generateTypeScript(models: Record<string, ModelProfile>): string {
 
   // Create the source file with empty statements for spacing
   const sourceFile = ts.factory.createSourceFile(
-    [importDeclaration, profilesVariable, exportDefault],
+    [
+      importDeclaration,
+      ...sharedConstantDeclarations,
+      profilesVariable,
+      exportDefault,
+    ],
     ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None
   );

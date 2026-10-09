@@ -283,6 +283,121 @@ describe("convertMessagesToGeminiContents", () => {
     expect(responses[1].functionResponse!.id).toBe("call-london");
   });
 
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (legacy path)", () => {
+    // A ToolMessage (functionResponse) and a following HumanMessage (text) both
+    // map to the `user` role. They must NOT be merged into one content: Gemini /
+    // Vertex rejects a single `user` content that mixes a functionResponse with
+    // text (see issue #11444). Expected: user, model, user(functionResponse),
+    // user(text) — four separate contents.
+    const messages = [
+      new HumanMessage("read it"),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+      }),
+      new HumanMessage("continue"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[0].role).toBe("user");
+    expect(contents[0].parts.some((p) => "text" in p)).toBe(true);
+    expect(contents[0].parts.some((p) => "functionResponse" in p)).toBe(false);
+
+    expect(contents[1].role).toBe("model");
+
+    // The tool response turn carries ONLY the functionResponse, no text.
+    expect(contents[2].role).toBe("user");
+    expect(contents[2].parts.some((p) => "functionResponse" in p)).toBe(true);
+    expect(contents[2].parts.some((p) => "text" in p)).toBe(false);
+
+    // The following human turn is its own user content with just the text.
+    expect(contents[3].role).toBe("user");
+    expect(contents[3].parts.some((p) => "functionResponse" in p)).toBe(false);
+    expect(
+      (contents[3].parts.find((p) => "text" in p) as Gemini.Part.Text).text
+    ).toBe("continue");
+  });
+
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (v1 standard path)", () => {
+    // Same contract as the legacy path, exercised through the v1 standard
+    // content path (`output_version: "v1"`): the tool turn must carry ONLY
+    // its functionResponse part, and the follow-up human text must remain
+    // its own user content.
+    const response_metadata = { output_version: "v1" } as const;
+    const messages = [
+      new HumanMessage({
+        content: "read it",
+        response_metadata,
+      }),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+        response_metadata,
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+        response_metadata,
+      }),
+      new HumanMessage({
+        content: "continue",
+        response_metadata,
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[1].role).toBe("model");
+    expect(
+      contents[1].parts.some((p) => "functionCall" in p && p.functionCall)
+    ).toBe(true);
+
+    // The tool turn carries ONLY the functionResponse, no text.
+    expect(contents[2]).toEqual({
+      role: "user",
+      parts: [
+        {
+          functionResponse: {
+            id: "call_1",
+            name: "read_document_pages",
+            response: { result: "page text" },
+          },
+        },
+      ],
+    });
+
+    // The follow-up human turn is its own user content with just the text.
+    expect(contents[3]).toEqual({
+      role: "user",
+      parts: [{ text: "continue" }],
+    });
+  });
+
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
     // Even when ToolMessage has a name, the tool_calls lookup should take priority
     const messages = [
@@ -383,6 +498,132 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart).toBeDefined();
     expect(functionCallPart.functionCall!.name).toBe("get_weather");
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
+  });
+
+  test("AIMessage tool_calls carrying a thoughtSignature reattach it to the rebuilt functionCall part (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-abc",
+        } as {
+          name: string;
+          args: object;
+          id: string;
+          thoughtSignature: string;
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe("sig-abc");
+  });
+
+  test("AIMessage tool_calls with no thoughtSignature produce a functionCall part with no thoughtSignature key (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        { name: "get_weather", args: { city: "London" }, id: "call-1" },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect("thoughtSignature" in functionCallPart).toBe(false);
+  });
+
+  test("resolves thoughtSignature from the matching tool_call content block, without it living on tool_calls (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
+      tool_calls: [
+        { name: "get_weather", args: { city: "London" }, id: "call-1" },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
+  });
+
+  test("prefers the content block's thoughtSignature over a direct tool_calls property (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-on-tool-call",
+        } as {
+          name: string;
+          args: object;
+          id: string;
+          type: "tool_call";
+          thoughtSignature: string;
+        },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
   });
 
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
@@ -740,6 +981,461 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("ToolMessage image content becomes a sibling inlineData part, not inline JSON (legacy path)", () => {
+    const imageDataUri = "data:image/png;base64,iVBORw0KGgo=";
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_screenshot",
+            args: {},
+            id: "call-image",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image_url", image_url: imageDataUri },
+        ],
+        tool_call_id: "call-image",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(functionResponsePart).toBeDefined();
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("Here is the screenshot.");
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("image/png");
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage media content becomes a sibling part, not inline JSON (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_recording",
+            args: {},
+            id: "call-media",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the recording." },
+          { type: "media", mimeType: "audio/mp3", data: "ZmFrZS1hdWRpbw==" },
+        ],
+        tool_call_id: "call-media",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("Here is the recording.");
+    expect(resultStr).not.toContain("ZmFrZS1hdWRpbw==");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("audio/mp3");
+    expect(inlineDataPart.inlineData!.data).toBe("ZmFrZS1hdWRpbw==");
+  });
+
+  test("ToolMessage image content becomes a sibling inlineData part, not inline JSON (v1 path)", () => {
+    const imageDataUri = "data:image/png;base64,iVBORw0KGgo=";
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_screenshot",
+          args: {},
+          id: "call-image-v1",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image_url", image_url: { url: imageDataUri } },
+        ],
+        tool_call_id: "call-image-v1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("image/png");
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage v1 standard image content block is excluded from functionResponse.result (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_screenshot",
+          args: {},
+          id: "call-v1-block",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image", mimeType: "image/png", data: "iVBORw0KGgo=" },
+        ],
+        tool_call_id: "call-v1-block",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage native inlineData content item is excluded from functionResponse.result (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_screenshot",
+            args: {},
+            id: "call-native-inline",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+        ],
+        tool_call_id: "call-native-inline",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage plain-text file block is preserved in functionResponse.result, not treated as media (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "read_file",
+            args: {},
+            id: "call-file-text",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [{ type: "file", source_type: "text", text: "line one" }],
+        tool_call_id: "call-file-text",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("line one");
+  });
+
+  test("ToolMessage non-string content is passed through as a JSON object, not double-stringified (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_video_captions",
+            args: {},
+            id: "call-captions",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          {
+            url: "https://www.youtube.com/watch?v=redacted",
+            error: "All 5 caption URLs failed",
+          },
+        ] as unknown as string,
+        tool_call_id: "call-captions",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const result = functionResponsePart.functionResponse!.response!.result;
+    expect(typeof result).not.toBe("string");
+    expect(result).toEqual([
+      {
+        url: "https://www.youtube.com/watch?v=redacted",
+        error: "All 5 caption URLs failed",
+      },
+    ]);
+  });
+
+  test("legacy path: preserves thought and thoughtSignature on a resent text block", () => {
+    // Shape returned by convertGeminiCandidateToAIMessage for a thinking-model
+    // response — a text part with `thought: true` immediately followed by a
+    // functionCall part carrying `thoughtSignature`. When this AIMessage is
+    // fed back in as history on the next turn, the thought text must keep
+    // its `thought`/`thoughtSignature` markers so Gemini can tell it apart
+    // from a real committed utterance (see
+    // https://ai.google.dev/gemini-api/docs/thinking).
+    const priorAiMessage = new AIMessage({
+      content: [
+        { type: "text", text: "internal reasoning", thought: true },
+        {
+          type: "functionCall",
+          functionCall: { name: "get_weather", args: { city: "London" } },
+          thoughtSignature: "sig-abc",
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const messages = [new HumanMessage("what's the weather?"), priorAiMessage];
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent!.parts.find((p) => "text" in p) as
+      | Gemini.Part.Text
+      | undefined;
+    expect(textPart).toBeDefined();
+    expect(textPart!.text).toBe("internal reasoning");
+    expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
+  });
+
+  test("legacy path: a plain text block with no thought key is unaffected", () => {
+    const message = new AIMessage({
+      content: [{ type: "text", text: "Here are your results." }],
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hi"),
+      message,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toEqual([{ text: "Here are your results." }]);
+  });
+
+  test("v1 contentBlocks (explicit output_version): preserves thought and thoughtSignature on a resent text block", () => {
+    // response_metadata.output_version === "v1" makes AIMessage.contentBlocks
+    // return `content` verbatim (ai.ts:196-202), bypassing ChatGoogleTranslator
+    // entirely — exercises convertStandardContentBlockToGeminiPart's "text" case.
+    const priorAiMessage = new AIMessage({
+      content: [
+        { type: "text" as const, text: "internal reasoning", thought: true },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const messages = [new HumanMessage("hi"), priorAiMessage];
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent!.parts.find((p) => "text" in p) as
+      | Gemini.Part.Text
+      | undefined;
+    expect(textPart).toBeDefined();
+    expect(textPart!.text).toBe("internal reasoning");
+    expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
+  });
+
+  test("v1 contentBlocks (via ChatGoogleTranslator): preserves thought on a resent reasoning block", () => {
+    // The real-world shape: every AIMessage this package produces carries
+    // response_metadata.model_provider = "google" (see
+    // convertGeminiCandidateToAIMessage). With no output_version override,
+    // AIMessage.contentBlocks (ai.ts:204-213) routes through
+    // ChatGoogleTranslator, which normalizes a `{ type: "text", thought:
+    // true }` part into `{ type: "reasoning", reasoning, thought,
+    // reasoningContentBlock }` (block_translators/google.ts).
+    // convertStandardContentBlockToGeminiPart must handle that "reasoning"
+    // shape too, or this history is silently dropped on the next turn.
+    const priorAiMessage = new AIMessage({
+      content: [{ text: "internal reasoning", thought: true, type: "text" }],
+      response_metadata: { model_provider: "google" },
+    });
+
+    // Sanity check the premise: this AIMessage's own .contentBlocks getter
+    // really does normalize to "reasoning" via ChatGoogleTranslator.
+    const blocks = priorAiMessage.contentBlocks;
+    expect(blocks.some((b) => b.type === "reasoning")).toBe(true);
+
+    const messages = [new HumanMessage("hi"), priorAiMessage];
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent!.parts.find((p) => "text" in p) as
+      | Gemini.Part.Text
+      | undefined;
+    expect(textPart).toBeDefined();
+    expect(textPart!.text).toBe("internal reasoning");
+    expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
+  });
+
+  test("a non-Google reasoning block with no thought flag is dropped, not sent as visible text", () => {
+    const message = new AIMessage({
+      content: [{ type: "reasoning", reasoning: "private reasoning" }],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hi"),
+      message,
+    ]);
+
+    expect(contents.find((c) => c.role === "model")).toBeUndefined();
+  });
+});
+
+test("coalesces consecutive plain HumanMessages into one user content", () => {
+  // Plain same-role turns have always been coalesced; only the
+  // functionResponse + text boundary introduced by #11444 must stay split.
+  const messages = [new HumanMessage("first"), new HumanMessage("second")];
+
+  const contents = convertMessagesToGeminiContents(messages);
+
+  expect(contents).toHaveLength(1);
+  expect(contents[0].role).toBe("user");
+  expect(contents[0].parts).toEqual([{ text: "first" }, { text: "second" }]);
 });
 
 describe("executableCode and codeExecutionResult round-trip", () => {
