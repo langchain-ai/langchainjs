@@ -23,9 +23,12 @@ const WhenFunctionSchema = z
  * Receives a {@link ToolCallRequest} and returns `true` to interrupt or `false`
  * to auto-approve the tool call.
  *
- * The request is constructed with `tool` set to `undefined` and `runtime` set to
- * the node-level {@link Runtime}, so it reflects the batch (`afterModel`) context
- * rather than a per-call tool execution.
+ * The request's `tool` is populated with the resolved tool instance when the
+ * tool was registered with the agent upfront, so the predicate can gate on tool
+ * metadata (description, schema, annotations). It is `undefined` for tools that
+ * are only registered dynamically at request time. `runtime` is the node-level
+ * {@link Runtime}, reflecting the batch (`afterModel`) context rather than a
+ * per-call tool execution.
  *
  * @param request - The tool call request being evaluated
  * @returns `true` to interrupt for the tool call, `false` to auto-approve it.
@@ -38,6 +41,17 @@ const WhenFunctionSchema = z
  * // Only interrupt delete_file calls targeting /etc
  * const when: WhenPredicate = (request) =>
  *   String(request.toolCall.args.path ?? "").startsWith("/etc");
+ * ```
+ *
+ * @example
+ * Gate on tool metadata (e.g. a `destructiveHint` annotation) rather than name
+ * ```typescript
+ * import { type WhenPredicate } from "langchain";
+ *
+ * const when: WhenPredicate = (request) =>
+ *   (request.tool as {
+ *     metadata?: { annotations?: { destructiveHint?: boolean } };
+ *   })?.metadata?.annotations?.destructiveHint === true;
  * ```
  */
 export type WhenPredicate = z.infer<typeof WhenFunctionSchema>;
@@ -76,6 +90,12 @@ export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
 const ALLOWED_DECISIONS = ["approve", "edit", "reject"] as const;
 const DecisionType = z.enum(ALLOWED_DECISIONS);
 export type DecisionType = z.infer<typeof DecisionType>;
+
+/**
+ * Catch-all key for {@link HumanInTheLoopMiddlewareConfig.interruptOn}. A config
+ * under this key applies to any tool call that has no explicit entry of its own.
+ */
+const WILDCARD_TOOL_NAME = "*";
 
 const InterruptOnConfigSchema = z.object({
   /**
@@ -136,8 +156,11 @@ const InterruptOnConfigSchema = z.object({
    * Receives a {@link ToolCallRequest} and returns `true` to interrupt or
    * `false` to auto-approve the tool call.
    *
-   * The request is constructed with `tool` set to `undefined` and `runtime` set
-   * to the node-level {@link Runtime}, so `request.tool` is not available.
+   * The request's `tool` is populated with the resolved tool instance when the
+   * tool was registered with the agent upfront (so the predicate can read the
+   * tool's description, schema, or `metadata.annotations`), and `undefined` for
+   * tools registered dynamically at request time. `runtime` is the node-level
+   * {@link Runtime}.
    *
    * @example
    * ```typescript
@@ -148,6 +171,22 @@ const InterruptOnConfigSchema = z.object({
    *   allowedDecisions: ["approve", "reject"],
    *   when: (request) =>
    *     String(request.toolCall.args.path ?? "").startsWith("/etc"),
+   * };
+   * ```
+   *
+   * @example
+   * Combine with a `"*"` catch-all entry to gate every tool by metadata:
+   * ```typescript
+   * import type { HumanInTheLoopMiddlewareConfig } from "langchain";
+   *
+   * const config: HumanInTheLoopMiddlewareConfig = {
+   *   interruptOn: {
+   *     "*": {
+   *       allowedDecisions: ["approve", "reject"],
+   *       when: (request) =>
+   *         request.tool?.metadata?.annotations?.destructiveHint === true,
+   *     },
+   *   },
    * };
    * ```
    */
@@ -289,6 +328,13 @@ const contextSchema = z.object({
    * - `true` -> pause for approval and allow approve/edit/reject decisions
    * - `false` -> auto-approve (no human review)
    * - `InterruptOnConfig` -> explicitly specify which decisions are allowed for this tool
+   *
+   * The special key `"*"` acts as a catch-all applied to any tool that has no
+   * explicit entry of its own. This is useful when tool names aren't known ahead
+   * of time (e.g. tools discovered dynamically) — for example, pausing before
+   * any tool whose metadata marks it destructive via a `when` predicate. An
+   * exact tool-name entry always takes precedence over `"*"`, and an explicit
+   * `false` for a tool opts it out even when a `"*"` entry is present.
    */
   interruptOn: z
     .record(z.union([z.boolean(), InterruptOnConfigSchema]))
@@ -362,7 +408,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * - `reject`: Provide a manual response instead of executing the tool
  *
  * @param options - Configuration options for the middleware
- * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
+ * @param options.interruptOn - Per-tool configuration mapping tool names to their settings. The special key `"*"` is a catch-all applied to any tool without an explicit entry (an exact tool-name entry, including `false`, takes precedence).
  * @param options.interruptOn[toolName].allowedDecisions - Array of decision types allowed for this tool (e.g., ["approve", "edit", "reject"])
  * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
  * @param options.interruptOn[toolName].argsSchema - JSON schema for the arguments associated with the action, if edits are allowed
@@ -469,6 +515,26 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  *     }
  *   },
  *   descriptionPrefix: "Database operation pending approval"
+ * });
+ * ```
+ *
+ * @example
+ * Catch-all gating for tools whose names aren't known ahead of time
+ * ```typescript
+ * const hitlMiddleware = humanInTheLoopMiddleware({
+ *   interruptOn: {
+ *     // Pause before any tool marked destructive via its metadata annotations,
+ *     // even when the tool names aren't enumerated upfront.
+ *     "*": {
+ *       allowedDecisions: ["approve", "reject"],
+ *       when: (request) =>
+ *         (request.tool as {
+ *           metadata?: { annotations?: { destructiveHint?: boolean } };
+ *         })?.metadata?.annotations?.destructiveHint === true,
+ *     },
+ *     // An exact-name entry always overrides the "*" catch-all.
+ *     "read_file": false,
+ *   }
  * });
  * ```
  *
@@ -584,9 +650,16 @@ export function humanInTheLoopMiddleware(
     if (when == null) {
       return true;
     }
+    /**
+     * Resolve the concrete tool instance (if the agent registered it upfront)
+     * so the predicate can read tool metadata such as its description, schema,
+     * or annotations. Dynamically registered tools that aren't declared upfront
+     * resolve to `undefined`, matching the batch (`afterModel`) semantics.
+     */
+    const tool = runtime.tools?.find((t) => t.name === toolCall.name);
     const request: ToolCallRequest<AgentBuiltInState> = {
       toolCall,
-      tool: undefined,
+      tool,
       state,
       runtime,
     };
@@ -708,9 +781,16 @@ export function humanInTheLoopMiddleware(
         }
 
         /**
-         * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve)
+         * Resolve per-tool configs (boolean true -> all decisions allowed; false -> auto-approve).
+         * The `"*"` catch-all is resolved like any other entry and applied later
+         * to tools that lack an explicit entry of their own.
          */
         const resolvedConfigs: Record<string, InterruptOnConfig> = {};
+        /**
+         * Tools explicitly set to `false`. These are auto-approved and are NOT
+         * subject to the `"*"` catch-all.
+         */
+        const explicitlyAutoApproved = new Set<string>();
         for (const [toolName, toolConfig] of Object.entries(
           config.interruptOn
         )) {
@@ -719,17 +799,37 @@ export function humanInTheLoopMiddleware(
               resolvedConfigs[toolName] = {
                 allowedDecisions: [...ALLOWED_DECISIONS],
               };
+            } else {
+              explicitlyAutoApproved.add(toolName);
             }
           } else if (toolConfig.allowedDecisions) {
             resolvedConfigs[toolName] = toolConfig as InterruptOnConfig;
           }
         }
 
+        /**
+         * Resolve the interrupt config for a tool call, honoring precedence:
+         * an exact tool-name entry wins; an explicit `false` opts the tool out
+         * even when a `"*"` catch-all is present; otherwise the `"*"` entry (if
+         * any) applies. Returns `undefined` when the tool should be auto-approved.
+         */
+        const resolveInterruptConfig = (
+          toolName: string
+        ): InterruptOnConfig | undefined => {
+          if (resolvedConfigs[toolName]) {
+            return resolvedConfigs[toolName];
+          }
+          if (explicitlyAutoApproved.has(toolName)) {
+            return undefined;
+          }
+          return resolvedConfigs[WILDCARD_TOOL_NAME];
+        };
+
         const interruptToolCalls: ToolCall[] = [];
         const autoApprovedToolCalls: ToolCall[] = [];
 
         for (const toolCall of lastMessage.tool_calls) {
-          const interruptConfig = resolvedConfigs[toolCall.name];
+          const interruptConfig = resolveInterruptConfig(toolCall.name);
           /**
            * A tool call is interrupted only when it has a resolved config and its
            * optional `when` predicate doesn't opt it out. Otherwise it is
@@ -759,7 +859,7 @@ export function humanInTheLoopMiddleware(
         const reviewConfigs: ReviewConfig[] = [];
 
         for (const toolCall of interruptToolCalls) {
-          const interruptConfig = resolvedConfigs[toolCall.name]!;
+          const interruptConfig = resolveInterruptConfig(toolCall.name)!;
 
           /**
            * Create ActionRequest and ReviewConfig using helper method
@@ -818,7 +918,7 @@ export function humanInTheLoopMiddleware(
         for (let i = 0; i < decisions.length; i++) {
           const decision = decisions[i]!;
           const toolCall = interruptToolCalls[i]!;
-          const interruptConfig = resolvedConfigs[toolCall.name]!;
+          const interruptConfig = resolveInterruptConfig(toolCall.name)!;
 
           const { revisedToolCall, toolMessage } = processDecision(
             decision,

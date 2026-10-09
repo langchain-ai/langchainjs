@@ -9,6 +9,7 @@ import {
 import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
 import type { JumpToTarget } from "../constants.js";
 import type { Runtime } from "../runtime.js";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import type {
   AnyAgentMiddleware,
   MiddlewareResult,
@@ -33,10 +34,18 @@ export abstract class MiddlewareNode<
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
   abstract middleware: AnyAgentMiddleware;
 
+  /**
+   * The tools registered with the agent, exposed to middleware hooks via
+   * `runtime.tools` so they can resolve a tool instance by name.
+   */
+  protected tools?: readonly (ClientTool | ServerTool)[];
+
   constructor(
-    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>
+    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>,
+    tools?: readonly (ClientTool | ServerTool)[]
   ) {
     super(fields);
+    this.tools = tools;
   }
 
   abstract runHook(
@@ -99,6 +108,7 @@ export abstract class MiddlewareNode<
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,
+      tools: this.tools,
     };
 
     const result = await this.runHook(

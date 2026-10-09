@@ -65,6 +65,37 @@ const writeFileTool = tool(writeFileFn, {
   }),
 });
 
+const deleteFileFn = vi.fn(async ({ path }: { path: string }) => {
+  return `Deleted ${path}`;
+});
+
+// A tool whose metadata marks it destructive. Used to exercise metadata-based
+// gating (reading `request.tool.metadata.annotations`) via the `when` predicate.
+const deleteFileTool = tool(deleteFileFn, {
+  name: "delete_file",
+  description: "Delete a file",
+  schema: z.object({
+    path: z.string().describe("Path of the file to delete"),
+  }),
+  metadata: { annotations: { destructiveHint: true } },
+});
+
+/**
+ * Reads a `destructiveHint` annotation off a resolved tool's metadata.
+ *
+ * `ToolCallRequest["tool"]` is the broad `ClientTool | ServerTool` union (some
+ * members carry no `metadata`), so a narrowing cast is needed to read tool
+ * annotations — this mirrors what a real `when` predicate would do.
+ */
+function getDestructiveHint(tool: ToolCallRequest["tool"]): boolean {
+  const metadata = (tool as { metadata?: Record<string, unknown> } | undefined)
+    ?.metadata;
+  const annotations = metadata?.annotations as
+    | { destructiveHint?: boolean }
+    | undefined;
+  return annotations?.destructiveHint === true;
+}
+
 describe("humanInTheLoopMiddleware", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -2168,8 +2199,11 @@ describe("humanInTheLoopMiddleware", () => {
         type: "tool_call",
       });
 
-      // In batch mode the request is constructed without a concrete tool.
-      expect(request.tool).toBeUndefined();
+      // The resolved tool instance is provided so predicates can read tool
+      // metadata (description, schema, annotations). `write_file` is registered
+      // with the agent upfront, so it resolves here.
+      expect(request.tool).toBeDefined();
+      expect(request.tool?.name).toBe("write_file");
 
       // The request carries the live agent state: the human prompt followed by
       // the AI message whose tool call is being evaluated.
@@ -2188,6 +2222,309 @@ describe("humanInTheLoopMiddleware", () => {
       // The request exposes the node-level runtime.
       expect(request.runtime).toBeDefined();
       expect(request.runtime.configurable?.thread_id).toBe("test-when-args");
+    });
+
+    it("populates request.tool so a `when` predicate can gate on tool metadata", async () => {
+      const captured: ToolCallRequest[] = [];
+
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          delete_file: {
+            allowedDecisions: ["approve", "reject"],
+            when: (request) => {
+              captured.push(request);
+              return getDestructiveHint(request.tool);
+            },
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ id: "call_1", name: "delete_file", args: { path: "/etc/hosts" } }],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [deleteFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: { thread_id: "test-when-metadata" },
+      };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Delete /etc/hosts")] },
+        config
+      );
+
+      // The predicate received the concrete tool instance and could read its
+      // metadata annotations.
+      expect(captured).toHaveLength(1);
+      expect(captured[0]?.tool?.name).toBe("delete_file");
+      expect(getDestructiveHint(captured[0]?.tool)).toBe(true);
+
+      // destructiveHint === true -> interrupt; the tool must not have executed.
+      expect(deleteFileFn).not.toHaveBeenCalled();
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(1);
+    });
+  });
+
+  describe('interruptOn catch-all ("*")', () => {
+    it("interrupts a tool with no explicit entry via the wildcard", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          "*": { allowedDecisions: ["approve"] },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 2, b: 3, operation: "add" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = { configurable: { thread_id: "test-wildcard-basic" } };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Calculate 2 + 3")] },
+        config
+      );
+
+      // The unlisted calculator tool is gated by the wildcard entry.
+      expect(calculatorFn).not.toHaveBeenCalled();
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(1);
+      const task = state.tasks?.[0];
+      expect(task?.interrupts).toHaveLength(1);
+      const hitlRequest = task!.interrupts[0].value as HITLRequest;
+      expect(hitlRequest.actionRequests).toHaveLength(1);
+      expect(hitlRequest.actionRequests[0]?.name).toBe("calculator");
+    });
+
+    it("lets an exact tool-name entry override the wildcard", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          "*": true,
+          write_file: {
+            allowedDecisions: ["approve"],
+            description: "exact-entry description",
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "write_file",
+              args: { filename: "a.txt", content: "hi" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = { configurable: { thread_id: "test-wildcard-exact" } };
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Write a.txt")] },
+        config
+      );
+
+      // The exact `write_file` config wins over the `"*": true` catch-all, so
+      // its custom description (not the wildcard's default) is used.
+      const interruptRequest = result
+        .__interrupt__?.[0] as Interrupt<HITLRequest>;
+      const hitlRequest = interruptRequest.value;
+      expect(hitlRequest.actionRequests).toHaveLength(1);
+      expect(hitlRequest.actionRequests[0]?.description).toBe(
+        "exact-entry description"
+      );
+      expect(hitlRequest.reviewConfigs[0]?.allowedDecisions).toEqual([
+        "approve",
+      ]);
+    });
+
+    it("lets an explicit `false` opt a tool out of the wildcard", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          "*": true,
+          calculator: false,
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 4, b: 5, operation: "add" },
+            },
+          ],
+          [],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = { configurable: { thread_id: "test-wildcard-false" } };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Calculate 4 + 5")] },
+        config
+      );
+
+      // `calculator: false` overrides `"*": true`, so it auto-approves and runs
+      // without interrupting.
+      expect(calculatorFn).toHaveBeenCalledTimes(1);
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(0);
+      expect(state.tasks?.[0]?.interrupts ?? []).toHaveLength(0);
+    });
+
+    it("auto-approves an unlisted tool when there is no wildcard", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: true,
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 6, b: 7, operation: "add" },
+            },
+          ],
+          [],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = { configurable: { thread_id: "test-no-wildcard" } };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Calculate 6 + 7")] },
+        config
+      );
+
+      // No `"*"` entry and no exact `calculator` entry -> auto-approved (existing
+      // default behavior is unchanged).
+      expect(calculatorFn).toHaveBeenCalledTimes(1);
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(0);
+      expect(state.tasks?.[0]?.interrupts ?? []).toHaveLength(0);
+    });
+
+    it('gates an unlisted tool by metadata via `"*"` + `when`', async () => {
+      const captured: ToolCallRequest[] = [];
+
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          "*": {
+            allowedDecisions: ["approve", "reject"],
+            when: (request) => {
+              captured.push(request);
+              return getDestructiveHint(request.tool);
+            },
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 1, b: 2, operation: "add" },
+            },
+            {
+              id: "call_2",
+              name: "delete_file",
+              args: { path: "/etc/hosts" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [calculateTool, deleteFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: { thread_id: "test-wildcard-metadata" },
+      };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Add then delete")] },
+        config
+      );
+
+      // The wildcard predicate evaluated every tool call, each with its resolved
+      // tool instance available.
+      expect(captured.map((r) => r.tool?.name)).toEqual([
+        "calculator",
+        "delete_file",
+      ]);
+
+      // Only the destructive tool interrupts; the safe one is auto-approved.
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(1);
+      const task = state.tasks?.[0];
+      expect(task?.interrupts).toHaveLength(1);
+      const hitlRequest = task!.interrupts[0].value as HITLRequest;
+      expect(hitlRequest.actionRequests).toHaveLength(1);
+      expect(hitlRequest.actionRequests[0]?.name).toBe("delete_file");
+      expect(deleteFileFn).not.toHaveBeenCalled();
     });
   });
 });
