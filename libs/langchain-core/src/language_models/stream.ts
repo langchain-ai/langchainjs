@@ -121,6 +121,14 @@ function applyDelta(
         data: (block.data ?? "") + delta.data,
       };
     case "block-delta":
+      if (
+        block.type === "text" &&
+        typeof block.text === "string" &&
+        block.text.trim() === "" &&
+        delta.fields.type === "tool_call_chunk"
+      ) {
+        return { ...delta.fields } as ContentBlock;
+      }
       return { ...block, ...delta.fields } as ContentBlock;
     default:
       throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
@@ -230,10 +238,17 @@ function parseToolArgs(value: unknown): Record<string, unknown> {
 function standardizeToolBlock(block: ContentBlock): ContentBlock {
   const record = block as Record<string, unknown>;
   if (block.type === "tool_call") return block;
+  const isToolCallInBlankTextBlock =
+    block.type === "text" &&
+    typeof block.text === "string" &&
+    block.text.trim() === "" &&
+    typeof record.name === "string" &&
+    ("args" in record || "input" in record);
   if (
     block.type !== "tool_call_chunk" &&
     block.type !== "tool_use" &&
-    block.type !== "input_json_delta"
+    block.type !== "input_json_delta" &&
+    !isToolCallInBlankTextBlock
   ) {
     return block;
   }
@@ -242,8 +257,10 @@ function standardizeToolBlock(block: ContentBlock): ContentBlock {
   if (name == null) return block;
 
   const args = record.args ?? record.input;
+  const normalizedRecord = { ...record };
+  if (isToolCallInBlankTextBlock) delete normalizedRecord.text;
   return {
-    ...record,
+    ...normalizedRecord,
     type: "tool_call",
     name,
     args: parseToolArgs(args),
