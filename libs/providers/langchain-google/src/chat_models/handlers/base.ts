@@ -8,6 +8,7 @@ import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
   BaseChatGoogleCallOptions,
   GoogleChatApiHandlerParams,
+  GooglePlatformType,
 } from "../types.js";
 
 /**
@@ -31,22 +32,20 @@ export abstract class GoogleChatApiHandler<
   }
 
   get endpoint(): string {
-    if (this.params.endpoint) {
+    if (typeof this.params.endpoint !== "undefined") {
       return this.params.endpoint;
-    }
-    if (this.params.baseUrl) {
-      return this.params.baseUrl;
-    }
-    if (this.params.platform === "gai") {
+    } else if (this.platform === "gai") {
       return "generativelanguage.googleapis.com";
-    }
-    if (this.params.isVertexExpress || this.location === "global") {
+    } else if (this.params.isVertexExpress) {
       return "aiplatform.googleapis.com";
-    }
-    if (!this.location.includes("-")) {
+    } else if (this.location === "global") {
+      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
+      return "aiplatform.googleapis.com";
+    } else if (!this.location.includes("-")) {
       return `aiplatform.${this.location}.rep.googleapis.com`;
+    } else {
+      return `${this.location}-aiplatform.googleapis.com`;
     }
-    return `${this.location}-aiplatform.googleapis.com`;
   }
 
   protected get endpointUrl(): string {
@@ -78,17 +77,7 @@ export abstract class GoogleChatApiHandler<
   protected abstract getUrlSuffix(urlMethod?: string): string;
 
   protected async buildUrlGemini(urlMethod?: string): Promise<string> {
-    const url = this.endpoint.includes("://")
-      ? new URL(this.endpoint)
-      : new URL(`https://${this.endpoint}`);
-    const suffix = this.getUrlSuffix(urlMethod);
-    const [pathPart, search] = suffix.split("?", 2);
-    const basePath = url.pathname.replace(/\/+$/, "");
-    url.pathname = `${basePath}/${this.apiVersion}${pathPart}`;
-    if (search) {
-      url.search = search;
-    }
-    return url.toString();
+    return `${this.endpointUrl}/${this.apiVersion}${this.getUrlSuffix(urlMethod)}`;
   }
 
   protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
@@ -98,8 +87,7 @@ export abstract class GoogleChatApiHandler<
   }
 
   protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
-    const projectId =
-      this.params.project ?? (await this.params.apiClient.getProjectId());
+    const projectId = await this.params.apiClient.getProjectId();
     return `${this.endpointUrl}/${
       this.apiVersion
     }/projects/${projectId}/locations/${this.location}/publishers/${
@@ -153,7 +141,7 @@ export abstract class GoogleChatApiHandler<
     options?: { name?: string; description?: string }
   ): { tools: BindToolsInput[]; toolChoice: string; functionName: string };
 
-  abstract streamChatModelEvents?(
+  streamChatModelEvents?(
     messages: BaseMessage[],
     options?: BaseChatGoogleCallOptions,
     runManager?: CallbackManagerForLLMRun

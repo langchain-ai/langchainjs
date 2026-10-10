@@ -1,7 +1,6 @@
 import {
   BaseChatGoogleParams,
   ChatGoogleFields,
-  GenerateContentSpecificFields,
   GooglePlatformType,
   settableServiceTier,
   SimplifiedSpeechConfig,
@@ -445,7 +444,7 @@ export function convertFieldsToServiceTier(
 
 export function mapDetailToMediaResolution(
   detail?: ChatGoogleFields["detail"]
-): Gemini.GenContent.MediaResolution | undefined {
+): Gemini.Shared.MediaResolution | undefined {
   switch (detail) {
     case "low":
       return "MEDIA_RESOLUTION_LOW";
@@ -456,44 +455,39 @@ export function mapDetailToMediaResolution(
   }
 }
 
-type CombinableFields = Omit<
-  BaseChatGoogleParams & GenerateContentSpecificFields,
-  "model"
->;
+type CombinableFields = Omit<BaseChatGoogleParams, "model">;
 
 export function combineGoogleChatModelFields(
   a: CombinableFields,
-  b?: CombinableFields,
+  b: CombinableFields,
   ...rest: CombinableFields[]
 ): CombinableFields {
-  const bSafe = b ?? {};
   const combined: CombinableFields = {
-    temperature: bSafe.temperature ?? a.temperature,
-    topP: bSafe.topP ?? a.topP,
-    topK: bSafe.topK ?? a.topK,
-    maxOutputTokens: bSafe.maxOutputTokens ?? a.maxOutputTokens,
-    presencePenalty: bSafe.presencePenalty ?? a.presencePenalty,
-    frequencyPenalty: bSafe.frequencyPenalty ?? a.frequencyPenalty,
-    stopSequences: bSafe.stopSequences ?? a.stopSequences,
-    seed: bSafe.seed ?? a.seed,
-    responseLogprobs: bSafe.responseLogprobs ?? a.responseLogprobs,
-    logprobs: bSafe.logprobs ?? a.logprobs,
-    safetySettings: bSafe.safetySettings ?? a.safetySettings,
-    responseSchema: bSafe.responseSchema ?? a.responseSchema,
-    responseMimeType: bSafe.responseMimeType ?? a.responseMimeType,
-    tools: bSafe.tools ?? a.tools,
-    responseModalities: bSafe.responseModalities ?? a.responseModalities,
+    temperature: b.temperature ?? a.temperature,
+    topP: b.topP ?? a.topP,
+    topK: b.topK ?? a.topK,
+    maxOutputTokens: b.maxOutputTokens ?? a.maxOutputTokens,
+    presencePenalty: b.presencePenalty ?? a.presencePenalty,
+    frequencyPenalty: b.frequencyPenalty ?? a.frequencyPenalty,
+    stopSequences: b.stopSequences ?? a.stopSequences,
+    seed: b.seed ?? a.seed,
+    responseLogprobs: b.responseLogprobs ?? a.responseLogprobs,
+    logprobs: b.logprobs ?? a.logprobs,
+    safetySettings: b.safetySettings ?? a.safetySettings,
+    responseSchema: b.responseSchema ?? a.responseSchema,
+    tools: b.tools ?? a.tools,
+    responseModalities: b.responseModalities ?? a.responseModalities,
     enableEnhancedCivicAnswers:
-      bSafe.enableEnhancedCivicAnswers ?? a.enableEnhancedCivicAnswers,
-    speechConfig: bSafe.speechConfig ?? a.speechConfig,
-    imageConfig: bSafe.imageConfig ?? a.imageConfig,
-    mediaResolution: bSafe.mediaResolution ?? a.mediaResolution,
-    detail: bSafe.detail ?? a.detail,
-    maxReasoningTokens: bSafe.maxReasoningTokens ?? a.maxReasoningTokens,
-    thinkingBudget: bSafe.thinkingBudget ?? a.thinkingBudget,
-    reasoningEffort: bSafe.reasoningEffort ?? a.reasoningEffort,
-    thinkingLevel: bSafe.thinkingLevel ?? a.thinkingLevel,
-    serviceTier: bSafe.serviceTier ?? a.serviceTier,
+      b.enableEnhancedCivicAnswers ?? a.enableEnhancedCivicAnswers,
+    speechConfig: b.speechConfig ?? a.speechConfig,
+    imageConfig: b.imageConfig ?? a.imageConfig,
+    mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    detail: b.detail ?? a.detail,
+    maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
+    thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
+    reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
+    thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
+    serviceTier: b.serviceTier ?? a.serviceTier,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));

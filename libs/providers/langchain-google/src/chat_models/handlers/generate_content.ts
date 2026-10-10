@@ -91,7 +91,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
   override getHeaders(
     options?: BaseChatGoogleCallOptions
   ): Record<string, string> {
-    const fields = combineGoogleChatModelFields(this.params, options);
+    const fields = combineGoogleChatModelFields(this.params, options ?? {});
 
     // The priority type is set via header only for Vertex
     const priorityHeaders: Record<string, string> =
@@ -231,7 +231,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamUsage: boolean =
-      options?.streamUsage ?? this.params.streamUsage;
+      options?.streamUsage ?? this.params.streamUsage ?? false;
 
     const body = {
       ...this.invocationParams(options),
@@ -486,7 +486,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
   invocationParams(
     options?: BaseChatGoogleCallOptions
   ): GenerateContentInvocationParams {
-    const fields = combineGoogleChatModelFields(this.params, options);
+    const fields = combineGoogleChatModelFields(this.params, options ?? {});
     const mediaResolution =
       fields.mediaResolution ?? mapDetailToMediaResolution(fields.detail);
 
@@ -514,7 +514,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       | JsonSchema7Type
       | Record<string, unknown>
       | undefined;
-    let responseMimeType: string | undefined = fields.responseMimeType;
+    let responseMimeType: string | undefined;
 
     if (fields.responseSchema) {
       // Convert Zod schema to JSON Schema if needed
@@ -591,7 +591,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       (schema as { parameters?: unknown }).parameters != null
     ) {
       geminiFunctionDeclaration =
-        schema as Gemini.GenContent.Tools.FunctionDeclaration;
+        schema as unknown as Gemini.GenContent.Tools.FunctionDeclaration;
       functionName = (schema as { name: string }).name;
     } else {
       // We are providing the schema for *just* the parameters
