@@ -89,6 +89,23 @@ describe("tool() literal name type inference", () => {
     // Name should still be inferred as literal even with ToolRuntime
     expectTypeOf(myTool.name).toEqualTypeOf<"greetUser">();
   });
+
+  it("should type ToolRuntime.store as unknown so callers narrow it", () => {
+    // The concrete store shape is decided by the runtime that injects it
+    // (e.g. LangGraph's `BaseStore`, which exposes `get`/`put`, not core's
+    // `mget`/`mset`). Typing it as `unknown` forces callers to narrow.
+    tool(
+      (_input, runtime: ToolRuntime) => {
+        expectTypeOf(runtime.store).toEqualTypeOf<unknown>();
+        return "ok";
+      },
+      {
+        name: "storeTypeCheck",
+        description: "verifies store type",
+        schema: z.object({}),
+      }
+    );
+  });
 });
 
 describe("tool() async generator type inference", () => {
