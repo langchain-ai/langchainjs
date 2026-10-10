@@ -968,7 +968,12 @@ test("Streaming supports empty string chunks", async () => {
 
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
-  expect(finalChunk.content).toBe("Hello world!");
+  // Text deltas now carry their contentBlockIndex and merge by index instead
+  // of concatenating into a bare string, so thinking-mode responses keep a
+  // single text block instead of hundreds of fragments. See #11357.
+  expect(finalChunk.content).toEqual([
+    { type: "text", text: "Hello world!", index: 0 },
+  ]);
 });
 
 test("Streaming throws when Bedrock stream stalls between chunks", async () => {
