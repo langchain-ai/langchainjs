@@ -2,6 +2,10 @@ import { Runnable } from "../runnables/base.js";
 import type { InputValues } from "../utils/types/index.js";
 import { TypedPromptInputValues } from "./base.js";
 import { parseTemplate, renderTemplate, TemplateFormat } from "./template.js";
+import {
+  MAX_PROMPT_TEMPLATE_DEPTH,
+  createPromptTemplateDepthError,
+} from "./utils.js";
 
 export class DictPromptTemplate<
   RunInput extends InputValues = InputValues,
@@ -55,8 +59,13 @@ export class DictPromptTemplate<
 
 function _getInputVariables(
   template: Record<string, unknown>,
-  templateFormat: TemplateFormat
+  templateFormat: TemplateFormat,
+  depth = 0
 ): Array<Extract<keyof InputValues, string>> {
+  if (depth >= MAX_PROMPT_TEMPLATE_DEPTH) {
+    throw createPromptTemplateDepthError();
+  }
+
   const inputVariables: Array<Extract<keyof InputValues, string>> = [];
   for (const v of Object.values(template)) {
     if (typeof v === "string") {
@@ -74,12 +83,18 @@ function _getInputVariables(
             }
           });
         } else if (typeof x === "object") {
-          inputVariables.push(..._getInputVariables(x, templateFormat));
+          inputVariables.push(
+            ..._getInputVariables(x, templateFormat, depth + 1)
+          );
         }
       }
     } else if (typeof v === "object" && v !== null) {
       inputVariables.push(
-        ..._getInputVariables(v as Record<string, unknown>, templateFormat)
+        ..._getInputVariables(
+          v as Record<string, unknown>,
+          templateFormat,
+          depth + 1
+        )
       );
     }
   }
@@ -89,8 +104,13 @@ function _getInputVariables(
 function _insertInputVariables(
   template: Record<string, unknown>,
   inputs: TypedPromptInputValues<InputValues>,
-  templateFormat: TemplateFormat
+  templateFormat: TemplateFormat,
+  depth = 0
 ): Record<string, unknown> {
+  if (depth >= MAX_PROMPT_TEMPLATE_DEPTH) {
+    throw createPromptTemplateDepthError();
+  }
+
   const formatted: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(template)) {
     if (typeof v === "string") {
@@ -101,7 +121,9 @@ function _insertInputVariables(
         if (typeof x === "string") {
           formattedV.push(renderTemplate(x, templateFormat, inputs));
         } else if (typeof x === "object") {
-          formattedV.push(_insertInputVariables(x, inputs, templateFormat));
+          formattedV.push(
+            _insertInputVariables(x, inputs, templateFormat, depth + 1)
+          );
         }
       }
       formatted[k] = formattedV;
@@ -109,7 +131,8 @@ function _insertInputVariables(
       formatted[k] = _insertInputVariables(
         v as Record<string, unknown>,
         inputs,
-        templateFormat
+        templateFormat,
+        depth + 1
       );
     } else {
       formatted[k] = v;
