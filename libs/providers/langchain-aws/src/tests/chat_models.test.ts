@@ -932,6 +932,187 @@ describe("reasoning content replay", () => {
   });
 });
 
+describe("unstamped tool call content replay", () => {
+  const createToolCallContent = () => [
+    { type: "text", text: "before" },
+    {
+      type: "tool_call",
+      id: "tool-call-1",
+      name: "write_file",
+      args: { file_path: "/tmp/example.txt" },
+    },
+    { type: "text", text: "after" },
+  ];
+  const expectedContent = [
+    { text: "before" },
+    {
+      toolUse: {
+        toolUseId: "tool-call-1",
+        name: "write_file",
+        input: { file_path: "/tmp/example.txt" },
+      },
+    },
+    { text: "after" },
+  ];
+
+  it("converts standard tool calls without output version metadata", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({ content: createToolCallContent() }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      { role: "assistant", content: expectedContent },
+    ]);
+  });
+
+  it("does not merge whitespace-only text into a preceding tool call", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "tool_call",
+            id: "tool-call-1",
+            name: "write_file",
+            args: { file_path: "/tmp/example.txt" },
+          },
+          { type: "text", text: "\n  " },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      {
+        role: "assistant",
+        content: [
+          {
+            toolUse: {
+              toolUseId: "tool-call-1",
+              name: "write_file",
+              input: { file_path: "/tmp/example.txt" },
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("deduplicates only matching tool calls", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: createToolCallContent(),
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "write_file",
+            args: { file_path: "/tmp/example.txt" },
+          },
+          {
+            id: "tool-call-1",
+            name: "read_file",
+            args: { file_path: "/tmp/example.txt" },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      ...expectedContent,
+      {
+        toolUse: {
+          toolUseId: "tool-call-1",
+          name: "read_file",
+          input: { file_path: "/tmp/example.txt" },
+        },
+      },
+    ]);
+  });
+
+  it("prefers inline content when mirrored tool call arguments disagree", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: createToolCallContent(),
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "write_file",
+            args: { file_path: "/tmp/stale.txt" },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual(expectedContent);
+  });
+
+  it("keeps text-only assistant content unchanged", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({ content: [{ type: "text", text: "hello" }] }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      { role: "assistant", content: [{ text: "hello" }] },
+    ]);
+  });
+
+  it("skips invalid tool calls without output version metadata", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "text", text: "before" },
+          {
+            type: "invalid_tool_call",
+            id: "tool-call-1",
+            name: "write_file",
+            args: '{"file_path":',
+            error: "Failed to parse tool call arguments as JSON",
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      { role: "assistant", content: [{ text: "before" }] },
+    ]);
+  });
+
+  it("rejects tool calls without an id before creating a Bedrock request", () => {
+    expect(() =>
+      convertToConverseMessages([
+        new AIMessage({
+          content: [
+            {
+              type: "tool_call",
+              name: "write_file",
+              args: { file_path: "/tmp/example.txt" },
+            },
+          ],
+        }),
+      ])
+    ).toThrow(
+      "Tool call content blocks must include a non-empty string id for Bedrock Converse."
+    );
+  });
+
+  it("rejects tool calls with a whitespace-only id", () => {
+    expect(() =>
+      convertToConverseMessages([
+        new AIMessage({
+          content: [
+            {
+              type: "tool_call",
+              id: "   ",
+              name: "write_file",
+              args: { file_path: "/tmp/example.txt" },
+            },
+          ],
+        }),
+      ])
+    ).toThrow(
+      "Tool call content blocks must include a non-empty string id for Bedrock Converse."
+    );
+  });
+});
+
 test("Streaming supports empty string chunks", async () => {
   const contentBlocks = [
     {
