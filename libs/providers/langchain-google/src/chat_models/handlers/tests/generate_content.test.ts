@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
-import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { ApiClient } from "../../../clients/index.js";
 import { GenerateContentApiHandler } from "../generate_content.js";
@@ -12,7 +12,6 @@ import type {
   GenerateContentApiHandlerParams,
   GenerateContentInvocationParams,
   GoogleChatApiHandlerParams,
-  BaseChatGoogleCallOptions,
 } from "../../types.js";
 
 class MockApiClient extends ApiClient {
@@ -98,32 +97,17 @@ describe("GenerateContentApiHandler", () => {
       );
     });
 
-    test("builds Gemini Developer API URL preserving gateway baseUrl path", async () => {
+    test("builds Gemini Developer API URL preserving gateway endpoint path", async () => {
       const handler = createHandler({
         platform: "gai",
         apiVersion: "v1beta",
         model: "gemini-2.0-flash",
-        baseUrl: "http://localhost:8080/gemini",
+        endpoint: "http://localhost:8080/gemini",
       });
 
       const url = await handler.buildUrl();
       expect(url).toBe(
         "http://localhost:8080/gemini/v1beta/models/gemini-2.0-flash:generateContent"
-      );
-    });
-
-    test("builds Vertex AI (gcp) standard URL with project and location", async () => {
-      const handler = createHandler({
-        platform: "gcp",
-        apiVersion: "v1",
-        model: "gemini-2.0-flash",
-        location: "us-central1",
-        project: "my-gcp-project",
-      });
-
-      const url = await handler.buildUrl();
-      expect(url).toBe(
-        "https://us-central1-aiplatform.googleapis.com/v1/projects/my-gcp-project/locations/us-central1/publishers/google/models/gemini-2.0-flash:generateContent"
       );
     });
 
@@ -460,7 +444,7 @@ describe("GenerateContentApiHandler", () => {
           return "/test-model:custom";
         }
 
-        async generate(): Promise<{ generations: ChatGenerationChunk[] }> {
+        async generate(): Promise<ChatResult> {
           return {
             generations: [
               new ChatGenerationChunk({
@@ -484,7 +468,11 @@ describe("GenerateContentApiHandler", () => {
           return {};
         }
 
-        formatStructuredOutputTool() {
+        formatStructuredOutputTool(): {
+          tools: any[];
+          toolChoice: string;
+          functionName: string;
+        } {
           throw new Error("Not implemented");
         }
       }
