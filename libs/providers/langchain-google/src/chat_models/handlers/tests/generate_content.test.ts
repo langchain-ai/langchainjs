@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { ApiClient } from "../../../clients/index.js";
@@ -469,7 +470,7 @@ describe("GenerateContentApiHandler", () => {
         }
 
         formatStructuredOutputTool(): {
-          tools: any[];
+          tools: BindToolsInput[];
           toolChoice: string;
           functionName: string;
         } {
