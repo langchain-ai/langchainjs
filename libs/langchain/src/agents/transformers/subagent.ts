@@ -176,6 +176,9 @@ export function createSubagentTransformer(
         resolveOutput = resolve as (value: unknown) => void;
         rejectOutput = reject;
       });
+      // Same rationale as the tool-call transformer: a subagent that fails
+      // must not crash the process just because nobody awaited its `output`.
+      output.catch(() => {});
 
       handles.set(key, {
         key,
