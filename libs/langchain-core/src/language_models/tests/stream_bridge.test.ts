@@ -6,6 +6,7 @@ import {
   type BaseChatModelCallOptions,
 } from "../chat_models.js";
 import type { ChatModelStreamEvent } from "../event.js";
+import { ChatModelStream } from "../stream.js";
 import type { BaseMessage } from "../../messages/base.js";
 import type { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import { BaseCallbackHandler } from "../../callbacks/base.js";
@@ -163,6 +164,90 @@ class FakeToolCallStreamModel extends BaseChatModel {
       message: new AIMessageChunk({
         content: "",
         tool_call_chunks: [{ args: '{"q":"hello"}', index: 0 }],
+      }),
+      text: "",
+    });
+  }
+}
+
+/**
+ * OpenAI-compatible models sometimes emit a whitespace text separator on
+ * the same provider index as the first tool call.
+ */
+class FakeBlankTextThenToolCallStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-blank-text-tool-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "\n\n",
+        id: "msg_blank_tool",
+        tool_call_chunks: [
+          { id: "call_1", name: "ls", args: '{"path":"/"}', index: 0 },
+        ],
+      }),
+      text: "\n\n",
+    });
+  }
+}
+
+/**
+ * Later streamed frames from some OpenAI-compatible gateways repeat the
+ * tool-call slot with empty `id` / `name`.
+ */
+class FakeEmptyIdentityToolCallStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-empty-identity-tool-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        id: "msg_empty_identity",
+        tool_call_chunks: [
+          {
+            id: "call_abb153f2f925412ca16f7b64",
+            name: "read_file",
+            args: "",
+            index: 0,
+          },
+        ],
+      }),
+      text: "",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          { id: "", name: "", args: '{"path":"/tmp/notes.md"}', index: 0 },
+        ],
       }),
       text: "",
     });
@@ -488,6 +573,59 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolFinish).toBeDefined();
       expect(toolFinish!.content.name).toBe("search");
       expect(toolFinish!.content.args).toEqual({ q: "hello" });
+    });
+
+    test("preserves a tool call after a blank streamed text block", async () => {
+      const model = new FakeBlankTextThenToolCallStreamModel({});
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
+      const message = await stream.output;
+
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "ls",
+          args: { path: "/" },
+        },
+      ]);
+    });
+
+    test("keeps first-frame tool-call identity when later frames are empty", async () => {
+      const model = new FakeEmptyIdentityToolCallStreamModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const toolFinish = events.find(
+        (event) =>
+          event.event === "content-block-finish" &&
+          event.content.type === "tool_call"
+      ) as { content: ContentBlock.Tools.ToolCall } | undefined;
+      expect(toolFinish?.content).toEqual({
+        type: "tool_call",
+        id: "call_abb153f2f925412ca16f7b64",
+        name: "read_file",
+        args: { path: "/tmp/notes.md" },
+      });
+
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
+      const message = await stream.output;
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_abb153f2f925412ca16f7b64",
+          name: "read_file",
+          args: { path: "/tmp/notes.md" },
+        },
+      ]);
     });
   });
 

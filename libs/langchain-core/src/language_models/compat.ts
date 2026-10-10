@@ -270,8 +270,14 @@ export async function* convertChunksToEvents(
           id?: string;
           name?: string;
         };
-        if (toolChunk.id != null) acc.id = toolChunk.id;
-        if (toolChunk.name != null) acc.name = toolChunk.name;
+        // Empty strings from later OpenAI-compatible frames must not
+        // overwrite the identity delivered on the first tool-call chunk.
+        if (typeof toolChunk.id === "string" && toolChunk.id.length > 0) {
+          acc.id = toolChunk.id;
+        }
+        if (typeof toolChunk.name === "string" && toolChunk.name.length > 0) {
+          acc.name = toolChunk.name;
+        }
         acc.args = (acc.args ?? "") + (toolChunk.args ?? "");
         yield {
           event: "content-block-delta" as const,
@@ -280,8 +286,8 @@ export async function* convertChunksToEvents(
             type: "block-delta" as const,
             fields: {
               type: "tool_call_chunk",
-              ...("id" in acc && acc.id != null ? { id: acc.id } : {}),
-              ...("name" in acc && acc.name != null ? { name: acc.name } : {}),
+              ...(acc.id ? { id: acc.id } : {}),
+              ...(acc.name ? { name: acc.name } : {}),
               args: acc.args,
             },
           },
@@ -458,7 +464,15 @@ function applyDeltaToBlock(
         data: (block.data ?? "") + delta.data,
       };
     case "block-delta":
-      return { ...block, ...delta.fields } as ContentBlock;
+      if (
+        block.type === "text" &&
+        typeof block.text === "string" &&
+        block.text.trim() === "" &&
+        delta.fields.type === "tool_call_chunk"
+      ) {
+        return { ...delta.fields } as ContentBlock;
+      }
+      return mergeToolCallIdentity(block, delta.fields);
     default:
       throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
   }
@@ -503,7 +517,56 @@ function contentBlockToDelta(block: ContentBlock): ContentBlockDelta {
  * Finalize a content block for the finish event.
  * For tool calls, parse the accumulated JSON args string.
  */
+function mergeToolCallIdentity(
+  block: ContentBlock,
+  fields: { type: string } & Record<string, unknown>
+): ContentBlock {
+  const current = block as Record<string, unknown>;
+  const merged = { ...current, ...fields };
+  const currentId = typeof current.id === "string" ? current.id : undefined;
+  const currentName =
+    typeof current.name === "string" ? current.name : undefined;
+  const nextId = typeof fields.id === "string" ? fields.id : undefined;
+  const nextName = typeof fields.name === "string" ? fields.name : undefined;
+  if (nextId || currentId) merged.id = nextId || currentId;
+  if (nextName || currentName) merged.name = nextName || currentName;
+  return merged as ContentBlock;
+}
+
 export function finalizeContentBlock(block: ContentBlock): ContentBlock {
+  const record = block as Record<string, unknown>;
+  if (
+    block.type === "text" &&
+    typeof block.text === "string" &&
+    block.text.trim() === "" &&
+    typeof record.name === "string" &&
+    record.name.length > 0 &&
+    ("args" in record || "input" in record)
+  ) {
+    const rawArgs = record.args ?? record.input;
+    let parsedArgs: unknown = rawArgs;
+    if (typeof rawArgs === "string") {
+      try {
+        parsedArgs = JSON.parse(rawArgs.length > 0 ? rawArgs : "{}");
+      } catch {
+        return {
+          type: "invalid_tool_call" as const,
+          id: record.id,
+          name: record.name,
+          args: rawArgs,
+          error: "Failed to parse tool call arguments as JSON",
+        } as ContentBlock.Tools.InvalidToolCall;
+      }
+    }
+    const { text: _text, ...rest } = record;
+    return {
+      ...rest,
+      type: "tool_call" as const,
+      name: record.name,
+      args: parsedArgs,
+    } as ContentBlock.Tools.ToolCall;
+  }
+
   if (block.type === "tool_call_chunk") {
     const chunk = block as ContentBlock.Tools.ToolCallChunk;
     let parsedArgs: unknown;

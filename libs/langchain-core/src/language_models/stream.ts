@@ -78,13 +78,96 @@ class ReplayBuffer {
   }
 }
 
+function isBlankTextBlock(block: ContentBlock): boolean {
+  return (
+    block.type === "text" &&
+    typeof block.text === "string" &&
+    block.text.trim() === ""
+  );
+}
+
+function isToolCallBlockType(type: unknown): boolean {
+  return (
+    type === "tool_call" ||
+    type === "tool_call_chunk" ||
+    type === "tool_use" ||
+    type === "input_json_delta"
+  );
+}
+
+function hasToolCallFields(block: Record<string, unknown>): boolean {
+  return (
+    typeof block.name === "string" &&
+    block.name.length > 0 &&
+    ("args" in block || "input" in block)
+  );
+}
+
+/**
+ * Prefer a non-empty string so later empty `id` / `name` deltas do not
+ * clobber the identity already accumulated from earlier chunks.
+ */
+function preferNonEmpty(primary: unknown, fallback: unknown): unknown {
+  if (typeof primary === "string" && primary.length > 0) return primary;
+  if (typeof fallback === "string" && fallback.length > 0) return fallback;
+  if (primary !== undefined) return primary;
+  return fallback;
+}
+
+function mergeBlockDeltaFields(
+  block: ContentBlock,
+  fields: { type: string } & Record<string, unknown>
+): ContentBlock {
+  if (isBlankTextBlock(block) && fields.type === "tool_call_chunk") {
+    return { ...fields } as ContentBlock;
+  }
+
+  const current = block as Record<string, unknown>;
+  const merged = { ...current, ...fields };
+  const id = preferNonEmpty(fields.id, current.id);
+  const name = preferNonEmpty(fields.name, current.name);
+  if (id !== undefined) merged.id = id;
+  if (name !== undefined) merged.name = name;
+  return merged as ContentBlock;
+}
+
+function mergeFinishedContentBlock(
+  current: ContentBlock | undefined,
+  finish: ContentBlock
+): ContentBlock {
+  if (current == null) return finish;
+
+  const finishRecord = finish as Record<string, unknown>;
+
+  if (isToolCallBlockType(current.type) && isBlankTextBlock(finish)) {
+    return mergeBlockDeltaFields(current, {
+      ...(finishRecord as { type: string } & Record<string, unknown>),
+      type: current.type,
+    });
+  }
+
+  if (isBlankTextBlock(finish) && hasToolCallFields(finishRecord)) {
+    const { text: _text, ...rest } = finishRecord;
+    return { ...rest, type: "tool_call_chunk" } as ContentBlock;
+  }
+
+  if (isToolCallBlockType(current.type) && isToolCallBlockType(finish.type)) {
+    return mergeBlockDeltaFields(current, {
+      ...(finishRecord as { type: string } & Record<string, unknown>),
+    });
+  }
+
+  return finish;
+}
+
 /**
  * Apply a typed delta to an accumulated content block.
  *
  * - `text-delta` → append text
  * - `reasoning-delta` → append reasoning text
  * - `data-delta` → append encoded data to `data`
- * - `block-delta` → shallow merge fields
+ * - `block-delta` → merge fields, replacing a blank text block when a
+ *   `tool_call_chunk` arrives on the same index
  *
  * @internal
  */
@@ -121,7 +204,7 @@ function applyDelta(
         data: (block.data ?? "") + delta.data,
       };
     case "block-delta":
-      return { ...block, ...delta.fields } as ContentBlock;
+      return mergeBlockDeltaFields(block, delta.fields);
     default:
       throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
   }
@@ -229,25 +312,53 @@ function parseToolArgs(value: unknown): Record<string, unknown> {
 
 function standardizeToolBlock(block: ContentBlock): ContentBlock {
   const record = block as Record<string, unknown>;
-  if (block.type === "tool_call") return block;
+  if (block.type === "tool_call") {
+    const args = record.args ?? record.input;
+    if (typeof args === "string") {
+      return {
+        ...record,
+        type: "tool_call",
+        args: parseToolArgs(args),
+      } as ContentBlock;
+    }
+    return block;
+  }
+  const isToolCallInBlankTextBlock =
+    isBlankTextBlock(block) && hasToolCallFields(record);
   if (
     block.type !== "tool_call_chunk" &&
     block.type !== "tool_use" &&
-    block.type !== "input_json_delta"
+    block.type !== "input_json_delta" &&
+    !isToolCallInBlankTextBlock
   ) {
     return block;
   }
 
   const name = typeof record.name === "string" ? record.name : undefined;
-  if (name == null) return block;
+  if (name == null || name.length === 0) return block;
 
   const args = record.args ?? record.input;
+  const normalizedRecord = { ...record };
+  if (isToolCallInBlankTextBlock) delete normalizedRecord.text;
   return {
-    ...record,
+    ...normalizedRecord,
     type: "tool_call",
     name,
     args: parseToolArgs(args),
   } as ContentBlock;
+}
+
+function getFinishedToolCall(
+  content: ContentBlock
+): ContentBlock.Tools.ToolCall | undefined {
+  if (content.type === "tool_call") {
+    return content as ContentBlock.Tools.ToolCall;
+  }
+  const standardized = standardizeToolBlock(content);
+  if (standardized.type === "tool_call") {
+    return standardized as ContentBlock.Tools.ToolCall;
+  }
+  return undefined;
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────
@@ -344,11 +455,10 @@ export class ToolCallsStream
       async *[Symbol.asyncIterator]() {
         const calls: Array<ContentBlock.Tools.ToolCall> = [];
         for await (const event of buffer.iterate()) {
-          if (
-            event.event === "content-block-finish" &&
-            event.content.type === "tool_call"
-          ) {
-            calls.push(event.content as ContentBlock.Tools.ToolCall);
+          if (event.event !== "content-block-finish") continue;
+          const call = getFinishedToolCall(event.content);
+          if (call) {
+            calls.push(call);
             yield [...calls];
           }
         }
@@ -360,12 +470,9 @@ export class ToolCallsStream
     const buffer = this._buffer;
     async function* gen() {
       for await (const event of buffer.iterate()) {
-        if (
-          event.event === "content-block-finish" &&
-          event.content.type === "tool_call"
-        ) {
-          yield event.content as ContentBlock.Tools.ToolCall;
-        }
+        if (event.event !== "content-block-finish") continue;
+        const call = getFinishedToolCall(event.content);
+        if (call) yield call;
       }
     }
     return gen();
@@ -644,7 +751,10 @@ export class ChatModelStream
         }
 
         case "content-block-finish":
-          contentBlocks[event.index] = event.content;
+          contentBlocks[event.index] = mergeFinishedContentBlock(
+            contentBlocks[event.index],
+            event.content
+          );
           break;
 
         case "usage":
