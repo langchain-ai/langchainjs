@@ -249,13 +249,13 @@ export interface GoogleChatApiHandlerParams
   caller: AsyncCaller;
   model: string;
   platform: GooglePlatformType;
-  endpoint: string;
-  location: string;
-  apiVersion: string;
-  isVertexExpress: boolean;
-  publisher: string;
-  streaming: boolean;
-  streamUsage: boolean;
+  endpoint?: string;
+  location?: string;
+  apiVersion?: string;
+  isVertexExpress?: boolean;
+  publisher?: string;
+  streaming?: boolean;
+  streamUsage?: boolean;
   customHeaders?: Record<string, string>;
 }
 
