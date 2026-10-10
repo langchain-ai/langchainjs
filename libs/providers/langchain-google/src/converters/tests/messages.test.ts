@@ -4,7 +4,7 @@ import type { Gemini } from "../../chat_models/types.js";
 import {
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
-} from "../messages.js";
+} from "../generate_content/messages.js";
 
 describe("convertGeminiPartsToToolCalls", () => {
   test("uses native functionCall.id when present", () => {
