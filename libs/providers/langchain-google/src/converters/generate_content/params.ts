@@ -7,8 +7,8 @@ import {
   SpeechSpeakerName,
   SpeechVoice,
   SpeechVoiceLanguage,
-} from "../chat_models/types.js";
-import type { Gemini } from "../chat_models/api-types.js";
+  type Gemini,
+} from "../../chat_models/types.js";
 
 /**
  * Converts a reasoning "effort" level value (e.g., "minimal", "low", "medium", "high")

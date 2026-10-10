@@ -2,7 +2,7 @@
 
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
-import type { Gemini as GeminiBase } from "./api-types.js";
+import type { GenContent as GeminiBase } from "./api_types/generate_content.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 
 export interface ChatGoogleFields {
@@ -206,12 +206,12 @@ export const settableServiceTier: GeminiBase.ServiceTier[] = [
   "priority",
 ];
 
-export { type Gemini } from "./api-types.js";
+export { type GenContent as Gemini } from "./api_types/generate_content.js";
 
 // There's a fair number of utilities that we need to extract from the base
 // Gemini OpenAPI types, Adding these directly to the base types
 // would pollute the typegen output, so we're adding them here instead.
-declare module "./api-types.js" {
+declare module "./api_types/generate_content.js" {
   export namespace Gemini {
     // Gemini parts are contained as one intersecting type
     // in the spec, so we need to pick out the specific parts we need.
