@@ -11,7 +11,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
-import type { Gemini } from "../chat_models/api-types.js";
+import type { Gemini } from "../../chat_models/types.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
 

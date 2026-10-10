@@ -13,8 +13,8 @@ import type {
   BindToolsInput,
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
-import type { Gemini } from "../chat_models/types.js";
-import { InvalidInputError, InvalidToolError } from "../utils/errors.js";
+import type { Gemini } from "../../chat_models/types.js";
+import { InvalidInputError, InvalidToolError } from "../../utils/errors.js";
 import {
   isSerializableSchema,
   SerializableSchema,
