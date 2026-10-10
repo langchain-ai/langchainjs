@@ -353,7 +353,34 @@ function restoreMessage(
  * // Generates markers like: [REDACTED_EMPLOYEE_ID_xyz789]
  * ```
  *
- * @deprecated
+ * @deprecated Use {@link piiMiddleware} with `reversible: true` instead.
+ *
+ * ```typescript
+ * // Before (deprecated):
+ * piiRedactionMiddleware({
+ *   rules: { ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g }
+ * })
+ *
+ * // After:
+ * piiMiddleware("ssn", {
+ *   detector: /\b\d{3}-?\d{2}-?\d{4}\b/g,
+ *   strategy: "redact",
+ *   reversible: true,
+ * })
+ * ```
+ *
+ * Key differences from this deprecated middleware:
+ * - Uses `beforeModel`/`afterModel` instead of `wrapModelCall`, so PII is
+ *   also removed from LangGraph state and checkpoints (not just the model
+ *   request). This is more secure — the old approach retained original PII
+ *   in state.
+ * - Built-in detectors for email, credit card, IP, MAC, and URL — custom
+ *   regex or function detectors are still supported.
+ * - Redaction map is cleared per invocation to avoid unbounded retention of
+ *   sensitive values.
+ * - Tool call arguments are restored via recursive object walk instead of
+ *   JSON serialisation, avoiding breakage when PII contains JSON-special
+ *   characters.
  */
 export function piiRedactionMiddleware(
   options: PIIRedactionMiddlewareConfig = {}
@@ -361,7 +388,7 @@ export function piiRedactionMiddleware(
   const redactionMap: RedactionMap = {};
 
   console.warn(
-    "DEPRECATED: piiRedactionMiddleware is deprecated. Please use piiMiddleware instead, go to https://docs.langchain.com/oss/javascript/langchain/middleware/built-in#pii-detection for more information."
+    'DEPRECATED: piiRedactionMiddleware is deprecated. Use piiMiddleware(type, { strategy: "redact", reversible: true }) instead. See https://docs.langchain.com/oss/javascript/langchain/middleware/built-in#pii-detection'
   );
 
   return createMiddleware({
