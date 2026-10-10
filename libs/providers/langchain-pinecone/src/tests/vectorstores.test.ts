@@ -155,6 +155,56 @@ test("PineconeStore throws when no config or index is passed", async () => {
   expect(() => new PineconeStore(embeddings, {})).toThrow();
 });
 
+test("PineconeStore addDocuments with empty input does not throw and does not call upsert", async () => {
+  // Simulate the Pinecone SDK error that would be thrown when upsert receives an empty array,
+  // matching the behaviour of @pinecone-database/pinecone@>=5 which validates records.length > 0
+  const upsert = vi.fn().mockImplementation((records: unknown[]) => {
+    if (!records || records.length === 0) {
+      throw new Error("Must pass in at least 1 record to upsert.");
+    }
+    return Promise.resolve();
+  });
+  const client = {
+    namespace: vi.fn().mockReturnValue({
+      upsert,
+      query: vi.fn().mockResolvedValue({
+        matches: [],
+      }),
+    }),
+  };
+  const embeddings = new FakeEmbeddings();
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
+
+  const ids = await store.addDocuments([]);
+  expect(ids).toEqual([]);
+  expect(upsert).not.toHaveBeenCalled();
+});
+
+test("PineconeStore addVectors with empty input does not throw and does not call upsert", async () => {
+  // Simulate the Pinecone SDK error that would be thrown when upsert receives an empty array,
+  // matching the behaviour of @pinecone-database/pinecone@>=5 which validates records.length > 0
+  const upsert = vi.fn().mockImplementation((records: unknown[]) => {
+    if (!records || records.length === 0) {
+      throw new Error("Must pass in at least 1 record to upsert.");
+    }
+    return Promise.resolve();
+  });
+  const client = {
+    namespace: vi.fn().mockReturnValue({
+      upsert,
+      query: vi.fn().mockResolvedValue({
+        matches: [],
+      }),
+    }),
+  };
+  const embeddings = new FakeEmbeddings();
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
+
+  const ids = await store.addVectors([], []);
+  expect(ids).toEqual([]);
+  expect(upsert).not.toHaveBeenCalled();
+});
+
 test("PineconeStore throws when config and index is passed", async () => {
   const upsert = vi.fn();
   const client = {
