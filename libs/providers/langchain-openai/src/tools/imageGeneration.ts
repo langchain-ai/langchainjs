@@ -40,8 +40,8 @@ export interface ImageGenerationOptions {
 
   /**
    * Control how much effort the model will exert to match the style and features,
-   * especially facial features, of input images. This parameter is only supported
-   * for `gpt-image-1`. Unsupported for `gpt-image-1-mini`.
+   * especially facial features, of input images. This parameter is supported by
+   * `gpt-image-1`, `gpt-image-1.5`, and later models. Unsupported for `gpt-image-1-mini`.
    * - `high`: Higher fidelity to input images
    * - `low`: Lower fidelity to input images
    * @default "low"
@@ -55,10 +55,17 @@ export interface ImageGenerationOptions {
   inputImageMask?: ImageGenerationInputMask;
 
   /**
-   * The image generation model to use.
+   * The image generation model to use. Accepts any model string the OpenAI
+   * Responses API supports (e.g. `gpt-image-2`), with autocomplete for
+   * currently-known models.
    * @default "gpt-image-1"
    */
-  model?: "gpt-image-1" | "gpt-image-1-mini" | "gpt-image-1.5";
+  model?:
+    | (string & {})
+    | "gpt-image-1"
+    | "gpt-image-1-mini"
+    | "gpt-image-1.5"
+    | "gpt-image-2";
 
   /**
    * Moderation level for the generated image.
@@ -220,7 +227,8 @@ function convertInputImageMask(
  *
  * @remarks
  * - Supported models: gpt-4o, gpt-4o-mini, gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, o3
- * - The image generation process always uses `gpt-image-1` model internally
+ * - The underlying image generation model defaults to `gpt-image-1` and can be
+ *   configured via the `model` option (e.g. `gpt-image-1.5`, `gpt-image-2`)
  * - The model will automatically revise prompts for improved performance
  * - Access the revised prompt via `revised_prompt` field in the output
  * - Multi-turn editing is supported by passing previous response messages

@@ -51,4 +51,24 @@ describe("OpenAI Image Generation Tool Tests", () => {
       expect(tool).toMatchObject({ type: "image_generation", action });
     }
   });
+
+  it("imageGeneration supports all known model values", () => {
+    for (const model of [
+      "gpt-image-1",
+      "gpt-image-1-mini",
+      "gpt-image-1.5",
+      "gpt-image-2",
+    ] as const) {
+      const tool = tools.imageGeneration({ model });
+      expect(tool).toMatchObject({ type: "image_generation", model });
+    }
+  });
+
+  it("imageGeneration passes through unknown model strings", () => {
+    const tool = tools.imageGeneration({ model: "gpt-image-future" });
+    expect(tool).toMatchObject({
+      type: "image_generation",
+      model: "gpt-image-future",
+    });
+  });
 });
