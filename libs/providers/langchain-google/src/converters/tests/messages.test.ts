@@ -1187,7 +1187,7 @@ describe("convertMessagesToGeminiContents", () => {
       new ToolMessage({
         content: [
           { type: "text", text: "Here is the screenshot." },
-          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } } as any,
         ],
         tool_call_id: "call-native-inline",
       }),
@@ -1455,11 +1455,10 @@ describe("executableCode and codeExecutionResult round-trip", () => {
       tool_calls: [],
     });
 
-    const result = convertMessagesToGeminiContents(
-      "gemini-2.0-flash",
-      [new HumanMessage("Calculate 1+1"), message],
-      false
-    );
+    const result = convertMessagesToGeminiContents([
+      new HumanMessage("Calculate 1+1"),
+      message,
+    ]);
 
     const modelContent = result.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
