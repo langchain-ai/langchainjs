@@ -1,5 +1,7 @@
 import {
+  BaseChatGoogleParams,
   ChatGoogleFields,
+  GenerateContentSpecificFields,
   GooglePlatformType,
   settableServiceTier,
   SimplifiedSpeechConfig,
@@ -439,4 +441,72 @@ export function convertFieldsToServiceTier(
   return {
     serviceTier: serviceTier,
   };
+}
+
+export function mapDetailToMediaResolution(
+  detail?: ChatGoogleFields["detail"]
+): Gemini.GenContent.MediaResolution | undefined {
+  switch (detail) {
+    case "low":
+      return "MEDIA_RESOLUTION_LOW";
+    case "high":
+      return "MEDIA_RESOLUTION_HIGH";
+    default:
+      return undefined;
+  }
+}
+
+type CombinableFields = Omit<
+  BaseChatGoogleParams & GenerateContentSpecificFields,
+  "model"
+>;
+
+export function combineGoogleChatModelFields(
+  a: CombinableFields,
+  b?: CombinableFields,
+  ...rest: CombinableFields[]
+): CombinableFields {
+  const bSafe = b ?? {};
+  const combined: CombinableFields = {
+    temperature: bSafe.temperature ?? a.temperature,
+    topP: bSafe.topP ?? a.topP,
+    topK: bSafe.topK ?? a.topK,
+    maxOutputTokens: bSafe.maxOutputTokens ?? a.maxOutputTokens,
+    presencePenalty: bSafe.presencePenalty ?? a.presencePenalty,
+    frequencyPenalty: bSafe.frequencyPenalty ?? a.frequencyPenalty,
+    stopSequences: bSafe.stopSequences ?? a.stopSequences,
+    seed: bSafe.seed ?? a.seed,
+    responseLogprobs: bSafe.responseLogprobs ?? a.responseLogprobs,
+    logprobs: bSafe.logprobs ?? a.logprobs,
+    safetySettings: bSafe.safetySettings ?? a.safetySettings,
+    responseSchema: bSafe.responseSchema ?? a.responseSchema,
+    responseMimeType: bSafe.responseMimeType ?? a.responseMimeType,
+    tools: bSafe.tools ?? a.tools,
+    responseModalities: bSafe.responseModalities ?? a.responseModalities,
+    enableEnhancedCivicAnswers:
+      bSafe.enableEnhancedCivicAnswers ?? a.enableEnhancedCivicAnswers,
+    speechConfig: bSafe.speechConfig ?? a.speechConfig,
+    imageConfig: bSafe.imageConfig ?? a.imageConfig,
+    mediaResolution: bSafe.mediaResolution ?? a.mediaResolution,
+    detail: bSafe.detail ?? a.detail,
+    maxReasoningTokens: bSafe.maxReasoningTokens ?? a.maxReasoningTokens,
+    thinkingBudget: bSafe.thinkingBudget ?? a.thinkingBudget,
+    reasoningEffort: bSafe.reasoningEffort ?? a.reasoningEffort,
+    thinkingLevel: bSafe.thinkingLevel ?? a.thinkingLevel,
+    serviceTier: bSafe.serviceTier ?? a.serviceTier,
+  };
+  if (rest.length > 0) {
+    return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));
+  }
+  return combined;
+}
+
+export function getGoogleChatModelParams<TParams extends BaseChatGoogleParams>(
+  modelOrParams: string | TParams,
+  paramsArg?: Omit<TParams, "model">
+): TParams {
+  const model =
+    typeof modelOrParams === "string" ? modelOrParams : modelOrParams.model;
+  const params = typeof modelOrParams === "string" ? paramsArg : modelOrParams;
+  return { model, ...params } as TParams;
 }

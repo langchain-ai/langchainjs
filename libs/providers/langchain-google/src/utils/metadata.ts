@@ -78,4 +78,3 @@ export function usageMetadataToTokenUsage(usageMetadata: UsageMetadata) {
     totalTokens: usageMetadata.total_tokens,
   };
 }
-

@@ -1,11 +1,19 @@
 /* oxlint-disable @typescript-eslint/no-namespace */
 
 import type { InteropZodType } from "@langchain/core/utils/types";
-import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
+import type {
+  BaseChatModelParams,
+  BaseChatModelCallOptions,
+  BindToolsInput,
+} from "@langchain/core/language_models/chat_models";
+import type { AsyncCaller } from "@langchain/core/utils/async_caller";
+import type { ApiClient } from "../clients/index.js";
 import type { GenContent as GenContentNamespace } from "./api_types/generate_content.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
+import type { GoogleChatApiHandler } from "./handlers/base.js";
 
-export interface ChatGoogleFields {
+export interface BaseChatGoogleFields {
   /**
    * The temperature is used for sampling during response generation, which
    * occurs when topP and topK are applied. Temperature controls the degree of
@@ -75,75 +83,10 @@ export interface ChatGoogleFields {
   seed?: number;
 
   /**
-   * If true, returns the log probabilities of the tokens that were chosen by
-   * the model at each step. By default, this parameter is set to false.
-   */
-  responseLogprobs?: boolean;
-
-  /**
-   * Returns the log probabilities of the top candidate tokens at each generation
-   * step. The model's chosen token might not be the same as the top candidate
-   * token at each step. Specify the number of candidates to return by using an
-   * integer value in the range of 1-20.
-   */
-  logprobs?: number;
-
-  /**
-   * Per request settings for blocking unsafe content
-   */
-  safetySettings?: Prettify<Gemini.Shared.SafetySetting>[];
-
-  /**
-   * Configuration for the model's thinking process
-   */
-  thinkingConfig?: Prettify<GenContentNamespace.ThinkingConfig>;
-
-  /**
-   * The schema that the generated response should match.
-   * Can be a Zod schema or a JSON Schema object.
-   * When set, the response will be structured according to this schema
-   * and `responseMimeType` will automatically be set to "application/json".
-   */
-  responseSchema?: InteropZodType | Record<string, unknown>;
-
-  /**
    * A list of tools the model may use to generate the next response.
    * Can be LangChain tools, OpenAI tools, or Gemini function declarations.
    */
   tools?: BindToolsInput[];
-
-  /**
-   * The requested modalities of the response.
-   * Represents the set of modalities that the model can return.
-   * An empty list is equivalent to requesting only text.
-   */
-  responseModalities?: Prettify<GenContentNamespace.GenerativeLanguageModality>[];
-
-  /**
-   * If true, enables enhanced civic answers feature.
-   */
-  enableEnhancedCivicAnswers?: boolean;
-
-  /**
-   * Speech generation configuration.
-   * You can use either Google's definition of the speech configuration,
-   * or a simplified version we've defined (which can be as simple
-   * as the name of a pre-defined voice).
-   */
-  speechConfig?: Prettify<GenContentNamespace.SpeechConfig> | SimplifiedSpeechConfig;
-
-  /**
-   * Configuration for image generation.
-   */
-  imageConfig?: Prettify<GenContentNamespace.ImageConfig>;
-
-  /**
-   * Media resolution for input media processing.
-   *
-   * This maps to `generationConfig.mediaResolution`, which is a scalar enum-like
-   * string value in the Gemini API.
-   */
-  mediaResolution?: Gemini.Shared.MediaResolution;
 
   /**
    * OpenAI-compatible alias for media input detail level.
@@ -181,22 +124,157 @@ export interface ChatGoogleFields {
   thinkingLevel?: Gemini.Shared.ThinkingLevel;
 
   /**
+   * Custom / additional headers to include with every request to the API.
+   * When set on both constructor params and per-invocation call options,
+   * per-invocation headers take precidence for matching keys.
+   */
+  customHeaders?: Record<string, string>;
+
+  /**
+   * Per request settings for blocking unsafe content
+   */
+  safetySettings?: Prettify<Gemini.Shared.SafetySetting>[];
+
+  /**
+   * Media resolution for input media processing.
+   *
+   * This maps to `generationConfig.mediaResolution`, which is a scalar enum-like
+   * string value in the Gemini API.
+   */
+  mediaResolution?: Gemini.Shared.MediaResolution;
+}
+
+export interface GenerateContentSpecificFields {
+  /**
+   * The schema that the generated response should match.
+   * Can be a Zod schema or a JSON Schema object.
+   * When set, the response will be structured according to this schema
+   * and `responseMimeType` will automatically be set to "application/json".
+   */
+  responseSchema?:
+    | InteropZodType
+    | SerializableSchema
+    | Record<string, unknown>;
+
+  /**
+   * Desired MIME type of the generated candidate content.
+   */
+  responseMimeType?: string;
+
+  /**
+   * The requested modalities of the response.
+   * Represents the set of modalities that the model can return.
+   * An empty list is equivalent to requesting only text.
+   */
+  responseModalities?: Prettify<GenContentNamespace.GenerativeLanguageModality>[];
+
+  /**
+   * If true, returns the log probabilities of the tokens that were chosen by
+   * the model at each step. By default, this parameter is set to false.
+   */
+  responseLogprobs?: boolean;
+
+  /**
+   * Returns the log probabilities of the top candidate tokens at each generation
+   * step. The model's chosen token might not be the same as the top candidate
+   * token at each step. Specify the number of candidates to return by using an
+   * integer value in the range of 1-20.
+   */
+  logprobs?: number;
+
+  /**
+   * Configuration for the model's thinking process
+   */
+  thinkingConfig?: Prettify<GenContentNamespace.ThinkingConfig>;
+
+  /**
+   * If true, enables enhanced civic answers feature.
+   */
+  enableEnhancedCivicAnswers?: boolean;
+
+  /**
+   * Speech generation configuration.
+   * You can use either Google's definition of the speech configuration,
+   * or a simplified version we've defined (which can be as simple
+   * as the name of a pre-defined voice).
+   */
+  speechConfig?:
+    | Prettify<GenContentNamespace.SpeechConfig>
+    | SimplifiedSpeechConfig;
+
+  /**
+   * Configuration for image generation.
+   */
+  imageConfig?: Prettify<GenContentNamespace.ImageConfig>;
+
+  /**
    * Inference service tiers.
    * "priority" offers highest reliability for higher rates.
    * "flex" offers a discount for preemptable processing.
    * Other values are treated as the standard service tier.
    */
   serviceTier?: GenContentNamespace.ServiceTier;
+}
 
-  /**
-   * Custom / additional headers to include with every request to the API.
-   * When set on both constructor params and per-invocation call options,
-   * per-invocation headers take precidence for matching keys.
-   */
+export interface GenerateContentFields
+  extends BaseChatGoogleFields, GenerateContentSpecificFields {}
+
+export interface ChatGoogleFields
+  extends BaseChatGoogleFields, Partial<GenerateContentSpecificFields> {}
+
+export type GooglePlatformType = "gai" | "gcp";
+
+export interface BaseChatGoogleParams
+  extends BaseChatModelParams, ChatGoogleFields {
+  model: string;
+  apiClient?: ApiClient;
+  endpoint?: string;
+  location?: string;
+  apiVersion?: string;
+  platformType?: GooglePlatformType;
+  vertexai?: boolean;
+  streaming?: boolean;
+  streamUsage?: boolean;
+  apiHandler?: GoogleChatApiHandlerConfig;
+}
+
+export interface BaseChatGoogleCallOptions
+  extends BaseChatModelCallOptions, ChatGoogleFields {
+  streamUsage?: boolean;
+}
+
+export interface GoogleChatApiHandlerParams
+  extends BaseChatModelParams, BaseChatGoogleFields {
+  apiClient: ApiClient;
+  caller: AsyncCaller;
+  model: string;
+  platform: GooglePlatformType;
+  endpoint: string;
+  location: string;
+  apiVersion: string;
+  isVertexExpress: boolean;
+  publisher: string;
+  streaming: boolean;
+  streamUsage: boolean;
   customHeaders?: Record<string, string>;
 }
 
-export type GooglePlatformType = "gai" | "gcp";
+export interface GenerateContentApiHandlerParams
+  extends GoogleChatApiHandlerParams, GenerateContentSpecificFields {}
+
+export type GoogleChatApiHandlerFactory = (
+  params: GoogleChatApiHandlerParams
+) => GoogleChatApiHandler;
+
+export type GoogleChatApiHandlerConfig =
+  | "generateContent"
+  | GoogleChatApiHandlerFactory;
+
+export type GenerateContentInvocationParams = Partial<
+  Omit<GenContentNamespace.GenerateContentRequest, "contents">
+> & {
+  serviceTier?: GenContentNamespace.ServiceTier;
+};
 
 // These are service tiers that we specifically need to send.
 // Other values will be ignored, resulting in the default
@@ -240,10 +318,7 @@ declare module "./api_types/generate_content.js" {
         GenContentNamespace.Part,
         "mediaResolution"
       >;
-      export type PartMetadata = Pick<
-        GenContentNamespace.Part,
-        "partMetadata"
-      >;
+      export type PartMetadata = Pick<GenContentNamespace.Part, "partMetadata">;
       export type Text = Pick<GenContentNamespace.Part, "text">;
       export type Thought = Pick<GenContentNamespace.Part, "thought">;
       export type ThoughtSignature = Pick<
@@ -364,18 +439,15 @@ export declare namespace Gemini {
     export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
     export type SpeechConfig = GenContentNamespace.SpeechConfig;
     export namespace SpeechConfig {
-      export type LanguageCode =
-        GenContentNamespace.SpeechConfig.LanguageCode;
+      export type LanguageCode = GenContentNamespace.SpeechConfig.LanguageCode;
     }
     export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
     export namespace PrebuiltVoiceConfig {
-      export type VoiceName =
-        GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
+      export type VoiceName = GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
     }
     export type SpeakerVoiceConfig = GenContentNamespace.SpeakerVoiceConfig;
     export namespace SpeakerVoiceConfig {
-      export type Speaker =
-        GenContentNamespace.SpeakerVoiceConfig.Speaker;
+      export type Speaker = GenContentNamespace.SpeakerVoiceConfig.Speaker;
     }
     export type ServiceTier = GenContentNamespace.ServiceTier;
     export type Role = GenContentNamespace.Role;
@@ -412,8 +484,7 @@ export declare namespace Gemini {
       export type ComputerUse = GenContentNamespace.Tools.ComputerUse;
       export type FunctionCallingConfig =
         GenContentNamespace.Tools.FunctionCallingConfig;
-      export type RetrievalConfig =
-        GenContentNamespace.Tools.RetrievalConfig;
+      export type RetrievalConfig = GenContentNamespace.Tools.RetrievalConfig;
       export type ToolConfig = GenContentNamespace.Tools.ToolConfig;
       export type Schema = GenContentNamespace.Tools.Schema;
       export type LatLng = GenContentNamespace.Tools.LatLng;
@@ -441,18 +512,15 @@ export declare namespace Gemini {
   export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
   export type SpeechConfig = GenContentNamespace.SpeechConfig;
   export namespace SpeechConfig {
-    export type LanguageCode =
-      GenContentNamespace.SpeechConfig.LanguageCode;
+    export type LanguageCode = GenContentNamespace.SpeechConfig.LanguageCode;
   }
   export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
   export namespace PrebuiltVoiceConfig {
-    export type VoiceName =
-      GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
+    export type VoiceName = GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
   }
   export type SpeakerVoiceConfig = GenContentNamespace.SpeakerVoiceConfig;
   export namespace SpeakerVoiceConfig {
-    export type Speaker =
-      GenContentNamespace.SpeakerVoiceConfig.Speaker;
+    export type Speaker = GenContentNamespace.SpeakerVoiceConfig.Speaker;
   }
   export type ServiceTier = GenContentNamespace.ServiceTier;
   export type Role = GenContentNamespace.Role;
@@ -491,8 +559,7 @@ export declare namespace Gemini {
     export type ComputerUse = GenContentNamespace.Tools.ComputerUse;
     export type FunctionCallingConfig =
       GenContentNamespace.Tools.FunctionCallingConfig;
-    export type RetrievalConfig =
-      GenContentNamespace.Tools.RetrievalConfig;
+    export type RetrievalConfig = GenContentNamespace.Tools.RetrievalConfig;
     export type ToolConfig = GenContentNamespace.Tools.ToolConfig;
     export type Schema = GenContentNamespace.Tools.Schema;
     export type LatLng = GenContentNamespace.Tools.LatLng;
