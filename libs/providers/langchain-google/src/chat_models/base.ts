@@ -57,15 +57,18 @@ import {
   convertToolChoiceToGeminiConfig,
   mixesBuiltinAndFunctionTools,
   schemaToGeminiParameters,
-} from "../converters/tools.js";
+} from "../converters/generate_content/tools.js";
 import {
   convertParamsToPlatformType,
   convertFieldsToSpeechConfig,
   convertFieldsToThinkingConfig,
   convertFieldsToServiceTier,
-} from "../converters/params.js";
-import { Gemini } from "./api-types.js";
-import { subtractUsageMetadata } from "../utils/metadata.js";
+} from "../converters/generate_content/params.js";
+import { GenContent as Gemini } from "./api_types/generate_content.js";
+import {
+  subtractUsageMetadata,
+  usageMetadataToTokenUsage,
+} from "../utils/metadata.js";
 import {
   isSerializableSchema,
   SerializableSchema,
@@ -167,14 +170,6 @@ export function getPlatformType(
   } else {
     return "gcp";
   }
-}
-
-function usageMetadataToTokenUsage(usageMetadata: UsageMetadata) {
-  return {
-    promptTokens: usageMetadata.input_tokens,
-    completionTokens: usageMetadata.output_tokens,
-    totalTokens: usageMetadata.total_tokens,
-  };
 }
 
 function mapDetailToMediaResolution(

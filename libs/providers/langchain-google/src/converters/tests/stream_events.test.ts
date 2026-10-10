@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertGoogleGeminiStream } from "../stream_events.js";
+import { convertGoogleGeminiStream } from "../generate_content/stream_events.js";
 
 async function collectEvents(
   chunks: Record<string, unknown>[]

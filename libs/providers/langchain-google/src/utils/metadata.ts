@@ -70,3 +70,12 @@ export function subtractUsageMetadata(
     ),
   };
 }
+
+export function usageMetadataToTokenUsage(usageMetadata: UsageMetadata) {
+  return {
+    promptTokens: usageMetadata.input_tokens,
+    completionTokens: usageMetadata.output_tokens,
+    totalTokens: usageMetadata.total_tokens,
+  };
+}
+
