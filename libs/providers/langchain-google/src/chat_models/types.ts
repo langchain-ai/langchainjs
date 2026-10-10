@@ -2,7 +2,7 @@
 
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
-import type { GenContent as GeminiBase } from "./api_types/generate_content.js";
+import type { GenContent as GenContentNamespace } from "./api_types/generate_content.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 
 export interface ChatGoogleFields {
@@ -91,12 +91,12 @@ export interface ChatGoogleFields {
   /**
    * Per request settings for blocking unsafe content
    */
-  safetySettings?: Prettify<GeminiBase.SafetySetting>[];
+  safetySettings?: Prettify<Gemini.Shared.SafetySetting>[];
 
   /**
    * Configuration for the model's thinking process
    */
-  thinkingConfig?: Prettify<GeminiBase.ThinkingConfig>;
+  thinkingConfig?: Prettify<GenContentNamespace.ThinkingConfig>;
 
   /**
    * The schema that the generated response should match.
@@ -117,7 +117,7 @@ export interface ChatGoogleFields {
    * Represents the set of modalities that the model can return.
    * An empty list is equivalent to requesting only text.
    */
-  responseModalities?: Prettify<GeminiBase.GenerativeLanguageModality>[];
+  responseModalities?: Prettify<GenContentNamespace.GenerativeLanguageModality>[];
 
   /**
    * If true, enables enhanced civic answers feature.
@@ -130,12 +130,12 @@ export interface ChatGoogleFields {
    * or a simplified version we've defined (which can be as simple
    * as the name of a pre-defined voice).
    */
-  speechConfig?: Prettify<GeminiBase.SpeechConfig> | SimplifiedSpeechConfig;
+  speechConfig?: Prettify<GenContentNamespace.SpeechConfig> | SimplifiedSpeechConfig;
 
   /**
    * Configuration for image generation.
    */
-  imageConfig?: Prettify<GeminiBase.ImageConfig>;
+  imageConfig?: Prettify<GenContentNamespace.ImageConfig>;
 
   /**
    * Media resolution for input media processing.
@@ -143,7 +143,7 @@ export interface ChatGoogleFields {
    * This maps to `generationConfig.mediaResolution`, which is a scalar enum-like
    * string value in the Gemini API.
    */
-  mediaResolution?: GeminiBase.GenerationConfig["mediaResolution"];
+  mediaResolution?: Gemini.Shared.MediaResolution;
 
   /**
    * OpenAI-compatible alias for media input detail level.
@@ -173,12 +173,12 @@ export interface ChatGoogleFields {
    * the primary thinking/reasoning setting for Gemini 3.
    * If explicitly set, then the reasoning blocks will be returned.
    */
-  reasoningEffort?: GeminiBase.ThinkingLevel;
+  reasoningEffort?: Gemini.Shared.ThinkingLevel;
 
   /**
    * An alias for `reasoningEffort` for compatibility.
    */
-  thinkingLevel?: GeminiBase.ThinkingLevel;
+  thinkingLevel?: Gemini.Shared.ThinkingLevel;
 
   /**
    * Inference service tiers.
@@ -186,7 +186,7 @@ export interface ChatGoogleFields {
    * "flex" offers a discount for preemptable processing.
    * Other values are treated as the standard service tier.
    */
-  serviceTier?: GeminiBase.ServiceTier;
+  serviceTier?: GenContentNamespace.ServiceTier;
 
   /**
    * Custom / additional headers to include with every request to the API.
@@ -201,54 +201,65 @@ export type GooglePlatformType = "gai" | "gcp";
 // These are service tiers that we specifically need to send.
 // Other values will be ignored, resulting in the default
 // or "standard" setting.
-export const settableServiceTier: GeminiBase.ServiceTier[] = [
+export const settableServiceTier: GenContentNamespace.ServiceTier[] = [
   "flex",
   "priority",
 ];
 
-export { type GenContent as Gemini } from "./api_types/generate_content.js";
-
-// There's a fair number of utilities that we need to extract from the base
-// Gemini OpenAPI types, Adding these directly to the base types
-// would pollute the typegen output, so we're adding them here instead.
+// 1. Augment GenContent so internal references in generated types resolve
 declare module "./api_types/generate_content.js" {
-  export namespace Gemini {
+  export namespace GenContent {
     // Gemini parts are contained as one intersecting type
     // in the spec, so we need to pick out the specific parts we need.
     export namespace Part {
       export type CodeExecutionResult = Pick<
-        GeminiBase.Part,
+        GenContentNamespace.Part,
         "codeExecutionResult"
       >;
-      export type ExecutableCode = Pick<GeminiBase.Part, "executableCode">;
+      export type ExecutableCode = Pick<
+        GenContentNamespace.Part,
+        "executableCode"
+      >;
       export type FileData = Pick<
-        GeminiBase.Part,
+        GenContentNamespace.Part,
         "fileData" | "videoMetadata"
       >;
       export type FunctionCall = Required<
-        Pick<GeminiBase.Part, "functionCall">
+        Pick<GenContentNamespace.Part, "functionCall">
       > &
-        Pick<GeminiBase.Part, "thoughtSignature">;
-      export type FunctionResponse = Pick<GeminiBase.Part, "functionResponse">;
+        Pick<GenContentNamespace.Part, "thoughtSignature">;
+      export type FunctionResponse = Pick<
+        GenContentNamespace.Part,
+        "functionResponse"
+      >;
       export type InlineData = Pick<
-        GeminiBase.Part,
+        GenContentNamespace.Part,
         "inlineData" | "videoMetadata"
       >;
-      export type MediaResolution = Pick<GeminiBase.Part, "mediaResolution">;
-      export type PartMetadata = Pick<GeminiBase.Part, "partMetadata">;
-      export type Text = Pick<GeminiBase.Part, "text">;
-      export type Thought = Pick<GeminiBase.Part, "thought">;
-      export type ThoughtSignature = Pick<GeminiBase.Part, "thoughtSignature">;
+      export type MediaResolution = Pick<
+        GenContentNamespace.Part,
+        "mediaResolution"
+      >;
+      export type PartMetadata = Pick<
+        GenContentNamespace.Part,
+        "partMetadata"
+      >;
+      export type Text = Pick<GenContentNamespace.Part, "text">;
+      export type Thought = Pick<GenContentNamespace.Part, "thought">;
+      export type ThoughtSignature = Pick<
+        GenContentNamespace.Part,
+        "thoughtSignature"
+      >;
     }
 
     export namespace PrebuiltVoiceConfig {
       /**
        * The name of a prebuilt voice that can be used for speech synthesis.
        *
-       * Extracted as a non-nullable type from the GeminiBase.PrebuiltVoiceConfig["voiceName"] property.
+       * Extracted as a non-nullable type from the PrebuiltVoiceConfig["voiceName"] property.
        */
       export type VoiceName = NonNullable<
-        GeminiBase.PrebuiltVoiceConfig["voiceName"]
+        GenContentNamespace.PrebuiltVoiceConfig["voiceName"]
       >;
     }
 
@@ -256,10 +267,10 @@ declare module "./api_types/generate_content.js" {
       /**
        * The speaker identifier for a custom or multi-speaker TTS configuration.
        *
-       * Extracted as a non-nullable type from the GeminiBase.SpeakerVoiceConfig["speaker"] property.
+       * Extracted as a non-nullable type from the SpeakerVoiceConfig["speaker"] property.
        */
       export type Speaker = NonNullable<
-        GeminiBase.SpeakerVoiceConfig["speaker"]
+        GenContentNamespace.SpeakerVoiceConfig["speaker"]
       >;
     }
 
@@ -267,22 +278,22 @@ declare module "./api_types/generate_content.js" {
       /**
        * The BCP-47 language code for speech synthesis (e.g., "en-US").
        *
-       * Extracted as a non-nullable type from the GeminiBase.SpeechConfig["languageCode"] property.
+       * Extracted as a non-nullable type from the SpeechConfig["languageCode"] property.
        */
       export type LanguageCode = NonNullable<
-        GeminiBase.SpeechConfig["languageCode"]
+        GenContentNamespace.SpeechConfig["languageCode"]
       >;
     }
 
     /**
      * The level of "thinking" or reasoning configured for the model.
      *
-     * Extends GeminiBase.ThinkingConfig["thinkingLevel"] to also accept
+     * Extends ThinkingConfig["thinkingLevel"] to also accept
      * lowercase variants (e.g. "high" in addition to "HIGH").
      */
     export type ThinkingLevel =
-      | GeminiBase.ThinkingConfig["thinkingLevel"]
-      | LowercaseLiteral<GeminiBase.ThinkingConfig["thinkingLevel"]>;
+      | GenContentNamespace.ThinkingConfig["thinkingLevel"]
+      | LowercaseLiteral<GenContentNamespace.ThinkingConfig["thinkingLevel"]>;
 
     /**
      * The role of a content message. The spec types this as `string`, but
@@ -294,12 +305,13 @@ declare module "./api_types/generate_content.js" {
      * Alias for the unwieldy generated grounding support type name.
      */
     export type GroundingSupport =
-      GeminiBase.GoogleAiGenerativelanguageV1betaGroundingSupport;
+      GenContentNamespace.GoogleAiGenerativelanguageV1betaGroundingSupport;
 
     /**
      * Alias for the unwieldy generated segment type name.
      */
-    export type Segment = GeminiBase.GoogleAiGenerativelanguageV1betaSegment;
+    export type Segment =
+      GenContentNamespace.GoogleAiGenerativelanguageV1betaSegment;
 
     export namespace Tools {
       /**
@@ -307,7 +319,7 @@ declare module "./api_types/generate_content.js" {
        * FunctionCallingConfig interface.
        */
       export type FunctionCallingConfigMode =
-        GeminiBase.Tools.FunctionCallingConfig["mode"];
+        GenContentNamespace.Tools.FunctionCallingConfig["mode"];
     }
 
     /**
@@ -315,7 +327,7 @@ declare module "./api_types/generate_content.js" {
      * Not in the current OpenAPI spec but still returned by the API.
      */
     export interface UrlRetrievalMetadata {
-      urlRetrievalContexts?: Array<GeminiBase.UrlMetadata>;
+      urlRetrievalContexts?: Array<GenContentNamespace.UrlMetadata>;
     }
 
     // Augment Candidate with legacy field the API still returns.
@@ -326,32 +338,200 @@ declare module "./api_types/generate_content.js" {
   }
 }
 
+// 2. Expose the Gemini composite namespace
+export declare namespace Gemini {
+  export namespace Shared {
+    export type HarmCategory = GenContentNamespace.HarmCategory;
+    export type SafetySetting = GenContentNamespace.SafetySetting;
+    export type MediaResolution =
+      GenContentNamespace.GenerationConfig["mediaResolution"];
+    export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
+  }
+
+  export namespace GenContent {
+    export type Content = GenContentNamespace.Content;
+    export type Candidate = GenContentNamespace.Candidate;
+    export type GenerateContentRequest =
+      GenContentNamespace.GenerateContentRequest;
+    export type GenerateContentResponse =
+      GenContentNamespace.GenerateContentResponse;
+    export type GenerationConfig = GenContentNamespace.GenerationConfig;
+    export type SafetyRating = GenContentNamespace.SafetyRating;
+    export type SafetySetting = GenContentNamespace.SafetySetting;
+    export type PromptFeedback = GenContentNamespace.PromptFeedback;
+    export type Tool = GenContentNamespace.Tool;
+    export type ThinkingConfig = GenContentNamespace.ThinkingConfig;
+    export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
+    export type SpeechConfig = GenContentNamespace.SpeechConfig;
+    export namespace SpeechConfig {
+      export type LanguageCode =
+        GenContentNamespace.SpeechConfig.LanguageCode;
+    }
+    export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
+    export namespace PrebuiltVoiceConfig {
+      export type VoiceName =
+        GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
+    }
+    export type SpeakerVoiceConfig = GenContentNamespace.SpeakerVoiceConfig;
+    export namespace SpeakerVoiceConfig {
+      export type Speaker =
+        GenContentNamespace.SpeakerVoiceConfig.Speaker;
+    }
+    export type ServiceTier = GenContentNamespace.ServiceTier;
+    export type Role = GenContentNamespace.Role;
+    export type GroundingSupport = GenContentNamespace.GroundingSupport;
+    export type GroundingMetadata = GenContentNamespace.GroundingMetadata;
+    export type CitationMetadata = GenContentNamespace.CitationMetadata;
+    export type UsageMetadata = GenContentNamespace.UsageMetadata;
+    export type ModalityTokenCount = GenContentNamespace.ModalityTokenCount;
+    export type Part = GenContentNamespace.Part;
+    export namespace Part {
+      export type CodeExecutionResult =
+        GenContentNamespace.Part.CodeExecutionResult;
+      export type ExecutableCode = GenContentNamespace.Part.ExecutableCode;
+      export type FileData = GenContentNamespace.Part.FileData;
+      export type FunctionCall = GenContentNamespace.Part.FunctionCall;
+      export type FunctionResponse = GenContentNamespace.Part.FunctionResponse;
+      export type InlineData = GenContentNamespace.Part.InlineData;
+      export type MediaResolution = GenContentNamespace.Part.MediaResolution;
+      export type PartMetadata = GenContentNamespace.Part.PartMetadata;
+      export type Text = GenContentNamespace.Part.Text;
+      export type Thought = GenContentNamespace.Part.Thought;
+      export type ThoughtSignature = GenContentNamespace.Part.ThoughtSignature;
+    }
+    export namespace Tools {
+      export type FunctionCallingConfigMode =
+        GenContentNamespace.Tools.FunctionCallingConfigMode;
+      export type FunctionDeclaration =
+        GenContentNamespace.Tools.FunctionDeclaration;
+      export type GoogleSearch = GenContentNamespace.Tools.GoogleSearch;
+      export type CodeExecution = GenContentNamespace.Tools.CodeExecution;
+      export type UrlContext = GenContentNamespace.Tools.UrlContext;
+      export type GoogleMaps = GenContentNamespace.Tools.GoogleMaps;
+      export type FileSearch = GenContentNamespace.Tools.FileSearch;
+      export type ComputerUse = GenContentNamespace.Tools.ComputerUse;
+      export type FunctionCallingConfig =
+        GenContentNamespace.Tools.FunctionCallingConfig;
+      export type RetrievalConfig =
+        GenContentNamespace.Tools.RetrievalConfig;
+      export type ToolConfig = GenContentNamespace.Tools.ToolConfig;
+      export type Schema = GenContentNamespace.Tools.Schema;
+      export type LatLng = GenContentNamespace.Tools.LatLng;
+      export type Interval = GenContentNamespace.Tools.Interval;
+      export type SearchTypes = GenContentNamespace.Tools.SearchTypes;
+      export type Type = GenContentNamespace.Tools.Type;
+      export type WebSearch = GenContentNamespace.Tools.WebSearch;
+      export type ImageSearch = GenContentNamespace.Tools.ImageSearch;
+    }
+  }
+
+  // Type aliases for generateContent wire types during Phase 1 transition
+  export type Content = GenContentNamespace.Content;
+  export type Candidate = GenContentNamespace.Candidate;
+  export type GenerateContentRequest =
+    GenContentNamespace.GenerateContentRequest;
+  export type GenerateContentResponse =
+    GenContentNamespace.GenerateContentResponse;
+  export type GenerationConfig = GenContentNamespace.GenerationConfig;
+  export type SafetyRating = GenContentNamespace.SafetyRating;
+  export type SafetySetting = GenContentNamespace.SafetySetting;
+  export type PromptFeedback = GenContentNamespace.PromptFeedback;
+  export type Tool = GenContentNamespace.Tool;
+  export type ThinkingConfig = GenContentNamespace.ThinkingConfig;
+  export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
+  export type SpeechConfig = GenContentNamespace.SpeechConfig;
+  export namespace SpeechConfig {
+    export type LanguageCode =
+      GenContentNamespace.SpeechConfig.LanguageCode;
+  }
+  export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
+  export namespace PrebuiltVoiceConfig {
+    export type VoiceName =
+      GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
+  }
+  export type SpeakerVoiceConfig = GenContentNamespace.SpeakerVoiceConfig;
+  export namespace SpeakerVoiceConfig {
+    export type Speaker =
+      GenContentNamespace.SpeakerVoiceConfig.Speaker;
+  }
+  export type ServiceTier = GenContentNamespace.ServiceTier;
+  export type Role = GenContentNamespace.Role;
+  export type GroundingSupport = GenContentNamespace.GroundingSupport;
+  export type GroundingMetadata = GenContentNamespace.GroundingMetadata;
+  export type CitationMetadata = GenContentNamespace.CitationMetadata;
+  export type UsageMetadata = GenContentNamespace.UsageMetadata;
+  export type ModalityTokenCount = GenContentNamespace.ModalityTokenCount;
+
+  export type Part = GenContentNamespace.Part;
+  export namespace Part {
+    export type CodeExecutionResult =
+      GenContentNamespace.Part.CodeExecutionResult;
+    export type ExecutableCode = GenContentNamespace.Part.ExecutableCode;
+    export type FileData = GenContentNamespace.Part.FileData;
+    export type FunctionCall = GenContentNamespace.Part.FunctionCall;
+    export type FunctionResponse = GenContentNamespace.Part.FunctionResponse;
+    export type InlineData = GenContentNamespace.Part.InlineData;
+    export type MediaResolution = GenContentNamespace.Part.MediaResolution;
+    export type PartMetadata = GenContentNamespace.Part.PartMetadata;
+    export type Text = GenContentNamespace.Part.Text;
+    export type Thought = GenContentNamespace.Part.Thought;
+    export type ThoughtSignature = GenContentNamespace.Part.ThoughtSignature;
+  }
+
+  export namespace Tools {
+    export type FunctionCallingConfigMode =
+      GenContentNamespace.Tools.FunctionCallingConfigMode;
+    export type FunctionDeclaration =
+      GenContentNamespace.Tools.FunctionDeclaration;
+    export type GoogleSearch = GenContentNamespace.Tools.GoogleSearch;
+    export type CodeExecution = GenContentNamespace.Tools.CodeExecution;
+    export type UrlContext = GenContentNamespace.Tools.UrlContext;
+    export type GoogleMaps = GenContentNamespace.Tools.GoogleMaps;
+    export type FileSearch = GenContentNamespace.Tools.FileSearch;
+    export type ComputerUse = GenContentNamespace.Tools.ComputerUse;
+    export type FunctionCallingConfig =
+      GenContentNamespace.Tools.FunctionCallingConfig;
+    export type RetrievalConfig =
+      GenContentNamespace.Tools.RetrievalConfig;
+    export type ToolConfig = GenContentNamespace.Tools.ToolConfig;
+    export type Schema = GenContentNamespace.Tools.Schema;
+    export type LatLng = GenContentNamespace.Tools.LatLng;
+    export type Interval = GenContentNamespace.Tools.Interval;
+    export type SearchTypes = GenContentNamespace.Tools.SearchTypes;
+    export type Type = GenContentNamespace.Tools.Type;
+    export type WebSearch = GenContentNamespace.Tools.WebSearch;
+    export type ImageSearch = GenContentNamespace.Tools.ImageSearch;
+  }
+}
+
+export type { GenContentNamespace as GenContent };
+
 /**
  * Simplified speaker/name pair for multi-speaker config.
  * - `speaker` derived from SpeakerVoiceConfig["speaker"]
  * - `name` is the prebuilt voice name
  */
 export interface SpeechSpeakerName {
-  speaker: GeminiBase.SpeakerVoiceConfig.Speaker;
-  name: GeminiBase.PrebuiltVoiceConfig.VoiceName;
+  speaker: Gemini.GenContent.SpeakerVoiceConfig.Speaker;
+  name: Gemini.GenContent.PrebuiltVoiceConfig.VoiceName;
 }
 
 /** A voice can be a prebuilt voice name, a speaker/name pair, or an array of pairs */
 export type SpeechVoice =
-  | GeminiBase.PrebuiltVoiceConfig.VoiceName
+  | Gemini.GenContent.PrebuiltVoiceConfig.VoiceName
   | SpeechSpeakerName
   | SpeechSpeakerName[];
 
 /** Voice with language code (derived from SpeechConfig's languageCode) */
 export interface SpeechVoiceLanguage {
   voice: SpeechVoice;
-  languageCode: GeminiBase.SpeechConfig.LanguageCode;
+  languageCode: Gemini.GenContent.SpeechConfig.LanguageCode;
 }
 
 /** Voices with language code */
 export interface SpeechVoicesLanguage {
   voices: SpeechVoice;
-  languageCode: GeminiBase.SpeechConfig.LanguageCode;
+  languageCode: Gemini.GenContent.SpeechConfig.LanguageCode;
 }
 
 /** Simplified language config (with voice or voices) */

@@ -13,7 +13,7 @@ import {
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertGoogleGeminiStream } from "../utils/stream_events.js";
+import { convertGoogleGeminiStream } from "../converters/generate_content/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EventSourceParserStream } from "eventsource-parser/stream";
@@ -44,7 +44,7 @@ import {
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
   convertMessagesToGeminiSystemInstruction,
-} from "../converters/messages.js";
+} from "../converters/generate_content/messages.js";
 import {
   ConfigurationError,
   MalformedOutputError,
@@ -64,7 +64,7 @@ import {
   convertFieldsToThinkingConfig,
   convertFieldsToServiceTier,
 } from "../converters/generate_content/params.js";
-import { GenContent as Gemini } from "./api_types/generate_content.js";
+import type { Gemini } from "./types.js";
 import {
   subtractUsageMetadata,
   usageMetadataToTokenUsage,
@@ -81,7 +81,7 @@ import {
 import { iife } from "../utils/misc";
 import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import ServiceTier = Gemini.ServiceTier;
+type ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -115,22 +115,27 @@ function hasVertexCredentials(params: {
  *
  * @returns a new params object with gateway routing applied when applicable.
  */
-export function applyGeminiGatewayParams<
-  TParams extends {
+export function applyGeminiGatewayParams<TParams extends object>(
+  params: TParams
+): TParams & {
+  apiKey?: string;
+  endpoint?: string;
+  platformType?: GooglePlatformType;
+} {
+  const p = params as {
     apiKey?: string;
     endpoint?: string;
     platformType?: GooglePlatformType;
     vertexai?: boolean;
     credentials?: unknown;
     googleAuthOptions?: unknown;
-  },
->(params: TParams): TParams & { apiKey?: string; endpoint?: string } {
-  if (typeof params.endpoint !== "undefined") {
+  };
+  if (typeof p.endpoint !== "undefined") {
     return { ...params };
   }
   const platform =
-    convertParamsToPlatformType(params) ??
-    (hasVertexCredentials(params) ? "gcp" : "gai");
+    convertParamsToPlatformType(p) ??
+    (hasVertexCredentials(p) ? "gcp" : "gai");
   const gatewayConfig = resolveLangSmithGatewayConfig({
     providerPath: platform === "gcp" ? "vertex" : "gemini",
   });
@@ -153,7 +158,7 @@ export function applyGeminiGatewayParams<
       : `${gatewayUrl.protocol}//${gatewayUrl.host}${path}`;
   return {
     ...params,
-    apiKey: params.apiKey ?? gatewayConfig.apiKey,
+    apiKey: p.apiKey ?? gatewayConfig.apiKey,
     endpoint,
     platformType: platform,
   };
@@ -242,7 +247,9 @@ export interface BaseChatGoogleParams
 }
 
 export interface BaseChatGoogleCallOptions
-  extends BaseChatModelCallOptions, ChatGoogleFields {}
+  extends BaseChatModelCallOptions, ChatGoogleFields {
+  streamUsage?: boolean;
+}
 
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
@@ -569,7 +576,9 @@ export abstract class BaseChatGoogle<
             .originalTextContentBlock as Record<string, unknown>
         ).text = finalChunk.message.content;
       }
-      const usageMetadata = finalChunk?.message?.usage_metadata;
+      const usageMetadata = (
+        finalChunk?.message as AIMessageChunk | undefined
+      )?.usage_metadata;
       return {
         generations: finalChunk ? [finalChunk] : [],
         ...(usageMetadata
