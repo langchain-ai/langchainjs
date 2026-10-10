@@ -1235,7 +1235,7 @@ export class ChatCohere<
         if (toolCalls.length > 0) {
           toolCallChunks = toolCalls.map((toolCall: any) => ({
             name: toolCall.function.name,
-            args: toolCall.function.arguments,
+            args: JSON.stringify(toolCall.function.arguments),
             id: toolCall.id,
             index: toolCall.index,
             type: "tool_call_chunk",
