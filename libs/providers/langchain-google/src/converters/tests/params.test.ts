@@ -81,12 +81,12 @@ describe("convertReasoningTokensToReasoningEffort", () => {
   });
 
   test("returns minimal for budget 0 (unless gemini-3-pro)", () => {
-    expect(
-      convertReasoningTokensToReasoningEffort("gemini-2.5-flash", 0)
-    ).toBe("minimal");
-    expect(
-      convertReasoningTokensToReasoningEffort("gemini-3-pro", 0)
-    ).toBe("low");
+    expect(convertReasoningTokensToReasoningEffort("gemini-2.5-flash", 0)).toBe(
+      "minimal"
+    );
+    expect(convertReasoningTokensToReasoningEffort("gemini-3-pro", 0)).toBe(
+      "low"
+    );
   });
 
   test("maps ranges appropriately", () => {
@@ -164,15 +164,15 @@ describe("convertFieldsToSpeechConfig", () => {
 
 describe("convertFieldsToServiceTier", () => {
   test("returns empty object for gcp platform", () => {
-    expect(
-      convertFieldsToServiceTier("gcp", { serviceTier: "flex" })
-    ).toEqual({});
+    expect(convertFieldsToServiceTier("gcp", { serviceTier: "flex" })).toEqual(
+      {}
+    );
   });
 
   test("returns serviceTier for valid gai settable tier", () => {
-    expect(
-      convertFieldsToServiceTier("gai", { serviceTier: "flex" })
-    ).toEqual({ serviceTier: "flex" });
+    expect(convertFieldsToServiceTier("gai", { serviceTier: "flex" })).toEqual({
+      serviceTier: "flex",
+    });
     expect(
       convertFieldsToServiceTier("gai", { serviceTier: "priority" })
     ).toEqual({ serviceTier: "priority" });
