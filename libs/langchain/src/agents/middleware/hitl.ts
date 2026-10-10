@@ -649,7 +649,9 @@ export function humanInTheLoopMiddleware(
       // Create a tool message with the human's text response
       const content =
         decision.message ??
-        `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
+        `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}. ` +
+        `The tool was not executed. Do not retry this tool call unless the user ` +
+        `explicitly requests it.`;
 
       const toolMessage = new ToolMessage({
         content,
