@@ -983,7 +983,6 @@ export const convertMessagesToGeminiContents: Converter<
     // const content: Gemini.Content | null = convertContentMessageToGeminiContent(message, messages);
     const content: Gemini.Content | null = iife(() => {
       const outputVersion =
-        message.response_metadata &&
         "output_version" in message.response_metadata
           ? (message.response_metadata?.output_version as string)
           : "v0";
