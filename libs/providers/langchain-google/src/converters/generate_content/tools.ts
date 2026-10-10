@@ -74,7 +74,7 @@ function adjustObjectType(
   return obj;
 }
 
-// Keywords Gemini's function schema accepts. Keep in sync with Gemini.Tools.Schema (api-types.ts); anything else 400s (#8584).
+// Keywords Gemini's function schema accepts. Keep in sync with Gemini.Tools.Schema (api_types/generate_content.ts); anything else 400s (#8584).
 const GEMINI_SCHEMA_KEYS = new Set([
   "anyOf",
   "default",
