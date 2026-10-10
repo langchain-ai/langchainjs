@@ -483,6 +483,186 @@ describe("ChatModelStream", () => {
       expect(message.response_metadata?.finish_reason).toBe("tool_use");
     });
 
+    test("keeps assistant text emitted at a reasoning block's protocol index", async () => {
+      // Reproduces OpenAI Responses streaming for reasoning models: text deltas
+      // are emitted at `index: 0`, which is already occupied by a reasoning
+      // block. Without type-aware routing the text is silently dropped from the
+      // assembled message (and therefore from anything that persists it).
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_reasoning_text" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Think A" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "reasoning-delta", reasoning: " more" },
+          },
+          {
+            event: "content-block-start",
+            index: 1,
+            content: { type: "reasoning", reasoning: "Think B" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: "Two quick" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: " approaches:" },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Think A more" },
+          },
+          {
+            event: "content-block-finish",
+            index: 1,
+            content: { type: "reasoning", reasoning: "Think B" },
+          },
+          { event: "message-finish", reason: "stop" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.contentBlocks).toEqual([
+        { type: "reasoning", reasoning: "Think A more" },
+        { type: "reasoning", reasoning: "Think B" },
+        { type: "text", text: "Two quick approaches:" },
+      ]);
+      expect(message.text).toBe("Two quick approaches:");
+    });
+
+    test("orders blocks by numeric index when starts arrive interleaved", async () => {
+      // The protocol's `index` is positional: a stream that starts index 1
+      // before index 0 must still assemble as [0, 1], not first-seen order.
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_interleaved" },
+          {
+            event: "content-block-start",
+            index: 1,
+            content: { type: "text", text: "" },
+          },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "text", text: "" },
+          },
+          {
+            event: "content-block-delta",
+            index: 1,
+            delta: { type: "text-delta", text: "second" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: "first" },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: { type: "text", text: "first" },
+          },
+          {
+            event: "content-block-finish",
+            index: 1,
+            content: { type: "text", text: "second" },
+          },
+          { event: "message-finish", reason: "stop" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.contentBlocks).toEqual([
+        { type: "text", text: "first" },
+        { type: "text", text: "second" },
+      ]);
+    });
+
+    test("does not let a later content-block-start clobber rerouted text", async () => {
+      // Regression: a colliding text delta at index 0 must not be assigned a
+      // numeric slot that a subsequent real `content-block-start` (here index 1)
+      // can overwrite. The rerouted text lives in its own keyspace.
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_reroute_clobber" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Reasoning" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: "Answer" },
+          },
+          {
+            event: "content-block-start",
+            index: 1,
+            content: {
+              type: "tool_call_chunk",
+              id: "call_1",
+              name: "calc",
+              args: "",
+            } as unknown as ContentBlock,
+          },
+          {
+            event: "content-block-delta",
+            index: 1,
+            delta: {
+              type: "block-delta",
+              fields: {
+                type: "tool_call_chunk",
+                id: "call_1",
+                name: "calc",
+                args: '{"x":1}',
+              },
+            },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Reasoning" },
+          },
+          {
+            event: "content-block-finish",
+            index: 1,
+            content: {
+              type: "tool_call",
+              id: "call_1",
+              name: "calc",
+              args: { x: 1 },
+            } as unknown as ContentBlock,
+          },
+          { event: "message-finish", reason: "tool_use" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      // Real blocks keep numeric index order (reasoning @0, tool_call @1); the
+      // rerouted text is appended after them in its own keyspace, so the index 1
+      // start cannot overwrite it.
+      expect(message.contentBlocks).toEqual([
+        { type: "reasoning", reasoning: "Reasoning" },
+        { type: "tool_call", id: "call_1", name: "calc", args: { x: 1 } },
+        { type: "text", text: "Answer" },
+      ]);
+      expect(message.text).toBe("Answer");
+      expect(message.tool_calls).toEqual([
+        { type: "tool_call", id: "call_1", name: "calc", args: { x: 1 } },
+      ]);
+    });
+
     test("normalizes provider tool-use blocks into tool calls", async () => {
       const stream = new ChatModelStream(
         iterEvents([
