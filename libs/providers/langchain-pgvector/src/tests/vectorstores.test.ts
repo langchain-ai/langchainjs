@@ -112,7 +112,7 @@ describe("PGVectorStore", () => {
       expect(store.skipInitializationCheck).toBe(false);
       expect(store.chunkSize).toBe(500);
       expect(store.distanceStrategy).toBe("cosine");
-      expect(store.scoreNormalization).toBe("distance");
+      expect(store.scoreNormalization).toBe("similarity");
     });
 
     test("accepts custom chunkSize", () => {
@@ -400,7 +400,65 @@ describe("PGVectorStore", () => {
       expect(results[0][0].pageContent).toBe("hello world");
       expect(results[0][0].metadata).toEqual({ key: "value" });
       expect(results[0][0].id).toBe("uuid-1");
-      expect(results[0][1]).toBe(0.1);
+      expect(results[0][1]).toBe(0.95);
+    });
+
+    test("returns similarity score of 1.0 for exact match (distance 0.0) by default", async () => {
+      const pool = createMockPool();
+      pool.query.mockResolvedValue({
+        rows: [
+          {
+            id: "uuid-exact",
+            text: "exact match",
+            metadata: {},
+            embedding: "[0.1,0.2,0.3]",
+            _distance: 0.0,
+          },
+        ],
+      });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      const results = await store.similaritySearchVectorWithScore(
+        [0.1, 0.2, 0.3],
+        1
+      );
+
+      expect(results).toHaveLength(1);
+      // cosine similarity = (2 - distance) / 2; distance 0.0 => similarity 1.0
+      expect(results[0][1]).toBe(1.0);
+    });
+
+    test("returns similarity score of 0.75 for cosine distance 0.5 by default", async () => {
+      const pool = createMockPool();
+      pool.query.mockResolvedValue({
+        rows: [
+          {
+            id: "uuid-half",
+            text: "half similar",
+            metadata: {},
+            embedding: "[0.1,0.2,0.3]",
+            _distance: 0.5,
+          },
+        ],
+      });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      const results = await store.similaritySearchVectorWithScore(
+        [0.1, 0.2, 0.3],
+        1
+      );
+
+      expect(results).toHaveLength(1);
+      // cosine similarity = (2 - distance) / 2; distance 0.5 => similarity 0.75
+      expect(results[0][1]).toBe(0.75);
     });
 
     test("applies metadata filter", async () => {
@@ -589,9 +647,9 @@ describe("PGVectorStore", () => {
       expect(store.convertDistanceToScore(-5)).toBe(5);
     });
 
-    test("scoreNormalization defaults to 'distance'", () => {
+    test("scoreNormalization defaults to 'similarity'", () => {
       const store = createStore();
-      expect(store.scoreNormalization).toBe("distance");
+      expect(store.scoreNormalization).toBe("similarity");
     });
 
     test("scoreNormalization can be set to 'similarity'", () => {
