@@ -295,6 +295,7 @@ export async function* convertOpenAIResponsesStream(
         model_provider: provider,
         id: event.response.id,
         model: event.response.model,
+        model_name: event.response.model,
         status: event.response.status,
       };
       if (shouldStreamUsage && event.response.usage) {
