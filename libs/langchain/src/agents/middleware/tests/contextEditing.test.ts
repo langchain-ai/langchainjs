@@ -770,5 +770,77 @@ describe("contextEditingMiddleware", () => {
       const clearedMessages = filterClearedMessages(result.messages);
       expect(clearedMessages.length).toBe(0);
     });
+
+    it("should remove tool messages not immediately after their tool call", async () => {
+      const edit = new ClearToolUsesEdit({
+        trigger: { tokens: 1_000_000 },
+        keep: { messages: 3 },
+      });
+
+      const messages: BaseMessage[] = [
+        new HumanMessage("First question"),
+        new AIMessage({
+          content: "Searching",
+          tool_calls: [
+            { id: "toolu_old", name: "search", args: { query: "a" } },
+          ],
+        }),
+        new ToolMessage({
+          content: "[cleared]",
+          tool_call_id: "toolu_old",
+          response_metadata: {
+            context_editing: { cleared: true, strategy: "clear_tool_uses" },
+          },
+        }),
+        new AIMessage("First answer"),
+        new HumanMessage("Follow-up"),
+        // Misplaced duplicate: valid id exists earlier, but previous message is human
+        new ToolMessage({
+          content: "[cleared]",
+          tool_call_id: "toolu_old",
+          response_metadata: {
+            context_editing: { cleared: true, strategy: "clear_tool_uses" },
+          },
+        }),
+        new AIMessage({
+          content: "Searching again",
+          tool_calls: [
+            { id: "toolu_new", name: "search", args: { query: "b" } },
+          ],
+        }),
+        new ToolMessage({
+          content: "fresh results",
+          tool_call_id: "toolu_new",
+        }),
+        new AIMessage("Second answer"),
+      ];
+
+      const countTokens: TokenCounter = async () => 0;
+      await edit.apply({
+        messages,
+        model: new FakeToolCallingChatModel({
+          responses: [new AIMessage("ok")],
+        }),
+        countTokens,
+      });
+
+      expect(
+        messages.some(
+          (msg) =>
+            ToolMessage.isInstance(msg) &&
+            msg.tool_call_id === "toolu_old" &&
+            messages[messages.indexOf(msg) - 1] &&
+            HumanMessage.isInstance(messages[messages.indexOf(msg) - 1])
+        )
+      ).toBe(false);
+
+      const toolMessages = messages.filter(ToolMessage.isInstance);
+      expect(toolMessages).toHaveLength(2);
+      expect(toolMessages[0]?.tool_call_id).toBe("toolu_old");
+      expect(toolMessages[1]?.tool_call_id).toBe("toolu_new");
+      expect(
+        AIMessage.isInstance(messages[messages.indexOf(toolMessages[1]!) - 1])
+      ).toBe(true);
+    });
   });
 });
