@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
@@ -79,4 +79,52 @@ test("convertToOllamaMessages returns string content for AIMessage without tool_
   expect(result).toHaveLength(1);
   expect(result[0].content).toBe("Hello!");
   expect(result[0].tool_calls).toBeUndefined();
+});
+
+test("convertToOllamaMessages joins text blocks of a ToolMessage", () => {
+  const toolMsg = new ToolMessage({
+    tool_call_id: "call_1",
+    content: [
+      { type: "text", text: "First line." },
+      { type: "text", text: "Second line." },
+    ],
+  });
+
+  expect(convertToOllamaMessages([toolMsg])).toEqual([
+    { role: "tool", content: "First line.\nSecond line." },
+  ]);
+});
+
+test("convertToOllamaMessages sends ToolMessage images as Ollama images", () => {
+  const toolMsg = new ToolMessage({
+    tool_call_id: "call_1",
+    content: [
+      { type: "text", text: "Took a screenshot." },
+      { type: "image", mimeType: "image/png", data: "aW1hZ2Ux" },
+      { type: "image", url: "data:image/png;base64,aW1hZ2Uy" },
+      {
+        type: "image_url",
+        image_url: { url: "data:image/png;base64,aW1hZ2Uz" },
+      },
+    ],
+  });
+
+  expect(convertToOllamaMessages([toolMsg])).toEqual([
+    {
+      role: "tool",
+      content: "Took a screenshot.",
+      images: ["aW1hZ2Ux", "aW1hZ2Uy", "aW1hZ2Uz"],
+    },
+  ]);
+});
+
+test("convertToOllamaMessages rejects ToolMessage images that are not inline data", () => {
+  const toolMsg = new ToolMessage({
+    tool_call_id: "call_1",
+    content: [{ type: "image", url: "https://example.com/screenshot.png" }],
+  });
+
+  expect(() => convertToOllamaMessages([toolMsg])).toThrow(
+    "Unsupported tool message content type: image"
+  );
 });
