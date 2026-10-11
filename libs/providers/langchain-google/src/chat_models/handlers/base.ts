@@ -31,42 +31,10 @@ export abstract class GoogleChatApiHandler<
     return this.params.platform;
   }
 
-  get endpoint(): string {
-    if (typeof this.params.endpoint !== "undefined") {
-      return this.params.endpoint;
-    } else if (this.platform === "gai") {
-      return "generativelanguage.googleapis.com";
-    } else if (this.params.isVertexExpress) {
-      return "aiplatform.googleapis.com";
-    } else if (this.location === "global") {
-      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
-      return "aiplatform.googleapis.com";
-    } else if (!this.location.includes("-")) {
-      return `aiplatform.${this.location}.rep.googleapis.com`;
-    } else {
-      return `${this.location}-aiplatform.googleapis.com`;
-    }
-  }
-
   protected get endpointUrl(): string {
-    return this.endpoint.includes("://")
-      ? this.endpoint
-      : `https://${this.endpoint}`;
-  }
-
-  get apiVersion(): string {
-    return (
-      this.params.apiVersion ??
-      (this.params.platform === "gai" ? "v1beta" : "v1")
-    );
-  }
-
-  get location(): string {
-    return this.params.location ?? "us-central1";
-  }
-
-  get publisher(): string {
-    return this.params.publisher ?? "google";
+    return this.params.endpoint.includes("://")
+      ? this.params.endpoint
+      : `https://${this.params.endpoint}`;
   }
 
   /**
@@ -77,21 +45,21 @@ export abstract class GoogleChatApiHandler<
   protected abstract getUrlSuffix(urlMethod?: string): string;
 
   protected async buildUrlGemini(urlMethod?: string): Promise<string> {
-    return `${this.endpointUrl}/${this.apiVersion}${this.getUrlSuffix(urlMethod)}`;
+    return `${this.endpointUrl}/${this.params.apiVersion}${this.getUrlSuffix(urlMethod)}`;
   }
 
   protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
-    return `${this.endpointUrl}/${this.apiVersion}/publishers/${
-      this.publisher
+    return `${this.endpointUrl}/${this.params.apiVersion}/publishers/${
+      this.params.publisher
     }${this.getUrlSuffix(urlMethod)}`;
   }
 
   protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
     const projectId = await this.params.apiClient.getProjectId();
     return `${this.endpointUrl}/${
-      this.apiVersion
-    }/projects/${projectId}/locations/${this.location}/publishers/${
-      this.publisher
+      this.params.apiVersion
+    }/projects/${projectId}/locations/${this.params.location}/publishers/${
+      this.params.publisher
     }${this.getUrlSuffix(urlMethod)}`;
   }
 
