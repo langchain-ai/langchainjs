@@ -41,15 +41,7 @@ import {
   GoogleChatApiHandler,
   GenerateContentApiHandler,
 } from "./handlers/index.js";
-import {
-  convertParamsToPlatformType,
-  getGoogleChatModelParams,
-} from "../converters/shared/params.js";
-
-export {
-  convertParamsToPlatformType,
-  getGoogleChatModelParams,
-} from "../converters/shared/params.js";
+import { convertParamsToPlatformType } from "../converters/shared/params.js";
 
 export type {
   BaseChatGoogleParams,

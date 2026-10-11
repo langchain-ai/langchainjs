@@ -5,8 +5,8 @@ import {
   BaseChatGoogle,
   BaseChatGoogleCallOptions,
   BaseChatGoogleParams,
-  getGoogleChatModelParams,
 } from "./base.js";
+import { getGoogleChatModelParams } from "../converters/shared/params.js";
 
 /**
  * Configuration parameters for the ChatGoogle model.
