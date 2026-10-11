@@ -23,10 +23,7 @@ import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../../chat_models/types.js";
 import { iife } from "../../utils/misc.js";
-import {
-  InvalidInputError,
-  ToolCallNotFoundError,
-} from "../../utils/errors.js";
+import { InvalidInputError, ToolCallNotFoundError } from "../../utils/errors.js";
 
 /**
  * Standard content block converter for Google Gemini API.
@@ -387,14 +384,6 @@ function convertStandardVideoContentBlockToGeminiPart(
 function convertStandardReasoningBlockToGeminiPart(
   block: ContentBlock.Reasoning
 ): Gemini.Part | null {
-  // A reasoning block from a non-Google provider without a thought flag should be dropped
-  if (
-    !("thought" in block && block.thought) &&
-    !("reasoningContentBlock" in block && block.reasoningContentBlock)
-  ) {
-    return null;
-  }
-
   // Reasoning blocks created from Gemini should contain the base
   // standard block they would be if "thought" wasn't set to true.
   // If it exists, we'll use that. Otherwise, we'll assume it was
@@ -426,12 +415,7 @@ function convertStandardContentBlockToGeminiPart(
   function baseGeminiPart(): Gemini.Part | null {
     switch (block.type) {
       case "text":
-        return {
-          text: block.text,
-          ...("thought" in block && typeof block.thought === "boolean"
-            ? { thought: block.thought }
-            : {}),
-        };
+        return { text: block.text };
       case "reasoning":
         return convertStandardReasoningBlockToGeminiPart(block);
       case "image":
@@ -506,25 +490,16 @@ function convertStandardContentMessageToGeminiContent(
   const contentBlocks = Array.isArray(message.contentBlocks)
     ? message.contentBlocks
     : [];
-  if (contentBlocks.length > 0) {
-    contentBlocks.forEach((block: ContentBlock.Standard) => {
-      const contentBlock =
-        (message.additional_kwargs
-          .originalTextContentBlock as ContentBlock.Standard) || block;
-      const part: Gemini.Part | null =
-        convertStandardContentBlockToGeminiPart(contentBlock);
-      if (part) {
-        parts.push(part);
-      }
-    });
-  } else if (Array.isArray(message.content)) {
-    for (const item of message.content) {
-      const part = convertLegacyPartToGeminiPart(item);
+  contentBlocks.forEach((block: ContentBlock.Standard) => {
+    const contentBlock =
+      (message.additional_kwargs
+        .originalTextContentBlock as ContentBlock.Standard) || block;
+    const part: Gemini.Part | null =
+      convertStandardContentBlockToGeminiPart(contentBlock);
+    if (part) {
       parts.push(part);
     }
-  } else if (typeof message.content === "string" && message.content.trim()) {
-    parts.push({ text: message.content });
-  }
+  });
 
   // Convert tool_calls to functionCall parts, reading thoughtSignature from the matching content block, falling back to the tool_call itself.
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
@@ -581,12 +556,11 @@ function convertStandardContentMessageToGeminiContent(
       },
     });
 
-    // For tool messages, keep only the functionResponse part(s) and any media parts (inlineData/fileData)
-    // as siblings so images/audio/video reach Gemini as real parts instead of being lost.
-    parts = parts.filter(
-      (part) =>
-        "functionResponse" in part || "inlineData" in part || "fileData" in part
-    );
+    // For tool messages, keep only the functionResponse part(s): any text is
+    // already included in functionResponse.response.result, and a `user`
+    // content mixing a functionResponse with text is rejected or corrupted
+    // by the API. Mirrors the legacy-path filter.
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only return content if we have parts
@@ -878,22 +852,6 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
-  // Convert tool_calls to functionCall parts
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    for (const toolCall of message.tool_calls) {
-      const part = {
-        functionCall: {
-          name: toolCall.name,
-          args: toolCall.args ?? {},
-        },
-      } as Gemini.Part.FunctionCall;
-      if ("thoughtSignature" in toolCall && toolCall.thoughtSignature) {
-        part.thoughtSignature = toolCall.thoughtSignature as string;
-      }
-      parts.push(part);
-    }
-  }
-
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
     const responseContent = stripMediaBlocksForFunctionResponse(
@@ -983,6 +941,7 @@ export const convertMessagesToGeminiContents: Converter<
     // const content: Gemini.Content | null = convertContentMessageToGeminiContent(message, messages);
     const content: Gemini.Content | null = iife(() => {
       const outputVersion =
+        message.response_metadata &&
         "output_version" in message.response_metadata
           ? (message.response_metadata?.output_version as string)
           : "v0";
