@@ -48,6 +48,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import type { ToolChoice } from "@langchain/core/language_models/chat_models";
 import type { LLMResult } from "@langchain/core/outputs";
 
 /**
@@ -983,6 +984,48 @@ describe.each(coreModelInfo)(
       expect(typeof call.args).toBe("object");
       expect(call.args).toHaveProperty("location");
       expect(call.args.location).toBe("New York");
+    });
+
+    const toolChoices: ToolChoice[] = ["validated", { mode: "VALIDATED" }];
+
+    describe.each(toolChoices)("VALIDATED tool choice: %o", (toolChoice) => {
+      test("accepts a function call with schema-conforming arguments", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage('Call get_weather with location set to "New York".'),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls).toHaveLength(1);
+        expect(result.tool_calls?.[0]).toMatchObject({
+          name: "get_weather",
+          args: { location: "New York" },
+        });
+        expect(
+          weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
+        ).toBe(true);
+      });
+
+      test("also permits a text response without forcing a function", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage(
+            "Do not use any tools. Reply with the single word Hello."
+          ),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls ?? []).toHaveLength(0);
+        expect(result.text).toMatch(/hello/i);
+      });
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {

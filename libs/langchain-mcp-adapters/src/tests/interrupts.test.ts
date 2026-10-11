@@ -827,7 +827,7 @@ describe("real stdio servers", () => {
       try {
         const tools = await adapter.listTools();
         expect(tools).toHaveLength(mode === "mixed" ? 2 : 1);
-        const modern = tools.find((tool) => tool.name === "modern__approve");
+        const modern = tools.find((tool) => tool.name === "modern_approve");
 
         if (!modern) {
           throw new Error("Missing modern tool");
@@ -867,7 +867,7 @@ describe("real stdio servers", () => {
         expect(legacyCallback).not.toHaveBeenCalled();
 
         if (mode === "mixed") {
-          const legacy = tools.find((tool) => tool.name === "legacy__approve");
+          const legacy = tools.find((tool) => tool.name === "legacy_approve");
 
           if (!legacy) {
             throw new Error("Missing legacy tool");

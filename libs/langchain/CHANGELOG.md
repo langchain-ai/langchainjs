@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.16
+
+### Patch Changes
+
+- [#11880](https://github.com/langchain-ai/langchainjs/pull/11880) [`22ea038`](https://github.com/langchain-ai/langchainjs/commit/22ea03827873cfd07bf6aa6d4e2562dd6aa9b1ad) Thanks [@eliornl](https://github.com/eliornl)! - fix(langchain): `createAgent` with middleware now passes a `Command` built by a different copy of `@langchain/langgraph` to the graph as-is, instead of merging it into the input state as a plain object.
+
 ## 1.5.15
 
 ### Patch Changes

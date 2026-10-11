@@ -794,8 +794,8 @@ const clientOptionsSchema = z
       .optional()
       .default(true),
     /**
-     * Whether to prefix tool names with the server name. Prefixes are separated by double
-     * underscores (example: `calculator_server_1__add`).
+     * Whether to prefix tool names with the server name. Prefixes are separated by a single
+     * underscore (example: `calculator_server_1_add`).
      *
      * @default true in `MCPAdapter`, false in `loadMcpTools`
      */
