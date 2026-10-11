@@ -80,3 +80,62 @@ test("convertToOllamaMessages returns string content for AIMessage without tool_
   expect(result[0].content).toBe("Hello!");
   expect(result[0].tool_calls).toBeUndefined();
 });
+
+test("convertToOllamaMessages keeps tool_calls of an AIMessage with v1 content blocks", () => {
+  const aiMsg = new AIMessage({
+    content: [
+      { type: "reasoning", reasoning: "Need the weather." },
+      {
+        type: "tool_call",
+        id: "call_1",
+        name: "get_weather",
+        args: { city: "Paris" },
+      },
+    ],
+    tool_calls: [
+      { id: "call_1", name: "get_weather", args: { city: "Paris" } },
+    ],
+    response_metadata: { output_version: "v1" },
+  });
+
+  expect(convertToOllamaMessages([aiMsg])).toEqual([
+    {
+      role: "assistant",
+      content: "",
+      tool_calls: [
+        {
+          id: "call_1",
+          type: "function",
+          function: { name: "get_weather", arguments: { city: "Paris" } },
+        },
+      ],
+    },
+  ]);
+});
+
+test("convertToOllamaMessages keeps text and tool_calls of an AIMessage with text blocks", () => {
+  const aiMsg = new AIMessage({
+    content: [{ type: "text", text: "Checking the weather." }],
+    tool_calls: [
+      { id: "call_1", name: "get_weather", args: { city: "Paris" } },
+    ],
+  });
+
+  const result = convertToOllamaMessages([aiMsg]);
+
+  expect(result).toHaveLength(2);
+  expect(result[0].content).toBe("Checking the weather.");
+  expect(result[1].tool_calls![0].function.name).toBe("get_weather");
+});
+
+test("convertToOllamaMessages rejects tool_use blocks without tool_calls", () => {
+  const aiMsg = new AIMessage({
+    content: [
+      { type: "tool_use", id: "call_1", name: "get_weather", input: {} },
+    ],
+  });
+
+  expect(() => convertToOllamaMessages([aiMsg])).toThrow(
+    "'tool_use' content type is not supported without tool calls."
+  );
+});
