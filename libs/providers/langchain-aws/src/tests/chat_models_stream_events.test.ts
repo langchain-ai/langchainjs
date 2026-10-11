@@ -1,5 +1,7 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
 import { ChatBedrockConverse } from "../chat_models.js";
+import { HumanMessage } from "@langchain/core/messages";
+import { convertToConverseMessages } from "../utils/message_inputs.js";
 
 function bedrockTextStream() {
   return [
@@ -92,6 +94,48 @@ afterEach(() => {
 });
 
 describe("ChatBedrockConverse.streamEvents", () => {
+  test("preserves reasoning signatures when replaying streamed output", async () => {
+    const events = [
+      ...bedrockReasoningStream(),
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: { reasoningContent: { signature: "opaque-signature" } },
+        },
+      },
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 1,
+          delta: { text: "Answer" },
+        },
+      },
+    ];
+    const result = await mockBedrock(events).streamEvents("Hello").output;
+    expect(result.contentBlocks).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Let me reason...",
+        signature: "opaque-signature",
+      },
+      { type: "text", text: "Answer" },
+    ]);
+    const { converseMessages } = convertToConverseMessages([
+      new HumanMessage("Hello"),
+      result,
+    ]);
+    expect(converseMessages[1].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Let me reason...",
+            signature: "opaque-signature",
+          },
+        },
+      },
+      { text: "Answer" },
+    ]);
+  });
+
   test("streams text", async () => {
     await expect(
       mockBedrock(bedrockTextStream()).streamEvents("Hello")
