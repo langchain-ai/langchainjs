@@ -62,7 +62,13 @@ function createHandler(
   const defaultParams: GenerateContentApiHandlerParams = {
     model: "gemini-2.0-flash",
     platform: "gai",
+    endpoint: "generativelanguage.googleapis.com",
+    location: "global",
     apiVersion: "v1beta",
+    publisher: "google",
+    isVertexExpress: false,
+    streaming: false,
+    streamUsage: false,
     apiClient: new MockApiClient(),
     caller: new AsyncCaller({}),
     ...overrides,
@@ -115,6 +121,7 @@ describe("GenerateContentApiHandler", () => {
     test("builds Vertex AI standard URL resolving project from apiClient", async () => {
       const handler = createHandler({
         platform: "gcp",
+        endpoint: "us-east4-aiplatform.googleapis.com",
         apiVersion: "v1",
         model: "gemini-2.0-flash",
         location: "us-east4",
@@ -129,6 +136,7 @@ describe("GenerateContentApiHandler", () => {
     test("builds Vertex AI Express URL correctly", async () => {
       const handler = createHandler({
         platform: "gcp",
+        endpoint: "aiplatform.googleapis.com",
         apiVersion: "v1",
         model: "gemini-2.0-flash",
         isVertexExpress: true,
