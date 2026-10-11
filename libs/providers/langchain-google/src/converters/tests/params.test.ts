@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest";
 import {
-  convertReasoningEffortToReasoningTokens,
-  convertReasoningTokensToReasoningEffort,
   convertFieldsToThinkingConfig,
   convertFieldsToSpeechConfig,
   convertFieldsToServiceTier,
-  convertParamsToPlatformType,
 } from "../generate_content/params.js";
+import {
+  convertReasoningEffortToReasoningTokens,
+  convertReasoningTokensToReasoningEffort,
+  convertParamsToPlatformType,
+} from "../shared/params.js";
 
 describe("convertReasoningEffortToReasoningTokens", () => {
   test("returns undefined when effort is undefined", () => {

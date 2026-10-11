@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
   applyGeminiGatewayParams,
-  convertParamsToPlatformType,
-  getGoogleChatModelParams,
   getPlatformType,
 } from "../base.js";
+import {
+  convertParamsToPlatformType,
+  getGoogleChatModelParams,
+} from "../../converters/shared/params.js";
 
 describe("convertParamsToPlatformType", () => {
   test("detects explicit platform type", () => {

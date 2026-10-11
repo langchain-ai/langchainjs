@@ -14,24 +14,9 @@ import {
 import {
   convertReasoningEffortToReasoningTokens,
   convertReasoningTokensToReasoningEffort,
-  convertParamsToPlatformType,
-  getModelFamily,
   getModelVersion,
-  getModelLevel,
   getModelSpecialty,
-  getGoogleChatModelParams,
 } from "../shared/params.js";
-
-export {
-  convertReasoningEffortToReasoningTokens,
-  convertReasoningTokensToReasoningEffort,
-  convertParamsToPlatformType,
-  getModelFamily,
-  getModelVersion,
-  getModelLevel,
-  getModelSpecialty,
-  getGoogleChatModelParams,
-};
 
 
 // Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".
