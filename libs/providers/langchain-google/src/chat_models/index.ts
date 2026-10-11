@@ -72,5 +72,8 @@ export type {
   GoogleChatApiHandlerFactory,
   GoogleChatApiHandlerConfig,
   GenerateContentInvocationParams,
+  BaseChatGoogleFields,
+  GenerateContentSpecificFields,
   GenerateContentFields,
+  ChatGoogleFields,
 } from "./types.js";

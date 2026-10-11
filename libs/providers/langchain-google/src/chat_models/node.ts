@@ -3,6 +3,7 @@ import { ChatGoogleParams } from "./index.js";
 import {
   applyGeminiGatewayParams,
   BaseChatGoogle,
+  convertParamsToPlatformType,
   getGoogleChatModelParams,
   getPlatformType,
 } from "./base.js";
@@ -12,7 +13,6 @@ import {
   NodeApiClient,
   NodeApiClientParams,
 } from "../clients/node.js";
-import { convertParamsToPlatformType } from "../converters/generate_content/params.js";
 
 interface ChatGoogleNodeParams extends NodeApiClientParams, ChatGoogleParams {}
 
