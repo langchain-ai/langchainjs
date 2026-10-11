@@ -109,7 +109,7 @@ export abstract class GoogleChatApiHandler<
     options?: { name?: string; description?: string }
   ): { tools: BindToolsInput[]; toolChoice: string; functionName: string };
 
-  streamChatModelEvents?(
+  abstract streamChatModelEvents(
     messages: BaseMessage[],
     options?: BaseChatGoogleCallOptions,
     runManager?: CallbackManagerForLLMRun

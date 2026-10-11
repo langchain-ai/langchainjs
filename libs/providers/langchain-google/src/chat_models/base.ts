@@ -376,18 +376,11 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
-    if (
-      this.apiHandler.streamChatModelEvents &&
-      typeof this.apiHandler.streamChatModelEvents === "function"
-    ) {
-      yield* this.apiHandler.streamChatModelEvents(
-        messages,
-        options,
-        runManager
-      );
-    } else {
-      yield* super._streamChatModelEvents(messages, options, runManager);
-    }
+    yield* this.apiHandler.streamChatModelEvents(
+      messages,
+      options,
+      runManager
+    );
   }
 
   async *_streamResponseChunks(
