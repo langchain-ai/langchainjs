@@ -1,7 +1,7 @@
-import {
+import type {
   BaseChatGoogleParams,
   GooglePlatformType,
-  type Gemini,
+  Gemini,
 } from "../../chat_models/types.js";
 
 /**
