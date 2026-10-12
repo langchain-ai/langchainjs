@@ -146,3 +146,55 @@ describe("message output usage metadata conversion", () => {
     });
   });
 });
+
+describe("thinking token usage conversion", () => {
+  const nativeUsage = {
+    usage: {
+      output_tokens: 565,
+      output_tokens_details: { thinking_tokens: 562 },
+    },
+  };
+
+  test("maps thinking tokens from additionalModelResponseFields for non-stream responses", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      { role: "assistant", content: [{ text: "Hello" }] },
+      {
+        usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        additionalModelResponseFields: nativeUsage,
+      } as Omit<Bedrock.ConverseResponse, "output">
+    );
+
+    expect(result.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+
+  test("does not add output_token_details when thinking tokens are absent", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      { role: "assistant", content: [{ text: "Hello" }] },
+      {
+        usage: { inputTokens: 20, outputTokens: 5, totalTokens: 25 },
+        additionalModelResponseFields: { usage: { output_tokens: 5 } },
+      } as Omit<Bedrock.ConverseResponse, "output">
+    );
+
+    expect(result.usage_metadata?.output_token_details).toBeUndefined();
+  });
+
+  test("maps thinking tokens for stream metadata", () => {
+    const result = handleConverseStreamMetadata(
+      { usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 } },
+      { streamUsage: true, reasoningTokens: 562 }
+    );
+
+    expect(result.message.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+});
