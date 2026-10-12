@@ -808,15 +808,18 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
     "reasoning" in content &&
     typeof content.reasoning === "string"
   ) {
+    const text = content.reasoning;
     const signature =
       "signature" in content && typeof content.signature === "string"
         ? content.signature
         : undefined;
-    if (content.reasoning.length > 0 || signature !== undefined) {
+    const hasText = text.length > 0;
+    const isSigned = signature !== undefined;
+    if (hasText || isSigned) {
       return {
         reasoningText: {
-          text: content.reasoning,
-          ...(signature !== undefined ? { signature } : {}),
+          text,
+          ...(isSigned ? { signature } : {}),
         },
       };
     }
@@ -826,23 +829,30 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
     return undefined;
   }
 
-  if (
+  const reasoningText =
     "reasoningText" in content &&
     typeof content.reasoningText === "object" &&
-    content.reasoningText !== null &&
-    "text" in content.reasoningText &&
-    typeof content.reasoningText.text === "string"
+    content.reasoningText !== null
+      ? content.reasoningText
+      : undefined;
+  if (
+    reasoningText !== undefined &&
+    "text" in reasoningText &&
+    typeof reasoningText.text === "string"
   ) {
+    const text = reasoningText.text;
     const signature =
-      "signature" in content.reasoningText &&
-      typeof content.reasoningText.signature === "string"
-        ? content.reasoningText.signature
+      "signature" in reasoningText &&
+      typeof reasoningText.signature === "string"
+        ? reasoningText.signature
         : undefined;
-    if (content.reasoningText.text.length > 0 || signature !== undefined) {
+    const hasText = text.length > 0;
+    const isSigned = signature !== undefined;
+    if (hasText || isSigned) {
       return {
         reasoningText: {
-          text: content.reasoningText.text,
-          ...(signature !== undefined ? { signature } : {}),
+          text,
+          ...(isSigned ? { signature } : {}),
         },
       };
     }
