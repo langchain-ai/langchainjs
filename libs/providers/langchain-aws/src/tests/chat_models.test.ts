@@ -714,7 +714,7 @@ describe("convertToConverseMessages", () => {
 });
 
 describe("reasoning content replay", () => {
-  it("omits signature-only standard reasoning and preserves tool use", () => {
+  it("replays signature-only standard reasoning and preserves tool use", () => {
     const result = convertToConverseMessages([
       new AIMessage({
         content: [
@@ -744,6 +744,14 @@ describe("reasoning content replay", () => {
         role: "assistant",
         content: [
           {
+            reasoningContent: {
+              reasoningText: {
+                text: "",
+                signature: "opaque-signature",
+              },
+            },
+          },
+          {
             toolUse: {
               toolUseId: "tool-call-1",
               name: "get_weather",
@@ -763,6 +771,63 @@ describe("reasoning content replay", () => {
           },
         ],
       },
+    ]);
+  });
+
+  it("replays signature-only legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              text: "",
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("omits unsigned empty standard reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
+    ]);
+  });
+
+  it("omits unsigned empty legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning_content", reasoningText: { text: "" } },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
     ]);
   });
 

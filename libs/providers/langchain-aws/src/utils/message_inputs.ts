@@ -806,19 +806,20 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
   if (
     content.type === "reasoning" &&
     "reasoning" in content &&
-    typeof content.reasoning === "string" &&
-    content.reasoning.length > 0
+    typeof content.reasoning === "string"
   ) {
     const signature =
       "signature" in content && typeof content.signature === "string"
         ? content.signature
         : undefined;
-    return {
-      reasoningText: {
-        text: content.reasoning,
-        ...(signature !== undefined ? { signature } : {}),
-      },
-    };
+    if (content.reasoning.length > 0 || signature !== undefined) {
+      return {
+        reasoningText: {
+          text: content.reasoning,
+          ...(signature !== undefined ? { signature } : {}),
+        },
+      };
+    }
   }
 
   if (content.type !== "reasoning_content") {
@@ -830,20 +831,21 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
     typeof content.reasoningText === "object" &&
     content.reasoningText !== null &&
     "text" in content.reasoningText &&
-    typeof content.reasoningText.text === "string" &&
-    content.reasoningText.text.length > 0
+    typeof content.reasoningText.text === "string"
   ) {
     const signature =
       "signature" in content.reasoningText &&
       typeof content.reasoningText.signature === "string"
         ? content.reasoningText.signature
         : undefined;
-    return {
-      reasoningText: {
-        text: content.reasoningText.text,
-        ...(signature !== undefined ? { signature } : {}),
-      },
-    };
+    if (content.reasoningText.text.length > 0 || signature !== undefined) {
+      return {
+        reasoningText: {
+          text: content.reasoningText.text,
+          ...(signature !== undefined ? { signature } : {}),
+        },
+      };
+    }
   }
 
   if (
