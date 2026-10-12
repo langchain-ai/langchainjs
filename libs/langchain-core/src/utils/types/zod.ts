@@ -56,7 +56,7 @@ import { SerializableSchema } from "../standard_schema.js";
 
 export interface ZodV3TypeDef {
   typeName?: string;
-  description?: string;
+  description?: string | undefined;
   [key: string]: any;
 }
 
@@ -65,7 +65,7 @@ export interface ZodV3Like<Output = any, Input = Output> {
   readonly _output: Output;
   readonly _input: Input;
   readonly _def: ZodV3TypeDef;
-  readonly description?: string;
+  readonly description?: string | undefined;
   parse(data: unknown, params?: any): Output;
   safeParse(
     data: unknown,
