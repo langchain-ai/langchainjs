@@ -801,6 +801,32 @@ describe("reasoning content replay", () => {
     ]);
   });
 
+  it("replays legacy provider-native reasoning that has a signature but no text field", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
   it("omits unsigned empty standard reasoning", () => {
     const result = convertToConverseMessages([
       new AIMessage({
@@ -993,6 +1019,87 @@ describe("reasoning content replay", () => {
           },
         },
       },
+    ]);
+  });
+
+  it("replays signature-only standard reasoning from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "",
+            signature: "opaque-signature",
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy Bedrock reasoning with a signature but no text field from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              type: "reasoning_content",
+              reasoningText: {
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("omits unsigned empty standard reasoning from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
     ]);
   });
 });

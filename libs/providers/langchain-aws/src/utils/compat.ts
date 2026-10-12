@@ -5,13 +5,16 @@ function convertReasoningText(
   text: unknown,
   signature: unknown
 ): Bedrock.ReasoningContentBlock | undefined {
-  if (typeof text !== "string" || text.length === 0) {
+  const normalizedText = typeof text === "string" ? text : "";
+  const hasSignature = typeof signature === "string";
+  const shouldReplayReasoning = normalizedText !== "" || hasSignature;
+  if (!shouldReplayReasoning) {
     return undefined;
   }
   return {
     reasoningText: {
-      text,
-      ...(typeof signature === "string" ? { signature } : {}),
+      text: normalizedText,
+      ...(hasSignature ? { signature } : {}),
     },
   };
 }

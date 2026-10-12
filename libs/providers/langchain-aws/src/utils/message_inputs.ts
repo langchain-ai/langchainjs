@@ -813,16 +813,17 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
       "signature" in content && typeof content.signature === "string"
         ? content.signature
         : undefined;
-    const hasText = text.length > 0;
-    const isSigned = signature !== undefined;
-    if (hasText || isSigned) {
-      return {
-        reasoningText: {
-          text,
-          ...(isSigned ? { signature } : {}),
-        },
-      };
+    const hasSignature = signature !== undefined;
+    const shouldReplayReasoning = text !== "" || hasSignature;
+    if (!shouldReplayReasoning) {
+      return undefined;
     }
+    return {
+      reasoningText: {
+        text,
+        ...(hasSignature ? { signature } : {}),
+      },
+    };
   }
 
   if (content.type !== "reasoning_content") {
@@ -830,29 +831,24 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
   }
 
   const reasoningText =
-    "reasoningText" in content &&
-    typeof content.reasoningText === "object" &&
-    content.reasoningText !== null
-      ? content.reasoningText
-      : undefined;
-  if (
-    reasoningText !== undefined &&
-    "text" in reasoningText &&
-    typeof reasoningText.text === "string"
-  ) {
-    const text = reasoningText.text;
+    "reasoningText" in content ? content.reasoningText : undefined;
+  if (typeof reasoningText === "object" && reasoningText !== null) {
+    const text =
+      "text" in reasoningText && typeof reasoningText.text === "string"
+        ? reasoningText.text
+        : "";
     const signature =
       "signature" in reasoningText &&
       typeof reasoningText.signature === "string"
         ? reasoningText.signature
         : undefined;
-    const hasText = text.length > 0;
-    const isSigned = signature !== undefined;
-    if (hasText || isSigned) {
+    const hasSignature = signature !== undefined;
+    const shouldReplayReasoning = text !== "" || hasSignature;
+    if (shouldReplayReasoning) {
       return {
         reasoningText: {
           text,
-          ...(isSigned ? { signature } : {}),
+          ...(hasSignature ? { signature } : {}),
         },
       };
     }
