@@ -1,4 +1,5 @@
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { Serialized } from "@langchain/core/load/serializable";
 import {
   ChatOpenAIResponsesCallOptions,
@@ -39,6 +40,12 @@ export class AzureChatOpenAIResponses<
 
   _llmType(): string {
     return "azure_openai";
+  }
+
+  override get profile(): ModelProfile {
+    const profile = { ...super.profile };
+    delete profile.midConversationTools;
+    return profile;
   }
 
   get lc_aliases(): Record<string, string> {

@@ -1,6 +1,7 @@
 import { StructuredOutputMethodOptions } from "@langchain/core/language_models/base";
 import type { Serialized } from "@langchain/core/load/serializable";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/index.js";
 import { AzureOpenAIChatInput } from "../../types.js";
 import {
@@ -449,6 +450,12 @@ export class AzureChatOpenAI<
 
   _llmType(): string {
     return "azure_openai";
+  }
+
+  override get profile(): ModelProfile {
+    const profile = { ...super.profile };
+    delete profile.midConversationTools;
+    return profile;
   }
 
   get lc_aliases(): Record<string, string> {
