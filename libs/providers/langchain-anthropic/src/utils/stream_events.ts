@@ -320,20 +320,29 @@ function applyAnthropicDelta(
         accumulated: { ...accumulated, signature: delta.signature },
       };
 
-    case "compaction_delta":
+    case "compaction_delta": {
+      // The delta carries the block's own fields: the summary (in one delta
+      // today, appended if it ever arrives in several) and the opaque state the
+      // API needs back verbatim. Merging them into the block keeps the replayed
+      // compaction block in the shape the API accepts.
+      const prev = (accumulated.value ?? {}) as Record<string, unknown>;
+      const value = {
+        ...prev,
+        content:
+          typeof prev.content === "string" && typeof delta.content === "string"
+            ? prev.content + delta.content
+            : (delta.content ?? prev.content ?? null),
+        encrypted_content:
+          delta.encrypted_content ?? prev.encrypted_content ?? null,
+      };
       return {
         contentDelta: {
           type: "block-delta" as const,
-          fields: {
-            type: "non_standard",
-            value: { ...(accumulated.value ?? {}), compaction: delta },
-          },
+          fields: { type: "non_standard", value },
         },
-        accumulated: {
-          ...accumulated,
-          value: { ...(accumulated.value ?? {}), compaction: delta },
-        },
+        accumulated: { ...accumulated, value },
       };
+    }
 
     default:
       return {
