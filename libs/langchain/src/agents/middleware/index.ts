@@ -103,3 +103,11 @@ export {
  */
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
+
+export {
+  openAIAutoModeMiddleware,
+  openAIModelRouterMiddleware,
+  type OpenAIAutoModeMiddlewareOptions,
+  type OpenAIModelRouterMiddlewareOptions,
+  type ModelChoice,
+} from "./provider/openai/decisions.js";
