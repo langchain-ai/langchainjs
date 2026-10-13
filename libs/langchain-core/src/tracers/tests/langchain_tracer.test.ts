@@ -2,6 +2,7 @@
 
 import { vi, test, expect, describe, afterEach } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { AgentAddress } from "langsmith";
 import { RunTree } from "langsmith/run_trees";
 import * as uuid from "../../utils/uuid/index.js";
 
@@ -118,10 +119,7 @@ describe("LangChainTracer code and environment destinations", () => {
     vi.unstubAllEnvs();
   });
 
-  const CODE_ADDRESS = {
-    agentId: "code-agent",
-    agentEnvironment: "production",
-  };
+  const CODE_ADDRESS = new AgentAddress("code-agent", "production");
 
   function caseFor(inputs: {
     codeProject: boolean;
@@ -133,8 +131,8 @@ describe("LangChainTracer code and environment destinations", () => {
     if (inputs.codeProject && inputs.codeAddress) {
       return {
         kind: "conflict",
-        description: "confict",
-        error: /A run is sent to a project .* or to an address .* not both/,
+        description: "conflict",
+        error: /A run is sent to a project .* or to an address, not both/,
       } as const;
     }
 
@@ -171,7 +169,7 @@ describe("LangChainTracer code and environment destinations", () => {
         description: "traced env-agent",
         payload: {
           session_name: undefined,
-          address: { agentId: "env-agent", agentEnvironment: "staging" },
+          address: new AgentAddress("env-agent", "staging"),
         },
       } as const;
     }
@@ -277,7 +275,7 @@ describe("LangChainTracer code and environment destinations", () => {
 
 test("LangChainTracer inherits an addressed parent without assigning a project", () => {
   const tracer = new LangChainTracer();
-  const address = { agentId: "support", agentEnvironment: "production" };
+  const address = new AgentAddress("support", "production");
 
   const parent = new RunTree({ name: "parent", address });
 
