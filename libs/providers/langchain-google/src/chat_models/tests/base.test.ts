@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  applyGeminiGatewayParams,
-  getPlatformType,
-} from "../base.js";
+import { applyGeminiGatewayParams, getPlatformType } from "../base.js";
 import {
   convertParamsToPlatformType,
   getGoogleChatModelParams,

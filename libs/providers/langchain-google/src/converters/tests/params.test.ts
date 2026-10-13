@@ -200,4 +200,3 @@ describe("convertParamsToPlatformType", () => {
     expect(convertParamsToPlatformType({})).toBeUndefined();
   });
 });
-
