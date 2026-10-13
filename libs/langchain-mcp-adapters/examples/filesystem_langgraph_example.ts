@@ -28,7 +28,7 @@ import fs from "fs";
 import path from "path";
 
 // MCP client imports
-import { MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapter } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -37,7 +37,7 @@ dotenv.config();
  * Example demonstrating how to use MCP filesystem tools with LangGraph agent flows
  * This example focuses on file operations like reading multiple files and writing files
  */
-export async function runExample(client?: MultiServerMCPClient) {
+export async function runExample(client?: MCPAdapter) {
   try {
     console.log("Initializing MCP client...");
 
@@ -45,9 +45,10 @@ export async function runExample(client?: MultiServerMCPClient) {
     // oxlint-disable-next-line no-param-reassign
     client =
       client ??
-      new MultiServerMCPClient({
-        mcpServers: {
+      new MCPAdapter({
+        servers: {
           filesystem: {
+            mode: "legacy",
             transport: "stdio" as const,
             command: "npx",
             args: [
@@ -58,18 +59,18 @@ export async function runExample(client?: MultiServerMCPClient) {
           },
           // This server is not available - demonstrate onConnectionError: "ignore"
           "optional-math-server": {
+            mode: "legacy",
             transport: "http",
             url: "http://localhost:9999/mcp",
           },
         },
         onConnectionError: "ignore",
-        useStandardContentBlocks: true,
       });
 
     console.log("Connected to servers");
 
     // Get all tools (flattened array is the default now)
-    const mcpTools = await client.getTools();
+    const mcpTools = await client.listTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");

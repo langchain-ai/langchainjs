@@ -70,6 +70,22 @@ export interface ModelProfile {
   videoInputs?: boolean;
 
   /**
+   * MIME types the model accepts as generic file inputs.
+   *
+   * Covers file types beyond those with dedicated flags (e.g. {@link pdfInputs}),
+   * such as office documents, source code, or plain text. When undefined, the
+   * model's support for generic file inputs is unknown.
+   *
+   * @example
+   * ```typescript
+   * const profile: ModelProfile = {
+   *   fileMimeTypes: ["text/plain", "text/csv", "application/json"]
+   * };
+   * ```
+   */
+  fileMimeTypes?: readonly string[];
+
+  /**
    * Whether the model supports image content in tool messages.
    *
    * When `true`, tool responses can include images that the model can process

@@ -82,17 +82,6 @@ import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
 
-/**
- * Returns true when the params (or environment) configure Vertex AI /
- * service-account authentication, which the LangSmith gateway does not proxy.
- *
- * This covers the cases `convertParamsToPlatformType` cannot see: explicit
- * service-account `credentials`, the `GOOGLE_CLOUD_CREDENTIALS` env var, and
- * Node-only `googleAuthOptions` (Application Default Credentials). Without this
- * check a credentials-only model would resolve to `gcp` today, but injecting a
- * gateway API key below would flip it to `gai` and misroute the request to the
- * Gemini Developer API gateway path.
- */
 function hasVertexCredentials(params: {
   credentials?: unknown;
   googleAuthOptions?: unknown;
@@ -107,13 +96,8 @@ function hasVertexCredentials(params: {
 /**
  * Resolves LangSmith gateway routing for Google chat model params.
  *
- * The LangSmith gateway proxies the **Gemini Developer API** (the API-key,
- * `gai` platform), not Vertex AI. So this only applies when the resolved
- * platform is `gai` and the caller has not set an explicit `endpoint`. An
- * explicit `endpoint`, a Vertex configuration (`vertexai: true` /
- * `platformType: "gcp"`), or service-account credentials (`credentials`,
- * `googleAuthOptions`, or `GOOGLE_CLOUD_CREDENTIALS`) suppress gateway routing
- * entirely.
+ * The LangSmith gateway exposes direct paths for the Gemini Developer API and
+ * Vertex AI. An explicit `endpoint` suppresses gateway routing.
  *
  * When `LANGSMITH_GATEWAY` is set, this rewrites `endpoint` to the gateway
  * host and lets the gateway key take precedence over the provider key (which
@@ -138,26 +122,20 @@ export function applyGeminiGatewayParams<
     googleAuthOptions?: unknown;
   },
 >(params: TParams): TParams & { apiKey?: string; endpoint?: string } {
-  // An explicit endpoint always wins; a Vertex config is out of scope (the
-  // gateway proxies the Gemini Developer API, not Vertex AI).
   if (typeof params.endpoint !== "undefined") {
     return { ...params };
   }
-  const explicitPlatform = convertParamsToPlatformType(params);
-  if (explicitPlatform === "gcp" || hasVertexCredentials(params)) {
-    return { ...params };
-  }
-
+  const platform =
+    convertParamsToPlatformType(params) ??
+    (hasVertexCredentials(params) ? "gcp" : "gai");
   const gatewayConfig = resolveLangSmithGatewayConfig({
-    providerPath: "gemini",
+    providerPath: platform === "gcp" ? "vertex" : "gemini",
   });
   if (typeof gatewayConfig.baseURL === "undefined") {
     return { ...params };
   }
 
-  // When routing through the gateway with no explicitly requested platform and
-  // no credentials that would imply Vertex, treat this as a Gemini Developer
-  // API (`gai`) call. A provider key still wins over the gateway key.
+  // A provider key still wins over the gateway key.
   const gatewayUrl = new URL(gatewayConfig.baseURL);
   const path = gatewayUrl.pathname.replace(/\/+$/, "");
   // The URL builders compose `https://${endpoint}/${apiVersion}/...`. For the
@@ -174,6 +152,7 @@ export function applyGeminiGatewayParams<
     ...params,
     apiKey: params.apiKey ?? gatewayConfig.apiKey,
     endpoint,
+    platformType: platform,
   };
 }
 
@@ -293,7 +272,12 @@ export abstract class BaseChatGoogle<
 
   protected apiClient: ApiClient;
 
-  constructor(protected params: BaseChatGoogleParams) {
+  constructor(
+    protected params: BaseChatGoogleParams & {
+      credentials?: unknown;
+      googleAuthOptions?: unknown;
+    }
+  ) {
     super(params);
     this._addVersion("@langchain/google", __PKG_VERSION__);
 
@@ -334,7 +318,11 @@ export abstract class BaseChatGoogle<
   }
 
   protected get isVertexExpress(): boolean {
-    return this.platform === "gcp" && this.apiClient.hasApiKey();
+    return (
+      this.platform === "gcp" &&
+      this.apiClient.hasApiKey() &&
+      !hasVertexCredentials(this.params)
+    );
   }
 
   protected get apiVersion(): string {
@@ -412,15 +400,21 @@ export abstract class BaseChatGoogle<
     return url.toString();
   }
 
+  protected get endpointUrl(): string {
+    return this.endpoint.includes("://")
+      ? this.endpoint
+      : `https://${this.endpoint}`;
+  }
+
   protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
-    return `https://${this.endpoint}/${this.apiVersion}/publishers/${
+    return `${this.endpointUrl}/${this.apiVersion}/publishers/${
       this.publisher
     }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
   protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
     const projectId = await this.apiClient.getProjectId();
-    return `https://${this.endpoint}/${
+    return `${this.endpointUrl}/${
       this.apiVersion
     }/projects/${projectId}/locations/${this.location}/publishers/${
       this.publisher

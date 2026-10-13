@@ -9,7 +9,7 @@ type Constructor = abstract new (...args: any[]) => any;
  * The return type of `Namespace.brand()`: the original base class
  * intersected with a polymorphic `isInstance` type guard.
  */
-type BrandedClass<TBase extends Constructor> = TBase & {
+export type BrandedClass<TBase extends Constructor> = TBase & {
   isInstance: IsInstanceFn;
 };
 
