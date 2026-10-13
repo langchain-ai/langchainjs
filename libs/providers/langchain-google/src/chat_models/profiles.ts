@@ -9,7 +9,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioInputs: true,
     pdfInputs: true,
     videoInputs: true,
-    maxOutputTokens: 32768,
+    maxOutputTokens: 65536,
     reasoningOutput: true,
     imageOutputs: false,
     audioOutputs: false,
