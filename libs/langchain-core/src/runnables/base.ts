@@ -3036,16 +3036,21 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       throw error;
     }
     let output;
+    let outputSupported = true;
     try {
       for await (const chunk of stream) {
         yield chunk;
-        try {
-          output =
-            output === undefined
-              ? output
-              : this._concatOutputChunks(output, chunk);
-        } catch {
-          output = undefined;
+        if (outputSupported) {
+          if (output === undefined) {
+            output = chunk;
+          } else {
+            try {
+              output = this._concatOutputChunks(output, chunk);
+            } catch {
+              output = undefined;
+              outputSupported = false;
+            }
+          }
         }
       }
     } catch (e) {

@@ -3,6 +3,7 @@ import { test, expect } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
 import { RunnableLambda } from "../base.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 
 test("RunnableWithFallbacks", async () => {
@@ -84,4 +85,41 @@ test("RunnableWithFallbacks stream events with local storage and callbacks added
   }
   expect(chunks.length).toBeGreaterThan(1);
   expect(chunks.map((chunk) => chunk.data.chunk.text).join("")).toEqual("hihi");
+});
+
+test("RunnableWithFallbacks stream reports the aggregated output to callbacks", async () => {
+  const makeStream = (chunks: string[], failFirst = false) =>
+    RunnableLambda.from(async function* () {
+      if (failFirst) {
+        throw new Error("Bad error!");
+      }
+      yield* chunks;
+    });
+
+  const runNames = new Map<string, string>();
+  const chainEnds: { name?: string; outputs: unknown }[] = [];
+  const handler = BaseCallbackHandler.fromMethods({
+    handleChainStart(chain, _inputs, runId) {
+      runNames.set(runId, chain.id[chain.id.length - 1]);
+    },
+    handleChainEnd(outputs, runId) {
+      chainEnds.push({ name: runNames.get(runId), outputs });
+    },
+  });
+  handler.awaitHandlers = true;
+
+  for (const primaryFails of [false, true]) {
+    chainEnds.length = 0;
+    const runnable = makeStream(["a", "b", "c"], primaryFails).withFallbacks({
+      fallbacks: [makeStream(["a", "b", "c"])],
+    });
+    const stream = await runnable.stream("hi", { callbacks: [handler] });
+    for await (const _ of stream) {
+      // oxlint-disable-next-line no-void
+      void _;
+    }
+    expect(
+      chainEnds.find((end) => end.name === "RunnableWithFallbacks")?.outputs
+    ).toEqual({ output: "abc" });
+  }
 });
