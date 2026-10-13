@@ -1834,11 +1834,15 @@ describe("withStructuredOutput type narrowing", () => {
   });
 });
 
-test.each([true, false])(
-  "usage-only streaming respects streamUsage=%s",
-  async (streamUsage) => {
+test.each([
+  ["gemini-3.5-flash", true],
+  ["gemini-4-argon", true],
+  ["gemini-4-argon", false],
+] as const)(
+  "%s usage-only streaming respects streamUsage=%s",
+  async (model, streamUsage) => {
     const llm = new ChatGoogle({
-      model: "gemini-4-argon",
+      model,
       streamUsage,
       apiClient: new MockStreamingApiClient([
         {
