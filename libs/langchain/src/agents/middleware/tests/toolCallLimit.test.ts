@@ -676,7 +676,7 @@ describe("toolCallLimitMiddleware", () => {
       }
     });
 
-    it("should run remaining tools until limit is exceeded", async () => {
+    it("should return to the model when remaining tool calls are blocked", async () => {
       const middleware = toolCallLimitMiddleware({
         threadLimit: 3,
         runLimit: 2,
@@ -697,7 +697,7 @@ describe("toolCallLimitMiddleware", () => {
             content: "",
             tool_calls: [{ id: "4", name: "search", args: { query: "test3" } }],
           }),
-          new AIMessage("Should not reach here"),
+          new AIMessage("Final response after tool limit"),
         ],
       });
 
@@ -712,8 +712,16 @@ describe("toolCallLimitMiddleware", () => {
       });
 
       const lastMessage = result.messages[result.messages.length - 1];
-      expect(lastMessage.content).toContain(
-        "Tool call limit exceeded. Do not make additional tool calls."
+      expect(AIMessage.isInstance(lastMessage)).toBe(true);
+      expect(lastMessage.content).toBe("Final response after tool limit");
+
+      const blockedToolMessages = result.messages.filter(
+        (message): message is ToolMessage =>
+          ToolMessage.isInstance(message) && message.status === "error"
+      );
+      expect(blockedToolMessages).toHaveLength(2);
+      expect(blockedToolMessages[0].content).toContain(
+        "Tool call limit exceeded"
       );
       expect(searchToolMock).toHaveBeenCalledTimes(2);
       expect(calculatorToolMock).toHaveBeenCalledTimes(0);
