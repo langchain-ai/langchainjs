@@ -1,8 +1,10 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "../",
+    "rootDir": "../../../",
+    "composite": false,
     "declaration": false,
+    "declarationMap": false,
     "strict": true,
     "noEmit": true // we just want type checking - no need to output for inclusion in the published module
   },

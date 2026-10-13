@@ -241,7 +241,7 @@ export class AgentNode<
     config: RunnableConfig
   ) {
     /**
-     * Check if we just executed a returnDirect tool
+     * Check if we just executed a returnDirect tool successfully
      * If so, we should generate structured response (if needed) and stop
      */
     const lastMessage = state.messages.at(-1);
@@ -249,6 +249,7 @@ export class AgentNode<
       lastMessage &&
       ToolMessage.isInstance(lastMessage) &&
       lastMessage.name &&
+      lastMessage.status !== "error" &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
       return [new Command({ update: { messages: [] } })];
@@ -324,7 +325,13 @@ export class AgentNode<
    */
   #deriveModel() {
     if (typeof this.#options.model === "string") {
-      return initChatModel(this.#options.model);
+      // `openai:` model strings default to the Responses API; pass a model instance to opt out.
+      return initChatModel(
+        this.#options.model,
+        this.#options.model.startsWith("openai:")
+          ? { useResponsesApi: true }
+          : undefined
+      );
     }
 
     if (this.#options.model) {

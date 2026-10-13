@@ -30,17 +30,17 @@
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@jest/globals": "^30.5.0",
+    "@jest/globals": "^30.5.2",
     "@langchain/core": "workspace:^",
-    "@swc/core": "^1.16.1",
+    "@swc/core": "^1.16.2",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
-    "jest": "^30.5.0",
-    "jest-environment-node": "^30.5.0",
-    "ts-jest": "^29.4.12",
+    "jest": "^30.5.2",
+    "jest-environment-node": "^30.5.2",
+    "ts-jest": "^29.4.14",
     "typescript": "~7.0.2",
     "zod": "^3.25.76"
   },
