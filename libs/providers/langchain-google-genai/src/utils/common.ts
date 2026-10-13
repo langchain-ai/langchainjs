@@ -529,7 +529,7 @@ export function convertMessageContentToParts(
             return signature;
           }
         }
-        if (model?.includes("gemini-3")) {
+        if (Number(model?.match(/gemini-(\d+)/)?.[1]) >= 3) {
           return DUMMY_SIGNATURE;
         }
         return "";

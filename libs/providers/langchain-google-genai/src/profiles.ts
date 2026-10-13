@@ -3,6 +3,20 @@
  */
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 const PROFILES: Record<string, ModelProfile> = {
+  "gemini-4-argon": {
+    maxInputTokens: 1048576,
+    maxOutputTokens: 65536,
+    imageInputs: true,
+    audioInputs: true,
+    videoInputs: true,
+    pdfInputs: true,
+    reasoningOutput: true,
+    toolCalling: true,
+    structuredOutput: true,
+    imageOutputs: false,
+    audioOutputs: false,
+    videoOutputs: false,
+  },
   "gemini-embedding-001": {
     maxInputTokens: 2048,
     imageInputs: false,
