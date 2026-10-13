@@ -1,6 +1,6 @@
 import {
   type Client,
-  type Address,
+  type AgentAddress,
   type LangSmithTracingClientInterface,
 } from "langsmith";
 import { RunTree, type RunTreeConfig } from "langsmith/run_trees";
@@ -42,7 +42,7 @@ export interface RunUpdate extends BaseRunUpdate {
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
-  address?: Address;
+  address?: AgentAddress;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
   metadata?: Record<string, unknown>;
@@ -95,7 +95,7 @@ export class LangChainTracer
 
   projectName?: string;
 
-  address?: Address;
+  address?: AgentAddress;
 
   exampleId?: string;
 
