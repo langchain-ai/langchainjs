@@ -280,7 +280,7 @@ export function convertFieldsToThinkingConfig(
   }
   if (
     thinkingLevel === "MINIMAL" &&
-    model.startsWith("gemini-3") &&
+    Number(model.match(/^gemini-(\d+)/)?.[1]) >= 3 &&
     !supportsMinimalThinkingLevel(model)
   ) {
     thinkingLevel = "LOW";
