@@ -1187,7 +1187,7 @@ describe("convertMessagesToGeminiContents", () => {
       new ToolMessage({
         content: [
           { type: "text", text: "Here is the screenshot." },
-          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } } as any,
+          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
         ],
         tool_call_id: "call-native-inline",
       }),

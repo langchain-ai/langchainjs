@@ -1128,7 +1128,7 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke(
         "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
       );
-      expect(result.tool_calls?.some((c: { name: string; }) => c.name === "custom_tool")).toBe(
+      expect(result.tool_calls?.some((c) => c.name === "custom_tool")).toBe(
         true
       );
     });
