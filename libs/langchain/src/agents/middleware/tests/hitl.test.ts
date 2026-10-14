@@ -491,6 +491,176 @@ describe("humanInTheLoopMiddleware", () => {
     );
   });
 
+  it("should handle respond decision type", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: {
+          allowedDecisions: ["respond"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "manual.txt", content: "Manual content" },
+          },
+        ],
+        [],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-respond",
+      },
+    };
+
+    const initialResult = await agent.invoke(
+      {
+        messages: [new HumanMessage("Ask the human before writing")],
+      },
+      config
+    );
+
+    const interruptRequest = initialResult
+      .__interrupt__?.[0] as Interrupt<HITLRequest>;
+    expect(interruptRequest.value.reviewConfigs[0].allowedDecisions).toEqual([
+      "respond",
+    ]);
+
+    const resumedResult = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [
+            {
+              type: "respond",
+              message: "Use ap-south-1 instead.",
+            },
+          ],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    expect(writeFileFn).not.toHaveBeenCalled();
+
+    const toolMessage = resumedResult.messages.find((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage;
+
+    expect(toolMessage).toBeDefined();
+    expect(toolMessage.content).toBe("Use ap-south-1 instead.");
+    expect(toolMessage.tool_call_id).toBe("call_1");
+    expect(toolMessage.status).toBe("success");
+  });
+
+  it("should execute approved tools when another tool is answered with respond", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        calculator: {
+          allowedDecisions: ["respond"],
+        },
+        write_file: {
+          allowedDecisions: ["approve"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 3, b: 4, operation: "add" },
+          },
+          {
+            id: "call_2",
+            name: "write_file",
+            args: { filename: "approved.txt", content: "approved" },
+          },
+        ],
+        [],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [calculateTool, writeFileTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-respond-with-approved",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Calculate and write the result")],
+      },
+      config
+    );
+
+    const resumedResult = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [
+            { type: "respond", message: "3 + 4 = 7" },
+            { type: "approve" },
+          ],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    expect(calculatorFn).not.toHaveBeenCalled();
+    expect(writeFileFn).toHaveBeenCalledTimes(1);
+    expect(writeFileFn).toHaveBeenCalledWith(
+      {
+        filename: "approved.txt",
+        content: "approved",
+      },
+      expect.anything()
+    );
+
+    const toolMessages = resumedResult.messages.filter((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage[];
+
+    expect(
+      toolMessages.some(
+        (msg) =>
+          msg.tool_call_id === "call_1" &&
+          msg.content === "3 + 4 = 7" &&
+          msg.status === "success"
+      )
+    ).toBe(true);
+    expect(
+      toolMessages.some(
+        (msg) =>
+          msg.tool_call_id === "call_2" &&
+          typeof msg.content === "string" &&
+          msg.content.includes("Successfully wrote")
+      )
+    ).toBe(true);
+  });
+
   it("should generate default rejection message when message is not provided", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
