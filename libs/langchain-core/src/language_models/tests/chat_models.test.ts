@@ -9,6 +9,7 @@ import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
 import type { BaseMessage } from "../../messages/base.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { BaseCallbackHandler } from "../../callbacks/base.js";
+import type { Serialized } from "../../load/serializable.js";
 import { ChatGenerationChunk } from "../../outputs.js";
 import type { LLMResult, ChatResult } from "../../outputs.js";
 import { BaseChatModel } from "../chat_models.js";
@@ -721,4 +722,100 @@ test("Test ChatModel .invoke() with a streaming-preferring callback builds llmOu
     completionTokens: 12,
     totalTokens: 22,
   });
+});
+
+class CaptureTracedInputHandler extends BaseCallbackHandler {
+  name = "CaptureTracedInputHandler";
+
+  messages: BaseMessage[] | undefined;
+
+  async handleChatModelStart(
+    _llm: Serialized,
+    messages: BaseMessage[][]
+  ): Promise<void> {
+    this.messages = messages[0];
+  }
+}
+
+test("Traced input converts every base64 content block, not just the first", async () => {
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "two PDFs" },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjQK",
+      },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjUK",
+      },
+    ],
+  });
+
+  const handler = new CaptureTracedInputHandler();
+  await new FakeListChatModel({ responses: ["ok"] }).invoke([message], {
+    callbacks: [handler],
+  });
+
+  expect(handler.messages?.[0].content).toEqual([
+    { type: "text", text: "two PDFs" },
+    {
+      type: "image_url",
+      image_url: { url: "data:application/pdf;base64,JVBERi0xLjQK" },
+    },
+    {
+      type: "image_url",
+      image_url: { url: "data:application/pdf;base64,JVBERi0xLjUK" },
+    },
+  ]);
+});
+
+test("Traced input leaves the original message untouched", async () => {
+  // The provider must still receive what the caller authored; only the tracing
+  // copy is rewritten.
+  const content = [
+    {
+      type: "file",
+      source_type: "base64",
+      mime_type: "application/pdf",
+      data: "JVBERi0xLjQK",
+    },
+    {
+      type: "file",
+      source_type: "base64",
+      mime_type: "application/pdf",
+      data: "JVBERi0xLjUK",
+    },
+  ];
+  const message = new HumanMessage({ content: [...content] });
+
+  const handler = new CaptureTracedInputHandler();
+  await new FakeListChatModel({ responses: ["ok"] }).invoke([message], {
+    callbacks: [handler],
+  });
+
+  expect(message.content).toEqual(content);
+});
+
+test("Traced input passes through messages with no convertible blocks", async () => {
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "a" },
+      { type: "text", text: "b" },
+    ],
+  });
+
+  const handler = new CaptureTracedInputHandler();
+  await new FakeListChatModel({ responses: ["ok"] }).invoke([message], {
+    callbacks: [handler],
+  });
+
+  expect(handler.messages?.[0].content).toEqual([
+    { type: "text", text: "a" },
+    { type: "text", text: "b" },
+  ]);
 });
