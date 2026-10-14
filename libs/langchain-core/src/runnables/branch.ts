@@ -149,6 +149,10 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
     let result;
+    // Tracked separately from `result`: a branch that matched but returned a falsy
+    // value (0, "", false, null) or undefined is still a match, and testing the
+    // output alone cannot tell that apart from no branch having matched at all.
+    let matched = false;
     for (let i = 0; i < this.branches.length; i += 1) {
       const [condition, branchRunnable] = this.branches[i];
       const conditionValue = await condition.invoke(
@@ -164,10 +168,11 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
             callbacks: runManager?.getChild(`branch:${i + 1}`),
           })
         );
+        matched = true;
         break;
       }
     }
-    if (!result) {
+    if (!matched) {
       result = await this.default.invoke(
         input,
         patchConfig(config, {
