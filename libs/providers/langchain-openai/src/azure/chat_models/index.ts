@@ -454,6 +454,8 @@ export class AzureChatOpenAI<
 
   override get profile(): ModelProfile {
     const profile = { ...super.profile };
+    // The data describes OpenAI's API; `additional_tools` is unverified on
+    // Azure's, so make no claim either way.
     delete profile.midConversationTools;
     return profile;
   }
