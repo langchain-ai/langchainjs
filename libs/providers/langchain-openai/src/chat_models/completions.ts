@@ -239,22 +239,31 @@ export class ChatOpenAICompletions<
         .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
         .map(([_, value]) => value);
 
-      const { functions, function_call } = this.invocationParams(options);
+      // With `stream_options.include_usage` (set through `streamUsage`, on by default),
+      // the server reports the token usage in the last chunk, which is merged into the
+      // first generation. Only estimate when the stream did not report it, because the
+      // estimate downloads the tokenizer encoding.
+      const streamedUsage = (
+        generations[0]?.message as AIMessageChunk | undefined
+      )?.usage_metadata;
+      if (streamedUsage) {
+        usageMetadata.input_tokens = streamedUsage.input_tokens;
+        usageMetadata.output_tokens = streamedUsage.output_tokens;
+        usageMetadata.total_tokens = streamedUsage.total_tokens;
+      } else {
+        const { functions, function_call } = this.invocationParams(options);
+        const promptTokenUsage = await this._getEstimatedTokenCountFromPrompt(
+          messages,
+          functions,
+          function_call
+        );
+        const completionTokenUsage =
+          await this._getNumTokensFromGenerations(generations);
 
-      // OpenAI does not support token usage report under stream mode,
-      // fallback to estimation.
-
-      const promptTokenUsage = await this._getEstimatedTokenCountFromPrompt(
-        messages,
-        functions,
-        function_call
-      );
-      const completionTokenUsage =
-        await this._getNumTokensFromGenerations(generations);
-
-      usageMetadata.input_tokens = promptTokenUsage;
-      usageMetadata.output_tokens = completionTokenUsage;
-      usageMetadata.total_tokens = promptTokenUsage + completionTokenUsage;
+        usageMetadata.input_tokens = promptTokenUsage;
+        usageMetadata.output_tokens = completionTokenUsage;
+        usageMetadata.total_tokens = promptTokenUsage + completionTokenUsage;
+      }
       return {
         generations,
         llmOutput: {
