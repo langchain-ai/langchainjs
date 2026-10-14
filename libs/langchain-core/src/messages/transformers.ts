@@ -305,6 +305,19 @@ export interface TrimMessagesFields {
    */
   maxTokens: number;
   /**
+   * Optional token budget to trim to when the input exceeds `maxTokens`.
+   * Only supported with `strategy: "last"`. Must be finite and between
+   * zero and `maxTokens`, inclusive. The threshold counts the full input,
+   * before applying `endOn`; existing message boundary options still apply.
+   *
+   * Persist the returned messages before appending the next turn to leave
+   * room for several turns between evictions. This function is stateless.
+   * A stable prefix may improve prompt caching, but provider cache hits are
+   * not guaranteed. For complete human-led turns including tool exchanges,
+   * use `startOn: "human"` and `allowPartial: false`.
+   */
+  floorTokens?: number;
+  /**
    * @param {((messages: BaseMessage[]) => number) | ((messages: BaseMessage[]) => Promise<number>) | BaseLanguageModel} tokenCounter
    * Function or LLM for counting tokens in an array of `BaseMessage`s.
    * If a `BaseLanguageModel` is passed in then `BaseLanguageModel.getNumTokens()` will be used.
@@ -649,6 +662,7 @@ async function _trimMessagesHelper(
 ): Promise<Array<BaseMessage>> {
   const {
     maxTokens,
+    floorTokens,
     tokenCounter,
     strategy = "last",
     allowPartial = false,
@@ -657,6 +671,23 @@ async function _trimMessagesHelper(
     includeSystem = false,
     textSplitter,
   } = options;
+  if (floorTokens !== undefined) {
+    if (strategy !== "last") {
+      throw new Error(
+        "`floorTokens` should only be specified if `strategy` is 'last'."
+      );
+    }
+    if (
+      !Number.isFinite(floorTokens) ||
+      floorTokens < 0 ||
+      floorTokens > maxTokens ||
+      !Number.isFinite(maxTokens)
+    ) {
+      throw new Error(
+        "`floorTokens` must be finite and between 0 and a finite `maxTokens`, inclusive."
+      );
+    }
+  }
   if (startOn && strategy === "first") {
     throw new Error(
       "`startOn` should only be specified if `strategy` is 'last'."
@@ -702,7 +733,11 @@ async function _trimMessagesHelper(
     });
   } else if (strategy === "last") {
     return _lastMaxTokens(messages, {
-      maxTokens,
+      maxTokens:
+        floorTokens !== undefined &&
+        (await listTokenCounter(messages)) > maxTokens
+          ? floorTokens
+          : maxTokens,
       tokenCounter: listTokenCounter,
       textSplitter: textSplitterFunc,
       allowPartial,
@@ -891,7 +926,7 @@ async function _lastMaxTokens(
     endOn: startOn,
   });
 
-  if (swappedSystem) {
+  if (swappedSystem && reversed_.length > 0) {
     return [reversed_[0], ...reversed_.slice(1).reverse()];
   } else {
     return reversed_.reverse();
