@@ -718,7 +718,7 @@ export class PGVectorStore extends VectorStore {
    * @param paramOffset - Starting parameter index offset.
    * @returns Object containing whereClauses array and parameters array.
    */
-  private buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
+  protected buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
     const whereClauses: string[] = [];
     const parameters: unknown[] = [];
     let paramCount = paramOffset;
