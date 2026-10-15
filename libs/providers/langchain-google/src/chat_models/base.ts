@@ -253,7 +253,7 @@ export abstract class BaseChatGoogle<
 
   protected _apiHandler?: GoogleChatApiHandler;
 
-  get apiHandler(): GoogleChatApiHandler {
+  protected get apiHandler(): GoogleChatApiHandler {
     if (!this._apiHandler) {
       const handlerConfig = this.params.apiHandler ?? "generateContent";
       const handlerParams: GenerateContentApiHandlerParams = {
