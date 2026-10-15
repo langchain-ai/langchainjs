@@ -223,7 +223,7 @@ declare module "./api-types.js" {
       export type ExecutableCode = Pick<GeminiBase.Part, "executableCode">;
       export type FileData = Pick<
         GeminiBase.Part,
-        "fileData" | "videoMetadata"
+        "fileData" | "videoMetadata" | "mediaProcessing"
       >;
       export type FunctionCall = Required<
         Pick<GeminiBase.Part, "functionCall">
@@ -232,7 +232,7 @@ declare module "./api-types.js" {
       export type FunctionResponse = Pick<GeminiBase.Part, "functionResponse">;
       export type InlineData = Pick<
         GeminiBase.Part,
-        "inlineData" | "videoMetadata"
+        "inlineData" | "videoMetadata" | "mediaProcessing"
       >;
       export type MediaResolution = Pick<GeminiBase.Part, "mediaResolution">;
       export type PartMetadata = Pick<GeminiBase.Part, "partMetadata">;
