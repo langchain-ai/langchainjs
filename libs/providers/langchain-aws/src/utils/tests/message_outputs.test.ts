@@ -66,6 +66,73 @@ describe("reasoning output conversion", () => {
     ]);
     expect(result.response_metadata).not.toHaveProperty("output_version");
   });
+
+  test("merges streaming text deltas after a reasoning block", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const firstText = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Hello" },
+    });
+    const secondText = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: " world" },
+    });
+
+    const result = concat(
+      concat(reasoning.message, firstText.message),
+      secondText.message
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        index: 0,
+      },
+      {
+        type: "text",
+        text: "Hello world",
+        index: 1,
+      },
+    ]);
+  });
+
+  test("preserves a reasoning signature after streamed text", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const signature = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { signature: "opaque-signature" } },
+    });
+    const text = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Answer" },
+    });
+
+    const result = concat(
+      concat(reasoning.message, signature.message),
+      text.message
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+        index: 0,
+      },
+      {
+        type: "text",
+        text: "Answer",
+        index: 1,
+      },
+    ]);
+  });
 });
 
 describe("message output usage metadata conversion", () => {
