@@ -254,7 +254,7 @@ export type TodoMiddlewareState = z.infer<typeof stateSchema>;
 export interface TodoListMiddlewareOptions {
   /**
    * Custom system prompt to guide the agent on using the todo tool.
-   * If not provided, uses the default {@link PLANNING_MIDDLEWARE_SYSTEM_PROMPT}.
+   * If not provided, uses the default {@link TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT}.
    */
   systemPrompt?: string;
   /**
