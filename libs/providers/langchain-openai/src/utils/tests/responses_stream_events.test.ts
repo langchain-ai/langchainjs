@@ -239,6 +239,101 @@ describe("convertOpenAIResponsesStream", () => {
     });
   });
 
+  test.each([false, true])(
+    "interleaved argument snapshots survive serialization and final corrections (custom: %s)",
+    async (custom) => {
+      const item = custom
+        ? { type: "custom_tool_call", input: "" }
+        : { type: "function_call", arguments: "" };
+      const input = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: { ...item, id: "fc_1", call_id: "call_1", name: "save" },
+        } as RawEvent,
+        ...(
+          [
+            [0, '{"message":"'],
+            [1, '{"other":'],
+            [0, "hello"],
+            [1, "true}"],
+            [0, ' 😀"}'],
+          ] as const
+        ).map(
+          ([output_index, delta]) =>
+            ({
+              type:
+                custom && output_index === 0
+                  ? "response.custom_tool_call_input.delta"
+                  : "response.function_call_arguments.delta",
+              output_index,
+              delta,
+            }) as RawEvent
+        ),
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            ...item,
+            id: "fc_1",
+            call_id: "call_1",
+            name: "save",
+            ...(custom
+              ? { input: '{"message":"corrected"}' }
+              : { arguments: '{"message":"corrected"}' }),
+          },
+        } as RawEvent,
+        {
+          type: "response.output_item.done",
+          output_index: 1,
+          item: {
+            type: "function_call",
+            id: "fc_2",
+            call_id: "call_2",
+            name: "other",
+            arguments: '{"other":true}',
+          },
+        } as RawEvent,
+        completedResponse(),
+      ];
+      const retained: ChatModelStreamEvent[] = [];
+      const live: string[] = [];
+      for await (const event of convertOpenAIResponsesStream(
+        asAsyncIterable(input)
+      )) {
+        live.push(JSON.stringify(event));
+        retained.push(event);
+      }
+
+      expect(retained.map((event) => JSON.stringify(event))).toEqual(live);
+      const deltas = retained.flatMap((event) =>
+        event.event === "content-block-delta" &&
+        event.delta.type === "block-delta"
+          ? [event.delta.fields]
+          : []
+      );
+      const expected = [
+        '{"message":"',
+        '{"other":',
+        '{"message":"hello',
+        '{"other":true}',
+        '{"message":"hello 😀"}',
+      ];
+      expect(deltas.map((fields) => fields.args)).toEqual(expected);
+      expect({ ...deltas[0] }.args).toBe(expected[0]);
+      expect(
+        retained.find((event) => event.event === "content-block-finish")
+      ).toMatchObject({ content: { args: { message: "corrected" } } });
+
+      // Stream middleware can replace one snapshot without changing the rest.
+      deltas[0].args = "redacted";
+      expect(JSON.parse(JSON.stringify(deltas[0])).args).toBe("redacted");
+      expect(deltas.slice(1).map((fields) => fields.args)).toEqual(
+        expected.slice(1)
+      );
+    }
+  );
+
   test("usage snapshot on completed", async () => {
     const events = await collectEvents([
       {
