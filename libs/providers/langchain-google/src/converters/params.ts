@@ -280,7 +280,8 @@ export function convertFieldsToThinkingConfig(
   }
   if (
     thinkingLevel === "MINIMAL" &&
-    model.startsWith("gemini-3") &&
+    getModelFamily(model) === "gemini" &&
+    Number(getModelVersion(model)) >= 3 &&
     !supportsMinimalThinkingLevel(model)
   ) {
     thinkingLevel = "LOW";
