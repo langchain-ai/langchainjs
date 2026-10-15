@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "make": "tsx src/cli.ts",
+    "refresh": "tsx src/refresh-cli.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
