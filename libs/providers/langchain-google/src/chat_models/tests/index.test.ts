@@ -22,6 +22,7 @@ import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { Runnable } from "@langchain/core/runnables";
 import type { Gemini } from "../types.js";
+import { convertFieldsToThinkingConfig } from "../../converters/params.js";
 
 interface MockResponseParameters {
   filePath: string;
@@ -1832,4 +1833,101 @@ describe("withStructuredOutput type narrowing", () => {
     const _check: typeof result extends Runnable ? true : never = true;
     assertType<true>(_check);
   });
+});
+
+test.each([
+  ["gemini-3.5-flash", true],
+  ["gemini-4-argon", true],
+  ["gemini-4-argon", false],
+] as const)(
+  "%s usage-only streaming respects streamUsage=%s",
+  async (model, streamUsage) => {
+    const llm = new ChatGoogle({
+      model,
+      streamUsage,
+      apiClient: new MockStreamingApiClient([
+        {
+          candidates: [
+            { content: { parts: [{ text: "Hello" }], role: "model" } },
+          ],
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 1,
+            totalTokenCount: 6,
+          },
+        },
+        {},
+        {
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 3,
+            totalTokenCount: 8,
+          },
+        },
+        {
+          candidates: [],
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 4,
+            totalTokenCount: 9,
+          },
+        },
+      ]),
+    });
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await llm.stream("Hello")) chunks.push(chunk);
+    expect(chunks).toHaveLength(streamUsage ? 3 : 1);
+    expect(chunks[0].content).toBe("Hello");
+    if (streamUsage) {
+      expect(chunks[1].usage_metadata).toMatchObject({
+        input_tokens: 0,
+        output_tokens: 2,
+        total_tokens: 2,
+      });
+      expect(chunks[2].usage_metadata).toMatchObject({
+        input_tokens: 0,
+        output_tokens: 1,
+        total_tokens: 1,
+      });
+      expect(chunks.reduce((a, b) => a.concat(b)).usage_metadata).toMatchObject(
+        { input_tokens: 5, output_tokens: 4, total_tokens: 9 }
+      );
+    } else {
+      expect(chunks[0].usage_metadata).toBeUndefined();
+    }
+  }
+);
+
+test.each(["gemma-4-pro", "gemini-2.5-flash", "gemini-unknown"])(
+  "%s does not use the Gemini 3+ fallback",
+  (model) => {
+    expect(
+      convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
+    ).not.toMatchObject({ thinkingLevel: "LOW" });
+  }
+);
+
+test.each([
+  "gemini-4-argon",
+  "gemini-4.1-pro",
+  "gemini-10-pro",
+  "gemini-3.8-flash",
+])("%s downgrades minimal thinking", (model) => {
+  expect(
+    convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
+  ).toMatchObject({ thinkingLevel: "LOW", includeThoughts: false });
+  expect(
+    convertFieldsToThinkingConfig(model, { maxReasoningTokens: 0 })
+  ).toMatchObject({ thinkingLevel: "LOW", includeThoughts: false });
+});
+
+test.each([
+  "gemini-3-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
+])("%s preserves minimal thinking support", (model) => {
+  expect(
+    convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
+  ).toMatchObject({ thinkingLevel: "MINIMAL" });
 });
