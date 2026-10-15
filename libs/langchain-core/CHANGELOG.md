@@ -1,5 +1,17 @@
 # @langchain/core
 
+## 1.2.18
+
+### Patch Changes
+
+- [#11956](https://github.com/langchain-ai/langchainjs/pull/11956) [`93d62b0`](https://github.com/langchain-ai/langchainjs/commit/93d62b008e13e10f28724a5ab09ab6eda584f1cb) Thanks [@hntrl](https://github.com/hntrl)! - Require langsmith >=0.11.0 to include the restored NullableHeaders type declarations.
+
+- [#11822](https://github.com/langchain-ai/langchainjs/pull/11822) [`d3e6fe6`](https://github.com/langchain-ai/langchainjs/commit/d3e6fe66a5f902fa615f076ca71d9541f1291166) Thanks [@dqbd](https://github.com/dqbd)! - Add explicit agent address support to `LangChainTracer`, inherit project and address destinations together, and delegate default destination resolution to the LangSmith SDK.
+
+- [#11150](https://github.com/langchain-ai/langchainjs/pull/11150) [`cea15cf`](https://github.com/langchain-ai/langchainjs/commit/cea15cf9ef5216125b24f23bb5ad06b7c1a91b33) Thanks [@mdnanocom](https://github.com/mdnanocom)! - fix(core): defer tool call chunk collapsing in AIMessageChunk to fix O(n²) streaming aggregation
+
+  `AIMessageChunk` eagerly re-ran `collapseToolCallChunks` in its constructor on every streamed delta `concat`, re-parsing all accumulated tool args each time — O(n²) over a stream, which can block the event loop for seconds on long tool-call streams. Collapsing now runs lazily, once, on first read of `tool_calls` / `invalid_tool_calls`.
+
 ## 1.2.17
 
 ### Patch Changes
