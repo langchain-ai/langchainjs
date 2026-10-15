@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.2.11
+
+### Patch Changes
+
+- [#11940](https://github.com/langchain-ai/langchainjs/pull/11940) [`57d0e02`](https://github.com/langchain-ai/langchainjs/commit/57d0e02b2256da85dec6e5062d3e1bde2271c5de) Thanks [@hntrl](https://github.com/hntrl)! - Support Gemini 4 Argon model capabilities and Gemini 3+ compatibility; preserve usage-only streaming chunks.
+
 ## 0.2.10
 
 ### Patch Changes
