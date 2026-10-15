@@ -1,4 +1,4 @@
-import { test, expect, beforeEach } from "vitest";
+import { test, expect, beforeEach, vi } from "vitest";
 
 import { env } from "../../../tests/utils.js";
 import { AzureChatOpenAI } from "../index.js";
@@ -96,5 +96,42 @@ test("AzureChatOpenAI profile follows the Responses API setting", () => {
   expect(responses.profile.fileMimeTypes).toContain("text/plain");
   expect(responsesOnly.profile.fileMimeTypes).toEqual(
     responses.profile.fileMimeTypes
+  );
+});
+
+test("AzureChatOpenAI without a model sends requests to the deployment", async () => {
+  const mockFetch = vi.fn<typeof fetch>(
+    async () =>
+      new Response(
+        JSON.stringify({
+          id: "chatcmpl-0",
+          object: "chat.completion",
+          created: 0,
+          model: "mock",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "hi" },
+              finish_reason: "stop",
+              logprobs: null,
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+  );
+  const chat = new AzureChatOpenAI({
+    azureOpenAIApiInstanceName: "foobar",
+    azureOpenAIApiDeploymentName: "my-deployment",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+    maxRetries: 0,
+    configuration: { fetch: mockFetch },
+  });
+
+  await chat.invoke("hello");
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+  expect(String(mockFetch.mock.calls[0][0])).toContain(
+    "/deployments/my-deployment/chat/completions"
   );
 });
