@@ -707,3 +707,97 @@ pnpm lint && pnpm format
 ### Adding new entrypoints
 
 If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.
+
+## Decisions API (beta)
+
+`OpenAIDecisions` is a runnable for typed decisions, not a chat model. Set
+`OPENAI_API_KEY`, then supply a decisions-capable model and named questions:
+
+```typescript
+import { OpenAIDecisions } from "@langchain/openai";
+
+const decisions = new OpenAIDecisions({ model: "gpt-6-luna" });
+const response = await decisions.invoke({
+  input: "The deploy failed and customers are seeing 500s.",
+  questions: {
+    urgent: {
+      type: "predicate",
+      instructions: "Does this need attention now?",
+    },
+    team: {
+      type: "choice",
+      instructions: "Which team should handle this?",
+      choices: { infra: "Availability incidents", billing: "Payments" },
+    },
+    severity: {
+      type: "score",
+      instructions: "How severe is the impact?",
+      levels: ["Cosmetic", { label: "Outage", description: "Full outage" }],
+    },
+  },
+});
+console.log(response.predicates.urgent?.probability);
+console.log(response.choices.team?.choice);
+console.log(response.scores.severity?.score);
+```
+
+Questions are TypeScript discriminated objects (`Predicate`, `Choice`, `Score`),
+not Python-style constructors. Answers are keyed by question name on `answers`,
+`predicates`, `choices`, `scores`, and `refusals`. A refusal has no corresponding
+answer in its typed group: check for a missing key before acting. Scores are
+probability-weighted zero-based level indices; `legend` maps indices to labels.
+JS object keys are strings, including boolean-valued choice probabilities.
+
+Input supports strings, LangChain messages, and JSON state. Human messages use
+native text and base64 data URL images; hosted images and other native media are
+not supported. Other roles and JSON state are serialized in a user message, with
+base64 images preserved in position. Batch and runnable composition work as usual.
+LangSmith callbacks record an LLM run with provider metadata and token usage.
+`configuration` accepts OpenAI SDK client options (base URL, headers, timeout,
+retries, custom fetch). Gateway routing must be configured explicitly through
+`configuration.baseURL` and `apiKey`; it is not inferred from Python gateway flags.
+
+### Agent middleware
+
+Install `langchain` alongside `@langchain/openai`. Middleware lives in `langchain`
+like the other JS provider middleware, rather than in the provider package:
+
+```typescript
+import {
+  createAgent,
+  openAIAutoModeMiddleware,
+  openAIModelRouterMiddleware,
+} from "langchain";
+import { OpenAIDecisions } from "@langchain/openai";
+
+const decisions = new OpenAIDecisions({ model: "gpt-6-luna" });
+const agent = createAgent({
+  model: "openai:gpt-6-luna",
+  tools: [],
+  middleware: [
+    openAIModelRouterMiddleware({
+      model: decisions,
+      instructions: "Choose the least costly model suited to this task.",
+      choices: {
+        fast: { model: "openai:gpt-6-luna", criteria: "Simple tasks" },
+        powerful: { model: "openai:gpt-6-sol", criteria: "Complex tasks" },
+      },
+    }),
+    openAIAutoModeMiddleware({ model: decisions, tools: ["delete_file"] }),
+  ],
+});
+```
+
+The router classifies the latest human message once per invocation and stores the
+choice, probabilities and confidence in `model_route`. No human message or a
+refusal clears the route and retains the agent's own model. Tool-risk gating
+classifies only listed tools using the proposed call and the last 30 messages.
+Probability >= 0.5 or a refusal returns an error ToolMessage without execution;
+API errors propagate without execution. Unsupported media is replaced by text
+placeholders; image rejection (400/413) retries once without images.
+
+These beta middleware do not ask for human approval and are not a security
+boundary. Use human-in-the-loop middleware for approval of dangerous operations.
+Conversation state and arguments are sent to OpenAI and can appear in traces;
+do not include secrets unless that disclosure is acceptable. Python's middleware
+trace-payload omission policy has no equivalent in this JS implementation.
