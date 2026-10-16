@@ -74,6 +74,34 @@ describe("convertOpenAICompletionsStream", () => {
     expect(finish.content.text).toBe("Hello world");
   });
 
+  test("empty chunk id leaves the message id unset", async () => {
+    const events = await collectEvents([
+      { id: "", model: "", choices: [] },
+      {
+        id: "chatcmpl-abc",
+        model: "gpt-4o-mini",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hello" },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "chatcmpl-abc",
+        model: "gpt-4o-mini",
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      },
+    ]);
+
+    const start = events.find((e) => e.event === "message-start");
+    if (start?.event !== "message-start") {
+      throw new Error("Expected message-start event");
+    }
+    expect(start.id).toBeUndefined();
+  });
+
   test("reasoning_content deltas", async () => {
     const events = await collectEvents([
       {
