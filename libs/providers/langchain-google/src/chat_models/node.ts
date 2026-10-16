@@ -12,7 +12,7 @@ import {
   NodeApiClient,
   NodeApiClientParams,
 } from "../clients/node.js";
-import { convertParamsToPlatformType } from "../converters/params.js";
+import { convertParamsToPlatformType } from "../converters/generate_content/params.js";
 
 interface ChatGoogleNodeParams extends NodeApiClientParams, ChatGoogleParams {}
 

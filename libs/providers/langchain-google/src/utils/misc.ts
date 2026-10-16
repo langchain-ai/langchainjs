@@ -6,14 +6,19 @@ export const iife = <T>(fn: () => T): T => fn();
 /**
  * Type utility that recursively resolves object shape, removing type aliases,
  * intersections, and unions for easier type introspection and error output.
+ * Makes sure to guard primitive types.
  *
  * Usage:
  *   type Input = { a: string } & { b: number };
  *   type Output = Prettify<Input>; // { a: string; b: number }
  */
-export type Prettify<T> = T extends object
-  ? { [K in keyof T]: Prettify<T[K]> }
-  : T;
+export type Prettify<T> = T extends Function
+  ? T
+  : T extends string | number | boolean | bigint | symbol
+    ? T
+    : T extends object
+      ? { [K in keyof T]: Prettify<T[K]> }
+      : T;
 
 /**
  * Distributes over a string union and applies Lowercase only to

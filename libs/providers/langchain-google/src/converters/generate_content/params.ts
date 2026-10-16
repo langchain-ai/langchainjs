@@ -1,4 +1,5 @@
 import {
+  BaseChatGoogleParams,
   ChatGoogleFields,
   GooglePlatformType,
   settableServiceTier,
@@ -7,8 +8,8 @@ import {
   SpeechSpeakerName,
   SpeechVoice,
   SpeechVoiceLanguage,
-} from "../chat_models/types.js";
-import type { Gemini } from "../chat_models/api-types.js";
+  type Gemini,
+} from "../../chat_models/types.js";
 
 /**
  * Converts a reasoning "effort" level value (e.g., "minimal", "low", "medium", "high")
@@ -439,4 +440,67 @@ export function convertFieldsToServiceTier(
   return {
     serviceTier: serviceTier,
   };
+}
+
+export function mapDetailToMediaResolution(
+  detail?: ChatGoogleFields["detail"]
+): Gemini.Shared.MediaResolution | undefined {
+  switch (detail) {
+    case "low":
+      return "MEDIA_RESOLUTION_LOW";
+    case "high":
+      return "MEDIA_RESOLUTION_HIGH";
+    default:
+      return undefined;
+  }
+}
+
+type CombinableFields = Omit<BaseChatGoogleParams, "model">;
+
+export function combineGoogleChatModelFields(
+  a: CombinableFields,
+  b: CombinableFields,
+  ...rest: CombinableFields[]
+): CombinableFields {
+  const combined: CombinableFields = {
+    temperature: b.temperature ?? a.temperature,
+    topP: b.topP ?? a.topP,
+    topK: b.topK ?? a.topK,
+    maxOutputTokens: b.maxOutputTokens ?? a.maxOutputTokens,
+    presencePenalty: b.presencePenalty ?? a.presencePenalty,
+    frequencyPenalty: b.frequencyPenalty ?? a.frequencyPenalty,
+    stopSequences: b.stopSequences ?? a.stopSequences,
+    seed: b.seed ?? a.seed,
+    responseLogprobs: b.responseLogprobs ?? a.responseLogprobs,
+    logprobs: b.logprobs ?? a.logprobs,
+    safetySettings: b.safetySettings ?? a.safetySettings,
+    responseSchema: b.responseSchema ?? a.responseSchema,
+    tools: b.tools ?? a.tools,
+    responseModalities: b.responseModalities ?? a.responseModalities,
+    enableEnhancedCivicAnswers:
+      b.enableEnhancedCivicAnswers ?? a.enableEnhancedCivicAnswers,
+    speechConfig: b.speechConfig ?? a.speechConfig,
+    imageConfig: b.imageConfig ?? a.imageConfig,
+    mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    detail: b.detail ?? a.detail,
+    maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
+    thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
+    reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
+    thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
+    serviceTier: b.serviceTier ?? a.serviceTier,
+  };
+  if (rest.length > 0) {
+    return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));
+  }
+  return combined;
+}
+
+export function getGoogleChatModelParams<TParams extends BaseChatGoogleParams>(
+  modelOrParams: string | TParams,
+  paramsArg?: Omit<TParams, "model">
+): TParams {
+  const model =
+    typeof modelOrParams === "string" ? modelOrParams : modelOrParams.model;
+  const params = typeof modelOrParams === "string" ? paramsArg : modelOrParams;
+  return { model, ...params } as TParams;
 }

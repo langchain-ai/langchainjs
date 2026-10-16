@@ -1,22 +1,16 @@
 import {
   BaseChatModel,
-  type BaseChatModelCallOptions,
   type LangSmithParams,
-  type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
   AIMessageChunk,
-  AIMessageChunkFields,
   BaseMessage,
-  type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertGoogleGeminiStream } from "../utils/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
-import { EventSourceParserStream } from "eventsource-parser/stream";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import PROFILES from "./profiles.js";
@@ -25,62 +19,35 @@ import type {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
-import {
-  toJsonSchema,
-  type JsonSchema7Type,
-} from "@langchain/core/utils/json_schema";
-import {
-  InteropZodType,
-  isInteropZodSchema,
-} from "@langchain/core/utils/types";
-
+import type { InteropZodType } from "@langchain/core/utils/types";
 import { ApiClient } from "../clients/index.js";
-import { ChatGoogleFields, settableServiceTier } from "./types.js";
-import { SafeJsonEventParserStream } from "../utils/stream.js";
-import {
-  convertAIMessageToText,
-  convertGeminiCandidateToAIMessage,
-  convertGeminiGenerateContentResponseToUsageMetadata,
-  convertGeminiPartsToToolCalls,
-  convertMessagesToGeminiContents,
-  convertMessagesToGeminiSystemInstruction,
-} from "../converters/messages.js";
-import {
-  ConfigurationError,
-  MalformedOutputError,
-  NoCandidatesError,
-  PromptBlockedError,
-  RequestError,
-} from "../utils/errors.js";
-import {
-  convertToolsToGeminiTools,
-  convertToolChoiceToGeminiConfig,
-  mixesBuiltinAndFunctionTools,
-  schemaToGeminiParameters,
-} from "../converters/tools.js";
-import {
-  convertParamsToPlatformType,
-  convertFieldsToSpeechConfig,
-  convertFieldsToThinkingConfig,
-  convertFieldsToServiceTier,
-} from "../converters/params.js";
-import { Gemini } from "./api-types.js";
-import { subtractUsageMetadata } from "../utils/metadata.js";
-import {
-  isSerializableSchema,
-  SerializableSchema,
-} from "@langchain/core/utils/standard_schema";
+import type {
+  BaseChatGoogleParams,
+  BaseChatGoogleCallOptions,
+  GooglePlatformType,
+  GenerateContentApiHandlerParams,
+} from "./types.js";
+import { ConfigurationError, MalformedOutputError } from "../utils/errors.js";
+import { convertParamsToPlatformType } from "../converters/generate_content/params.js";
+import { usageMetadataToTokenUsage } from "../utils/metadata.js";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import {
   assembleStructuredOutputPipeline,
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
-import { iife } from "../utils/misc";
 import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import ServiceTier = Gemini.ServiceTier;
+import {
+  GoogleChatApiHandler,
+  GenerateContentApiHandler,
+} from "./handlers/index.js";
 
-export type GooglePlatformType = "gai" | "gcp";
+export type {
+  BaseChatGoogleParams,
+  BaseChatGoogleCallOptions,
+  GooglePlatformType,
+} from "./types.js";
 
 function hasVertexCredentials(params: {
   credentials?: unknown;
@@ -112,22 +79,26 @@ function hasVertexCredentials(params: {
  *
  * @returns a new params object with gateway routing applied when applicable.
  */
-export function applyGeminiGatewayParams<
-  TParams extends {
+export function applyGeminiGatewayParams<TParams extends object>(
+  params: TParams
+): TParams & {
+  apiKey?: string;
+  endpoint?: string;
+  platformType?: GooglePlatformType;
+} {
+  const p = params as {
     apiKey?: string;
     endpoint?: string;
     platformType?: GooglePlatformType;
     vertexai?: boolean;
     credentials?: unknown;
     googleAuthOptions?: unknown;
-  },
->(params: TParams): TParams & { apiKey?: string; endpoint?: string } {
-  if (typeof params.endpoint !== "undefined") {
+  };
+  if (typeof p.endpoint !== "undefined") {
     return { ...params };
   }
   const platform =
-    convertParamsToPlatformType(params) ??
-    (hasVertexCredentials(params) ? "gcp" : "gai");
+    convertParamsToPlatformType(p) ?? (hasVertexCredentials(p) ? "gcp" : "gai");
   const gatewayConfig = resolveLangSmithGatewayConfig({
     providerPath: platform === "gcp" ? "vertex" : "gemini",
   });
@@ -150,7 +121,7 @@ export function applyGeminiGatewayParams<
       : `${gatewayUrl.protocol}//${gatewayUrl.host}${path}`;
   return {
     ...params,
-    apiKey: params.apiKey ?? gatewayConfig.apiKey,
+    apiKey: p.apiKey ?? gatewayConfig.apiKey,
     endpoint,
     platformType: platform,
   };
@@ -168,86 +139,6 @@ export function getPlatformType(
     return "gcp";
   }
 }
-
-function usageMetadataToTokenUsage(usageMetadata: UsageMetadata) {
-  return {
-    promptTokens: usageMetadata.input_tokens,
-    completionTokens: usageMetadata.output_tokens,
-    totalTokens: usageMetadata.total_tokens,
-  };
-}
-
-function mapDetailToMediaResolution(
-  detail?: ChatGoogleFields["detail"]
-): Gemini.GenerationConfig["mediaResolution"] | undefined {
-  switch (detail) {
-    case "low":
-      return "MEDIA_RESOLUTION_LOW";
-    case "high":
-      return "MEDIA_RESOLUTION_HIGH";
-    default:
-      return undefined;
-  }
-}
-
-export interface BaseChatGoogleParams
-  extends BaseChatModelParams, ChatGoogleFields {
-  /**
-   * The name of the Gemini model to use.
-   *
-   * Example: "gemini-3-pro-preview"
-   */
-  model: string;
-
-  /**
-   * Optional. The API client implementation for making HTTP requests to the Gemini API.
-   * If not set, a default client will be used based on the runtime environment.
-   */
-  apiClient?: ApiClient;
-
-  /**
-   * Hostname for the API call (if this is running on GCP)
-   * Usually this is computed based on location and platformType.
-   **/
-  endpoint?: string;
-
-  /**
-   * Region where the LLM is stored (if this is running on GCP)
-   * Defaults to "global"
-   **/
-  location?: string;
-
-  /**
-   * The version of the API functions. Part of the path.
-   * Usually this is computed based on platformType.
-   **/
-  apiVersion?: string;
-
-  /**
-   * What platform to run the service on.
-   * If not specified, the class should determine this from other
-   * means. Either way, the platform actually used will be in
-   * the "platform" getter.
-   */
-  platformType?: GooglePlatformType;
-
-  /**
-   * For compatibility with Google's libraries, should this use Vertex?
-   * The "platformType" parmeter takes precedence.
-   */
-  vertexai?: boolean;
-
-  /**
-   * Backwards compatibility.
-   * @deprecated in favor of using `disableStreaming` or `.stream()`
-   */
-  streaming?: boolean;
-
-  streamUsage?: boolean;
-}
-
-export interface BaseChatGoogleCallOptions
-  extends BaseChatModelCallOptions, ChatGoogleFields {}
 
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
@@ -360,8 +251,36 @@ export abstract class BaseChatGoogle<
     return "google";
   }
 
-  protected get urlMethod(): string {
-    return this.streaming ? "streamGenerateContent?alt=sse" : "generateContent";
+  protected _apiHandler?: GoogleChatApiHandler;
+
+  get apiHandler(): GoogleChatApiHandler {
+    if (!this._apiHandler) {
+      const handlerConfig = this.params.apiHandler ?? "generateContent";
+      const handlerParams: GenerateContentApiHandlerParams = {
+        ...this.params,
+        model: this.model,
+        platform: this.platform,
+        endpoint: this.endpoint,
+        location: this.location,
+        apiVersion: this.apiVersion,
+        isVertexExpress: this.isVertexExpress,
+        publisher: this.publisher,
+        streaming: this.streaming,
+        streamUsage: this.streamUsage,
+        customHeaders: this.params.customHeaders,
+        apiClient: this.apiClient,
+        caller: this.caller,
+      };
+
+      if (typeof handlerConfig === "function") {
+        this._apiHandler = handlerConfig(handlerParams);
+      } else if (handlerConfig === "generateContent") {
+        this._apiHandler = new GenerateContentApiHandler(handlerParams);
+      } else {
+        throw new ConfigurationError(`Unknown apiHandler: ${handlerConfig}`);
+      }
+    }
+    return this._apiHandler;
   }
 
   /**
@@ -381,170 +300,30 @@ export abstract class BaseChatGoogle<
     return PROFILES[this.model] ?? {};
   }
 
-  protected async buildUrlGemini(urlMethod?: string): Promise<string> {
-    // `endpoint` is normally scheme-less (e.g. `generativelanguage.googleapis.com`)
-    // and defaults to `https`, but a gateway endpoint may already carry a scheme
-    // and a base path (e.g. a custom `http://` LangSmith gateway). Let `URL`
-    // resolve the scheme so a custom `http://` gateway is not forced to TLS.
-    const url = this.endpoint.includes("://")
-      ? new URL(this.endpoint)
-      : new URL(`https://${this.endpoint}`);
-    // `urlMethod` may include a query string (e.g. `streamGenerateContent?alt=sse`);
-    // split it out so `URL` keeps it as a query rather than encoding the `?`.
-    const [method, search] = (urlMethod ?? this.urlMethod).split("?", 2);
-    const basePath = url.pathname.replace(/\/+$/, "");
-    url.pathname = `${basePath}/${this.apiVersion}/models/${this.model}:${method}`;
-    if (search) {
-      url.search = search;
-    }
-    return url.toString();
+  async buildUrl(urlMethod?: string): Promise<string> {
+    return this.apiHandler.buildUrl(urlMethod);
   }
 
-  protected get endpointUrl(): string {
-    return this.endpoint.includes("://")
-      ? this.endpoint
-      : `https://${this.endpoint}`;
-  }
-
-  protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
-    return `${this.endpointUrl}/${this.apiVersion}/publishers/${
-      this.publisher
-    }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
-  }
-
-  protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
-    const projectId = await this.apiClient.getProjectId();
-    return `${this.endpointUrl}/${
-      this.apiVersion
-    }/projects/${projectId}/locations/${this.location}/publishers/${
-      this.publisher
-    }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
-  }
-
-  protected async buildUrlVertex(urlMethod?: string): Promise<string> {
-    if (this.isVertexExpress) {
-      return this.buildUrlVertexExpress(urlMethod);
-    } else {
-      return this.buildUrlVertexLocation(urlMethod);
-    }
-  }
-
-  protected async buildUrl(urlMethod?: string): Promise<string> {
-    switch (this.platform) {
-      case "gai":
-        return this.buildUrlGemini(urlMethod);
-      default:
-        return this.buildUrlVertex(urlMethod);
-    }
-  }
-
-  override invocationParams(options: this["ParsedCallOptions"]) {
-    const fields = combineGoogleChatModelFields(this.params, options);
-    const mediaResolution =
-      fields.mediaResolution ?? mapDetailToMediaResolution(fields.detail);
-
-    // Convert tools to Gemini format
-    const tools = fields.tools
-      ? convertToolsToGeminiTools(fields.tools)
-      : undefined;
-
-    // Convert tool choice to Gemini function calling config
-    let toolConfig = convertToolChoiceToGeminiConfig(
-      options.tool_choice,
-      !!(tools && tools.length > 0)
-    );
-
-    // Gemini rejects a mix of built-in and function-declaration tools unless
-    // this is set. See mixesBuiltinAndFunctionTools's docstring.
-    if (tools && mixesBuiltinAndFunctionTools(tools)) {
-      toolConfig = {
-        ...toolConfig,
-        includeServerSideToolInvocations: true,
-      };
-    }
-
-    let responseJsonSchema:
-      | JsonSchema7Type
-      | Record<string, unknown>
-      | undefined;
-    let responseMimeType: string | undefined;
-
-    if (fields.responseSchema) {
-      // Convert Zod schema to JSON Schema if needed
-      if (
-        isInteropZodSchema(fields.responseSchema) ||
-        isSerializableSchema(fields.responseSchema)
-      ) {
-        responseJsonSchema = toJsonSchema(fields.responseSchema);
-      } else {
-        responseJsonSchema = fields.responseSchema as Record<string, unknown>;
-      }
-      // Automatically set responseMimeType to "application/json" when schema is provided
-      responseMimeType = "application/json";
-    }
-
-    return {
-      ...(tools && tools.length > 0 ? { tools } : {}),
-      ...(toolConfig ? { toolConfig } : {}),
-      safetySettings: fields.safetySettings,
-      generationConfig: {
-        temperature: fields.temperature,
-        topP: fields.topP,
-        topK: fields.topK,
-        maxOutputTokens: fields.maxOutputTokens,
-        presencePenalty: fields.presencePenalty,
-        frequencyPenalty: fields.frequencyPenalty,
-        stopSequences: fields.stopSequences,
-        ...(responseMimeType ? { responseMimeType } : {}),
-        ...(responseJsonSchema ? { responseJsonSchema } : {}),
-        ...(fields.responseModalities && fields.responseModalities.length > 0
-          ? { responseModalities: fields.responseModalities }
-          : {}),
-        candidateCount: 1,
-        seed: fields.seed,
-        responseLogprobs: fields.responseLogprobs,
-        logprobs: fields.logprobs,
-        ...(fields.enableEnhancedCivicAnswers !== undefined
-          ? { enableEnhancedCivicAnswers: fields.enableEnhancedCivicAnswers }
-          : {}),
-        thinkingConfig: convertFieldsToThinkingConfig(this.model, fields),
-        speechConfig: convertFieldsToSpeechConfig(fields),
-        ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
-        ...(mediaResolution ? { mediaResolution } : {}),
-      },
-      ...convertFieldsToServiceTier(this.platform, fields),
-    };
+  override invocationParams(
+    options: this["ParsedCallOptions"]
+  ): Record<string, unknown> {
+    return this.apiHandler.invocationParams(options) as Record<string, unknown>;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
-    const params = this.invocationParams(options);
     return {
       ls_provider: this.platform === "gcp" ? "google_vertexai" : "google_genai",
       ls_model_name: this.model,
       ls_model_type: "chat",
-      ls_temperature: params.generationConfig?.temperature ?? undefined,
-      ls_max_tokens: params.generationConfig?.maxOutputTokens ?? undefined,
-      ls_stop: options.stop,
+      ls_temperature: options?.temperature ?? this.params.temperature,
+      ls_max_tokens: options?.maxOutputTokens ?? this.params.maxOutputTokens,
+      ls_stop:
+        options?.stopSequences ?? options?.stop ?? this.params.stopSequences,
     };
   }
 
-  getHeaders(options: this["ParsedCallOptions"]): HeadersInit {
-    const fields = combineGoogleChatModelFields(this.params, options);
-
-    // The priority type is set via header only for Vertex
-    const priorityHeaders: Record<string, string> =
-      this.platform === "gcp" &&
-      typeof fields.serviceTier !== "undefined" &&
-      settableServiceTier.includes(fields.serviceTier)
-        ? { "X-Vertex-AI-LLM-Shared-Request-Type": fields.serviceTier }
-        : {};
-
-    return {
-      "Content-Type": "application/json",
-      ...priorityHeaders,
-      ...this._customHeaders,
-      ...options.customHeaders,
-    };
+  getHeaders(options?: this["ParsedCallOptions"]): HeadersInit {
+    return this.apiHandler.getHeaders(options);
   }
 
   async _generate(
@@ -574,7 +353,8 @@ export abstract class BaseChatGoogle<
             .originalTextContentBlock as Record<string, unknown>
         ).text = finalChunk.message.content;
       }
-      const usageMetadata = finalChunk?.message?.usage_metadata;
+      const usageMetadata = (finalChunk?.message as AIMessageChunk | undefined)
+        ?.usage_metadata;
       return {
         generations: finalChunk ? [finalChunk] : [],
         ...(usageMetadata
@@ -588,188 +368,15 @@ export abstract class BaseChatGoogle<
       };
     }
 
-    const url = await this.buildUrl();
-    const headers = this.getHeaders(options);
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
-
-    const moduleName = this.constructor.name;
-    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
-      url,
-      headers,
-      body,
-    });
-
-    let response: Response;
-    try {
-      response = await this.caller.callWithOptions(
-        { signal: options.signal, maxRetries: options.maxRetries },
-        async () => {
-          const nextResponse = await this.apiClient.fetch(
-            new Request(url, {
-              method: "POST",
-              headers,
-              body: JSON.stringify(body),
-              signal: options.signal,
-            })
-          );
-
-          if (!nextResponse.ok) {
-            throw await RequestError.fromResponse(nextResponse);
-          }
-
-          return nextResponse;
-        }
-      );
-    } catch (error) {
-      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-        error,
-      });
-      throw error;
-    }
-
-    const data: Gemini.GenerateContentResponse = await response.json();
-    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-      data,
-      url: response.url,
-      headers: Array.from(response.headers.entries()),
-      status: response.status,
-      statusText: response.statusText,
-    });
-
-    // Check for prompt feedback errors
-    if (data.promptFeedback?.blockReason) {
-      throw PromptBlockedError.fromPromptFeedback(data.promptFeedback);
-    }
-
-    // Check if we have candidates
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new NoCandidatesError();
-    }
-
-    // Use the first candidate
-    const candidate = data.candidates[0];
-    const message = convertGeminiCandidateToAIMessage(candidate);
-
-    // Extract text content from the message
-    const text = convertAIMessageToText(message);
-
-    const usageMetadata =
-      convertGeminiGenerateContentResponseToUsageMetadata(data);
-    message.usage_metadata = usageMetadata;
-
-    const serviceTier: ServiceTier = iife((): ServiceTier => {
-      // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
-      const trafficType: string | undefined = data.usageMetadata?.trafficType;
-
-      // AI Studio replies with actual service type in the header
-      const serviceTierHeader: string | null = response.headers.get(
-        "x-gemini-service-tier"
-      );
-
-      if (trafficType?.startsWith("ON_DEMAND_")) {
-        return trafficType?.substring("ON_DEMAND_".length).toLowerCase();
-      }
-      return serviceTierHeader || "standard";
-    });
-
-    return {
-      generations: [
-        {
-          text,
-          message,
-          generationInfo: {
-            finishReason: candidate.finishReason,
-            finishMessage: candidate.finishMessage,
-            safetyRatings: candidate.safetyRatings,
-            citationMetadata: candidate.citationMetadata,
-            tokenCount: candidate.tokenCount,
-          },
-        },
-      ],
-      llmOutput: {
-        tokenUsage: usageMetadataToTokenUsage(usageMetadata),
-        model: data.modelVersion,
-        responseId: data.responseId,
-        usageMetadata,
-        serviceTier,
-      },
-    };
+    return this.apiHandler.generate(messages, options, runManager);
   }
 
-  async *_streamChatModelEvents(
+  override async *_streamChatModelEvents(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
-
-    const url = await this.buildUrl("streamGenerateContent?alt=sse");
-    const headers = this.getHeaders(options);
-
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
-
-    if (!response.ok) {
-      throw await RequestError.fromResponse(response);
-    }
-
-    if (!response.body) {
-      return;
-    }
-
-    const eventStream = response.body
-      .pipeThrough(new TextDecoderStream())
-      .pipeThrough(new EventSourceParserStream())
-      .pipeThrough(
-        new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
-      );
-
-    const shouldStreamUsage =
-      this.streamUsage !== false && options.streamUsage !== false;
-
-    async function* geminiChunks(
-      stream: ReadableStream<Gemini.GenerateContentResponse | null>,
-      signal?: AbortSignal
-    ) {
-      const reader = stream.getReader();
-      try {
-        while (true) {
-          if (signal?.aborted) {
-            return;
-          }
-          const { done, value } = await reader.read();
-          if (done) {
-            break;
-          }
-          if (value !== null) {
-            yield value;
-          }
-        }
-      } finally {
-        reader.releaseLock();
-      }
-    }
-
-    yield* convertGoogleGeminiStream(
-      geminiChunks(eventStream, options.signal),
-      {
-        streamUsage: shouldStreamUsage,
-      }
-    );
+    yield* this.apiHandler.streamChatModelEvents(messages, options, runManager);
   }
 
   async *_streamResponseChunks(
@@ -777,184 +384,7 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const streamUsage: boolean = this.streamUsage ?? true;
-
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
-
-    const url = await this.buildUrl("streamGenerateContent?alt=sse");
-    const headers = this.getHeaders(options);
-    const moduleName = this.constructor.name;
-    await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
-      url,
-      headers,
-      body,
-    });
-
-    let response: Response;
-    try {
-      response = await this.caller.callWithOptions(
-        { signal: options.signal, maxRetries: options.maxRetries },
-        async () => {
-          const nextResponse = await this.apiClient.fetch(
-            new Request(url, {
-              method: "POST",
-              headers,
-              body: JSON.stringify(body),
-              signal: options.signal,
-            })
-          );
-
-          if (!nextResponse.ok) {
-            throw await RequestError.fromResponse(nextResponse);
-          }
-
-          return nextResponse;
-        }
-      );
-    } catch (error) {
-      await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-        error,
-      });
-      throw error;
-    }
-
-    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-      url: response.url,
-      headers: response.headers,
-      status: response.status,
-      statusText: response.statusText,
-    });
-
-    if (response.body) {
-      let previousUsage: UsageMetadata | undefined;
-      const stream = response.body
-        .pipeThrough(new TextDecoderStream())
-        .pipeThrough(new EventSourceParserStream())
-        .pipeThrough(
-          new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
-        )
-        .pipeThrough(
-          new TransformStream<
-            Gemini.GenerateContentResponse,
-            ChatGenerationChunk
-          >({
-            transform(chunk, controller) {
-              // oxlint-disable-next-line no-void
-              void runManager?.handleCustomEvent(`google-chunk-${moduleName}`, {
-                chunk,
-              });
-              if (chunk === null) {
-                controller.enqueue(
-                  new ChatGenerationChunk({
-                    text: "",
-                    message: new AIMessageChunk({ content: "" }),
-                    generationInfo: { finishReason: "stop" },
-                  })
-                );
-                return;
-              }
-
-              // Extract text delta from the chunk
-              const candidate = chunk.candidates?.[0];
-              if (!candidate) {
-                return;
-              }
-
-              const message = convertGeminiCandidateToAIMessage(candidate);
-              const text = convertAIMessageToText(message);
-
-              const parts = candidate.content?.parts ?? [];
-              const toolCalls = convertGeminiPartsToToolCalls(parts);
-
-              // Only emit if we have content
-              if (parts.length > 0 || candidate.finishReason) {
-                const messageChunkParams: AIMessageChunkFields = {
-                  content: message.content,
-                  tool_calls: toolCalls,
-                  response_metadata: {
-                    model_provider: "google",
-                  },
-                  additional_kwargs: {
-                    ...(message.additional_kwargs.originalTextContentBlock
-                      ? {
-                          originalTextContentBlock:
-                            message.additional_kwargs.originalTextContentBlock,
-                        }
-                      : {}),
-                    ...(candidate.finishReason
-                      ? {
-                          finishReason: candidate.finishReason,
-                          finishMessage: candidate.finishMessage,
-                        }
-                      : {}),
-                  },
-                };
-
-                if (chunk?.usageMetadata && streamUsage) {
-                  const cumulative =
-                    convertGeminiGenerateContentResponseToUsageMetadata(chunk);
-                  messageChunkParams.usage_metadata = subtractUsageMetadata(
-                    cumulative,
-                    previousUsage
-                  );
-                  previousUsage = cumulative;
-                }
-                const messageChunk = new AIMessageChunk(messageChunkParams);
-
-                controller.enqueue(
-                  new ChatGenerationChunk({
-                    text: text,
-                    message: messageChunk,
-                    generationInfo: {
-                      ...(candidate.finishReason && {
-                        finishReason: candidate.finishReason,
-                        finishMessage: candidate.finishMessage,
-                      }),
-                      ...(candidate.safetyRatings && {
-                        safetyRatings: candidate.safetyRatings,
-                      }),
-                      ...(candidate.citationMetadata && {
-                        citationMetadata: candidate.citationMetadata,
-                      }),
-                      ...(candidate.groundingMetadata && {
-                        groundingMetadata: candidate.groundingMetadata,
-                        // Support entries for the first content part only (matches messages.ts).
-                        groundingSupport:
-                          candidate.groundingMetadata.groundingSupports?.filter(
-                            (s) => (s?.segment?.partIndex ?? 0) === 0
-                          ),
-                      }),
-                    },
-                  })
-                );
-              }
-            },
-          })
-        );
-
-      const reader = stream.getReader();
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          yield value;
-          await runManager?.handleLLMNewToken(
-            value.text ?? "",
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            { chunk: value }
-          );
-        }
-      } finally {
-        reader.releaseLock();
-      }
-    }
+    yield* this.apiHandler.streamResponseChunks(messages, options, runManager);
   }
 
   /**
@@ -1085,45 +515,11 @@ export abstract class BaseChatGoogle<
         }
       );
     } else if (method === "functionCalling") {
-      // Use function calling mode
-      let functionName = name ?? "extract";
-      let geminiFunctionDeclaration: Gemini.Tools.FunctionDeclaration;
+      const { tools, toolChoice, functionName } =
+        this.apiHandler.formatStructuredOutputTool(schema, { name });
 
-      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
-        const jsonSchema = schemaToGeminiParameters(schema);
-        const description =
-          typeof jsonSchema.description === "string"
-            ? jsonSchema.description
-            : "A function available to call.";
-        geminiFunctionDeclaration = {
-          name: functionName,
-          description,
-          parameters: jsonSchema as Gemini.Tools.Schema,
-        };
-      } else if (
-        typeof schema.name === "string" &&
-        typeof schema.parameters === "object" &&
-        schema.parameters != null
-      ) {
-        geminiFunctionDeclaration = schema as Gemini.Tools.FunctionDeclaration;
-        functionName = schema.name;
-      } else {
-        // We are providing the schema for *just* the parameters
-        const parameters = schemaToGeminiParameters(schema);
-        geminiFunctionDeclaration = {
-          name: functionName,
-          description: (schema as { description?: string }).description ?? "",
-          parameters,
-        };
-      }
-
-      const tools: Gemini.Tool[] = [
-        {
-          functionDeclarations: [geminiFunctionDeclaration],
-        },
-      ];
       llm = this.bindTools(tools).withConfig({
-        tool_choice: functionName,
+        tool_choice: toolChoice,
       } as Partial<CallOptions>);
 
       outputParser = createFunctionCallingParser(schema, functionName);
@@ -1143,53 +539,7 @@ export abstract class BaseChatGoogle<
     );
   }
 }
-
-type CombinableFields = Omit<BaseChatGoogleParams, "model">;
-
-export function combineGoogleChatModelFields(
-  a: CombinableFields,
-  b: CombinableFields,
-  ...rest: CombinableFields[]
-): CombinableFields {
-  const combined: CombinableFields = {
-    temperature: b.temperature ?? a.temperature,
-    topP: b.topP ?? a.topP,
-    topK: b.topK ?? a.topK,
-    maxOutputTokens: b.maxOutputTokens ?? a.maxOutputTokens,
-    presencePenalty: b.presencePenalty ?? a.presencePenalty,
-    frequencyPenalty: b.frequencyPenalty ?? a.frequencyPenalty,
-    stopSequences: b.stopSequences ?? a.stopSequences,
-    seed: b.seed ?? a.seed,
-    responseLogprobs: b.responseLogprobs ?? a.responseLogprobs,
-    logprobs: b.logprobs ?? a.logprobs,
-    safetySettings: b.safetySettings ?? a.safetySettings,
-    responseSchema: b.responseSchema ?? a.responseSchema,
-    tools: b.tools ?? a.tools,
-    responseModalities: b.responseModalities ?? a.responseModalities,
-    enableEnhancedCivicAnswers:
-      b.enableEnhancedCivicAnswers ?? a.enableEnhancedCivicAnswers,
-    speechConfig: b.speechConfig ?? a.speechConfig,
-    imageConfig: b.imageConfig ?? a.imageConfig,
-    mediaResolution: b.mediaResolution ?? a.mediaResolution,
-    detail: b.detail ?? a.detail,
-    maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
-    thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
-    reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
-    thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
-    serviceTier: b.serviceTier ?? a.serviceTier,
-  };
-  if (rest.length > 0) {
-    return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));
-  }
-  return combined;
-}
-
-export function getGoogleChatModelParams<TParams extends BaseChatGoogleParams>(
-  modelOrParams: string | TParams,
-  paramsArg?: Omit<TParams, "model">
-): TParams {
-  const model =
-    typeof modelOrParams === "string" ? modelOrParams : modelOrParams.model;
-  const params = typeof modelOrParams === "string" ? paramsArg : modelOrParams;
-  return { model, ...params } as TParams;
-}
+export {
+  combineGoogleChatModelFields,
+  getGoogleChatModelParams,
+} from "../converters/generate_content/params.js";
