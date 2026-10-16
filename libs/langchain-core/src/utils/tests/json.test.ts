@@ -301,3 +301,24 @@ it("kitchen sink of partial json parsing", async () => {
     expectPartialJson(item).toEqual(segments[i]);
   }
 });
+
+it("strings with escapes cut at every position", () => {
+  const value = {
+    content: 'line 1: "quoted" \\ back\nline 2: \u00e9 \ud83d\ude00\ttab',
+    raw: "\\u00e9 \\n",
+    nested: [{ key: 'a"b', n: -1.5e3 }],
+  };
+  const rawJson = JSON.stringify(value).replace("é", "\\u00e9");
+  expectPartialJson(rawJson).toEqual(value);
+  expectPartialJson('{"a": "x\\').toEqual({ a: "x\\" });
+  expectPartialJson('{"a": "x\\u00').toEqual({ a: "xu00" });
+  expectPartialJson('{"a": "x\\u00e9').toEqual({ a: "xé" });
+  expectPartialJson('{"a": "x\\"y').toEqual({ a: 'x"y' });
+  expectPartialJson('{"a": "line\nbreak"}').toEqual({ a: "line\nbreak" });
+  expect(() => parsePartialJson('{"a": "x\\q"}')).toThrow(
+    "Invalid escape sequence"
+  );
+  for (const [item] of generateSegments(rawJson)) {
+    expect(() => parsePartialJson(item), `[${item}]`).not.toThrow();
+  }
+});
