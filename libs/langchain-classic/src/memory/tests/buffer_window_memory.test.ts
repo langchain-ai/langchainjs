@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { describe, test, expect } from "vitest";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
@@ -48,4 +48,50 @@ test("Test buffer window memory with pre-loaded history", async () => {
   });
   const result = await memory.loadMemoryVariables({});
   expect(result).toStrictEqual({ history: pastMessages });
+});
+
+describe("Test buffer window memory window size", () => {
+  const saveTurns = async (memory: BufferWindowMemory, turns: number) => {
+    for (let i = 1; i <= turns; i += 1) {
+      await memory.saveContext(
+        { input: `question ${i}` },
+        { output: `answer ${i}` }
+      );
+    }
+  };
+
+  test.each([
+    [0, 0],
+    [1, 2],
+    [2, 4],
+    [4, 8],
+    [10, 8],
+  ])(
+    "k = %i returns %i messages when 4 turns are saved",
+    async (k, expectedCount) => {
+      const memory = new BufferWindowMemory({ k, returnMessages: true });
+      await saveTurns(memory, 4);
+
+      const { history } = await memory.loadMemoryVariables({});
+      expect(history).toHaveLength(expectedCount);
+    }
+  );
+
+  test("k = 0 returns an empty string when not returning messages", async () => {
+    const memory = new BufferWindowMemory({ k: 0 });
+    await saveTurns(memory, 4);
+
+    const result = await memory.loadMemoryVariables({});
+    expect(result).toStrictEqual({ history: "" });
+  });
+
+  test("k = 1 returns only the last turn", async () => {
+    const memory = new BufferWindowMemory({ k: 1 });
+    await saveTurns(memory, 4);
+
+    const result = await memory.loadMemoryVariables({});
+    expect(result).toStrictEqual({
+      history: "Human: question 4\nAI: answer 4",
+    });
+  });
 });
