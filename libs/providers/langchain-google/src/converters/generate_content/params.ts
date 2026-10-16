@@ -15,7 +15,8 @@ import {
   convertReasoningEffortToReasoningTokens,
   convertReasoningTokensToReasoningEffort,
   getModelVersion,
-  getModelSpecialty, getModelFamily,
+  getModelSpecialty,
+  getModelFamily,
 } from "../shared/params.js";
 
 // Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".

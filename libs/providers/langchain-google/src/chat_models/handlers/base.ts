@@ -69,12 +69,7 @@ export abstract class GoogleChatApiHandler<
   }
 
   protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
-    return this.formatUrl(
-      [
-        `publishers/${this.params.publisher}`,
-      ],
-      urlMethod
-    );
+    return this.formatUrl([`publishers/${this.params.publisher}`], urlMethod);
   }
 
   protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
