@@ -3,6 +3,7 @@
  */
 import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
+import { isGraphBubbleUp } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
@@ -198,6 +199,10 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
         try {
           return await handler(delegated);
         } catch (error) {
+          if (isGraphBubbleUp(error)) {
+            throw error;
+          }
+
           const attemptsMade = attempt + 1; // attempt is 0-indexed
 
           // Ensure error is an Error instance
@@ -208,8 +213,8 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
 
           // Check if we should retry this exception
           if (!shouldRetryException(err)) {
-            // Exception is not retryable, handle failure immediately
-            return handleFailure(err, attemptsMade);
+            // Exception is not retryable, re-throw immediately (not handled by onFailure)
+            throw error;
           }
 
           // Check if we have more retries left
