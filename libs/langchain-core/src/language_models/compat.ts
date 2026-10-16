@@ -148,6 +148,26 @@ export async function* convertChunksToEvents(
     number,
     { type: string; accumulated: ContentBlock }
   >();
+  // Provider content and tool indexes are independent input namespaces.
+  // Allocate event indexes together so arrival order cannot create collisions.
+  const blockIndexes = new Map<string, number>();
+  const getBlockIndex = (...keys: (string | undefined)[]): number => {
+    let index: number | undefined;
+    for (const key of keys) {
+      if (key === undefined) continue;
+      const existing = blockIndexes.get(key);
+      if (existing === undefined) continue;
+      if (index !== undefined && index !== existing) {
+        throw new Error("Conflicting provider content block identifiers");
+      }
+      index = existing;
+    }
+    index ??= nextBlockIndex(activeBlocks);
+    for (const key of keys) {
+      if (key !== undefined) blockIndexes.set(key, index);
+    }
+    return index;
+  };
   let messageStarted = false;
   let lastUsage:
     | { input_tokens: number; output_tokens: number; total_tokens: number }
@@ -180,7 +200,9 @@ export async function* convertChunksToEvents(
     const content = msg.content;
     if (typeof content === "string") {
       if (content !== "") {
-        const blockIndex = 0;
+        const blockIndex = getBlockIndex(
+          JSON.stringify(["content", "text", 0])
+        );
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock.Text = { type: "text", text: "" };
           activeBlocks.set(blockIndex, {
@@ -206,8 +228,11 @@ export async function* convertChunksToEvents(
       }
     } else if (Array.isArray(content)) {
       for (const part of content) {
-        const blockIndex =
-          typeof part.index === "number" ? part.index : activeBlocks.size;
+        const blockIndex = getBlockIndex(
+          typeof part.index === "number" || typeof part.index === "string"
+            ? JSON.stringify(["content", part.type, part.index])
+            : undefined
+        );
 
         if (!activeBlocks.has(blockIndex)) {
           activeBlocks.set(blockIndex, {
@@ -239,10 +264,15 @@ export async function* convertChunksToEvents(
       msg.tool_call_chunks.length > 0
     ) {
       for (const toolChunk of msg.tool_call_chunks) {
-        const blockIndex =
-          typeof toolChunk.index === "number"
-            ? toolChunk.index
-            : activeBlocks.size;
+        const blockIndex = getBlockIndex(
+          typeof toolChunk.index === "number" ||
+            typeof toolChunk.index === "string"
+            ? JSON.stringify(["tool", "index", toolChunk.index])
+            : undefined,
+          typeof toolChunk.id === "string" && toolChunk.id.length > 0
+            ? JSON.stringify(["tool", "id", toolChunk.id])
+            : undefined
+        );
 
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock = {
