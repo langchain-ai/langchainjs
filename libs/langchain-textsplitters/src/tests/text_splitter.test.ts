@@ -536,3 +536,118 @@ test("Test lines loc on iterative text splitter.", async () => {
 
   expect(docs).toEqual(expectedDocs);
 });
+
+describe("Line numbers when merged chunks are not substrings of the text", () => {
+  // The empty splits between consecutive separators are dropped, so the merged
+  // chunk has fewer newlines than the text it was taken from.
+  const text = "alpha\nbeta\n\n\n\ngamma\ndelta";
+
+  test("CharacterTextSplitter with a run of separators in the chunk", async () => {
+    const splitter = new CharacterTextSplitter({
+      chunkSize: 100,
+      chunkOverlap: 0,
+    });
+    const docs = await splitter.createDocuments([text]);
+
+    expect(docs).toEqual([
+      new Document({
+        pageContent: "alpha\nbeta\n\ngamma\ndelta",
+        metadata: { loc: { lines: { from: 1, to: 7 } } },
+      }),
+    ]);
+  });
+
+  test("RecursiveCharacterTextSplitter with keepSeparator false", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 100,
+      chunkOverlap: 0,
+      keepSeparator: false,
+    });
+    const docs = await splitter.createDocuments([text]);
+
+    expect(docs).toEqual([
+      new Document({
+        pageContent: "alpha\nbeta\n\ngamma\ndelta",
+        metadata: { loc: { lines: { from: 1, to: 7 } } },
+      }),
+    ]);
+  });
+
+  test("Following chunks are still anchored correctly", async () => {
+    const splitter = new CharacterTextSplitter({
+      chunkSize: 25,
+      chunkOverlap: 0,
+    });
+    const docs = await splitter.createDocuments([
+      `${text}\n\nepsilon\nzeta\n\n\n\n\n\neta`,
+    ]);
+
+    expect(docs).toEqual([
+      new Document({
+        pageContent: "alpha\nbeta\n\ngamma\ndelta",
+        metadata: { loc: { lines: { from: 1, to: 7 } } },
+      }),
+      new Document({
+        pageContent: "epsilon\nzeta\n\neta",
+        metadata: { loc: { lines: { from: 9, to: 16 } } },
+      }),
+    ]);
+  });
+
+  test("Chunks with overlap", async () => {
+    const splitter = new CharacterTextSplitter({
+      separator: "\n",
+      chunkSize: 9,
+      chunkOverlap: 4,
+    });
+    const docs = await splitter.createDocuments([
+      "aaaa\n\n\nbbbb\n\ncccc\ndddd",
+    ]);
+
+    expect(docs).toEqual([
+      new Document({
+        pageContent: "aaaa\nbbbb",
+        metadata: { loc: { lines: { from: 1, to: 4 } } },
+      }),
+      new Document({
+        pageContent: "bbbb\ncccc",
+        metadata: { loc: { lines: { from: 4, to: 6 } } },
+      }),
+      new Document({
+        pageContent: "cccc\ndddd",
+        metadata: { loc: { lines: { from: 6, to: 7 } } },
+      }),
+    ]);
+  });
+
+  test("Chunks containing regular expression special characters", async () => {
+    const splitter = new CharacterTextSplitter({
+      chunkSize: 100,
+      chunkOverlap: 0,
+    });
+    const docs = await splitter.createDocuments(["a.b*\n\n\n\n(c)[d]"]);
+
+    expect(docs).toEqual([
+      new Document({
+        pageContent: "a.b*\n\n(c)[d]",
+        metadata: { loc: { lines: { from: 1, to: 5 } } },
+      }),
+    ]);
+  });
+
+  test("Chunks that can't be located don't produce out of range line numbers", async () => {
+    const splitter = new CharacterTextSplitter({
+      separator: ".*",
+      chunkSize: 100,
+      chunkOverlap: 0,
+    });
+    // the merged chunk "a\nb.*c\nd" is not in the text, and it isn't only whitespace that was collapsed
+    const docs = await splitter.createDocuments(["a\nb.*.*.*.*c\nd"]);
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0].pageContent).toBe("a\nb.*c\nd");
+    const { from, to } = docs[0].metadata.loc.lines;
+    expect(from).toBe(1);
+    expect(to).toBeGreaterThanOrEqual(from);
+  });
+});
