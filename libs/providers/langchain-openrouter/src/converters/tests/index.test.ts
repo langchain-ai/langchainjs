@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+} from "@langchain/core/messages";
 import { formatToolChoice } from "../tools.js";
 import {
+  convertMessagesToOpenRouterParams,
   convertUsageMetadata,
   convertOpenRouterResponseToBaseMessage,
   convertOpenRouterDeltaToBaseMessageChunk,
@@ -370,12 +375,66 @@ describe("convertOpenRouterDeltaToBaseMessageChunk reasoning", () => {
 
     const merged = c1.concat(c2).concat(c3);
 
+    expect(convertMessagesToOpenRouterParams([merged])[0]).toHaveProperty(
+      "reasoning_details",
+      merged.additional_kwargs.reasoning_details
+    );
+
     expect(merged.additional_kwargs.reasoning_details).toEqual([
       {
         type: "reasoning.text",
         text: "Let me think.",
         index: 0,
       },
+    ]);
+  });
+});
+
+describe("convertMessagesToOpenRouterParams reasoning", () => {
+  it("preserves reasoning on the correct message after audio expansion", () => {
+    const details = [{ type: "reasoning.encrypted", data: "opaque", index: 0 }];
+    const messages = [
+      new AIMessage({
+        content: "Audio",
+        additional_kwargs: { audio: { id: "audio_1" } },
+      }),
+      new AIMessage({
+        content: "Answer",
+        additional_kwargs: {
+          reasoning_content: "Think first",
+          reasoning_details: details,
+        },
+      }),
+    ];
+    const before = JSON.stringify(messages);
+    expect(convertMessagesToOpenRouterParams(messages)).toEqual([
+      { role: "assistant", content: "Audio" },
+      { role: "assistant", audio: { id: "audio_1" } },
+      {
+        role: "assistant",
+        content: "Answer",
+        reasoning: "Think first",
+        reasoning_details: details,
+      },
+    ]);
+    expect(JSON.stringify(messages)).toBe(before);
+  });
+
+  it("omits reasoning on non-assistant messages and messages without reasoning", () => {
+    expect(
+      convertMessagesToOpenRouterParams([
+        new HumanMessage({
+          content: "Hello",
+          additional_kwargs: {
+            reasoning_content: "Not assistant reasoning",
+            reasoning_details: [],
+          },
+        }),
+        new AIMessage("Hi"),
+      ])
+    ).toEqual([
+      { role: "user", content: "Hello" },
+      { role: "assistant", content: "Hi" },
     ]);
   });
 });
