@@ -1,5 +1,5 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { fakeModel } from "@langchain/core/testing";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
@@ -7,6 +7,7 @@ import { FakeListChatModel } from "@langchain/core/utils/testing";
 import { summarizationMiddleware } from "../summarization.js";
 import { createAgent } from "../../index.js";
 import { hasToolCalls } from "../../utils.js";
+import { getHookFunction } from "../utils.js";
 import {
   FakeToolCallingChatModel,
   collectV3Messages,
@@ -33,12 +34,16 @@ function createMockSummarizationModel() {
       return { content: "Summary of previous conversation." };
     });
 
-  return {
+  const model = {
     invoke: invokeCallback,
+    // The middleware wraps the summary model with `withRetry`; the plain mock
+    // has no retry logic, so it returns itself.
+    withRetry: () => model,
     getName: () => "mock-summarizer",
     _modelType: "mock",
     lc_runnable: true,
   };
+  return model;
 }
 
 // Helper to create a mock main model
@@ -1324,6 +1329,7 @@ describe("summarizationMiddleware", () => {
         capturedPrompt = prompt;
         return { content: "Summary of the conversation." };
       }),
+      withRetry: () => summarizationModel,
       getName: () => "mock-summarizer",
       _modelType: "mock",
       lc_runnable: true,
@@ -1384,5 +1390,74 @@ describe("summarizationMiddleware", () => {
 
     // The tool calls should still be included (as JSON appended to the AI message)
     expect(capturedPrompt).toContain("get_weather");
+  });
+});
+
+describe("summarizationMiddleware when the summary model fails", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const buildMessages = () =>
+    Array.from({ length: 10 }, (_, i) =>
+      i % 2 ? new AIMessage(`a${i}`) : new HumanMessage(`q${i}`)
+    );
+
+  async function runBeforeModel(
+    summaryModel: ReturnType<typeof fakeModel>,
+    messages: ReturnType<typeof buildMessages>
+  ) {
+    const middleware = summarizationMiddleware({
+      model: summaryModel as any,
+      trigger: { messages: 4 },
+      keep: { messages: 2 },
+    });
+    const hook = getHookFunction(middleware.beforeModel as any) as any;
+    // Retries back off with timers; fake them so the test does not wait.
+    vi.useFakeTimers();
+    const pending = hook({ messages } as any, { context: {} } as any);
+    const settled = pending.then(
+      (value: unknown) => ({ value }),
+      (error: unknown) => ({ error })
+    );
+    await vi.runAllTimersAsync();
+    return settled as Promise<{ value?: any; error?: any }>;
+  }
+
+  it("surfaces the error and leaves the history untouched after retries are exhausted", async () => {
+    const summaryModel = fakeModel().alwaysThrow(
+      new Error("429 Too Many Requests")
+    );
+    const messages = buildMessages();
+    const snapshot = [...messages];
+
+    const result = await runBeforeModel(summaryModel, messages);
+
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error.message).toContain("429 Too Many Requests");
+    // No RemoveMessage(REMOVE_ALL) or fabricated summary is returned.
+    expect(result.value).toBeUndefined();
+    expect(messages).toEqual(snapshot);
+    expect(
+      messages.some((m) => String(m.content).includes("Error generating"))
+    ).toBe(false);
+    // Bounded retry: three attempts in total.
+    expect(summaryModel.calls).toHaveLength(3);
+  });
+
+  it("retries a transient failure and then produces the summary", async () => {
+    const summaryModel = fakeModel()
+      .respond(new Error("429 Too Many Requests"))
+      .respond(new AIMessage("Recovered summary."));
+    const messages = buildMessages();
+
+    const result = await runBeforeModel(summaryModel, messages);
+
+    expect(result.error).toBeUndefined();
+    const [removeAll, summary, ...preserved] = result.value.messages;
+    expect(removeAll.id).toBe("__remove_all__");
+    expect(summary.content).toContain("Recovered summary.");
+    expect(summary.content).not.toContain("Error generating summary");
+    expect(preserved).toHaveLength(2);
   });
 });
