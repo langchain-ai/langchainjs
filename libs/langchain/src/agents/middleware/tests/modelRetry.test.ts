@@ -3,10 +3,11 @@ import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { ContextOverflowError, stampRetryable } from "@langchain/core/errors";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
+import { interrupt } from "@langchain/langgraph";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
 
-import { createAgent } from "../../index.js";
+import { createAgent, createMiddleware } from "../../index.js";
 import { modelRetryMiddleware } from "../modelRetry.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
 import { InvalidRetryConfigError } from "../error.js";
@@ -382,14 +383,44 @@ describe("modelRetryMiddleware", () => {
       expect(model._generate).toHaveBeenCalledTimes(2);
     });
 
-    it("should not retry on non-specified error types", async () => {
+    it("should propagate errors not matching retryOn without retrying", async () => {
       const model = new AlwaysFailingModel(new Error("Generic error"));
+      const onFailure = vi.fn(() => "must not handle non-retryable errors");
 
       const retry = modelRetryMiddleware({
         maxRetries: 2,
         initialDelayMs: 10,
         jitter: false,
         retryOn: [TimeoutError, RateLimitError],
+        onFailure,
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      // Error is not in the retryOn list, so it is re-thrown after one attempt
+      await expect(
+        agent.invoke(
+          { messages: [new HumanMessage("Hello")] },
+          { configurable: { thread_id: "test" } }
+        )
+      ).rejects.toThrow("Generic error");
+      expect(model._generate).toHaveBeenCalledTimes(1);
+      expect(onFailure).not.toHaveBeenCalled();
+    });
+
+    it("should retry matching errors and then use onFailure", async () => {
+      const model = new AlwaysFailingModel(new TimeoutError("timed out"));
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+        retryOn: [TimeoutError],
         onFailure: "continue",
       });
 
@@ -406,9 +437,11 @@ describe("modelRetryMiddleware", () => {
       );
 
       const aiMessages = result.messages.filter(AIMessage.isInstance);
-      expect(aiMessages.length).toBeGreaterThan(0);
-      // Should fail immediately without retries since Error is not in retryOn list
-      expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
+      expect(model._generate).toHaveBeenCalledTimes(3);
+      expect(aiMessages[aiMessages.length - 1].content).toContain("3 attempts");
+      expect(aiMessages[aiMessages.length - 1].content).toContain(
+        "TimeoutError"
+      );
     });
 
     it("should use custom retry function", async () => {
@@ -490,48 +523,100 @@ describe("modelRetryMiddleware", () => {
         checkpointer: new MemorySaver(),
       });
 
-      await agent.invoke(
-        { messages: [new HumanMessage("Hello")] },
-        { configurable: { thread_id: threadId } }
-      );
+      const [outcome] = await Promise.allSettled([
+        agent.invoke(
+          { messages: [new HumanMessage("Hello")] },
+          { configurable: { thread_id: threadId } }
+        ),
+      ]);
 
-      return model._generate;
+      return { generate: model._generate, outcome };
     };
 
-    it("should not retry an error marked non-retryable", async () => {
-      const generate = await runWithDefaultRetryOn(
+    it("should not retry an error marked non-retryable, and propagate it", async () => {
+      const { generate, outcome } = await runWithDefaultRetryOn(
         stampRetryable(new Error("Invalid API key"), false),
         "non-retryable"
       );
 
       expect(generate).toHaveBeenCalledTimes(1);
+      expect(outcome.status).toBe("rejected");
     });
 
     it("should retry an error marked retryable", async () => {
-      const generate = await runWithDefaultRetryOn(
+      const { generate, outcome } = await runWithDefaultRetryOn(
         stampRetryable(new Error("Rate limited"), true),
         "retryable"
       );
 
       expect(generate).toHaveBeenCalledTimes(3);
+      expect(outcome.status).toBe("fulfilled");
     });
 
     it("should retry an unclassified error", async () => {
-      const generate = await runWithDefaultRetryOn(
+      const { generate, outcome } = await runWithDefaultRetryOn(
         new Error("Who knows"),
         "unclassified"
       );
 
       expect(generate).toHaveBeenCalledTimes(3);
+      expect(outcome.status).toBe("fulfilled");
     });
 
-    it("should not retry a core error that is non-retryable by construction", async () => {
-      const generate = await runWithDefaultRetryOn(
+    it("should not retry a core error that is non-retryable by construction, and propagate it", async () => {
+      const { generate, outcome } = await runWithDefaultRetryOn(
         new ContextOverflowError(),
         "context-overflow"
       );
 
       expect(generate).toHaveBeenCalledTimes(1);
+      expect(outcome.status).toBe("rejected");
+    });
+  });
+
+  describe("Graph control flow", () => {
+    it("bubbles graph interrupts without retrying or handling them", async () => {
+      let interruptCalls = 0;
+      const retryOn = vi.fn(() => true);
+      const onFailure = vi.fn(() => "must not handle graph control flow");
+      const model = new FakeToolCallingModel({ toolCalls: [[]] });
+
+      // inner middleware pauses for approval before the model call
+      const approval = createMiddleware({
+        name: "approval",
+        wrapModelCall: async (request, handler) => {
+          interruptCalls += 1;
+          interrupt({ action: "approve" });
+          return handler(request);
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          modelRetryMiddleware({
+            maxRetries: 2,
+            initialDelayMs: 0,
+            jitter: false,
+            retryOn,
+            onFailure,
+          }),
+          approval,
+        ] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "model-retry-graph-interrupt" } }
+      );
+
+      expect(result.__interrupt__).toHaveLength(1);
+      expect(result.__interrupt__?.[0].value).toEqual({ action: "approve" });
+      expect(interruptCalls).toBe(1);
+      expect(retryOn).not.toHaveBeenCalled();
+      expect(onFailure).not.toHaveBeenCalled();
     });
   });
 
