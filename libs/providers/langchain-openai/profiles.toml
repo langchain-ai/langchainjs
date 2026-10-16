@@ -148,3 +148,127 @@ pdfInputs = false
 pdfToolMessage = false
 imageToolMessage = false
 structuredOutput = false
+
+[overrides."gpt-4.1"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-4.1-mini"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-4.1-nano"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5-mini"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5-nano"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5-pro"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.1"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.2"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.2-chat-latest"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.2-pro"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.3-chat-latest"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.3-codex"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.3-codex-spark"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.4"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.4-mini"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.4-nano"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.4-pro"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.5-pro"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.6"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.6-luna"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.6-sol"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-5.6-terra"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-6-astra"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-6-luna"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-6-sol"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-6.1-sol"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."o3"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."o3-mini"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."o3-pro"]
+midConversationSystemMessages = true
+midConversationTools = true

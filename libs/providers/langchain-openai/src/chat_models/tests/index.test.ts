@@ -2165,7 +2165,10 @@ describe("profile.fileMimeTypes", () => {
     const { fileMimeTypes: _fileMimeTypes, ...expectedProfile } =
       PROFILES["gpt-5.5"];
     expect(model.profile.fileMimeTypes).toBeUndefined();
-    expect(model.profile).toEqual(expectedProfile);
+    expect(model.profile).toEqual({
+      ...expectedProfile,
+      midConversationTools: false,
+    });
   });
 
   test("ChatOpenAI includes file MIME types with useResponsesApi", () => {
@@ -2226,5 +2229,58 @@ describe("profile.fileMimeTypes", () => {
     // ...but the shared static table still has it, proving nothing was
     // deleted in place.
     expect(PROFILES["gpt-5.5"].fileMimeTypes).toBeDefined();
+  });
+});
+
+describe("profile.midConversationTools", () => {
+  test("ChatOpenAIResponses keeps mid-conversation support", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.midConversationSystemMessages).toBe(true);
+    expect(model.profile.midConversationTools).toBe(true);
+  });
+
+  test("ChatOpenAICompletions turns off mid-conversation tools", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.midConversationSystemMessages).toBe(true);
+    expect(model.profile.midConversationTools).toBe(false);
+  });
+
+  test("ChatOpenAI turns off mid-conversation tools without the Responses API", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.5", apiKey: "test" });
+    expect(model.profile.midConversationTools).toBe(false);
+  });
+
+  test("ChatOpenAI keeps mid-conversation tools with useResponsesApi", () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.5",
+      apiKey: "test",
+      useResponsesApi: true,
+    });
+    expect(model.profile.midConversationTools).toBe(true);
+  });
+
+  test("ChatOpenAI keeps mid-conversation tools for Responses-preferring models", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.2-pro", apiKey: "test" });
+    expect(model.profile.midConversationTools).toBe(true);
+  });
+
+  test("leaves models without the capability unset", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o",
+      apiKey: "test",
+    });
+    expect(model.profile.midConversationTools).toBeUndefined();
+  });
+
+  test("does not mutate the shared profile registry", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test",
+    });
+    expect(model.profile.midConversationTools).toBe(false);
+    expect(PROFILES["gpt-5.5"].midConversationTools).toBe(true);
   });
 });
