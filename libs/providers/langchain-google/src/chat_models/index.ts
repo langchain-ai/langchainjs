@@ -59,3 +59,18 @@ export class ChatGoogle extends BaseChatGoogle<ChatGoogleCallOptions> {
     this.apiKey = params.apiKey;
   }
 }
+
+export {
+  BaseChatGoogle,
+  type BaseChatGoogleParams,
+  type BaseChatGoogleCallOptions,
+} from "./base.js";
+export * from "./handlers/index.js";
+export type {
+  GoogleChatApiHandlerParams,
+  GenerateContentApiHandlerParams,
+  GoogleChatApiHandlerFactory,
+  GoogleChatApiHandlerConfig,
+  GenerateContentInvocationParams,
+  GenerateContentFields,
+} from "./types.js";
