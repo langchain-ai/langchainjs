@@ -1,5 +1,18 @@
 # @langchain/google
 
+## 0.2.12
+
+### Patch Changes
+
+- [#11968](https://github.com/langchain-ai/langchainjs/pull/11968) [`84eca2b`](https://github.com/langchain-ai/langchainjs/commit/84eca2b11c0900a67775dca258ebec04f8e852a2) Thanks [@afirstenberg](https://github.com/afirstenberg)! - refactoring in preparation for Interactions API
+
+  - Protocol-specific operations are now done through `GoogleChatApiHandler`
+    subclass
+  - Converters for generate_content and shared converters
+  - Types moved into protocol-specific generated file
+  - Includes support Gemini 4 Argon parity (thinking config, model profile,
+    usage-only streaming)
+
 ## 0.2.11
 
 ### Patch Changes
