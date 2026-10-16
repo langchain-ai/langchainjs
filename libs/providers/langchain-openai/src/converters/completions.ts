@@ -484,6 +484,10 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   }
 };
 
+// Standard data blocks accept either a base64 string or raw bytes.
+const toBase64 = (data: string | Uint8Array): string =>
+  typeof data === "string" ? data : Buffer.from(data).toString("base64");
+
 /**
  * Converts a standard LangChain content block to an OpenAI Completions API content part.
  *
@@ -531,7 +535,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "image_url",
         image_url: {
-          url: `data:${block.mimeType};base64,${block.data}`,
+          url: `data:${block.mimeType};base64,${toBase64(block.data)}`,
         },
       };
     }
@@ -548,7 +552,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "input_audio",
         input_audio: {
-          data: block.data.toString(),
+          data: toBase64(block.data),
           format,
         },
       };
@@ -561,7 +565,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "file",
         file: {
-          file_data: `data:${block.mimeType};base64,${block.data}`,
+          file_data: `data:${block.mimeType};base64,${toBase64(block.data)}`,
           filename: filename,
         },
       };
