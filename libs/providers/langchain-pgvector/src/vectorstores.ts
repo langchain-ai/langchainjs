@@ -71,6 +71,84 @@ type Metadata = Record<string, unknown>;
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
 
 /**
+ * How each operator understood by {@link PGVectorStore.buildFilterClauses}
+ * decides whether it can be translated to SQL.
+ *
+ * `buildFilterClauses` consults `accepted` before emitting each operator's
+ * clause, so this table is the single source of truth for which values are
+ * translatable. A value that fails `accepted` emits no clause; an operator
+ * missing from this table cannot be translated at all. Either way the query
+ * ends up running unfiltered, so both cases are reported to the caller.
+ */
+const FILTER_OPERATORS = {
+  in: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  notIn: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  arrayContains: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  gt: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  gte: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  lt: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  lte: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  // `neq` is guarded by `hasOwnProperty` alone, so any value yields a clause.
+  neq: { accepted: () => true },
+};
+type FilterOperator = {
+  accepted: (value: unknown) => boolean;
+};
+
+/**
+ * Finds filter entries that {@link PGVectorStore.buildFilterClauses} cannot
+ * translate into a WHERE clause.
+ *
+ * These fall into two groups: an operator key the builder does not know, and a
+ * known operator whose value fails the builder's type guard. Both produce no
+ * clause, so the query runs unfiltered and returns more rows than intended,
+ * which is a silent correctness problem worth surfacing.
+ *
+ * @param filter - The metadata filter object to inspect.
+ * @returns Human-readable descriptions of each ignored entry.
+ */
+function collectUntranslatedFilterEntries(filter: MetadataFilter): string[] {
+  const ignored: string[] = [];
+  for (const [key, value] of Object.entries(filter)) {
+    if (typeof value !== "object" || value === null) {
+      continue;
+    }
+    const operators = Object.keys(value as Record<string, unknown>);
+    if (operators.length === 0) {
+      ignored.push(`${key} (empty operator object)`);
+      continue;
+    }
+    for (const operator of operators) {
+      const definition = (FILTER_OPERATORS as Record<string, FilterOperator>)[
+        operator
+      ];
+      if (!definition) {
+        ignored.push(`${key}.${operator} (unsupported operator)`);
+      } else if (
+        !definition.accepted((value as Record<string, unknown>)[operator])
+      ) {
+        ignored.push(`${key}.${operator} (invalid value for this operator)`);
+      }
+    }
+  }
+  return ignored;
+}
+
+/**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
@@ -228,7 +306,7 @@ export interface PGVectorStoreArgs {
  * <details>
  * <summary><strong>Similarity search with filter operators</strong></summary>
  *
- * Available filter operators: in, notIn, lte, lt, gte, gt, neq
+ * Available filter operators: in, notIn, arrayContains, lte, lt, gte, gt, neq
  *
  * ```typescript
  * const resultsWithFilters = await vectorStore.similaritySearch("thud", 1, {
@@ -245,6 +323,60 @@ export interface PGVectorStoreArgs {
  * }
  * // Output: * foo [{"baz":"bar"}]
  * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Filtering on nested JSONB with a subclass</strong></summary>
+ *
+ * `buildFilterClauses` is `protected`, so operators can be added by extending
+ * the store. For example, to match documents whose `metadata.profile` contains
+ * `{ tier: "gold" }` — a partial match, not equality — using Postgres JSONB
+ * containment (`@>`):
+ *
+ * ```typescript
+ * class JsonbContainsStore extends PGVectorStore {
+ *   protected override buildFilterClauses(filter, paramOffset = 0) {
+ *     const whereClauses: string[] = [];
+ *     const parameters: unknown[] = [];
+ *     let paramCount = paramOffset;
+ *
+ *     const remaining = { ...filter };
+ *     for (const [key, value] of Object.entries(remaining)) {
+ *       if (typeof value !== "object" || value === null || !("jsonbContains" in value)) {
+ *         continue;
+ *       }
+ *       const { jsonbContains, ...rest } = value;
+ *       delete (remaining as Record<string, unknown>)[key];
+ *       if (Object.keys(rest).length > 0) {
+ *         (remaining as Record<string, unknown>)[key] = rest;
+ *       }
+ *
+ *       paramCount += 1;
+ *       parameters.push(key);
+ *       const keyPlaceholder = `$${paramCount}`;
+ *       paramCount += 1;
+ *       parameters.push(JSON.stringify(jsonbContains));
+ *       whereClauses.push(`(${this.metadataColumnName} -> ${keyPlaceholder}) @> $${paramCount}::jsonb`);
+ *     }
+ *
+ *     const base = super.buildFilterClauses(remaining, paramCount);
+ *     return {
+ *       whereClauses: [...whereClauses, ...base.whereClauses],
+ *       parameters: [...parameters, ...base.parameters],
+ *       paramCount: base.paramCount,
+ *     };
+ *   }
+ * }
+ *
+ * const gold = await jsonbStore.similaritySearch("thud", 10, {
+ *   profile: { jsonbContains: { tier: "gold" } },
+ * });
+ * ```
+ *
+ * Remove your own operator from the filter before delegating to `super`, or the
+ * base implementation will warn that it does not recognize it.
  * </details>
  *
  * <br />
@@ -714,11 +846,36 @@ export class PGVectorStore extends VectorStore {
   /**
    * Builds WHERE clause conditions and parameters for metadata filtering.
    *
+   * Subclasses may override this to support additional operators. Three things
+   * matter for an override to behave correctly:
+   *
+   * - **Continue the parameter numbering.** `paramOffset` already accounts for
+   *   the parameters bound before filtering: `$1` the query embedding and `$2`
+   *   the limit in a search, plus `$3` the collection id when the store is
+   *   configured with one. Return the updated `paramCount` so the next call can
+   *   resume from it.
+   * - **Remove your own operators before delegating.** The base implementation
+   *   warns about any operator it does not recognize, so a subclass that adds
+   *   e.g. `regex` must strip that key from a shallow copy of the filter before
+   *   calling `super`, otherwise every query logs a spurious warning.
+   * - **Bind both keys and values as parameters.** Never interpolate filter
+   *   input into the query string.
+   *
+   * Note that {@link PGVectorStore.initialize} constructs a `PGVectorStore`
+   * directly, so calling it on a subclass returns a base instance and silently
+   * discards the override. A subclass has to be constructed with `new` and
+   * initialized by calling `ensureTableInDatabase` (and
+   * `ensureCollectionTableInDatabase`, if applicable) itself.
+   *
    * @param filter - The metadata filter object.
    * @param paramOffset - Starting parameter index offset.
-   * @returns Object containing whereClauses array and parameters array.
+   * @returns The WHERE clauses, the values they bind, and the index of the last
+   *   parameter bound.
    */
-  private buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
+  protected buildFilterClauses(
+    filter: MetadataFilter,
+    paramOffset = 0
+  ): { whereClauses: string[]; parameters: unknown[]; paramCount: number } {
     const whereClauses: string[] = [];
     const parameters: unknown[] = [];
     let paramCount = paramOffset;
@@ -732,17 +889,28 @@ export class PGVectorStore extends VectorStore {
       if (typeof value === "object" && value !== null) {
         const _value = value as Record<string, unknown>;
 
-        if (Array.isArray(_value.in)) {
-          const placeholders = _value.in
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
-          );
+        if (FILTER_OPERATORS.in.accepted(_value.in)) {
+          // An empty list can never match. Emitting `IN ()` is a syntax error,
+          // so short-circuit to a clause that is always false instead.
+          if (_value.in.length === 0) {
+            whereClauses.push("FALSE");
+          } else {
+            const placeholders = _value.in
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
+            );
+          }
         }
 
-        if (Array.isArray(_value.notIn)) {
+        if (
+          FILTER_OPERATORS.notIn.accepted(_value.notIn) &&
+          _value.notIn.length > 0
+        ) {
+          // An empty exclusion list excludes nothing, so the clause is a
+          // no-op and is omitted rather than emitted as `NOT IN ()`.
           const placeholders = _value.notIn
             .map((item: unknown) => addParameter(item))
             .join(",");
@@ -752,7 +920,7 @@ export class PGVectorStore extends VectorStore {
           );
         }
 
-        if (Array.isArray(_value.arrayContains)) {
+        if (FILTER_OPERATORS.arrayContains.accepted(_value.arrayContains)) {
           const keyPlaceholder = addParameter(key);
           const valuesPlaceholder = addParameter(_value.arrayContains);
           whereClauses.push(
@@ -760,17 +928,18 @@ export class PGVectorStore extends VectorStore {
           );
         }
 
-        const operators = {
-          gt: ">",
-          gte: ">=",
-          lt: "<",
-          lte: "<=",
-        };
+        const numericOperators: Array<[keyof typeof FILTER_OPERATORS, string]> =
+          [
+            ["gt", ">"],
+            ["gte", ">="],
+            ["lt", "<"],
+            ["lte", "<="],
+          ];
 
-        for (const [opKey, sqlOp] of Object.entries(operators)) {
+        for (const [opKey, sqlOp] of numericOperators) {
           if (
             Object.prototype.hasOwnProperty.call(_value, opKey) &&
-            typeof _value[opKey] === "number"
+            FILTER_OPERATORS[opKey].accepted(_value[opKey])
           ) {
             const keyPlaceholder = addParameter(key);
             const valuePlaceholder = addParameter(_value[opKey]);
@@ -794,6 +963,19 @@ export class PGVectorStore extends VectorStore {
           `${this.metadataColumnName} ->> ${keyPlaceholder} = ${valuePlaceholder}`
         );
       }
+    }
+
+    const ignored = collectUntranslatedFilterEntries(filter);
+    if (ignored.length > 0) {
+      // Ignoring an entry widens the result set to everything, which is a
+      // silent correctness bug for a vector store. Warn rather than throw so
+      // that callers relying on the previous lenient behaviour are not broken
+      // outright.
+      console.warn(
+        `[PGVectorStore] These filter entries produced no WHERE clause and were ignored: ${ignored.join(
+          ", "
+        )}. Supported operators are: in, notIn, arrayContains, gt, gte, lt, lte, neq. The query may return more rows than intended.`
+      );
     }
 
     return { whereClauses, parameters, paramCount };
