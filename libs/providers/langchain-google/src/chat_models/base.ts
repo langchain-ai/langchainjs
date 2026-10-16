@@ -140,7 +140,6 @@ export function getPlatformType(
   }
 }
 
-
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
@@ -377,11 +376,7 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
-    yield* this.apiHandler.streamChatModelEvents(
-      messages,
-      options,
-      runManager
-    );
+    yield* this.apiHandler.streamChatModelEvents(messages, options, runManager);
   }
 
   async *_streamResponseChunks(
@@ -544,4 +539,3 @@ export abstract class BaseChatGoogle<
     );
   }
 }
-

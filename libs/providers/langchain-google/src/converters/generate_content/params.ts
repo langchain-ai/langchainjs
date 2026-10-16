@@ -18,7 +18,6 @@ import {
   getModelSpecialty,
 } from "../shared/params.js";
 
-
 // Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".
 // TODO: Move this to model profile.
 const MINIMAL_THINKING_LEVEL_MODELS = [
@@ -299,4 +298,3 @@ export function combineGoogleChatModelFields(
   }
   return combined;
 }
-
