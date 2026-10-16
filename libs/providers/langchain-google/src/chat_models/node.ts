@@ -3,16 +3,18 @@ import { ChatGoogleParams } from "./index.js";
 import {
   applyGeminiGatewayParams,
   BaseChatGoogle,
-  getGoogleChatModelParams,
   getPlatformType,
 } from "./base.js";
+import {
+  convertParamsToPlatformType,
+  getGoogleChatModelParams,
+} from "../converters/shared/params.js";
 import { GENERATIVE_AI_AUTH_SCOPES, VERTEX_AI_AUTH_SCOPES } from "../const.js";
 import {
   ensureAuthScopes,
   NodeApiClient,
   NodeApiClientParams,
 } from "../clients/node.js";
-import { convertParamsToPlatformType } from "../converters/generate_content/params.js";
 
 interface ChatGoogleNodeParams extends NodeApiClientParams, ChatGoogleParams {}
 

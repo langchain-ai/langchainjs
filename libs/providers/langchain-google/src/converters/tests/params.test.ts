@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest";
 import {
-  convertReasoningEffortToReasoningTokens,
-  convertReasoningTokensToReasoningEffort,
   convertFieldsToThinkingConfig,
   convertFieldsToSpeechConfig,
   convertFieldsToServiceTier,
-  convertParamsToPlatformType,
 } from "../generate_content/params.js";
+import {
+  convertReasoningEffortToReasoningTokens,
+  convertReasoningTokensToReasoningEffort,
+  convertParamsToPlatformType,
+} from "../shared/params.js";
 
 describe("convertReasoningEffortToReasoningTokens", () => {
   test("returns undefined when effort is undefined", () => {
@@ -184,16 +186,17 @@ describe("convertFieldsToServiceTier", () => {
 });
 
 describe("convertParamsToPlatformType", () => {
-  test("detects explicit platform type", () => {
-    expect(convertParamsToPlatformType({ platformType: "gcp" })).toBe("gcp");
+  test("returns explicit platformType when set", () => {
     expect(convertParamsToPlatformType({ platformType: "gai" })).toBe("gai");
+    expect(convertParamsToPlatformType({ platformType: "gcp" })).toBe("gcp");
   });
 
-  test("detects vertexai flag", () => {
+  test("maps vertexai: true to gcp", () => {
     expect(convertParamsToPlatformType({ vertexai: true })).toBe("gcp");
   });
 
-  test("returns undefined when no platform or vertexai specified", () => {
+  test("returns undefined when unset", () => {
+    expect(convertParamsToPlatformType(undefined)).toBeUndefined();
     expect(convertParamsToPlatformType({})).toBeUndefined();
   });
 });

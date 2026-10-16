@@ -28,7 +28,6 @@ import type {
   GenerateContentApiHandlerParams,
 } from "./types.js";
 import { ConfigurationError, MalformedOutputError } from "../utils/errors.js";
-import { convertParamsToPlatformType } from "../converters/generate_content/params.js";
 import { usageMetadataToTokenUsage } from "../utils/metadata.js";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import {
@@ -42,6 +41,7 @@ import {
   GoogleChatApiHandler,
   GenerateContentApiHandler,
 } from "./handlers/index.js";
+import { convertParamsToPlatformType } from "../converters/shared/params.js";
 
 export type {
   BaseChatGoogleParams,
@@ -539,7 +539,3 @@ export abstract class BaseChatGoogle<
     );
   }
 }
-export {
-  combineGoogleChatModelFields,
-  getGoogleChatModelParams,
-} from "../converters/generate_content/params.js";
