@@ -315,6 +315,24 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
               // Extract text delta from the chunk
               const candidate = chunk.candidates?.[0];
               if (!candidate) {
+                if (chunk.usageMetadata && streamUsage) {
+                  const cumulative =
+                    convertGeminiGenerateContentResponseToUsageMetadata(chunk);
+                  controller.enqueue(
+                    new ChatGenerationChunk({
+                      text: "",
+                      message: new AIMessageChunk({
+                        content: "",
+                        response_metadata: { model_provider: "google" },
+                        usage_metadata: subtractUsageMetadata(
+                          cumulative,
+                          previousUsage
+                        ),
+                      }),
+                    })
+                  );
+                  previousUsage = cumulative;
+                }
                 return;
               }
 
