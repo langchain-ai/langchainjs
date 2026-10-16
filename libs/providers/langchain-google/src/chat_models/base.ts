@@ -253,24 +253,35 @@ export abstract class BaseChatGoogle<
 
   protected _apiHandler?: GoogleChatApiHandler;
 
+  protected _handlerParams?: GenerateContentApiHandlerParams;
+
+  protected syncHandlerParams(): GenerateContentApiHandlerParams {
+    const nextParams: GenerateContentApiHandlerParams = {
+      ...this.params,
+      model: this.model,
+      platform: this.platform,
+      endpoint: this.endpoint,
+      location: this.location,
+      apiVersion: this.apiVersion,
+      isVertexExpress: this.isVertexExpress,
+      publisher: this.publisher,
+      streaming: this.streaming,
+      streamUsage: this.streamUsage,
+      customHeaders: this._customHeaders,
+      apiClient: this.apiClient,
+      caller: this.caller,
+    };
+    if (this._handlerParams) {
+      return Object.assign(this._handlerParams, nextParams);
+    }
+    this._handlerParams = nextParams;
+    return this._handlerParams;
+  }
+
   protected get apiHandler(): GoogleChatApiHandler {
+    const handlerParams = this.syncHandlerParams();
     if (!this._apiHandler) {
       const handlerConfig = this.params.apiHandler ?? "generateContent";
-      const handlerParams: GenerateContentApiHandlerParams = {
-        ...this.params,
-        model: this.model,
-        platform: this.platform,
-        endpoint: this.endpoint,
-        location: this.location,
-        apiVersion: this.apiVersion,
-        isVertexExpress: this.isVertexExpress,
-        publisher: this.publisher,
-        streaming: this.streaming,
-        streamUsage: this.streamUsage,
-        customHeaders: this.params.customHeaders,
-        apiClient: this.apiClient,
-        caller: this.caller,
-      };
 
       if (typeof handlerConfig === "function") {
         this._apiHandler = handlerConfig(handlerParams);
