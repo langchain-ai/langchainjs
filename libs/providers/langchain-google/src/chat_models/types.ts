@@ -130,7 +130,9 @@ export interface ChatGoogleFields {
    * or a simplified version we've defined (which can be as simple
    * as the name of a pre-defined voice).
    */
-  speechConfig?: Prettify<GenContentNamespace.SpeechConfig> | SimplifiedSpeechConfig;
+  speechConfig?:
+    | Prettify<GenContentNamespace.SpeechConfig>
+    | SimplifiedSpeechConfig;
 
   /**
    * Configuration for image generation.
@@ -240,10 +242,7 @@ declare module "./api_types/generate_content.js" {
         GenContentNamespace.Part,
         "mediaResolution"
       >;
-      export type PartMetadata = Pick<
-        GenContentNamespace.Part,
-        "partMetadata"
-      >;
+      export type PartMetadata = Pick<GenContentNamespace.Part, "partMetadata">;
       export type Text = Pick<GenContentNamespace.Part, "text">;
       export type Thought = Pick<GenContentNamespace.Part, "thought">;
       export type ThoughtSignature = Pick<
@@ -364,18 +363,15 @@ export declare namespace Gemini {
     export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
     export type SpeechConfig = GenContentNamespace.SpeechConfig;
     export namespace SpeechConfig {
-      export type LanguageCode =
-        GenContentNamespace.SpeechConfig.LanguageCode;
+      export type LanguageCode = GenContentNamespace.SpeechConfig.LanguageCode;
     }
     export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
     export namespace PrebuiltVoiceConfig {
-      export type VoiceName =
-        GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
+      export type VoiceName = GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
     }
     export type SpeakerVoiceConfig = GenContentNamespace.SpeakerVoiceConfig;
     export namespace SpeakerVoiceConfig {
-      export type Speaker =
-        GenContentNamespace.SpeakerVoiceConfig.Speaker;
+      export type Speaker = GenContentNamespace.SpeakerVoiceConfig.Speaker;
     }
     export type ServiceTier = GenContentNamespace.ServiceTier;
     export type Role = GenContentNamespace.Role;
@@ -412,8 +408,7 @@ export declare namespace Gemini {
       export type ComputerUse = GenContentNamespace.Tools.ComputerUse;
       export type FunctionCallingConfig =
         GenContentNamespace.Tools.FunctionCallingConfig;
-      export type RetrievalConfig =
-        GenContentNamespace.Tools.RetrievalConfig;
+      export type RetrievalConfig = GenContentNamespace.Tools.RetrievalConfig;
       export type ToolConfig = GenContentNamespace.Tools.ToolConfig;
       export type Schema = GenContentNamespace.Tools.Schema;
       export type LatLng = GenContentNamespace.Tools.LatLng;
@@ -441,18 +436,15 @@ export declare namespace Gemini {
   export type ThinkingLevel = GenContentNamespace.ThinkingLevel;
   export type SpeechConfig = GenContentNamespace.SpeechConfig;
   export namespace SpeechConfig {
-    export type LanguageCode =
-      GenContentNamespace.SpeechConfig.LanguageCode;
+    export type LanguageCode = GenContentNamespace.SpeechConfig.LanguageCode;
   }
   export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
   export namespace PrebuiltVoiceConfig {
-    export type VoiceName =
-      GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
+    export type VoiceName = GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
   }
   export type SpeakerVoiceConfig = GenContentNamespace.SpeakerVoiceConfig;
   export namespace SpeakerVoiceConfig {
-    export type Speaker =
-      GenContentNamespace.SpeakerVoiceConfig.Speaker;
+    export type Speaker = GenContentNamespace.SpeakerVoiceConfig.Speaker;
   }
   export type ServiceTier = GenContentNamespace.ServiceTier;
   export type Role = GenContentNamespace.Role;
@@ -491,8 +483,7 @@ export declare namespace Gemini {
     export type ComputerUse = GenContentNamespace.Tools.ComputerUse;
     export type FunctionCallingConfig =
       GenContentNamespace.Tools.FunctionCallingConfig;
-    export type RetrievalConfig =
-      GenContentNamespace.Tools.RetrievalConfig;
+    export type RetrievalConfig = GenContentNamespace.Tools.RetrievalConfig;
     export type ToolConfig = GenContentNamespace.Tools.ToolConfig;
     export type Schema = GenContentNamespace.Tools.Schema;
     export type LatLng = GenContentNamespace.Tools.LatLng;

@@ -134,8 +134,7 @@ export function applyGeminiGatewayParams<TParams extends object>(
     return { ...params };
   }
   const platform =
-    convertParamsToPlatformType(p) ??
-    (hasVertexCredentials(p) ? "gcp" : "gai");
+    convertParamsToPlatformType(p) ?? (hasVertexCredentials(p) ? "gcp" : "gai");
   const gatewayConfig = resolveLangSmithGatewayConfig({
     providerPath: platform === "gcp" ? "vertex" : "gemini",
   });
@@ -576,9 +575,8 @@ export abstract class BaseChatGoogle<
             .originalTextContentBlock as Record<string, unknown>
         ).text = finalChunk.message.content;
       }
-      const usageMetadata = (
-        finalChunk?.message as AIMessageChunk | undefined
-      )?.usage_metadata;
+      const usageMetadata = (finalChunk?.message as AIMessageChunk | undefined)
+        ?.usage_metadata;
       return {
         generations: finalChunk ? [finalChunk] : [],
         ...(usageMetadata

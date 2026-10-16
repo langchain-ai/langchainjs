@@ -206,7 +206,11 @@ describe("convertGoogleGeminiStream", () => {
 
     const deltaIds = events
       .filter((e) => e.event === "content-block-delta")
-      .map((e) => (e as unknown as { delta: { fields: { id: string } } }).delta.fields.id);
+      .map(
+        (e) =>
+          (e as unknown as { delta: { fields: { id: string } } }).delta.fields
+            .id
+      );
     const startId = (
       events.find((e) => e.event === "content-block-start") as {
         content: { id: string };
