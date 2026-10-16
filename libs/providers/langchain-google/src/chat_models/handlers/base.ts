@@ -44,23 +44,49 @@ export abstract class GoogleChatApiHandler<
    */
   protected abstract getUrlSuffix(urlMethod?: string): string;
 
+  protected formatUrl(
+    pathPrefix: string | string[],
+    urlMethod?: string
+  ): string {
+    const rawPrefix = Array.isArray(pathPrefix)
+      ? pathPrefix.join("/")
+      : pathPrefix;
+    const normalizedPrefix = rawPrefix.replace(/^\/+|\/+$/g, "");
+    const prefixPath = normalizedPrefix ? `/${normalizedPrefix}` : "";
+
+    const [suffixPath, query] = this.getUrlSuffix(urlMethod).split("?", 2);
+    const url = new URL(this.endpointUrl);
+    const basePath = url.pathname.replace(/\/+$/, "");
+    url.pathname = `${basePath}/${this.params.apiVersion}${prefixPath}${suffixPath}`;
+    if (query) {
+      url.search = query;
+    }
+    return url.toString();
+  }
+
   protected async buildUrlGemini(urlMethod?: string): Promise<string> {
-    return `${this.endpointUrl}/${this.params.apiVersion}${this.getUrlSuffix(urlMethod)}`;
+    return this.formatUrl("", urlMethod);
   }
 
   protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
-    return `${this.endpointUrl}/${this.params.apiVersion}/publishers/${
-      this.params.publisher
-    }${this.getUrlSuffix(urlMethod)}`;
+    return this.formatUrl(
+      [
+        `publishers/${this.params.publisher}`,
+      ],
+      urlMethod
+    );
   }
 
   protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
     const projectId = await this.params.apiClient.getProjectId();
-    return `${this.endpointUrl}/${
-      this.params.apiVersion
-    }/projects/${projectId}/locations/${this.params.location}/publishers/${
-      this.params.publisher
-    }${this.getUrlSuffix(urlMethod)}`;
+    return this.formatUrl(
+      [
+        `projects/${projectId}`,
+        `locations/${this.params.location}`,
+        `publishers/${this.params.publisher}`,
+      ],
+      urlMethod
+    );
   }
 
   protected async buildUrlVertex(urlMethod?: string): Promise<string> {
