@@ -13,7 +13,7 @@ import {
   isCommand,
   Command,
   Send,
-  isGraphInterrupt,
+  isGraphBubbleUp,
   type LangGraphRunnableConfig,
   StateDefinitionInit,
 } from "@langchain/langgraph";
@@ -21,6 +21,7 @@ import {
 import { RunnableCallable } from "../RunnableCallable.js";
 import { mergeAbortSignals } from "./utils.js";
 import { MiddlewareError, ToolInvocationError } from "../errors.js";
+import { TOOL_ERROR_CONTEXT } from "../middleware/toolErrorContext.js";
 import type {
   WrapToolCallHook,
   ToolCallRequest,
@@ -60,21 +61,25 @@ export interface ToolNodeOptions {
   /**
    * Whether to throw the error immediately if the tool fails or handle it by the `onToolError` function or via ToolMessage.
    *
-   * **Default behavior** (matches Python):
-   *   - Catches only `ToolInvocationError` (invalid arguments from model) and converts to ToolMessage
-   *   - Re-raises all other errors including errors from `wrapToolCall` middleware
+   * **Default behavior**:
+   *   - Converts tool execution errors, including invalid arguments, to ToolMessage
+   *   - Preserves this behavior through `wrapToolCall` middleware passthrough
+   *   - Re-raises middleware-origin errors and intentional rethrows marked with
+   *     `markToolErrorAsFatal`
    *
    * If `true`:
-   *   - Catches all errors and returns a ToolMessage with the error
+   *   - Catches all errors except graph control flow and cancellation, including
+   *     intentional fatal rethrows, and returns a ToolMessage with the error
    *
    * If `false`:
    *   - All errors are thrown immediately
    *
    * If a function is provided:
+   *   - Middleware-origin errors and marked rethrows still propagate
    *   - If function returns a `ToolMessage`, use it as the result
    *   - If function returns `undefined`, re-raise the error
    *
-   * @default A function that only catches ToolInvocationError
+   * @default A function that converts tool execution errors to ToolMessage
    */
   handleToolErrors?:
     | boolean
@@ -229,21 +234,22 @@ export class ToolNode<
   #handleError(
     error: unknown,
     call: ToolCall,
-    isMiddlewareError: boolean
+    isMiddlewareError: boolean,
+    signal?: AbortSignal
   ): ToolMessage {
     /**
-     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
-     * As such, they are not recoverable by the agent and shouldn't be fed
-     * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+     * LangGraph control flow (interrupts, draining, and parent commands) must
+     * propagate rather than become model-visible errors, even when
+     * `handleToolErrors = true`.
      */
-    if (isGraphInterrupt(error)) {
+    if (error != null && isGraphBubbleUp(error)) {
       throw error;
     }
 
     /**
      * If the signal is aborted, we want to bubble up the error to the invoke caller.
      */
-    if (this.signal?.aborted) {
+    if (this.signal?.aborted || signal?.aborted) {
       throw error;
     }
 
@@ -335,6 +341,8 @@ export class ToolNode<
      * For dynamically registered tools, this may be undefined.
      */
     const registeredTool = this.tools.find((t) => t.name === call.name);
+    const toolErrors = new Set<unknown>();
+    const errorContext = { fatalErrors: new Set<unknown>() };
 
     /**
      * Define the base handler that executes the tool.
@@ -411,26 +419,24 @@ export class ToolNode<
          * Handle errors from tool execution (not from wrapToolCall)
          * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
          */
-        if (e instanceof ToolInputParsingException) {
-          throw new ToolInvocationError(e, toolCall);
-        }
-        /**
-         * Re-throw to be handled by caller
-         */
-        throw e;
+        const error =
+          e instanceof ToolInputParsingException
+            ? new ToolInvocationError(e, toolCall)
+            : e;
+        toolErrors.add(error);
+        throw error;
       }
     };
 
     /**
      * Create request object for middleware
-     * Cast to ToolCallRequest<AgentBuiltInState> to satisfy type constraints
-     * of wrapToolCall which expects AgentBuiltInState
      */
-    const request: ToolCallRequest<AgentBuiltInState> = {
+    const request = {
       toolCall: call,
       tool: registeredTool,
       state,
       runtime,
+      [TOOL_ERROR_CONTEXT]: errorContext,
     };
 
     /**
@@ -440,10 +446,18 @@ export class ToolNode<
       try {
         return await this.wrapToolCall(request, baseHandler);
       } catch (e: unknown) {
-        /**
-         * Handle middleware errors
-         */
-        return this.#handleError(e, call, true);
+        // Deliberate rethrows keep middleware precedence, even for validation
+        // errors. An explicit handleToolErrors:true remains an override.
+        if (errorContext.fatalErrors.has(e) && this.handleToolErrors !== true) {
+          throw e;
+        }
+        return this.#handleError(
+          e,
+          call,
+          // A tool may invoke a sub-agent whose own middleware failed.
+          !toolErrors.has(e) || MiddlewareError.isInstance(e),
+          config.signal
+        );
       }
     }
 
@@ -469,7 +483,7 @@ export class ToolNode<
       /**
        * Handle tool errors when no middleware provided
        */
-      return this.#handleError(e, call, false);
+      return this.#handleError(e, call, false, config.signal);
     }
   }
 

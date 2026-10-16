@@ -7,6 +7,7 @@ import { isGraphBubbleUp } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 import type { ToolCallRequest } from "./types.js";
+import { markToolErrorAsFatal } from "./toolErrorContext.js";
 
 /**
  * Handler called when tool execution throws.
@@ -86,12 +87,19 @@ export function toolErrorMiddleware(config: ToolErrorMiddlewareConfig) {
       try {
         return await handler(request);
       } catch (error: unknown) {
-        if (isGraphBubbleUp(error)) {
+        if (error != null && isGraphBubbleUp(error)) {
           throw error;
         }
 
-        const content = await config.onError(error, request);
+        let content: MessageContent | void;
+        try {
+          content = await config.onError(error, request);
+        } catch (callbackError) {
+          markToolErrorAsFatal(request, callbackError);
+          throw callbackError;
+        }
         if (content === undefined) {
+          markToolErrorAsFatal(request, error);
           throw error;
         }
 
