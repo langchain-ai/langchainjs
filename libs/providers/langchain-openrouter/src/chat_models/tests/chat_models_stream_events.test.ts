@@ -81,3 +81,63 @@ describe("ChatOpenRouter.streamEvents", () => {
     });
   });
 });
+
+describe.each(["stream", "streamEvents"] as const)(
+  "%s usage options",
+  (method) => {
+    test.each([
+      [undefined, undefined, true],
+      [false, undefined, false],
+      [undefined, false, false],
+      [true, false, false],
+      [false, true, true],
+    ])(
+      "instance=%s call=%s includes usage=%s",
+      async (instance, call, expected) => {
+        const model = new ChatOpenRouter({
+          apiKey: "fake-key",
+          model: "test",
+          streamUsage: instance,
+        });
+        const chunks = [
+          {
+            id: "test",
+            model: "test",
+            object: "chat.completion.chunk" as const,
+            created: 0,
+            choices: [
+              {
+                index: 0,
+                delta: { role: "assistant" as const, content: "Hello" },
+                finish_reason: "stop" as const,
+              },
+            ],
+            usage: {
+              prompt_tokens: 10,
+              completion_tokens: 2,
+              total_tokens: 12,
+            },
+          },
+        ];
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(
+          sseResponseFromOpenAIChunks(chunks)
+        );
+        let hasUsage = false;
+        if (method === "stream") {
+          for await (const chunk of await model.stream("Hi", {
+            streamUsage: call,
+          })) {
+            hasUsage ||= chunk.usage_metadata !== undefined;
+          }
+        } else {
+          for await (const event of model.streamEvents("Hi", {
+            streamUsage: call,
+          })) {
+            hasUsage ||= "usage" in event && event.usage !== undefined;
+          }
+        }
+        expect(hasUsage).toBe(expected);
+      }
+    );
+  }
+);
