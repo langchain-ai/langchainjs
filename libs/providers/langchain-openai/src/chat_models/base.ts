@@ -289,7 +289,7 @@ export abstract class BaseChatOpenAI<
 
   logitBias?: Record<string, number>;
 
-  model = "gpt-3.5-turbo";
+  model: string;
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -377,6 +377,15 @@ export abstract class BaseChatOpenAI<
   verbosity?: OpenAIVerbosityParam;
 
   protected defaultOptions: CallOptions;
+
+  /**
+   * Model name to use when the constructor is not given one. There is none by
+   * default, because OpenAI retires model names over time.
+   * @internal
+   */
+  protected _fallbackModel(): string | undefined {
+    return undefined;
+  }
 
   _llmType() {
     return "openai";
@@ -583,7 +592,14 @@ export abstract class BaseChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    const model = fields?.model ?? fields?.modelName ?? this._fallbackModel();
+    if (model === undefined) {
+      const name = (this.constructor as typeof BaseChatOpenAI).lc_name();
+      throw new Error(
+        `${name} requires a model. Pass one as \`model\`, for example \`new ${name}({ model: "..." })\`.`
+      );
+    }
+    this.model = model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 

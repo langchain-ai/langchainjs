@@ -7,6 +7,7 @@ import {
   _constructAzureFields,
   _serializeAzureChat,
   AZURE_ALIASES,
+  AZURE_FALLBACK_MODEL,
   AZURE_SECRETS,
   AZURE_SERIALIZABLE_KEYS,
   AzureChatOpenAIFields,
@@ -449,6 +450,10 @@ export class AzureChatOpenAI<
 
   _llmType(): string {
     return "azure_openai";
+  }
+
+  protected override _fallbackModel(): string {
+    return AZURE_FALLBACK_MODEL;
   }
 
   get lc_aliases(): Record<string, string> {
