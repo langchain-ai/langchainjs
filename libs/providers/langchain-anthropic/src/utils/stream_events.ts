@@ -185,6 +185,8 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
       return "tool_use";
     case "max_tokens":
       return "length";
+    case "refusal":
+      return "content_filter";
     default:
       return "stop";
   }

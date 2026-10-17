@@ -239,6 +239,38 @@ function cacheUsageEvents() {
   ];
 }
 
+function refusalEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_05MNO",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 25, output_tokens: 0 },
+      },
+    },
+    {
+      type: "message_delta" as const,
+      delta: {
+        stop_reason: "refusal" as const,
+        stop_sequence: null,
+        stop_details: {
+          type: "refusal" as const,
+          category: "cyber" as const,
+          explanation: null,
+        },
+      },
+      usage: { output_tokens: 0 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
 // ─── Tests ───────────────────────────────────────────────────────
 
 describe("ChatAnthropic._streamChatModelEvents (native)", () => {
@@ -523,6 +555,30 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         reason: string;
       };
       expect(finish.reason).toBe("tool_use");
+    });
+  });
+
+  describe("refusal", () => {
+    test("message-finish has content_filter reason", async () => {
+      const model = new MockStreamChatAnthropic(refusalEvents());
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as ChatAnthropicCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const finish = events.find((e) => e.event === "message-finish") as {
+        reason: string;
+      };
+      expect(finish.reason).toBe("content_filter");
+    });
+
+    test("streamEvents output carries content_filter finish_reason", async () => {
+      const model = new MockStreamChatAnthropic(refusalEvents());
+      const message = await model.streamEvents("Hello");
+      expect(message.response_metadata.finish_reason).toBe("content_filter");
     });
   });
 
