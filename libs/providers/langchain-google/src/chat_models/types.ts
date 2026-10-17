@@ -300,7 +300,7 @@ declare module "./api_types/generate_content.js" {
       >;
       export type FileData = Pick<
         GenContentNamespace.Part,
-        "fileData" | "videoMetadata"
+        "fileData" | "videoMetadata" | "mediaProcessing"
       >;
       export type FunctionCall = Required<
         Pick<GenContentNamespace.Part, "functionCall">
@@ -312,7 +312,7 @@ declare module "./api_types/generate_content.js" {
       >;
       export type InlineData = Pick<
         GenContentNamespace.Part,
-        "inlineData" | "videoMetadata"
+        "inlineData" | "videoMetadata" | "mediaProcessing"
       >;
       export type MediaResolution = Pick<
         GenContentNamespace.Part,
@@ -441,6 +441,7 @@ export declare namespace Gemini {
     export namespace SpeechConfig {
       export type LanguageCode = GenContentNamespace.SpeechConfig.LanguageCode;
     }
+    export type SpeechMetadata = GenContentNamespace.SpeechMetadata;
     export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
     export namespace PrebuiltVoiceConfig {
       export type VoiceName = GenContentNamespace.PrebuiltVoiceConfig.VoiceName;
@@ -514,6 +515,7 @@ export declare namespace Gemini {
   export namespace SpeechConfig {
     export type LanguageCode = GenContentNamespace.SpeechConfig.LanguageCode;
   }
+  export type SpeechMetadata = GenContentNamespace.SpeechMetadata;
   export type PrebuiltVoiceConfig = GenContentNamespace.PrebuiltVoiceConfig;
   export namespace PrebuiltVoiceConfig {
     export type VoiceName = GenContentNamespace.PrebuiltVoiceConfig.VoiceName;

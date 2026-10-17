@@ -53,6 +53,7 @@ import {
   convertFieldsToThinkingConfig,
   convertFieldsToServiceTier,
   mapDetailToMediaResolution,
+  speechConfigVersion,
 } from "../../converters/generate_content/params.js";
 import { convertGoogleGeminiStream } from "../../converters/generate_content/stream_events.js";
 import type {
@@ -107,6 +108,32 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     };
   }
 
+  getBody(messages: BaseMessage[], options?: BaseChatGoogleCallOptions) {
+    const systemInstruction =
+      convertMessagesToGeminiSystemInstruction(messages);
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const speechVersion = speechConfigVersion(this.params.model);
+    if (speechVersion < 2) {
+      // Pre gemini-3.8, "speechMetadata" isn't valid
+      const len = contents?.[0]?.parts?.length || 0;
+      for (let i = 0; i < len; i++) {
+        if (
+          contents?.[0]?.parts?.[i] &&
+          "speechMetadata" in contents[0].parts[i]
+        ) {
+          delete contents[0].parts[i].speechMetadata;
+        }
+      }
+    }
+
+    return {
+      ...this.invocationParams(options),
+      systemInstruction,
+      contents,
+    };
+  }
+
   async generate(
     messages: BaseMessage[],
     options?: BaseChatGoogleCallOptions,
@@ -114,11 +141,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
   ): Promise<ChatResult> {
     const url = await this.buildUrl("generateContent");
     const headers = this.getHeaders(options);
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.getBody(messages, options);
 
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
@@ -233,11 +256,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     const streamUsage: boolean =
       options?.streamUsage ?? this.params.streamUsage ?? false;
 
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.getBody(messages, options);
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
@@ -434,11 +453,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     options?: BaseChatGoogleCallOptions,
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.getBody(messages, options);
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
@@ -576,7 +591,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
           this.params.model,
           fields
         ),
-        speechConfig: convertFieldsToSpeechConfig(fields),
+        speechConfig: convertFieldsToSpeechConfig(this.params.model, fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
         ...(mediaResolution ? { mediaResolution } : {}),
       },
