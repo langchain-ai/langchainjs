@@ -2,11 +2,39 @@ import { describe, expect, test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import {
   CharacterTextSplitter,
+  MarkdownHeaderTextSplitter,
   LatexTextSplitter,
   MarkdownTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
 } from "../index.js";
+
+describe("MarkdownHeaderTextSplitter", () => {
+  test("tracks nested headers and ignores headings in fenced code", () => {
+    const splitter = new MarkdownHeaderTextSplitter({
+      headersToSplitOn: [["#", "Header 1"], ["##", "Header 2"]],
+    });
+    const docs = splitter.splitText(
+      ["# Guide", "", "Intro", "", "## Install", "", "Run it", "", "```", "## not a header", "```", "", "Done"].join("\n")
+    );
+    expect(docs).toEqual([
+      new Document({ pageContent: "Intro", metadata: { "Header 1": "Guide" } }),
+      new Document({ pageContent: ["Run it", ["```", "## not a header", "```"].join("\n"), "Done"].join("  \n"), metadata: { "Header 1": "Guide", "Header 2": "Install" } }),
+    ]);
+  });
+
+  test("can preserve headers and return each line", () => {
+    const splitter = new MarkdownHeaderTextSplitter({
+      headersToSplitOn: [["#", "Header 1"]],
+      returnEachLine: true,
+      stripHeaders: false,
+    });
+    expect(splitter.splitText(["# Guide", "", "Text"].join("\n"))).toEqual([
+      new Document({ pageContent: "# Guide", metadata: { "Header 1": "Guide" } }),
+      new Document({ pageContent: "Text", metadata: { "Header 1": "Guide" } }),
+    ]);
+  });
+});
 
 function textLineGenerator(char: string, length: number) {
   const line = new Array(length).join(char);
