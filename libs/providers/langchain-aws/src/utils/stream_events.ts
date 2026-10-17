@@ -11,6 +11,7 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { getReasoningTokensFromAdditionalFields } from "./message_outputs.js";
 
 export interface ConvertBedrockConverseStreamOptions {
   streamUsage?: boolean;
@@ -31,6 +32,7 @@ export async function* convertBedrockConverseStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
+  let reasoningTokens: number | undefined;
 
   for await (const event of source) {
     if (!messageStarted) {
@@ -134,10 +136,23 @@ export async function* convertBedrockConverseStream(
             ? { cache_creation: u.cacheWriteInputTokens }
             : {}),
         },
+        ...(reasoningTokens !== undefined
+          ? { output_token_details: { reasoning: reasoningTokens } }
+          : {}),
       };
       yield { event: "usage" as const, usage: usageSnapshot };
     } else if (event.messageStop?.stopReason) {
       finishReason = mapStopReason(event.messageStop.stopReason);
+      reasoningTokens = getReasoningTokensFromAdditionalFields(
+        event.messageStop.additionalModelResponseFields
+      );
+      // Usage may already have arrived; message-finish carries the patched snapshot.
+      if (usageSnapshot && reasoningTokens !== undefined) {
+        usageSnapshot = {
+          ...usageSnapshot,
+          output_token_details: { reasoning: reasoningTokens },
+        };
+      }
     } else {
       yield {
         event: "provider" as const,

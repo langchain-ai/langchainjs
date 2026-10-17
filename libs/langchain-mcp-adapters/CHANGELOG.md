@@ -1,5 +1,13 @@
 # @langchain/mcp-adapters
 
+## 2.0.1
+
+### Patch Changes
+
+- [#11804](https://github.com/langchain-ai/langchainjs/pull/11804) [`0552450`](https://github.com/langchain-ai/langchainjs/commit/0552450883862054cab97891be4373b232caf9e8) Thanks [@byhow](https://github.com/byhow)! - Keep the SDK error as `cause` after an HTTP→SSE fallback. When a Streamable HTTP connection falls back to SSE and the SSE attempt fails, the thrown `MCPClientError` now has the SSE attempt's SDK error (an `UnauthorizedError`, or the SSE 401) as its `cause`, one level down as for a direct HTTP or SSE connection, instead of a second `MCPClientError`. Code that checks `UnauthorizedError.isInstance(error.cause)`, such as an OAuth login handler, now works for SSE-only servers too.
+
+- [#11845](https://github.com/langchain-ai/langchainjs/pull/11845) [`1b5ac16`](https://github.com/langchain-ai/langchainjs/commit/1b5ac16fda8099c8a28cebd9328d5c6494dc4e8f) Thanks [@hntrl](https://github.com/hntrl)! - Use a single underscore between MCP server names and tool names (`server_tool` instead of `server__tool`). The separator for `additionalToolNamePrefix` remains unchanged (`mcp__server_tool`).
+
 ## 2.0.0
 
 ### Major Changes

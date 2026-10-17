@@ -1,5 +1,17 @@
 # @langchain/google
 
+## 0.2.11
+
+### Patch Changes
+
+- [#11940](https://github.com/langchain-ai/langchainjs/pull/11940) [`57d0e02`](https://github.com/langchain-ai/langchainjs/commit/57d0e02b2256da85dec6e5062d3e1bde2271c5de) Thanks [@hntrl](https://github.com/hntrl)! - Support Gemini 4 Argon model capabilities and Gemini 3+ compatibility; preserve usage-only streaming chunks.
+
+## 0.2.10
+
+### Patch Changes
+
+- [#11696](https://github.com/langchain-ai/langchainjs/pull/11696) [`824d07b`](https://github.com/langchain-ai/langchainjs/commit/824d07bd992bb47cdd319fd16b552895dd3ad6b4) Thanks [@dvd233](https://github.com/dvd233)! - Support Gemini's `VALIDATED` function-calling mode through `tool_choice`.
+
 ## 0.2.9
 
 ### Patch Changes

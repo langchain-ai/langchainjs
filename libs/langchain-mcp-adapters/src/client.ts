@@ -846,13 +846,13 @@ export class MCPAdapter {
                       `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
                     ),
                     serverName,
-                    { cause: secondSSEError }
+                    { cause: sseAttemptCause(secondSSEError) }
                   );
                 }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
                   serverName,
-                  { cause: secondSSEError }
+                  { cause: sseAttemptCause(secondSSEError) }
                 );
               }
             } else {
@@ -866,13 +866,13 @@ export class MCPAdapter {
                     `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
                   ),
                   serverName,
-                  { cause: firstSSEError }
+                  { cause: sseAttemptCause(firstSSEError) }
                 );
               }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
                 serverName,
-                { cause: firstSSEError }
+                { cause: sseAttemptCause(firstSSEError) }
               );
             }
           }
@@ -1185,6 +1185,17 @@ export class MCPAdapter {
 
 /** @deprecated Use MCPAdapter. This alias shares the same implementation. */
 export { MCPAdapter as MultiServerMCPClient };
+
+/**
+ * The SDK error behind an SSE attempt's `MCPClientError`, so an HTTP→SSE
+ * fallback's error carries it as `cause`, one level down like a direct HTTP
+ * or SSE connection's, instead of a second `MCPClientError`.
+ */
+function sseAttemptCause(error: unknown): unknown {
+  return MCPClientError.isInstance(error) && error.cause !== undefined
+    ? error.cause
+    : error;
+}
 
 /**
  * `listTools()` flattens catalogs into one list, so a repeated tool name -

@@ -36,7 +36,7 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
-import { convertMessagesToGeminiContents } from "../../converters/messages.js";
+import { convertMessagesToGeminiContents } from "../../converters/generate_content/messages.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -48,6 +48,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import type { ToolChoice } from "@langchain/core/language_models/chat_models";
 import type { LLMResult } from "@langchain/core/outputs";
 
 /**
@@ -78,7 +79,6 @@ type ModelInfoConfig = {
   hasImageThoughts?: boolean; // Is this an image model that has thinking output?
   isTts?: boolean; // Is this a TTS model?
   isAudio?: boolean; // Is this an audio generation model?
-  hasMediaProcessing?: boolean; // Does this model support agentic video understanding / mediaProcessing?
 };
 
 type DefaultGoogleParams = Omit<
@@ -125,32 +125,28 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3.5-flash-lite",
     testConfig: {
       isThinking: true,
-      hasMediaProcessing: true,
     },
   },
   {
     model: "gemini-3.6-flash",
     testConfig: {
       isThinking: true,
-      hasMediaProcessing: true,
     },
   },
   {
     model: "gemini-3.7-flash",
     testConfig: {
       isThinking: true,
-      hasMediaProcessing: true,
     },
   },
   {
     model: "gemini-3.8-flash",
     testConfig: {
       isThinking: true,
-      hasMediaProcessing: true,
     },
   },
   {
-    model: "gemini-3.8-flash",
+    model: "gemini-4-argon",
     testConfig: {
       isThinking: true,
     },
@@ -198,18 +194,6 @@ const allModelInfo: ModelInfo[] = [
   },
   {
     model: "gemini-3.1-flash-tts-preview",
-    testConfig: {
-      isTts: true,
-    },
-  },
-  {
-    model: "gemini-3.8-flash-tts",
-    testConfig: {
-      isTts: true,
-    },
-  },
-  {
-    model: "gemini-3.8-flash-lite-tts",
     testConfig: {
       isTts: true,
     },
@@ -314,9 +298,58 @@ function expandAllModelInfo(): ModelInfo[] {
   return ret;
 }
 
+function wrapInWavHeader(
+  buffer: Buffer,
+  sampleRate = 24000
+): Buffer<ArrayBuffer> {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const dataSize = buffer.length;
+  const headerSize = 44;
+  const totalSize = headerSize + dataSize - 8;
+
+  const header = Buffer.alloc(headerSize);
+  let offset = 0;
+
+  // RIFF chunk
+  header.write("RIFF", offset);
+  offset += 4;
+  header.writeUInt32LE(totalSize, offset);
+  offset += 4;
+  header.write("WAVE", offset);
+  offset += 4;
+
+  // fmt sub-chunk
+  header.write("fmt ", offset);
+  offset += 4;
+  header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
+  offset += 4;
+  header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
+  offset += 2;
+  header.writeUInt16LE(numChannels, offset);
+  offset += 2;
+  header.writeUInt32LE(sampleRate, offset);
+  offset += 4;
+  header.writeUInt32LE(byteRate, offset);
+  offset += 4;
+  header.writeUInt16LE(blockAlign, offset);
+  offset += 2;
+  header.writeUInt16LE(bitsPerSample, offset);
+  offset += 2;
+
+  // data sub-chunk
+  header.write("data", offset);
+  offset += 4;
+  header.writeUInt32LE(dataSize, offset);
+  offset += 4;
+
+  return Buffer.concat([header, buffer]);
+}
+
 async function openFileCommon(
   block: ContentBlock.Multimodal.File,
-  now: number,
   testSeq: number,
   imageSeq: number
 ) {
@@ -326,9 +359,7 @@ async function openFileCommon(
   const buffer = Buffer.from(block.data as string, "base64");
   const fullMimeType = block.mimeType ?? "";
   const mimeType = fullMimeType.split(";")[0].trim().toLowerCase();
-  const nowStr = now.toString();
-  const padSeq = ("000000" + imageSeq).substring(imageSeq.toString(10).length);
-  const basename = `langchain-gemini-test-${nowStr}-${testSeq}-${padSeq}`;
+  const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq}`;
 
   let outBuffer = buffer;
   let ext = "bin";
@@ -336,18 +367,15 @@ async function openFileCommon(
   if (parts.length === 2) {
     ext = parts[1];
   }
-  // if (mimeType === "audio/l16" && imageSeq === 0) {
-  //   ext = "wav";
-  //   outBuffer = wrapInWavHeader(buffer);
-  // }
+  if (mimeType === "audio/l16") {
+    ext = "wav";
+    outBuffer = wrapInWavHeader(buffer);
+  }
 
   const filePath = path.join(os.tmpdir(), `${basename}.${ext}`);
   await fs.writeFile(filePath, outBuffer);
-  console.log("File logged to: ", filePath);
   if (mimeType.startsWith("audio/")) {
-    if (mimeType !== "audio/l16") {
-      exec(`afplay "${filePath}"`);
-    }
+    exec(`afplay "${filePath}"`);
   } else {
     exec(`open "${filePath}"`);
   }
@@ -964,6 +992,48 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
+    const toolChoices: ToolChoice[] = ["validated", { mode: "VALIDATED" }];
+
+    describe.each(toolChoices)("VALIDATED tool choice: %o", (toolChoice) => {
+      test("accepts a function call with schema-conforming arguments", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage('Call get_weather with location set to "New York".'),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls).toHaveLength(1);
+        expect(result.tool_calls?.[0]).toMatchObject({
+          name: "get_weather",
+          args: { location: "New York" },
+        });
+        expect(
+          weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
+        ).toBe(true);
+      });
+
+      test("also permits a text response without forcing a function", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage(
+            "Do not use any tools. Reply with the single word Hello."
+          ),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls ?? []).toHaveLength(0);
+        expect(result.text).toMatch(/hello/i);
+      });
+    });
+
     test("Supports GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
@@ -1064,9 +1134,11 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke(
         "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
       );
-      expect(result.tool_calls?.some((c) => c.name === "custom_tool")).toBe(
-        true
-      );
+      expect(
+        result.tool_calls?.some(
+          (c: { name: string }) => c.name === "custom_tool"
+        )
+      ).toBe(true);
     });
 
     test(`function - stream tools`, async () => {
@@ -1470,7 +1542,7 @@ describe.each(coreModelInfo)(
       const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
         ?.video as number;
       expect(typeof videoTokens1).toEqual("number");
-      expect(videoTokens1).toBeGreaterThanOrEqual(528);
+      expect(videoTokens1).toBeGreaterThan(712);
       expect(
         aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
       ).toBeGreaterThan(0);
@@ -1558,9 +1630,7 @@ describe.each(coreModelInfo)(
       const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
         ?.video as number;
       expect(typeof videoTokens1).toEqual("number");
-      // For Gemini 3 models, AI Studio API seems to use 713 tokens,
-      // while Vertex/GEAP API seems to use 528.
-      expect(videoTokens1).toBeGreaterThanOrEqual(528);
+      expect(videoTokens1).toBeGreaterThan(712);
       expect(
         aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
       ).toBeGreaterThan(0);
@@ -1613,145 +1683,6 @@ describe.each(coreModelInfo)(
       expect(typeof videoTokens2).toEqual("number");
       expect(videoTokens2).toBeGreaterThan(videoTokens1);
     }, 90000);
-
-    test.runIf(testConfig?.hasMediaProcessing)(
-      "video - ContentBlock.Standard - mediaProcessing AGENTIC",
-      async () => {
-        const model = newChatGoogle({});
-
-        const dataPath = "src/chat_models/tests/data/rainbow.mp4";
-        const dataType = "video/mp4";
-        const data = await fs.readFile(dataPath);
-        const data64 = data.toString("base64");
-
-        const message1: ContentBlock.Standard[] = [
-          {
-            type: "text",
-            text: "Describe this video in detail.",
-          },
-          {
-            type: "video",
-            data: data64,
-            mimeType: dataType,
-            mediaProcessing: "AGENTIC",
-          },
-        ];
-
-        const messages1: BaseMessage[] = [
-          new HumanMessageChunk({ contentBlocks: message1 }),
-        ];
-
-        const res1 = await model.invoke(messages1);
-
-        expect(res1).toBeDefined();
-        expect(res1._getType()).toEqual("ai");
-
-        const aiMessage1 = res1 as AIMessageChunk;
-        expect(aiMessage1.content).toBeDefined();
-
-        // Verify that mediaProcessing: "AGENTIC" was sent in the request
-        const sentContents1 = recorder.request?.body?.contents as
-          | Gemini.Content[]
-          | undefined;
-        expect(sentContents1).toBeDefined();
-        const videoPart1 = sentContents1?.[0]?.parts?.find(
-          (p: any) => p.inlineData || p.fileData
-        ) as any;
-        expect(videoPart1?.mediaProcessing).toBe("AGENTIC");
-
-        const text1 = (
-          typeof aiMessage1.content === "string"
-            ? aiMessage1.content
-            : (aiMessage1.text ?? "")
-        ) as string;
-        expect(text1.toLowerCase()).toMatch(/rainbow/);
-
-        // Verify multi-turn replay succeeds and drops media_processing server tool steps
-        const messages2: BaseMessage[] = [
-          ...messages1,
-          aiMessage1,
-          new HumanMessage("What colors did you see?"),
-        ];
-
-        const res2 = await model.invoke(messages2);
-        expect(res2).toBeDefined();
-        expect(res2._getType()).toEqual("ai");
-
-        const sentContents2 = recorder.request?.body?.contents as
-          | Gemini.Content[]
-          | undefined;
-        expect(sentContents2).toBeDefined();
-        expect(sentContents2?.length).toBe(3);
-
-        const modelParts = sentContents2?.[1]?.parts ?? [];
-        for (const part of modelParts as any[]) {
-          expect(part.toolCall?.toolName).not.toBe("media_processing");
-          expect(part.toolCall?.toolType).not.toBe("MEDIA_PROCESSING");
-          expect(part.toolResponse?.toolType).not.toBe("MEDIA_PROCESSING");
-        }
-      },
-      90000
-    );
-
-    test.runIf(testConfig?.hasMediaProcessing)(
-      "video - ContentBlock.Standard - mediaProcessing STATIC",
-      async () => {
-        const model = newChatGoogle({});
-
-        const dataPath = "src/chat_models/tests/data/rainbow.mp4";
-        const dataType = "video/mp4";
-        const data = await fs.readFile(dataPath);
-        const data64 = data.toString("base64");
-        const dataUri = `data:${dataType};base64,${data64}`;
-
-        const message: ContentBlock.Standard[] = [
-          {
-            type: "text",
-            text: "Describe this video in detail.",
-          },
-          {
-            type: "video",
-            url: dataUri,
-            mediaProcessing: "STATIC",
-          },
-        ];
-
-        const messages: BaseMessage[] = [
-          new HumanMessageChunk({ contentBlocks: message }),
-        ];
-
-        const res = await model.invoke(messages);
-
-        expect(res).toBeDefined();
-        expect(res._getType()).toEqual("ai");
-
-        const aiMessage = res as AIMessageChunk;
-        expect(aiMessage.content).toBeDefined();
-
-        // Verify that mediaProcessing: "STATIC" was sent in the request
-        const sentContents = recorder.request?.body?.contents as
-          | Gemini.Content[]
-          | undefined;
-        expect(sentContents).toBeDefined();
-        const videoPart = sentContents?.[0]?.parts?.find(
-          (p: any) => p.inlineData || p.fileData
-        ) as any;
-        expect(videoPart?.mediaProcessing).toBe("STATIC");
-
-        const text = (
-          typeof aiMessage.content === "string"
-            ? aiMessage.content
-            : (aiMessage.text ?? "")
-        ) as string;
-        expect(text.toLowerCase()).toMatch(/rainbow/);
-
-        const videoTokens = aiMessage?.usage_metadata?.input_token_details
-          ?.video as number;
-        expect(typeof videoTokens).toEqual("number");
-        expect(videoTokens).toBeGreaterThanOrEqual(528);
-      },
-      90000
-    );
 
     test("audio - legacy", async () => {
       // Update this with the correct path to an audio file on your machine.
@@ -1974,7 +1905,7 @@ describe.each(thinkingModelInfo)(
         new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
       ]);
       const modelTurn = contents.find((c) => c.role === "model");
-      const sentFunctionCallPart = modelTurn?.parts.find(
+      const sentFunctionCallPart = modelTurn?.parts?.find(
         (p): p is Gemini.Part.FunctionCall => "functionCall" in p
       );
 
@@ -2185,7 +2116,7 @@ describe.each(imageModelInfo)(
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
-      await openFileCommon(block, Date.now(), testSeq, imageSeq++);
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
     async function handleResult(
@@ -2274,7 +2205,7 @@ const ttsModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true,
 ]);
 
-describe.sequential.each(ttsModelInfo)(
+describe.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -2331,66 +2262,20 @@ describe.sequential.each(ttsModelInfo)(
       warnSpy.mockRestore();
     });
 
-    async function openFile(
-      block: ContentBlock.Multimodal.File,
-      optNow?: number
-    ) {
-      const now = optNow || Date.now();
-      await openFileCommon(block, now, testSeq, imageSeq++);
+    async function openFile(block: ContentBlock.Multimodal.File) {
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
-    async function handleResult(
-      blocks: ContentBlock.Standard[],
-      optNow?: number
-    ) {
+    async function handleResult(blocks: ContentBlock.Standard[]) {
       for (const block of blocks) {
         if (block.type === "file") {
-          await openFile(block as ContentBlock.Multimodal.File, optNow);
+          await openFile(block as ContentBlock.Multimodal.File);
         } else if (block.type === "text") {
           // no-op
         } else {
           // no-op
         }
       }
-    }
-
-    function promptToMessages(prompt: string): BaseMessage[] {
-      const ret: BaseMessage[] = [];
-
-      const promptLines = prompt.split("\n").map((line) => {
-        const t = line.trim();
-        if (t.match(/^[a-zA-Z]+:/)) {
-          return t;
-        } else {
-          return "";
-        }
-      });
-      const contentBlocks: ContentBlock.Text[] = promptLines.reduce(
-        (acc, val) => {
-          const ret = acc;
-          if (val.length > 0) {
-            const [speaker, text] = val.split(":", 2);
-            console.log("speaker,text", speaker, text);
-            ret.push({
-              type: "text",
-              text,
-              speechMetadata: {
-                speaker,
-              },
-            });
-          }
-          return ret;
-        },
-        [] as ContentBlock.Text[]
-      );
-      const humanMessage = new HumanMessage({
-        contentBlocks,
-      });
-      console.log("message", humanMessage);
-
-      ret.push(humanMessage);
-
-      return ret;
     }
 
     test("single", async () => {
@@ -2408,11 +2293,11 @@ describe.sequential.each(ttsModelInfo)(
         speechConfig: [
           {
             speaker: "Joe",
-            name: "Puck",
+            name: "Kore",
           },
           {
             speaker: "Jane",
-            name: "Kore",
+            name: "Puck",
           },
         ],
       });
@@ -2421,8 +2306,7 @@ describe.sequential.each(ttsModelInfo)(
         Joe: Hows it going today, Jane?
         Jane: Not too bad, how about you?
       `;
-      const messages = promptToMessages(prompt);
-      const res = await model.invoke(messages);
+      const res = await model.invoke(prompt);
       const content = res?.contentBlocks;
       await handleResult(content);
     });
@@ -2449,8 +2333,7 @@ describe.sequential.each(ttsModelInfo)(
         Joe: [Sighs and sounds tired] It has been a rough day.
         Joe: [Perks up] But the week should improve!
       `;
-      const messages = promptToMessages(prompt);
-      const res = await model.invoke(messages);
+      const res = await model.invoke(prompt);
       const content = res?.contentBlocks;
       await handleResult(content);
     });
@@ -2479,12 +2362,10 @@ describe.sequential.each(ttsModelInfo)(
         Jane: Well, I guess we should see about the outcome of this test, then.
         Joe: Wait, this is a test?
       `;
-      const messages = promptToMessages(prompt);
-      const res = await model.stream(messages);
-      const now = Date.now();
+      const res = await model.stream(prompt);
       for await (const chunk of res) {
         const content = chunk?.contentBlocks;
-        await handleResult(content, now);
+        await handleResult(content);
       }
     }, 60000);
   }
@@ -2496,7 +2377,7 @@ const audioModelInfo: ModelInfo[] = filterTestableModels([
 console.log(audioModelInfo);
 
 // Audio tests fail on Vertex
-describe.sequential.each(audioModelInfo)(
+describe.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -2553,12 +2434,8 @@ describe.sequential.each(audioModelInfo)(
       warnSpy.mockRestore();
     });
 
-    async function openFile(
-      block: ContentBlock.Multimodal.File,
-      optNow?: number
-    ) {
-      const now = optNow ?? Date.now();
-      await openFileCommon(block, now, testSeq, imageSeq++);
+    async function openFile(block: ContentBlock.Multimodal.File) {
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
     async function handleResult(blocks: ContentBlock.Standard[]) {

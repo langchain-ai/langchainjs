@@ -1,5 +1,27 @@
 # langchain
 
+## 1.5.18
+
+### Patch Changes
+
+- [#11877](https://github.com/langchain-ai/langchainjs/pull/11877) [`2f4d891`](https://github.com/langchain-ai/langchainjs/commit/2f4d891cf3aa750caebff5d969d1ee7820fc8a52) Thanks [@byhow](https://github.com/byhow)! - feat(agents): add opt-in `interruptMode: "per_call"` to `humanInTheLoopMiddleware`. Each gated tool call raises its own interrupt (`type: "tool_approval"`, with a typed `responseSchema` built from the tool's allowed decisions), answered by interrupt ID. `respond` is supported. Edits are pinned to the called tool and checked against the input side of its Zod v4 schema, so its transforms run once, when the tool does. An invalid answer throws without being saved. Also adds `Interrupt.response_schema`. In both modes, `interruptOn: { tool: true }` now allows every decision, `respond` included, as in Python; batched mode is otherwise unchanged.
+
+## 1.5.17
+
+### Patch Changes
+
+- [#11956](https://github.com/langchain-ai/langchainjs/pull/11956) [`93d62b0`](https://github.com/langchain-ai/langchainjs/commit/93d62b008e13e10f28724a5ab09ab6eda584f1cb) Thanks [@hntrl](https://github.com/hntrl)! - Require langsmith >=0.11.0 to include the restored NullableHeaders type declarations.
+
+- [#11498](https://github.com/langchain-ai/langchainjs/pull/11498) [`227f01c`](https://github.com/langchain-ai/langchainjs/commit/227f01c818996bf107dbcedc3e0ffa1620b7719e) Thanks [@xianjianlf2](https://github.com/xianjianlf2)! - feat(langchain): support HITL respond decisions
+
+- [#11822](https://github.com/langchain-ai/langchainjs/pull/11822) [`d3e6fe6`](https://github.com/langchain-ai/langchainjs/commit/d3e6fe66a5f902fa615f076ca71d9541f1291166) Thanks [@dqbd](https://github.com/dqbd)! - Add explicit agent address support to `LangChainTracer`, inherit project and address destinations together, and delegate default destination resolution to the LangSmith SDK.
+
+## 1.5.16
+
+### Patch Changes
+
+- [#11880](https://github.com/langchain-ai/langchainjs/pull/11880) [`22ea038`](https://github.com/langchain-ai/langchainjs/commit/22ea03827873cfd07bf6aa6d4e2562dd6aa9b1ad) Thanks [@eliornl](https://github.com/eliornl)! - fix(langchain): `createAgent` with middleware now passes a `Command` built by a different copy of `@langchain/langgraph` to the graph as-is, instead of merging it into the input state as a plain object.
+
 ## 1.5.15
 
 ### Patch Changes
