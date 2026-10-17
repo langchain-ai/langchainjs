@@ -180,12 +180,29 @@ export abstract class TextSplitter
     return text === "" ? null : text;
   }
 
-  async mergeSplits(splits: string[], separator: string): Promise<string[]> {
+  /**
+   * Merges splits into chunks of at most `chunkSize`.
+   *
+   * @param splits The pieces of text to merge.
+   * @param separator The separator to join pieces with.
+   * @param lengths Optional precomputed `lengthFunction` result for each
+   * split, so callers that already measured the splits don't measure them
+   * again.
+   */
+  async mergeSplits(
+    splits: string[],
+    separator: string,
+    lengths?: number[]
+  ): Promise<string[]> {
     const docs: string[] = [];
     const currentDoc: string[] = [];
+    // Lengths of the splits in currentDoc, so popping them from the front
+    // doesn't call lengthFunction again.
+    const currentLengths: number[] = [];
     let total = 0;
-    for (const d of splits) {
-      const _len = await this.lengthFunction(d);
+    for (let i = 0; i < splits.length; i += 1) {
+      const d = splits[i];
+      const _len = lengths?.[i] ?? (await this.lengthFunction(d));
       if (
         total + _len + currentDoc.length * separator.length >
         this.chunkSize
@@ -210,12 +227,13 @@ which is longer than the specified ${this.chunkSize}`
               this.chunkSize &&
               total > 0)
           ) {
-            total -= await this.lengthFunction(currentDoc[0]);
+            total -= currentLengths.shift() as number;
             currentDoc.shift();
           }
         }
       }
       currentDoc.push(d);
+      currentLengths.push(_len);
       total += _len;
     }
     const doc = this.joinDocs(currentDoc, separator);
@@ -318,15 +336,23 @@ export class RecursiveCharacterTextSplitter
 
     // Now go merging things, recursively splitting longer texts.
     let goodSplits: string[] = [];
+    let goodSplitLengths: number[] = [];
     const _separator = this.keepSeparator ? "" : separator;
     for (const s of splits) {
-      if ((await this.lengthFunction(s)) < this.chunkSize) {
+      const length = await this.lengthFunction(s);
+      if (length < this.chunkSize) {
         goodSplits.push(s);
+        goodSplitLengths.push(length);
       } else {
         if (goodSplits.length) {
-          const mergedText = await this.mergeSplits(goodSplits, _separator);
+          const mergedText = await this.mergeSplits(
+            goodSplits,
+            _separator,
+            goodSplitLengths
+          );
           finalChunks.push(...mergedText);
           goodSplits = [];
+          goodSplitLengths = [];
         }
         if (!newSeparators) {
           finalChunks.push(s);
@@ -337,7 +363,11 @@ export class RecursiveCharacterTextSplitter
       }
     }
     if (goodSplits.length) {
-      const mergedText = await this.mergeSplits(goodSplits, _separator);
+      const mergedText = await this.mergeSplits(
+        goodSplits,
+        _separator,
+        goodSplitLengths
+      );
       finalChunks.push(...mergedText);
     }
     return finalChunks;
