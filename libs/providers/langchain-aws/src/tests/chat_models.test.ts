@@ -713,6 +713,85 @@ describe("convertToConverseMessages", () => {
   );
 });
 
+describe("tool_call content blocks (#11476)", () => {
+  it("does not throw on a tool_call block that duplicates tool_calls", () => {
+    // An AIMessage carries the same call twice: once as a standard `tool_call`
+    // content block, once in `tool_calls`. The converter used to throw
+    // `Unsupported content block type: tool_call` on a shape this class
+    // produces itself.
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "text", text: "Looking that up." },
+          {
+            type: "tool_call",
+            id: "tool-call-1",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ],
+      }),
+    ]);
+
+    // Exactly one toolUse: the block is the duplicate, not a second call.
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "Looking that up." },
+      {
+        toolUse: {
+          toolUseId: "tool-call-1",
+          name: "get_weather",
+          input: { location: "San Francisco" },
+        },
+      },
+    ]);
+  });
+
+  it("converts a tool_call block that tool_calls does not carry", () => {
+    // Core only syncs `content` and `tool_calls` when a message is built with
+    // `contentBlocks`, so a hand-assembled one can hold the block alone.
+    // Skipping it wholesale would drop the call without a word.
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "tool_call",
+            id: "tool-call-2",
+            name: "get_time",
+            args: { timezone: "UTC" },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        toolUse: {
+          toolUseId: "tool-call-2",
+          name: "get_time",
+          input: { timezone: "UTC" },
+        },
+      },
+    ]);
+  });
+
+  it("still throws on a block type it genuinely cannot convert", () => {
+    expect(() =>
+      convertToConverseMessages([
+        new AIMessage({
+          content: [{ type: "not_a_real_block", value: 1 } as never],
+        }),
+      ])
+    ).toThrow(/Unsupported content block type: not_a_real_block/);
+  });
+});
+
 describe("reasoning content replay", () => {
   it("omits signature-only standard reasoning and preserves tool use", () => {
     const result = convertToConverseMessages([
