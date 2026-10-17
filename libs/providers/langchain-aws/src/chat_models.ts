@@ -1035,7 +1035,7 @@ export class ChatBedrockConverse
         options?.additionalModelResponseFieldPaths ??
         this.additionalModelResponseFieldPaths,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
-      performanceConfig: options?.performanceConfig,
+      performanceConfig: options?.performanceConfig ?? this.performanceConfig,
       serviceTier: serviceTierType
         ? {
             type: serviceTierType,
