@@ -1,7 +1,13 @@
 import { test, expect, describe } from "vitest";
 import { Document } from "../../documents/document.js";
 import { FunctionalTranslator } from "../functional.js";
-import { Comparators, Visitor } from "../ir.js";
+import {
+  Comparators,
+  Comparison,
+  Operation,
+  Operators,
+  Visitor,
+} from "../ir.js";
 
 describe("FunctionalTranslator", () => {
   const translator = new FunctionalTranslator();
@@ -249,6 +255,104 @@ describe("FunctionalTranslator", () => {
       generateComparatorTestsForType("string");
       generateComparatorTestsForType("number");
       generateComparatorTestsForType("boolean");
+    });
+  });
+
+  describe("visitOperation", () => {
+    const makeDoc = (color: string, size: number) =>
+      new Document({ pageContent: color, metadata: { color, size } });
+    const docs = [
+      makeDoc("red", 1),
+      makeDoc("blue", 2),
+      makeDoc("green", 3),
+      makeDoc("red", 4),
+    ];
+    const color = (value: string) =>
+      new Comparison(Comparators.eq, "color", value);
+    const size = (comparator: (typeof Comparators)[string], value: number) =>
+      new Comparison(comparator, "size", value);
+
+    const filterDocs = (operation: Operation) => {
+      const filter = operation.accept(translator) as (
+        document: Document
+      ) => boolean;
+      return docs
+        .filter(filter)
+        .map((doc) => [doc.pageContent, doc.metadata.size]);
+    };
+
+    test("or matches documents that satisfy any argument", () => {
+      const operation = new Operation(Operators.or, [
+        color("red"),
+        color("blue"),
+      ]);
+      expect(filterDocs(operation)).toEqual([
+        ["red", 1],
+        ["blue", 2],
+        ["red", 4],
+      ]);
+    });
+
+    test("or does not match documents that satisfy no argument", () => {
+      const operation = new Operation(Operators.or, [
+        color("purple"),
+        color("orange"),
+      ]);
+      expect(filterDocs(operation)).toEqual([]);
+    });
+
+    test("or with a single argument behaves like that argument", () => {
+      const operation = new Operation(Operators.or, [color("green")]);
+      expect(filterDocs(operation)).toEqual([["green", 3]]);
+    });
+
+    test("and matches only documents that satisfy every argument", () => {
+      const operation = new Operation(Operators.and, [
+        color("red"),
+        size(Comparators.gt, 1),
+      ]);
+      expect(filterDocs(operation)).toEqual([["red", 4]]);
+    });
+
+    test("and does not match documents when any argument fails", () => {
+      const operation = new Operation(Operators.and, [
+        color("red"),
+        color("blue"),
+      ]);
+      expect(filterDocs(operation)).toEqual([]);
+    });
+
+    test("and containing an or", () => {
+      const operation = new Operation(Operators.and, [
+        new Operation(Operators.or, [color("red"), color("blue")]),
+        size(Comparators.gt, 1),
+      ]);
+      expect(filterDocs(operation)).toEqual([
+        ["blue", 2],
+        ["red", 4],
+      ]);
+    });
+
+    test("or containing an and", () => {
+      const operation = new Operation(Operators.or, [
+        new Operation(Operators.and, [color("red"), size(Comparators.gt, 1)]),
+        color("green"),
+      ]);
+      expect(filterDocs(operation)).toEqual([
+        ["green", 3],
+        ["red", 4],
+      ]);
+    });
+
+    test("nested or inside or", () => {
+      const operation = new Operation(Operators.or, [
+        new Operation(Operators.or, [color("purple"), color("blue")]),
+        color("green"),
+      ]);
+      expect(filterDocs(operation)).toEqual([
+        ["blue", 2],
+        ["green", 3],
+      ]);
     });
   });
 });
