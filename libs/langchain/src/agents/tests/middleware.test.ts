@@ -337,6 +337,440 @@ describe("middleware", () => {
     });
   });
 
+  describe('jumpTo: "model" resolves to the loop entry', () => {
+    /**
+     * A middleware whose hooks append a label to `calls`, so a test can assert
+     * which hooks ran, in what order, and how many times.
+     */
+    function loggingMiddleware(options: {
+      name: string;
+      calls: string[];
+      beforeAgent?: boolean;
+      beforeModel?: boolean;
+      afterModel?: boolean;
+      afterAgent?: boolean;
+      jumpFrom?: "beforeAgent" | "beforeModel" | "afterModel" | "afterAgent";
+      /** Number of times the jumping hook jumps before giving up. */
+      jumps?: number;
+    }) {
+      const { name, calls, jumpFrom } = options;
+      const maxJumps = options.jumps ?? 1;
+      let jumped = 0;
+
+      const hook = (hookName: NonNullable<typeof jumpFrom>) => () => {
+        calls.push(`${name}:${hookName}`);
+        if (hookName === jumpFrom && jumped < maxJumps) {
+          jumped += 1;
+          return { jumpTo: "model" as const };
+        }
+        return undefined;
+      };
+      const withJump = (hookName: NonNullable<typeof jumpFrom>) =>
+        hookName === jumpFrom
+          ? { canJumpTo: ["model" as const], hook: hook(hookName) }
+          : hook(hookName);
+
+      return createMiddleware({
+        name,
+        ...(options.beforeAgent
+          ? { beforeAgent: withJump("beforeAgent") }
+          : {}),
+        ...(options.beforeModel
+          ? { beforeModel: withJump("beforeModel") }
+          : {}),
+        ...(options.afterModel ? { afterModel: withJump("afterModel") } : {}),
+        ...(options.afterAgent ? { afterAgent: withJump("afterAgent") } : {}),
+      });
+    }
+
+    it("re-runs the beforeModel stack when an afterModel hook jumps to model", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [{ id: "call_1", name: "myTool", args: { x: 1 } }],
+          }),
+          new AIMessage("done"),
+        ],
+      });
+      const toolFn = vi.fn();
+      const agent = createAgent({
+        model,
+        tools: [
+          tool(toolFn, {
+            name: "myTool",
+            description: "tool",
+            schema: z.object({ x: z.number() }),
+          }),
+        ],
+        middleware: [
+          loggingMiddleware({
+            name: "mw",
+            calls,
+            beforeModel: true,
+            afterModel: true,
+            jumpFrom: "afterModel",
+          }),
+        ],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+
+      expect(calls).toEqual([
+        "mw:beforeModel",
+        "mw:afterModel",
+        "mw:beforeModel",
+        "mw:afterModel",
+      ]);
+      // The jump abandoned the pending tool call rather than running it.
+      expect(toolFn).not.toHaveBeenCalled();
+    });
+
+    it("honours an afterModel jump when the model replied without tool calls", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("not good enough"), new AIMessage("better")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "mw",
+            calls,
+            beforeModel: true,
+            afterModel: true,
+            jumpFrom: "afterModel",
+          }),
+        ],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Hello, world!")],
+      });
+
+      expect(calls).toEqual([
+        "mw:beforeModel",
+        "mw:afterModel",
+        "mw:beforeModel",
+        "mw:afterModel",
+      ]);
+      expect(result.messages.at(-1)?.content).toBe("better");
+    });
+
+    it("honours an afterModel jump regardless of middleware position", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("not good enough"), new AIMessage("better")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "a",
+            calls,
+            beforeModel: true,
+            afterModel: true,
+          }),
+          loggingMiddleware({
+            name: "b",
+            calls,
+            beforeModel: true,
+            afterModel: true,
+            jumpFrom: "afterModel",
+          }),
+        ],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+
+      expect(calls).toEqual([
+        "a:beforeModel",
+        "b:beforeModel",
+        // afterModel runs in reverse declaration order; b jumps, abandoning a
+        "b:afterModel",
+        "a:beforeModel",
+        "b:beforeModel",
+        "b:afterModel",
+        "a:afterModel",
+      ]);
+    });
+
+    it("re-runs earlier beforeModel hooks when a later one jumps to model", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("done")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({ name: "a", calls, beforeModel: true }),
+          loggingMiddleware({
+            name: "b",
+            calls,
+            beforeModel: true,
+            jumpFrom: "beforeModel",
+          }),
+        ],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+
+      expect(calls).toEqual([
+        "a:beforeModel",
+        "b:beforeModel",
+        "a:beforeModel",
+        "b:beforeModel",
+      ]);
+    });
+
+    it("re-enters itself when the loop entry beforeModel hook jumps to model", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("done")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "mw",
+            calls,
+            beforeModel: true,
+            jumpFrom: "beforeModel",
+            jumps: 2,
+          }),
+        ],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Hello, world!")],
+      });
+
+      expect(calls).toEqual([
+        "mw:beforeModel",
+        "mw:beforeModel",
+        "mw:beforeModel",
+      ]);
+      expect(result.messages.at(-1)?.content).toBe("done");
+    });
+
+    it("surfaces a recursion limit error for an unconditional jump", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("done")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "mw",
+            calls,
+            beforeModel: true,
+            jumpFrom: "beforeModel",
+            jumps: Number.POSITIVE_INFINITY,
+          }),
+        ],
+      });
+
+      await expect(
+        agent.invoke(
+          { messages: [new HumanMessage("Hello, world!")] },
+          { recursionLimit: 6 }
+        )
+      ).rejects.toThrow(/Recursion limit/i);
+    });
+
+    it("enters the loop at the loop entry when beforeAgent jumps to model", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("done")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "a",
+            calls,
+            beforeAgent: true,
+            jumpFrom: "beforeAgent",
+          }),
+          loggingMiddleware({ name: "b", calls, beforeAgent: true }),
+          loggingMiddleware({ name: "c", calls, beforeModel: true }),
+        ],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+
+      // The jump abandons b's beforeAgent and lands on the loop entry.
+      expect(calls).toEqual(["a:beforeAgent", "c:beforeModel"]);
+    });
+
+    it("re-enters the loop at the loop entry when afterAgent jumps to model", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("first"), new AIMessage("second")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "mw",
+            calls,
+            beforeModel: true,
+            afterAgent: true,
+            jumpFrom: "afterAgent",
+          }),
+        ],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+
+      expect(calls).toEqual([
+        "mw:beforeModel",
+        "mw:afterAgent",
+        "mw:beforeModel",
+        "mw:afterAgent",
+      ]);
+    });
+
+    it("jumps to the model request node when no beforeModel middleware exists", async () => {
+      const calls: string[] = [];
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("first"), new AIMessage("second")],
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          loggingMiddleware({
+            name: "mw",
+            calls,
+            afterModel: true,
+            jumpFrom: "afterModel",
+          }),
+        ],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Hello, world!")],
+      });
+
+      expect(calls).toEqual(["mw:afterModel", "mw:afterModel"]);
+      expect(result.messages.at(-1)?.content).toBe("second");
+    });
+
+    it('still honours jumps to "end" and "tools"', async () => {
+      const endCalls: string[] = [];
+      const endAgent = createAgent({
+        model: new FakeToolCallingChatModel({
+          responses: [new AIMessage("done")],
+        }),
+        tools: [],
+        middleware: [
+          createMiddleware({
+            name: "jumpEnd",
+            beforeModel: {
+              canJumpTo: ["end"],
+              hook: () => {
+                endCalls.push("beforeModel");
+                return { jumpTo: "end" as const };
+              },
+            },
+            afterModel: () => {
+              endCalls.push("afterModel");
+              return undefined;
+            },
+          }),
+        ],
+      });
+      await endAgent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+      expect(endCalls).toEqual(["beforeModel"]);
+
+      const toolFn = vi.fn().mockResolvedValue("sunny");
+      const toolsAgent = createAgent({
+        model: new FakeToolCallingChatModel({
+          responses: [new AIMessage("done")],
+        }),
+        tools: [
+          tool(toolFn, {
+            name: "myTool",
+            description: "tool",
+            schema: z.object({ x: z.number() }),
+          }),
+        ],
+        middleware: [
+          createMiddleware({
+            name: "jumpTools",
+            beforeModel: {
+              canJumpTo: ["tools"],
+              hook: (state: { messages: BaseMessage[] }) => {
+                // only jump on the first pass, before any tool message exists
+                if (state.messages.some((m) => ToolMessage.isInstance(m))) {
+                  return undefined;
+                }
+                return { jumpTo: "tools" as const };
+              },
+            },
+          }),
+        ],
+      });
+      await toolsAgent.invoke({
+        messages: [
+          new HumanMessage("Hello, world!"),
+          new AIMessage({
+            content: "",
+            tool_calls: [{ id: "call_1", name: "myTool", args: { x: 1 } }],
+          }),
+        ],
+      });
+      expect(toolFn).toHaveBeenCalledTimes(1);
+    });
+
+    it("terminates a self-jump using state read back on re-entry", async () => {
+      const calls: string[] = [];
+      const agent = createAgent({
+        model: new FakeToolCallingChatModel({
+          responses: [new AIMessage("done")],
+        }),
+        tools: [],
+        middleware: [
+          createMiddleware({
+            name: "retry",
+            stateSchema: new StateSchema({
+              retries: z4.number().default(0),
+            }),
+            beforeModel: {
+              canJumpTo: ["model"],
+              hook: (state) => {
+                calls.push(`beforeModel(retries=${state.retries})`);
+                if (state.retries >= 2) return undefined;
+                return { jumpTo: "model" as const, retries: state.retries + 1 };
+              },
+            },
+          }),
+        ],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Hello, world!")],
+      });
+
+      expect(calls).toEqual([
+        "beforeModel(retries=0)",
+        "beforeModel(retries=1)",
+        "beforeModel(retries=2)",
+      ]);
+      expect(result.messages.at(-1)?.content).toBe("done");
+    });
+  });
+
   describe("wrapModelCall", () => {
     it("should compose three middlewares where first is outermost wrapper", async () => {
       /**
