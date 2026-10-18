@@ -1054,6 +1054,37 @@ describe("ToolNode error handling", () => {
     });
   }
 
+  it("should not send the error's stack trace to the model on invalid args", async () => {
+    const strictTool = tool(
+      ({ value }: { value: number }) => `Result: ${value}`,
+      {
+        name: "strict_tool",
+        description: "A tool with strict validation",
+        schema: z.object({
+          value: z.number(),
+        }),
+      }
+    );
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [[{ name: "strict_tool", args: { value: "123" }, id: "1" }]],
+    });
+
+    const agent = createAgent({ model, tools: [strictTool] });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Call strict tool with invalid args")],
+    });
+
+    const toolMessage = result.messages[2] as ToolMessage;
+    expect(toolMessage.content).toContain(
+      "Received tool input did not match expected schema"
+    );
+    // No stack frames, hence no file paths of the server.
+    expect(toolMessage.content).not.toMatch(/\n\s+at /);
+    expect(toolMessage.content).not.toContain("file://");
+  });
+
   it("should handle missing tool name with default error handler", async () => {
     const getWeatherTool = tool(
       ({ location }) => `Weather in ${location}: sunny`,
