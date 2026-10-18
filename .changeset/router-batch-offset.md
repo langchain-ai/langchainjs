@@ -2,4 +2,4 @@
 "@langchain/core": patch
 ---
 
-Fix RouterRunnable.batch selecting incorrect routes and per-input configurations after the first batch when maxConcurrency is set.
+Fix RouterRunnable.batch to preserve each input's route and configuration under concurrency limits and return per-input errors when returnExceptions is enabled.
