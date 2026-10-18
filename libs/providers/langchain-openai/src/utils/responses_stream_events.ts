@@ -11,7 +11,11 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
-import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import {
+  convertResponsesUsageToUsageMetadata,
+  _FUNCTION_CALL_IDS_MAP_KEY,
+  _CUSTOM_TOOL_CALL_IDS_MAP_KEY,
+} from "../converters/responses.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -43,6 +47,7 @@ export async function* convertOpenAIResponsesStream(
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
   let responseMetadata: Record<string, unknown> | undefined;
+  let additionalKwargs: Record<string, unknown> | undefined;
   const finalizedBlockIndices = new Set<number>();
 
   const getOrCreateBlockIndex = (
@@ -291,12 +296,54 @@ export async function* convertOpenAIResponsesStream(
         event.response.status,
         event.type
       );
+      // Preserve the raw output items so multi-turn input conversion can
+      // replay them verbatim (reasoning items, function call item IDs), and
+      // carry the same provider payloads the non-streaming converter stores
+      // in `additional_kwargs`. We strip `parsed_arguments` from
+      // function_call items because the OpenAI SDK injects it when using
+      // responses.parse(), but the API rejects it when sent back as input.
+      const cleanedOutput = (event.response.output ?? []).map((item) => {
+        if (item.type === "function_call" && "parsed_arguments" in item) {
+          const cleaned = { ...item } as Record<string, unknown>;
+          delete cleaned.parsed_arguments;
+          return cleaned;
+        }
+        return item;
+      });
       responseMetadata = {
         model_provider: provider,
         id: event.response.id,
         model: event.response.model,
         status: event.response.status,
+        output: cleanedOutput,
       };
+      const functionCallIds: Record<string, string> = {};
+      const customToolCallIds: Record<string, string> = {};
+      let reasoningItem: unknown;
+      for (const item of event.response.output ?? []) {
+        if (item.type === "reasoning") {
+          reasoningItem = item;
+        } else if (item.type === "function_call" && item.id) {
+          functionCallIds[item.call_id] = item.id;
+        } else if (
+          item.type === "custom_tool_call" &&
+          item.id &&
+          item.call_id
+        ) {
+          customToolCallIds[item.call_id] = item.id;
+        }
+      }
+      if (reasoningItem != null) {
+        (additionalKwargs ??= {}).reasoning = reasoningItem;
+      }
+      if (Object.keys(functionCallIds).length > 0) {
+        (additionalKwargs ??= {})[_FUNCTION_CALL_IDS_MAP_KEY] =
+          functionCallIds;
+      }
+      if (Object.keys(customToolCallIds).length > 0) {
+        (additionalKwargs ??= {})[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] =
+          customToolCallIds;
+      }
       if (shouldStreamUsage && event.response.usage) {
         usageSnapshot = convertResponsesUsageToUsageMetadata(
           event.response.usage
@@ -334,6 +381,7 @@ export async function* convertOpenAIResponsesStream(
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
+    ...(additionalKwargs ? { additionalKwargs } : {}),
   };
 }
 
