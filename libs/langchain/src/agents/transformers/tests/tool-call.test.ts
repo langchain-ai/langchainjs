@@ -634,6 +634,61 @@ describe("streamEvents", () => {
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
 
+  it("does not raise an unhandled rejection when a tool error output is never awaited", async () => {
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => {
+      unhandled.push(reason);
+    };
+    process.on("unhandledRejection", onUnhandled);
+
+    try {
+      transformer.process(
+        toolEvent({
+          event: "tool-started",
+          tool_call_id: "call_1",
+          tool_name: "flaky",
+          input: {},
+        })
+      );
+
+      const iterator = projection.toolCalls[Symbol.asyncIterator]();
+      const pendingCall = await iterator.next();
+
+      transformer.process(
+        toolEvent({
+          event: "tool-error",
+          tool_call_id: "call_1",
+          message: "upstream service unavailable",
+        })
+      );
+
+      transformer.finalize?.();
+
+      // Drain the stream without ever awaiting `call.output`.
+      expect(pendingCall.done).toBe(false);
+      expect(pendingCall.value.callId).toBe("call_1");
+      expect(await pendingCall.value.status).toBe("error");
+      expect(await iterator.next()).toEqual({ done: true, value: undefined });
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+
+    expect(unhandled).toEqual([]);
+  });
+
   it("unwraps ToolMessage outputs in tool call streams", async () => {
     const transformer = createToolCallTransformer([])();
     const projection = transformer.init();
