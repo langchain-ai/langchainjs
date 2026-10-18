@@ -38,39 +38,13 @@ credentials from the first of the following that apply:
 
 ## Tool Schema Limitations
 
-When using tools with Gemini models through Vertex AI, be aware of the following Zod schema limitations:
+Tool schemas using `anyOf` are supported, including MCP schemas and Zod discriminated unions. Simple nullable unions are converted to `nullable: true`.
 
 ### Unsupported Schema Features
 
-1. **Discriminated Unions** - `.discriminatedUnion()` is not supported
+1. **Union types encoded as a `type` array** - For example, Zod 3 `z.union([z.string(), z.number()])` emits a type array. Use an `anyOf` JSON schema instead. A single type combined with `null` is supported.
 
-   ```typescript
-   // ❌ This will throw an error
-   z.discriminatedUnion("type", [
-     z.object({ type: z.literal("a"), value: z.string() }),
-     z.object({ type: z.literal("b"), value: z.number() }),
-   ]);
-
-   // ✅ Use a flat object with optional fields instead
-   z.object({
-     type: z.enum(["a", "b"]),
-     stringValue: z.string().optional(),
-     numberValue: z.number().optional(),
-   });
-   ```
-
-2. **Union Types** - `z.union()` is not supported
-
-   ```typescript
-   // ❌ This will throw an error
-   z.union([z.string(), z.number()]);
-
-   // ✅ Consider using separate optional fields
-   z.object({
-     stringValue: z.string().optional(),
-     numberValue: z.number().optional(),
-   });
-   ```
+2. **`oneOf` schemas** - Only simple nullable unions are supported. Use `anyOf` when its semantics fit your schema.
 
 3. **Positive Refinement** - `.positive()` is automatically converted
 
@@ -86,12 +60,13 @@ When using tools with Gemini models through Vertex AI, be aware of the following
 
 If you use unsupported schema features, you'll receive descriptive error messages:
 
-- For union types: `"Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf)"`
+- For type arrays: `"Gemini cannot handle union types"`
+- For unsupported `oneOf` schemas: `"Gemini cannot handle oneOf schemas"`
 - For tool conversion failures: `"Failed to convert tool '[toolName]' schema for Gemini"`
 
 ### Best Practices
 
 1. Use simple, flat object structures when possible
-2. Replace discriminated unions with enums and optional fields
+2. Use `anyOf` for schemas that accept multiple types
 3. Use `.min()` instead of `.positive()` for number constraints
 4. Test your tool schemas before deploying to production

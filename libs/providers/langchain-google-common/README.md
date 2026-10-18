@@ -34,10 +34,12 @@ file storage.
 
 ### Tool/Function Schema Limitations
 
-When using tools or functions with Gemini models, the following Zod schema features are not supported:
+Tool schemas using `anyOf` are supported, including MCP schemas and Zod object unions. Simple nullable unions are converted to `nullable: true`.
 
-- **Discriminated Unions** (`z.discriminatedUnion()`) - Use flat objects with optional fields instead
-- **Union Types** (`z.union()`) - Use separate optional fields
+The following limitations still apply:
+
+- **Union types encoded as a `type` array** (for example, Zod 3 `z.union([z.string(), z.number()])`) - Use an `anyOf` schema instead. A single type combined with `null` is supported.
+- **`oneOf` schemas** - Only simple nullable unions are supported. Use `anyOf` when its semantics fit your schema.
 - **Positive Refinement** (`z.number().positive()`) - Automatically converted to `z.number().min(0.01)`
 
 For detailed examples and workarounds, see the Tool Schema Limitations section in the @langchain/google-vertexai or @langchain/google-genai package documentation.
