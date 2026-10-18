@@ -236,11 +236,28 @@ export interface BaseChatGoogleParams
   streaming?: boolean;
   streamUsage?: boolean;
   apiHandler?: GoogleChatApiHandlerConfig;
+  /**
+   * Maximum time, in milliseconds, for each model call, including retries
+   * and reading a streamed response. Defaults to 20 minutes, the longest a
+   * single Long Decode request can run on the server. Set to `0` to disable.
+   * A per-call `timeout` or `signal` can shorten this but not extend it.
+   * Node.js's built-in `fetch` separately fails after 5 minutes without
+   * headers or streamed data; see the package README for raising it.
+   */
+  timeout?: number;
 }
 
 export interface BaseChatGoogleCallOptions
   extends BaseChatModelCallOptions, ChatGoogleFields {
   streamUsage?: boolean;
+
+  /**
+   * Long Decode: resumes generation from a previous Generate Content response
+   * that returned `response_metadata.continuationToken`. Send the same
+   * messages and settings as the original request; do not append the partial
+   * output. Continuation is never performed automatically.
+   */
+  continuationToken?: string;
 }
 
 export interface GoogleChatApiHandlerParams
@@ -257,6 +274,7 @@ export interface GoogleChatApiHandlerParams
   streaming: boolean;
   streamUsage: boolean;
   customHeaders?: Record<string, string>;
+  timeout?: number;
 }
 
 export interface GenerateContentApiHandlerParams
@@ -409,6 +427,22 @@ declare module "./api_types/generate_content.js" {
     export interface Candidate {
       /** @deprecated Use urlContextMetadata instead. */
       readonly urlRetrievalMetadata?: UrlRetrievalMetadata;
+
+      /**
+       * Long Decode: opaque token returned when `finishReason` is
+       * `CONTINUATION` (and sometimes `MAX_TOKENS`). Newer than the
+       * vendored OpenAPI spec.
+       */
+      readonly continuationToken?: string;
+    }
+
+    export interface GenerateContentRequest {
+      /**
+       * Long Decode: token from a previous response's candidate. `contents`
+       * must identically replicate the original request. Newer than the
+       * vendored OpenAPI spec.
+       */
+      continuationToken?: string;
     }
   }
 }

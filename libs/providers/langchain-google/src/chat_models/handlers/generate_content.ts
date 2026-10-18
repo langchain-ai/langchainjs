@@ -27,7 +27,7 @@ import {
   subtractUsageMetadata,
   usageMetadataToTokenUsage,
 } from "../../utils/metadata.js";
-import { iife } from "../../utils/misc.js";
+import { iife, withTimeoutSignal } from "../../utils/misc.js";
 import {
   PromptBlockedError,
   NoCandidatesError,
@@ -114,11 +114,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
   ): Promise<ChatResult> {
     const url = await this.buildUrl("generateContent");
     const headers = this.getHeaders(options);
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.requestBody(messages, options);
 
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
@@ -127,17 +123,18 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       body,
     });
 
+    const signal = withTimeoutSignal(options?.signal, this.params.timeout);
     let response: Response;
     try {
       response = await this.params.caller.callWithOptions(
-        { signal: options?.signal, maxRetries: options?.maxRetries },
+        { signal, maxRetries: options?.maxRetries },
         async () => {
           const nextResponse = await this.params.apiClient.fetch(
             new Request(url, {
               method: "POST",
               headers,
               body: JSON.stringify(body),
-              signal: options?.signal,
+              signal,
             })
           );
 
@@ -212,6 +209,9 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
             safetyRatings: candidate.safetyRatings,
             citationMetadata: candidate.citationMetadata,
             tokenCount: candidate.tokenCount,
+            ...(candidate.continuationToken
+              ? { continuationToken: candidate.continuationToken }
+              : {}),
           },
         },
       ],
@@ -233,11 +233,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     const streamUsage: boolean =
       options?.streamUsage ?? this.params.streamUsage ?? false;
 
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.requestBody(messages, options);
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
@@ -248,17 +244,18 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       body,
     });
 
+    const signal = withTimeoutSignal(options?.signal, this.params.timeout);
     let response: Response;
     try {
       response = await this.params.caller.callWithOptions(
-        { signal: options?.signal, maxRetries: options?.maxRetries },
+        { signal, maxRetries: options?.maxRetries },
         async () => {
           const nextResponse = await this.params.apiClient.fetch(
             new Request(url, {
               method: "POST",
               headers,
               body: JSON.stringify(body),
-              signal: options?.signal,
+              signal,
             })
           );
 
@@ -285,6 +282,10 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     if (response.body) {
       let previousUsage: UsageMetadata | undefined;
+      // Long Decode streams send a fresh checkpoint token every few thousand
+      // tokens. Chunk aggregation concatenates strings, so only the latest
+      // token is emitted, once, after the last chunk.
+      let continuationToken: string | undefined;
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
@@ -314,6 +315,8 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
               // Extract text delta from the chunk
               const candidate = chunk.candidates?.[0];
+              continuationToken =
+                candidate?.continuationToken ?? continuationToken;
               if (!candidate) {
                 if (chunk.usageMetadata && streamUsage) {
                   const cumulative =
@@ -405,6 +408,22 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                 );
               }
             },
+            flush(controller) {
+              if (continuationToken) {
+                controller.enqueue(
+                  new ChatGenerationChunk({
+                    text: "",
+                    message: new AIMessageChunk({
+                      content: "",
+                      response_metadata: {
+                        model_provider: "google",
+                        continuationToken,
+                      },
+                    }),
+                  })
+                );
+              }
+            },
           })
         );
 
@@ -434,21 +453,18 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     options?: BaseChatGoogleCallOptions,
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
-    const body = {
-      ...this.invocationParams(options),
-      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
-    };
+    const body = this.requestBody(messages, options);
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
+    const signal = withTimeoutSignal(options?.signal, this.params.timeout);
 
     const response = await this.params.apiClient.fetch(
       new Request(url, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
-        signal: options?.signal,
+        signal,
       })
     );
 
@@ -493,12 +509,25 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       }
     }
 
-    yield* convertGoogleGeminiStream(
-      geminiChunks(eventStream, options?.signal),
-      {
-        streamUsage: shouldStreamUsage,
-      }
-    );
+    yield* convertGoogleGeminiStream(geminiChunks(eventStream, signal), {
+      streamUsage: shouldStreamUsage,
+    });
+  }
+
+  // The continuation token is added here rather than in invocationParams,
+  // which LangChain records in traces.
+  protected requestBody(
+    messages: BaseMessage[],
+    options?: BaseChatGoogleCallOptions
+  ) {
+    return {
+      ...this.invocationParams(options),
+      ...(options?.continuationToken
+        ? { continuationToken: options.continuationToken }
+        : {}),
+      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
+      contents: convertMessagesToGeminiContents(messages),
+    };
   }
 
   invocationParams(
