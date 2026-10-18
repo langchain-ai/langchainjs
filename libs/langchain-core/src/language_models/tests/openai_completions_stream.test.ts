@@ -102,4 +102,78 @@ describe("convertOpenAICompletionsStream", () => {
     }
     expect(reasoningFinish.content.reasoning).toBe("think");
   });
+
+  test("deduplicates repeated usage snapshots but emits changed snapshots", async () => {
+    const events = await collectEvents([
+      {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hello" },
+            finish_reason: null,
+          },
+        ],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 1,
+          total_tokens: 101,
+          prompt_tokens_details: { cached_tokens: 25 },
+        },
+      },
+      {
+        choices: [{ index: 0, delta: { content: " world" } }],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 1,
+          total_tokens: 101,
+          prompt_tokens_details: { cached_tokens: 25 },
+        },
+      },
+      {
+        choices: [{ index: 0, delta: { content: "!" } }],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 2,
+          total_tokens: 102,
+          prompt_tokens_details: { cached_tokens: 25 },
+        },
+      },
+      {
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 2,
+          total_tokens: 102,
+          prompt_tokens_details: { cached_tokens: 25 },
+        },
+      },
+    ]);
+
+    const usageEvents = events.filter((event) => event.event === "usage");
+    expect(usageEvents).toHaveLength(2);
+    expect(usageEvents.map((event) => event.usage)).toEqual([
+      {
+        input_tokens: 100,
+        output_tokens: 1,
+        total_tokens: 101,
+        input_token_details: { cache_read: 25 },
+      },
+      {
+        input_tokens: 100,
+        output_tokens: 2,
+        total_tokens: 102,
+        input_token_details: { cache_read: 25 },
+      },
+    ]);
+
+    const finish = events.find((event) => event.event === "message-finish");
+    expect(
+      finish?.event === "message-finish" ? finish.usage : undefined
+    ).toEqual({
+      input_tokens: 100,
+      output_tokens: 2,
+      total_tokens: 102,
+      input_token_details: { cache_read: 25 },
+    });
+  });
 });
