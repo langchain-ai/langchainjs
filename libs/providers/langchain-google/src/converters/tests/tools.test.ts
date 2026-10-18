@@ -3,7 +3,7 @@ import * as z from "zod";
 import {
   convertToolChoiceToGeminiConfig,
   schemaToGeminiParameters,
-} from "../tools.js";
+} from "../generate_content/tools.js";
 
 describe("convertToolChoiceToGeminiConfig", () => {
   test("returns undefined when toolChoice is undefined", () => {
