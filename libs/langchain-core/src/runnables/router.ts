@@ -108,8 +108,8 @@ export class RouterRunnable<
     for (let i = 0; i < actualInputs.length; i += batchSize) {
       const batchPromises = actualInputs
         .slice(i, i + batchSize)
-        .map((actualInput, i) =>
-          runnables[i].invoke(actualInput, optionsList[i])
+        .map((actualInput, index) =>
+          runnables[i + index].invoke(actualInput, optionsList[i + index])
         );
       const batchResult = await Promise.all(batchPromises);
       batchResults.push(batchResult);
