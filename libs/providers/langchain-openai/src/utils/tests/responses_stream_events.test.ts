@@ -280,4 +280,71 @@ describe("convertOpenAIResponsesStream", () => {
     }
     expect(out.filter((e) => e.event === "usage")).toHaveLength(0);
   });
+
+  test("completed response carries reasoning and function call IDs into message-finish", async () => {
+    const output = [
+      { type: "reasoning", id: "rs_123", summary: [] },
+      {
+        type: "function_call",
+        id: "fc_abc",
+        call_id: "call_abc",
+        name: "get_weather",
+        arguments: '{"city":"Paris"}',
+        status: "completed",
+      },
+    ];
+    const events = await collectEvents([
+      {
+        type: "response.created",
+        response: { id: "resp_reason", model: "gpt-5" },
+      } as RawEvent,
+      {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: { type: "reasoning", id: "rs_123", summary: [] },
+      } as RawEvent,
+      {
+        type: "response.output_item.added",
+        output_index: 1,
+        item: {
+          type: "function_call",
+          id: "fc_abc",
+          call_id: "call_abc",
+          name: "get_weather",
+          arguments: "",
+        },
+      } as RawEvent,
+      {
+        type: "response.function_call_arguments.delta",
+        output_index: 1,
+        delta: '{"city":"Paris"}',
+      } as RawEvent,
+      {
+        type: "response.output_item.done",
+        output_index: 1,
+        item: {
+          type: "function_call",
+          id: "fc_abc",
+          call_id: "call_abc",
+          name: "get_weather",
+          arguments: '{"city":"Paris"}',
+        },
+      } as RawEvent,
+      completedResponse({ id: "resp_reason", output }),
+    ]);
+
+    const finish = events.find((e) => e.event === "message-finish") as {
+      additionalKwargs?: Record<string, unknown>;
+      responseMetadata?: Record<string, unknown>;
+    };
+    expect(finish.additionalKwargs?.reasoning).toEqual({
+      type: "reasoning",
+      id: "rs_123",
+      summary: [],
+    });
+    expect(
+      finish.additionalKwargs?.__openai_function_call_ids__
+    ).toEqual({ call_abc: "fc_abc" });
+    expect(finish.responseMetadata?.output).toEqual(output);
+  });
 });
