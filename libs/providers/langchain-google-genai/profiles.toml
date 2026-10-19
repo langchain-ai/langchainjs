@@ -1,2 +1,13 @@
 provider = "google"
 output = "src/profiles.ts"
+
+[overrides."gemini-4-argon"]
+maxInputTokens = 1048576
+maxOutputTokens = 65536
+imageInputs = true
+audioInputs = true
+videoInputs = true
+pdfInputs = true
+reasoningOutput = true
+toolCalling = true
+structuredOutput = true
