@@ -118,8 +118,9 @@ export function createMiddleware<
   /**
    * Controls the payloads recorded by this middleware's lifecycle hook spans.
    * Processors affect chain callback payloads, including `streamEvents`; output
-   * omission can suppress messages directly returned by a lifecycle hook, Processors
-   * must not mutate payloads, which are shared with agent execution.
+   * omission can suppress messages directly returned by a lifecycle hook, and
+   * input omission can affect message deduplication. Processors must not mutate
+   * payloads, which are shared with agent execution.
    */
   tracePolicy?: TracePolicy;
   /**

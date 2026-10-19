@@ -280,7 +280,7 @@ describe("middleware tracePolicy", () => {
       outputs: {},
     });
     const [toolRun] = runsFor(tracer, "weather");
-    expect(toolRun.inputs).toEqual({ input: '{"city":"Tokyo"}' });
+    expect(toolRun.inputs).toEqual({ city: "Tokyo" });
     expect(JSON.stringify(toolRun.outputs)).toContain("sunny");
     expect(toolRun.parent_run_id).toBeDefined();
   });
