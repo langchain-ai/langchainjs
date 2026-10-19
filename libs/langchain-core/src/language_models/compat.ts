@@ -267,7 +267,7 @@ export async function* convertChunksToEvents(
         // Accumulate the full call for content-block-finish, and emit only
         // this chunk's args. A late id or name reaches consumers on finish.
         const block = activeBlocks.get(blockIndex)!;
-        const acc = block.accumulated
+        const acc = block.accumulated;
         if (toolChunk.id != null) acc.id = toolChunk.id;
         if (toolChunk.name != null) acc.name = toolChunk.name;
         if (toolChunk.args) {
