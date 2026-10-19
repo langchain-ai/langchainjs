@@ -371,10 +371,19 @@ export abstract class GoogleAIConnection<
     return url;
   }
 
+  get vertexEndpoint(): string {
+    const endpoint =
+      this._endpoint ??
+      (this.isApiKey ? "aiplatform.googleapis.com" : this.endpoint);
+    return (
+      endpoint.includes("://") ? endpoint : `https://${endpoint}`
+    ).replace(/\/+$/, "");
+  }
+
   async buildUrlVertexExpress(): Promise<string> {
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
-    const url = `https://aiplatform.googleapis.com/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${method}`;
+    const url = `${this.vertexEndpoint}/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${method}`;
     return url;
   }
 
@@ -382,7 +391,7 @@ export abstract class GoogleAIConnection<
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
-    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
+    const url = `${this.vertexEndpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
     return url;
   }
 
