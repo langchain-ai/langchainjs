@@ -165,4 +165,32 @@ describe("ChatBedrockConverse.streamEvents", () => {
       total_tokens: 7,
     });
   });
+
+  test("streams thinking token usage", async () => {
+    await expect(
+      mockBedrock([
+        {
+          messageStop: {
+            stopReason: "end_turn",
+            additionalModelResponseFields: {
+              usage: {
+                output_tokens: 565,
+                output_tokens_details: { thinking_tokens: 562 },
+              },
+            },
+          },
+        },
+        {
+          metadata: {
+            usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+          },
+        },
+      ]).streamEvents("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
 });

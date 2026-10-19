@@ -387,6 +387,16 @@ export class ReactAgent<
      * to allow middleware to handle dynamically registered tools.
      */
     const hasWrapToolCallMiddleware = middleware.some((m) => m.wrapToolCall);
+    if (
+      this.#toolBehaviorVersion === "v1" &&
+      middleware.some(
+        (m) => m.name === "HumanInTheLoopMiddleware" && m.wrapToolCall
+      )
+    ) {
+      throw new Error(
+        'humanInTheLoopMiddleware({ interruptMode: "per_call" }) requires createAgent version "v2" (the default). Version "v1" runs every tool call in one task, so per-call interrupts would share an ID.'
+      );
+    }
     const clientTools = toolClasses.filter(isClientTool);
 
     /**
