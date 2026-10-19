@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { ApiClient } from "../../clients/index.js";
 import { ChatGoogle } from "../index.js";
-import type { Gemini } from "../api-types.js";
+import type { Gemini } from "../types.js";
 
 class MockChunkStreamingResponse implements Response {
   readonly headers = new Headers();
