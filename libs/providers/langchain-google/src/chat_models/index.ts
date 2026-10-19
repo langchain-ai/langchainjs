@@ -5,8 +5,8 @@ import {
   BaseChatGoogle,
   BaseChatGoogleCallOptions,
   BaseChatGoogleParams,
-  getGoogleChatModelParams,
 } from "./base.js";
+import { getGoogleChatModelParams } from "../converters/shared/params.js";
 
 /**
  * Configuration parameters for the ChatGoogle model.
@@ -59,3 +59,21 @@ export class ChatGoogle extends BaseChatGoogle<ChatGoogleCallOptions> {
     this.apiKey = params.apiKey;
   }
 }
+
+export {
+  BaseChatGoogle,
+  type BaseChatGoogleParams,
+  type BaseChatGoogleCallOptions,
+} from "./base.js";
+export * from "./handlers/index.js";
+export type {
+  GoogleChatApiHandlerParams,
+  GenerateContentApiHandlerParams,
+  GoogleChatApiHandlerFactory,
+  GoogleChatApiHandlerConfig,
+  GenerateContentInvocationParams,
+  BaseChatGoogleFields,
+  GenerateContentSpecificFields,
+  GenerateContentFields,
+  ChatGoogleFields,
+} from "./types.js";
