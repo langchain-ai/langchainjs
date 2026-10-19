@@ -1,5 +1,9 @@
 # @langchain/google-genai
 
+## 2.3.3
+
+No changes in this release.
+
 ## 2.3.2
 
 ### Patch Changes
