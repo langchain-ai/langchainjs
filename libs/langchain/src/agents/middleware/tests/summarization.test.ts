@@ -1385,4 +1385,41 @@ describe("summarizationMiddleware", () => {
     // The tool calls should still be included (as JSON appended to the AI message)
     expect(capturedPrompt).toContain("get_weather");
   });
+
+  it("preserves conversation history when the summary model call fails", async () => {
+    const failingModel = {
+      invoke: vi.fn().mockRejectedValue(new Error("transient model error")),
+      getName: () => "failing-summarizer",
+      _modelType: "mock",
+      lc_runnable: true,
+    };
+    const middleware = summarizationMiddleware({
+      model: failingModel as any,
+      trigger: { tokens: 50 }, // Lower threshold to trigger easily
+      keep: { messages: 2 },
+    });
+
+    const messages = [
+      new HumanMessage(`First question. ${"x".repeat(200)}`),
+      new AIMessage(`First answer. ${"x".repeat(200)}`),
+      new HumanMessage(`Second question. ${"x".repeat(200)}`),
+      new AIMessage(`Second answer. ${"x".repeat(200)}`),
+      new HumanMessage("Final question"),
+    ];
+
+    const beforeModelHook = middleware.beforeModel;
+    let result: unknown;
+    if (typeof beforeModelHook === "function") {
+      result = await beforeModelHook({ messages } as any, { context: {} } as any);
+    } else {
+      result = await beforeModelHook?.hook(
+        { messages } as any,
+        { context: {} } as any
+      );
+    }
+
+    // No state update: history is preserved and summarization retries next turn.
+    expect(result).toBeUndefined();
+    expect(messages).toHaveLength(5);
+  });
 });

@@ -444,14 +444,23 @@ export function summarizationMiddleware(
         cutoffIndex
       );
 
-      const summary = await createSummary(
-        messagesToSummarize,
-        model,
-        summaryPrompt,
-        tokenCounter,
-        trimTokensToSummarize,
-        runtime
-      );
+      let summary: string;
+      try {
+        summary = await createSummary(
+          messagesToSummarize,
+          model,
+          summaryPrompt,
+          tokenCounter,
+          trimTokensToSummarize,
+          runtime
+        );
+      } catch (e) {
+        // If the summary model call fails (e.g. a transient error), skip
+        // summarization for this turn instead of wiping the conversation
+        // history. The trigger will fire again on the next turn.
+        console.warn(`Summarization failed, skipping this turn: ${e}`);
+        return;
+      }
 
       // Reuse a replaced message's id so the summary projects as an update, not a new message.
       const summaryMessage = new HumanMessage({
@@ -976,7 +985,10 @@ async function createSummary(
     }
     return "Error generating summary: Invalid response format";
   } catch (e) {
-    return `Error generating summary: ${e}`;
+    // Rethrow: the caller decides how to handle a failed summarization.
+    // Returning the error as a string here would let beforeModel replace the
+    // entire conversation history with an "Error generating summary" note.
+    throw e;
   }
 }
 
