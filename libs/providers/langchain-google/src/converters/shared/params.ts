@@ -179,6 +179,15 @@ export function getModelVersion(model: string): string {
 }
 
 /**
+ * Returns the model version as a value that can be compared numerically.
+ * @param model
+ */
+export function getModelVersionValue(model: string): number {
+  const version = getModelVersion(model) ?? "";
+  return parseFloat(version);
+}
+
+/**
  * Returns the model level from a Gemini model name.
  * e.g. "gemini-2.5-flash" → "flash", "gemini-2.5-flash-lite" → "flash-lite"
  */
@@ -204,6 +213,16 @@ export function getModelSpecialty(model: string): string {
     return "tts";
   } else {
     return "";
+  }
+}
+
+export function speechConfigVersion(model: string): number {
+  const modelVersion = getModelVersionValue(model);
+  if (modelVersion < 3.8) {
+    return 1;
+  } else {
+    // Starting with version 3.8
+    return 2;
   }
 }
 

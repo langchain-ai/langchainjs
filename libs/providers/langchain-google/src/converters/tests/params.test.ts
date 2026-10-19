@@ -157,11 +157,11 @@ describe("convertFieldsToThinkingConfig", () => {
 
 describe("convertFieldsToSpeechConfig", () => {
   test("returns undefined when no speechConfig is provided", () => {
-    expect(convertFieldsToSpeechConfig({})).toBeUndefined();
+    expect(convertFieldsToSpeechConfig("gemini-2.5-flash", {})).toBeUndefined();
   });
 
-  test("converts voice string to prebuiltVoiceConfig", () => {
-    const config = convertFieldsToSpeechConfig({
+  test("converts voice string to prebuiltVoiceConfig for models < 3.8", () => {
+    const config = convertFieldsToSpeechConfig("gemini-2.5-flash-preview-tts", {
       speechConfig: "Puck",
     });
     expect(config).toEqual({
@@ -169,6 +169,17 @@ describe("convertFieldsToSpeechConfig", () => {
         prebuiltVoiceConfig: {
           voiceName: "Puck",
         },
+      },
+    });
+  });
+
+  test("converts voice string to voiceConfig.voice for models >= 3.8", () => {
+    const config = convertFieldsToSpeechConfig("gemini-3.8-flash-tts", {
+      speechConfig: "Puck",
+    });
+    expect(config).toEqual({
+      voiceConfig: {
+        voice: "Puck",
       },
     });
   });
@@ -181,9 +192,11 @@ describe("convertFieldsToSpeechConfig", () => {
         },
       },
     };
-    expect(convertFieldsToSpeechConfig({ speechConfig: wireConfig })).toEqual(
-      wireConfig
-    );
+    expect(
+      convertFieldsToSpeechConfig("gemini-2.5-flash", {
+        speechConfig: wireConfig,
+      })
+    ).toEqual(wireConfig);
   });
 });
 
