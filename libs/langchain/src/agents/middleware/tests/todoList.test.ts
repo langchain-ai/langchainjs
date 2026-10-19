@@ -47,6 +47,57 @@ describe("todoListMiddleware", () => {
     );
   });
 
+  it("should request the final answer after the closing todo update", async () => {
+    const middleware = todoListMiddleware();
+    const model = createMockModel();
+    const agent = createAgent({ model, middleware: [middleware] });
+
+    await agent.invoke({ messages: [new HumanMessage("Analyze the data")] });
+
+    const [messages] = (model.invoke as unknown as MockInstance).mock
+      .calls[0][0];
+    expect(messages.text).toContain(
+      "write your final answer in the message AFTER your last `write_todos` call"
+    );
+    expect(messages.text).toContain("not in the same turn as that call");
+    expect(middleware.tools![0].description).toContain(
+      "must appear as text content in a message after your final `write_todos` call"
+    );
+  });
+
+  it("should acknowledge completed todos without dumping their contents", async () => {
+    const middleware = todoListMiddleware();
+    const model = createMockModel();
+    const todos = [{ content: "Analyze the data", status: "completed" }];
+    const answer =
+      "Gamma: 900, Alpha: 400, Beta: 200 people per square kilometer.";
+    vi.mocked(model.invoke)
+      .mockResolvedValueOnce(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { name: "write_todos", args: { todos }, id: "complete" },
+          ],
+        })
+      )
+      .mockResolvedValueOnce(new AIMessage(answer));
+    const agent = createAgent({ model, middleware: [middleware] });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Rank the countries by density")],
+    });
+
+    expect(result.todos).toEqual(todos);
+    const toolMessage = result.messages.find((msg) =>
+      ToolMessage.isInstance(msg)
+    );
+    expect(toolMessage?.content).toBe("Todo list updated.");
+    expect(toolMessage?.tool_call_id).toBe("complete");
+    expect(toolMessage?.name).toBe("write_todos");
+    expect(result.messages.at(-1)?.content).toBe(answer);
+    expect(model.invoke).toHaveBeenCalledTimes(2);
+  });
+
   it("should add the custom system prompt to the model request and custom tool description", async () => {
     const openAIFetchMock = vi.fn().mockImplementation(async () => {
       const mockResponse = {
