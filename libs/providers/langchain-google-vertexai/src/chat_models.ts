@@ -1,5 +1,4 @@
 import { type ChatGoogleInput, ChatGoogle } from "@langchain/google-gauth";
-import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 
 /**
  * Input to a Google Vertex AI chat model class.
@@ -310,33 +309,5 @@ export class ChatVertexAI extends ChatGoogle {
       platformType: "gcp",
     });
     this._addVersion("@langchain/google-vertexai", __PKG_VERSION__);
-  }
-
-  override buildConnection(
-    fields: Parameters<ChatGoogle["buildConnection"]>[0],
-    client: Parameters<ChatGoogle["buildConnection"]>[1]
-  ) {
-    if (fields.endpoint !== undefined) {
-      return super.buildConnection(fields, client);
-    }
-    const gateway = resolveLangSmithGatewayConfig({ providerPath: "vertex" });
-    if (gateway.baseURL === undefined) {
-      return super.buildConnection(fields, client);
-    }
-    const gatewayFields = {
-      ...fields,
-      endpoint: gateway.baseURL,
-      apiKey: fields.apiKey ?? gateway.apiKey,
-    };
-    const gatewayClient = this.buildClient(gatewayFields);
-    const regional =
-      gatewayClient.clientType === "apiKey" && fields.authOptions !== undefined;
-    super.buildConnection(gatewayFields, {
-      clientType: regional ? "gateway-regional" : gatewayClient.clientType,
-      request: gatewayClient.request.bind(gatewayClient),
-      getProjectId: regional
-        ? () => this.buildAbstractedClient(fields).getProjectId()
-        : gatewayClient.getProjectId.bind(gatewayClient),
-    });
   }
 }

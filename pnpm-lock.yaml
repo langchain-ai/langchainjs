@@ -1586,9 +1586,6 @@ importers:
         specifier: workspace:*
         version: link:../langchain-google-gauth
     devDependencies:
-      '@langchain/core':
-        specifier: workspace:^
-        version: link:../../langchain-core
       '@langchain/google-common':
         specifier: workspace:*
         version: link:../langchain-google-common
