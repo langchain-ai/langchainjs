@@ -252,9 +252,10 @@ export async function* convertChunksToEvents(
             args: "",
             index: blockIndex,
           };
+          // Copy, so accumulating args doesn't mutate the start event.
           activeBlocks.set(blockIndex, {
             type: "tool_call_chunk",
-            accumulated: initial,
+            accumulated: { ...initial },
           });
           yield {
             event: "content-block-start" as const,
@@ -263,29 +264,20 @@ export async function* convertChunksToEvents(
           };
         }
 
-        // Accumulate tool call args internally, emit incremental content chunks.
+        // Accumulate the full call for content-block-finish, and emit only
+        // this chunk's args. A late id or name reaches consumers on finish.
         const block = activeBlocks.get(blockIndex)!;
-        const acc = block.accumulated as {
-          args?: string;
-          id?: string;
-          name?: string;
-        };
+        const acc = block.accumulated
         if (toolChunk.id != null) acc.id = toolChunk.id;
         if (toolChunk.name != null) acc.name = toolChunk.name;
-        acc.args = (acc.args ?? "") + (toolChunk.args ?? "");
-        yield {
-          event: "content-block-delta" as const,
-          index: blockIndex,
-          delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...("id" in acc && acc.id != null ? { id: acc.id } : {}),
-              ...("name" in acc && acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
-          },
-        };
+        if (toolChunk.args) {
+          acc.args = (acc.args ?? "") + toolChunk.args;
+          yield {
+            event: "content-block-delta" as const,
+            index: blockIndex,
+            delta: { type: "tool-call-delta" as const, args: toolChunk.args },
+          };
+        }
       }
     }
 
