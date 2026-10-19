@@ -643,6 +643,7 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
  * LangGraph API loading, which unwraps ReactAgent to `.graph` before execution.
  */
 const GRAPH_DEFAULT_CONFIG_KEYS = [
+  "callbacks",
   "tags",
   "metadata",
   "runName",

@@ -9,7 +9,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, createAgent } from "langchain";
 import dotenv from "dotenv";
 
-import { ClientConfig, MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapterConfig, MCPAdapter } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -17,9 +17,10 @@ dotenv.config();
 /**
  * Configuration for multiple MCP servers
  */
-const multipleServersConfig: ClientConfig = {
-  mcpServers: {
+const multipleServersConfig: MCPAdapterConfig = {
+  servers: {
     firecrawl: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "firecrawl-mcp"],
@@ -30,20 +31,20 @@ const multipleServersConfig: ClientConfig = {
     },
     // Math server configuration
     math: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-math"],
     },
   },
-  useStandardContentBlocks: true,
 };
 
 /**
- * Example demonstrating how to use multiple MCP servers with React agent
+ * Example demonstrating how to use multiple MCP servers with agent
  * This example creates and loads a configuration file with multiple servers
  */
 async function runExample() {
-  let client: MultiServerMCPClient | null = null;
+  let client: MCPAdapter | null = null;
 
   try {
     console.log(
@@ -51,12 +52,12 @@ async function runExample() {
     );
 
     // Create a client from the configuration file
-    client = new MultiServerMCPClient(multipleServersConfig);
+    client = new MCPAdapter(multipleServersConfig);
 
     console.log("Connected to servers from multiple servers configuration");
 
     // Get all tools from all servers
-    const mcpTools = await client.getTools();
+    const mcpTools = await client.listTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");
@@ -75,11 +76,11 @@ async function runExample() {
     });
 
     // ================================================
-    // Create a React agent
+    // Create a agent
     // ================================================
     console.log("\n=== CREATING REACT AGENT ===");
 
-    // Create the React agent
+    // Create the agent
     const agent = createAgent({
       model,
       tools: mcpTools,
@@ -92,13 +93,13 @@ async function runExample() {
       "If I have 42 items and each costs $7.50, what is the total cost?",
     ];
 
-    // Test the React agent with the queries
+    // Test the agent with the queries
     console.log("\n=== RUNNING REACT AGENT ===");
 
     for (const query of queries) {
       console.log(`\nQuery: ${query}`);
 
-      // Run the React agent with the query
+      // Run the agent with the query
       const result = await agent.invoke({
         messages: [new HumanMessage(query)],
       });

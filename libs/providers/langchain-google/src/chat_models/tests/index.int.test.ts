@@ -36,6 +36,7 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
+import { convertMessagesToGeminiContents } from "../../converters/generate_content/messages.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -47,6 +48,8 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import type { ToolChoice } from "@langchain/core/language_models/chat_models";
+import type { LLMResult } from "@langchain/core/outputs";
 
 /**
  * Builds the callback handler list for integration tests.
@@ -138,6 +141,12 @@ const allModelInfo: ModelInfo[] = [
   },
   {
     model: "gemini-3.8-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-4-argon",
     testConfig: {
       isThinking: true,
     },
@@ -497,6 +506,22 @@ describe.each(coreModelInfo)(
 
       expect(result.response_metadata.serviceTier).toEqual("standard");
     });
+
+    test.runIf(testConfig?.node === true && model === "gemini-2.5-flash")(
+      "invoke from the Vertex multi-region endpoint",
+      async () => {
+        const llm = newChatGoogle({
+          platformType: "gcp",
+          location: "eu",
+        });
+
+        await llm.invoke("What is 1 + 1?");
+
+        expect(recorder.request?.url).toContain(
+          "https://aiplatform.eu.rep.googleapis.com/"
+        );
+      }
+    );
 
     test("invoke seed", async () => {
       const llm = newChatGoogle({
@@ -920,6 +945,35 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("streamEvents preserves stable tool call ids (regression for #11261)", async () => {
+      const llm = newChatGoogle();
+      const events = [];
+      for await (const event of llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      )) {
+        events.push(event);
+      }
+
+      const toolCallStart = events
+        .filter((event) => event.event === "content-block-start")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call_chunk");
+      const toolCallFinish = events
+        .filter((event) => event.event === "content-block-finish")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call");
+
+      expect(toolCallStart).toMatchObject({
+        id: expect.any(String),
+        name: "get_weather",
+      });
+      expect(toolCallFinish).toMatchObject({
+        id: toolCallStart?.id,
+        name: "get_weather",
+      });
+    });
+
     test("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
@@ -936,6 +990,48 @@ describe.each(coreModelInfo)(
       expect(typeof call.args).toBe("object");
       expect(call.args).toHaveProperty("location");
       expect(call.args.location).toBe("New York");
+    });
+
+    const toolChoices: ToolChoice[] = ["validated", { mode: "VALIDATED" }];
+
+    describe.each(toolChoices)("VALIDATED tool choice: %o", (toolChoice) => {
+      test("accepts a function call with schema-conforming arguments", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage('Call get_weather with location set to "New York".'),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls).toHaveLength(1);
+        expect(result.tool_calls?.[0]).toMatchObject({
+          name: "get_weather",
+          args: { location: "New York" },
+        });
+        expect(
+          weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
+        ).toBe(true);
+      });
+
+      test("also permits a text response without forcing a function", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage(
+            "Do not use any tools. Reply with the single word Hello."
+          ),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls ?? []).toHaveLength(0);
+        expect(result.text).toMatch(/hello/i);
+      });
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {
@@ -972,6 +1068,26 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
+    test("Supports GoogleSearchTool - streaming (#9264)", async () => {
+      const searchTool: Gemini.Tool = {
+        googleSearch: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([searchTool]);
+
+      const stream = await llm.stream("Who won the 2024 MLB World Series?");
+      let finalMsg: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalMsg = finalMsg
+          ? concat(finalMsg, chunk as AIMessageChunk)
+          : (chunk as AIMessageChunk);
+      }
+      expect(finalMsg?.content as string).toContain("Dodgers");
+      expect(finalMsg).toHaveProperty("response_metadata");
+
+      expect(finalMsg?.response_metadata).toHaveProperty("groundingMetadata");
+      expect(finalMsg?.response_metadata).toHaveProperty("groundingSupport");
+    });
+
     test("URL Context Tool", async () => {
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash
@@ -999,6 +1115,30 @@ describe.each(coreModelInfo)(
       expect(context.urlMetadata[0].urlRetrievalStatus).toEqual(
         "URL_RETRIEVAL_STATUS_SUCCESS"
       );
+    });
+
+    test("mixing a native tool with a custom tool (#10675, #10819)", async () => {
+      // Only Gemini 3+ models can mix built-in and function-calling tools at
+      // all, and only with toolConfig.includeServerSideToolInvocations set.
+      if (!testConfig?.isThinking) {
+        return;
+      }
+      const customTool = tool(({ query }) => `Result for ${query}`, {
+        name: "custom_tool",
+        description: "A custom tool",
+        schema: z.object({ query: z.string() }),
+      });
+      const searchTool: Gemini.Tool = { googleSearch: {} };
+      const llm: Runnable = newChatGoogle().bindTools([customTool, searchTool]);
+
+      const result = await llm.invoke(
+        "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
+      );
+      expect(
+        result.tool_calls?.some(
+          (c: { name: string }) => c.name === "custom_tool"
+        )
+      ).toBe(true);
     });
 
     test(`function - stream tools`, async () => {
@@ -1171,6 +1311,30 @@ describe.each(coreModelInfo)(
       expect(
         recorder.request?.body?.generationConfig?.responseMimeType
       ).toEqual("application/json");
+    });
+
+    test("function calling with a z.record() schema", async () => {
+      const recordTool = tool(({ input }) => `${input + 2}`, {
+        name: "magic_function",
+        description: "Applies a magic function to an input.",
+        schema: z.object({
+          input: z
+            .number()
+            .describe("Input number to apply the magic function to."),
+          metadata: z
+            .record(z.string(), z.string())
+            .optional()
+            .describe(
+              "A complex field that can hold various string key-value pairs."
+            ),
+        }),
+      });
+
+      const llm: Runnable = newChatGoogle().bindTools([recordTool]);
+      const result = await llm.invoke("Call magic_function with input 5.");
+
+      expect(result.tool_calls?.length).toBeGreaterThan(0);
+      expect(result.tool_calls?.[0].name).toBe("magic_function");
     });
 
     test("service tier - flex", async () => {
@@ -1669,6 +1833,15 @@ describe.each(thinkingModelInfo)(
       warnSpy.mockRestore();
     });
 
+    test.each([{ maxReasoningTokens: 0 }, { reasoningEffort: "minimal" }])(
+      "minimal thinking %o",
+      async (fields) => {
+        const llm = newChatGoogle(fields as DefaultGoogleParams);
+        const result = await llm.invoke("What is 1 + 1?");
+        expect(result.text.length).toBeGreaterThan(0);
+      }
+    );
+
     test("thought signature - text", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "low",
@@ -1707,6 +1880,37 @@ describe.each(thinkingModelInfo)(
         (b: ContentBlock.Standard) => "thoughtSignature" in b
       );
       expect(hasThoughtSignature).toBe(true);
+    });
+
+    test("thoughtSignature survives a real multi-turn round trip via streamEvents (regression for #11181)", async () => {
+      const llm = newChatGoogle({ reasoningEffort: "high" });
+      const firstResult = await llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      );
+      expect(firstResult.tool_calls).toBeDefined();
+      expect(firstResult.tool_calls!.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      expect(toolCall.id).toBeDefined();
+
+      const toolCallBlock = firstResult.contentBlocks.find(
+        (block) => block.type === "tool_call"
+      ) as { thoughtSignature?: string } | undefined;
+      const expectedSignature = toolCallBlock?.thoughtSignature;
+      expect(expectedSignature).toBeDefined();
+
+      const contents = convertMessagesToGeminiContents([
+        new HumanMessage("What is the weather in New York?"),
+        firstResult,
+        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+      ]);
+      const modelTurn = contents.find((c) => c.role === "model");
+      const sentFunctionCallPart = modelTurn?.parts?.find(
+        (p): p is Gemini.Part.FunctionCall => "functionCall" in p
+      );
+
+      expect(sentFunctionCallPart).toBeDefined();
+      expect(sentFunctionCallPart?.thoughtSignature).toBe(expectedSignature);
     });
 
     test("thinking - invoke", async () => {
@@ -2001,7 +2205,7 @@ const ttsModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true,
 ]);
 
-describe.sequential.each(ttsModelInfo)(
+describe.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -2173,7 +2377,7 @@ const audioModelInfo: ModelInfo[] = filterTestableModels([
 console.log(audioModelInfo);
 
 // Audio tests fail on Vertex
-describe.sequential.each(audioModelInfo)(
+describe.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -2481,6 +2685,63 @@ describe
       expect(contents[3]).toEqual({
         role: "user",
         parts: [{ text: "continue" }],
+      });
+    });
+  }
+);
+
+describe.skipIf(!getEnvironmentVariable("TEST_API_KEY"))(
+  "Google token usage & cost accounting root-cause checks (live API)",
+  () => {
+    test("llmOutput.tokenUsage vs usage_metadata across call styles (#11424)", async () => {
+      async function run(streamingCtor: boolean, useStreamMethod: boolean) {
+        let callbackResult: LLMResult | undefined;
+        const llm = new ChatGoogle({
+          model: "gemini-3.8-flash",
+          apiKey: getEnvironmentVariable("TEST_API_KEY"),
+          streaming: streamingCtor,
+          callbacks: [
+            {
+              async handleLLMEnd(output: LLMResult) {
+                callbackResult = output;
+              },
+            },
+          ],
+        });
+
+        const prompt =
+          "Write a 300 word essay about why the sky is blue, covering Rayleigh scattering, wavelength, and atmospheric composition.";
+        let res: AIMessageChunk | AIMessage | null = null;
+        if (useStreamMethod) {
+          for await (const chunk of await llm.stream(prompt)) {
+            res = res ? (res as AIMessageChunk).concat(chunk) : chunk;
+          }
+        } else {
+          res = await llm.invoke(prompt);
+        }
+        return { res, callbackResult };
+      }
+
+      const nonStreaming = await run(false, false);
+      const invokeStreaming = await run(true, false);
+      const dotStream = await run(false, true);
+
+      expect(nonStreaming.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: nonStreaming.res?.usage_metadata?.input_tokens,
+        completionTokens: nonStreaming.res?.usage_metadata?.output_tokens,
+        totalTokens: nonStreaming.res?.usage_metadata?.total_tokens,
+      });
+
+      expect(invokeStreaming.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: invokeStreaming.res?.usage_metadata?.input_tokens,
+        completionTokens: invokeStreaming.res?.usage_metadata?.output_tokens,
+        totalTokens: invokeStreaming.res?.usage_metadata?.total_tokens,
+      });
+
+      expect(dotStream.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: dotStream.res?.usage_metadata?.input_tokens,
+        completionTokens: dotStream.res?.usage_metadata?.output_tokens,
+        totalTokens: dotStream.res?.usage_metadata?.total_tokens,
       });
     });
   }

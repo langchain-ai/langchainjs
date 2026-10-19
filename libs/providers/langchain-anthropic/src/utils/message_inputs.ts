@@ -15,16 +15,10 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
-  AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
   AnthropicTextBlockParam,
-  AnthropicToolResultBlockParam,
-  AnthropicToolUseBlockParam,
-  AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
-  AnthropicServerToolUseBlockParam,
-  AnthropicWebSearchToolResultBlockParam,
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
   AnthropicContainerUploadBlockParam,
@@ -454,6 +448,88 @@ function _formatContent(message: BaseMessage, toolCalls?: ToolCall[]) {
   }
 }
 
+type AnthropicToolChangeBlockParam =
+  | Anthropic.Beta.BetaRequestToolAdditionBlock
+  | Anthropic.Beta.BetaRequestToolRemovalBlock;
+
+type AnthropicSystemContentBlockParam =
+  | Anthropic.Messages.ContentBlockParam
+  | AnthropicToolChangeBlockParam;
+
+const TOOL_CHANGE_BLOCK_TYPES = ["tool_addition", "tool_removal"];
+
+/**
+ * Returns the provider payload a block carries: the `value` of a
+ * `non_standard` wrapper, or the block itself.
+ */
+function _unwrapNonStandard(
+  block: MessageContentComplex
+): MessageContentComplex {
+  if (
+    block.type === "non_standard" &&
+    "value" in block &&
+    typeof block.value === "object" &&
+    block.value !== null
+  ) {
+    return block.value as MessageContentComplex;
+  }
+  return block;
+}
+
+/**
+ * Normalizes the content of a system message for the wire.
+ *
+ * Shared by the hoisted top-level `system` field and by in-place
+ * `role: "system"` entries, so both strip the same framework-internal fields.
+ *
+ * Blocks wrapped in core's `non_standard` escape hatch are unwrapped first, so
+ * a provider-native block behaves the same whichever way it was written.
+ */
+function _formatSystemContent(
+  content: BaseMessage["content"]
+): string | AnthropicSystemContentBlockParam[] {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (!Array.isArray(content)) {
+    // rare case: message.content could be undefined
+    return [];
+  }
+  return content.flatMap((rawBlock): AnthropicSystemContentBlockParam[] => {
+    if (typeof rawBlock !== "object" || rawBlock === null) {
+      return [{ type: "text" as const, text: String(rawBlock) }];
+    }
+    const block = _unwrapNonStandard(rawBlock);
+    if (TOOL_CHANGE_BLOCK_TYPES.includes(block.type as string)) {
+      return [block as AnthropicToolChangeBlockParam];
+    }
+    if (block.type === "text" && typeof block.text === "string") {
+      return [
+        {
+          type: "text" as const,
+          text: block.text,
+          ...("cache_control" in block && block.cache_control
+            ? {
+                cache_control:
+                  block.cache_control as AnthropicTextBlockParam["cache_control"],
+              }
+            : {}),
+          ...("citations" in block && block.citations
+            ? {
+                citations:
+                  block.citations as AnthropicTextBlockParam["citations"],
+              }
+            : {}),
+        },
+      ];
+    }
+    // Anthropic accepts a closed set of system content blocks, and rejects
+    // the whole request for anything else.
+    // Consider warning about the dropped block once we have a proper logging solution
+    return [];
+  });
+}
+
 /**
  * Formats messages as a prompt for the model.
  * Used in LangSmith, export is important here.
@@ -464,12 +540,38 @@ export function _convertMessagesToAnthropicPayload(
   messages: BaseMessage[]
 ): AnthropicMessageCreateParams {
   const mergedMessages = _ensureMessageContents(messages);
-  let system;
-  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
-    system = messages[0].content;
+
+  // The contiguous run of system messages starting at index 0 is hoisted into
+  // the top-level `system` field. Every other system message keeps its
+  // position and is sent as a `role: "system"` entry, which the provider
+  // applies from that point in the conversation onwards. The run is identified
+  // after tool-message folding, because that is the sequence the provider sees.
+  let leadingSystemCount = 0;
+  while (
+    leadingSystemCount < mergedMessages.length &&
+    mergedMessages[leadingSystemCount]._getType() === "system"
+  ) {
+    leadingSystemCount += 1;
   }
-  const conversationMessages =
-    system !== undefined ? mergedMessages.slice(1) : mergedMessages;
+
+  let system: string | AnthropicSystemContentBlockParam[] | undefined;
+  if (leadingSystemCount === 1) {
+    system = _formatSystemContent(mergedMessages[0].content);
+  } else if (leadingSystemCount > 1) {
+    system = mergedMessages.slice(0, leadingSystemCount).flatMap((message) => {
+      const content = _formatSystemContent(message.content);
+      return typeof content === "string"
+        ? [{ type: "text" as const, text: content }]
+        : content;
+    });
+  }
+  // The provider rejects empty system content, so system content that narrowed
+  // to nothing is omitted rather than sent.
+  if (Array.isArray(system) && system.length === 0) {
+    system = undefined;
+  }
+
+  const conversationMessages = mergedMessages.slice(leadingSystemCount);
   const formattedMessages = conversationMessages.map((message) => {
     let role;
     if (message._getType() === "human") {
@@ -479,9 +581,7 @@ export function _convertMessagesToAnthropicPayload(
     } else if (message._getType() === "tool") {
       role = "user" as const;
     } else if (message._getType() === "system") {
-      throw new Error(
-        "System messages are only permitted as the first passed message."
-      );
+      role = "system" as const;
     } else {
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
@@ -536,6 +636,11 @@ export function _convertMessagesToAnthropicPayload(
           ],
         };
       }
+    } else if (role === "system") {
+      const content = _formatSystemContent(message.content);
+      return Array.isArray(content) && content.length === 0
+        ? undefined
+        : { role, content };
     } else {
       return {
         role,
@@ -548,10 +653,42 @@ export function _convertMessagesToAnthropicPayload(
   });
   return {
     messages: mergeMessages(
-      formattedMessages as AnthropicMessageCreateParams["messages"]
+      formattedMessages.filter(
+        (message) => message !== undefined
+      ) as AnthropicMessageCreateParams["messages"]
     ),
     system,
   } as AnthropicMessageCreateParams;
+}
+
+/**
+ * Describes the tool changes in the system content of a converted payload:
+ * `"inline"` if any `tool_addition` block defines a tool by value,
+ * `"reference"` if tool changes only name tools declared elsewhere, or
+ * `undefined` if there are none. The provider requires a different beta for
+ * each.
+ *
+ * Reads the converted payload rather than the input messages, so a block that
+ * was dropped during conversion never enables a beta.
+ */
+export function _getToolChangeKind(
+  payload: AnthropicMessageCreateParams
+): "inline" | "reference" | undefined {
+  const systemContents: unknown[] = [
+    payload.system,
+    ...payload.messages
+      .filter((message) => message.role === "system")
+      .map((message) => message.content),
+  ];
+  const toolChanges = systemContents.flatMap((content) =>
+    Array.isArray(content)
+      ? content.filter((block) => TOOL_CHANGE_BLOCK_TYPES.includes(block.type))
+      : []
+  );
+  if (toolChanges.some((block) => block.tool?.type === "tool_definition")) {
+    return "inline";
+  }
+  return toolChanges.length > 0 ? "reference" : undefined;
 }
 
 function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
@@ -563,32 +700,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
   let currentMessage = messages[0];
 
   const normalizeContent = (
-    content:
-      | string
-      | Array<
-          | AnthropicTextBlockParam
-          | AnthropicImageBlockParam
-          | AnthropicToolUseBlockParam
-          | AnthropicToolResultBlockParam
-          | AnthropicDocumentBlockParam
-          | AnthropicThinkingBlockParam
-          | AnthropicRedactedThinkingBlockParam
-          | AnthropicServerToolUseBlockParam
-          | AnthropicWebSearchToolResultBlockParam
-          | AnthropicSearchResultBlockParam
-        >
-  ): Array<
-    | AnthropicTextBlockParam
-    | AnthropicImageBlockParam
-    | AnthropicToolUseBlockParam
-    | AnthropicToolResultBlockParam
-    | AnthropicDocumentBlockParam
-    | AnthropicThinkingBlockParam
-    | AnthropicRedactedThinkingBlockParam
-    | AnthropicServerToolUseBlockParam
-    | AnthropicWebSearchToolResultBlockParam
-    | AnthropicSearchResultBlockParam
-  > => {
+    content: string | Array<Anthropic.Messages.ContentBlockParam>
+  ): Array<Anthropic.Messages.ContentBlockParam> => {
     if (typeof content === "string") {
       return [
         {

@@ -1,5 +1,11 @@
 # @langchain/google-genai
 
+## 2.3.2
+
+### Patch Changes
+
+- [#9687](https://github.com/langchain-ai/langchainjs/pull/9687) [`18b71af`](https://github.com/langchain-ai/langchainjs/commit/18b71af7f841f3a932050265cf5622721e7571c2) Thanks [@nathannewyen](https://github.com/nathannewyen)! - feat(google-genai): add `outputDimensionality` parameter to `GoogleGenerativeAIEmbeddings`
+
 ## 2.3.1
 
 ## 2.3.0

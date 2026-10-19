@@ -3,16 +3,18 @@ import { ChatGoogleParams } from "./index.js";
 import {
   applyGeminiGatewayParams,
   BaseChatGoogle,
-  getGoogleChatModelParams,
   getPlatformType,
 } from "./base.js";
+import {
+  convertParamsToPlatformType,
+  getGoogleChatModelParams,
+} from "../converters/shared/params.js";
 import { GENERATIVE_AI_AUTH_SCOPES, VERTEX_AI_AUTH_SCOPES } from "../const.js";
 import {
   ensureAuthScopes,
   NodeApiClient,
   NodeApiClientParams,
 } from "../clients/node.js";
-import { convertParamsToPlatformType } from "../converters/params.js";
 
 interface ChatGoogleNodeParams extends NodeApiClientParams, ChatGoogleParams {}
 
@@ -24,18 +26,17 @@ class ChatGoogleNode extends BaseChatGoogle {
     paramsArg?: Omit<ChatGoogleNodeParams, "model">
   ) {
     let params = getGoogleChatModelParams(modelOrParams, paramsArg);
-    if (!params.googleAuthOptions) {
-      // Route through the LangSmith gateway (Gemini Developer API path) when
-      // configured, before falling back to the provider API-key env var so the
-      // gateway key can take precedence. Skipped when Vertex OAuth
-      // (`googleAuthOptions`) is used, which the gateway does not proxy.
-      params = applyGeminiGatewayParams(params);
-      params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
-    }
+    params = applyGeminiGatewayParams(params);
+    params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     const requiredScopes: string[] = getRequiredAuthScopes(params);
-    if (params.googleAuthOptions) {
+    const usesImplicitGoogleAuth =
+      !params.apiClient &&
+      !params.apiKey &&
+      !params.credentials &&
+      !getEnvironmentVariable("GOOGLE_CLOUD_CREDENTIALS");
+    if (params.googleAuthOptions || usesImplicitGoogleAuth) {
       params.googleAuthOptions = ensureAuthScopes(
-        params.googleAuthOptions,
+        params.googleAuthOptions ?? {},
         requiredScopes
       );
     }

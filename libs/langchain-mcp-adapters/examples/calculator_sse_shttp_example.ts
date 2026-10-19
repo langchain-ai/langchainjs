@@ -28,14 +28,14 @@ import dotenv from "dotenv";
 import { main as calculatorServerMain } from "./calculator_server_shttp_sse.js";
 
 // MCP client imports
-import { MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapter } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
 
 const transportType = process.env.MCP_TRANSPORT_TYPE === "sse" ? "sse" : "http";
 
-export async function runExample(client?: MultiServerMCPClient) {
+export async function runExample(client?: MCPAdapter) {
   try {
     console.log("Initializing MCP client...");
 
@@ -51,21 +51,22 @@ export async function runExample(client?: MultiServerMCPClient) {
     // oxlint-disable-next-line no-param-reassign
     client =
       client ??
-      new MultiServerMCPClient({
-        mcpServers: {
+      new MCPAdapter({
+        servers: {
           calculator: {
+            mode: "legacy",
+            transport: transportType,
             url: `http://localhost:3000/${
               transportType === "sse" ? "sse" : "mcp"
             }`,
           },
         },
-        useStandardContentBlocks: true,
       });
 
     console.log("Connected to server");
 
     // Get all tools (flattened array is the default now)
-    const mcpTools = await client.getTools();
+    const mcpTools = await client.listTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");

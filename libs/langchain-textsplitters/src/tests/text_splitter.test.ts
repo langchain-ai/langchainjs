@@ -337,6 +337,28 @@ Bye!\n\n-H.`;
     ];
     expect(docs).toEqual(expectedDocs);
   });
+
+  test("Line numbers with a custom lengthFunction", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 3,
+      chunkOverlap: 0,
+      lengthFunction: (text: string) => text.split(/\s+/).length,
+    });
+
+    const docs = await splitter.createDocuments(["aaaa\nbbbb\n\ncccc"]);
+
+    const expectedDocs = [
+      new Document({
+        pageContent: "aaaa\nbbbb",
+        metadata: { loc: { lines: { from: 1, to: 2 } } },
+      }),
+      new Document({
+        pageContent: "cccc",
+        metadata: { loc: { lines: { from: 4, to: 4 } } },
+      }),
+    ];
+    expect(docs).toEqual(expectedDocs);
+  });
 });
 
 test("Separator length is considered correctly for chunk size", async () => {

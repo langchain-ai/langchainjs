@@ -1,7 +1,9 @@
 import { vi, test, expect, describe } from "vitest";
 import {
   AIMessage,
+  type BaseMessage,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   AIMessageChunk,
 } from "@langchain/core/messages";
@@ -10,7 +12,11 @@ import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
 import { ContentBlockParam as AnthropicContentBlockParam } from "@anthropic-ai/sdk/resources";
-import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
+import {
+  ChatAnthropic,
+  type ChatAnthropicInput,
+  ChatAnthropicMessages,
+} from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 
@@ -1323,6 +1329,200 @@ describe("Tool search beta auto-append", () => {
       paramsWithoutToolSearch.betas === undefined ||
         !paramsWithoutToolSearch.betas.includes("advanced-tool-use-2025-11-20")
     ).toBe(true);
+  });
+});
+
+describe("Mid-conversation tool change beta auto-append", () => {
+  const BETA = "mid-conversation-tool-changes-2026-07-01";
+  const toolRemoval = {
+    type: "tool_removal",
+    tool: { type: "tool_reference", name: "get_weather" },
+  };
+  const responseMessage = {
+    id: "msg_test",
+    type: "message",
+    role: "assistant",
+    model: "claude-haiku-4-5-20251001",
+    content: [{ type: "text", text: "OK" }],
+    stop_reason: "end_turn",
+    stop_sequence: null,
+    usage: { input_tokens: 1, output_tokens: 1 },
+  };
+
+  function makeMockFetch() {
+    return vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(init?.body as string);
+      if (!body.stream) {
+        return new Response(JSON.stringify(responseMessage), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const events = [
+        {
+          type: "message_start",
+          message: { ...responseMessage, content: [], stop_reason: null },
+        },
+        { type: "message_stop" },
+      ];
+      return new Response(
+        events
+          .map((e) => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`)
+          .join(""),
+        { status: 200, headers: { "content-type": "text/event-stream" } }
+      );
+    });
+  }
+
+  function makeMockedModel(fields?: Partial<ChatAnthropicInput>) {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      apiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      ...fields,
+    });
+    return { model, mockFetch };
+  }
+
+  function sentBetas(mockFetch: ReturnType<typeof makeMockFetch>) {
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [, init] = mockFetch.mock.calls[0];
+    const header = new Headers(init?.headers).get("anthropic-beta");
+    return header ? header.split(",").map((beta) => beta.trim()) : [];
+  }
+
+  const entryPoints = {
+    invoke: async (model: ChatAnthropic, messages: BaseMessage[]) => {
+      await model.invoke(messages);
+    },
+    stream: async (model: ChatAnthropic, messages: BaseMessage[]) => {
+      for await (const _chunk of await model.stream(messages)) {
+        // drain
+      }
+    },
+    streamEvents: async (model: ChatAnthropic, messages: BaseMessage[]) => {
+      for await (const _event of model.streamEvents(messages)) {
+        // drain
+      }
+    },
+  };
+
+  describe.each(Object.entries(entryPoints))("via %s", (_name, send) => {
+    test("adds the beta when a system turn carries a tool-change block", async () => {
+      const { model, mockFetch } = makeMockedModel();
+
+      await send(model, [
+        new HumanMessage("Review foo()"),
+        new SystemMessage({
+          content: [{ type: "non_standard", value: toolRemoval }],
+        }),
+      ]);
+
+      expect(sentBetas(mockFetch)).toEqual([BETA]);
+    });
+  });
+
+  test("adds the beta once when the caller already requested it", async () => {
+    const { model, mockFetch } = makeMockedModel({ betas: [BETA] });
+
+    await model.invoke([
+      new HumanMessage("Review foo()"),
+      new SystemMessage({ content: [toolRemoval] }),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([BETA]);
+  });
+
+  test("adds the beta for a tool-change block forwarded to the top-level system field", async () => {
+    // Anthropic, not the converter, rejects this placement, and it needs the
+    // beta to recognise the block when it does.
+    const { model, mockFetch } = makeMockedModel();
+
+    await model.invoke([
+      new SystemMessage({ content: [toolRemoval] }),
+      new HumanMessage("Review foo()"),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([BETA]);
+  });
+
+  test("omits the beta when no tool-change block is present", async () => {
+    const { model, mockFetch } = makeMockedModel();
+
+    await model.invoke([
+      new SystemMessage("You are a code reviewer."),
+      new HumanMessage("Review foo()"),
+      new SystemMessage("Be concise."),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([]);
+  });
+
+  test("omits the beta when the tool-change block was dropped", async () => {
+    // Only system content carries tool changes; on a human message the block
+    // is dropped like any other unrecognized block, so it enables nothing.
+    const { model, mockFetch } = makeMockedModel();
+
+    await model.invoke([
+      new HumanMessage({
+        content: [{ type: "text", text: "Review foo()" }, toolRemoval],
+      }),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([]);
+  });
+
+  describe("inline tool definitions", () => {
+    const INLINE_TOOLS_BETA = "inline-tools-2026-09-15";
+    const inlineDefinition = {
+      type: "tool_addition",
+      tool: {
+        type: "tool_definition",
+        definition: {
+          name: "db_query",
+          description:
+            "Run a read-only SQL query against the analytics database.",
+          input_schema: {
+            type: "object",
+            properties: { sql: { type: "string" } },
+            required: ["sql"],
+          },
+        },
+      },
+    };
+
+    test("sends the inline tools beta in place of the tool changes beta", async () => {
+      // The inline tools beta also covers changes by reference, so the tool
+      // changes beta is not sent alongside it.
+      const { model, mockFetch } = makeMockedModel();
+
+      await model.invoke([
+        new HumanMessage("Review foo()"),
+        new SystemMessage({ content: [toolRemoval] }),
+        new AIMessage("Done."),
+        new HumanMessage("How many orders shipped yesterday?"),
+        new SystemMessage({
+          content: [{ type: "non_standard", value: inlineDefinition }],
+        }),
+      ]);
+
+      expect(sentBetas(mockFetch)).toEqual([INLINE_TOOLS_BETA]);
+    });
+
+    test("adds no tool changes beta when the caller already sent the inline tools beta", async () => {
+      const { model, mockFetch } = makeMockedModel({
+        betas: [INLINE_TOOLS_BETA],
+      });
+
+      await model.invoke([
+        new HumanMessage("Review foo()"),
+        new SystemMessage({ content: [toolRemoval] }),
+      ]);
+
+      expect(sentBetas(mockFetch)).toEqual([INLINE_TOOLS_BETA]);
+    });
   });
 });
 

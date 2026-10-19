@@ -4,7 +4,7 @@ import type { Gemini } from "../../chat_models/types.js";
 import {
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
-} from "../messages.js";
+} from "../generate_content/messages.js";
 
 describe("convertGeminiPartsToToolCalls", () => {
   test("uses native functionCall.id when present", () => {
@@ -553,6 +553,77 @@ describe("convertMessagesToGeminiContents", () => {
     ) as Gemini.Part.FunctionCall;
     expect(functionCallPart).toBeDefined();
     expect("thoughtSignature" in functionCallPart).toBe(false);
+  });
+
+  test("resolves thoughtSignature from the matching tool_call content block, without it living on tool_calls (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
+      tool_calls: [
+        { name: "get_weather", args: { city: "London" }, id: "call-1" },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
+  });
+
+  test("prefers the content block's thoughtSignature over a direct tool_calls property (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-on-tool-call",
+        } as {
+          name: string;
+          args: object;
+          id: string;
+          type: "tool_call";
+          thoughtSignature: string;
+        },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
   });
 
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
@@ -1115,8 +1186,9 @@ describe("convertMessagesToGeminiContents", () => {
       }),
       new ToolMessage({
         content: [
-          { type: "text", text: "Here is the screenshot." },
-          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+          {
+            inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" },
+          } as unknown as { type: string },
         ],
         tool_call_id: "call-native-inline",
       }),
@@ -1384,11 +1456,10 @@ describe("executableCode and codeExecutionResult round-trip", () => {
       tool_calls: [],
     });
 
-    const result = convertMessagesToGeminiContents(
-      "gemini-2.0-flash",
-      [new HumanMessage("Calculate 1+1"), message],
-      false
-    );
+    const result = convertMessagesToGeminiContents([
+      new HumanMessage("Calculate 1+1"),
+      message,
+    ]);
 
     const modelContent = result.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();

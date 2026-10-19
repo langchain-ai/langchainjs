@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.2.10",
+  "version": "1.2.18",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -27,7 +27,7 @@
     "@cfworker/json-schema": "^4.0.2",
     "@standard-schema/spec": "^1.1.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": ">=0.5.0 <1.0.0",
+    "langsmith": ">=0.11.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "zod": "^3.25.76 || ^4"
@@ -35,13 +35,13 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "ml-matrix": "^6.15.0",
     "rimraf": "^6.1.3",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8",
+    "vitest": "^5.0.2",
     "web-streams-polyfill": "^4.3.0"
   },
   "publishConfig": {
