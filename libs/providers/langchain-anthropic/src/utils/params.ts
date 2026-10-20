@@ -21,6 +21,7 @@ const ADAPTIVE_ONLY_MODEL_PREFIXES = [
   "claude-opus-4-8",
   "claude-opus-5",
   "claude-sonnet-5",
+  "claude-haiku-5-5",
   "claude-fable-5",
   "claude-mythos-5",
   "claude-mythos-preview",
@@ -76,6 +77,7 @@ export function validateInvocationParamCompatibility(
   } = fields;
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
   const fableModel = modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
+  const haiku55Model = modelStartsWithAnyPrefix(model, ["claude-haiku-5-5"]);
   const modelName = model ?? "this model";
 
   if (fableModel && thinkingExplicitlySet && thinking.type === "disabled") {
@@ -99,7 +101,8 @@ export function validateInvocationParamCompatibility(
     );
   }
   if (
-    modelStartsWithAnyPrefix(model, ["claude-opus-5"]) &&
+    modelStartsWithAnyPrefix(model, ["claude-opus-5", "claude-haiku-5-5"]) &&
+    (!haiku55Model || thinkingExplicitlySet) &&
     thinking.type === "disabled" &&
     (outputConfig?.effort === "xhigh" || outputConfig?.effort === "max")
   ) {
@@ -113,7 +116,7 @@ export function validateInvocationParamCompatibility(
         `topK is not supported for ${modelName}; omit topK/topP/temperature or use model prompting instead`
       );
     }
-    if (topP !== undefined && topP !== 1) {
+    if (topP !== undefined && topP !== (haiku55Model ? 0.99 : 1)) {
       throw new Error(
         `topP is not supported for ${modelName} when set to non-default values`
       );
@@ -125,7 +128,11 @@ export function validateInvocationParamCompatibility(
     }
   }
 
-  if (!fableModel && isThinkingEnabled(thinking)) {
+  if (haiku55Model && temperature !== undefined && topP !== undefined) {
+    throw new Error(`Set at most one of temperature and topP for ${modelName}`);
+  }
+
+  if (!fableModel && !haiku55Model && isThinkingEnabled(thinking)) {
     if (topK !== undefined) {
       throw new Error("topK is not supported when thinking is enabled");
     }

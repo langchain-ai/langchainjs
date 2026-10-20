@@ -354,6 +354,9 @@ export function convertToV1FromAnthropicMessage(
           id: block.id,
           name: block.name,
           args: block.input,
+          ...(_isString(block.toolset_name)
+            ? { toolset_name: block.toolset_name }
+            : {}),
         };
         continue;
       }

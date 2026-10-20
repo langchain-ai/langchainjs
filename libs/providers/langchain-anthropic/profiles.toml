@@ -11,3 +11,6 @@ structuredOutput = false
 
 [overrides."claude-fable-5-1"]
 structuredOutput = true
+
+[overrides."claude-haiku-5-5"]
+structuredOutput = true
