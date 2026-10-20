@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, type MockInstance } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "@langchain/openai";
 
@@ -73,14 +78,14 @@ describe("todoListMiddleware", () => {
       "Gamma: 900, Alpha: 400, Beta: 200 people per square kilometer.";
     vi.mocked(model.invoke)
       .mockResolvedValueOnce(
-        new AIMessage({
+        new AIMessageChunk({
           content: "",
           tool_calls: [
             { name: "write_todos", args: { todos }, id: "complete" },
           ],
         })
       )
-      .mockResolvedValueOnce(new AIMessage(answer));
+      .mockResolvedValueOnce(new AIMessageChunk(answer));
     const agent = createAgent({ model, middleware: [middleware] });
 
     const result = await agent.invoke({
