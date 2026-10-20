@@ -84,6 +84,7 @@ class ReplayBuffer {
  * - `text-delta` → append text
  * - `reasoning-delta` → append reasoning text
  * - `data-delta` → append encoded data to `data`
+ * - `tool-call-delta` → append tool-call args
  * - `block-delta` → shallow merge fields
  *
  * @internal
@@ -120,10 +121,23 @@ function applyDelta(
         ...block,
         data: (block.data ?? "") + delta.data,
       };
+    case "tool-call-delta":
+      if (
+        block.type === "tool_call_chunk" ||
+        block.type === "server_tool_call_chunk"
+      ) {
+        return {
+          ...block,
+          args: (block.args ?? "") + delta.args,
+        };
+      }
+      return block;
     case "block-delta":
       return { ...block, ...delta.fields } as ContentBlock;
     default:
-      throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
+      // The agent protocol adds delta variants over time, so skip ones this
+      // version doesn't know. `content-block-finish` carries the full block.
+      return block;
   }
 }
 
