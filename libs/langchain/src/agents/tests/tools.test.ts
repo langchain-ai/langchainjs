@@ -37,7 +37,7 @@ describe("tools", () => {
       };
       const seen: string[] = [];
       const inspectState = tool(
-        (_input, runtime: ToolRuntime) => {
+        (_input, runtime: ToolRuntime<Record<string, unknown>>) => {
           checkState(runtime.state);
           expect(runtime.state).toHaveProperty("payload", "x".repeat(1024));
           interrupt("approve");
@@ -98,8 +98,7 @@ describe("tools", () => {
               })),
             },
           },
-          tuple.metadata!,
-          {}
+          tuple.metadata!
         );
       }
       const paused = await agent.invoke(null, config);
