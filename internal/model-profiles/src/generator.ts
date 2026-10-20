@@ -1,15 +1,16 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as ts from "typescript";
-import { format, type FormatConfig } from "oxfmt";
+import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import type { Model, ProviderMap } from "./api-schema.js";
-import { type ModelProfileOverride, applyOverrides } from "./config.js";
-import { findMonorepoRoot, validatePathInMonorepo } from "./config.js";
+import {
+  type ModelProfileOverride,
+  applyOverrides,
+  findMonorepoRoot,
+  validatePathInMonorepo,
+} from "./config.js";
 
-/**
- * Converts a Model from the API schema to a ModelProfile.
- */
 function modelToProfile(model: Model): ModelProfile {
   return {
     maxInputTokens: model.limit?.context,
@@ -27,47 +28,16 @@ function modelToProfile(model: Model): ModelProfile {
   };
 }
 
-/**
- * Converts a JavaScript value to a TypeScript expression node.
- */
-function valueToExpression(value: unknown): ts.Expression {
-  if (value === undefined || value === null) {
-    return ts.factory.createIdentifier("undefined");
-  }
-  if (typeof value === "boolean") {
-    return value ? ts.factory.createTrue() : ts.factory.createFalse();
-  }
-  if (typeof value === "number") {
-    return ts.factory.createNumericLiteral(value);
-  }
-  if (typeof value === "string") {
-    return ts.factory.createStringLiteral(value);
-  }
-  if (Array.isArray(value)) {
-    return ts.factory.createArrayLiteralExpression(
-      value.map((item) => valueToExpression(item)),
-      false
-    );
-  }
-  // Fallback to JSON for complex types
-  return ts.factory.createStringLiteral(JSON.stringify(value));
-}
-
-/**
- * Converts a camelCase field name to a CONSTANT_CASE identifier.
- */
 function toConstantName(key: string): string {
-  return key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
+  const name = key
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .toUpperCase()
+    .replace(/[^A-Z0-9_]/g, "_");
+  return /^\d/.test(name) ? `_${name}` : name;
 }
 
-/**
- * Array-valued fields (e.g. `fileMimeTypes`) are often identical across many
- * models. Rather than duplicating the literal in every model's object,
- * assign each distinct repeated array a shared top-level constant and
- * reference it by name wherever it appears.
- */
 function hoistSharedArrayConstants(models: Record<string, ModelProfile>): {
-  declarations: ts.Statement[];
+  declarations: string[];
   identifierFor: Map<string, string>;
 } {
   const groups = new Map<
@@ -84,272 +54,135 @@ function hoistSharedArrayConstants(models: Record<string, ModelProfile>): {
     }
   }
 
-  const usedNames = new Map<string, number>();
+  const usedNames = new Set<string>();
   const identifierFor = new Map<string, string>();
-  const declarations: ts.Statement[] = [];
+  const declarations: string[] = [];
   for (const [groupKey, group] of groups) {
-    if (group.count < 2) continue; // not worth hoisting a one-off value
+    if (group.count < 2) continue;
     const baseName = toConstantName(group.key);
-    const suffix = usedNames.get(baseName) ?? 0;
-    usedNames.set(baseName, suffix + 1);
-    const identifier = suffix === 0 ? baseName : `${baseName}_${suffix + 1}`;
+    let identifier = baseName;
+    let suffix = 2;
+    while (usedNames.has(identifier)) {
+      identifier = `${baseName}_${suffix++}`;
+    }
+    usedNames.add(identifier);
     identifierFor.set(groupKey, identifier);
-    declarations.push(
-      ts.factory.createVariableStatement(
-        undefined,
-        ts.factory.createVariableDeclarationList(
-          [
-            ts.factory.createVariableDeclaration(
-              ts.factory.createIdentifier(identifier),
-              undefined,
-              undefined,
-              valueToExpression(group.value)
-            ),
-          ],
-          ts.NodeFlags.Const
-        )
-      )
-    );
+    declarations.push(`const ${identifier} = ${JSON.stringify(group.value)};`);
   }
   return { declarations, identifierFor };
 }
 
-/**
- * Generates TypeScript code for model profiles using the TypeScript AST API.
- */
-function generateTypeScript(models: Record<string, ModelProfile>): string {
-  const { declarations: sharedConstantDeclarations, identifierFor } =
-    hoistSharedArrayConstants(models);
-
-  // Create property assignments for each profile
-  const modelProfiles = Object.entries(models).map(([modelName, profile]) => {
-    // Create property assignments for the profile
-    const profileProperties = Object.entries(profile)
-      .filter(([, value]) => value !== undefined)
-      .map(([key, value]) => {
-        const groupKey = Array.isArray(value)
-          ? `${key}\u0000${JSON.stringify(value)}`
-          : undefined;
-        const sharedIdentifier = groupKey
-          ? identifierFor.get(groupKey)
-          : undefined;
-        return ts.factory.createPropertyAssignment(
-          ts.factory.createIdentifier(key),
-          sharedIdentifier
-            ? ts.factory.createIdentifier(sharedIdentifier)
-            : valueToExpression(value)
-        );
-      });
-
-    return ts.factory.createPropertyAssignment(
-      ts.factory.createStringLiteral(modelName),
-      ts.factory.createObjectLiteralExpression(profileProperties, true)
-    );
-  });
-
-  // Create the profiles object literal - use multiline for proper formatting
-  const profilesObject = ts.factory.createObjectLiteralExpression(
-    modelProfiles,
-    true // Use multiline to get newlines between entries
-  );
-
-  // Create the type annotation: Record<string, ModelProfile>
-  const recordType = ts.factory.createTypeReferenceNode(
-    ts.factory.createIdentifier("Record"),
-    [
-      ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-      ts.factory.createTypeReferenceNode(
-        ts.factory.createIdentifier("ModelProfile"),
-        undefined
-      ),
-    ]
-  );
-
-  // Create: const profiles: Record<string, ModelProfile> = { ... }
-  const profilesVariable = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier("PROFILES"),
-          undefined,
-          recordType,
-          profilesObject
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
-
-  // Create import: import type { ModelProfile } from "@langchain/core/language_models/profile";
-  const importSpecifier = ts.factory.createImportSpecifier(
-    false, // Specifier itself is not type-only (clause handles it)
-    undefined,
-    ts.factory.createIdentifier("ModelProfile")
-  );
-  const importDeclaration = ts.factory.createImportDeclaration(
-    undefined,
-    ts.factory.createImportClause(
-      true, // Mark the entire import clause as type-only
-      undefined,
-      ts.factory.createNamedImports([importSpecifier])
-    ),
-    ts.factory.createStringLiteral("@langchain/core/language_models/profile")
-  );
-
-  // Create export: export default models;
-  const exportDefault = ts.factory.createExportAssignment(
-    undefined,
-    false,
-    ts.factory.createIdentifier("PROFILES")
-  );
-
-  // Create the source file with empty statements for spacing
-  const sourceFile = ts.factory.createSourceFile(
-    [
-      importDeclaration,
-      ...sharedConstantDeclarations,
-      profilesVariable,
-      exportDefault,
-    ],
-    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None
-  );
-
-  // Add JSDoc comment to the source file
-  ts.addSyntheticLeadingComment(
-    importDeclaration,
-    ts.SyntaxKind.MultiLineCommentTrivia,
-    "*\n * This file was automatically generated by an automated script. Do not edit manually.\n ",
-    true
-  );
-
-  // Print the source file to string
-  const printer = ts.createPrinter({
-    removeComments: false,
-  });
-  return printer.printFile(sourceFile);
+function propertyName(key: string, allowIdentifier = false): string {
+  const quoted = JSON.stringify(key);
+  if (key === "__proto__") return `[${quoted}]`;
+  return allowIdentifier && /^[a-zA-Z_$][\w$]*$/.test(key) ? key : quoted;
 }
 
-/**
- * Fetches provider data from the models.dev API.
- */
+function generateTypeScript(models: Record<string, ModelProfile>): string {
+  const { declarations, identifierFor } = hoistSharedArrayConstants(models);
+  const modelProfiles = Object.entries(models)
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([modelName, profile]) => {
+      const properties = Object.entries(profile)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => {
+          const groupKey = Array.isArray(value)
+            ? `${key}\u0000${JSON.stringify(value)}`
+            : undefined;
+          const expression =
+            (groupKey ? identifierFor.get(groupKey) : undefined) ??
+            JSON.stringify(value);
+          return `${propertyName(key, true)}: ${expression}`;
+        });
+      return `${propertyName(modelName)}: {\n${properties.join(",\n")}\n}`;
+    });
+  return [
+    "/**\n * This file was automatically generated by an automated script. Do not edit manually.\n */",
+    'import type { ModelProfile } from "@langchain/core/language_models/profile";',
+    ...declarations,
+    `const PROFILES: Record<string, ModelProfile> = {\n${modelProfiles.join(",\n")}\n};`,
+    "export default PROFILES;\n",
+  ].join("\n");
+}
+
 async function fetchProviderData(): Promise<ProviderMap> {
   const response = await fetch("https://models.dev/api.json", {
     signal: AbortSignal.timeout(30000),
   });
-
   if (!response.ok) {
     throw new Error(`Failed to fetch models.dev API: ${response.statusText}`);
   }
-
   return (await response.json()) as ProviderMap;
 }
 
-/**
- * Generates model profiles for a provider with overrides applied.
- */
 export async function generateModelProfiles(
   providerId: string,
   providerOverrides: ModelProfileOverride,
   modelOverrides: Record<string, ModelProfileOverride>,
   outputPath: string
 ): Promise<void> {
-  console.log(`Fetching provider data from models.dev API...`);
+  console.log("Fetching provider data from models.dev API...");
   const data = await fetchProviderData();
-
   const provider = data[providerId];
   if (!provider) {
     throw new Error(`Provider "${providerId}" not found in models.dev API`);
   }
-
+  if (
+    !provider.models ||
+    typeof provider.models !== "object" ||
+    Array.isArray(provider.models) ||
+    !Object.keys(provider.models).length
+  ) {
+    throw new Error(`Provider "${providerId}" has no valid model data`);
+  }
   console.log(
-    `Found provider "${providerId}" with ${
-      Object.keys(provider.models).length
-    } models`
+    `Found provider "${providerId}" with ${Object.keys(provider.models).length} models`
   );
 
-  const profiles: Record<string, ModelProfile> = {};
-
-  for (const [modelName, modelData] of Object.entries(provider.models)) {
-    const baseProfile = modelToProfile(modelData);
-    const modelSpecificOverrides = modelOverrides[modelName];
-
-    const finalProfile = applyOverrides(
-      baseProfile,
+  const profiles: Record<string, ModelProfile> = Object.create(null);
+  const modelNames = [
+    ...new Set([
+      ...Object.keys(provider.models),
+      ...Object.keys(modelOverrides),
+    ]),
+  ].sort();
+  for (const modelName of modelNames) {
+    const model = Object.hasOwn(provider.models, modelName)
+      ? provider.models[modelName]
+      : undefined;
+    profiles[modelName] = applyOverrides(
+      model ? modelToProfile(model) : {},
       providerOverrides,
-      modelSpecificOverrides
+      Object.hasOwn(modelOverrides, modelName)
+        ? modelOverrides[modelName]
+        : undefined
     );
-
-    profiles[modelName] = finalProfile;
   }
 
-  const typescriptCode = generateTypeScript(profiles);
-
-  // Validate that the output path is within the monorepo (defensive check)
-  // outputPath should already be validated by parseConfig, but we validate again for safety
   const resolvedOutputPath = validatePathInMonorepo(outputPath);
-
-  // Ensure the directory exists
-  const outputDir = path.dirname(resolvedOutputPath);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  // Format with Oxfmt using project's configuration
-  let formattedCode: string;
-  try {
-    const oxfmtConfig = await loadOxfmtConfig();
-    const result = await format(
-      resolvedOutputPath,
-      typescriptCode,
-      oxfmtConfig
-    );
-    if (result.errors.length > 0) {
-      throw new Error(result.errors[0]?.message ?? "Unknown oxfmt error");
+  const oxfmtBin = path.join(
+    path.dirname(createRequire(import.meta.url).resolve("oxfmt/package.json")),
+    "bin/oxfmt"
+  );
+  const result = spawnSync(
+    process.execPath,
+    [oxfmtBin, "--stdin-filepath", resolvedOutputPath],
+    {
+      cwd: findMonorepoRoot(),
+      input: generateTypeScript(profiles),
+      encoding: "utf8",
+      maxBuffer: 32 * 1024 * 1024,
+      timeout: 30000,
     }
-    formattedCode = result.code;
-  } catch (error) {
-    console.warn(
-      "⚠️ Failed to format code with oxfmt, using unformatted code:",
-      error instanceof Error ? error.message : String(error)
+  );
+  if (result.error || result.status !== 0 || !result.stdout) {
+    throw new Error(
+      `Failed to format model profiles with oxfmt: ${
+        result.error?.message || result.stderr || `exit status ${result.status}`
+      }`
     );
-    formattedCode = typescriptCode;
   }
-
-  fs.writeFileSync(resolvedOutputPath, formattedCode, "utf-8");
+  fs.mkdirSync(path.dirname(resolvedOutputPath), { recursive: true });
+  fs.writeFileSync(resolvedOutputPath, result.stdout, "utf8");
   console.log(`✅ Generated model profiles file: ${resolvedOutputPath}`);
-}
-
-const OXFMT_CONFIG_FILES = [".oxfmtrc.jsonc", ".oxfmtrc.json"];
-let cachedOxfmtConfig: FormatConfig | undefined;
-
-async function loadOxfmtConfig(): Promise<FormatConfig | undefined> {
-  if (cachedOxfmtConfig) return cachedOxfmtConfig;
-
-  const monorepoRoot = findMonorepoRoot();
-  for (const filename of OXFMT_CONFIG_FILES) {
-    const configPath = path.join(monorepoRoot, filename);
-    try {
-      const raw = await fs.promises.readFile(configPath, "utf-8");
-      const { config, error } = ts.parseConfigFileTextToJson(configPath, raw);
-      if (error) {
-        throw new Error(
-          ts.flattenDiagnosticMessageText(error.messageText, "\n")
-        );
-      }
-      const parsed = config as Record<string, unknown>;
-      if ("$schema" in parsed) {
-        delete parsed.$schema;
-      }
-      cachedOxfmtConfig = parsed as FormatConfig;
-      return cachedOxfmtConfig;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
-    }
-  }
-
-  return undefined;
 }
