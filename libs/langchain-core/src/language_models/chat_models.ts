@@ -62,6 +62,7 @@ import {
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
+import { collapseToolCallChunks } from "../messages/utils.js";
 import {
   isSerializableSchema,
   type SerializableSchema,
@@ -217,6 +218,32 @@ export type BindToolsInput =
  * Base class for chat models. It extends the BaseLanguageModel class and
  * provides methods for generating chat based on input messages.
  */
+/**
+ * A stream that ends partway through a tool call's arguments (output limit,
+ * dropped connection) leaves partial JSON in `tool_call_chunks`. While the
+ * stream is in flight, repairing that JSON is what makes the chunks useful;
+ * once it has ended, a repaired call looks complete and would run with half
+ * of its input. Re-derive the calls with a strict parse, the same rule the
+ * non-streaming path applies, so truncated arguments land in
+ * `invalid_tool_calls` with the raw string preserved.
+ */
+function finalizeStreamedToolCalls(message: BaseMessage): void {
+  if (
+    !AIMessageChunk.isInstance(message) ||
+    !message.tool_call_chunks?.length
+  ) {
+    return;
+  }
+  const { tool_calls, invalid_tool_calls } = collapseToolCallChunks(
+    message.tool_call_chunks,
+    { final: true }
+  );
+  message.tool_calls = tool_calls;
+  message.invalid_tool_calls = invalid_tool_calls;
+  message.lc_kwargs.tool_calls = tool_calls;
+  message.lc_kwargs.invalid_tool_calls = invalid_tool_calls;
+}
+
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   // TODO: Fix the parameter order on the next minor version.
@@ -829,6 +856,7 @@ export abstract class BaseChatModel<
             aggregated.message
           ) as AIMessageChunk;
         }
+        finalizeStreamedToolCalls(aggregated.message);
         generations.push([aggregated]);
         // Built from the fully-accumulated chunk, same as _streamIterator above.
         let llmOutput: LLMResult["llmOutput"];
@@ -877,6 +905,9 @@ export abstract class BaseChatModel<
           if (pResult.status === "fulfilled") {
             const result = pResult.value;
             for (const generation of result.generations) {
+              // Providers that stream inside _generate return the
+              // concatenated chunk; the stream has ended at this point.
+              finalizeStreamedToolCalls(generation.message);
               if (generation.message.id == null) {
                 const runId = runManagers?.at(0)?.runId;
                 if (runId != null) generation.message._updateId(`run-${runId}`);
