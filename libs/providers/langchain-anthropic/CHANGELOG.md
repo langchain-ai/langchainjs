@@ -1,5 +1,13 @@
 # @langchain/anthropic
 
+## 1.5.13
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): declare mid-conversation support in model profiles. Claude Opus 4.8, Opus 5, Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5 and 5.1, and Mythos 5 and 5.1 set `midConversationSystemMessages` and `midConversationTools`. Sonnet 5 sets system messages only.
+
+  Regenerating the profiles from models.dev also adds Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5, removes Claude Opus 4.1, and lowers Claude Sonnet 4.5's `maxInputTokens` to 200,000.
+
 ## 1.5.12
 
 ### Patch Changes
