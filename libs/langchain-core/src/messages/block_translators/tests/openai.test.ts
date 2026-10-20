@@ -381,6 +381,15 @@ describe("openaiTranslator", () => {
               },
             },
           ],
+          results: [
+            {
+              type: "image_result",
+              image_url: "https://cdn.example/golden-gate-sunset.jpg",
+              thumbnail_url: "https://cdn.example/golden-gate-sunset-thumb.jpg",
+              source_website_url: "https://example.com/source-page",
+              caption: "Golden Gate Bridge at sunset"
+            }
+          ]
         },
         response_metadata: { model_provider: "openai" },
       });
@@ -403,6 +412,15 @@ describe("openaiTranslator", () => {
               query: "melbourne australia news today",
               sources: [{ type: "url", url: "https://example.com/news" }],
             },
+            results: [
+              {
+                type: "image_result",
+                image_url: "https://cdn.example/golden-gate-sunset.jpg",
+                thumbnail_url: "https://cdn.example/golden-gate-sunset-thumb.jpg",
+                source_website_url: "https://example.com/source-page",
+                caption: "Golden Gate Bridge at sunset"
+              }
+            ]
           },
         },
       ];

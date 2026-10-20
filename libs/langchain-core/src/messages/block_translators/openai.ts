@@ -242,6 +242,9 @@ function* mapToolOutputToV1Blocks(
       if (_isObject(toolOutput.action)) {
         output.action = toolOutput.action;
       }
+      if (_isArray(toolOutput.results)) {
+        output.results = toolOutput.results
+      }
       yield {
         type: "server_tool_call_result",
         toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
