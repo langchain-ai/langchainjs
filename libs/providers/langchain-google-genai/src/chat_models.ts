@@ -880,9 +880,8 @@ export class ChatGoogleGenerativeAI
   }
 
   /**
-   * The Gemini request body has no `model` field (it lives in the URL), so
-   * `invocationParams()` does not carry it. Traces still need it so the run's
-   * `invocation_params` and metadata name the model like other providers do.
+   * Gemini puts the model in the URL, not in the request body, so
+   * `invocationParams()` has no `model`. Add it for traces only.
    */
   protected override _getInvocationParamsForTracing(
     options?: this["ParsedCallOptions"]
