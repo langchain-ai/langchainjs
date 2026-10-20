@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.20
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(core): add `midConversationSystemMessages` and `midConversationTools` to `ModelProfile`. They say whether a chat model sends a system message after the first turn in place, and whether it can add a tool through a message rather than the request's tool list. Either way the prompt prefix before it stays unchanged.
+
 ## 1.2.19
 
 ### Patch Changes

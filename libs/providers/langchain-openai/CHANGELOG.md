@@ -1,5 +1,13 @@
 # @langchain/openai
 
+## 1.6.3
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): declare mid-conversation support in model profiles. GPT-4.1, GPT-5.x, GPT-6.x and o3 set `midConversationSystemMessages` and `midConversationTools`. `midConversationTools` is `false` on Chat Completions, since only the Responses API carries an `additional_tools` input item, so `ChatOpenAI` reports it only when it routes to the Responses API. `AzureChatOpenAI` and `AzureChatOpenAIResponses` leave it unset, since it is unverified on Azure's API.
+
+  Regenerating the profiles from models.dev also adds GPT-6 Sol, GPT-6 Luna and GPT-6.1 Sol.
+
 ## 1.6.2
 
 ### Patch Changes
