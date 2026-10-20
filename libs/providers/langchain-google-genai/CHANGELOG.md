@@ -1,5 +1,11 @@
 # @langchain/google-genai
 
+## 2.3.4
+
+### Patch Changes
+
+- [#11992](https://github.com/langchain-ai/langchainjs/pull/11992) [`77e3fd1`](https://github.com/langchain-ai/langchainjs/commit/77e3fd1ff891a0dec0b62ae4db10a9951be696e9) Thanks [@thibautlehmann](https://github.com/thibautlehmann)! - fix(google-genai): include `model` in traced invocation params so LangSmith runs name the Gemini model like other providers
+
 ## 2.3.3
 
 No changes in this release.
