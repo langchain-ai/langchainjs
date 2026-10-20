@@ -62,6 +62,7 @@ import {
   handleConverseStreamContentBlockDelta,
   handleConverseStreamContentBlockStart,
   handleConverseStreamMetadata,
+  getReasoningTokensFromAdditionalFields,
 } from "./utils/message_outputs.js";
 import { normalizeBedrockError } from "./utils/errors.js";
 import {
@@ -201,6 +202,11 @@ export interface ChatBedrockConverseInput
    */
   additionalModelRequestFields?: __DocumentType;
   /**
+   * JSON pointers to return in `additionalModelResponseFields`; `["/usage"]` adds thinking tokens to `usage_metadata`.
+   * @link https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html#bedrock-runtime_Converse-request-additionalModelResponseFieldPaths
+   */
+  additionalModelResponseFieldPaths?: string[];
+  /**
    * Whether or not to include usage data, like token counts
    * in the streamed response chunks. Passing as a call option will
    * take precedence over the class-level setting.
@@ -267,6 +273,7 @@ export interface ChatBedrockConverseCallOptions
     Pick<
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
+      | "additionalModelResponseFieldPaths"
       | "streamUsage"
       | "streamIdleTimeout"
       | "guardrailConfig"
@@ -788,6 +795,8 @@ export class ChatBedrockConverse
 
   additionalModelRequestFields?: __DocumentType;
 
+  additionalModelResponseFieldPaths?: string[];
+
   streamUsage = true;
 
   streamIdleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT;
@@ -930,6 +939,8 @@ export class ChatBedrockConverse
     this.bedrockBearerToken = bedrockBearerToken;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
+    this.additionalModelResponseFieldPaths =
+      rest?.additionalModelResponseFieldPaths;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.streamIdleTimeout = rest?.streamIdleTimeout ?? this.streamIdleTimeout;
     this.guardrailConfig = rest?.guardrailConfig;
@@ -1020,6 +1031,9 @@ export class ChatBedrockConverse
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
+      additionalModelResponseFieldPaths:
+        options?.additionalModelResponseFieldPaths ??
+        this.additionalModelResponseFieldPaths,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
       performanceConfig: options?.performanceConfig,
       serviceTier: serviceTierType
@@ -1230,6 +1244,7 @@ export class ChatBedrockConverse
           abortController
         );
         if (response.stream) {
+          let reasoningTokens: number | undefined;
           for await (const chunk of withStreamIdleTimeout(
             response.stream,
             streamIdleTimeout,
@@ -1271,8 +1286,14 @@ export class ChatBedrockConverse
             } else if (chunk.metadata) {
               yield handleConverseStreamMetadata(chunk.metadata, {
                 streamUsage,
+                reasoningTokens,
               });
             } else {
+              if (chunk.messageStop) {
+                reasoningTokens = getReasoningTokensFromAdditionalFields(
+                  chunk.messageStop.additionalModelResponseFields
+                );
+              }
               yield new ChatGenerationChunk({
                 text: "",
                 message: new AIMessageChunk({
