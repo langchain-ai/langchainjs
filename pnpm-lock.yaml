@@ -364,7 +364,7 @@ importers:
         version: 3.5.4
       mem0ai:
         specifier: ^3.3.1
-        version: 3.3.1(8a20f1ba93a1242a4a84188049c9b1da)
+        version: 3.3.1(a98c1130c153c1c77c994730ef720823)
       mongodb:
         specifier: ^7.1.1
         version: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.10)
@@ -953,7 +953,7 @@ importers:
         version: 3.5.4
       mem0ai:
         specifier: ^3.3.1
-        version: 3.3.1(0ac7ced90f479bb4743f4bd20bd8698f)
+        version: 3.3.1(e95ae85a9b10b70408b12900933f4886)
       mongodb:
         specifier: ^6.17.0
         version: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.10)
@@ -1096,8 +1096,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(@modelcontextprotocol/server@2.3.0)(hono@4.13.13)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.32.0
-        version: 1.32.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
+        specifier: ^1.32.1
+        version: 1.32.1(@cfworker/json-schema@4.1.1)(zod@4.4.3)
       '@modelcontextprotocol/server':
         specifier: ^2.3.0
         version: 2.3.0
@@ -4048,8 +4048,8 @@ packages:
       hono:
         optional: true
 
-  '@modelcontextprotocol/sdk@1.32.0':
-    resolution: {integrity: sha512-8BviX/hK4Gd2eL1KdTwm0gfl4d3wdoErW0Jd00h6nomUAtk6IJk5vwQJc6kfWtJTzN5OEV/lgIiJKI8fiDGAlA==}
+  '@modelcontextprotocol/sdk@1.32.1':
+    resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -12982,14 +12982,14 @@ snapshots:
       - supports-color
     optional: true
 
-  '@google/genai@1.50.1(@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)':
+  '@google/genai@1.50.1(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)':
     dependencies:
       google-auth-library: 10.9.1
       p-retry: 4.6.2
       protobufjs: 7.6.6
       ws: 8.22.0(bufferutil@4.1.0)
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.32.0(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@modelcontextprotocol/sdk': 1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -13810,7 +13810,7 @@ snapshots:
     optionalDependencies:
       hono: 4.13.13
 
-  '@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
+  '@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 2.1.5(hono@4.13.13)
       ajv: 8.20.0
@@ -13835,7 +13835,7 @@ snapshots:
       - supports-color
     optional: true
 
-  '@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 2.1.5(hono@4.13.13)
       ajv: 8.20.0
@@ -18871,45 +18871,7 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mem0ai@3.3.1(0ac7ced90f479bb4743f4bd20bd8698f):
-    dependencies:
-      '@cloudflare/workers-types': 5.20260928.1
-      axios: 1.20.0(debug@4.4.3)
-      better-sqlite3: 13.0.3
-      compromise: 14.15.0
-      openai: 4.104.0(encoding@0.1.13)(ws@8.22.0(bufferutil@4.1.0))(zod@3.25.76)
-      uuid: 11.1.1
-      zod: 3.25.76
-    optionalDependencies:
-      '@azure/identity': 4.13.3
-      '@azure/search-documents': 12.2.0
-      '@elastic/elasticsearch': 8.19.2
-      '@google/genai': 1.50.1(@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)
-      '@huggingface/transformers': 3.0.2(@types/node@26.6.3)
-      '@langchain/core': link:libs/langchain-core
-      '@opensearch-project/opensearch': 3.9.0
-      '@pinecone-database/pinecone': 8.2.0
-      '@qdrant/js-client-rest': 1.19.0(typescript@7.0.2)
-      '@supabase/supabase-js': 2.117.2(@opentelemetry/api@1.9.1)
-      '@types/pg': 8.23.1
-      '@upstash/vector': 1.2.3
-      '@zilliz/milvus2-sdk-node': 3.0.6(bufferutil@4.1.0)
-      chromadb: 3.5.0
-      cloudflare: 4.5.0(encoding@0.1.13)
-      cohere-ai: 8.1.0(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.1034.0)(@smithy/protocol-http@5.3.14)(@smithy/signature-v4@5.7.4)
-      mongodb: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.10)
-      mysql2: 3.24.3(@types/node@26.6.3)
-      natural: 8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.10)
-      pg: 8.23.0
-      redis: 6.2.1(@opentelemetry/api@1.9.1)
-      weaviate-client: 3.14.0
-    transitivePeerDependencies:
-      - debug
-      - encoding
-      - supports-color
-      - ws
-
-  mem0ai@3.3.1(8a20f1ba93a1242a4a84188049c9b1da):
+  mem0ai@3.3.1(a98c1130c153c1c77c994730ef720823):
     dependencies:
       '@cloudflare/workers-types': 5.20260928.1
       axios: 1.20.0(debug@4.4.3)
@@ -18922,7 +18884,7 @@ snapshots:
       '@azure/identity': 4.13.3
       '@azure/search-documents': 12.2.0
       '@elastic/elasticsearch': 8.19.2
-      '@google/genai': 1.50.1(@modelcontextprotocol/sdk@1.32.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)
+      '@google/genai': 1.50.1(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)
       '@huggingface/transformers': 3.0.2(@types/node@26.6.3)
       '@langchain/core': link:libs/langchain-core
       '@opensearch-project/opensearch': 3.9.0
@@ -18936,6 +18898,44 @@ snapshots:
       cloudflare: 4.5.0(encoding@0.1.13)
       cohere-ai: 8.1.0(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.1034.0)(@smithy/protocol-http@5.3.14)(@smithy/signature-v4@5.7.4)
       mongodb: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.10)
+      mysql2: 3.24.3(@types/node@26.6.3)
+      natural: 8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.10)
+      pg: 8.23.0
+      redis: 6.2.1(@opentelemetry/api@1.9.1)
+      weaviate-client: 3.14.0
+    transitivePeerDependencies:
+      - debug
+      - encoding
+      - supports-color
+      - ws
+
+  mem0ai@3.3.1(e95ae85a9b10b70408b12900933f4886):
+    dependencies:
+      '@cloudflare/workers-types': 5.20260928.1
+      axios: 1.20.0(debug@4.4.3)
+      better-sqlite3: 13.0.3
+      compromise: 14.15.0
+      openai: 4.104.0(encoding@0.1.13)(ws@8.22.0(bufferutil@4.1.0))(zod@3.25.76)
+      uuid: 11.1.1
+      zod: 3.25.76
+    optionalDependencies:
+      '@azure/identity': 4.13.3
+      '@azure/search-documents': 12.2.0
+      '@elastic/elasticsearch': 8.19.2
+      '@google/genai': 1.50.1(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)
+      '@huggingface/transformers': 3.0.2(@types/node@26.6.3)
+      '@langchain/core': link:libs/langchain-core
+      '@opensearch-project/opensearch': 3.9.0
+      '@pinecone-database/pinecone': 8.2.0
+      '@qdrant/js-client-rest': 1.19.0(typescript@7.0.2)
+      '@supabase/supabase-js': 2.117.2(@opentelemetry/api@1.9.1)
+      '@types/pg': 8.23.1
+      '@upstash/vector': 1.2.3
+      '@zilliz/milvus2-sdk-node': 3.0.6(bufferutil@4.1.0)
+      chromadb: 3.5.0
+      cloudflare: 4.5.0(encoding@0.1.13)
+      cohere-ai: 8.1.0(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.1034.0)(@smithy/protocol-http@5.3.14)(@smithy/signature-v4@5.7.4)
+      mongodb: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.10)
       mysql2: 3.24.3(@types/node@26.6.3)
       natural: 8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.10)
       pg: 8.23.0
