@@ -26,6 +26,7 @@ import type {
   BaseChatGoogleCallOptions,
   GooglePlatformType,
   GenerateContentApiHandlerParams,
+  InteractionsApiHandlerParams,
 } from "./types.js";
 import { ConfigurationError, MalformedOutputError } from "../utils/errors.js";
 import { usageMetadataToTokenUsage } from "../utils/metadata.js";
@@ -40,6 +41,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   GoogleChatApiHandler,
   GenerateContentApiHandler,
+  InteractionsApiHandler,
 } from "./handlers/index.js";
 import { convertParamsToPlatformType } from "../converters/shared/params.js";
 
@@ -253,10 +255,13 @@ export abstract class BaseChatGoogle<
 
   protected _apiHandler?: GoogleChatApiHandler;
 
-  protected _handlerParams?: GenerateContentApiHandlerParams;
+  protected _handlerParams?: GenerateContentApiHandlerParams &
+    InteractionsApiHandlerParams;
 
-  protected syncHandlerParams(): GenerateContentApiHandlerParams {
-    const nextParams: GenerateContentApiHandlerParams = {
+  protected syncHandlerParams(): GenerateContentApiHandlerParams &
+    InteractionsApiHandlerParams {
+    const nextParams: GenerateContentApiHandlerParams &
+      InteractionsApiHandlerParams = {
       ...this.params,
       model: this.model,
       platform: this.platform,
@@ -287,6 +292,8 @@ export abstract class BaseChatGoogle<
         this._apiHandler = handlerConfig(handlerParams);
       } else if (handlerConfig === "generateContent") {
         this._apiHandler = new GenerateContentApiHandler(handlerParams);
+      } else if (handlerConfig === "interactions") {
+        this._apiHandler = new InteractionsApiHandler(handlerParams);
       } else {
         throw new ConfigurationError(`Unknown apiHandler: ${handlerConfig}`);
       }
