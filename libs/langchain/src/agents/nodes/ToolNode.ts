@@ -85,6 +85,8 @@ export interface ToolNodeOptions {
    * The wrapper receives the tool call request and a handler function to execute the tool.
    */
   wrapToolCall?: WrapToolCallHook;
+  /** Graph channels to read for tool-call-only Send inputs. */
+  stateKeys?: string[];
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -392,7 +394,7 @@ export class ToolNode<
              */
             config,
             toolCallId: toolCall.id!,
-            state: config.configurable?.__pregel_scratchpad?.currentTaskInput,
+            state,
             signal: mergeAbortSignals(this.signal, config.signal),
           }
         );
@@ -481,7 +483,24 @@ export class ToolNode<
 
     if (isSendInput(state)) {
       const { lg_tool_call: _, jumpTo: __, ...newState } = state;
-      outputs = [await this.runTool(state.lg_tool_call, config, newState)];
+      let toolState = newState;
+      if (Object.keys(newState).length === 0 && this.options?.stateKeys) {
+        const read = config.configurable?.__pregel_read;
+        if (typeof read !== "function") {
+          throw new Error(
+            "ToolNode requires a graph state reader for compact Send inputs."
+          );
+        }
+        toolState = read(this.options.stateKeys, true);
+        if (!isMessagesState(toolState)) {
+          throw new Error("ToolNode could not read messages from graph state.");
+        }
+        const scratchpad = config.configurable?.__pregel_scratchpad;
+        if (scratchpad) {
+          scratchpad.currentTaskInput = { ...toolState, ...state };
+        }
+      }
+      outputs = [await this.runTool(state.lg_tool_call, config, toolState)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {
