@@ -1,5 +1,20 @@
 # @langchain/core
 
+## 1.2.20
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(core): add `midConversationSystemMessages` and `midConversationTools` to `ModelProfile`. They say whether a chat model sends a system message after the first turn in place, and whether it can add a tool through a message rather than the request's tool list. Either way the prompt prefix before it stays unchanged.
+
+## 1.2.19
+
+### Patch Changes
+
+- [#11982](https://github.com/langchain-ai/langchainjs/pull/11982) [`5af4684`](https://github.com/langchain-ai/langchainjs/commit/5af4684bd19a16bb59950801da92245733482fb3) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(core): read `tool-call-delta` in `ChatModelStream`
+
+  - `ChatModelStream` appends `tool-call-delta` slices to a tool call's args, and still replaces them on `block-delta`
+  - It ignores delta types it doesn't recognize instead of throwing `Unknown delta type`
+
 ## 1.2.18
 
 ### Patch Changes

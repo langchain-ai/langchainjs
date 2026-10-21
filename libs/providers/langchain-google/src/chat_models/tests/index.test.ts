@@ -1833,3 +1833,62 @@ describe("withStructuredOutput type narrowing", () => {
     assertType<true>(_check);
   });
 });
+
+test.each([true, false])(
+  "usage-only streaming respects streamUsage=%s",
+  async (streamUsage) => {
+    const llm = new ChatGoogle({
+      model: "gemini-4-argon",
+      streamUsage,
+      apiClient: new MockStreamingApiClient([
+        {
+          candidates: [
+            { content: { parts: [{ text: "Hello" }], role: "model" } },
+          ],
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 1,
+            totalTokenCount: 6,
+          },
+        },
+        {},
+        {
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 3,
+            totalTokenCount: 8,
+          },
+        },
+        {
+          candidates: [],
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 4,
+            totalTokenCount: 9,
+          },
+        },
+      ]),
+    });
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await llm.stream("Hello")) chunks.push(chunk);
+    expect(chunks).toHaveLength(streamUsage ? 3 : 1);
+    expect(chunks[0].content).toBe("Hello");
+    if (streamUsage) {
+      expect(chunks[1].usage_metadata).toMatchObject({
+        input_tokens: 0,
+        output_tokens: 2,
+        total_tokens: 2,
+      });
+      expect(chunks[2].usage_metadata).toMatchObject({
+        input_tokens: 0,
+        output_tokens: 1,
+        total_tokens: 1,
+      });
+      expect(chunks.reduce((a, b) => a.concat(b)).usage_metadata).toMatchObject(
+        { input_tokens: 5, output_tokens: 4, total_tokens: 9 }
+      );
+    } else {
+      expect(chunks[0].usage_metadata).toBeUndefined();
+    }
+  }
+);
