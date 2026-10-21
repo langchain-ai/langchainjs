@@ -214,6 +214,15 @@ export interface GenerateContentSpecificFields {
    * Other values are treated as the standard service tier.
    */
   serviceTier?: GenContentNamespace.ServiceTier;
+
+  /**
+   * Long Decode: resumes generation from a previous Generate Content response
+   * that returned `response_metadata.continuationToken`. Accepted only as a
+   * call option. Send the same messages and settings as the original request;
+   * do not append the partial output. Continuation is never performed
+   * automatically.
+   */
+  continuationToken?: string;
 }
 
 export interface GenerateContentFields
@@ -224,8 +233,9 @@ export interface ChatGoogleFields
 
 export type GooglePlatformType = "gai" | "gcp";
 
+// continuationToken is single-use per request, so it is a call option only.
 export interface BaseChatGoogleParams
-  extends BaseChatModelParams, ChatGoogleFields {
+  extends BaseChatModelParams, Omit<ChatGoogleFields, "continuationToken"> {
   model: string;
   apiClient?: ApiClient;
   endpoint?: string;
@@ -238,11 +248,12 @@ export interface BaseChatGoogleParams
   apiHandler?: GoogleChatApiHandlerConfig;
   /**
    * Maximum time, in milliseconds, for each model call, including retries
-   * and reading a streamed response. Defaults to 20 minutes, the longest a
-   * single Long Decode request can run on the server. Set to `0` to disable.
-   * A per-call `timeout` or `signal` can shorten this but not extend it.
-   * Node.js's built-in `fetch` separately fails after 5 minutes without
-   * headers or streamed data; see the package README for raising it.
+   * and reading a streamed response. When unset, Long Decode requests
+   * (`maxOutputTokens` above 64,000) get 20 minutes, the longest the server
+   * runs one, and other requests keep `fetch`'s default behavior. Set to `0`
+   * to disable. A per-call `timeout` or `signal` can shorten this but not
+   * extend it. Node.js's built-in `fetch` separately fails after 5 minutes
+   * without headers or streamed data; see the package README.
    */
   timeout?: number;
 }
@@ -250,14 +261,6 @@ export interface BaseChatGoogleParams
 export interface BaseChatGoogleCallOptions
   extends BaseChatModelCallOptions, ChatGoogleFields {
   streamUsage?: boolean;
-
-  /**
-   * Long Decode: resumes generation from a previous Generate Content response
-   * that returned `response_metadata.continuationToken`. Send the same
-   * messages and settings as the original request; do not append the partial
-   * output. Continuation is never performed automatically.
-   */
-  continuationToken?: string;
 }
 
 export interface GoogleChatApiHandlerParams
@@ -278,7 +281,9 @@ export interface GoogleChatApiHandlerParams
 }
 
 export interface GenerateContentApiHandlerParams
-  extends GoogleChatApiHandlerParams, GenerateContentSpecificFields {}
+  extends
+    GoogleChatApiHandlerParams,
+    Omit<GenerateContentSpecificFields, "continuationToken"> {}
 
 export type GoogleChatApiHandlerFactory = (
   params: GoogleChatApiHandlerParams
@@ -427,22 +432,6 @@ declare module "./api_types/generate_content.js" {
     export interface Candidate {
       /** @deprecated Use urlContextMetadata instead. */
       readonly urlRetrievalMetadata?: UrlRetrievalMetadata;
-
-      /**
-       * Long Decode: opaque token returned when `finishReason` is
-       * `CONTINUATION` (and sometimes `MAX_TOKENS`). Newer than the
-       * vendored OpenAPI spec.
-       */
-      readonly continuationToken?: string;
-    }
-
-    export interface GenerateContentRequest {
-      /**
-       * Long Decode: token from a previous response's candidate. `contents`
-       * must identically replicate the original request. Newer than the
-       * vendored OpenAPI spec.
-       */
-      continuationToken?: string;
     }
   }
 }

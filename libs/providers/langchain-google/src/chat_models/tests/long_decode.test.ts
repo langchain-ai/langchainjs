@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, expectTypeOf, test, vi } from "vitest";
 import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { InMemoryCache } from "@langchain/core/caches";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
@@ -6,8 +6,19 @@ import { ApiClient } from "../../clients/index.js";
 import { RequestError } from "../../utils/errors.js";
 import { withTimeoutSignal } from "../../utils/misc.js";
 import { convertGoogleGeminiStream } from "../../converters/generate_content/stream_events.js";
-import { ChatGoogle, type ChatGoogleParams } from "../index.js";
-import type { Gemini } from "../types.js";
+import {
+  ChatGoogle,
+  type ChatGoogleCallOptions,
+  type ChatGoogleParams,
+} from "../index.js";
+import type {
+  BaseChatGoogleCallOptions,
+  BaseChatGoogleFields,
+  BaseChatGoogleParams,
+  Gemini,
+  GenerateContentApiHandlerParams,
+  GenerateContentSpecificFields,
+} from "../types.js";
 
 type GenerateContentResponse = Gemini.GenContent.GenerateContentResponse;
 
@@ -297,6 +308,38 @@ describe("Long Decode: non-streaming", () => {
 });
 
 describe("Long Decode: request configuration", () => {
+  test("continuationToken is a Generate Content field and call option", () => {
+    expectTypeOf<GenerateContentSpecificFields>().toHaveProperty(
+      "continuationToken"
+    );
+    expectTypeOf<BaseChatGoogleFields>().not.toHaveProperty(
+      "continuationToken"
+    );
+    expectTypeOf<
+      BaseChatGoogleCallOptions["continuationToken"]
+    >().toEqualTypeOf<string | undefined>();
+    expectTypeOf<ChatGoogleCallOptions["continuationToken"]>().toEqualTypeOf<
+      string | undefined
+    >();
+  });
+
+  test("continuationToken is not a constructor option", () => {
+    expectTypeOf<BaseChatGoogleParams>().not.toHaveProperty(
+      "continuationToken"
+    );
+    expectTypeOf<ChatGoogleParams>().not.toHaveProperty("continuationToken");
+    expectTypeOf<GenerateContentApiHandlerParams>().not.toHaveProperty(
+      "continuationToken"
+    );
+
+    new ChatGoogle({
+      model: "gemini-4-argon",
+      apiClient: new HangingApiClient(),
+      // @ts-expect-error continuationToken is accepted only per call
+      continuationToken: "tok",
+    });
+  });
+
   test("forwards maxOutputTokens above the per-hop limit without clamping", async () => {
     const { model, client } = argon([hop("A", "STOP"), hop("B", "STOP")]);
     await model.invoke(prompt);
@@ -466,20 +509,134 @@ describe("Long Decode: stream events", () => {
 });
 
 describe("Long Decode: timeouts", () => {
-  test("defaults to 20 minutes per call", () => {
-    const model = new ChatGoogle({
-      model: "gemini-4-argon",
-      apiClient: new HangingApiClient(),
-    });
-    expect(model.timeout).toBe(20 * 60 * 1000);
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  test("accepts a custom timeout and rejects invalid values", () => {
+  /** Timeouts the handler applied to requests, in milliseconds. */
+  function spyOnTimeouts() {
+    return vi.spyOn(AbortSignal, "timeout");
+  }
+
+  test("ordinary requests keep fetch's default behavior", async () => {
+    const timeouts = spyOnTimeouts();
+    const { model } = argon([hop("Hi", "STOP"), [hop("Hi", "STOP")]], {
+      model: "gemini-2.5-flash",
+      maxOutputTokens: 64_000,
+      thinkingLevel: undefined,
+    });
+
+    await model.invoke(prompt);
+    for await (const _ of await model.stream(prompt)) {
+      // drain
+    }
+    expect(timeouts).not.toHaveBeenCalled();
+  });
+
+  test("Long Decode requests default to 20 minutes", async () => {
+    const timeouts = spyOnTimeouts();
+    const { model } = argon([hop("A", "STOP"), [hop("B", "STOP")]]);
+
+    await model.invoke(prompt);
+    for await (const _ of await model.stream(prompt)) {
+      // drain
+    }
+    expect(timeouts.mock.calls).toEqual([[20 * 60 * 1000], [20 * 60 * 1000]]);
+  });
+
+  test("an explicit timeout overrides the Long Decode default", async () => {
+    const timeouts = spyOnTimeouts();
+    await argon([hop("A", "STOP")], { timeout: 5_000 }).model.invoke(prompt);
+    expect(timeouts.mock.calls).toEqual([[5_000]]);
+
+    timeouts.mockClear();
+    await argon([hop("A", "STOP")], { timeout: 0 }).model.invoke(prompt);
+    expect(timeouts).not.toHaveBeenCalled();
+  });
+
+  test("an explicit timeout applies to ordinary requests", async () => {
+    const timeouts = spyOnTimeouts();
+    const { model } = argon([hop("Hi", "STOP")], {
+      model: "gemini-2.5-flash",
+      maxOutputTokens: undefined,
+      thinkingLevel: undefined,
+      timeout: 5_000,
+    });
+
+    await model.invoke(prompt);
+    expect(timeouts.mock.calls).toEqual([[5_000]]);
+  });
+
+  test("a per-call maxOutputTokens above 64,000 gets the Long Decode default on every request path", async () => {
+    const timeouts = spyOnTimeouts();
+    const { model } = argon(
+      [hop("A", "STOP"), [hop("B", "STOP")], [hop("C", "STOP")]],
+      { maxOutputTokens: undefined }
+    );
+    const options = { maxOutputTokens: 262_144 };
+
+    await model.invoke(prompt, options);
+    for await (const _ of await model.stream(prompt, options)) {
+      // drain
+    }
+    for await (const _ of model.streamEvents(prompt, options)) {
+      // drain
+    }
+    expect(timeouts.mock.calls).toEqual([
+      [20 * 60 * 1000],
+      [20 * 60 * 1000],
+      [20 * 60 * 1000],
+    ]);
+  });
+
+  test.each([
+    ["constructor", 64_000, []],
+    ["constructor", 64_001, [[20 * 60 * 1000]]],
+    ["per-call", 64_000, []],
+    ["per-call", 64_001, [[20 * 60 * 1000]]],
+  ])(
+    "%s maxOutputTokens of %i is compared against 64,000",
+    async (where, maxOutputTokens, expected) => {
+      const timeouts = spyOnTimeouts();
+      const { model } = argon([hop("A", "STOP")], {
+        maxOutputTokens: where === "constructor" ? maxOutputTokens : undefined,
+      });
+
+      await model.invoke(
+        prompt,
+        where === "per-call" ? { maxOutputTokens } : undefined
+      );
+      expect(timeouts.mock.calls).toEqual(expected);
+    }
+  );
+
+  test("a per-call maxOutputTokens overrides the constructor's", async () => {
+    const timeouts = spyOnTimeouts();
+    const { model } = argon([hop("A", "STOP")]);
+
+    await model.invoke(prompt, { maxOutputTokens: 1_000 });
+    expect(timeouts).not.toHaveBeenCalled();
+  });
+
+  test("an explicit timeout overrides a per-call Long Decode request", async () => {
+    const timeouts = spyOnTimeouts();
+    const options = { maxOutputTokens: 262_144 };
+    await argon([hop("A", "STOP")], {
+      maxOutputTokens: undefined,
+      timeout: 5_000,
+    }).model.invoke(prompt, options);
+    expect(timeouts.mock.calls).toEqual([[5_000]]);
+
+    timeouts.mockClear();
+    await argon([hop("A", "STOP")], {
+      maxOutputTokens: undefined,
+      timeout: 0,
+    }).model.invoke(prompt, options);
+    expect(timeouts).not.toHaveBeenCalled();
+  });
+
+  test("rejects invalid timeouts", () => {
     const apiClient = new HangingApiClient();
-    expect(
-      new ChatGoogle({ model: "gemini-4-argon", apiClient, timeout: 5_000 })
-        .timeout
-    ).toBe(5_000);
     expect(
       () => new ChatGoogle({ model: "gemini-4-argon", apiClient, timeout: -1 })
     ).toThrow(/timeout/);
@@ -522,10 +679,11 @@ describe("Long Decode: timeouts", () => {
     }).rejects.toMatchObject({ name: "TimeoutError" });
   });
 
-  test("a shorter per-call timeout still applies", async () => {
+  test("a per-call timeout shorter than the Long Decode default still applies", async () => {
     const model = new ChatGoogle({
       model: "gemini-4-argon",
       apiClient: new HangingApiClient(),
+      maxOutputTokens: 262_144,
     });
 
     await expect(model.invoke(prompt, { timeout: 50 })).rejects.toMatchObject({
@@ -533,18 +691,44 @@ describe("Long Decode: timeouts", () => {
     });
   });
 
-  test("caller cancellation still works with a timeout configured", async () => {
+  test.each([
+    ["an explicit timeout", { timeout: 60_000 }, {}],
+    ["the Long Decode default", { maxOutputTokens: 262_144 }, {}],
+    ["a per-call Long Decode request", {}, { maxOutputTokens: 262_144 }],
+    ["no timeout", {}, {}],
+  ])(
+    "caller cancellation still works with %s",
+    async (_, fields, callOptions) => {
+      const model = new ChatGoogle({
+        model: "gemini-4-argon",
+        apiClient: new HangingApiClient(),
+        ...fields,
+      });
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 20);
+
+      await expect(
+        model.invoke(prompt, { ...callOptions, signal: controller.signal })
+      ).rejects.toMatchObject({ name: "AbortError" });
+    }
+  );
+
+  test("caller cancellation stops a per-call Long Decode stream", async () => {
     const model = new ChatGoogle({
       model: "gemini-4-argon",
       apiClient: new HangingApiClient(),
-      timeout: 60_000,
     });
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 20);
 
-    await expect(
-      model.invoke(prompt, { signal: controller.signal })
-    ).rejects.toMatchObject({ name: "AbortError" });
+    await expect(async () => {
+      for await (const _ of await model.stream(prompt, {
+        maxOutputTokens: 262_144,
+        signal: controller.signal,
+      })) {
+        // drain
+      }
+    }).rejects.toMatchObject({ name: "AbortError" });
   });
 
   test("withTimeoutSignal combines or passes through signals", async () => {

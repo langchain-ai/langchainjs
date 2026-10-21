@@ -123,7 +123,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       body,
     });
 
-    const signal = withTimeoutSignal(options?.signal, this.params.timeout);
+    const signal = withTimeoutSignal(options?.signal, this.timeoutFor(options));
     let response: Response;
     try {
       response = await this.params.caller.callWithOptions(
@@ -244,7 +244,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
       body,
     });
 
-    const signal = withTimeoutSignal(options?.signal, this.params.timeout);
+    const signal = withTimeoutSignal(options?.signal, this.timeoutFor(options));
     let response: Response;
     try {
       response = await this.params.caller.callWithOptions(
@@ -457,7 +457,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
-    const signal = withTimeoutSignal(options?.signal, this.params.timeout);
+    const signal = withTimeoutSignal(options?.signal, this.timeoutFor(options));
 
     const response = await this.params.apiClient.fetch(
       new Request(url, {

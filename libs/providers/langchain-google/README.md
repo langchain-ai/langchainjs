@@ -82,11 +82,13 @@ for (;;) {
 
 ### Timeouts
 
-Each call has a `timeout` (milliseconds) covering the request, its retries and
-reading a streamed response. It defaults to 20 minutes, the longest Google lets
-a single Long Decode request run. Set it in the constructor
-(`new ChatGoogle({ ..., timeout: 600_000 })`) or `0` to disable. A per-call
-`timeout` or `signal` can shorten it, but not extend it.
+When `maxOutputTokens` is above 64,000, each call gets a 20-minute `timeout`
+(the longest Google lets a single Long Decode request run) covering the
+request, its retries and reading a streamed response. Other requests keep
+`fetch`'s default behavior. To choose your own limit, set `timeout` in
+milliseconds in the constructor (`new ChatGoogle({ ..., timeout: 600_000 })`),
+or `0` to disable it. A per-call `timeout` or `signal` can shorten it, but not
+extend it.
 
 On Node.js, the built-in `fetch` also gives up if the server sends no response
 headers, or no streamed data, for 5 minutes. Google allows a non-streaming hop

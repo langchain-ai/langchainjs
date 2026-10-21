@@ -153,9 +153,7 @@ export abstract class BaseChatGoogle<
 
   streamUsage: boolean = true;
 
-  // Google closes Long Decode streams after 20 minutes, so this never cuts a
-  // request short that the server would have completed.
-  timeout: number = 20 * 60 * 1000;
+  protected _timeout?: number;
 
   protected _platform?: GooglePlatformType;
 
@@ -201,10 +199,13 @@ export abstract class BaseChatGoogle<
     this.streamUsage = params?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
 
-    this.timeout = params?.timeout ?? this.timeout;
-    if (!Number.isFinite(this.timeout) || this.timeout < 0) {
+    this._timeout = params?.timeout;
+    if (
+      this._timeout !== undefined &&
+      (!Number.isFinite(this._timeout) || this._timeout < 0)
+    ) {
       throw new ConfigurationError(
-        `timeout must be a non-negative number of milliseconds, got ${this.timeout}`
+        `timeout must be a non-negative number of milliseconds, got ${this._timeout}`
       );
     }
   }
@@ -281,7 +282,7 @@ export abstract class BaseChatGoogle<
       streaming: this.streaming,
       streamUsage: this.streamUsage,
       customHeaders: this._customHeaders,
-      timeout: this.timeout,
+      timeout: this._timeout,
       apiClient: this.apiClient,
       caller: this.caller,
     };
