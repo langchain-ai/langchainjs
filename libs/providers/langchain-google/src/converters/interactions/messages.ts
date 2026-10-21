@@ -2,7 +2,6 @@ import {
   AIMessage,
   BaseMessage,
   ContentBlock,
-  HumanMessage,
   SystemMessage,
   ToolMessage,
   UsageMetadata,
@@ -19,24 +18,63 @@ import {
 } from "../generate_content/messages.js";
 
 /**
- * Converts a single LangChain `BaseMessage` into `Gemini.Part[]` using the
- * existing GenerateContent message converters.
+ * Converts a single LangChain `BaseMessage` into `Gemini.Part[]` by delegating
+ * to the existing GenerateContent message converters.
+ *
+ * When `message` is a `ToolMessage`, `convertMessagesToGeminiContents` requires
+ * the preceding `AIMessage` that issued the matching `tool_call_id` to be present
+ * in the input array so it can resolve the function name (and avoid throwing
+ * `ToolCallNotFoundError`). Pass the full `messages` conversation array when
+ * converting a `ToolMessage` so the matching `AIMessage` can be included as
+ * context; if none is found (e.g., a standalone `ToolMessage`), a minimal
+ * synthetic `AIMessage` is provided as a fallback. Only the `Gemini.Part[]`
+ * produced for `message` itself is returned.
+ *
+ * @param message - The individual message to convert into `Gemini.Part[]`.
+ * @param messages - Optional full conversation history used to look up the
+ *   matching `AIMessage` when `message` is a `ToolMessage`.
  */
 function convertSingleMessageToGeminiParts(
-  message: BaseMessage
+  message: BaseMessage,
+  messages?: BaseMessage[]
 ): Gemini.Part[] {
   if (SystemMessage.isInstance(message)) {
     const sys = convertMessagesToGeminiSystemInstruction([message]);
     return sys?.parts ?? [];
   }
   if (ToolMessage.isInstance(message)) {
-    const contents = convertMessagesToGeminiContents([
-      new HumanMessage({
-        content: message.content,
-        response_metadata: message.response_metadata,
-      }),
-    ]);
-    return contents.flatMap((c) => c.parts ?? []);
+    // Look up the AIMessage that originated this tool call so
+    // `convertMessagesToGeminiContents` can resolve the tool name and build
+    // a `functionResponse` part alongside any sibling media (`inlineData`/`fileData`) parts.
+    const aiMsg = messages
+      ?.filter(AIMessage.isInstance)
+      .find((msg) =>
+        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
+      );
+    // If no matching AIMessage is in history, synthesize a minimal one so
+    // `convertMessagesToGeminiContents` does not throw `ToolCallNotFoundError`.
+    const fallbackAiMsg =
+      !aiMsg && message.tool_call_id
+        ? new AIMessage({
+            tool_calls: [
+              {
+                type: "tool_call",
+                id: message.tool_call_id,
+                name: message.name ?? "unknown",
+                args: {},
+              },
+            ],
+          })
+        : undefined;
+    const contextMessages = [
+      ...(aiMsg ? [aiMsg] : fallbackAiMsg ? [fallbackAiMsg] : []),
+      message,
+    ];
+    const contents = convertMessagesToGeminiContents(contextMessages);
+    // `contents` contains `[aiContent, toolContent]`; only return the parts
+    // generated for the `ToolMessage` itself (the last entry).
+    const lastContent = contents[contents.length - 1];
+    return lastContent?.parts ?? [];
   }
   const contents = convertMessagesToGeminiContents([message]);
   return contents.flatMap((c) => c.parts ?? []);
@@ -440,36 +478,98 @@ export function convertMessagesToInteractionsInput(
           result = message.content;
         }
       } else if (Array.isArray(message.content)) {
-        const parts = convertSingleMessageToGeminiParts(message);
-        const contents: Gemini.Interactions.Content[] = [];
-        for (const part of parts) {
-          if (part.functionResponse?.response) {
-            const resp = part.functionResponse.response;
-            if (
-              typeof resp === "object" &&
-              resp !== null &&
-              "result" in resp &&
-              Object.keys(resp).length === 1 &&
-              typeof resp.result === "string"
-            ) {
-              contents.push({ type: "text", text: resp.result });
+        // A ToolMessage's `content` can be an array in two distinct cases:
+        // 1. Multimodal content blocks (e.g. `[{ type: "text", ... }, { type: "image_url", ... }]`),
+        //    where `convertSingleMessageToGeminiParts` produces both a `functionResponse` part
+        //    (containing the non-media items under `response.result`) and sibling media parts
+        //    (`inlineData` / `fileData`).
+        // 2. Arbitrary JSON array data returned by a tool (e.g. `[{ url: "...", error: "..." }]`),
+        //    where `convertSingleMessageToGeminiParts` produces only a `functionResponse` part
+        //    with `response: { result: message.content }` and no media parts.
+        const parts = convertSingleMessageToGeminiParts(message, messages);
+        const hasMediaParts = parts.some((p) => !("functionResponse" in p));
+        if (hasMediaParts) {
+          // Case 1 (multimodal tool output): Interactions `FunctionResultStep.result` must be an
+          // array of Content blocks (`TextContent` / `ImageContent`) so the image/media is sent
+          // as a sibling block rather than lost or base64-stringified inside JSON (#10297).
+          const contents: Gemini.Interactions.Content[] = [];
+          for (const part of parts) {
+            if (part.functionResponse?.response) {
+              // Unwrap text items from `functionResponse.response.result` into `TextContent` blocks
+              const resp = part.functionResponse.response;
+              if (
+                typeof resp === "object" &&
+                resp !== null &&
+                "result" in resp &&
+                Object.keys(resp).length === 1
+              ) {
+                if (typeof resp.result === "string") {
+                  contents.push({ type: "text", text: resp.result });
+                } else if (Array.isArray(resp.result)) {
+                  for (const item of resp.result) {
+                    if (typeof item === "string") {
+                      contents.push({ type: "text", text: item });
+                    } else if (
+                      typeof item === "object" &&
+                      item !== null &&
+                      "text" in item &&
+                      typeof (item as { text?: unknown }).text === "string"
+                    ) {
+                      contents.push({
+                        type: "text",
+                        text: (item as { text: string }).text,
+                      });
+                    } else {
+                      contents.push({
+                        type: "text",
+                        text: JSON.stringify(item),
+                      });
+                    }
+                  }
+                } else {
+                  contents.push({
+                    type: "text",
+                    text: JSON.stringify(resp.result),
+                  });
+                }
+              } else {
+                contents.push({
+                  type: "text",
+                  text: JSON.stringify(resp),
+                });
+              }
             } else {
-              contents.push({
-                type: "text",
-                text: JSON.stringify(resp),
-              });
-            }
-          } else {
-            const converted = convertGeminiPartToInteractionsContent(
-              part,
-              defaultMediaResolution
-            );
-            if (converted) {
-              contents.push(converted);
+              // Convert sibling media parts (`inlineData` / `fileData`) into Interactions Content blocks
+              const converted = convertGeminiPartToInteractionsContent(
+                part,
+                defaultMediaResolution
+              );
+              if (converted) {
+                contents.push(converted);
+              }
             }
           }
+          result = contents.length > 0 ? contents : "";
+        } else {
+          // Case 2 (no media blocks, e.g. a JSON array tool result): preserve the structured
+          // `{ result: ... }` JSON object from `functionResponse.response` directly on
+          // `FunctionResultStep.result` without double-stringifying (#10439).
+          const functionResponsePart = parts.find(
+            (p): p is Gemini.Part.FunctionResponse =>
+              "functionResponse" in p && Boolean(p.functionResponse?.response)
+          );
+          result = (functionResponsePart?.functionResponse?.response as
+            | Record<string, unknown>
+            | undefined) ?? {
+            result: message.content,
+          };
         }
-        result = contents.length > 0 ? contents : "";
+      } else if (
+        typeof message.content === "object" &&
+        message.content !== null
+      ) {
+        // Non-array object content: wrap as `{ result: ... }` to satisfy `Record<string, unknown>`
+        result = { result: message.content };
       } else {
         result = String(message.content ?? "");
       }
