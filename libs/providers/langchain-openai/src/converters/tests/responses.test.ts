@@ -1549,6 +1549,61 @@ describe("convertMessagesToResponsesInput", () => {
         },
       ]);
     });
+
+    it("converts Chat Completions file_data blocks to Responses input_file", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Summarise this PDF" },
+            {
+              type: "file",
+              file: {
+                filename: "report.pdf",
+                file_data: "data:application/pdf;base64,JVBERi0xLjQK",
+              },
+            } as any,
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-5.6",
+        zdrEnabled: false,
+      });
+
+      expect((result[0] as any).content).toEqual([
+        { type: "input_text", text: "Summarise this PDF" },
+        {
+          type: "input_file",
+          filename: "report.pdf",
+          file_data: "data:application/pdf;base64,JVBERi0xLjQK",
+        },
+      ]);
+    });
+
+    it("converts Chat Completions file_id blocks to Responses input_file", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            {
+              type: "file",
+              file: { file_id: "file_123" },
+            } as any,
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-5.6",
+        zdrEnabled: false,
+      });
+
+      expect((result[0] as any).content).toEqual([
+        { type: "input_file", file_id: "file_123" },
+      ]);
+    });
   });
 
   describe("ToolMessage conversion", () => {
