@@ -75,6 +75,22 @@ describe("convertBedrockConverseStream", () => {
     });
   });
 
+  test.each([
+    { stopReason: "end_turn", reason: "stop" },
+    { stopReason: "tool_use", reason: "tool_use" },
+    { stopReason: "max_tokens", reason: "length" },
+    { stopReason: "model_context_window_exceeded", reason: "length" },
+    { stopReason: "guardrail_intervened", reason: "content_filter" },
+  ])(
+    "maps the $stopReason stop reason to the $reason finish reason",
+    async ({ stopReason, reason }) => {
+      const events = await collectEvents([{ messageStop: { stopReason } }]);
+
+      const finish = events.find((e) => e.event === "message-finish");
+      expect(finish).toMatchObject({ reason });
+    }
+  );
+
   test("maps thinking tokens from messageStop into usage", async () => {
     const messageStop = {
       messageStop: {
