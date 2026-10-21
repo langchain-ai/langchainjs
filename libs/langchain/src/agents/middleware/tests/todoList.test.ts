@@ -70,7 +70,7 @@ describe("todoListMiddleware", () => {
     );
   });
 
-  it("should acknowledge completed todos without dumping their contents", async () => {
+  it("should preserve the todo update response and deliver the final answer afterwards", async () => {
     const middleware = todoListMiddleware();
     const model = createMockModel();
     const todos = [{ content: "Analyze the data", status: "completed" }];
@@ -96,7 +96,9 @@ describe("todoListMiddleware", () => {
     const toolMessage = result.messages.find((msg) =>
       ToolMessage.isInstance(msg)
     );
-    expect(toolMessage?.content).toBe("Todo list updated.");
+    expect(toolMessage?.content).toBe(
+      `Updated todo list to ${JSON.stringify(todos)}`
+    );
     expect(toolMessage?.tool_call_id).toBe("complete");
     expect(toolMessage?.name).toBe("write_todos");
     expect(result.messages.at(-1)?.content).toBe(answer);

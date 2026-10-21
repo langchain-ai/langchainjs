@@ -2,4 +2,4 @@
 "langchain": patch
 ---
 
-Guide agents to deliver their substantive final answer after the last `write_todos` result and return a neutral todo-update acknowledgment while preserving todo state.
+Align the default todo-list system prompt and tool description with Python, including guidance to deliver the substantive final answer after the last `write_todos` result.
