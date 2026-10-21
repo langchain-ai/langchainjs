@@ -1,5 +1,13 @@
 # langchain
 
+## 1.5.19
+
+### Patch Changes
+
+- [#11990](https://github.com/langchain-ai/langchainjs/pull/11990) [`0c5e7bc`](https://github.com/langchain-ai/langchainjs/commit/0c5e7bc688f651c6acc78b2d8b6ad48f6b161165) Thanks [@hntrl](https://github.com/hntrl)! - Avoid copying full agent state into every parallel tool task. Restore tool and middleware state from graph channels for compact tasks while continuing to support full-state tasks saved in older checkpoints.
+
+- [#11989](https://github.com/langchain-ai/langchainjs/pull/11989) [`f096a32`](https://github.com/langchain-ai/langchainjs/commit/f096a32187d194b9f334cf7ec62e05c0050a1cfd) Thanks [@hntrl](https://github.com/hntrl)! - Align the default todo-list system prompt and tool description with Python, including guidance to deliver the substantive final answer after the last `write_todos` result.
+
 ## 1.5.18
 
 ### Patch Changes
