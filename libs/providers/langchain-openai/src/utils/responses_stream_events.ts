@@ -36,6 +36,7 @@ export async function* convertOpenAIResponsesStream(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Record<string, any>
   >();
+  const argumentPrefixes = new Map<number, { text: string }>();
   const blockKeyToIndex = new Map<BlockKey, number>();
   let nextBlockIndex = 0;
   let messageStarted = false;
@@ -224,7 +225,16 @@ export async function* convertOpenAIResponsesStream(
         };
       }
       const acc = blockAccumulators.get(index)!;
-      acc.args = (acc.args ?? "") + event.delta;
+      // Share streamed prefixes without retaining every cumulative string.
+      // Keep this separate from acc.args: output_item.done may replace it.
+      let prefix = argumentPrefixes.get(index);
+      if (!prefix) {
+        prefix = { text: acc.args ?? "" };
+        argumentPrefixes.set(index, prefix);
+      }
+      prefix.text += event.delta;
+      acc.args = prefix.text;
+      const prefixLength = prefix.text.length;
       yield {
         event: "content-block-delta" as const,
         index,
@@ -234,7 +244,17 @@ export async function* convertOpenAIResponsesStream(
             type: "tool_call_chunk",
             ...(acc.id != null ? { id: acc.id } : {}),
             ...(acc.name != null ? { name: acc.name } : {}),
-            args: acc.args,
+            get args() {
+              return prefix.text.slice(0, prefixLength);
+            },
+            set args(value: string) {
+              Object.defineProperty(this, "args", {
+                value,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            },
           },
         },
       };
