@@ -97,7 +97,7 @@ export class AzureChatOpenAIResponses<
   override _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): OpenAICoreRequestOptions {
-    return _getAzureClientOptions.call(this, options);
+    return _getAzureClientOptions.call(this, options, "responses");
   }
 
   override toJSON(): Serialized {
