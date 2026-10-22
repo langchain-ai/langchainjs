@@ -874,9 +874,48 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         ];
   }
 
+  /**
+   * Resolves the name sent in the `functionResponse` for a tool result.
+   * Gemini matches a response to its call by this name, so with parallel
+   * tool calls it has to be the name of the call the result answers:
+   * 1. the name set on the ToolMessage itself,
+   * 2. the name of the tool call with the same id in the nearest preceding
+   *    AI message,
+   * 3. otherwise the previous behavior: the first tool call of the previous
+   *    message when that is an AI message, else its name, else the call id.
+   */
+  function toolMessageResponseName(
+    message: ToolMessage,
+    prevMessage: BaseMessage,
+    previousMessages: BaseMessage[]
+  ): string {
+    if (message.name) {
+      return message.name;
+    }
+    for (let i = previousMessages.length - 1; i >= 0; i -= 1) {
+      const candidate = previousMessages[i];
+      if (isAIMessage(candidate)) {
+        const matched = candidate.tool_calls?.find(
+          (toolCall) => toolCall.id === message.tool_call_id
+        );
+        if (matched?.name) {
+          return matched.name;
+        }
+        break;
+      }
+    }
+    // Hacky :(
+    return (
+      (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
+        ? prevMessage.tool_calls[0].name
+        : prevMessage.name) ?? message.tool_call_id
+    );
+  }
+
   function toolMessageToContent(
     message: ToolMessage,
-    prevMessage: BaseMessage
+    prevMessage: BaseMessage,
+    previousMessages: BaseMessage[]
   ): GeminiContent[] {
     const contentStr =
       typeof message.content === "string"
@@ -893,11 +932,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
               ""
             )
           : JSON.stringify(message.content);
-    // Hacky :(
-    const responseName =
-      (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
-        ? prevMessage.tool_calls[0].name
-        : prevMessage.name) ?? message.tool_call_id;
+    const responseName = toolMessageResponseName(
+      message,
+      prevMessage,
+      previousMessages
+    );
     try {
       const content = JSON.parse(contentStr);
       return [
@@ -934,6 +973,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     message: BaseMessage,
     prevMessage: BaseMessage | undefined
   ): Promise<GeminiContent[]> {
+    return baseMessageToContentWithHistory(
+      message,
+      prevMessage,
+      prevMessage ? [prevMessage] : []
+    );
+  }
+
+  async function baseMessageToContentWithHistory(
+    message: BaseMessage,
+    prevMessage: BaseMessage | undefined,
+    previousMessages: BaseMessage[]
+  ): Promise<GeminiContent[]> {
     if (SystemMessage.isInstance(message)) {
       return systemMessageToContent(message);
     } else if (HumanMessage.isInstance(message)) {
@@ -946,7 +997,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           "Tool messages cannot be the first message passed to the model."
         );
       }
-      return toolMessageToContent(message, prevMessage);
+      return toolMessageToContent(message, prevMessage, previousMessages);
     } else {
       console.log(`Unsupported message type: ${message.type}`);
       return [];
@@ -1731,7 +1782,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     _parameters: GoogleAIModelParams
   ): Promise<GeminiContent[]> {
     const inputPromises: Promise<GeminiContent[]>[] = input.map((msg, i) =>
-      baseMessageToContent!(msg, input[i - 1])
+      baseMessageToContentWithHistory(msg, input[i - 1], input.slice(0, i))
     );
     const inputs = await Promise.all(inputPromises);
 
