@@ -81,3 +81,61 @@ describe("ChatOpenRouter.streamEvents", () => {
     });
   });
 });
+
+describe.each(["stream", "streamEvents"] as const)(
+  "%s provider errors",
+  (method) => {
+    test.each([false, true])(
+      "throws an SSE error after partial output=%s",
+      async (partial) => {
+        const model = new ChatOpenRouter({
+          apiKey: "fake-key",
+          model: "test",
+          maxRetries: 0,
+        });
+        const events: unknown[] = partial
+          ? [
+              {
+                id: "test",
+                choices: [
+                  { index: 0, delta: { role: "assistant", content: "Hello" } },
+                ],
+              },
+            ]
+          : [];
+        events.push({
+          id: "test",
+          error: {
+            code: "server_error",
+            message: "Provider disconnected",
+            metadata: { provider_name: "test-provider" },
+          },
+          choices: [
+            { index: 0, delta: { content: "" }, finish_reason: "error" },
+          ],
+        });
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(
+          new Response(
+            `${events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("")}data: [DONE]\n\n`,
+            { headers: { "Content-Type": "text/event-stream" } }
+          )
+        );
+        async function consume() {
+          const stream =
+            method === "stream"
+              ? await model.stream("Hello")
+              : model.streamEvents("Hello");
+          for await (const _chunk of stream) {
+            /* consume the complete stream */
+          }
+        }
+        await expect(consume()).rejects.toMatchObject({
+          name: "OpenRouterError",
+          message: "Provider disconnected",
+          code: "server_error",
+          metadata: { provider_name: "test-provider" },
+        });
+      }
+    );
+  }
+);
