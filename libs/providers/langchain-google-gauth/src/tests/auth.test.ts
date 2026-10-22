@@ -1,6 +1,9 @@
 import { expect, test, describe } from "vitest";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { Readable } from "stream";
-import { NodeJsonStream } from "../auth.js";
+import { OAuth2Client } from "google-auth-library";
+import { GAuthClient, NodeJsonStream } from "../auth.js";
 
 describe("NodeJsonStream", () => {
   test("stream", async () => {
@@ -50,5 +53,48 @@ describe("NodeJsonStream", () => {
     expect(await stream.nextChunk()).toEqual({ i: 2, msg: "こんにちは👋" });
     expect(await stream.nextChunk()).toBeNull();
     expect(stream.streamDone).toEqual(true);
+  });
+});
+
+describe("GAuthClient", () => {
+  test("includes the Google error body when a request is rejected", async () => {
+    const googleError =
+      "Schema.ref '#/definitions/nope' was not found in the root Schema.defs.";
+    const server = createServer((_req, res) => {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify([
+          {
+            error: {
+              code: 400,
+              message: googleError,
+              status: "INVALID_ARGUMENT",
+            },
+          },
+        ])
+      );
+    });
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+    const { port } = server.address() as AddressInfo;
+
+    const authClient = new OAuth2Client();
+    authClient.setCredentials({
+      access_token: "test-token",
+      expiry_date: Date.now() + 3_600_000,
+    });
+    const client = new GAuthClient({ authOptions: { authClient } });
+
+    try {
+      await expect(
+        client.request({
+          url: `http://127.0.0.1:${port}/v1/models/gemini:streamGenerateContent`,
+          method: "POST",
+          data: {},
+          responseType: "stream",
+        })
+      ).rejects.toThrow(googleError);
+    } finally {
+      server.close();
+    }
   });
 });
