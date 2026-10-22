@@ -283,9 +283,78 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
       });
     });
+
+    it("base64-encodes binary image data", () => {
+      const block = {
+        type: "image",
+        data: new Uint8Array([82, 73, 70, 70]),
+        mimeType: "image/png",
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "image_url",
+        image_url: { url: "data:image/png;base64,UklGRg==" },
+      });
+    });
+
+    it("base64-encodes binary audio data", () => {
+      const block = {
+        type: "audio",
+        data: new Uint8Array([82, 73, 70, 70]),
+        mimeType: "audio/wav",
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "input_audio",
+        input_audio: { data: "UklGRg==", format: "wav" },
+      });
+    });
+
+    it("base64-encodes binary file data", () => {
+      const block = {
+        type: "file",
+        data: new Uint8Array([82, 73, 70, 70]),
+        mimeType: "application/pdf",
+        metadata: { filename: "sample.pdf" },
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "file",
+        file: {
+          file_data: "data:application/pdf;base64,UklGRg==",
+          filename: "sample.pdf",
+        },
+      });
+    });
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it("base64-encodes binary data in HumanMessage contentBlocks", () => {
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "audio",
+            data: new Uint8Array([82, 73, 70, 70]),
+            mimeType: "audio/wav",
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "input_audio",
+          input_audio: { data: "UklGRg==", format: "wav" },
+        },
+      ]);
+    });
+
     it("preserves prompt cache breakpoints and drops other extras", () => {
       const message = new HumanMessage({
         content: [
