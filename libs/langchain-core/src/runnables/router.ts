@@ -92,29 +92,13 @@ export class RouterRunnable<
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
-    const keys = inputs.map((input) => input.key);
-    const actualInputs = inputs.map((input) => input.input);
-    const missingKey = keys.find((key) => this.runnables[key] === undefined);
-    if (missingKey !== undefined) {
+    if (
+      !batchOptions?.returnExceptions &&
+      inputs.some(({ key }) => this.runnables[key] === undefined)
+    ) {
       throw new Error(`One or more keys do not have a corresponding runnable.`);
     }
-    const runnables = keys.map((key) => this.runnables[key]);
-    const optionsList = this._getOptionsList(options ?? {}, inputs.length);
-    const maxConcurrency =
-      optionsList[0]?.maxConcurrency ?? batchOptions?.maxConcurrency;
-    const batchSize =
-      maxConcurrency && maxConcurrency > 0 ? maxConcurrency : inputs.length;
-    const batchResults = [];
-    for (let i = 0; i < actualInputs.length; i += batchSize) {
-      const batchPromises = actualInputs
-        .slice(i, i + batchSize)
-        .map((actualInput, i) =>
-          runnables[i].invoke(actualInput, optionsList[i])
-        );
-      const batchResult = await Promise.all(batchPromises);
-      batchResults.push(batchResult);
-    }
-    return batchResults.flat();
+    return super.batch(inputs, options, batchOptions);
   }
 
   async stream(
