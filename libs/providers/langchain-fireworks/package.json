@@ -1,6 +1,6 @@
 {
   "name": "@langchain/fireworks",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "description": "Fireworks integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
