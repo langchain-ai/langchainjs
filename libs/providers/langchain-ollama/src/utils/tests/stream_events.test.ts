@@ -67,4 +67,40 @@ describe("convertOllamaStream", () => {
 
     expect(events.filter((e) => e.event === "usage").length).toBeGreaterThan(0);
   });
+
+  test.each([false, true])(
+    "keeps tool calls from separate chunks (same tool: %s)",
+    async (sameTool) => {
+      const calls = [
+        { function: { name: "get_weather", arguments: { city: "Paris" } } },
+        {
+          function: {
+            name: sameTool ? "get_weather" : "get_time",
+            arguments: { city: "Tokyo" },
+          },
+        },
+      ];
+      const events = await collectEvents([
+        { message: { content: "Checking both cities." } },
+        ...calls.map((call) => ({ message: { tool_calls: [call] } })),
+        { message: {}, done_reason: "stop" },
+      ]);
+
+      const toolFinishes = events.filter(
+        (event) =>
+          event.event === "content-block-finish" &&
+          event.content.type === "tool_call"
+      );
+      expect(toolFinishes).toMatchObject(
+        calls.map((call, index) => ({
+          index: index + 1,
+          content: {
+            type: "tool_call",
+            name: call.function.name,
+            args: call.function.arguments,
+          },
+        }))
+      );
+    }
+  );
 });
