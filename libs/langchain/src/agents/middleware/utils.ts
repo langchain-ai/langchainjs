@@ -14,9 +14,68 @@ import {
 import { JumpToTarget } from "../constants.js";
 
 /**
+ * Characters that typically map to far more than 1 token / 4 chars under
+ * modern BPE tokenizers (e.g. o200k_base). Using a Latin-only density here
+ * under-counts Korean/Japanese/Chinese/Thai/Emoji text by ~40–66%, which
+ * delays summarization and context-editing budget triggers (see #11304).
+ */
+function isHighTokenDensityCodePoint(code: number): boolean {
+  return (
+    // CJK Unified Ideographs + Extension A
+    (code >= 0x3400 && code <= 0x4dbf) ||
+    (code >= 0x4e00 && code <= 0x9fff) ||
+    // Hiragana / Katakana
+    (code >= 0x3040 && code <= 0x30ff) ||
+    // Hangul Jamo + Hangul Syllables
+    (code >= 0x1100 && code <= 0x11ff) ||
+    (code >= 0xac00 && code <= 0xd7af) ||
+    // Thai
+    (code >= 0x0e00 && code <= 0x0e7f) ||
+    // Hebrew / Arabic (right-to-left scripts with dense tokenization)
+    (code >= 0x0590 && code <= 0x05ff) ||
+    (code >= 0x0600 && code <= 0x06ff) ||
+    // Common emoji blocks
+    (code >= 0x1f300 && code <= 0x1faff) ||
+    (code >= 0x1f600 && code <= 0x1f64f)
+  );
+}
+
+/**
+ * Approximate token weight for a string, accounting for script density.
+ *
+ * Latin / code-like text ≈ 4 chars per token; CJK / Hangul / Kana / Thai /
+ * emoji ≈ 1.5 chars per token (≈ measured o200k_base density for those scripts).
+ */
+function approximateTokenWeight(text: string): number {
+  const DENSE_CHARS_PER_TOKEN = 1.5;
+  const SPARSE_CHARS_PER_TOKEN = 4;
+  let denseChars = 0;
+  let sparseChars = 0;
+
+  for (const char of text) {
+    const code = char.codePointAt(0);
+    if (code === undefined) continue;
+    // Skip the trail surrogate pair half when iterating by code unit via for-of
+    // — `for…of` yields full code points for astral-plane chars.
+    if (isHighTokenDensityCodePoint(code)) {
+      denseChars += 1;
+    } else {
+      sparseChars += 1;
+    }
+  }
+
+  return (
+    denseChars / DENSE_CHARS_PER_TOKEN + sparseChars / SPARSE_CHARS_PER_TOKEN
+  );
+}
+
+/**
  * Default token counter that approximates based on character count.
  *
- * If tools are provided, the token count also includes stringified tool schemas.
+ * Script-aware: non-Latin scripts (CJK, Hangul, Kana, Thai, emoji, etc.)
+ * are counted at a higher density so summarization / context-editing budgets
+ * still fire on multilingual histories. Tools, when provided, contribute
+ * their stringified schemas under the same estimator.
  *
  * @param messages Messages to count tokens for
  * @param tools Optional list of tools to include in the token count. Each tool
@@ -29,17 +88,14 @@ export function countTokensApproximately(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tools?: Array<Record<string, any>> | null
 ): number {
-  const charsPerToken = 4;
-  let totalChars = 0;
+  let totalWeight = 0;
 
   // Count tokens for tools if provided
   if (tools && tools.length > 0) {
-    let toolsChars = 0;
     for (const tool of tools) {
       const toolDict = isLangChainTool(tool) ? convertToOpenAITool(tool) : tool;
-      toolsChars += JSON.stringify(toolDict).length;
+      totalWeight += approximateTokenWeight(JSON.stringify(toolDict));
     }
-    totalChars += toolsChars;
   }
 
   for (const msg of messages) {
@@ -70,10 +126,10 @@ export function countTokensApproximately(
       textContent += msg.tool_call_id ?? "";
     }
 
-    totalChars += textContent.length;
+    totalWeight += approximateTokenWeight(textContent);
   }
-  // Approximate 1 token = 4 characters
-  return Math.ceil(totalChars / charsPerToken);
+
+  return Math.ceil(totalWeight);
 }
 
 export function getHookConstraint(
