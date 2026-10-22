@@ -115,6 +115,9 @@ export class MatryoshkaRetriever<
       JSON.parse(doc.metadata[this.largeEmbeddingKey])
     );
     let func: () => Array<number[]>;
+    // Cosine similarity and inner product are similarities (larger is closer),
+    // whereas euclidean distance is a distance (smaller is closer).
+    let higherIsBetter = true;
 
     switch (this.searchType) {
       case "cosine":
@@ -125,12 +128,13 @@ export class MatryoshkaRetriever<
         break;
       case "euclidean":
         func = () => euclideanDistance([embeddedQuery], largeEmbeddings);
+        higherIsBetter = false;
         break;
       default:
         throw new Error(`Unknown search type: ${this.searchType}`);
     }
 
-    // Calculate the similarity scores between the query embedding and the large embeddings
+    // Calculate the similarity (or distance) scores between the query embedding and the large embeddings
     const [similarityScores] = func();
 
     // Create an array of indices from 0 to N-1, where N is the number of documents
@@ -141,7 +145,7 @@ export class MatryoshkaRetriever<
 
     indices = indices
       .map((v, i) => [similarityScores[i], v])
-      .sort(([a], [b]) => b - a)
+      .sort(([a], [b]) => (higherIsBetter ? b - a : a - b))
       .slice(0, this.largeK)
       .map(([, i]) => i);
 
