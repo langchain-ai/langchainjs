@@ -25,7 +25,7 @@ concurrency:
 env:
   PUPPETEER_SKIP_DOWNLOAD: "true"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-  NODE_VERSION: "22.x"
+  NODE_VERSION: "22.23.4"
 
 # Run a separate job for each check in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
