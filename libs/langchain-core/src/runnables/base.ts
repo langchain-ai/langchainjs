@@ -3072,15 +3072,11 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
-
-  async batch(
+async batch(
     inputs: RunInput[],
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
-    if (batchOptions?.returnExceptions) {
-      throw new Error("Not implemented.");
-    }
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
       configList.map((config) => getCallbackManagerForConfig(config))
@@ -3101,39 +3097,74 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       })
     );
 
+    const resultsMap: Record<string, RunOutput | Error> = {};
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let firstError: any;
+
     for (const runnable of this.runnables()) {
       configList[0].signal?.throwIfAborted();
+
+      const remainingIndexes = inputs
+        .map((_, i) => i)
+        .filter(
+          (i) =>
+            resultsMap[i.toString()] === undefined ||
+            // oxlint-disable-next-line no-instanceof/no-instanceof
+            resultsMap[i.toString()] instanceof Error
+        );
+
+      if (remainingIndexes.length === 0) break;
+
+      const remainingInputs = remainingIndexes.map((i) => inputs[i]);
+      const patchedConfigs = remainingIndexes.map((i) =>
+        patchConfig(configList[i], { callbacks: runManagers[i]?.getChild() })
+      );
+
       try {
-        const outputs = await runnable.batch(
-          inputs,
-          runManagers.map((runManager, j) =>
-            patchConfig(configList[j], {
-              callbacks: runManager?.getChild(),
-            })
-          ),
-          batchOptions
-        );
-        await Promise.all(
-          runManagers.map((runManager, i) =>
-            runManager?.handleChainEnd(_coerceToDict(outputs[i], "output"))
-          )
-        );
-        return outputs;
-      } catch (e) {
-        if (firstError === undefined) {
-          firstError = e;
+        const outputs = await runnable.batch(remainingInputs, patchedConfigs, {
+          ...batchOptions,
+          returnExceptions: true,
+        });
+
+        for (let i = 0; i < outputs.length; i += 1) {
+          const output = outputs[i];
+          const resultMapIndex = remainingIndexes[i];
+          // oxlint-disable-next-line no-instanceof/no-instanceof
+          if (output instanceof Error) {
+            if (firstError === undefined) firstError = output;
+          } else {
+            await runManagers[resultMapIndex]?.handleChainEnd(
+              _coerceToDict(output, "output")
+            );
+          }
+          resultsMap[resultMapIndex.toString()] = output;
         }
+      } catch (e) {
+        if (firstError === undefined) firstError = e;
       }
     }
-    if (!firstError) {
-      throw new Error("No error stored at end of fallbacks.");
+
+    const stillFailing = inputs
+      .map((_, i) => i)
+      .filter(
+        (i) =>
+          resultsMap[i.toString()] === undefined ||
+          // oxlint-disable-next-line no-instanceof/no-instanceof
+          resultsMap[i.toString()] instanceof Error
+      );
+
+    if (stillFailing.length > 0 && !batchOptions?.returnExceptions) {
+      const errorToThrow =
+        firstError ?? new Error("No error stored at end of fallbacks.");
+      await Promise.all(
+        runManagers.map((runManager) => runManager?.handleChainError(errorToThrow))
+      );
+      throw errorToThrow;
     }
-    await Promise.all(
-      runManagers.map((runManager) => runManager?.handleChainError(firstError))
-    );
-    throw firstError;
+
+    return Object.keys(resultsMap)
+      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+      .map((key) => resultsMap[parseInt(key, 10)]);
   }
 }
 
