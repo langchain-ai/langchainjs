@@ -401,6 +401,27 @@ export function convertToV1FromAnthropicMessage(
             args: { query },
           };
           continue;
+        } else if (
+          name === "tool_search_tool_bm25" ||
+          name === "tool_search_tool_regex"
+        ) {
+          const args = iife(() => {
+            if (_isObject(block.input) && Object.keys(block.input).length > 0) {
+              return block.input;
+            } else if (_isString(block.partial_json)) {
+              return (
+                safeParseJson<Record<string, unknown>>(block.partial_json) ?? {}
+              );
+            }
+            return {};
+          });
+          yield {
+            id,
+            type: "server_tool_call",
+            name,
+            args,
+          };
+          continue;
         } else if (block.name === "code_execution") {
           const code = iife(() => {
             if (typeof block.input === "string") {
@@ -459,6 +480,24 @@ export function convertToV1FromAnthropicMessage(
           name: "code_execution",
           toolCallId: block.tool_use_id,
           status: "success",
+          output: block.content,
+        };
+        continue;
+      }
+      // ToolSearchToolResultBlock
+      else if (
+        _isContentBlock(block, "tool_search_tool_result") &&
+        _isString(block.tool_use_id) &&
+        _isObject(block.content)
+      ) {
+        yield {
+          type: "server_tool_call_result",
+          name: "tool_search",
+          toolCallId: block.tool_use_id,
+          status:
+            block.content.type === "tool_search_tool_result_error"
+              ? "error"
+              : "success",
           output: block.content,
         };
         continue;
