@@ -6,7 +6,7 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
 
-import { createAgent } from "../../index.js";
+import { createAgent, createMiddleware } from "../../index.js";
 import { modelRetryMiddleware } from "../modelRetry.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
 import { InvalidRetryConfigError } from "../error.js";
@@ -335,6 +335,51 @@ describe("modelRetryMiddleware", () => {
   });
 
   describe("Retry on specific exceptions", () => {
+    it("should match error constructors through middleware wrappers", async () => {
+      class TimeoutFailureModel extends FakeToolCallingModel {
+        private attempt = 0;
+
+        _generate = vi.fn(
+          async (...args: Parameters<FakeToolCallingModel["_generate"]>) => {
+            this.attempt += 1;
+            if (this.attempt === 1) {
+              throw new TimeoutError("Timeout");
+            }
+            return super._generate(...args);
+          }
+        );
+
+        bindTools(tools: StructuredTool[]) {
+          // oxlint-disable-next-line dot-notation
+          this["tools"] = [...this["tools"], ...tools];
+          return this as unknown as RunnableBinding<any, any, any>;
+        }
+      }
+
+      const model = new TimeoutFailureModel({ toolCalls: [[]] });
+      const retry = modelRetryMiddleware({
+        maxRetries: 1,
+        initialDelayMs: 0,
+        jitter: false,
+        retryOn: [TimeoutError],
+        onFailure: "error",
+      });
+      const passthrough = createMiddleware({
+        name: "passthrough",
+        wrapModelCall: async (request, handler) => handler(request),
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry, passthrough] as const,
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello")] });
+
+      expect(model._generate).toHaveBeenCalledTimes(2);
+    });
+
     it("should retry on specified error types", async () => {
       class TimeoutFailureModel extends FakeToolCallingModel {
         private attempt = 0;
