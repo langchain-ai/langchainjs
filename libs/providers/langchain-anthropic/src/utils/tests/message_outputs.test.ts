@@ -1,5 +1,8 @@
 import { test, expect, describe } from "vitest";
-import { _makeMessageChunkFromAnthropicEvent } from "../message_outputs.js";
+import {
+  _makeMessageChunkFromAnthropicEvent,
+  anthropicResponseToChatMessages,
+} from "../message_outputs.js";
 
 const fields = { streamUsage: true, coerceContentToString: false };
 
@@ -164,5 +167,80 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
       model_provider: "anthropic",
       usage: { cost: 0.0123 },
     });
+  });
+});
+
+describe("thinking tokens in usage_metadata", () => {
+  type AnthropicEvent = Parameters<
+    typeof _makeMessageChunkFromAnthropicEvent
+  >[0];
+  const textBlock = { type: "text" as const, text: "42", citations: null };
+
+  test("non-streaming response reports thinking tokens as reasoning", () => {
+    const [generation] = anthropicResponseToChatMessages([textBlock], {
+      id: "msg_01",
+      usage: {
+        input_tokens: 10,
+        output_tokens: 565,
+        output_tokens_details: { thinking_tokens: 562 },
+      },
+    });
+
+    expect(generation.message.usage_metadata).toMatchObject({
+      output_tokens: 565,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+
+  test("non-streaming response without output_tokens_details has no output_token_details", () => {
+    const [generation] = anthropicResponseToChatMessages([textBlock], {
+      id: "msg_01",
+      usage: { input_tokens: 10, output_tokens: 3 },
+    });
+
+    expect(generation.message.usage_metadata).not.toHaveProperty(
+      "output_token_details"
+    );
+  });
+
+  test("streamed chunks report reasoning once, from message_delta", () => {
+    const messageStart = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "message_start" as const,
+        message: {
+          id: "msg_01",
+          type: "message" as const,
+          role: "assistant" as const,
+          content: [],
+          model: "claude-sonnet-4-5",
+          stop_reason: null,
+          stop_sequence: null,
+          usage: {
+            input_tokens: 10,
+            output_tokens: 1,
+            output_tokens_details: { thinking_tokens: 1 },
+          },
+        },
+      } as unknown as AnthropicEvent,
+      fields
+    )!.chunk;
+    const messageDelta = _makeMessageChunkFromAnthropicEvent(
+      {
+        type: "message_delta" as const,
+        delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+        usage: {
+          output_tokens: 565,
+          output_tokens_details: { thinking_tokens: 562 },
+        },
+      } as unknown as AnthropicEvent,
+      fields
+    )!.chunk;
+
+    expect(messageDelta.usage_metadata?.output_token_details).toEqual({
+      reasoning: 562,
+    });
+    expect(
+      messageStart.concat(messageDelta).usage_metadata?.output_token_details
+    ).toEqual({ reasoning: 562 });
   });
 });
