@@ -34,6 +34,10 @@ import {
 } from "./model.js";
 import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
+import {
+  TOOL_ERROR_CONTEXT,
+  getToolErrorContext,
+} from "./middleware/toolErrorContext.js";
 import type {
   ToolCallHandler,
   AnyAgentMiddleware,
@@ -576,7 +580,13 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
         // Track exact values thrown by the downstream handler so unchanged
         // propagation is not misclassified as a failure in this middleware.
         const downstreamErrors = new Set<unknown>();
+        const parentContext = getToolErrorContext(request);
+        const localContext = { fatalErrors: new Set<unknown>() };
+        const downstreamFatalErrors = new Set<unknown>();
+        const overlappingErrors = new Set<unknown>();
+        let activeHandlers = 0;
         const wrappedInnerHandler: ToolCallHandler = async (passedRequest) => {
+          const childContext = { fatalErrors: new Set<unknown>() };
           /**
            * Merge the passed request with the original state for parsing.
            * This ensures middleware can override tool/toolCall while
@@ -586,14 +596,32 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
             ...originalState,
             ...passedRequest.state,
           };
+          if (activeHandlers === 0) overlappingErrors.clear();
+          activeHandlers += 1;
           try {
-            return await handler({
+            // Restore the captured context even if middleware reconstructs
+            // the request instead of spreading its private symbol properties.
+            const downstreamRequest = {
               ...passedRequest,
               state: mergedState,
-            });
+              [TOOL_ERROR_CONTEXT]: childContext,
+            };
+            return await handler(downstreamRequest);
           } catch (error: unknown) {
             downstreamErrors.add(error);
+            // A fresh sequential attempt supersedes an inherited mark for
+            // this value. Overlapping identical-value failures conservatively
+            // retain any fatal intent because their occurrences are ambiguous.
+            if (!overlappingErrors.has(error)) {
+              downstreamFatalErrors.delete(error);
+              overlappingErrors.add(error);
+            }
+            if (childContext.fatalErrors.has(error)) {
+              downstreamFatalErrors.add(error);
+            }
             throw error;
+          } finally {
+            activeHandlers -= 1;
           }
         };
 
@@ -601,6 +629,7 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
           const result = await originalHandler(
             {
               ...request,
+              [TOOL_ERROR_CONTEXT]: localContext,
               /**
                * override state with the state from the specific middleware
                */
@@ -626,10 +655,16 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
 
           return result;
         } catch (error: unknown) {
-          if (downstreamErrors.has(error)) {
-            throw error;
+          const propagated = downstreamErrors.has(error)
+            ? error
+            : MiddlewareError.wrap(error, m.name);
+          if (
+            localContext.fatalErrors.has(error) ||
+            downstreamFatalErrors.has(error)
+          ) {
+            parentContext?.fatalErrors.add(propagated);
           }
-          throw MiddlewareError.wrap(error, m.name);
+          throw propagated;
         }
       };
       return wrappedHandler;
