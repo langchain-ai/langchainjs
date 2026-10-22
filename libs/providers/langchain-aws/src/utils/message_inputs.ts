@@ -806,17 +806,22 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
   if (
     content.type === "reasoning" &&
     "reasoning" in content &&
-    typeof content.reasoning === "string" &&
-    content.reasoning.length > 0
+    typeof content.reasoning === "string"
   ) {
+    const text = content.reasoning;
     const signature =
       "signature" in content && typeof content.signature === "string"
         ? content.signature
         : undefined;
+    const hasSignature = signature !== undefined;
+    const shouldReplayReasoning = text !== "" || hasSignature;
+    if (!shouldReplayReasoning) {
+      return undefined;
+    }
     return {
       reasoningText: {
-        text: content.reasoning,
-        ...(signature !== undefined ? { signature } : {}),
+        text,
+        ...(hasSignature ? { signature } : {}),
       },
     };
   }
@@ -825,25 +830,28 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
     return undefined;
   }
 
-  if (
-    "reasoningText" in content &&
-    typeof content.reasoningText === "object" &&
-    content.reasoningText !== null &&
-    "text" in content.reasoningText &&
-    typeof content.reasoningText.text === "string" &&
-    content.reasoningText.text.length > 0
-  ) {
+  const reasoningText =
+    "reasoningText" in content ? content.reasoningText : undefined;
+  if (typeof reasoningText === "object" && reasoningText !== null) {
+    const text =
+      "text" in reasoningText && typeof reasoningText.text === "string"
+        ? reasoningText.text
+        : "";
     const signature =
-      "signature" in content.reasoningText &&
-      typeof content.reasoningText.signature === "string"
-        ? content.reasoningText.signature
+      "signature" in reasoningText &&
+      typeof reasoningText.signature === "string"
+        ? reasoningText.signature
         : undefined;
-    return {
-      reasoningText: {
-        text: content.reasoningText.text,
-        ...(signature !== undefined ? { signature } : {}),
-      },
-    };
+    const hasSignature = signature !== undefined;
+    const shouldReplayReasoning = text !== "" || hasSignature;
+    if (shouldReplayReasoning) {
+      return {
+        reasoningText: {
+          text,
+          ...(hasSignature ? { signature } : {}),
+        },
+      };
+    }
   }
 
   if (
