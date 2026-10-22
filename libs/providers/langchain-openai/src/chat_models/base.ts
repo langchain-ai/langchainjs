@@ -1200,7 +1200,9 @@ export abstract class BaseChatOpenAI<
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
           async (aiMessage: AIMessageChunk) => {
             if ("parsed" in aiMessage.additional_kwargs) {
-              return aiMessage.additional_kwargs.parsed as RunOutput;
+              return altParser.invoke(
+                JSON.stringify(aiMessage.additional_kwargs.parsed)
+              );
             }
             return altParser.invoke(aiMessage.content as string);
           }

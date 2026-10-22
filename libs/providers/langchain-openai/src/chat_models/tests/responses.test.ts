@@ -1,7 +1,77 @@
 import { ContextOverflowError } from "@langchain/core/errors";
 import { HumanMessage } from "@langchain/core/messages";
 import { describe, it, expect, vi } from "vitest";
+import { z } from "zod";
 import { ChatOpenAIResponses } from "../responses.js";
+import { ChatOpenAI } from "../index.js";
+
+function responsesFetch(outputText: string) {
+  return async () =>
+    new Response(
+      JSON.stringify({
+        id: "r",
+        object: "response",
+        created_at: 0,
+        model: "m",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "m",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: outputText,
+                parsed: JSON.parse(outputText),
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 },
+      }),
+      { headers: { "content-type": "application/json" } }
+    );
+}
+
+describe("withStructuredOutput zod parsing on the Responses API", () => {
+  const schema = z.object({
+    tag: z.string().transform((s) => s.toUpperCase()),
+    n: z.number(),
+  });
+
+  it("applies zod transforms to the parsed output", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-x",
+      apiKey: "test",
+      useResponsesApi: true,
+      configuration: {
+        fetch: responsesFetch(JSON.stringify({ tag: "a", n: 1 })),
+      },
+    });
+
+    const result = await model.withStructuredOutput(schema).invoke("hi");
+    expect(result).toEqual({ tag: "A", n: 1 });
+  });
+
+  it("throws when the parsed output fails a zod refinement", async () => {
+    const refined = schema.refine((v) => v.n < 3, "n must be < 3");
+    const model = new ChatOpenAI({
+      model: "gpt-x",
+      apiKey: "test",
+      useResponsesApi: true,
+      configuration: {
+        fetch: responsesFetch(JSON.stringify({ tag: "a", n: 9 })),
+      },
+    });
+
+    await expect(
+      model.withStructuredOutput(refined).invoke("hi")
+    ).rejects.toThrow();
+  });
+});
 
 class TraceableChatOpenAIResponses extends ChatOpenAIResponses {
   traceParams(options: Parameters<ChatOpenAIResponses["invocationParams"]>[0]) {
