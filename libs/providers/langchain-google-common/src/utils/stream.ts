@@ -13,6 +13,13 @@ export interface AbstractStream {
    */
   closeBuffer(): void;
   /**
+   * Indicate that the source failed before it finished (for example, the
+   * request was aborted mid-response). Chunks already parsed are still
+   * returned, then the next call to nextChunk() rejects with this error.
+   * @param error
+   */
+  errorBuffer?(error: unknown): void;
+  /**
    * Get the next chunk that is coming from the stream.
    * This chunk may be null, usually indicating the last chunk in the stream.
    */
@@ -164,6 +171,22 @@ export class JsonStream implements AbstractStream {
   }
 
   /**
+   * Indicate the source failed. Anything left unparsed in the buffer is
+   * dropped, a pending nextChunk() rejects, and so does every later call once
+   * the queue is empty.
+   * @param error
+   */
+  errorBuffer(error: unknown): void {
+    this._bufferOpen = false;
+    this._buffer = "";
+    this._error = { error };
+    if (this._chunkPending) {
+      this._chunkRejection(error);
+      this._chunkPending = null;
+    }
+  }
+
+  /**
    * Skip characters in the buffer till we get to the start of an object.
    * Then attempt to read a full object.
    * If we do read a full object, turn it into a chunk and send it to the chunk handler.
@@ -244,6 +267,9 @@ export class JsonStream implements AbstractStream {
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkResolution: (chunk: any) => void;
 
+  // ...or that errorBuffer() can reject.
+  _chunkRejection: (error: unknown) => void;
+
   // If there is no Promise (it is null), the handler must add it to the queue
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkPending: Promise<any> | null = null;
@@ -251,6 +277,9 @@ export class JsonStream implements AbstractStream {
   // A queue that will collect chunks while there is no Promise
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkQueue: any[] = [];
+
+  // Set by errorBuffer(). Boxed so that even a falsy error value is kept.
+  _error: { error: unknown } | null = null;
 
   /**
    * Register that we have another chunk available for consumption.
@@ -277,10 +306,13 @@ export class JsonStream implements AbstractStream {
     if (this._chunkQueue.length > 0) {
       // If there is data in the queue, return the next queue chunk
       return this._chunkQueue.shift() as GenerationChunk;
+    } else if (this._error) {
+      throw this._error.error;
     } else {
       // Otherwise, set up a promise that handleChunk will cause to be resolved
-      this._chunkPending = new Promise((resolve) => {
+      this._chunkPending = new Promise((resolve, reject) => {
         this._chunkResolution = resolve;
+        this._chunkRejection = reject;
       });
       return this._chunkPending;
     }
@@ -292,9 +324,13 @@ export class JsonStream implements AbstractStream {
    * - There is no more data to be added to the text buffer
    * - There is no more data in the text buffer
    * - There are no chunks that are waiting to be consumed
+   * - The source did not fail (a failed stream is never "done", so a
+   *   consumer looping on streamDone calls nextChunk() and sees the error
+   *   instead of treating a cut-off response as complete)
    */
   get streamDone(): boolean {
     return (
+      this._error === null &&
       !this._bufferOpen &&
       this._buffer.length === 0 &&
       this._chunkQueue.length === 0 &&
@@ -318,8 +354,10 @@ export class ReadableAbstractStream implements AbstractStream {
     this.baseStream = baseStream;
     this.decoder = new TextDecoder("utf-8");
     if (body) {
-      // oxlint-disable-next-line no-void
-      void this.run(body);
+      // run() is not awaited by anyone, so a failed read (e.g. an aborted
+      // request) must be handed to the stream here. Otherwise it becomes an
+      // unhandled rejection and the pending nextChunk() never settles.
+      this.run(body).catch((error: unknown) => this.errorBuffer(error));
     } else {
       console.error("Unexpected empty body while streaming");
     }
@@ -331,6 +369,10 @@ export class ReadableAbstractStream implements AbstractStream {
 
   closeBuffer(): void {
     return this.baseStream.closeBuffer();
+  }
+
+  errorBuffer(error: unknown): void {
+    return this.baseStream.errorBuffer?.(error);
   }
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -380,6 +422,20 @@ export class SseStream implements AbstractStream {
   }
 
   /**
+   * Indicate the source failed. See JsonStream.errorBuffer().
+   * @param error
+   */
+  errorBuffer(error: unknown): void {
+    this._bufferOpen = false;
+    this._buffer = "";
+    this._error = { error };
+    if (this._chunkPending) {
+      this._chunkRejection(error);
+      this._chunkPending = null;
+    }
+  }
+
+  /**
    * Attempt to load an entire event.
    * For each entire event we load,
    * send them to be handled.
@@ -426,6 +482,9 @@ export class SseStream implements AbstractStream {
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkResolution: (chunk: any) => void;
 
+  // ...or that errorBuffer() can reject.
+  _chunkRejection: (error: unknown) => void;
+
   // If there is no Promise (it is null), the handler must add it to the queue
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkPending: Promise<any> | null = null;
@@ -433,6 +492,9 @@ export class SseStream implements AbstractStream {
   // A queue that will collect chunks while there is no Promise
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkQueue: any[] = [];
+
+  // Set by errorBuffer(). Boxed so that even a falsy error value is kept.
+  _error: { error: unknown } | null = null;
 
   _handleEvent(event: string | null): void {
     const chunk = this._parseEvent(event);
@@ -449,10 +511,13 @@ export class SseStream implements AbstractStream {
     if (this._chunkQueue.length > 0) {
       // If there is data in the queue, return the next queue chunk
       return this._chunkQueue.shift() as Record<string, string>;
+    } else if (this._error) {
+      throw this._error.error;
     } else {
       // Otherwise, set up a promise that handleChunk will cause to be resolved
-      this._chunkPending = new Promise((resolve) => {
+      this._chunkPending = new Promise((resolve, reject) => {
         this._chunkResolution = resolve;
+        this._chunkRejection = reject;
       });
       return this._chunkPending;
     }
@@ -460,6 +525,7 @@ export class SseStream implements AbstractStream {
 
   get streamDone(): boolean {
     return (
+      this._error === null &&
       !this._bufferOpen &&
       this._buffer.length === 0 &&
       this._chunkQueue.length === 0 &&
