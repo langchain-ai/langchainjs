@@ -1,4 +1,5 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatBedrockConverse } from "../chat_models.js";
 
 function bedrockTextStream() {
@@ -49,6 +50,37 @@ function bedrockToolStream() {
       contentBlockDelta: {
         contentBlockIndex: 1,
         delta: { toolUse: { input: '{"query":"weather"}' } },
+      },
+    },
+  ];
+}
+
+function bedrockSplitToolArgsStream() {
+  return [
+    {
+      contentBlockStart: {
+        contentBlockIndex: 0,
+        start: {
+          toolUse: { toolUseId: "toolu_1", name: "web_search" },
+        },
+      },
+    },
+    {
+      contentBlockDelta: {
+        contentBlockIndex: 0,
+        delta: { toolUse: { input: "" } },
+      },
+    },
+    {
+      contentBlockDelta: {
+        contentBlockIndex: 0,
+        delta: { toolUse: { input: '{"query"' } },
+      },
+    },
+    {
+      contentBlockDelta: {
+        contentBlockIndex: 0,
+        delta: { toolUse: { input: ':"weather"}' } },
       },
     },
   ];
@@ -109,6 +141,58 @@ describe("ChatBedrockConverse.streamEvents", () => {
       mockBedrock(bedrockToolStream()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
+    ]);
+  });
+
+  test("streams tool call args as slices", async () => {
+    const stream = mockBedrock(bedrockSplitToolArgsStream()).streamEvents(
+      "Hello"
+    );
+    const events: ChatModelStreamEvent[] = [];
+    for await (const event of stream) {
+      events.push(event);
+    }
+
+    expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual([
+      {
+        event: "content-block-start",
+        index: 0,
+        content: {
+          type: "tool_call_chunk",
+          id: "toolu_1",
+          name: "web_search",
+          args: "",
+          index: 0,
+        },
+      },
+      {
+        event: "content-block-delta",
+        index: 0,
+        delta: { type: "tool-call-delta", args: '{"query"' },
+      },
+      {
+        event: "content-block-delta",
+        index: 0,
+        delta: { type: "tool-call-delta", args: ':"weather"}' },
+      },
+      {
+        event: "content-block-finish",
+        index: 0,
+        content: {
+          type: "tool_call",
+          id: "toolu_1",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      },
+    ]);
+    expect((await stream).tool_calls).toEqual([
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "web_search",
+        args: { query: "weather" },
+      },
     ]);
   });
 
