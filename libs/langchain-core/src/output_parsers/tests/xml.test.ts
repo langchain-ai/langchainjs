@@ -91,3 +91,11 @@ test("Can parse streams", async () => {
   }
   expect(finalResult).toStrictEqual(expectedResult);
 });
+
+test("Keeps CDATA content as element text", async () => {
+  const parser = new XMLOutputParser();
+  const result = await parser.parse(
+    "<answer><code><![CDATA[if (a < b && c > d) {}]]></code></answer>"
+  );
+  expect(result).toEqual({ answer: [{ code: "if (a < b && c > d) {}" }] });
+});
