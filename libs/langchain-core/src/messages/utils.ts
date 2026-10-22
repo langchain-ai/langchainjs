@@ -573,11 +573,22 @@ export function convertToChunk(message: BaseMessage) {
  *
  * For each group, the function:
  * 1. Concatenates all `args` strings from the chunks
- * 2. Attempts to parse the concatenated string as JSON
+ * 2. Attempts to parse the concatenated string as JSON (partial JSON is
+ *    repaired unless `options.final` is set)
  * 3. Validates that the result is a non-null object with a valid id
  * 4. Creates either a `ToolCall` (if valid) or `InvalidToolCall` (if invalid)
  */
-export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
+export function collapseToolCallChunks(
+  chunks: ToolCallChunk[],
+  options?: {
+    /**
+     * Set once the stream has ended. Arguments must then be complete JSON
+     * (parsed with `JSON.parse`, like non-streamed tool calls); partial JSON
+     * becomes an `InvalidToolCall` instead of being repaired into a call.
+     */
+    final?: boolean;
+  }
+): {
   tool_call_chunks: ToolCallChunk[];
   tool_calls: ToolCall[];
   invalid_tool_calls: InvalidToolCall[];
@@ -631,7 +642,9 @@ export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
       continue;
     }
     try {
-      parsedArgs = parsePartialJson(argsStr);
+      parsedArgs = options?.final
+        ? JSON.parse(argsStr)
+        : parsePartialJson(argsStr);
       if (
         !id ||
         parsedArgs === null ||
