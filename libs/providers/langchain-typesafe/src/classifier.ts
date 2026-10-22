@@ -9,7 +9,7 @@ import {
   parseQuestions,
   serializeQuestion,
   type ClassificationResponse,
-  type Question,
+  type QuestionsInput,
   type ValidatedQuestions,
 } from "./types.js";
 import { buildHeaders, parseResponse, SYSTEMONE_PATH } from "./utils/client.js";
@@ -27,9 +27,11 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 
 export interface TypeSafeClassifierCallOptions extends RunnableConfig {}
 
-export interface TypeSafeClassifierFields extends AsyncCallerParams {
+export interface TypeSafeClassifierFields<
+  QS extends QuestionsInput = QuestionsInput,
+> extends AsyncCallerParams {
   /** The questions to ask. At least one is required. */
-  questions: Record<string, Question>;
+  questions: QS;
   /** Model or alias. Defaults to `jev-latest`. */
   model?: string;
   /** Falls back to the `TYPESAFE_API_KEY` environment variable. */
@@ -66,11 +68,24 @@ export interface TypeSafeClassifierFields extends AsyncCallerParams {
  *   },
  * });
  * const result = await classifier.invoke("My payouts have been failing.");
+ * result.answers.urgent.noul; // number: already narrowed to a NoulAnswer
  * ```
+ *
+ * `QS` is inferred from the `questions` literal, so each answer is typed
+ * by the question that asked for it: no discriminant check before reading
+ * a field, and an unknown question id is a compile error.
+ *
+ * The `const` modifier is what makes this work without the caller writing
+ * `as const`. It preserves the literal ids, the literal labels and the
+ * rubric's LENGTH, which an ordinary type parameter loses and which is
+ * where a Score's level keys come from. Falls back to the `Answer` union
+ * whenever the map is not statically known.
  */
-export class TypeSafeClassifier extends Runnable<
+export class TypeSafeClassifier<
+  const QS extends QuestionsInput = QuestionsInput,
+> extends Runnable<
   State,
-  ClassificationResponse,
+  ClassificationResponse<QS>,
   TypeSafeClassifierCallOptions
 > {
   static lc_name(): string {
@@ -85,7 +100,7 @@ export class TypeSafeClassifier extends Runnable<
     return { apiKey: "TYPESAFE_API_KEY" };
   }
 
-  readonly questions: ValidatedQuestions;
+  readonly questions: ValidatedQuestions<QS>;
 
   readonly model: string;
 
@@ -106,7 +121,7 @@ export class TypeSafeClassifier extends Runnable<
 
   protected fetchImpl: typeof fetch;
 
-  constructor(fields: TypeSafeClassifierFields) {
+  constructor(fields: TypeSafeClassifierFields<QS>) {
     // `Serializable`'s own constructor stores whatever is passed here
     // verbatim as `this.lc_kwargs` — a normal, enumerable property. If
     // `apiKey` rode along, `util.inspect(classifier)` would print it via
@@ -141,7 +156,7 @@ export class TypeSafeClassifier extends Runnable<
     // branded error subtree). Rethrown here as a `TypeSafeError` so the
     // whole constructor surface stays catchable via
     // `TypeSafeError.isInstance()`. The original message is preserved.
-    let questions: ValidatedQuestions;
+    let questions: ValidatedQuestions<QS>;
     try {
       questions = parseQuestions(fields.questions);
     } catch (error) {
@@ -201,7 +216,7 @@ export class TypeSafeClassifier extends Runnable<
   async invoke(
     input: State,
     options?: Partial<TypeSafeClassifierCallOptions>
-  ): Promise<ClassificationResponse> {
+  ): Promise<ClassificationResponse<QS>> {
     return this._callWithConfig(
       (state: State) => this.classify(state, options?.signal),
       input,
@@ -228,7 +243,7 @@ export class TypeSafeClassifier extends Runnable<
   protected async classify(
     state: State,
     signal?: AbortSignal
-  ): Promise<ClassificationResponse> {
+  ): Promise<ClassificationResponse<QS>> {
     const url = `${this.baseUrl}${SYSTEMONE_PATH}`;
     const endpoint = sanitizeEndpoint("POST", url);
     const body = this.payload(state);
@@ -276,7 +291,7 @@ export class TypeSafeClassifier extends Runnable<
         // mid-body — fails here, not at the call above. Outside this block
         // the caller would receive a raw AbortError instead of
         // TypeSafeAPITimeoutError.
-        return await parseResponse(response, endpoint);
+        return await parseResponse<QS>(response, endpoint);
       } catch (error) {
         // Anything already mapped to this package's own error type (every
         // non-2xx response, and response-schema failures) passes through
