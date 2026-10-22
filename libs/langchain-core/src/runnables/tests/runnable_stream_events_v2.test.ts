@@ -35,6 +35,24 @@ function reverse(s: string) {
   return s.split("").reverse().join("");
 }
 
+function chainStreamFirst<T extends { event: string }>(events: T[]): T[] {
+  // A chunk's `on_chain_stream` and `on_chat_model_stream` arrive as a pair,
+  // chain first before Node 24.21 and model first from it. Put each pair chain
+  // first.
+  const pair = new Set(["on_chain_stream", "on_chat_model_stream"]);
+  const ordered = [...events];
+  for (let i = 0; i < ordered.length - 1; i += 1) {
+    const [a, b] = [ordered[i], ordered[i + 1]];
+    if (pair.has(a.event) && pair.has(b.event) && a.event !== b.event) {
+      if (a.event === "on_chat_model_stream") {
+        [ordered[i], ordered[i + 1]] = [b, a];
+      }
+      i += 1;
+    }
+  }
+  return ordered;
+}
+
 const originalCallbackValue = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 afterEach(() => {
@@ -912,7 +930,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
 
   // used here to avoid casting every ID
   const anyString = expect.any(String) as unknown as string;
-  expect(events).toEqual([
+  expect(chainStreamFirst(events)).toEqual([
     {
       run_id: expect.any(String),
       event: "on_chain_start",
