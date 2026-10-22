@@ -223,15 +223,16 @@ function _convertJsonSchemaToCohereTool(jsonSchema: Record<string, any>) {
 
   // Iterate through all properties
   Object.keys(parameterDefinitionsProperties).forEach((propertyName) => {
-    // Create the property in the new object
-    parameterDefinitionsFinal[propertyName] =
-      parameterDefinitionsProperties[propertyName];
-    // Set the required property based on the 'required' array
     if (parameterDefinitionsRequired === undefined) {
       parameterDefinitionsRequired = [];
     }
-    parameterDefinitionsFinal[propertyName].required =
-      parameterDefinitionsRequired.includes(propertyName);
+    // Copy the property instead of assigning it: the input schema can be shared (e.g. the cached
+    // result of `toJsonSchema`), and writing `required` onto it would change it for every caller.
+    parameterDefinitionsFinal[propertyName] = {
+      ...parameterDefinitionsProperties[propertyName],
+      // Set the required property based on the 'required' array
+      required: parameterDefinitionsRequired.includes(propertyName),
+    };
   });
   return parameterDefinitionsFinal;
 }
