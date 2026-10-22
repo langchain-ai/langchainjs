@@ -232,45 +232,6 @@ export abstract class StructuredTool<
     // If arg is a ToolCall, use its args; otherwise, use arg directly.
     const inputForValidation = _isToolCall(arg) ? arg.args : arg;
 
-    let parsed: SchemaOutputT; // This will hold the successfully parsed input of the expected output type.
-    if (isInteropZodSchema(this.schema)) {
-      try {
-        // Validate the inputForValidation - TS needs help here as it can't exclude ToolCall based on the check
-        parsed = await interopParseAsync(
-          this.schema as InteropZodType,
-          inputForValidation as Exclude<TArg, ToolCall>
-        );
-      } catch (e) {
-        let message = `Received tool input did not match expected schema`;
-        if (this.verboseParsingErrors) {
-          message = `${message}\nDetails: ${(e as Error).message}`;
-        }
-        if (isInteropZodError(e)) {
-          message = `${message}\n\n${z4.prettifyError(e as ZodError)}`;
-        }
-        // Pass the original raw input arg to the exception
-        throw new ToolInputParsingException(message, JSON.stringify(arg));
-      }
-    } else {
-      const result = validate(
-        inputForValidation,
-        this.schema as ValidationSchema
-      );
-      if (!result.valid) {
-        let message = `Received tool input did not match expected schema`;
-        if (this.verboseParsingErrors) {
-          message = `${message}\nDetails: ${result.errors
-            .map((e) => `${e.keywordLocation}: ${e.error}`)
-            .join("\n")}`;
-        }
-        // Pass the original raw input arg to the exception
-        throw new ToolInputParsingException(message, JSON.stringify(arg));
-      }
-      // Assign the validated input to parsed
-      // We cast here because validate() doesn't narrow the type sufficiently for TS, but we know it's valid.
-      parsed = inputForValidation as SchemaOutputT;
-    }
-
     const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = CallbackManager.configure(
       config.callbacks,
@@ -303,6 +264,7 @@ export abstract class StructuredTool<
     if (!callbackInput) {
       callbackInput = typeof arg === "string" ? arg : JSON.stringify(arg);
     }
+    // Start the run before validating, so a rejected input reaches handleToolError.
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
       callbackInput,
@@ -314,6 +276,55 @@ export abstract class StructuredTool<
       toolCallId
     );
     delete config.runId;
+
+    let parsed: SchemaOutputT; // This will hold the successfully parsed input of the expected output type.
+    if (isInteropZodSchema(this.schema)) {
+      try {
+        // Validate the inputForValidation - TS needs help here as it can't exclude ToolCall based on the check
+        parsed = await interopParseAsync(
+          this.schema as InteropZodType,
+          inputForValidation as Exclude<TArg, ToolCall>
+        );
+      } catch (e) {
+        let message = `Received tool input did not match expected schema`;
+        if (this.verboseParsingErrors) {
+          message = `${message}\nDetails: ${(e as Error).message}`;
+        }
+        if (isInteropZodError(e)) {
+          message = `${message}\n\n${z4.prettifyError(e as ZodError)}`;
+        }
+        // Pass the original raw input arg to the exception
+        const error = new ToolInputParsingException(
+          message,
+          JSON.stringify(arg)
+        );
+        await runManager?.handleToolError(error);
+        throw error;
+      }
+    } else {
+      const result = validate(
+        inputForValidation,
+        this.schema as ValidationSchema
+      );
+      if (!result.valid) {
+        let message = `Received tool input did not match expected schema`;
+        if (this.verboseParsingErrors) {
+          message = `${message}\nDetails: ${result.errors
+            .map((e) => `${e.keywordLocation}: ${e.error}`)
+            .join("\n")}`;
+        }
+        // Pass the original raw input arg to the exception
+        const error = new ToolInputParsingException(
+          message,
+          JSON.stringify(arg)
+        );
+        await runManager?.handleToolError(error);
+        throw error;
+      }
+      // Assign the validated input to parsed
+      // We cast here because validate() doesn't narrow the type sufficiently for TS, but we know it's valid.
+      parsed = inputForValidation as SchemaOutputT;
+    }
 
     let result;
     try {
