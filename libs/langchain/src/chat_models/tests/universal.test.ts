@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatOpenAI } from "@langchain/openai";
 
-import { initChatModel } from "../universal.js";
+import { initChatModel, MODEL_PROVIDER_CONFIG } from "../universal.js";
 
 const LANGSMITH_ENVIRONMENT_VARIABLES = [
   "LANGSMITH_GATEWAY",
@@ -24,6 +24,22 @@ describe("Will appropriately infer a model profiles", () => {
       temperature: 0,
     });
     expect(model.profile.maxInputTokens).toBeDefined();
+  });
+});
+
+describe("initChatModel Google providers", () => {
+  it("maps google-node to the Node.js entry point", () => {
+    expect(MODEL_PROVIDER_CONFIG["google-node"]).toEqual({
+      package: "@langchain/google/node",
+      className: "ChatGoogle",
+    });
+  });
+
+  it("keeps the browser-compatible entry point for google", () => {
+    expect(MODEL_PROVIDER_CONFIG.google).toEqual({
+      package: "@langchain/google",
+      className: "ChatGoogle",
+    });
   });
 });
 
