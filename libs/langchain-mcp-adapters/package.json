@@ -31,7 +31,7 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/client": "^2.2.0",
+    "@modelcontextprotocol/client": "^2.3.0",
     "@modelcontextprotocol/core": "^2.2.0",
     "zod": "^4.4.3"
   },
@@ -53,9 +53,9 @@
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@modelcontextprotocol/node": "^2.1.0",
-    "@modelcontextprotocol/sdk": "^1.31.0",
-    "@modelcontextprotocol/server": "^2.2.0",
-    "@modelcontextprotocol/server-legacy": "^2.2.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "@modelcontextprotocol/server": "^2.3.1",
+    "@modelcontextprotocol/server-legacy": "^2.3.1",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.3",
     "@vitest/coverage-v8": "^5.0.2",
