@@ -1,6 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 const TAVILY_BASE_URL = "https://api.tavily.com";
+const TAVILY_CLIENT_SOURCE = "langchain-js";
 
 /**
  * The parameters for the Tavily Search API.
@@ -82,6 +83,11 @@ export type TavilySearchParamsBase = {
    * @default false
    */
   include_usage?: boolean;
+
+  /**
+   * Only return results containing the exact phrase(s) in quotes in your query.
+   */
+  exact_match?: boolean;
 } & Record<string, unknown>;
 
 export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
@@ -758,6 +764,7 @@ export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Source": TAVILY_CLIENT_SOURCE,
     };
 
     // Convert camelCase to snake_case for API compatibility
@@ -795,6 +802,7 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Source": TAVILY_CLIENT_SOURCE,
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -828,6 +836,7 @@ export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Source": TAVILY_CLIENT_SOURCE,
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -861,6 +870,7 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Source": TAVILY_CLIENT_SOURCE,
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -898,6 +908,7 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Source": TAVILY_CLIENT_SOURCE,
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -963,6 +974,7 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Source": TAVILY_CLIENT_SOURCE,
     };
 
     const response = await fetch(`${this.apiBaseUrl}/research/${requestId}`, {
