@@ -14,6 +14,7 @@ import {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
+  _mistralContentToText,
 } from "../utils.js";
 import { ChatCompletionRequest } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 
@@ -344,5 +345,162 @@ describe("Streaming", () => {
     expect(capturedStreamParam).toBe(true);
     expect(chunks.length).toBe(2);
     expect(chunks.join("")).toBe("Hello world!");
+  });
+});
+
+describe("Thinking chunks", () => {
+  const thinkingDelta = (text: string) => ({
+    data: {
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            content: [
+              {
+                type: "thinking",
+                thinking: [{ type: "text", text }],
+                closed: true,
+              },
+            ],
+          },
+          finishReason: null,
+        },
+      ],
+    },
+  });
+
+  const textDelta = (text: string, finishReason: string | null = null) => ({
+    data: {
+      choices: [{ index: 0, delta: { content: text }, finishReason }],
+    },
+  });
+
+  test("sends assistant thinking chunks back instead of throwing", () => {
+    const messages = [
+      new HumanMessage("Say hi in 3 words."),
+      new AIMessage({
+        content: [
+          {
+            type: "thinking",
+            thinking: [{ type: "text", text: "Three words." }],
+            closed: true,
+          },
+          { type: "text", text: "Hello there, friend!" },
+        ],
+      }),
+      new HumanMessage("Now in French."),
+    ];
+
+    expect(convertMessagesToMistralMessages(messages)[1]).toEqual({
+      role: "assistant",
+      content: [
+        {
+          type: "thinking",
+          thinking: [{ type: "text", text: "Three words." }],
+        },
+        { type: "text", text: "Hello there, friend!" },
+      ],
+    });
+  });
+
+  test("still rejects thinking chunks on user messages", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "thinking", thinking: [{ type: "text", text: "Hmm" }] },
+      ],
+    });
+
+    expect(() => convertMessagesToMistralMessages([message])).toThrow(
+      /only supports types "text" or "image_url"/
+    );
+  });
+
+  test("streamed thinking round-trips as one merged thinking chunk", async () => {
+    const model = new ChatMistralAI({
+      apiKey: "test-api-key",
+      model: "zai-glm-5-3",
+    });
+    model.completionWithRetry = (async () =>
+      (async function* () {
+        yield thinkingDelta("The user");
+        yield thinkingDelta(" wants a greeting.");
+        yield textDelta("Hello");
+        yield textDelta(" there!", "stop");
+      })()) as any; // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+
+    const texts: string[] = [];
+    let merged: AIMessageChunk | undefined;
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("Hi")],
+      {}
+    )) {
+      texts.push(chunk.text);
+      const message = chunk.message as AIMessageChunk;
+      merged = merged ? merged.concat(message) : message;
+    }
+
+    // Thinking deltas carry no text
+    expect(texts).toEqual(["", "", "Hello", " there!"]);
+
+    const history = convertMessagesToMistralMessages([
+      new HumanMessage("Hi"),
+      new AIMessage({ content: merged!.content }),
+      new HumanMessage("Thanks"),
+    ]);
+
+    expect(history[1]).toEqual({
+      role: "assistant",
+      content: [
+        {
+          type: "thinking",
+          thinking: [{ type: "text", text: "The user wants a greeting." }],
+        },
+        { type: "text", text: "Hello" },
+        { type: "text", text: " there!" },
+      ],
+    });
+  });
+
+  test("generation text ignores thinking chunks", async () => {
+    const model = new ChatMistralAI({
+      apiKey: "test-api-key",
+      model: "zai-glm-5-3",
+    });
+    model.completionWithRetry = (async () => ({
+      choices: [
+        {
+          index: 0,
+          finishReason: "stop",
+          message: {
+            role: "assistant",
+            content: [
+              {
+                type: "thinking",
+                thinking: [{ type: "text", text: "Three words." }],
+              },
+              { type: "text", text: "Hello there, friend!" },
+            ],
+          },
+        },
+      ],
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    })) as any;
+
+    const result = await model._generate([new HumanMessage("Hi")], {});
+
+    expect(result.generations[0].text).toBe("Hello there, friend!");
+  });
+
+  test("_mistralContentToText joins text chunks only", () => {
+    expect(_mistralContentToText(null)).toBe("");
+    expect(_mistralContentToText("plain")).toBe("plain");
+    expect(
+      _mistralContentToText([
+        { type: "thinking", thinking: [{ type: "text", text: "hidden" }] },
+        { type: "text", text: "a" },
+        { type: "text", text: "b" },
+      ])
+    ).toBe("ab");
   });
 });
