@@ -254,3 +254,22 @@ test.each(
     expect(handler.handleChainStart).toHaveBeenCalledTimes(1);
   }
 );
+
+test("a plain object handler runs the methods it has at each run", async () => {
+  const first = vi.fn();
+  const second = vi.fn();
+  const handler = { handleChainStart: first };
+  const run = async () => {
+    await CallbackManager.configure([handler])?.handleChainStart(
+      { lc: 1, type: "not_implemented", id: ["test"] },
+      {}
+    );
+    await awaitAllCallbacks();
+  };
+
+  await run();
+  handler.handleChainStart = second;
+  await run();
+
+  expect([first.mock.calls.length, second.mock.calls.length]).toEqual([1, 1]);
+});
