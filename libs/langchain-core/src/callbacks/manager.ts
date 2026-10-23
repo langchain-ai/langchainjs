@@ -1533,6 +1533,13 @@ export class CallbackManager
   }
 }
 
+// Each plain object gets one wrapper, so configure() can dedupe it by instance
+// when merged configs pass it in twice.
+const wrappedHandlers = new WeakMap<
+  CallbackHandlerMethods,
+  BaseCallbackHandler
+>();
+
 export function ensureHandler(
   handler: BaseCallbackHandler | CallbackHandlerMethods
 ): BaseCallbackHandler {
@@ -1540,5 +1547,10 @@ export function ensureHandler(
     return handler;
   }
 
-  return BaseCallbackHandler.fromMethods(handler);
+  let wrapped = wrappedHandlers.get(handler);
+  if (wrapped === undefined) {
+    wrapped = BaseCallbackHandler.fromMethods(handler);
+    wrappedHandlers.set(handler, wrapped);
+  }
+  return wrapped;
 }

@@ -1876,57 +1876,58 @@ describe("createAgent", () => {
   });
 
   describe("streamEvents inside a LangGraph node", () => {
-    it("delivers each token once to the handlers passed in when the outer run is traced", async () => {
-      class TokenCounter extends BaseCallbackHandler {
-        name = "token_counter";
-
-        tokens = 0;
-
-        handleLLMNewToken(token: string) {
-          if (token) this.tokens += 1;
-        }
-      }
-      const counter = new TokenCounter();
-      const agent = createAgent({
-        model: new FakeStreamingChatModel({
-          chunks: ["Hello", "!", " How are you?"].map(
-            (content) => new AIMessageChunk({ content })
-          ),
-        }),
-        tools: [],
-      });
-      let streamedChunks = 0;
-      const graph = new StateGraph(MessagesAnnotation)
-        .addNode("run_agent", async () => {
-          const events = agent.streamEvents(
-            { messages: [new HumanMessage("hi")] },
-            { version: "v2", callbacks: [counter] }
-          );
-          for await (const event of events) {
-            if (
-              event.event === "on_chat_model_stream" &&
-              event.data.chunk.text
-            ) {
-              streamedChunks += 1;
+    it.each(["handler", "plain object"] as const)(
+      "delivers each token once to a %s passed in when the outer run is traced",
+      async (kind) => {
+        let handlerTokens = 0;
+        const handleLLMNewToken = (token: string) => {
+          if (token) handlerTokens += 1;
+        };
+        const counter =
+          kind === "handler"
+            ? BaseCallbackHandler.fromMethods({ handleLLMNewToken })
+            : { handleLLMNewToken };
+        const agent = createAgent({
+          model: new FakeStreamingChatModel({
+            chunks: ["Hello", "!", " How are you?"].map(
+              (content) => new AIMessageChunk({ content })
+            ),
+          }),
+          tools: [],
+        });
+        let streamedChunks = 0;
+        const graph = new StateGraph(MessagesAnnotation)
+          .addNode("run_agent", async () => {
+            const events = agent.streamEvents(
+              { messages: [new HumanMessage("hi")] },
+              { version: "v2", callbacks: [counter] }
+            );
+            for await (const event of events) {
+              if (
+                event.event === "on_chat_model_stream" &&
+                event.data.chunk.text
+              ) {
+                streamedChunks += 1;
+              }
             }
-          }
-          return {};
-        })
-        .addEdge(START, "run_agent")
-        .compile();
-      const tracer = new LangChainTracer({
-        client: {
-          createRun: vi.fn().mockResolvedValue(undefined),
-          updateRun: vi.fn().mockResolvedValue(undefined),
-        } as LangSmithTracingClientInterface,
-      });
+            return {};
+          })
+          .addEdge(START, "run_agent")
+          .compile();
+        const tracer = new LangChainTracer({
+          client: {
+            createRun: vi.fn().mockResolvedValue(undefined),
+            updateRun: vi.fn().mockResolvedValue(undefined),
+          } as LangSmithTracingClientInterface,
+        });
 
-      await graph.invoke({ messages: [] }, { callbacks: [tracer] });
+        await graph.invoke({ messages: [] }, { callbacks: [tracer] });
 
-      expect({ handlerTokens: counter.tokens, streamedChunks }).toEqual({
-        handlerTokens: 3,
-        streamedChunks: 3,
-      });
-    });
+        expect({ handlerTokens, streamedChunks }).toEqual({
+          handlerTokens: 3,
+          streamedChunks: 3,
+        });
+      }
+    );
   });
 });

@@ -5,6 +5,7 @@ import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { BaseCallbackHandler } from "../base.js";
 import { CallbackManager } from "../manager.js";
 import { mergeConfigs } from "../../runnables/config.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { RunTree } from "langsmith/run_trees";
 
 class TestHandler extends BaseCallbackHandler {
@@ -219,22 +220,25 @@ class CountingHandler extends BaseCallbackHandler {
   }
 }
 
-test.each([
-  { left: "array", right: "array" },
-  { left: "array", right: "manager" },
-  { left: "manager", right: "array" },
-  { left: "manager", right: "manager" },
-])(
-  "a handler merged in twice from $left and $right configs receives each callback once",
-  async ({ left, right }) => {
-    const handler = new CountingHandler();
-    const callbacks = (kind: string) =>
-      kind === "array"
-        ? [handler]
-        : new CallbackManager(undefined, {
-            handlers: [handler],
-            inheritableHandlers: [handler],
-          });
+test.each(
+  [
+    { left: "array", right: "array" },
+    { left: "array", right: "manager" },
+    { left: "manager", right: "array" },
+    { left: "manager", right: "manager" },
+  ].flatMap((sides) => [
+    { ...sides, kind: "handler" },
+    { ...sides, kind: "plain object" },
+  ])
+)(
+  "a $kind merged in twice from $left and $right configs receives each callback once",
+  async ({ left, right, kind }) => {
+    const handler =
+      kind === "handler"
+        ? new CountingHandler()
+        : { handleChainStart: vi.fn() };
+    const callbacks = (side: string) =>
+      side === "array" ? [handler] : CallbackManager.configure([handler]);
     const merged = mergeConfigs(
       { callbacks: callbacks(left) },
       { callbacks: callbacks(right) }
@@ -245,6 +249,7 @@ test.each([
       { lc: 1, type: "not_implemented", id: ["test"] },
       {}
     );
+    await awaitAllCallbacks();
 
     expect(handler.handleChainStart).toHaveBeenCalledTimes(1);
   }
