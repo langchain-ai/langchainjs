@@ -233,7 +233,7 @@ async function answerFor(
   } catch (error) {
     if (isGraphInterrupt(error)) throw error;
     throw new ToolException(
-      "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+      `This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation. ${error instanceof Error ? error.message : String(error)}`,
       error
     );
   }

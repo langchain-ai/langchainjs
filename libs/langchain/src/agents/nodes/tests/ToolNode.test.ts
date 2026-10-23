@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { StructuredTool, tool } from "@langchain/core/tools";
+import { StructuredTool, tool, type ToolRuntime } from "@langchain/core/tools";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
 import {
@@ -56,6 +56,42 @@ class SearchAPI extends StructuredTool {
 }
 
 describe("ToolNode", () => {
+  it("preserves explicit state in legacy Send payloads", async () => {
+    const state = {
+      messages: [new HumanMessage("legacy snapshot")],
+      value: "legacy",
+    };
+    const read = vi.fn(() => ({ ...state, value: "current" }));
+    const inspectState = tool(
+      (_input, runtime: ToolRuntime) => {
+        expect(runtime.state).toEqual(state);
+        return "ok";
+      },
+      {
+        name: "inspect_state",
+        description: "Inspect state",
+        schema: z.object({}),
+      }
+    );
+    const node = new ToolNode([inspectState], {
+      stateKeys: ["messages", "value"],
+      wrapToolCall: (request, handler) => {
+        expect(request.state).toEqual(state);
+        return handler(request);
+      },
+    });
+    const result = await node.invoke(
+      {
+        ...state,
+        lg_tool_call: { name: "inspect_state", args: {}, id: "legacy-call" },
+        jumpTo: undefined,
+      },
+      { configurable: { __pregel_read: read } }
+    );
+    expect(result).toMatchObject({ messages: [{ content: "ok" }] });
+    expect(read).not.toHaveBeenCalled();
+  });
+
   it("Should work when nested with a callback manager passed", async () => {
     const toolNode = new ToolNode([new SearchAPI()]);
     const wrapper = RunnableLambda.from(async (_) => {
