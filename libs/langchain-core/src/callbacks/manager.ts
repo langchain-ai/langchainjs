@@ -1521,12 +1521,35 @@ export class CallbackManager
         callbackManager.handlers,
         callbackManager.inheritableHandlers
       );
-      callbackManager.handlers = coalesced.handlers;
-      callbackManager.inheritableHandlers = coalesced.inheritableHandlers;
+      // Merged configs can register one handler more than once, which would
+      // deliver every callback to it that many times.
+      callbackManager.handlers = uniqueHandlers(coalesced.handlers);
+      callbackManager.inheritableHandlers = uniqueHandlers(
+        coalesced.inheritableHandlers
+      );
     }
 
     return callbackManager;
   }
+}
+
+// The plain object each wrapper was made from. Merged configs can wrap one
+// object twice, and configure() keeps one wrapper per object.
+const handlerSources = new WeakMap<
+  BaseCallbackHandler,
+  CallbackHandlerMethods
+>();
+
+function uniqueHandlers(
+  handlers: BaseCallbackHandler[]
+): BaseCallbackHandler[] {
+  const seen = new Set<object>();
+  return handlers.filter((handler) => {
+    const source = handlerSources.get(handler) ?? handler;
+    if (seen.has(source)) return false;
+    seen.add(source);
+    return true;
+  });
 }
 
 export function ensureHandler(
@@ -1536,5 +1559,7 @@ export function ensureHandler(
     return handler;
   }
 
-  return BaseCallbackHandler.fromMethods(handler);
+  const wrapped = BaseCallbackHandler.fromMethods(handler);
+  handlerSources.set(wrapped, handler);
+  return wrapped;
 }
