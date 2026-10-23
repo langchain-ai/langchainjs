@@ -1031,7 +1031,10 @@ export abstract class Runnable<
       }
     } finally {
       abortController.abort();
-      await runnableStreamConsumePromise;
+      await runnableStreamConsumePromise.catch((e) => {
+        // The abort above rejects the consume promise; don't surface it.
+        if (e !== abortController.signal.reason) throw e;
+      });
     }
   }
 
