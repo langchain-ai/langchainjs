@@ -74,11 +74,10 @@ export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
  * How each operator understood by {@link PGVectorStore.buildFilterClauses}
  * decides whether it can be translated to SQL.
  *
- * `buildFilterClauses` consults `accepted` before emitting each operator's
- * clause, so this table is the single source of truth for which values are
- * translatable. A value that fails `accepted` emits no clause; an operator
- * missing from this table cannot be translated at all. Either way the query
- * ends up running unfiltered, so both cases are reported to the caller.
+ * Used to report filter entries that produce no clause: a value that fails
+ * `accepted` is ignored, and an operator missing from this table cannot be
+ * translated at all. Either way the query ends up running unfiltered, so both
+ * cases are reported to the caller.
  */
 const FILTER_OPERATORS = {
   in: {
@@ -849,18 +848,17 @@ export class PGVectorStore extends VectorStore {
           );
         }
 
-        const numericOperators: Array<[keyof typeof FILTER_OPERATORS, string]> =
-          [
-            ["gt", ">"],
-            ["gte", ">="],
-            ["lt", "<"],
-            ["lte", "<="],
-          ];
+        const operators = {
+          gt: ">",
+          gte: ">=",
+          lt: "<",
+          lte: "<=",
+        };
 
-        for (const [opKey, sqlOp] of numericOperators) {
+        for (const [opKey, sqlOp] of Object.entries(operators)) {
           if (
             Object.prototype.hasOwnProperty.call(_value, opKey) &&
-            FILTER_OPERATORS[opKey].accepted(_value[opKey])
+            typeof _value[opKey] === "number"
           ) {
             const keyPlaceholder = addParameter(key);
             const valuePlaceholder = addParameter(_value[opKey]);
