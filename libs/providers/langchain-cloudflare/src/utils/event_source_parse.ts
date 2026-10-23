@@ -40,21 +40,11 @@ export async function getBytes(
   // stream is a Node.js Readable / PassThrough stream
   // this can happen if node-fetch is polyfilled
   if (isNodeJSReadable(stream)) {
-    return new Promise<void>((resolve) => {
-      stream.on("readable", () => {
-        let chunk;
-        while (true) {
-          chunk = stream.read();
-          if (chunk == null) {
-            onChunk(new Uint8Array(), true);
-            break;
-          }
-          onChunk(chunk);
-        }
-
-        resolve();
-      });
-    });
+    for await (const chunk of stream) {
+      onChunk(chunk);
+    }
+    onChunk(new Uint8Array(), true);
+    return;
   }
 
   const reader = stream.getReader();
