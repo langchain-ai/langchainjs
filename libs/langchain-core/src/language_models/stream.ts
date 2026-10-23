@@ -635,6 +635,7 @@ export class ChatModelStream
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
     let metadata: Record<string, unknown> = {};
+    let additionalKwargs: Record<string, unknown> = {};
     let finishReason: string | undefined;
 
     for await (const event of this._buffer.iterate()) {
@@ -667,6 +668,7 @@ export class ChatModelStream
 
         case "message-finish":
           finishReason = event.reason;
+          additionalKwargs = { ...additionalKwargs, ...event.additionalKwargs };
           if (event.usage) usage = normalizeUsage(event.usage);
           if (event.responseMetadata) {
             metadata = {
@@ -689,6 +691,7 @@ export class ChatModelStream
       id,
       content: filteredBlocks,
       usage_metadata: usage,
+      additional_kwargs: additionalKwargs,
       response_metadata: {
         ...metadata,
         ...(finishReason ? { finish_reason: finishReason } : {}),

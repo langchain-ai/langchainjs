@@ -76,6 +76,8 @@ export interface MessageFinishEvent {
   usage?: Partial<UsageMetadata>;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */
   responseMetadata?: Record<string, unknown>;
+  /** Provider-specific message fields retained on the final AIMessage. */
+  additionalKwargs?: Record<string, unknown>;
 }
 
 // ─── Content Block Lifecycle ────────────────────────────────────
