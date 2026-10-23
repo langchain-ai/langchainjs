@@ -494,6 +494,63 @@ describe("ChatBedrockConverse invocationParams", () => {
     });
   });
 
+  describe.each(["invoke", "stream"] as const)(
+    "%s performanceConfig",
+    (method) => {
+      const optimized = { latency: "optimized" } as const;
+      const standard = { latency: "standard" } as const;
+
+      test.each([
+        {
+          name: "uses the constructor default",
+          constructorConfig: optimized,
+          callConfig: undefined,
+          expected: optimized,
+        },
+        {
+          name: "lets call options override the constructor default",
+          constructorConfig: optimized,
+          callConfig: standard,
+          expected: standard,
+        },
+        {
+          name: "accepts call options without a constructor default",
+          constructorConfig: undefined,
+          callConfig: optimized,
+          expected: optimized,
+        },
+        {
+          name: "leaves performanceConfig unset when not configured",
+          constructorConfig: undefined,
+          callConfig: undefined,
+          expected: undefined,
+        },
+      ])("$name", async ({ constructorConfig, callConfig, expected }) => {
+        const model = new ChatBedrockConverse({
+          ...baseConstructorArgs,
+          performanceConfig: constructorConfig,
+        });
+        const messages = [new HumanMessage("Hello")];
+        const options = { performanceConfig: callConfig };
+
+        if (method === "stream") {
+          const stream = await model.stream(messages, options);
+          for await (const _chunk of stream) {
+            // Fully consume the stream so the command is executed.
+          }
+        } else {
+          await model.invoke(messages, options);
+        }
+
+        const input = Reflect.get(
+          method === "stream" ? ConverseStreamCommand : ConverseCommand,
+          "lastInput"
+        ) as ConverseCommandInput | ConverseStreamCommandInput;
+        expect(input.performanceConfig).toEqual(expected);
+      });
+    }
+  );
+
   describe("defaultHeaders middleware", () => {
     test("registers middleware on client when defaultHeaders are provided", () => {
       const model = new ChatBedrockConverse({
