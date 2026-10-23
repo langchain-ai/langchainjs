@@ -143,7 +143,8 @@ export async function* convertOpenAICompletionsStream(
       messageStarted = true;
       yield {
         event: "message-start" as const,
-        id: data.id,
+        // Azure OpenAI opens the stream with a content-filter chunk whose id is "".
+        id: data.id || undefined,
       };
     }
 
