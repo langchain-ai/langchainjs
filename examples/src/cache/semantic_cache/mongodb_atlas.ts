@@ -31,6 +31,7 @@ const cache = new MongoDBAtlasSemanticCache(
 
 // Set up the LLM with semantic cache
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   cache,
 });
 
