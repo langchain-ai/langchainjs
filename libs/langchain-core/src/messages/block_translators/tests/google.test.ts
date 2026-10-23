@@ -2,6 +2,47 @@ import { describe, expect, it } from "vitest";
 import { AIMessage } from "../../ai.js";
 
 describe("ChatGoogleTranslator", () => {
+  it.each([false, true])(
+    "should preserve original content when merging a signature (frozen: %s)",
+    (frozen) => {
+      const content = [
+        { type: "text", text: "First answer" },
+        { type: "text", text: "Final answer" },
+        { type: "text", text: "Thinking...", thought: true },
+      ];
+      const message = new AIMessage({
+        content,
+        additional_kwargs: {
+          originalTextContentBlock: { thoughtSignature: "sig-abc" },
+        },
+        response_metadata: { model_provider: "google" },
+      });
+      if (frozen) {
+        content.forEach(Object.freeze);
+        Object.freeze(content);
+      }
+
+      const expected = [
+        { type: "text", text: "First answer" },
+        { type: "text", text: "Final answer", thoughtSignature: "sig-abc" },
+        {
+          type: "reasoning",
+          reasoning: "Thinking...",
+          thought: true,
+          reasoningContentBlock: { type: "text", text: "Thinking..." },
+        },
+      ];
+      expect(message.contentBlocks).toEqual(expected);
+      expect(message.content).toEqual([
+        { type: "text", text: "First answer" },
+        { type: "text", text: "Final answer" },
+        { type: "text", text: "Thinking...", thought: true },
+      ]);
+      expect(message.content).toBe(content);
+      expect(message.contentBlocks).toEqual(expected);
+    }
+  );
+
   it("should use originalTextContentBlock when content is a string", () => {
     const message = new AIMessage({
       content: "The answer is 42",
