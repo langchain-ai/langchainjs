@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import {
   BaseMessage,
   AIMessage,
+  AIMessageChunk,
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -17,6 +18,9 @@ import { RunnableLambda } from "@langchain/core/runnables";
 import {
   Command,
   getCurrentTaskInput,
+  MessagesAnnotation,
+  START,
+  StateGraph,
   type BaseCheckpointSaver,
   type BaseStore,
 } from "@langchain/langgraph";
@@ -26,6 +30,7 @@ import type { LangSmithTracingClientInterface } from "langsmith";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type { Serialized } from "@langchain/core/load/serializable";
 import type { ChainValues } from "@langchain/core/utils/types";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
 
 import {
   providerStrategy,
@@ -1867,6 +1872,61 @@ describe("createAgent", () => {
       const postedRun = createRunMock.mock.calls[0]?.[0];
       expect(postedRun).toBeDefined();
       expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
+    });
+  });
+
+  describe("streamEvents inside a LangGraph node", () => {
+    it("delivers each token once to the handlers passed in when the outer run is traced", async () => {
+      class TokenCounter extends BaseCallbackHandler {
+        name = "token_counter";
+
+        tokens = 0;
+
+        handleLLMNewToken(token: string) {
+          if (token) this.tokens += 1;
+        }
+      }
+      const counter = new TokenCounter();
+      const agent = createAgent({
+        model: new FakeStreamingChatModel({
+          chunks: ["Hello", "!", " How are you?"].map(
+            (content) => new AIMessageChunk({ content })
+          ),
+        }),
+        tools: [],
+      });
+      let streamedChunks = 0;
+      const graph = new StateGraph(MessagesAnnotation)
+        .addNode("run_agent", async () => {
+          const events = agent.streamEvents(
+            { messages: [new HumanMessage("hi")] },
+            { version: "v2", callbacks: [counter] }
+          );
+          for await (const event of events) {
+            if (
+              event.event === "on_chat_model_stream" &&
+              event.data.chunk.text
+            ) {
+              streamedChunks += 1;
+            }
+          }
+          return {};
+        })
+        .addEdge(START, "run_agent")
+        .compile();
+      const tracer = new LangChainTracer({
+        client: {
+          createRun: vi.fn().mockResolvedValue(undefined),
+          updateRun: vi.fn().mockResolvedValue(undefined),
+        } as LangSmithTracingClientInterface,
+      });
+
+      await graph.invoke({ messages: [] }, { callbacks: [tracer] });
+
+      expect({ handlerTokens: counter.tokens, streamedChunks }).toEqual({
+        handlerTokens: 3,
+        streamedChunks: 3,
+      });
     });
   });
 });
