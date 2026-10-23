@@ -1521,8 +1521,12 @@ export class CallbackManager
         callbackManager.handlers,
         callbackManager.inheritableHandlers
       );
-      callbackManager.handlers = coalesced.handlers;
-      callbackManager.inheritableHandlers = coalesced.inheritableHandlers;
+      // Merged configs can register one handler instance more than once,
+      // which would deliver every callback to it that many times.
+      callbackManager.handlers = [...new Set(coalesced.handlers)];
+      callbackManager.inheritableHandlers = [
+        ...new Set(coalesced.inheritableHandlers),
+      ];
     }
 
     return callbackManager;

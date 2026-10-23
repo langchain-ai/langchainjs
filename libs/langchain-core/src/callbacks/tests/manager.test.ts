@@ -4,6 +4,7 @@ import { registerConfigureHook, setContextVariable } from "../../context.js";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { BaseCallbackHandler } from "../base.js";
 import { CallbackManager } from "../manager.js";
+import { mergeConfigs } from "../../runnables/config.js";
 import { RunTree } from "langsmith/run_trees";
 
 class TestHandler extends BaseCallbackHandler {
@@ -207,3 +208,44 @@ test("configure removes inherited LangChainTracer but keeps other handlers when 
 
   vi.unstubAllEnvs();
 });
+
+class CountingHandler extends BaseCallbackHandler {
+  name = "CountingHandler";
+
+  handleChainStart = vi.fn();
+
+  constructor() {
+    super({ _awaitHandler: true });
+  }
+}
+
+test.each([
+  { left: "array", right: "array" },
+  { left: "array", right: "manager" },
+  { left: "manager", right: "array" },
+  { left: "manager", right: "manager" },
+])(
+  "a handler merged in twice from $left and $right configs receives each callback once",
+  async ({ left, right }) => {
+    const handler = new CountingHandler();
+    const callbacks = (kind: string) =>
+      kind === "array"
+        ? [handler]
+        : new CallbackManager(undefined, {
+            handlers: [handler],
+            inheritableHandlers: [handler],
+          });
+    const merged = mergeConfigs(
+      { callbacks: callbacks(left) },
+      { callbacks: callbacks(right) }
+    );
+
+    const manager = CallbackManager.configure(merged.callbacks);
+    await manager?.handleChainStart(
+      { lc: 1, type: "not_implemented", id: ["test"] },
+      {}
+    );
+
+    expect(handler.handleChainStart).toHaveBeenCalledTimes(1);
+  }
+);
