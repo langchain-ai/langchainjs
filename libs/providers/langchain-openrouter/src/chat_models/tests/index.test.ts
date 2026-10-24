@@ -40,6 +40,87 @@ afterAll(() => {
   }
 });
 
+describe("standard multimodal request content", () => {
+  it.each(["invoke", "stream"] as const)(
+    "sends standard images as image_url through %s",
+    async (method) => {
+      const url = "https://example.com/image.png";
+      const model = new ChatOpenRouter({
+        model: "openai/gpt-4o",
+        apiKey: "test-key",
+      });
+      const choice = {
+        index: 0,
+        finish_reason: "stop",
+        message: { role: "assistant", content: "Seen" },
+      };
+      const response =
+        method === "invoke"
+          ? new Response(
+              JSON.stringify({
+                id: "test",
+                model: "openai/gpt-4o",
+                choices: [choice],
+              })
+            )
+          : new Response(
+              `data: ${JSON.stringify({ id: "test", model: "openai/gpt-4o", choices: [{ index: 0, finish_reason: "stop", delta: { role: "assistant", content: "Seen" } }] })}\n\ndata: [DONE]\n\n`,
+              { headers: { "Content-Type": "text/event-stream" } }
+            );
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(response);
+      const messages = [
+        {
+          type: "user" as const,
+          content: [
+            { type: "text" as const, text: "Describe the picture" },
+            { type: "image" as const, url },
+            {
+              type: "image" as const,
+              mimeType: "image/png",
+              data: new Uint8Array([137, 80, 78, 71]),
+            },
+          ],
+        },
+      ];
+
+      try {
+        if (method === "invoke") {
+          expect((await model.invoke(messages)).content).toBe("Seen");
+        } else {
+          let text = "";
+          for await (const chunk of await model.stream(messages)) {
+            text += chunk.content;
+          }
+          expect(text).toBe("Seen");
+        }
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(
+          JSON.parse(String(fetchSpy.mock.calls[0][1]?.body))
+        ).toMatchObject({
+          stream: method === "stream",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Describe the picture" },
+                { type: "image_url", image_url: { url } },
+                {
+                  type: "image_url",
+                  image_url: { url: "data:image/png;base64,iVBORw==" },
+                },
+              ],
+            },
+          ],
+        });
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    }
+  );
+});
+
 // ─── Constructor ─────────────────────────────────────────────────────
 
 describe("ChatOpenRouter constructor", () => {
