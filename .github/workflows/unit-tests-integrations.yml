@@ -51,8 +51,10 @@ jobs:
       matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
     steps:
       - id: set-matrix
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
-          changed_files="${{ needs.get-changed-files.outputs.changed_files }}"
+          changed_files="$CHANGED_FILES"
           echo "Changed files: $changed_files"
           # Convert PACKAGES environment variable into an array
           IFS=',' read -r -a packages <<< "$PACKAGES"
