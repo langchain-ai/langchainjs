@@ -88,13 +88,8 @@ export async function* convertBedrockConverseStream(
           event: "content-block-delta" as const,
           index,
           delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
+            type: "tool-call-delta" as const,
+            args: delta.toolUse.input,
           },
         };
       } else if (delta.reasoningContent) {
