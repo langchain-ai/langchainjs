@@ -5,6 +5,7 @@ import {
   SubscriptionFilterSchema,
 } from "@modelcontextprotocol/core";
 import type {
+  AuthProvider,
   CacheMode,
   ListResourcesResult,
   ListResourceTemplatesResult,
@@ -14,33 +15,10 @@ import type {
   Progress,
   ResourceUpdatedNotificationParams,
 } from "@modelcontextprotocol/client";
-import type {
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-} from "@langchain/core/messages";
-import type { RunnableConfig } from "@langchain/core/runnables";
-import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema } from "./hooks.js";
 import { outputHandlingSchema } from "./content.js";
-export {
-  callToolResultContentTypes,
-  outputHandlingSchema,
-  type CallToolResultContentType,
-  type DetailedOutputHandling,
-  type OutputHandling,
-} from "./content.js";
-import { getSdkHeaderCase } from "./utils/misc.js";
-
-export type {
-  Command,
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-  RunnableConfig,
-  CommandParams,
-};
+export type { CallToolResultContentType, OutputHandling } from "./content.js";
 
 /**
  * Preserve the SDK-owned service and its prototype. Property checks validate
@@ -67,6 +45,36 @@ export const oAuthClientProviderSchema = z
     z.property("saveCodeVerifier", z.function()),
     z.property("codeVerifier", z.function())
   );
+
+/**
+ * The SDK's minimal provider: `token()` is read before every request and
+ * `onUnauthorized()`, when present, runs once on a 401 before the retry.
+ *
+ * `onUnauthorized` is optional on `AuthProvider`, so it is checked with a
+ * plain predicate rather than `z.property`, whose mapped type always makes
+ * the property required and would reject a provider that omits it.
+ */
+export const tokenAuthProviderSchema = z
+  .custom<AuthProvider>(
+    (value) => value !== null && typeof value === "object" && "token" in value,
+    { error: "Expected an AuthProvider with a token() method" }
+  )
+  .check(z.property("token", z.function()), (ctx) => {
+    const { onUnauthorized } = ctx.value;
+    if (onUnauthorized !== undefined && typeof onUnauthorized !== "function") {
+      ctx.issues.push({
+        code: "custom",
+        input: ctx.value,
+        message: "Expected onUnauthorized to be a function",
+      });
+    }
+  });
+
+/** Either SDK provider shape; the transport adapts an OAuthClientProvider itself. */
+export const authProviderSchema = z.union([
+  oAuthClientProviderSchema,
+  tokenAuthProviderSchema,
+]);
 
 /** SDK logging levels, exposed as an adapter request option. */
 export const loggingLevelSchema = LoggingLevelSchema;
@@ -173,12 +181,6 @@ const stdioOptionsSchema = z
       .record(z.string(), z.string())
       .describe("The environment to use when spawning the process")
       .optional(),
-    /** @deprecated SDK 2 stdio does not support overriding the encoding. */
-    encoding: z
-      .never({
-        error: "SDK 2 stdio does not support encoding; remove this option",
-      })
-      .optional(),
     /**
      * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
      *
@@ -244,10 +246,7 @@ export const streamableHttpReconnectSchema = z
   })
   .describe("Configuration for streamable HTTP transport reconnection");
 
-const headersSchema = z
-  .record(z.string(), z.string())
-  .transform(getSdkHeaderCase)
-  .optional();
+const headersSchema = z.record(z.string(), z.string()).optional();
 
 const httpOptionsSchema = z
   .object({
@@ -273,12 +272,14 @@ const httpOptionsSchema = z
      */
     headers: headersSchema,
     /**
-     * OAuth client provider for automatic authentication handling.
-     * When provided, the transport will automatically handle token refresh,
-     * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
-     * This is the recommended approach for authentication instead of manual headers.
+     * Credentials for this server, handed to the SDK transport as-is:
+     * - an `AuthProvider` (`{ token, onUnauthorized? }`) for tokens the
+     *   application manages;
+     * - an `OAuthClientProvider` for OAuth.
+     * Once the provider has a token it replaces a configured `Authorization`
+     * header; until then the header is sent (SDK >= 2.1.0).
      */
-    authProvider: oAuthClientProviderSchema.optional(),
+    authProvider: authProviderSchema.optional(),
     /**
      * Additional reconnection settings.
      */
@@ -538,13 +539,6 @@ const notifications = z.object({
 
 export type Notifications = z.output<typeof notifications>;
 
-const removedRootsObserver = z
-  .never({
-    error:
-      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
-  })
-  .optional();
-
 const serverNotifications = notifications.omit({ onInitialized: true }).extend({
   /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
   resourceSubscriptions: SubscriptionFilterSchema.shape.resourceSubscriptions,
@@ -571,14 +565,17 @@ const modernPolicy = z
      */
     logLevel: loggingLevelSchema.optional(),
     /**
-     * Whether in-band MCP elicitation requests should suspend a LangGraph run
-     * and surface as graph interrupts.
+     * Whether modern in-band MCP elicitation should be handled through
+     * LangGraph interrupts.
      *
-     * This requires a modern MCP server and a LangGraph checkpointer.
+     * Tools that do not request input can run directly or in a graph without a
+     * checkpointer. If a tool requests input in either context, the invocation
+     * raises a `ToolException`. A checkpointer is required to suspend and
+     * resume an eliciting tool successfully.
      *
-     * @default false
+     * @default true
      */
-    elicitation: z.boolean().default(false),
+    elicitation: z.boolean().default(true),
     /** @deprecated Use `elicitation` for modern MCP servers. */
     onElicitation: z
       .never({
@@ -594,7 +591,6 @@ const modernPolicy = z
     automaticSSEFallback: z
       .never({ error: "automaticSSEFallback requires mode: legacy" })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(serverNotifications.shape);
 
@@ -609,7 +605,7 @@ const legacyPolicy = z
     /**
      * Handles elicitation requests from a legacy MCP server.
      *
-     * Modern servers use `elicitation: true` and LangGraph interrupts instead.
+     * Modern servers use LangGraph interrupts by default instead.
      */
     onElicitation: z
       .custom<MCPElicitationHandler>(
@@ -631,7 +627,6 @@ const legacyPolicy = z
           "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
       })
       .optional(),
-    onRootsListChanged: removedRootsObserver,
   })
   .extend(notifications.shape)
   .extend({
@@ -740,16 +735,6 @@ export const ConnectionSchema = z.union([
 ]);
 
 /**
- * {@link MultiServerMCPClient} configuration
- */
-const serverOnlyCallback = z
-  .never({
-    error:
-      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
-  })
-  .optional();
-
-/**
  * Custom error handler for connection failures.
  *
  * If the handler throws or rejects, the error is propagated when a caller is
@@ -777,11 +762,10 @@ const clientOptionsSchema = z
       .never({ error: "Move onElicitation into a legacy server definition" })
       .optional(),
     /**
-     * Modern in-band elicitation is enabled per server so only servers that
-     * support it can suspend LangGraph runs.
+     * Modern in-band elicitation is enabled by default per modern server.
      *
-     * Set `elicitation: true` on a server with `mode: "auto"` or
-     * `mode: "modern"` instead.
+     * Set `elicitation: false` on a server with `mode: "auto"` or
+     * `mode: "modern"` to opt out.
      */
     elicitation: z
       .never({ error: "Move elicitation into a modern server definition" })
@@ -810,16 +794,15 @@ const clientOptionsSchema = z
       .optional()
       .default(true),
     /**
-     * Whether to prefix tool names with the server name. Prefixes are separated by double
-     * underscores (example: `calculator_server_1__add`).
+     * Whether to prefix tool names with the server name. Prefixes are separated by a single
+     * underscore (example: `calculator_server_1_add`).
      *
-     * @default false
+     * @default true in `MCPAdapter`, false in `loadMcpTools`
      */
     prefixToolNameWithServerName: z
       .boolean()
       .describe("Whether to prefix tool names with the server name")
-      .optional()
-      .default(false),
+      .optional(),
     /**
      * An additional prefix to add to the tool name Prefixes are separated by double underscores
      * (example: `mcp__add`).
@@ -850,17 +833,6 @@ const clientOptionsSchema = z
   })
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
-  .extend({
-    resourceSubscriptions: serverOnlyCallback,
-    onMessage: serverOnlyCallback,
-    onProgress: serverOnlyCallback,
-    onInitialized: serverOnlyCallback,
-    onPromptsListChanged: serverOnlyCallback,
-    onResourcesListChanged: serverOnlyCallback,
-    onResourcesUpdated: serverOnlyCallback,
-    onToolsListChanged: serverOnlyCallback,
-    onRootsListChanged: removedRootsObserver,
-  })
   .strict()
   .describe("Configuration for the MCP client");
 
@@ -937,9 +909,6 @@ export type ResolvedSSEConnection = z.output<typeof SSEConnectionSchema>;
 /** Configuration for a URL-based Streamable HTTP or legacy SSE connection. */
 export type HTTPConnection = z.input<typeof HTTPConnectionSchema>;
 
-/** {@link HTTPConnection} with defaults applied. */
-export type ResolvedHTTPConnection = z.output<typeof HTTPConnectionSchema>;
-
 /** Union type for all supported MCP connection transports. */
 export type Connection = z.input<typeof ConnectionSchema>;
 
@@ -959,11 +928,6 @@ export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
  */
 export type ResolvedConnection = z.output<typeof ConnectionSchema>;
 
-/**
- * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
- */
-export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
-
 export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .pick({
     throwOnLoadError: true,
@@ -978,8 +942,15 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .extend(notifications.pick({ onProgress: true }).shape)
   .extend({
     logLevel: loggingLevelSchema.optional(),
-    /** Answer in-band input requests with LangGraph interrupts. */
-    elicitation: z.boolean().optional(),
+    /**
+     * Whether modern in-band MCP elicitation should be handled through
+     * LangGraph interrupts. Tools that do not elicit need no checkpointer. A
+     * direct invocation or graph without a checkpointer raises a
+     * `ToolException` only if the tool requests input.
+     *
+     * @default true
+     */
+    elicitation: z.boolean().default(true),
   });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;

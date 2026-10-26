@@ -1,5 +1,20 @@
 # @langchain/google-vertexai
 
+## 2.3.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-gauth@2.3.4
+
+## 2.3.3
+
+### Patch Changes
+
+- [#11988](https://github.com/langchain-ai/langchainjs/pull/11988) [`2a37b67`](https://github.com/langchain-ai/langchainjs/commit/2a37b672115a99136d645c3f96633d00421312d6) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Backport LangSmith gateway routing to `ChatVertexAI` in the Node and web packages through `@langchain/google-common`, including streaming, custom gateway URLs, and explicit regional project configuration. Honor custom endpoints in Vertex Express requests.
+- Updated dependencies []:
+  - @langchain/google-gauth@2.3.3
+
 ## 2.3.2
 
 ### Patch Changes

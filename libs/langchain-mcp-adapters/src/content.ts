@@ -7,7 +7,7 @@ import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
 } from "@modelcontextprotocol/client";
-import type { ContentBlock } from "@langchain/core/messages";
+import { ToolMessage, type ContentBlock } from "@langchain/core/messages";
 
 import { ToolException } from "./utils/errors.js";
 
@@ -211,8 +211,7 @@ type ConvertCallToolResultArgs = {
 
 /** Expand an output policy into its per-content-type representation. @internal */
 export function _resolveDetailedOutputHandling(
-  outputHandling: OutputHandling | undefined,
-  applyDefaults: boolean = false
+  outputHandling: OutputHandling | undefined
 ): DetailedOutputHandling {
   if (outputHandling == null) return {};
 
@@ -227,11 +226,8 @@ export function _resolveDetailedOutputHandling(
 
   const resolved: DetailedOutputHandling = {};
   for (const contentType of callToolResultContentTypes) {
-    if (outputHandling[contentType] || applyDefaults) {
-      resolved[contentType] =
-        outputHandling[contentType] ??
-        (contentType === "resource" ? "artifact" : "content");
-    }
+    if (outputHandling[contentType])
+      resolved[contentType] = outputHandling[contentType];
   }
   return resolved;
 }
@@ -277,18 +273,6 @@ export function convertCallToolResult({
   result,
   outputHandling,
 }: ConvertCallToolResultArgs): [ExtendedContent, ExtendedArtifact[]] {
-  if (result.isError) {
-    throw new ToolException(
-      `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: MCPContentBlock) =>
-          content.type === "text" ? content.text : ""
-        )
-        .join("\n")}`,
-      undefined,
-      result
-    );
-  }
-
   const convertedContent = result.content
     .filter(
       (block) =>
@@ -342,4 +326,72 @@ export function convertCallToolResult({
   }
 
   return [convertedContent, enhancedArtifacts];
+}
+
+/** A failed `ToolMessage` without text is fragile for some providers. */
+function withErrorText(content: ExtendedContent): ExtendedContent {
+  const blocks: ContentBlock[] =
+    typeof content === "string" ? [{ type: "text", text: content }] : content;
+
+  if (
+    blocks.some(
+      (block) =>
+        block.type === "text" &&
+        typeof block.text === "string" &&
+        block.text.trim() !== ""
+    )
+  )
+    return content;
+
+  const text = "The MCP tool returned an error without text content.";
+  const shown = blocks.filter((block) => block.type !== "text");
+
+  return shown.length ? [{ type: "text", text }, ...shown] : text;
+}
+
+/**
+ * Answer a tool call's `isError` result with a `status: "error"` message the
+ * model can act on; a plain-argument call throws `ToolException` instead.
+ *
+ * @internal
+ */
+export function convertCallToolError({
+  toolCallId,
+  name,
+  ...args
+}: ConvertCallToolResultArgs & {
+  /** Set only for a tool call; without it, this throws. */
+  toolCallId?: string;
+  /** The tool call's name. */
+  name?: string;
+}): ToolMessage {
+  const { serverName, toolName, result } = args;
+
+  if (!toolCallId)
+    throw new ToolException(
+      `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
+        .map((content: MCPContentBlock) =>
+          content.type === "text" ? content.text : ""
+        )
+        .join("\n")}`,
+      undefined,
+      result
+    );
+
+  const [content, artifact] = convertCallToolResult({
+    ...args,
+    // The model needs the error text to correct itself, whatever the routing.
+    outputHandling: {
+      ..._resolveDetailedOutputHandling(args.outputHandling),
+      text: "content",
+    },
+  });
+
+  return new ToolMessage({
+    status: "error",
+    content: withErrorText(content),
+    artifact,
+    tool_call_id: toolCallId,
+    name,
+  });
 }

@@ -224,6 +224,38 @@ describe("generator", () => {
       expect(content).toContain("maxOutputTokens: 8192");
     });
 
+    it("should build a profile from overrides for a model not in the API", async () => {
+      const mockProviderData: ProviderMap = {
+        openai: createMockProvider("openai", {
+          "gpt-4": createMockModel({
+            id: "gpt-4",
+            name: "gpt-4",
+          }),
+        }),
+      };
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockProviderData,
+      });
+
+      const outputPath = path.join(tempDir, "models.ts");
+
+      await generateModelProfiles(
+        "openai",
+        { toolCalling: true },
+        { "unlisted-model": { midConversationTools: true } },
+        outputPath
+      );
+
+      const content = fs.readFileSync(outputPath, "utf-8");
+      const unlisted = content.slice(content.indexOf('"unlisted-model"'));
+
+      expect(unlisted).toContain("toolCalling: true");
+      expect(unlisted).toContain("midConversationTools: true");
+      expect(unlisted).not.toContain("maxInputTokens");
+    });
+
     it("should handle image inputs", async () => {
       const mockProviderData: ProviderMap = {
         openai: createMockProvider("openai", {
