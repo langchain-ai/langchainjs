@@ -6,6 +6,10 @@ import {
 import type { FinishReason } from "@google/generative-ai";
 
 const ns = baseNs.sub("google-genai");
+const EmptyContentErrorBase: typeof LangChainError = ns.brand(
+  LangChainError,
+  "empty-content"
+);
 
 export interface EmptyContentErrorParams {
   /**
@@ -57,10 +61,7 @@ export interface EmptyContentErrorParams {
  * }
  * ```
  */
-export class EmptyContentError extends ns.brand(
-  LangChainError,
-  "empty-content"
-) {
+export class EmptyContentError extends EmptyContentErrorBase {
   readonly name = "EmptyContentError";
 
   readonly finishReason?: FinishReason | string;

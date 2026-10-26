@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import type { Plugin } from "rolldown";
 import { isSafeProjectPath, toPosixPath } from "../utils.ts";
 
@@ -191,14 +192,17 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
             ...(options.files ?? []),
             ...Array.from(pathsToEmit),
           ];
-          await fs.writeFile(
-            packageJsonPath,
-            /**
-             * set new line at the end of the file
-             * see .editorconfig
-             */
-            `${JSON.stringify(packageJson, null, 2)}\n`
-          );
+          const temporaryPath = `${packageJsonPath}.${randomUUID()}.tmp`;
+          try {
+            await fs.writeFile(
+              temporaryPath,
+              `${JSON.stringify(packageJson, null, 2)}\n`,
+              { flag: "wx" }
+            );
+            await fs.rename(temporaryPath, packageJsonPath);
+          } finally {
+            await fs.rm(temporaryPath, { force: true });
+          }
         }
       },
       order: "post",

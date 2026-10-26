@@ -3,6 +3,8 @@
 import type { AIMessageChunk } from "../messages/ai.js";
 import { ns as baseNs } from "../utils/namespace.js";
 
+export type { BrandedClass } from "../utils/namespace.js";
+
 export type LangChainErrorCodes =
   | "CONTEXT_OVERFLOW"
   | "INVALID_PROMPT_INPUT"
