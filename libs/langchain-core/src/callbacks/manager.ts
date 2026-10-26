@@ -1522,11 +1522,16 @@ export class CallbackManager
         callbackManager.inheritableHandlers
       );
       // Merged configs can register one handler more than once, which would
-      // deliver every callback to it that many times.
-      callbackManager.handlers = uniqueHandlers(coalesced.handlers);
-      callbackManager.inheritableHandlers = uniqueHandlers(
-        coalesced.inheritableHandlers
+      // deliver every callback to it that many times. Both lists keep the same
+      // wrapper per handler: copy() tells inheritable handlers by identity.
+      const inheritableHandlers = uniqueHandlers(coalesced.inheritableHandlers);
+      const inheritableBySource = new Map(
+        inheritableHandlers.map((handler) => [handlerSource(handler), handler])
       );
+      callbackManager.handlers = uniqueHandlers(coalesced.handlers).map(
+        (handler) => inheritableBySource.get(handlerSource(handler)) ?? handler
+      );
+      callbackManager.inheritableHandlers = inheritableHandlers;
     }
 
     return callbackManager;
@@ -1540,12 +1545,16 @@ const handlerSources = new WeakMap<
   CallbackHandlerMethods
 >();
 
+function handlerSource(handler: BaseCallbackHandler): object {
+  return handlerSources.get(handler) ?? handler;
+}
+
 function uniqueHandlers(
   handlers: BaseCallbackHandler[]
 ): BaseCallbackHandler[] {
   const seen = new Set<object>();
   return handlers.filter((handler) => {
-    const source = handlerSources.get(handler) ?? handler;
+    const source = handlerSource(handler);
     if (seen.has(source)) return false;
     seen.add(source);
     return true;

@@ -255,6 +255,28 @@ test.each(
   }
 );
 
+test("a handler local in one config and inheritable in another reaches child runs once", async () => {
+  const handler = { handleChainStart: vi.fn() };
+  const merged = mergeConfigs(
+    { callbacks: CallbackManager.configure(undefined, [handler]) },
+    { callbacks: [handler] }
+  );
+
+  const manager = CallbackManager.configure(
+    CallbackManager.configure(merged.callbacks)
+  );
+  const runManager = await manager?.handleChainStart(
+    { lc: 1, type: "not_implemented", id: ["test"] },
+    {}
+  );
+  await runManager
+    ?.getChild()
+    .handleChainStart({ lc: 1, type: "not_implemented", id: ["test"] }, {});
+  await awaitAllCallbacks();
+
+  expect(handler.handleChainStart).toHaveBeenCalledTimes(2);
+});
+
 test("a plain object handler runs the methods it has at each run", async () => {
   const first = vi.fn();
   const second = vi.fn();
