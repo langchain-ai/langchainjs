@@ -1,140 +1,157 @@
-import { BaseMessage, HumanMessage } from "@langchain/core/messages";
-import { convertMessagesToCompletionsMessageParams } from "../converters/completions.js";
+import type { OpenAI as OpenAIClient } from "openai";
+import { BaseMessage } from "@langchain/core/messages";
+import { convertMessagesToResponsesInput } from "../converters/responses.js";
 import type { DecisionInput } from "./types.js";
 
+type DecisionInputItem = Exclude<
+  OpenAIClient.DecisionCreateParams["input"],
+  string
+>[number];
+type AssistantPart = Exclude<
+  OpenAIClient.DecisionInputMessage.DecisionInputAssistantMessage["content"],
+  string
+>[number];
 type InputPart =
-  | { type: "input_text"; text: string }
-  | { type: "input_image"; image_url: string };
-
-const OMITTED_TYPES = new Set(["input_audio", "audio", "file", "video"]);
-
-function toOpenAIMessages(messages: BaseMessage[]) {
-  return convertMessagesToCompletionsMessageParams({ messages });
-}
-
-function dataImageURL(part: {
-  type?: unknown;
+  | OpenAIClient.DecisionInputText
+  | OpenAIClient.DecisionInputImage;
+type Part = {
+  type: string;
+  text?: unknown;
   image_url?: unknown;
-}): string | undefined {
-  if (part.type !== "image_url") return undefined;
-  const image = part.image_url;
-  const url =
-    typeof image === "string"
-      ? image
-      : typeof image === "object" && image !== null && "url" in image
-        ? image.url
-        : undefined;
-  return typeof url === "string" && url.startsWith("data:") ? url : undefined;
+  refusal?: unknown;
+};
+
+function toInputParts(content: unknown): InputPart[] {
+  return (content as Part[]).map((part) =>
+    part.type === "input_text" && typeof part.text === "string"
+      ? { type: "input_text", text: part.text }
+      : part.type === "input_image" && typeof part.image_url === "string"
+        ? { type: "input_image", image_url: part.image_url }
+        : { type: "input_text", text: `[${part.type} omitted]` }
+  );
 }
 
-/** User messages in the API's native form, or `undefined` if any part needs the JSON form. */
-function toNativeMessages(messages: HumanMessage[]) {
-  const native = [];
-  for (const { content } of toOpenAIMessages(messages)) {
-    if (typeof content === "string" || content == null) {
-      native.push({ role: "user", content: content ?? "" });
-      continue;
-    }
-    const parts: InputPart[] = [];
-    for (const part of content) {
-      const url = dataImageURL(part);
-      if (part.type === "text")
-        parts.push({ type: "input_text", text: part.text });
-      else if (url) parts.push({ type: "input_image", image_url: url });
-      else return undefined;
-    }
-    native.push({ role: "user", content: parts });
+/** Narrows a Responses input item to the fields the Decisions API accepts. */
+function toDecisionItem(
+  item: ReturnType<typeof convertMessagesToResponsesInput>[number]
+): DecisionInputItem[] {
+  if (!("type" in item) || item.type === "message") {
+    if (!("role" in item)) return [];
+    const { role, content } = item;
+    if (role === "user")
+      return [
+        {
+          role,
+          content:
+            typeof content === "string" ? content : toInputParts(content),
+        },
+      ];
+    if (role === "system" || role === "developer")
+      return [
+        {
+          role,
+          content:
+            typeof content === "string"
+              ? content
+              : toInputParts(content).map((part) =>
+                  part.type === "input_text"
+                    ? part
+                    : { type: "input_text", text: "[image omitted]" }
+                ),
+        },
+      ];
+    if (role === "assistant")
+      return [
+        {
+          role,
+          content:
+            typeof content === "string"
+              ? content
+              : (content as Part[]).flatMap((part): AssistantPart[] =>
+                  part.type === "output_text" && typeof part.text === "string"
+                    ? [{ type: "output_text", text: part.text }]
+                    : part.type === "refusal" &&
+                        typeof part.refusal === "string"
+                      ? [{ type: "refusal", refusal: part.refusal }]
+                      : []
+                ),
+        },
+      ];
+    return [];
   }
-  return native;
+  if (item.type === "function_call" || item.type === "custom_tool_call") {
+    const { type, call_id, name } = item;
+    return type === "function_call"
+      ? [{ type, call_id, name, arguments: item.arguments }]
+      : [{ type, call_id, name, input: item.input }];
+  }
+  if (
+    item.type === "function_call_output" ||
+    item.type === "custom_tool_call_output"
+  ) {
+    const { type, call_id, output } = item;
+    return [
+      {
+        type,
+        call_id: call_id ?? "",
+        output: typeof output === "string" ? output : toInputParts(output),
+      },
+    ];
+  }
+  return [];
 }
 
-/** Encodes state as JSON text, splitting out base64 images as image parts where they occur. */
-function toJSONParts(state: DecisionInput): InputPart[] {
-  const parts: InputPart[] = [];
-  let text = "";
-  const seen = new Set<object>();
-  const flush = () => {
-    if (text) parts.push({ type: "input_text", text });
-    text = "";
-  };
-  const write = (value: unknown): void => {
-    if (BaseMessage.isInstance(value))
-      return write(toOpenAIMessages([value])[0]);
-    if (value instanceof Date) return write(value.toISOString());
-    if (
-      value === null ||
-      typeof value === "string" ||
-      typeof value === "boolean" ||
-      (typeof value === "number" && Number.isFinite(value))
-    ) {
-      text += JSON.stringify(value);
-      return;
-    }
-    if (typeof value !== "object")
-      throw new TypeError(
-        `Unsupported OpenAI Decisions input value: ${typeof value}.`
-      );
-    if (seen.has(value))
-      throw new TypeError("OpenAI Decisions input contains a cycle.");
-    if (Array.isArray(value)) {
-      seen.add(value);
-      text += "[";
-      value.forEach((item, i) => {
-        if (i) text += ",";
-        write(item ?? null);
-      });
-      text += "]";
-      seen.delete(value);
-      return;
-    }
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null)
-      throw new TypeError(
-        `Unsupported OpenAI Decisions input value: ${value.constructor?.name ?? "object"}.`
-      );
-    const record = value as Record<string, unknown>;
-    const url = dataImageURL(record);
-    if (url) {
-      flush();
-      parts.push({ type: "input_image", image_url: url });
-      return;
-    }
-    if (typeof record.type === "string" && OMITTED_TYPES.has(record.type))
-      return write(`[${record.type} omitted]`);
-    seen.add(value);
-    text += "{";
-    let first = true;
-    for (const [key, item] of Object.entries(record)) {
-      if (item === undefined) continue;
-      text += `${first ? "" : ","}${JSON.stringify(key)}:`;
-      first = false;
-      write(item);
-    }
-    text += "}";
-    seen.delete(value);
-  };
-  write(state);
-  flush();
-  return parts;
+function toDecisionItems(messages: BaseMessage[]): DecisionInputItem[] {
+  return convertMessagesToResponsesInput({
+    messages,
+    zdrEnabled: true,
+    model: "",
+  }).flatMap(toDecisionItem);
+}
+
+/** Replaces messages nested in JSON with their Decisions input items. */
+function toJSONValue(value: unknown): unknown {
+  if (BaseMessage.isInstance(value)) return toDecisionItems([value]);
+  if (Array.isArray(value))
+    return value.flatMap((item) =>
+      BaseMessage.isInstance(item)
+        ? toDecisionItems([item])
+        : [toJSONValue(item)]
+    );
+  if (typeof value === "object" && value?.constructor === Object)
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, toJSONValue(item)])
+    );
+  return value;
 }
 
 /**
  * Converts input to the Decisions API `input` field.
  *
- * Strings and human-only messages are sent natively. Anything else is sent as JSON
- * text in one user message, with base64 images kept in place and audio, video and
- * files replaced by placeholders.
+ * Messages become a native conversation, with tool calls and results as function
+ * call items. Content the API does not accept, such as files, is replaced by a
+ * placeholder. JSON objects are sent as an `input_json` part in a user message,
+ * with any nested messages converted the same way.
  */
-export function toDecisionInput(state: DecisionInput) {
-  if (typeof state === "string") return state;
-  const messages = BaseMessage.isInstance(state) ? [state] : state;
+export function toDecisionInput(
+  input: DecisionInput
+): OpenAIClient.DecisionCreateParams["input"] {
+  if (typeof input === "string") return input;
+  const values = Array.isArray(input) ? input : [input];
   if (
-    Array.isArray(messages) &&
-    messages.length > 0 &&
-    messages.every((message) => HumanMessage.isInstance(message))
-  ) {
-    const native = toNativeMessages(messages);
-    if (native) return native;
-  }
-  return [{ role: "user", content: toJSONParts(state) }];
+    values.length > 0 &&
+    values.every((value) => BaseMessage.isInstance(value))
+  )
+    return toDecisionItems(values);
+  return [
+    {
+      role: "user",
+      content: [
+        {
+          type: "input_json",
+          data: toJSONValue(input) as OpenAIClient.DecisionInputJSON["data"],
+        },
+      ],
+    },
+  ];
 }

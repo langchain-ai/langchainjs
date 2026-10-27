@@ -3,11 +3,10 @@ import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { wrapOpenAIClientError } from "../utils/client.js";
 import { toDecisionInput } from "./input.js";
+import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
 import {
-  parseAnswers,
-  parseQuestions,
-  responseSchema,
   toWireQuestion,
+  type Answers,
   type DecisionRequest,
   type DecisionResult,
   type Questions,
@@ -94,33 +93,40 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
         { input, questions }: DecisionRequest<Q>,
         config?: Partial<RunnableConfig>
       ): Promise<DecisionResult<Q>> => {
-        parseQuestions(questions);
-        const body = {
-          model: this.model,
-          input: toDecisionInput(input),
-          questions: Object.entries(questions).map(([name, question]) =>
-            toWireQuestion(name, question)
-          ),
-        };
-        let data: unknown;
+        const names = Object.keys(questions);
+        if (!names.length)
+          throw new Error("OpenAI Decisions requires at least one question.");
+        let decision: OpenAIClient.Decision;
         let response: Response;
         try {
-          ({ data, response } = await this.client
-            .post<unknown>("/decisions", { body, signal: config?.signal })
+          ({ data: decision, response } = await this.client.decisions
+            .create(
+              {
+                model: this.model,
+                input: toDecisionInput(input),
+                questions: names.map((name) =>
+                  toWireQuestion(name, questions[name])
+                ),
+              },
+              { signal: config?.signal }
+            )
             .withResponse());
         } catch (error) {
           throw wrapOpenAIClientError(error);
         }
-        const parsed = responseSchema.safeParse(data);
-        if (!parsed.success)
-          throw new Error("Invalid response from the OpenAI Decisions API.", {
-            cause: parsed.error,
-          });
+        const answers = new Map(
+          decision.answers.map(({ name, ...answer }) => [name, answer])
+        );
+        for (const name of names)
+          if (!answers.has(name))
+            throw new Error(
+              `OpenAI Decisions returned no answer for question "${name}".`
+            );
         return {
-          answers: parseAnswers(questions, parsed.data.answers),
-          model: parsed.data.model,
+          answers: Object.fromEntries(answers) as Answers<Q>,
+          model: decision.model,
           requestId: response.headers.get("x-request-id") ?? undefined,
-          usage_metadata: parsed.data.usage,
+          usage_metadata: convertResponsesUsageToUsageMetadata(decision.usage),
         };
       },
       request,

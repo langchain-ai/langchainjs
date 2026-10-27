@@ -73,9 +73,14 @@ describe("openAIAutoModeMiddleware", () => {
     expect(fetch).toHaveBeenCalledOnce();
     const { input, questions } = sent();
     expect(questions[0]).toMatchObject({ type: "predicate", name: "is_risky" });
-    const text = input[0].content[0].text;
-    expect(text).toContain('"tool_call":{"id":"c","name":"delete"');
-    expect(text).toContain('"tool_description":"Deletes a file"');
+    expect(input[0].content[0]).toEqual({
+      type: "input_json",
+      data: {
+        messages: [{ role: "user", content: "delete backup" }],
+        tool_call: { id: "c", name: "delete", args: { path: "backup" } },
+        tool_description: "Deletes a file",
+      },
+    });
   });
 
   it("propagates failures without running the tool", async () => {
@@ -132,7 +137,10 @@ describe("openAIModelRouterMiddleware", () => {
       modelRoute: {
         choice: "fast",
         confidence: 0.9,
-        probabilities: { fast: 0.95, slow: 0.05 },
+        probabilities: [
+          { value: "fast", probability: 0.95 },
+          { value: "slow", probability: 0.05 },
+        ],
       },
     });
     expect(sent().input).toEqual([{ role: "user", content: "latest" }]);

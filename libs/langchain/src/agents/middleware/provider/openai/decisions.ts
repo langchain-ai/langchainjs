@@ -10,7 +10,7 @@ type DecisionAnswer =
       type: "choice";
       choice: string;
       confidence: number;
-      probabilities: Record<string, number>;
+      probabilities: { value: string; probability: number }[];
     }
   | { type: "score" | "refusal" };
 
@@ -151,7 +151,9 @@ export interface OpenAIModelRouterMiddlewareOptions {
 const routeSchema = z.object({
   choice: z.string(),
   confidence: z.number(),
-  probabilities: z.record(z.string(), z.number()),
+  probabilities: z.array(
+    z.object({ value: z.string(), probability: z.number() })
+  ),
 });
 
 /**

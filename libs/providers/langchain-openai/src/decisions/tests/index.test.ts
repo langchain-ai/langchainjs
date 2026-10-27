@@ -1,5 +1,10 @@
 import { describe, it, expect, expectTypeOf, vi } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import {
   OpenAIDecisions,
   type ChoiceAnswer,
@@ -25,7 +30,8 @@ function setup(body: unknown) {
     apiKey: "test-key",
     configuration: { fetch, maxRetries: 0 },
   });
-  return { fetch, decisions };
+  const sent = () => JSON.parse(String(fetch.mock.calls[0][1]?.body));
+  return { fetch, decisions, sent };
 }
 
 const questions = {
@@ -42,66 +48,64 @@ const questions = {
   },
 } as const;
 
-const answers = [
-  { name: "urgent", type: "predicate", probability: 0.9 },
-  {
-    name: "team",
-    type: "choice",
-    choice: "billing",
-    confidence: 0.8,
-    probabilities: [
-      { value: "billing", probability: 0.9 },
-      { value: "technical", probability: 0.1 },
-    ],
+const choice = {
+  type: "choice",
+  choice: "billing",
+  confidence: 0.8,
+  probabilities: [
+    { value: "billing", probability: 0.9 },
+    { value: "technical", probability: 0.1 },
+  ],
+};
+const score = {
+  type: "score",
+  score: 0.8,
+  confidence: 0.7,
+  probabilities: [
+    { value: 0, label: "Low", probability: 0.2 },
+    { value: 1, label: "High", probability: 0.8 },
+  ],
+};
+const body = {
+  model: "decision-model-1",
+  answers: [
+    { name: "urgent", type: "predicate", probability: 0.9 },
+    { name: "team", ...choice },
+    { name: "severity", ...score },
+  ],
+  usage: {
+    input_tokens: 10,
+    input_tokens_details: { cached_tokens: 4, cache_write_tokens: 0 },
+    output_tokens: 2,
+    output_tokens_details: { reasoning_tokens: 0 },
+    total_tokens: 12,
   },
-  {
-    name: "severity",
-    type: "score",
-    score: 0.8,
-    confidence: 0.7,
-    probabilities: [
-      { value: 1, label: "High", probability: 0.8 },
-      { value: 0, label: "Low", probability: 0.2 },
-    ],
-  },
-  { name: "extra", type: "future" },
-];
+};
 
 describe("OpenAIDecisions", () => {
   it("sends named questions and returns typed answers", async () => {
-    const { fetch, decisions } = setup({
-      model: "decision-model-1",
-      answers,
-      usage: { input_tokens: 10, output_tokens: 2 },
-    });
+    const { decisions, sent } = setup(body);
     const result = await decisions.invoke({ input: "help", questions });
     expect(result).toEqual({
       model: "decision-model-1",
       requestId: "req-123",
-      usage_metadata: { input_tokens: 10, output_tokens: 2, total_tokens: 12 },
+      usage_metadata: {
+        input_tokens: 10,
+        output_tokens: 2,
+        total_tokens: 12,
+        input_token_details: { cache_read: 4, cache_creation: 0 },
+        output_token_details: { reasoning: 0 },
+      },
       answers: {
         urgent: { type: "predicate", probability: 0.9 },
-        team: {
-          type: "choice",
-          choice: "billing",
-          confidence: 0.8,
-          probabilities: { billing: 0.9, technical: 0.1 },
-        },
-        severity: {
-          type: "score",
-          score: 0.8,
-          confidence: 0.7,
-          levels: [
-            { label: "Low", probability: 0.2 },
-            { label: "High", probability: 0.8 },
-          ],
-        },
+        team: choice,
+        severity: score,
       },
     });
     expectTypeOf(result.answers.team).toEqualTypeOf<
       ChoiceAnswer<"billing" | "technical"> | RefusalAnswer
     >();
-    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toEqual({
+    expect(sent()).toEqual({
       model: "decision-model",
       input: "help",
       questions: [
@@ -125,86 +129,31 @@ describe("OpenAIDecisions", () => {
     });
   });
 
-  it("accepts refusals and rejects missing or invalid answers", async () => {
-    const respond = (body: unknown) =>
-      new OpenAIDecisions({
-        model: "m",
-        apiKey: "k",
-        configuration: {
-          maxRetries: 0,
-          fetch: async () =>
-            new Response(JSON.stringify(body), {
-              headers: { "content-type": "application/json" },
-            }),
-        },
-      }).invoke({
-        input: "x",
-        questions: { urgent: { type: "predicate", instructions: "Urgent?" } },
-      });
-    await expect(
-      respond({
-        model: "m",
-        answers: [{ name: "urgent", type: "refusal", reason: "policy" }],
-      })
-    ).resolves.toMatchObject({
-      answers: { urgent: { type: "refusal", reason: "policy" } },
+  it("returns refusals and rejects missing answers", async () => {
+    const urgent = { urgent: questions.urgent };
+    const refused = setup({
+      ...body,
+      answers: [{ name: "urgent", type: "refusal" }],
     });
-    await expect(respond({ model: "m", answers: [] })).rejects.toThrow(
-      'question "urgent"'
-    );
-    await expect(
-      respond({
-        model: "m",
-        answers: [{ name: "urgent", type: "predicate", probability: 2 }],
-      })
-    ).rejects.toThrow('question "urgent"');
-    await expect(
-      respond({
-        model: "m",
-        answers: [{ name: "urgent", type: "score", score: 1 }],
-      })
-    ).rejects.toThrow('question "urgent"');
-  });
-
-  it("validates questions before sending", async () => {
-    const { fetch, decisions } = setup({ model: "m", answers });
-    const ask = (questions: never) =>
-      decisions.invoke({ input: "x", questions });
-    await expect(
-      ask({
-        s: { type: "score", instructions: "Rate", levels: ["One"] },
-      } as never)
-    ).rejects.toThrow(
-      'question "s": levels: Score requires at least two levels.'
-    );
-    await expect(
-      ask({ c: { type: "choice", instructions: "Pick", choices: {} } } as never)
-    ).rejects.toThrow("at least one option");
-    await expect(
-      ask({ p: { type: "predicate", instructions: " " } } as never)
-    ).rejects.toThrow("instructions must not be empty");
-    await expect(ask({} as never)).rejects.toThrow("at least one question");
-    expect(fetch).not.toHaveBeenCalled();
-    expect(() => new OpenAIDecisions({ model: "", apiKey: "k" })).toThrow();
-  });
-
-  it("infers answer types per call", async () => {
-    const { decisions } = setup({
-      model: "m",
-      answers: [{ name: "spam", type: "predicate", probability: 0.1 }],
+    const { answers } = await refused.decisions.invoke({
+      input: "x",
+      questions: urgent,
     });
-    const { answers: result } = await decisions.invoke({
-      input: "hi",
-      questions: { spam: { type: "predicate", instructions: "Spam?" } },
-    });
-    expectTypeOf(result).toEqualTypeOf<{
-      spam: PredicateAnswer | RefusalAnswer;
-    }>();
-    expect(result.spam).toEqual({ type: "predicate", probability: 0.1 });
+    expectTypeOf(answers.urgent).toEqualTypeOf<
+      PredicateAnswer | RefusalAnswer
+    >();
+    expect(answers.urgent).toEqual({ type: "refusal" });
+    const missing = setup({ ...body, answers: [] });
+    await expect(
+      missing.decisions.invoke({ input: "x", questions: urgent })
+    ).rejects.toThrow('no answer for question "urgent"');
+    await expect(
+      missing.decisions.invoke({ input: "x", questions: {} })
+    ).rejects.toThrow("at least one question");
   });
 
   it("supports batch and composition", async () => {
-    const { decisions } = setup({ model: "m", answers });
+    const { decisions } = setup(body);
     const request = { input: "a", questions };
     expect(await decisions.batch([request, request])).toHaveLength(2);
     expect(
@@ -212,32 +161,25 @@ describe("OpenAIDecisions", () => {
     ).toBe("predicate");
   });
 
-  it("traces an LLM run with provider metadata and usage", async () => {
-    const { decisions } = setup({
-      model: "m",
-      answers,
-      usage: { input_tokens: 3 },
-    });
+  it("traces an LLM run whose output carries usage_metadata", async () => {
+    const { decisions } = setup(body);
     const start = vi.fn();
     const end = vi.fn();
     await decisions.invoke(
       { input: "a", questions },
-      {
-        callbacks: [{ handleChainStart: start, handleChainEnd: end }],
-      }
+      { callbacks: [{ handleChainStart: start, handleChainEnd: end }] }
     );
     expect(start.mock.calls[0][6]).toBe("llm");
     expect(start.mock.calls[0][5]).toMatchObject({
       ls_provider: "openai",
       ls_model_name: "decision-model",
     });
-    expect(start.mock.calls[0][1]).toMatchObject({ input: "a" });
-    expect(end.mock.calls[0][0].usage_metadata.total_tokens).toBe(3);
+    expect(end.mock.calls[0][0].usage_metadata.total_tokens).toBe(12);
     expect(JSON.stringify(decisions.toJSON())).not.toContain("test-key");
   });
 
   it("does not send a request once aborted", async () => {
-    const { fetch, decisions } = setup({ model: "m", answers });
+    const { fetch, decisions } = setup(body);
     const controller = new AbortController();
     controller.abort();
     await expect(
@@ -248,69 +190,74 @@ describe("OpenAIDecisions", () => {
 });
 
 describe("toDecisionInput", () => {
-  it("sends human messages natively", () => {
+  it("sends messages as a native conversation", () => {
     expect(
-      toDecisionInput(
+      toDecisionInput([
+        new SystemMessage("Be careful."),
         new HumanMessage({
           content: [
             { type: "text", text: "see" },
             { type: "image_url", image_url: { url: image } },
+            {
+              type: "file",
+              source_type: "base64",
+              mime_type: "application/pdf",
+              data: "AAAA",
+            },
           ],
-        })
-      )
+        }),
+        new AIMessage({
+          content: "Reading it.",
+          tool_calls: [{ id: "c", name: "read", args: { path: "a" } }],
+        }),
+        new ToolMessage({ content: "ok", tool_call_id: "c" }),
+      ])
     ).toEqual([
+      { role: "system", content: "Be careful." },
       {
         role: "user",
         content: [
           { type: "input_text", text: "see" },
           { type: "input_image", image_url: image },
+          { type: "input_text", text: "[input_file omitted]" },
+        ],
+      },
+      { role: "assistant", content: "Reading it." },
+      {
+        type: "function_call",
+        call_id: "c",
+        name: "read",
+        arguments: '{"path":"a"}',
+      },
+      { type: "function_call_output", call_id: "c", output: "ok" },
+    ]);
+  });
+
+  it("sends JSON as an input_json part", () => {
+    expect(toDecisionInput({ account: { tier: "pro" } })).toEqual([
+      {
+        role: "user",
+        content: [{ type: "input_json", data: { account: { tier: "pro" } } }],
+      },
+    ]);
+    expect(
+      toDecisionInput({
+        messages: [new HumanMessage("delete it")],
+        tool_call: { name: "delete" },
+      })
+    ).toEqual([
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_json",
+            data: {
+              messages: [{ role: "user", content: "delete it" }],
+              tool_call: { name: "delete" },
+            },
+          },
         ],
       },
     ]);
-  });
-
-  it("encodes other input as JSON with images in place", () => {
-    const input = toDecisionInput({
-      messages: [
-        new HumanMessage("hi"),
-        new AIMessage({
-          content: [{ type: "image_url", image_url: { url: image } }],
-          tool_calls: [{ id: "c", name: "read", args: {} }],
-        }),
-        new ToolMessage({ content: "ok", tool_call_id: "c" }),
-      ],
-      at: new Date(0),
-    });
-    expect(input).toHaveLength(1);
-    const [{ content }] = input as { content: Record<string, string>[] }[];
-    expect(content.map((part) => part.type)).toEqual([
-      "input_text",
-      "input_image",
-      "input_text",
-    ]);
-    const text = content[0].text + content[2].text;
-    expect(text).toContain('{"messages":[{"role":"user","content":"hi"}');
-    expect(text).toContain('"tool_call_id":"c"');
-    expect(text).toContain('"at":"1970-01-01T00:00:00.000Z"');
-  });
-
-  it("falls back to JSON for hosted images and omits other media", () => {
-    const [{ content }] = toDecisionInput(
-      new HumanMessage({
-        content: [
-          { type: "image_url", image_url: "https://example.com/a.png" },
-          { type: "audio", mimeType: "audio/wav", data: "AAAA" },
-        ],
-      })
-    ) as { content: { text: string }[] }[];
-    expect(content[0].text).toContain("https://example.com/a.png");
-    expect(content[0].text).not.toContain("AAAA");
-  });
-
-  it("rejects values that are not JSON and cycles", () => {
-    expect(() => toDecisionInput({ bad: new Map() } as never)).toThrow("Map");
-    const cyclic: Record<string, unknown> = {};
-    cyclic.self = cyclic;
-    expect(() => toDecisionInput(cyclic as never)).toThrow("cycle");
   });
 });

@@ -742,15 +742,16 @@ if (answers.team.type === "choice") {
 }
 ```
 
-Every question gets an answer of its own type, or a `refusal`. A `score` is the
-probability-weighted average of the zero-based level indices, and `levels[i]` holds
-the label and probability of level `i`.
+Every question gets an answer of its own type, or a `refusal`. Answers use the
+OpenAI SDK's `Decision` answer shapes without `name`. A `score` is the
+probability-weighted average of the zero-based level indices.
 
-Strings and human-only messages with text and base64 images are sent as they are.
-Anything else, such as conversations with AI or tool messages, or JSON objects, is
-sent as JSON text with base64 images kept in place. Audio, video and files are
-replaced by placeholders. Runs are traced to LangSmith as LLM runs with token usage.
-`configuration` accepts OpenAI SDK client options such as `baseURL` and `fetch`.
+Messages are sent as a native conversation, including system and AI messages, tool
+calls and tool results. Content the API does not accept, such as files, is replaced
+by a placeholder. JSON objects are sent as an `input_json` part, with nested messages
+converted the same way. Runs are traced to LangSmith as LLM runs, and the output's
+`usage_metadata` records token usage. `configuration` accepts OpenAI SDK client
+options such as `baseURL` and `fetch`.
 
 ### Agent middleware
 

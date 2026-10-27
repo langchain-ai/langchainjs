@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "^7.23.0",
+    "openai": "^7.45.1",
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
