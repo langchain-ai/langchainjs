@@ -3,4 +3,4 @@
 "langchain": minor
 ---
 
-Add beta OpenAI Decisions runnable with named predicate, choice and score questions, LangChain message input and token usage tracing, plus model-routing and tool-risk agent middleware.
+Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.

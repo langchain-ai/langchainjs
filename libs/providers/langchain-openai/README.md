@@ -710,15 +710,15 @@ If you add a new file to be exported, either import & re-export from `src/index.
 
 ## Decisions API (beta)
 
-`OpenAIDecisions` is a runnable for typed decisions, not a chat model. Set
-`OPENAI_API_KEY`, then supply a decisions-capable model and named questions:
+`OpenAIDecisions` asks typed questions about text, messages or JSON state. It is a
+runnable, not a chat model. Questions are fixed when you create it, and the answer
+types are inferred from them:
 
 ```typescript
 import { OpenAIDecisions } from "@langchain/openai";
 
-const decisions = new OpenAIDecisions({ model: "gpt-6-luna" });
-const response = await decisions.invoke({
-  input: "The deploy failed and customers are seeing 500s.",
+const triage = new OpenAIDecisions({
+  model: "gpt-6-luna",
   questions: {
     urgent: {
       type: "predicate",
@@ -736,31 +736,30 @@ const response = await decisions.invoke({
     },
   },
 });
-console.log(response.predicates.urgent?.probability);
-console.log(response.choices.team?.choice);
-console.log(response.scores.severity?.score);
+
+const { answers } = await triage.invoke(
+  "The deploy failed and customers are seeing 500s."
+);
+if (answers.team.type === "choice") {
+  answers.team.choice; // "infra" | "billing"
+}
 ```
 
-Questions are TypeScript discriminated objects (`Predicate`, `Choice`, `Score`),
-not Python-style constructors. Answers are keyed by question name on `answers`,
-`predicates`, `choices`, `scores`, and `refusals`. A refusal has no corresponding
-answer in its typed group: check for a missing key before acting. Scores are
-probability-weighted zero-based level indices; `legend` maps indices to labels.
-JS object keys are strings, including boolean-valued choice probabilities.
+Every question gets an answer of its own type, or a `refusal`. A `score` is the
+probability-weighted average of the zero-based level indices, and `levels[i]` holds
+the label and probability of level `i`. `withQuestions()` returns a copy that asks
+different questions with the same model and client options.
 
-Input supports strings, LangChain messages, and JSON state. Human messages use
-native text and base64 data URL images; hosted images and other native media are
-not supported. Other roles and JSON state are serialized in a user message, with
-base64 images preserved in position. Batch and runnable composition work as usual.
-LangSmith callbacks record an LLM run with provider metadata and token usage.
-`configuration` accepts OpenAI SDK client options (base URL, headers, timeout,
-retries, custom fetch). Gateway routing must be configured explicitly through
-`configuration.baseURL` and `apiKey`; it is not inferred from Python gateway flags.
+Strings and human-only messages with text and base64 images are sent as they are.
+Anything else, such as conversations with AI or tool messages, or JSON objects, is
+sent as JSON text with base64 images kept in place. Audio, video and files are
+replaced by placeholders. Runs are traced to LangSmith as LLM runs with token usage.
+`configuration` accepts OpenAI SDK client options such as `baseURL` and `fetch`.
 
 ### Agent middleware
 
-Install `langchain` alongside `@langchain/openai`. Middleware lives in `langchain`
-like the other JS provider middleware, rather than in the provider package:
+`openAIModelRouterMiddleware` and `openAIAutoModeMiddleware` are exported from
+`langchain`. Pass a Decisions model name or an `OpenAIDecisions` instance:
 
 ```typescript
 import {
@@ -768,36 +767,29 @@ import {
   openAIAutoModeMiddleware,
   openAIModelRouterMiddleware,
 } from "langchain";
-import { OpenAIDecisions } from "@langchain/openai";
 
-const decisions = new OpenAIDecisions({ model: "gpt-6-luna" });
 const agent = createAgent({
   model: "openai:gpt-6-luna",
-  tools: [],
+  tools: [readFile, deleteFile],
   middleware: [
     openAIModelRouterMiddleware({
-      model: decisions,
+      model: "gpt-6-luna",
       instructions: "Choose the least costly model suited to this task.",
       choices: {
         fast: { model: "openai:gpt-6-luna", criteria: "Simple tasks" },
         powerful: { model: "openai:gpt-6-sol", criteria: "Complex tasks" },
       },
     }),
-    openAIAutoModeMiddleware({ model: decisions, tools: ["delete_file"] }),
+    openAIAutoModeMiddleware({ model: "gpt-6-luna", tools: ["delete_file"] }),
   ],
 });
 ```
 
-The router classifies the latest human message once per invocation and stores the
-choice, probabilities and confidence in `model_route`. No human message or a
-refusal clears the route and retains the agent's own model. Tool-risk gating
-classifies only listed tools using the proposed call and the last 30 messages.
-Probability >= 0.5 or a refusal returns an error ToolMessage without execution;
-API errors propagate without execution. Unsupported media is replaced by text
-placeholders; image rejection (400/413) retries once without images.
-
-These beta middleware do not ask for human approval and are not a security
-boundary. Use human-in-the-loop middleware for approval of dangerous operations.
-Conversation state and arguments are sent to OpenAI and can appear in traces;
-do not include secrets unless that disclosure is acceptable. Python's middleware
-trace-payload omission policy has no equivalent in this JS implementation.
+The router classifies the latest human message once per run, stores the answer in
+`modelRoute`, and uses the chosen model for the rest of the run. Without a human
+message, or on a refusal, the agent's own model is used. Auto mode classifies only the
+listed tools, using the proposed call and the last 30 messages. A risk probability of
+0.5 or more, or a refusal, returns an error `ToolMessage` without running the tool,
+and API errors propagate. It blocks rather than asking for approval, so it is not a
+replacement for `humanInTheLoopMiddleware`. Conversation state and tool arguments are
+sent to OpenAI and can appear in traces.

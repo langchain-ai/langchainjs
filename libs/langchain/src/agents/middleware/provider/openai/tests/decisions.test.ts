@@ -1,61 +1,64 @@
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-import { OpenAIDecisions, type DecisionResponse } from "@langchain/openai";
+import { OpenAIDecisions } from "@langchain/openai";
 import {
   openAIAutoModeMiddleware,
   openAIModelRouterMiddleware,
 } from "../decisions.js";
 import type { ToolCallRequest } from "../../../types.js";
 
-function response(probability?: number): DecisionResponse {
-  return {
+function decisions(answers: Record<string, unknown>[] | Error) {
+  const fetch = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+    if (answers instanceof Error) throw answers;
+    const { questions } = JSON.parse(String(init?.body));
+    return new Response(
+      JSON.stringify({
+        model: "m",
+        answers: answers.map((answer) => ({
+          name: questions[0].name,
+          ...answer,
+        })),
+      }),
+      { headers: { "content-type": "application/json" } }
+    );
+  });
+  const model = new OpenAIDecisions({
     model: "m",
-    answers: {},
-    predicates:
-      probability === undefined
-        ? {}
-        : { is_risky: { type: "predicate", probability } },
-    choices: {},
-    scores: {},
-    refusals: {},
-    usage: {},
-    usage_metadata: { input_tokens: 0, output_tokens: 0, total_tokens: 0 },
-    request_id: null,
-  };
+    apiKey: "test",
+    configuration: { fetch, maxRetries: 0 },
+  });
+  const sent = (call = 0) =>
+    JSON.parse(String(fetch.mock.calls[call][1]?.body));
+  return { model, fetch, sent };
 }
-function model(result: DecisionResponse) {
-  const decisions = new OpenAIDecisions({ model: "m", apiKey: "test" });
-  const invoke = vi.spyOn(decisions, "invoke").mockResolvedValue(result);
-  return { decisions, invoke };
-}
+
 const request = {
   toolCall: { id: "c", name: "delete", args: { path: "backup" } },
-  tool: undefined,
+  tool: { name: "delete", description: "Deletes a file" },
   state: { messages: [new HumanMessage("delete backup")] },
   runtime: {},
-} as ToolCallRequest;
-describe("OpenAI Decisions middleware", () => {
-  it.each([0.5, 0.9, undefined])(
-    "blocks risky or refused calls (%s)",
-    async (probability) => {
-      const { decisions } = model(response(probability));
-      const middleware = openAIAutoModeMiddleware({
-        model: decisions,
-        tools: ["delete"],
-      });
-      const handler = vi.fn();
-      const result = await middleware.wrapToolCall!(request, handler);
-      expect(handler).not.toHaveBeenCalled();
-      expect(result).toBeInstanceOf(ToolMessage);
-      expect((result as ToolMessage).status).toBe("error");
-    }
-  );
-  it("executes safe calls and bypasses unlisted tools", async () => {
-    const { decisions, invoke } = model(response(0.1));
-    const middleware = openAIAutoModeMiddleware({
-      model: decisions,
-      tools: ["delete"],
-    });
+} as unknown as ToolCallRequest;
+
+describe("openAIAutoModeMiddleware", () => {
+  it.each([
+    [{ type: "predicate", probability: 0.5 }, "probability: 0.50"],
+    [{ type: "refusal" }, "could not be assessed"],
+  ])("blocks risky or refused calls (%j)", async (answer, message) => {
+    const { model } = decisions([answer]);
+    const middleware = openAIAutoModeMiddleware({ model, tools: ["delete"] });
+    const handler = vi.fn();
+    const result = await middleware.wrapToolCall!(request, handler);
+    expect(handler).not.toHaveBeenCalled();
+    expect(result).toBeInstanceOf(ToolMessage);
+    expect((result as ToolMessage).status).toBe("error");
+    expect((result as ToolMessage).content).toContain(message);
+  });
+
+  it("runs safe calls, skips unlisted tools and sends the call", async () => {
+    const { model, fetch, sent } = decisions([
+      { type: "predicate", probability: 0.1 },
+    ]);
+    const middleware = openAIAutoModeMiddleware({ model, tools: ["delete"] });
     const handler = vi
       .fn()
       .mockResolvedValue(
@@ -67,69 +70,54 @@ describe("OpenAI Decisions middleware", () => {
       handler
     );
     expect(handler).toHaveBeenCalledTimes(2);
-    expect(invoke).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledOnce();
+    const { input, questions } = sent();
+    expect(questions[0]).toMatchObject({ type: "predicate", name: "is_risky" });
+    const text = input[0].content[0].text;
+    expect(text).toContain('"tool_call":{"id":"c","name":"delete"');
+    expect(text).toContain('"tool_description":"Deletes a file"');
   });
-  it("propagates failures without executing", async () => {
-    const { decisions, invoke } = model(response(0));
-    invoke.mockRejectedValue(new Error("unavailable"));
-    const middleware = openAIAutoModeMiddleware({
-      model: decisions,
-      tools: ["delete"],
-    });
+
+  it("propagates failures without running the tool", async () => {
+    const { model } = decisions(new Error("unavailable"));
+    const middleware = openAIAutoModeMiddleware({ model, tools: ["delete"] });
     const handler = vi.fn();
-    await expect(middleware.wrapToolCall!(request, handler)).rejects.toThrow(
-      "unavailable"
-    );
+    await expect(middleware.wrapToolCall!(request, handler)).rejects.toThrow();
     expect(handler).not.toHaveBeenCalled();
   });
-  it("retries rejected images once with text placeholders", async () => {
-    const { decisions, invoke } = model(response(0.1));
-    invoke.mockRejectedValueOnce(
-      Object.assign(new Error("image"), { status: 400 })
+
+  it("validates options", () => {
+    expect(() => openAIAutoModeMiddleware({ model: "m", tools: [] })).toThrow(
+      "at least one tool"
     );
-    const middleware = openAIAutoModeMiddleware({
-      model: decisions,
-      tools: ["delete"],
-    });
-    const handler = vi.fn();
-    await middleware.wrapToolCall!(
-      {
-        ...request,
-        state: {
-          ...request.state,
-          messages: [
-            new HumanMessage({
-              content: [
-                { type: "image_url", image_url: "data:image/png;base64,AA==" },
-              ],
-            }),
-          ],
-        },
-      },
-      handler
-    );
-    expect(invoke).toHaveBeenCalledTimes(2);
-    expect(JSON.stringify(invoke.mock.calls[1][0])).toContain("omitted");
-    expect(handler).toHaveBeenCalledOnce();
   });
-  it("routes once from the latest human and preserves state", async () => {
-    const answer = response();
-    answer.choices.model_route = {
-      type: "choice",
-      choice: "fast",
-      probabilities: { fast: 1 },
-      confidence: 1,
-    };
-    const { decisions, invoke } = model(answer);
-    const selected = {} as never;
+});
+
+describe("openAIModelRouterMiddleware", () => {
+  const route = {
+    type: "choice",
+    choice: "fast",
+    confidence: 0.9,
+    probabilities: [
+      { value: "fast", probability: 0.95 },
+      { value: "slow", probability: 0.05 },
+    ],
+  };
+
+  it("routes once from the latest human message", async () => {
+    const { model, fetch, sent } = decisions([route]);
+    const fast = { name: "fast" } as never;
     const middleware = openAIModelRouterMiddleware({
-      model: decisions,
+      model,
       instructions: "Choose",
-      choices: { fast: { model: selected, criteria: "Simple" } },
+      choices: {
+        fast: { model: fast, criteria: "Simple" },
+        slow: { model: "openai:gpt-6-sol", criteria: "Hard" },
+      },
     });
-    const before = middleware.beforeAgent;
-    if (typeof before !== "function")
-      throw new Error("Expected beforeAgent hook");
+    const before = middleware.beforeAgent as (
+      ...args: unknown[]
+    ) => Promise<Record<string, unknown>>;
     const state = await before(
       {
         messages: [
@@ -138,29 +126,48 @@ describe("OpenAI Decisions middleware", () => {
           new AIMessage("answer"),
         ],
       },
-      {} as never
+      {}
     );
-    expect(invoke.mock.calls[0][0].input).toMatchObject({ content: "latest" });
+    expect(state).toEqual({
+      modelRoute: {
+        choice: "fast",
+        confidence: 0.9,
+        probabilities: { fast: 0.95, slow: 0.05 },
+      },
+    });
+    expect(sent().input).toEqual([{ role: "user", content: "latest" }]);
+    expect(sent().questions[0].choices).toEqual([
+      { value: "fast", description: "Simple" },
+      { value: "slow", description: "Hard" },
+    ]);
     const handler = vi.fn().mockResolvedValue(new AIMessage("ok"));
     await middleware.wrapModelCall!({ state, model: {} } as never, handler);
-    expect(handler.mock.calls[0][0].model).toBe(selected);
-    expect(invoke).toHaveBeenCalledOnce();
+    await middleware.wrapModelCall!({ state, model: {} } as never, handler);
+    expect(handler.mock.calls[1][0].model).toBe(fast);
+    expect(fetch).toHaveBeenCalledOnce();
   });
-  it("clears prior routes with no human or refusal", async () => {
-    const { decisions } = model(response());
+
+  it("keeps the agent model with no human message or a refusal", async () => {
+    const { model, fetch } = decisions([{ type: "refusal" }]);
     const middleware = openAIModelRouterMiddleware({
-      model: decisions,
+      model,
       instructions: "Choose",
-      choices: { fast: { model: "openai:gpt-4o-mini", criteria: "Simple" } },
+      choices: { fast: { model: "openai:gpt-6-luna", criteria: "Simple" } },
     });
-    const before = middleware.beforeAgent;
-    if (typeof before !== "function")
-      throw new Error("Expected beforeAgent hook");
-    expect(await before({ messages: [] }, {} as never)).toEqual({
-      model_route: null,
+    const before = middleware.beforeAgent as (
+      ...args: unknown[]
+    ) => Promise<Record<string, unknown>>;
+    expect(await before({ messages: [] }, {})).toEqual({ modelRoute: null });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(await before({ messages: [new HumanMessage("hi")] }, {})).toEqual({
+      modelRoute: null,
     });
-    expect(
-      await before({ messages: [new HumanMessage("hi")] }, {} as never)
-    ).toEqual({ model_route: null });
+    const handler = vi.fn();
+    const own = {};
+    await middleware.wrapModelCall!(
+      { state: { modelRoute: null }, model: own } as never,
+      handler
+    );
+    expect(handler.mock.calls[0][0].model).toBe(own);
   });
 });

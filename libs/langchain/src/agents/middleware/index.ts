@@ -110,4 +110,5 @@ export {
   type OpenAIAutoModeMiddlewareOptions,
   type OpenAIModelRouterMiddlewareOptions,
   type ModelChoice,
+  type OpenAIDecisionsLike,
 } from "./provider/openai/decisions.js";
