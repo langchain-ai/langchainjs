@@ -408,6 +408,28 @@ describe("createAgent", () => {
     expect((result.messages[3] as AIMessage).tool_calls?.length).toBe(0);
   });
 
+  it("passes a Command from another copy of langgraph to the graph unchanged", async () => {
+    class ForeignCommand {
+      readonly lg_name = "Command";
+
+      resume = "approved";
+    }
+    const agent = createAgent({
+      model: new FakeToolCallingModel(),
+      tools: [],
+      middleware: [createMiddleware({ name: "noop" })],
+      checkpointer: syncCheckpointer,
+    });
+    const graphInvoke = vi.spyOn(agent.graph, "invoke");
+    const command = new ForeignCommand();
+
+    await agent.invoke(command as unknown as Command, {
+      configurable: { thread_id: "foreign-command" },
+    });
+
+    expect(graphInvoke.mock.calls[0][0]).toBe(command);
+  });
+
   describe("returnDirect tool errors", () => {
     const renderCall = (id: string, ui: string) => [
       { name: "render", args: { ui }, id },

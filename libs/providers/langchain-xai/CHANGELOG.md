@@ -1,5 +1,47 @@
 # @langchain/xai
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da)]:
+  - @langchain/openai@1.7.1
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(xai): stream Responses tool-call args as `tool-call-delta` slices
+
+  - In Responses mode, tool-call args now stream as `tool-call-delta` slices, through `@langchain/openai`'s converter.
+  - The `@langchain/core` peer is now `^1.3.0`, so pinning `@langchain/core` below 1.3.0 also keeps xAI on snapshots.
+
+### Patch Changes
+
+- Updated dependencies [[`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da)]:
+  - @langchain/openai@1.7.0
+
+## 1.4.18
+
+### Patch Changes
+
+- Updated dependencies [[`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d)]:
+  - @langchain/openai@1.6.3
+
+## 1.4.17
+
+### Patch Changes
+
+- Updated dependencies [[`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289), [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289)]:
+  - @langchain/openai@1.6.2
+
+## 1.4.16
+
+### Patch Changes
+
+- Updated dependencies [[`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a)]:
+  - @langchain/openai@1.6.1
+
 ## 1.4.15
 
 ### Patch Changes

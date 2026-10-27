@@ -211,8 +211,7 @@ type ConvertCallToolResultArgs = {
 
 /** Expand an output policy into its per-content-type representation. @internal */
 export function _resolveDetailedOutputHandling(
-  outputHandling: OutputHandling | undefined,
-  applyDefaults: boolean = false
+  outputHandling: OutputHandling | undefined
 ): DetailedOutputHandling {
   if (outputHandling == null) return {};
 
@@ -227,11 +226,8 @@ export function _resolveDetailedOutputHandling(
 
   const resolved: DetailedOutputHandling = {};
   for (const contentType of callToolResultContentTypes) {
-    if (outputHandling[contentType] || applyDefaults) {
-      resolved[contentType] =
-        outputHandling[contentType] ??
-        (contentType === "resource" ? "artifact" : "content");
-    }
+    if (outputHandling[contentType])
+      resolved[contentType] = outputHandling[contentType];
   }
   return resolved;
 }
