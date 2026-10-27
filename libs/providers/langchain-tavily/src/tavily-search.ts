@@ -116,9 +116,9 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   startDate?: string;
   /** Upper date bound, YYYY-MM-DD. */
   endDate?: string;
-  /** Include publication dates (beta; adds latency). */
+  /** Include best-estimate published or last-updated dates (beta; adds latency). */
   includePublishedDate?: boolean;
-  /** Filter date ranges by publication date (beta). */
+  /** Filter the active date window using best-estimate published or last-updated dates (beta). */
   filterByPublishedDate?: boolean;
   /** Restrict to or prefer includeDomains; requires includeDomains. */
   includeDomainsMode?: "restrict" | "prefer";
@@ -226,11 +226,15 @@ const inputSchema = z.object({
   includePublishedDate: z
     .boolean()
     .optional()
-    .describe("Include publication dates (beta; adds latency)."),
+    .describe(
+      "Include best-estimate published or last-updated dates (beta; adds latency)."
+    ),
   filterByPublishedDate: z
     .boolean()
     .optional()
-    .describe("Filter date ranges by publication date (beta)."),
+    .describe(
+      "Filter the active date window using best-estimate published or last-updated dates (beta)."
+    ),
   includeDomainsMode: z
     .enum(["restrict", "prefer"])
     .optional()
@@ -404,9 +408,9 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
   startDate?: string;
   /** Upper date bound, YYYY-MM-DD. */
   endDate?: string;
-  /** Include publication dates (beta; adds latency). */
+  /** Include best-estimate published or last-updated dates (beta; adds latency). */
   includePublishedDate?: boolean;
-  /** Filter date ranges by publication date (beta). */
+  /** Filter the active date window using best-estimate published or last-updated dates (beta). */
   filterByPublishedDate?: boolean;
   /** Restrict to or prefer includeDomains; requires includeDomains. */
   includeDomainsMode?: "restrict" | "prefer";

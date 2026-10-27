@@ -52,7 +52,7 @@ const results = await tool.invoke({
 console.log(results);
 ```
 
-Search accepts `fast` and `ultra-fast` depths and optional date, language, domain-preference and safe-search controls. Constructor values take precedence over invocation values, including `false`. `safeSearch` requires `basic` or `advanced` depth; `includeDomainsMode` requires `includeDomains`, and `filterByLanguage` requires `language`. Publication-date options are beta and can add latency. Omitted options are left to the API; `maxResults` remains constructor-only, including `0` for answer-only requests.
+Search accepts `fast` and `ultra-fast` depths and optional date, language, domain-preference and safe-search controls. Constructor values take precedence over invocation values, including `false`. `safeSearch` requires `basic` or `advanced` depth; `includeDomainsMode` requires `includeDomains`, and `filterByLanguage` requires `language`. Date estimates can reflect publication or last update and can be later than original publication. These options are beta and can add latency; `filterByPublishedDate` applies to an active `timeRange`, `startDate` or `endDate` window. Omitted options are left to the API; `maxResults` remains constructor-only, including `0` for answer-only requests.
 
 ```typescript
 const search = new TavilySearch({
