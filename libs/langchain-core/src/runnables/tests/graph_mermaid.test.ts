@@ -349,3 +349,36 @@ describe("drawMermaidImage", () => {
     expect(result).toMatch(new RegExp(nestedPattern));
   });
 });
+
+describe("drawMermaid node metadata labels", () => {
+  const data = {} as RunnableInterface;
+
+  const drawNode = (metadata: Record<string, unknown>) =>
+    drawMermaid({ tools: { id: "tools", data, name: "tools", metadata } }, [])
+      .split("\n")
+      .find((line) => line.startsWith("\ttools("));
+
+  test("joins scalar arrays", () => {
+    expect(drawNode({ __tools: ["search", "get_weather"] })).toBe(
+      "\ttools(tools<hr/><small><em>__tools = search,get_weather</em></small>)"
+    );
+  });
+
+  test("leaves out object values", () => {
+    expect(
+      drawNode({ __interrupt: "before", __subagents: { researcher: {} } })
+    ).toBe("\ttools(tools<hr/><small><em>__interrupt = before</em></small>)");
+  });
+
+  test("escapes Mermaid-significant characters", () => {
+    expect(drawNode({ note: 'a [b] (c) {d} "e" <f> #g' })).toBe(
+      "\ttools(tools<hr/><small><em>note = a #91;b#93; #40;c#41; #123;d#125; #quot;e#quot; #60;f#62; #35;g</em></small>)"
+    );
+  });
+
+  test("renders no metadata section when every entry is left out", () => {
+    expect(drawNode({ __subagents: { researcher: {} }, nested: [["a"]] })).toBe(
+      "\ttools(tools)"
+    );
+  });
+});
