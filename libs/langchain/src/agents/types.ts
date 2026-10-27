@@ -3,6 +3,7 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
+import type { JSONSchema } from "@langchain/core/utils/json_schema";
 import type {
   START,
   END,
@@ -464,6 +465,11 @@ export interface Interrupt<TValue = unknown> {
    * The requests for human input.
    */
   value: TValue;
+  /**
+   * JSON schema for the expected resume value, when the interrupt sets one (for
+   * example, a `humanInTheLoopMiddleware` tool approval in `"per_call"` mode).
+   */
+  response_schema?: JSONSchema;
 }
 
 export interface BuiltInState<

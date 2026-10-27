@@ -3,6 +3,7 @@ import { test, expect, beforeEach } from "vitest";
 import { env } from "../../../tests/utils.js";
 import { AzureChatOpenAI } from "../index.js";
 import { AzureChatOpenAIResponses } from "../responses.js";
+import { AzureChatOpenAICompletions } from "../completions.js";
 
 beforeEach(() => {
   delete process.env.OPENAI_API_KEY;
@@ -97,4 +98,24 @@ test("AzureChatOpenAI profile follows the Responses API setting", () => {
   expect(responsesOnly.profile.fileMimeTypes).toEqual(
     responses.profile.fileMimeTypes
   );
+});
+
+test("AzureChatOpenAI profile makes no claim about mid-conversation tools", () => {
+  const fields = {
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+  };
+  const chatModels = [
+    new AzureChatOpenAI("gpt-5.5", fields),
+    new AzureChatOpenAI("gpt-5.5", { ...fields, useResponsesApi: true }),
+    new AzureChatOpenAIResponses("gpt-5.5", fields),
+  ];
+  for (const chatModel of chatModels) {
+    expect(chatModel.profile.midConversationSystemMessages).toBe(true);
+    expect(chatModel.profile).not.toHaveProperty("midConversationTools");
+  }
+  // Chat Completions can't carry `additional_tools` on any endpoint.
+  const completions = new AzureChatOpenAICompletions("gpt-5.5", fields);
+  expect(completions.profile.midConversationTools).toBe(false);
 });

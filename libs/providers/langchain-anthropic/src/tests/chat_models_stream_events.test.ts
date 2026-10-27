@@ -182,6 +182,11 @@ function toolCallEvents() {
     {
       type: "content_block_delta" as const,
       index: 1,
+      delta: { type: "input_json_delta" as const, partial_json: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 1,
       delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
     },
     {
@@ -193,6 +198,102 @@ function toolCallEvents() {
     {
       type: "message_delta" as const,
       delta: { stop_reason: "tool_use" as const, stop_sequence: null },
+      usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function serverToolCallEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_05MNO",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 100, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "server_tool_use" as const,
+        id: "srvtoolu_01ABC",
+        name: "web_search",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: ':"weather"}' },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+      usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function mcpToolUseEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_06PQR",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 100, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "mcp_tool_use" as const,
+        id: "mcptoolu_01ABC",
+        name: "search",
+        server_name: "docs",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: ':"weather"}' },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
       usage: { output_tokens: 15 },
     },
     { type: "message_stop" as const },
@@ -444,49 +545,6 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
   });
 
   describe("tool call streaming", () => {
-    test("tool call args accumulate correctly", async () => {
-      const model = new MockStreamChatAnthropic(toolCallEvents());
-      const events: ChatModelStreamEvent[] = [];
-      for await (const event of model._streamChatModelEvents(
-        [],
-        {} as ChatAnthropicCallOptions
-      )) {
-        events.push(event);
-      }
-
-      // Start event for tool call
-      expect(
-        events.find((e) => e.event === "content-block-start" && e.index === 1)
-      ).toMatchObject({
-        content: {
-          type: "tool_call_chunk",
-          name: "web_search",
-          id: "toolu_01ABC",
-        },
-      });
-
-      // Deltas carry accumulated tool_call_chunk field snapshots
-      const toolDeltas = events.filter(
-        (e) =>
-          e.event === "content-block-delta" && "index" in e && e.index === 1
-      );
-      expect(toolDeltas.length).toBe(2);
-
-      const td1 = toolDeltas[0] as {
-        delta: { type: string; fields: { type: string; args?: string } };
-      };
-      expect(td1.delta.type).toBe("block-delta");
-      expect(td1.delta.fields.type).toBe("tool_call_chunk");
-      expect(td1.delta.fields.args).toBe('{"query"');
-
-      const td2 = toolDeltas[1] as {
-        delta: { type: string; fields: { type: string; args?: string } };
-      };
-      expect(td2.delta.type).toBe("block-delta");
-      expect(td2.delta.fields.type).toBe("tool_call_chunk");
-      expect(td2.delta.fields.args).toBe('{"query":"weather"}');
-    });
-
     test("tool call finish has parsed args", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const events: ChatModelStreamEvent[] = [];
@@ -795,6 +853,129 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       await expect(model.streamEvents("Hello")).toHaveStreamToolCalls([
         { name: "web_search", args: { query: "weather" } },
       ]);
+    });
+
+    test("tool call args stream as slices", async () => {
+      const model = new MockStreamChatAnthropic(toolCallEvents());
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(
+        events.filter(
+          (e) =>
+            e.event.startsWith("content-block") && "index" in e && e.index === 1
+        )
+      ).toEqual([
+        {
+          event: "content-block-start",
+          index: 1,
+          content: {
+            type: "tool_call_chunk",
+            id: "toolu_01ABC",
+            name: "web_search",
+            args: "",
+            index: 1,
+          },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: '{"query"' },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: ':"weather"}' },
+        },
+        {
+          event: "content-block-finish",
+          index: 1,
+          content: {
+            type: "tool_call",
+            id: "toolu_01ABC",
+            name: "web_search",
+            args: { query: "weather" },
+          },
+        },
+      ]);
+      expect((await stream).tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "toolu_01ABC",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      ]);
+    });
+
+    test("server tool call args stream as slices", async () => {
+      const model = new MockStreamChatAnthropic(serverToolCallEvents());
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual(
+        [
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "server_tool_call_chunk",
+              id: "srvtoolu_01ABC",
+              name: "web_search",
+              args: "",
+              index: 0,
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: '{"query"' },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: ':"weather"}' },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "server_tool_call",
+              id: "srvtoolu_01ABC",
+              name: "web_search",
+              args: { query: "weather" },
+            },
+          },
+        ]
+      );
+      expect((await stream).content).toEqual([
+        {
+          type: "server_tool_call",
+          id: "srvtoolu_01ABC",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      ]);
+    });
+
+    test("sends no tool-call-delta for JSON input on a non-tool-call block", async () => {
+      const model = new MockStreamChatAnthropic(mcpToolUseEvents());
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model.streamEvents("Hello")) {
+        events.push(event);
+      }
+
+      expect(
+        events.flatMap((e) =>
+          e.event === "content-block-delta" ? [e.delta.type] : []
+        )
+      ).toEqual(["block-delta", "block-delta"]);
     });
   });
 });

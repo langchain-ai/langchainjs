@@ -51,8 +51,10 @@ jobs:
       matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
     steps:
       - id: set-matrix
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
-          changed_files="${{ needs.get-changed-files.outputs.changed_files }}"
+          changed_files="$CHANGED_FILES"
           echo "Changed files: $changed_files"
           # Convert PACKAGES environment variable into an array
           IFS=',' read -r -a packages <<< "$PACKAGES"
@@ -65,10 +67,10 @@ jobs:
             first_entry=true
             for package in "${packages[@]}"; do
               if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
               fi
             done
           else
@@ -80,10 +82,10 @@ jobs:
               if echo "$changed_files" | grep -q "$package"; then
                 echo "Package $package found in changed files."
                 if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
               fi
               fi
             done
