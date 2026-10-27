@@ -1538,15 +1538,12 @@ export class CallbackManager
   }
 }
 
-// The plain object each wrapper was made from. Merged configs can wrap one
-// object twice, and configure() keeps one wrapper per object.
-const handlerSources = new WeakMap<
-  BaseCallbackHandler,
-  CallbackHandlerMethods
->();
+// Set on a wrapper to the plain object it was made from. Merged configs can
+// wrap one object twice, and configure() keeps one wrapper per object.
+const HANDLER_SOURCE = Symbol("handlerSource");
 
 function handlerSource(handler: BaseCallbackHandler): object {
-  return handlerSources.get(handler) ?? handler;
+  return (handler as { [HANDLER_SOURCE]?: object })[HANDLER_SOURCE] ?? handler;
 }
 
 function uniqueHandlers(
@@ -1569,6 +1566,6 @@ export function ensureHandler(
   }
 
   const wrapped = BaseCallbackHandler.fromMethods(handler);
-  handlerSources.set(wrapped, handler);
+  Object.defineProperty(wrapped, HANDLER_SOURCE, { value: handler });
   return wrapped;
 }
