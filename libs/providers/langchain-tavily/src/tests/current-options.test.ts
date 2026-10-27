@@ -100,60 +100,75 @@ test("Search permits zero results with answer metadata", async () => {
 test.each([
   {
     name: "Extract",
-    make: () => new TavilyExtract({ ...fields, timeout: 30 }),
-    args: {
-      urls: ["https://example.com"],
-      query: "fixture",
-      chunksPerSource: 5,
-      timeout: 10,
-    },
+    invoke: () =>
+      new TavilyExtract({ ...fields, timeout: 30 }).invoke({
+        urls: ["https://example.com"],
+        query: "fixture",
+        chunksPerSource: 5,
+        timeout: 10,
+      }),
     expected: { chunks_per_source: 5, timeout: 30 },
   },
   {
     name: "Crawl",
-    make: () => new TavilyCrawl({ ...fields, timeout: 150 }),
-    args: {
-      url: "https://example.com",
-      instructions: "fixture",
-      chunksPerSource: 5,
-      timeout: 10,
-    },
+    invoke: () =>
+      new TavilyCrawl({ ...fields, timeout: 150 }).invoke({
+        url: "https://example.com",
+        instructions: "fixture",
+        chunksPerSource: 5,
+        timeout: 10,
+      }),
     expected: { chunks_per_source: 5, timeout: 150 },
   },
   {
     name: "Map",
-    make: () => new TavilyMap({ ...fields, timeout: 150 }),
-    args: { url: "https://example.com", timeout: 10 },
+    invoke: () =>
+      new TavilyMap({ ...fields, timeout: 150 }).invoke({
+        url: "https://example.com",
+        timeout: 10,
+      }),
     expected: { timeout: 150 },
   },
 ])(
   "$name options survive public invocation with constructor precedence",
-  async ({ make, args, expected }) => {
+  async ({ invoke, expected }) => {
     const body = capture();
-    expect(await make().invoke(args)).toEqual(success);
+    expect(await invoke()).toEqual(success);
     expect(body()).toMatchObject(expected);
   }
 );
 test.each([
   {
-    make: () => new TavilyExtract(fields),
-    args: { urls: ["https://example.com"], chunksPerSource: 6 },
+    invoke: () =>
+      new TavilyExtract(fields).invoke({
+        urls: ["https://example.com"],
+        chunksPerSource: 6,
+      }),
   },
   {
-    make: () => new TavilyExtract(fields),
-    args: { urls: ["https://example.com"], timeout: 61 },
+    invoke: () =>
+      new TavilyExtract(fields).invoke({
+        urls: ["https://example.com"],
+        timeout: 61,
+      }),
   },
   {
-    make: () => new TavilyCrawl(fields),
-    args: { url: "https://example.com", timeout: 9 },
+    invoke: () =>
+      new TavilyCrawl(fields).invoke({
+        url: "https://example.com",
+        timeout: 9,
+      }),
   },
   {
-    make: () => new TavilyMap(fields),
-    args: { url: "https://example.com", timeout: 151 },
+    invoke: () =>
+      new TavilyMap(fields).invoke({
+        url: "https://example.com",
+        timeout: 151,
+      }),
   },
-])("invalid new tool options fail before HTTP", async ({ make, args }) => {
+])("invalid new tool options fail before HTTP", async ({ invoke }) => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
-  await expect(make().invoke(args)).rejects.toThrow();
+  await expect(invoke()).rejects.toThrow();
   expect(fetch).not.toHaveBeenCalled();
 });

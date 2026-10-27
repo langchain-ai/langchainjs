@@ -1,7 +1,7 @@
 /** Preserve useful API diagnostics without exposing credentials or unbounded bodies. */
 export async function tavilyHttpError(
   response: Response,
-  apiKey: string
+  apiKey?: string
 ): Promise<Error> {
   let message = response.statusText || "Unknown error";
   try {
@@ -27,10 +27,8 @@ export async function tavilyHttpError(
   } catch {
     // Keep the HTTP status when an error response body cannot be read.
   }
-  message = message
-    .split(apiKey)
-    .join("[REDACTED]")
-    .replace(/Bearer\s+[^\s"'<>]+/gi, "Bearer [REDACTED]");
+  if (apiKey) message = message.split(apiKey).join("[REDACTED]");
+  message = message.replace(/Bearer\s+[^\s"'<>]+/gi, "Bearer [REDACTED]");
   return new Error(`Error ${response.status}: ${message.slice(0, 2000)}`);
 }
 

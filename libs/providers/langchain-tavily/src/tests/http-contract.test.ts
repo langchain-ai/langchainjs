@@ -159,10 +159,12 @@ test("existing Research stream still yields the original bytes", async () => {
     stream: true,
   });
   expect(Symbol.asyncIterator in stream).toBe(true);
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream as AsyncGenerator<Buffer>)
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of stream as AsyncGenerator<Uint8Array>)
     chunks.push(chunk);
-  expect(Buffer.concat(chunks)).toEqual(Buffer.from(bytes));
+  expect(new Uint8Array(chunks.flatMap((chunk) => Array.from(chunk)))).toEqual(
+    bytes
+  );
 });
 
 test.each([401, 429, 500])(
@@ -171,13 +173,11 @@ test.each([401, 429, 500])(
     for (const { invoke } of operations) {
       vi.stubGlobal(
         "fetch",
-        vi
-          .fn()
-          .mockResolvedValue(
-            new Response(JSON.stringify({ detail: "fixture failure" }), {
-              status,
-            })
-          )
+        vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ detail: "fixture failure" }), {
+            status,
+          })
+        )
       );
       expect(await invoke()).toEqual({
         error: `Error ${status}: fixture failure`,
@@ -199,13 +199,11 @@ test("transport failures keep the returned-error convention", async () => {
 test("ToolCall error remains a returned error message rather than throwing", async () => {
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ detail: "fixture authentication" }), {
-          status: 401,
-        })
-      )
+    vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ detail: "fixture authentication" }), {
+        status: 401,
+      })
+    )
   );
   const result = await new TavilySearch(fields).invoke({
     type: "tool_call",
