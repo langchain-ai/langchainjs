@@ -1,5 +1,13 @@
 # langchain
 
+## 1.5.20
+
+### Patch Changes
+
+- [#12043](https://github.com/langchain-ai/langchainjs/pull/12043) [`81577b3`](https://github.com/langchain-ai/langchainjs/commit/81577b3e84c3f38581e76e8335faa89511e99d74) Thanks [@eliornl](https://github.com/eliornl)! - fix(langchain): re-throw a drained tool from the agent's `ToolNode`
+
+  A tool that throws `GraphDrained`, for example one whose inner graph run is drained with `RunControl.requestDrain()`, now stops the agent run with that error, as an interrupt already did, instead of coming back as an error `ToolMessage` that lets the agent go on as if the tool had failed.
+
 ## 1.5.19
 
 ### Patch Changes

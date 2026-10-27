@@ -16,8 +16,10 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
   Annotation,
   Command,
+  GraphDrained,
   GraphInterrupt,
   messagesStateReducer,
+  RunControl,
   Send,
   StateGraph,
   MessagesAnnotation,
@@ -832,6 +834,40 @@ describe("ToolNode error handling", () => {
         ],
       })
     ).rejects.toThrow(GraphInterrupt);
+  });
+
+  it("should raise GraphDrained when a tool's inner run is drained", async () => {
+    const control = new RunControl();
+    const inner = new StateGraph(MessagesAnnotation)
+      .addNode("requestDrain", () => {
+        control.requestDrain();
+        return {};
+      })
+      .addNode("after", () => ({}))
+      .addEdge("__start__", "requestDrain")
+      .addEdge("requestDrain", "after")
+      .compile();
+    const drainedTool = tool(
+      async () => {
+        await inner.invoke({ messages: [] }, { control });
+        return "unreachable";
+      },
+      {
+        name: "drained",
+        description: "A tool whose inner graph run is drained",
+        schema: z.object({}),
+      }
+    );
+    const agent = createAgent({
+      model: new FakeToolCallingModel({
+        toolCalls: [[{ name: "drained", args: {}, id: "1" }], []],
+      }),
+      tools: [drainedTool],
+    });
+
+    await expect(
+      agent.invoke({ messages: [new HumanMessage("run the drained tool")] })
+    ).rejects.toThrow(GraphDrained);
   });
 
   it("should handle tool errors by default", async () => {
