@@ -185,15 +185,7 @@ midConversationTools = true
 midConversationSystemMessages = true
 midConversationTools = true
 
-[overrides."gpt-5.2-chat-latest"]
-midConversationSystemMessages = true
-midConversationTools = true
-
 [overrides."gpt-5.2-pro"]
-midConversationSystemMessages = true
-midConversationTools = true
-
-[overrides."gpt-5.3-chat-latest"]
 midConversationSystemMessages = true
 midConversationTools = true
 
