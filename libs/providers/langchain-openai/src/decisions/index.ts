@@ -90,8 +90,39 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
     options?: Partial<RunnableConfig>
   ): Promise<DecisionResult<Q>> {
     return this._callWithConfig(
-      (request: DecisionRequest<Q>, config?: Partial<RunnableConfig>) =>
-        this.decide(request, config?.signal),
+      async (
+        { input, questions }: DecisionRequest<Q>,
+        config?: Partial<RunnableConfig>
+      ): Promise<DecisionResult<Q>> => {
+        parseQuestions(questions);
+        const body = {
+          model: this.model,
+          input: toDecisionInput(input),
+          questions: Object.entries(questions).map(([name, question]) =>
+            toWireQuestion(name, question)
+          ),
+        };
+        let data: unknown;
+        let response: Response;
+        try {
+          ({ data, response } = await this.client
+            .post<unknown>("/decisions", { body, signal: config?.signal })
+            .withResponse());
+        } catch (error) {
+          throw wrapOpenAIClientError(error);
+        }
+        const parsed = responseSchema.safeParse(data);
+        if (!parsed.success)
+          throw new Error("Invalid response from the OpenAI Decisions API.", {
+            cause: parsed.error,
+          });
+        return {
+          answers: parseAnswers(questions, parsed.data.answers),
+          model: parsed.data.model,
+          requestId: response.headers.get("x-request-id") ?? undefined,
+          usage_metadata: parsed.data.usage,
+        };
+      },
       request,
       {
         ...options,
@@ -104,39 +135,5 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
         },
       }
     ) as Promise<DecisionResult<Q>>;
-  }
-
-  protected async decide<Q extends Questions>(
-    { input, questions }: DecisionRequest<Q>,
-    signal?: AbortSignal
-  ): Promise<DecisionResult<Q>> {
-    parseQuestions(questions);
-    const body = {
-      model: this.model,
-      input: toDecisionInput(input),
-      questions: Object.entries(questions).map(([name, question]) =>
-        toWireQuestion(name, question)
-      ),
-    };
-    let data: unknown;
-    let response: Response;
-    try {
-      ({ data, response } = await this.client
-        .post<unknown>("/decisions", { body, signal })
-        .withResponse());
-    } catch (error) {
-      throw wrapOpenAIClientError(error);
-    }
-    const parsed = responseSchema.safeParse(data);
-    if (!parsed.success)
-      throw new Error("Invalid response from the OpenAI Decisions API.", {
-        cause: parsed.error,
-      });
-    return {
-      answers: parseAnswers(questions, parsed.data.answers),
-      model: parsed.data.model,
-      requestId: response.headers.get("x-request-id") ?? undefined,
-      usage_metadata: parsed.data.usage,
-    };
   }
 }
