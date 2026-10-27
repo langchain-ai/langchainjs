@@ -19,10 +19,11 @@ const MERMAID_ENTITY_CODES: Record<string, string> = {
   '"': "#quot;",
   "<": "#60;",
   ">": "#62;",
+  "|": "#124;",
 };
 
 function _escapeMetadataText(text: string): string {
-  return text.replace(/[#[\](){}"<>]/g, (char) => MERMAID_ENTITY_CODES[char]);
+  return text.replace(/[#[\](){}"<>|]/g, (char) => MERMAID_ENTITY_CODES[char]);
 }
 
 function _isScalar(value: unknown): value is string | number | boolean {

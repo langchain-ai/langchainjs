@@ -371,8 +371,8 @@ describe("drawMermaid node metadata labels", () => {
   });
 
   test("escapes Mermaid-significant characters", () => {
-    expect(drawNode({ note: 'a [b] (c) {d} "e" <f> #g' })).toBe(
-      "\ttools(tools<hr/><small><em>note = a #91;b#93; #40;c#41; #123;d#125; #quot;e#quot; #60;f#62; #35;g</em></small>)"
+    expect(drawNode({ note: 'a [b] (c) {d} "e" <f> #g h | i' })).toBe(
+      "\ttools(tools<hr/><small><em>note = a #91;b#93; #40;c#41; #123;d#125; #quot;e#quot; #60;f#62; #35;g h #124; i</em></small>)"
     );
   });
 
