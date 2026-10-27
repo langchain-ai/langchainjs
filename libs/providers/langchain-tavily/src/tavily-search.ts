@@ -4,7 +4,7 @@ import { StructuredTool, ToolParams } from "@langchain/core/tools";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { TavilySearchAPIWrapper, type TavilySearchResponse } from "./utils.js";
 
-export type SearchDepth = "basic" | "advanced";
+export type SearchDepth = "basic" | "advanced" | "fast" | "ultra-fast";
 export type TimeRange = "day" | "week" | "month" | "year";
 export type TopicType = "general" | "news" | "finance";
 
@@ -22,7 +22,7 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   /**
    * The maximum number of search results to return.
    *
-   * @default 5
+   * Omitted by this wrapper unless configured; the API applies its default.
    */
   maxResults?: number;
 
@@ -51,7 +51,7 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    *
    * @default false
    */
-  includeAnswer?: boolean;
+  includeAnswer?: boolean | "basic" | "advanced";
 
   /**
    * Include the cleaned and parsed HTML content of each search result.
@@ -78,7 +78,7 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   excludeDomains?: string[];
 
   /**
-   * The depth of the search. It can be "basic" or "advanced".
+   * The search depth: basic, advanced, fast or ultra-fast.
    *
    * @default "basic"
    */
@@ -111,6 +111,23 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeUsage?: boolean;
+
+  /** Lower date bound, YYYY-MM-DD. */
+  startDate?: string;
+  /** Upper date bound, YYYY-MM-DD. */
+  endDate?: string;
+  /** Include publication dates (beta; adds latency). */
+  includePublishedDate?: boolean;
+  /** Filter date ranges by publication date (beta). */
+  filterByPublishedDate?: boolean;
+  /** Restrict to or prefer includeDomains; requires includeDomains. */
+  includeDomainsMode?: "restrict" | "prefer";
+  /** Preferred language, for example english. */
+  language?: string;
+  /** Enforce the specified language; requires language. */
+  filterByLanguage?: boolean;
+  /** Filter adult content; supported with basic or advanced depth. */
+  safeSearch?: boolean;
 
   /**
    * The name of the tool.
@@ -204,6 +221,32 @@ function generateSuggestions(params: Record<string, unknown>): string[] {
 }
 
 const inputSchema = z.object({
+  startDate: z.string().optional().describe("Lower date bound, YYYY-MM-DD."),
+  endDate: z.string().optional().describe("Upper date bound, YYYY-MM-DD."),
+  includePublishedDate: z
+    .boolean()
+    .optional()
+    .describe("Include publication dates (beta; adds latency)."),
+  filterByPublishedDate: z
+    .boolean()
+    .optional()
+    .describe("Filter date ranges by publication date (beta)."),
+  includeDomainsMode: z
+    .enum(["restrict", "prefer"])
+    .optional()
+    .describe("Restrict to or prefer includeDomains; requires includeDomains."),
+  language: z
+    .string()
+    .optional()
+    .describe("Preferred language, for example english."),
+  filterByLanguage: z
+    .boolean()
+    .optional()
+    .describe("Enforce the specified language; requires language."),
+  safeSearch: z
+    .boolean()
+    .optional()
+    .describe("Filter adult content; supported with basic or advanced depth."),
   query: z.string().describe("Search query to look up"),
   includeDomains: z
     .array(z.string())
@@ -217,7 +260,7 @@ Use this parameter when:
 
 In both cases, you should determine the appropriate domains (e.g., ["nasa.gov"] or ["apple.com"]) and set this parameter.
 
-Results will ONLY come from the specified domains - no other sources will be included.
+By default results come only from these domains. Set includeDomainsMode to "prefer" to allow other sources.
 Default is None (no domain restriction).`
     ),
   excludeDomains: z
@@ -236,7 +279,7 @@ Results will filter out all content from the specified domains.
 Default is None (no domain exclusion).`
     ),
   searchDepth: z
-    .enum(["basic", "advanced"])
+    .enum(["basic", "advanced", "fast", "ultra-fast"])
     .optional()
     .describe(
       `Controls search thoroughness and result comprehensiveness.
@@ -244,7 +287,7 @@ Default is None (no domain exclusion).`
 Use "basic" (default) for simple queries requiring quick, straightforward answers.
 
 Use "advanced" for complex queries, specialized topics, 
-rare information, or when in-depth analysis is needed.`
+rare information, or when in-depth analysis is needed. Use "fast" or "ultra-fast" for lower latency; safeSearch is not supported at those depths.`
     ),
   includeImages: z
     .boolean()
@@ -331,7 +374,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   includeImageDescriptions?: boolean;
 
-  includeAnswer?: boolean;
+  includeAnswer?: boolean | "basic" | "advanced";
 
   includeRawContent?: boolean | "markdown" | "text";
 
@@ -356,6 +399,23 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
   includeFavicon?: boolean;
 
   includeUsage?: boolean;
+
+  /** Lower date bound, YYYY-MM-DD. */
+  startDate?: string;
+  /** Upper date bound, YYYY-MM-DD. */
+  endDate?: string;
+  /** Include publication dates (beta; adds latency). */
+  includePublishedDate?: boolean;
+  /** Filter date ranges by publication date (beta). */
+  filterByPublishedDate?: boolean;
+  /** Restrict to or prefer includeDomains; requires includeDomains. */
+  includeDomainsMode?: "restrict" | "prefer";
+  /** Preferred language, for example english. */
+  language?: string;
+  /** Enforce the specified language; requires language. */
+  filterByLanguage?: boolean;
+  /** Filter adult content; supported with basic or advanced depth. */
+  safeSearch?: boolean;
 
   handleToolError = true;
 
@@ -408,6 +468,14 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.autoParameters = params.autoParameters;
     this.includeFavicon = params.includeFavicon;
     this.includeUsage = params.includeUsage;
+    this.startDate = params.startDate;
+    this.endDate = params.endDate;
+    this.includePublishedDate = params.includePublishedDate;
+    this.filterByPublishedDate = params.filterByPublishedDate;
+    this.includeDomainsMode = params.includeDomainsMode;
+    this.language = params.language;
+    this.filterByLanguage = params.filterByLanguage;
+    this.safeSearch = params.safeSearch;
   }
 
   async _call(
@@ -450,6 +518,16 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         autoParameters: this.autoParameters,
         includeFavicon: this.includeFavicon,
         includeUsage: this.includeUsage,
+        startDate: this.startDate ?? input.startDate,
+        endDate: this.endDate ?? input.endDate,
+        includePublishedDate:
+          this.includePublishedDate ?? input.includePublishedDate,
+        filterByPublishedDate:
+          this.filterByPublishedDate ?? input.filterByPublishedDate,
+        includeDomainsMode: this.includeDomainsMode ?? input.includeDomainsMode,
+        language: this.language ?? input.language,
+        filterByLanguage: this.filterByLanguage ?? input.filterByLanguage,
+        safeSearch: this.safeSearch ?? input.safeSearch,
       });
 
       if (
@@ -457,7 +535,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         typeof rawResults !== "object" ||
         !("results" in rawResults) ||
         !Array.isArray(rawResults.results) ||
-        rawResults.results.length === 0
+        (rawResults.results.length === 0 && this.maxResults !== 0)
       ) {
         const searchParams = {
           timeRange: effectiveTimeRange,
