@@ -4,6 +4,8 @@ import { registerConfigureHook, setContextVariable } from "../../context.js";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { BaseCallbackHandler } from "../base.js";
 import { CallbackManager } from "../manager.js";
+import { mergeConfigs } from "../../runnables/config.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { RunTree } from "langsmith/run_trees";
 
 class TestHandler extends BaseCallbackHandler {
@@ -206,4 +208,90 @@ test("configure removes inherited LangChainTracer but keeps other handlers when 
   expect(hasCustomHandler).toBe(true);
 
   vi.unstubAllEnvs();
+});
+
+class CountingHandler extends BaseCallbackHandler {
+  name = "CountingHandler";
+
+  handleChainStart = vi.fn();
+
+  constructor() {
+    super({ _awaitHandler: true });
+  }
+}
+
+test.each(
+  [
+    { left: "array", right: "array" },
+    { left: "array", right: "manager" },
+    { left: "manager", right: "array" },
+    { left: "manager", right: "manager" },
+  ].flatMap((sides) => [
+    { ...sides, kind: "handler" },
+    { ...sides, kind: "plain object" },
+  ])
+)(
+  "a $kind merged in twice from $left and $right configs receives each callback once",
+  async ({ left, right, kind }) => {
+    const handler =
+      kind === "handler"
+        ? new CountingHandler()
+        : { handleChainStart: vi.fn() };
+    const callbacks = (side: string) =>
+      side === "array" ? [handler] : CallbackManager.configure([handler]);
+    const merged = mergeConfigs(
+      { callbacks: callbacks(left) },
+      { callbacks: callbacks(right) }
+    );
+
+    const manager = CallbackManager.configure(merged.callbacks);
+    await manager?.handleChainStart(
+      { lc: 1, type: "not_implemented", id: ["test"] },
+      {}
+    );
+    await awaitAllCallbacks();
+
+    expect(handler.handleChainStart).toHaveBeenCalledTimes(1);
+  }
+);
+
+test("a handler local in one config and inheritable in another reaches child runs once", async () => {
+  const handler = { handleChainStart: vi.fn() };
+  const merged = mergeConfigs(
+    { callbacks: CallbackManager.configure(undefined, [handler]) },
+    { callbacks: [handler] }
+  );
+
+  const manager = CallbackManager.configure(
+    CallbackManager.configure(merged.callbacks)
+  );
+  const runManager = await manager?.handleChainStart(
+    { lc: 1, type: "not_implemented", id: ["test"] },
+    {}
+  );
+  await runManager
+    ?.getChild()
+    .handleChainStart({ lc: 1, type: "not_implemented", id: ["test"] }, {});
+  await awaitAllCallbacks();
+
+  expect(handler.handleChainStart).toHaveBeenCalledTimes(2);
+});
+
+test("a plain object handler runs the methods it has at each run", async () => {
+  const first = vi.fn();
+  const second = vi.fn();
+  const handler = { handleChainStart: first };
+  const run = async () => {
+    await CallbackManager.configure([handler])?.handleChainStart(
+      { lc: 1, type: "not_implemented", id: ["test"] },
+      {}
+    );
+    await awaitAllCallbacks();
+  };
+
+  await run();
+  handler.handleChainStart = second;
+  await run();
+
+  expect([first.mock.calls.length, second.mock.calls.length]).toEqual([1, 1]);
 });
