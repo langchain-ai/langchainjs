@@ -14,24 +14,18 @@ type DecisionAnswer =
     }
   | { type: "score" | "refusal" };
 
-/** The parts of `OpenAIDecisions` from `@langchain/openai` these middleware use. */
+type DecisionQuestions = Record<
+  string,
+  | { type: "predicate"; instructions: string }
+  | { type: "choice"; instructions: string; choices: Record<string, string> }
+>;
+
+/** The part of `OpenAIDecisions` from `@langchain/openai` these middleware use. */
 export interface OpenAIDecisionsLike {
-  withQuestions(
-    questions: Record<
-      string,
-      | { type: "predicate"; instructions: string }
-      | {
-          type: "choice";
-          instructions: string;
-          choices: Record<string, string>;
-        }
-    >
-  ): {
-    invoke(
-      input: never,
-      config?: { signal?: AbortSignal }
-    ): Promise<{ answers: Record<string, DecisionAnswer> }>;
-  };
+  invoke(
+    request: { input: never; questions: DecisionQuestions },
+    config?: { signal?: AbortSignal }
+  ): Promise<{ answers: Record<string, DecisionAnswer> }>;
 }
 
 async function loadDecisions(
@@ -50,15 +44,20 @@ async function loadDecisions(
   }
 }
 
-/** Builds a decider for one question lazily, so construction never does I/O. */
+/** Asks a single question, loading the Decisions model on first use. */
 function decider(
   model: string | OpenAIDecisionsLike,
-  questions: Parameters<OpenAIDecisionsLike["withQuestions"]>[0]
+  questions: DecisionQuestions
 ) {
-  let pending: ReturnType<OpenAIDecisionsLike["withQuestions"]> | undefined;
+  let decisions: Promise<OpenAIDecisionsLike> | undefined;
   return async (input: unknown, signal?: AbortSignal) => {
-    pending ??= (await loadDecisions(model)).withQuestions(questions);
-    const { answers } = await pending.invoke(input as never, { signal });
+    decisions ??= loadDecisions(model).catch((error) => {
+      decisions = undefined;
+      throw error;
+    });
+    const { answers } = await (
+      await decisions
+    ).invoke({ input: input as never, questions }, { signal });
     return Object.values(answers)[0];
   };
 }

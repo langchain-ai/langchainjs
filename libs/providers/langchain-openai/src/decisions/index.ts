@@ -8,7 +8,7 @@ import {
   parseQuestions,
   responseSchema,
   toWireQuestion,
-  type DecisionInput,
+  type DecisionRequest,
   type DecisionResult,
   type Questions,
 } from "./types.js";
@@ -20,6 +20,7 @@ export type {
   Choice,
   ChoiceAnswer,
   DecisionInput,
+  DecisionRequest,
   DecisionResult,
   Level,
   Predicate,
@@ -31,11 +32,9 @@ export type {
   ScoreAnswer,
 } from "./types.js";
 
-export interface OpenAIDecisionsFields<Q extends Questions = Questions> {
+export interface OpenAIDecisionsFields {
   /** Decisions model name, such as `gpt-6-luna`. */
   model: string;
-  /** Named questions to ask. Answers are returned under the same names. */
-  questions?: Q;
   /** Falls back to the `OPENAI_API_KEY` environment variable. */
   apiKey?: string;
   /** OpenAI SDK client options, such as `baseURL`, `timeout` or `fetch`. */
@@ -44,12 +43,13 @@ export interface OpenAIDecisionsFields<Q extends Questions = Questions> {
 
 /**
  * Ask typed questions about text, messages or JSON state with the OpenAI Decisions
- * API (beta).
+ * API (beta). Answer types are inferred from the questions passed to `invoke`.
  *
  * @example
  * ```ts
- * const triage = new OpenAIDecisions({
- *   model: "gpt-6-luna",
+ * const decisions = new OpenAIDecisions({ model: "gpt-6-luna" });
+ * const { answers } = await decisions.invoke({
+ *   input: "I was charged twice!",
  *   questions: {
  *     urgent: { type: "predicate", instructions: "Is this urgent?" },
  *     team: {
@@ -59,13 +59,10 @@ export interface OpenAIDecisionsFields<Q extends Questions = Questions> {
  *     },
  *   },
  * });
- * const { answers } = await triage.invoke("I was charged twice!");
  * if (answers.team.type === "choice") answers.team.choice; // "billing" | "technical"
  * ```
  */
-export class OpenAIDecisions<
-  const Q extends Questions = Record<never, never>,
-> extends Runnable<DecisionInput, DecisionResult<Q>> {
+export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
   static lc_name() {
     return "OpenAIDecisions";
   }
@@ -74,39 +71,28 @@ export class OpenAIDecisions<
 
   readonly model: string;
 
-  readonly questions: Q;
-
   protected client: OpenAIClient;
 
-  private fields: OpenAIDecisionsFields<Q>;
-
-  constructor(fields: OpenAIDecisionsFields<Q>) {
+  constructor(fields: OpenAIDecisionsFields) {
     const { apiKey, ...kwargs } = fields;
     super(kwargs);
     if (!fields.model?.trim())
       throw new Error("An OpenAI Decisions model is required.");
-    this.fields = fields;
     this.model = fields.model;
-    this.questions = parseQuestions(fields.questions ?? ({} as Q));
     this.client = new OpenAIClient({
       ...fields.configuration,
       apiKey: apiKey ?? getEnvironmentVariable("OPENAI_API_KEY"),
     });
   }
 
-  /** Returns a copy that asks different questions with the same model and client options. */
-  withQuestions<const R extends Questions>(questions: R): OpenAIDecisions<R> {
-    return new OpenAIDecisions({ ...this.fields, questions });
-  }
-
-  async invoke(
-    input: DecisionInput,
+  async invoke<const Q extends Questions>(
+    request: DecisionRequest<Q>,
     options?: Partial<RunnableConfig>
   ): Promise<DecisionResult<Q>> {
     return this._callWithConfig(
-      (input: DecisionInput, config?: Partial<RunnableConfig>) =>
-        this.decide(input, config?.signal),
-      input,
+      (request: DecisionRequest<Q>, config?: Partial<RunnableConfig>) =>
+        this.decide(request, config?.signal),
+      request,
       {
         ...options,
         runType: "llm",
@@ -117,23 +103,19 @@ export class OpenAIDecisions<
           ls_model_type: "chat",
         },
       }
-    );
+    ) as Promise<DecisionResult<Q>>;
   }
 
-  protected async decide(
-    input: DecisionInput,
+  protected async decide<Q extends Questions>(
+    { input, questions }: DecisionRequest<Q>,
     signal?: AbortSignal
   ): Promise<DecisionResult<Q>> {
-    const names = Object.keys(this.questions);
-    if (!names.length)
-      throw new Error(
-        "OpenAIDecisions has no questions. Pass `questions` or call `withQuestions()`."
-      );
+    parseQuestions(questions);
     const body = {
       model: this.model,
       input: toDecisionInput(input),
-      questions: names.map((name) =>
-        toWireQuestion(name, this.questions[name])
+      questions: Object.entries(questions).map(([name, question]) =>
+        toWireQuestion(name, question)
       ),
     };
     let data: unknown;
@@ -151,7 +133,7 @@ export class OpenAIDecisions<
         cause: parsed.error,
       });
     return {
-      answers: parseAnswers(this.questions, parsed.data.answers),
+      answers: parseAnswers(questions, parsed.data.answers),
       model: parsed.data.model,
       requestId: response.headers.get("x-request-id") ?? undefined,
       usage_metadata: parsed.data.usage,

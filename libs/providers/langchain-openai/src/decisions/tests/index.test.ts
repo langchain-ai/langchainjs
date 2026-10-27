@@ -3,13 +3,14 @@ import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import {
   OpenAIDecisions,
   type ChoiceAnswer,
+  type PredicateAnswer,
   type RefusalAnswer,
 } from "../index.js";
 import { toDecisionInput } from "../input.js";
 
 const image = "data:image/png;base64,AA==";
 
-function decisions(body: unknown) {
+function setup(body: unknown) {
   const fetch = vi.fn(
     async (_url: RequestInfo | URL, _init?: RequestInit) =>
       new Response(JSON.stringify(body), {
@@ -19,26 +20,27 @@ function decisions(body: unknown) {
         },
       })
   );
-  const triage = new OpenAIDecisions({
+  const decisions = new OpenAIDecisions({
     model: "decision-model",
     apiKey: "test-key",
     configuration: { fetch, maxRetries: 0 },
-    questions: {
-      urgent: { type: "predicate", instructions: "Urgent?" },
-      team: {
-        type: "choice",
-        instructions: "Team?",
-        choices: { billing: "Payments", technical: null },
-      },
-      severity: {
-        type: "score",
-        instructions: "Severity?",
-        levels: ["Low", { label: "High", description: "Outage" }],
-      },
-    },
   });
-  return { fetch, triage };
+  return { fetch, decisions };
 }
+
+const questions = {
+  urgent: { type: "predicate", instructions: "Urgent?" },
+  team: {
+    type: "choice",
+    instructions: "Team?",
+    choices: { billing: "Payments", technical: null },
+  },
+  severity: {
+    type: "score",
+    instructions: "Severity?",
+    levels: ["Low", { label: "High", description: "Outage" }],
+  },
+} as const;
 
 const answers = [
   { name: "urgent", type: "predicate", probability: 0.9 },
@@ -67,12 +69,12 @@ const answers = [
 
 describe("OpenAIDecisions", () => {
   it("sends named questions and returns typed answers", async () => {
-    const { fetch, triage } = decisions({
+    const { fetch, decisions } = setup({
       model: "decision-model-1",
       answers,
       usage: { input_tokens: 10, output_tokens: 2 },
     });
-    const result = await triage.invoke("help");
+    const result = await decisions.invoke({ input: "help", questions });
     expect(result).toEqual({
       model: "decision-model-1",
       requestId: "req-123",
@@ -128,7 +130,6 @@ describe("OpenAIDecisions", () => {
       new OpenAIDecisions({
         model: "m",
         apiKey: "k",
-        questions: { urgent: { type: "predicate", instructions: "Urgent?" } },
         configuration: {
           maxRetries: 0,
           fetch: async () =>
@@ -136,7 +137,10 @@ describe("OpenAIDecisions", () => {
               headers: { "content-type": "application/json" },
             }),
         },
-      }).invoke("x");
+      }).invoke({
+        input: "x",
+        questions: { urgent: { type: "predicate", instructions: "Urgent?" } },
+      });
     await expect(
       respond({
         model: "m",
@@ -162,79 +166,82 @@ describe("OpenAIDecisions", () => {
     ).rejects.toThrow('question "urgent"');
   });
 
-  it("validates questions at construction", () => {
-    const build = (questions: never) =>
-      new OpenAIDecisions({ model: "m", apiKey: "k", questions });
-    expect(() =>
-      build({
+  it("validates questions before sending", async () => {
+    const { fetch, decisions } = setup({ model: "m", answers });
+    const ask = (questions: never) =>
+      decisions.invoke({ input: "x", questions });
+    await expect(
+      ask({
         s: { type: "score", instructions: "Rate", levels: ["One"] },
       } as never)
-    ).toThrow('question "s": levels: Score requires at least two levels.');
-    expect(() =>
-      build({
-        c: { type: "choice", instructions: "Pick", choices: {} },
-      } as never)
-    ).toThrow("at least one option");
-    expect(() =>
-      build({ p: { type: "predicate", instructions: " " } } as never)
-    ).toThrow("instructions must not be empty");
+    ).rejects.toThrow(
+      'question "s": levels: Score requires at least two levels.'
+    );
+    await expect(
+      ask({ c: { type: "choice", instructions: "Pick", choices: {} } } as never)
+    ).rejects.toThrow("at least one option");
+    await expect(
+      ask({ p: { type: "predicate", instructions: " " } } as never)
+    ).rejects.toThrow("instructions must not be empty");
+    await expect(ask({} as never)).rejects.toThrow("at least one question");
+    expect(fetch).not.toHaveBeenCalled();
     expect(() => new OpenAIDecisions({ model: "", apiKey: "k" })).toThrow();
   });
 
-  it("withQuestions reuses configuration and requires questions", async () => {
-    const { fetch, triage } = decisions({
+  it("infers answer types per call", async () => {
+    const { decisions } = setup({
       model: "m",
       answers: [{ name: "spam", type: "predicate", probability: 0.1 }],
     });
-    const spam = triage.withQuestions({
-      spam: { type: "predicate", instructions: "Spam?" },
+    const { answers: result } = await decisions.invoke({
+      input: "hi",
+      questions: { spam: { type: "predicate", instructions: "Spam?" } },
     });
-    const { answers: result } = await spam.invoke("hi");
     expectTypeOf(result).toEqualTypeOf<{
-      spam: import("../index.js").PredicateAnswer | RefusalAnswer;
+      spam: PredicateAnswer | RefusalAnswer;
     }>();
     expect(result.spam).toEqual({ type: "predicate", probability: 0.1 });
-    expect(fetch).toHaveBeenCalledOnce();
-    await expect(
-      new OpenAIDecisions({ model: "m", apiKey: "k" }).invoke("hi")
-    ).rejects.toThrow("no questions");
   });
 
   it("supports batch and composition", async () => {
-    const { triage } = decisions({ model: "m", answers });
-    expect(await triage.batch(["a", "b"])).toHaveLength(2);
+    const { decisions } = setup({ model: "m", answers });
+    const request = { input: "a", questions };
+    expect(await decisions.batch([request, request])).toHaveLength(2);
     expect(
-      await triage.pipe(({ answers }) => answers.urgent.type).invoke("a")
+      await decisions.pipe(({ answers }) => answers.urgent.type).invoke(request)
     ).toBe("predicate");
   });
 
   it("traces an LLM run with provider metadata and usage", async () => {
-    const { triage } = decisions({
+    const { decisions } = setup({
       model: "m",
       answers,
       usage: { input_tokens: 3 },
     });
     const start = vi.fn();
     const end = vi.fn();
-    await triage.invoke("a", {
-      callbacks: [{ handleChainStart: start, handleChainEnd: end }],
-    });
+    await decisions.invoke(
+      { input: "a", questions },
+      {
+        callbacks: [{ handleChainStart: start, handleChainEnd: end }],
+      }
+    );
     expect(start.mock.calls[0][6]).toBe("llm");
     expect(start.mock.calls[0][5]).toMatchObject({
       ls_provider: "openai",
       ls_model_name: "decision-model",
     });
-    expect(start.mock.calls[0][1]).toEqual({ input: "a" });
+    expect(start.mock.calls[0][1]).toMatchObject({ input: "a" });
     expect(end.mock.calls[0][0].usage_metadata.total_tokens).toBe(3);
-    expect(JSON.stringify(triage.toJSON())).not.toContain("test-key");
+    expect(JSON.stringify(decisions.toJSON())).not.toContain("test-key");
   });
 
   it("does not send a request once aborted", async () => {
-    const { fetch, triage } = decisions({ model: "m", answers });
+    const { fetch, decisions } = setup({ model: "m", answers });
     const controller = new AbortController();
     controller.abort();
     await expect(
-      triage.invoke("a", { signal: controller.signal })
+      decisions.invoke({ input: "a", questions }, { signal: controller.signal })
     ).rejects.toThrow();
     expect(fetch).not.toHaveBeenCalled();
   });

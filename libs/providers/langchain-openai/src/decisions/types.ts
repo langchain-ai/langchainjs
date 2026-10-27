@@ -77,6 +77,12 @@ export type Answers<Q extends Questions> = {
   -readonly [K in keyof Q]: AnswerFor<Q[K]> | RefusalAnswer;
 };
 
+/** One Decisions request: what to evaluate and the named questions to ask. */
+export interface DecisionRequest<Q extends Questions = Questions> {
+  input: DecisionInput;
+  questions: Q;
+}
+
 export interface DecisionResult<Q extends Questions = Questions> {
   answers: Answers<Q>;
   /** The model that answered, as reported by the API. */
@@ -137,6 +143,8 @@ const questionSchema = z.discriminatedUnion("type", [
 
 /** Validates questions, naming the offending question in the error. */
 export function parseQuestions<Q extends Questions>(questions: Q): Q {
+  if (!Object.keys(questions ?? {}).length)
+    throw new Error("OpenAI Decisions requires at least one question.");
   for (const [name, question] of Object.entries(questions)) {
     const result = questionSchema.safeParse(question);
     if (!result.success) {

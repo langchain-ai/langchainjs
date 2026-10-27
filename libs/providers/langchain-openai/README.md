@@ -711,14 +711,15 @@ If you add a new file to be exported, either import & re-export from `src/index.
 ## Decisions API (beta)
 
 `OpenAIDecisions` asks typed questions about text, messages or JSON state. It is a
-runnable, not a chat model. Questions are fixed when you create it, and the answer
-types are inferred from them:
+runnable, not a chat model. Pass the input and named questions to `invoke`; answer
+types are inferred from the questions:
 
 ```typescript
 import { OpenAIDecisions } from "@langchain/openai";
 
-const triage = new OpenAIDecisions({
-  model: "gpt-6-luna",
+const decisions = new OpenAIDecisions({ model: "gpt-6-luna" });
+const { answers } = await decisions.invoke({
+  input: "The deploy failed and customers are seeing 500s.",
   questions: {
     urgent: {
       type: "predicate",
@@ -736,10 +737,6 @@ const triage = new OpenAIDecisions({
     },
   },
 });
-
-const { answers } = await triage.invoke(
-  "The deploy failed and customers are seeing 500s."
-);
 if (answers.team.type === "choice") {
   answers.team.choice; // "infra" | "billing"
 }
@@ -747,8 +744,7 @@ if (answers.team.type === "choice") {
 
 Every question gets an answer of its own type, or a `refusal`. A `score` is the
 probability-weighted average of the zero-based level indices, and `levels[i]` holds
-the label and probability of level `i`. `withQuestions()` returns a copy that asks
-different questions with the same model and client options.
+the label and probability of level `i`.
 
 Strings and human-only messages with text and base64 images are sent as they are.
 Anything else, such as conversations with AI or tool messages, or JSON objects, is
