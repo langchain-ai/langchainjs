@@ -5,7 +5,7 @@ import { wrapOpenAIClientError } from "../utils/client.js";
 import { toDecisionInput } from "./input.js";
 import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
 import {
-  toWireQuestion,
+  toQuestionParam,
   type Answers,
   type DecisionRequest,
   type DecisionResult,
@@ -72,7 +72,16 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
 
   protected client: OpenAIClient;
 
-  constructor(fields: OpenAIDecisionsFields) {
+  constructor(model: string, fields?: Omit<OpenAIDecisionsFields, "model">);
+  constructor(fields: OpenAIDecisionsFields);
+  constructor(
+    modelOrFields: string | OpenAIDecisionsFields,
+    fieldsArg?: Omit<OpenAIDecisionsFields, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...fieldsArg, model: modelOrFields }
+        : modelOrFields;
     const { apiKey, ...kwargs } = fields;
     super(kwargs);
     if (!fields.model?.trim())
@@ -105,7 +114,7 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
                 model: this.model,
                 input: toDecisionInput(input),
                 questions: names.map((name) =>
-                  toWireQuestion(name, questions[name])
+                  toQuestionParam(name, questions[name])
                 ),
               },
               { signal: config?.signal }

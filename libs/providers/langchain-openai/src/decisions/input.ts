@@ -3,26 +3,54 @@ import { BaseMessage } from "@langchain/core/messages";
 import { convertMessagesToResponsesInput } from "../converters/responses.js";
 import type { DecisionInput } from "./types.js";
 
-type DecisionInputItem = Exclude<
+/**
+ * How LangChain input becomes the Decisions API `input` field.
+ *
+ * The Decisions API accepts a string, or a list of items using a subset of the
+ * Responses API input format: `user`, `system`, `developer` and `assistant` messages,
+ * plus function and custom tool calls and their outputs. Rather than writing a second
+ * LangChain message converter, messages go through the Responses converter
+ * (`convertMessagesToResponsesInput`), which already handles roles, content blocks,
+ * tool calls and tool results. The Decisions API is strict about what it accepts,
+ * though, and Responses items carry things it rejects: reasoning items, item `id`s,
+ * `annotations` and `phase` on assistant text, and content parts such as
+ * `input_file`. So each Responses item is rebuilt with only the fields the Decisions
+ * API accepts (`toDecisionItem`), and unsupported content parts are replaced by a
+ * text placeholder so the model knows something was there.
+ *
+ * Input that is not messages, such as application state, is sent as an `input_json`
+ * part, which the API reads as structured data. Messages nested in that state are
+ * converted to the same items, because a `BaseMessage` instance would otherwise be
+ * serialized as LangChain's internal constructor format.
+ */
+
+type ResponsesItem = ReturnType<typeof convertMessagesToResponsesInput>[number];
+type DecisionItem = Exclude<
   OpenAIClient.DecisionCreateParams["input"],
-  string
->[number];
-type AssistantPart = Exclude<
-  OpenAIClient.DecisionInputMessage.DecisionInputAssistantMessage["content"],
   string
 >[number];
 type InputPart =
   | OpenAIClient.DecisionInputText
   | OpenAIClient.DecisionInputImage;
-type Part = {
+type AssistantPart = Exclude<
+  OpenAIClient.DecisionInputMessage.DecisionInputAssistantMessage["content"],
+  string
+>[number];
+
+/** A Responses content part, loosely typed because roles and tool outputs use different part unions. */
+type ResponsesPart = {
   type: string;
   text?: unknown;
   image_url?: unknown;
   refusal?: unknown;
 };
 
+/**
+ * Keeps text and image parts, which is all user messages and tool outputs accept,
+ * and replaces anything else, such as `input_file`, with a placeholder.
+ */
 function toInputParts(content: unknown): InputPart[] {
-  return (content as Part[]).map((part) =>
+  return (content as ResponsesPart[]).map((part) =>
     part.type === "input_text" && typeof part.text === "string"
       ? { type: "input_text", text: part.text }
       : part.type === "input_image" && typeof part.image_url === "string"
@@ -31,77 +59,86 @@ function toInputParts(content: unknown): InputPart[] {
   );
 }
 
-/** Narrows a Responses input item to the fields the Decisions API accepts. */
-function toDecisionItem(
-  item: ReturnType<typeof convertMessagesToResponsesInput>[number]
-): DecisionInputItem[] {
-  if (!("type" in item) || item.type === "message") {
-    if (!("role" in item)) return [];
-    const { role, content } = item;
-    if (role === "user")
-      return [
-        {
-          role,
-          content:
-            typeof content === "string" ? content : toInputParts(content),
-        },
-      ];
-    if (role === "system" || role === "developer")
-      return [
-        {
-          role,
-          content:
-            typeof content === "string"
-              ? content
-              : toInputParts(content).map((part) =>
-                  part.type === "input_text"
-                    ? part
-                    : { type: "input_text", text: "[image omitted]" }
-                ),
-        },
-      ];
-    if (role === "assistant")
-      return [
-        {
-          role,
-          content:
-            typeof content === "string"
-              ? content
-              : (content as Part[]).flatMap((part): AssistantPart[] =>
-                  part.type === "output_text" && typeof part.text === "string"
-                    ? [{ type: "output_text", text: part.text }]
-                    : part.type === "refusal" &&
-                        typeof part.refusal === "string"
-                      ? [{ type: "refusal", refusal: part.refusal }]
-                      : []
-                ),
-        },
-      ];
-    return [];
-  }
-  if (item.type === "function_call" || item.type === "custom_tool_call") {
-    const { type, call_id, name } = item;
-    return type === "function_call"
-      ? [{ type, call_id, name, arguments: item.arguments }]
-      : [{ type, call_id, name, input: item.input }];
-  }
-  if (
-    item.type === "function_call_output" ||
-    item.type === "custom_tool_call_output"
-  ) {
-    const { type, call_id, output } = item;
-    return [
-      {
-        type,
-        call_id: call_id ?? "",
-        output: typeof output === "string" ? output : toInputParts(output),
-      },
-    ];
-  }
-  return [];
+/** System and developer messages accept only text parts. */
+function toTextParts(content: unknown): OpenAIClient.DecisionInputText[] {
+  return toInputParts(content).map((part) =>
+    part.type === "input_text"
+      ? part
+      : { type: "input_text", text: "[input_image omitted]" }
+  );
 }
 
-function toDecisionItems(messages: BaseMessage[]): DecisionInputItem[] {
+/** Assistant messages accept `output_text` and `refusal` parts, without `annotations`. */
+function toAssistantParts(content: unknown): AssistantPart[] {
+  return (content as ResponsesPart[]).flatMap((part): AssistantPart[] => {
+    if (part.type === "output_text" && typeof part.text === "string")
+      return [{ type: "output_text", text: part.text }];
+    if (part.type === "refusal" && typeof part.refusal === "string")
+      return [{ type: "refusal", refusal: part.refusal }];
+    return [];
+  });
+}
+
+/**
+ * Rebuilds one Responses item with only the fields the Decisions API accepts.
+ * Items it has no equivalent for, such as reasoning, are dropped.
+ */
+function toDecisionItem(item: ResponsesItem): DecisionItem[] {
+  if ("role" in item && (!("type" in item) || item.type === "message")) {
+    const { role, content } = item;
+    if (typeof content === "string")
+      return role === "user" ||
+        role === "system" ||
+        role === "developer" ||
+        role === "assistant"
+        ? [{ role, content }]
+        : [];
+    if (role === "user") return [{ role, content: toInputParts(content) }];
+    if (role === "system" || role === "developer")
+      return [{ role, content: toTextParts(content) }];
+    if (role === "assistant")
+      return [{ role, content: toAssistantParts(content) }];
+    return [];
+  }
+  if (!("type" in item)) return [];
+  switch (item.type) {
+    case "function_call":
+      return [
+        {
+          type: item.type,
+          call_id: item.call_id,
+          name: item.name,
+          arguments: item.arguments,
+        },
+      ];
+    case "custom_tool_call":
+      return [
+        {
+          type: item.type,
+          call_id: item.call_id,
+          name: item.name,
+          input: item.input,
+        },
+      ];
+    case "function_call_output":
+    case "custom_tool_call_output":
+      return [
+        {
+          type: item.type,
+          call_id: item.call_id ?? "",
+          output:
+            typeof item.output === "string"
+              ? item.output
+              : toInputParts(item.output),
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
+/** Converts LangChain messages to Decisions input items. */
+function toDecisionItems(messages: BaseMessage[]): DecisionItem[] {
   return convertMessagesToResponsesInput({
     messages,
     zdrEnabled: true,
@@ -109,7 +146,7 @@ function toDecisionItems(messages: BaseMessage[]): DecisionInputItem[] {
   }).flatMap(toDecisionItem);
 }
 
-/** Replaces messages nested in JSON with their Decisions input items. */
+/** Replaces messages nested in JSON state with their Decisions input items. */
 function toJSONValue(value: unknown): unknown {
   if (BaseMessage.isInstance(value)) return toDecisionItems([value]);
   if (Array.isArray(value))
@@ -126,12 +163,8 @@ function toJSONValue(value: unknown): unknown {
 }
 
 /**
- * Converts input to the Decisions API `input` field.
- *
- * Messages become a native conversation, with tool calls and results as function
- * call items. Content the API does not accept, such as files, is replaced by a
- * placeholder. JSON objects are sent as an `input_json` part in a user message,
- * with any nested messages converted the same way.
+ * Converts input to the Decisions API `input` field: strings as they are, messages
+ * as a native conversation, and anything else as an `input_json` part.
  */
 export function toDecisionInput(
   input: DecisionInput

@@ -1,10 +1,7 @@
 import type { OpenAI as OpenAIClient } from "openai";
 import type { BaseMessage, UsageMetadata } from "@langchain/core/messages";
 
-type WireQuestion =
-  OpenAIClient.DecisionCreateParams["questions"] extends (infer Q)[]
-    ? Q
-    : never;
+type QuestionParam = OpenAIClient.DecisionCreateParams["questions"][number];
 
 /** Estimate the probability that a condition is true. */
 export interface Predicate {
@@ -104,7 +101,10 @@ export interface DecisionResult<Q extends Questions = Questions> {
 }
 
 /** Converts a named question to the shape the Decisions API expects. */
-export function toWireQuestion(name: string, question: Question): WireQuestion {
+export function toQuestionParam(
+  name: string,
+  question: Question
+): QuestionParam {
   const { type, instructions } = question;
   if (type === "predicate") return { type, name, instructions };
   if (type === "choice") {

@@ -106,9 +106,11 @@ export { countTokensApproximately } from "./utils.js";
 
 export {
   openAIAutoModeMiddleware,
-  openAIModelRouterMiddleware,
   type OpenAIAutoModeMiddlewareOptions,
+} from "./provider/openai/autoMode.js";
+export {
+  openAIModelRouterMiddleware,
   type OpenAIModelRouterMiddlewareOptions,
   type ModelChoice,
-  type OpenAIDecisionsLike,
-} from "./provider/openai/decisions.js";
+} from "./provider/openai/modelRouter.js";
+export { type OpenAIDecisionsLike } from "./provider/openai/decisions.js";

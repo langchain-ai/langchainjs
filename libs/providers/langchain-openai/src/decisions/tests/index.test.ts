@@ -152,6 +152,13 @@ describe("OpenAIDecisions", () => {
     ).rejects.toThrow("at least one question");
   });
 
+  it("accepts a model string like ChatOpenAI", () => {
+    const decisions = new OpenAIDecisions("gpt-6-luna", { apiKey: "k" });
+    expect(decisions.model).toBe("gpt-6-luna");
+    expect(new OpenAIDecisions({ model: "m", apiKey: "k" }).model).toBe("m");
+    expect(() => new OpenAIDecisions("", { apiKey: "k" })).toThrow();
+  });
+
   it("supports batch and composition", async () => {
     const { decisions } = setup(body);
     const request = { input: "a", questions };
