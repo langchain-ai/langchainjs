@@ -1248,7 +1248,7 @@ export class ChatMistralAI<
     const params = this.invocationParams(options);
     const input = { ...params, messages: mistralMessages };
     const streamIterable = await this.completionWithRetry(input, true);
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    const shouldStreamUsage = options.streamUsage ?? this.streamUsage ?? true;
     async function* extractData(
       source: AsyncIterable<{ data: Record<string, unknown> }>,
       signal?: AbortSignal
@@ -1295,7 +1295,7 @@ export class ChatMistralAI<
         prompt: 0,
         completion: choice.index ?? 0,
       };
-      const shouldStreamUsage = this.streamUsage || options.streamUsage;
+      const shouldStreamUsage = options.streamUsage ?? this.streamUsage;
       const message = _convertDeltaToMessageChunk(
         delta,
         shouldStreamUsage ? data.usage : null
