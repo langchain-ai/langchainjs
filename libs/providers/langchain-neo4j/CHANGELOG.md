@@ -1,5 +1,12 @@
 # @langchain/neo4j
 
+## 0.1.29
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.57
+
 ## 0.1.28
 
 ### Patch Changes
