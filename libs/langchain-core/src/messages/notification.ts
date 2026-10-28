@@ -1,0 +1,94 @@
+import type { BaseMessage } from "./base.js";
+import type { Constructor } from "./utils.js";
+
+/** A first line for a notification's content, marking it as not from the user. */
+export const NOTIFICATION_HEADER = "[SYSTEM NOTIFICATION - NOT USER INPUT]";
+
+/** Which feature added a message, and that feature's fields. */
+export interface NotificationMetadata {
+  /** The feature that added the message, e.g. `"async_subagent"`. */
+  source: string;
+  /** The feature's fields, documented by that feature. */
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Return a copy of `message` marked as added by the agent harness.
+ *
+ * Use it for any message the user didn't type, such as a background task update
+ * or a conversation summary. It sets `additional_kwargs.lc_source` and, when
+ * `data` is given, `additional_kwargs.lc_data`. Any earlier `lc_source` and
+ * `lc_data` are removed first. LangChain's chat model integrations don't send
+ * these keys to the model.
+ *
+ * It doesn't change the content. Write the content the model reads yourself,
+ * e.g. starting with `NOTIFICATION_HEADER`.
+ *
+ * Anyone who can send input to a thread can set these keys. Don't use them to
+ * decide whether to trust a message.
+ *
+ * `mergeMessageRuns` and chunk `concat` join a notification with adjacent
+ * messages of its type; the merged message keeps the metadata and concatenates
+ * `lc_source`.
+ *
+ * @param message - The message to mark.
+ * @param metadata - The feature that added the message and its fields. `data` must be JSON-serializable.
+ * @returns A shallow copy of `message`, with the same `id`.
+ *
+ * @example
+ * ```typescript
+ * import {
+ *   HumanMessage,
+ *   NOTIFICATION_HEADER,
+ *   addNotificationMetadata,
+ * } from "@langchain/core/messages";
+ *
+ * const message = addNotificationMetadata(
+ *   new HumanMessage(`${NOTIFICATION_HEADER}\n<task-id>t_42</task-id>`),
+ *   { source: "async_subagent", data: { task_id: "t_42", status: "success" } }
+ * );
+ * ```
+ */
+export function addNotificationMetadata<M extends BaseMessage>(
+  message: M,
+  metadata: NotificationMetadata
+): M {
+  const { lc_data: _, ...kwargs } = message.additional_kwargs ?? {};
+  const additional_kwargs: Record<string, unknown> = {
+    ...kwargs,
+    lc_source: metadata.source,
+  };
+  if (metadata.data !== undefined) {
+    additional_kwargs.lc_data = { ...metadata.data };
+  }
+  const {
+    lc_kwargs: _kwargs,
+    lc_serializable: _serializable,
+    lc_namespace: _namespace,
+    type: _type,
+    ...fields
+  } = message;
+  const Cls = message.constructor as Constructor<M>;
+  return new Cls({ ...fields, additional_kwargs });
+}
+
+/**
+ * Return the notification metadata of `message`.
+ *
+ * @param message - The message to read.
+ * @returns The metadata `addNotificationMetadata` set, or `undefined` for a
+ * message without a string `lc_source`. `data` is a copy of `lc_data`, left out
+ * unless `lc_data` is an object.
+ */
+export function getNotificationMetadata(
+  message: BaseMessage
+): NotificationMetadata | undefined {
+  const source = message.additional_kwargs?.lc_source;
+  if (typeof source !== "string") return undefined;
+  const data = message.additional_kwargs?.lc_data;
+  const isRecord =
+    typeof data === "object" && data !== null && !Array.isArray(data);
+  return isRecord
+    ? { source, data: { ...(data as Record<string, unknown>) } }
+    : { source };
+}

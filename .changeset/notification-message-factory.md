@@ -2,4 +2,4 @@
 "@langchain/core": patch
 ---
 
-feat(core): add a beta `createNotificationMessage` factory for harness-added messages labeled with `lc_synthetic`, `lc_source` and `lc_data`.
+feat(core): add `addNotificationMetadata`, `getNotificationMetadata`, the `NotificationMetadata` type and `NOTIFICATION_HEADER` for marking messages the agent harness adds.
