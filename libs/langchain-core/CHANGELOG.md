@@ -1,5 +1,17 @@
 # @langchain/core
 
+## 1.3.1
+
+### Patch Changes
+
+- [#12026](https://github.com/langchain-ai/langchainjs/pull/12026) [`178af31`](https://github.com/langchain-ai/langchainjs/commit/178af31ee41b7e36fa2971af61ade6a5460b6d2e) Thanks [@eliornl](https://github.com/eliornl)! - fix(core): deliver callbacks once to a handler registered twice by merged configs
+
+  Merging two runnable configs that both carry the same callback handler, as happens when an agent's `streamEvents()` runs inside a LangGraph node with tracing on, registered that handler twice, so it received every callback twice: every streamed chunk arrived twice. The configured callback manager now keeps each handler once, in order, including a handler passed as a plain object of methods that merged configs wrapped twice.
+
+- [#12042](https://github.com/langchain-ai/langchainjs/pull/12042) [`50343ba`](https://github.com/langchain-ai/langchainjs/commit/50343ba94c2388b3d3a7d4d6cd0977fa60a90294) Thanks [@sera-wi](https://github.com/sera-wi)! - fix(core): include node `metadata` in `Graph.toJSON()` output when set, matching Python
+
+- [#12048](https://github.com/langchain-ai/langchainjs/pull/12048) [`304d190`](https://github.com/langchain-ai/langchainjs/commit/304d190a30343ecb8ae5f06081a2b5a6d93d9968) Thanks [@sera-wi](https://github.com/sera-wi)! - fix(core): escape `drawMermaid` node metadata labels and leave out object values, so metadata with brackets or objects no longer breaks Mermaid parsing
+
 ## 1.3.0
 
 ### Minor Changes

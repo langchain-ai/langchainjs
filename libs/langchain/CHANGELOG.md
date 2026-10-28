@@ -1,5 +1,11 @@
 # langchain
 
+## 1.6.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
 ## 1.5.20
 
 ### Patch Changes
