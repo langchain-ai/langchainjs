@@ -1145,7 +1145,7 @@ export class ChatCohere<
       { signal: options.signal },
       async () => this.client.chatStream(request)
     );
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    const shouldStreamUsage = options.streamUsage ?? this.streamUsage ?? true;
     const abortableStream = async function* (
       source: AsyncIterable<Record<string, unknown>>,
       signal?: AbortSignal
@@ -1212,7 +1212,7 @@ export class ChatCohere<
         });
       } else if (
         chunk.eventType === "stream-end" &&
-        (this.streamUsage || options.streamUsage)
+        (options.streamUsage ?? this.streamUsage)
       ) {
         // stream-end events contain the final token count
         const input_tokens = chunk.response.meta?.tokens?.inputTokens ?? 0;
