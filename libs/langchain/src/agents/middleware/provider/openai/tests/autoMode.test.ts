@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod/v4";
 import { openAIAutoModeMiddleware } from "../autoMode.js";
 import type { ToolCallRequest } from "../../../types.js";
 import { decisions } from "./utils.js";
@@ -53,6 +55,22 @@ describe("openAIAutoModeMiddleware", () => {
         tool_description: "Deletes a file",
       },
     });
+  });
+
+  it("accepts tool instances", async () => {
+    const { model, fetch } = decisions([
+      { type: "predicate", probability: 0.9 },
+    ]);
+    const deleteTool = tool(async () => "deleted", {
+      name: "delete",
+      description: "Deletes a file",
+      schema: z.object({ path: z.string() }),
+    });
+    const middleware = openAIAutoModeMiddleware({ model, tools: [deleteTool] });
+    const handler = vi.fn();
+    await middleware.wrapToolCall!(request, handler);
+    expect(handler).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledOnce();
   });
 
   it("propagates failures without running the tool", async () => {

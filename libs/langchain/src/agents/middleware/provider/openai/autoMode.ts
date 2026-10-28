@@ -1,4 +1,5 @@
 import { ToolMessage } from "@langchain/core/messages";
+import type { ClientTool } from "@langchain/core/tools";
 import { createMiddleware } from "../../../middleware.js";
 import { decider, type OpenAIDecisionsLike } from "./decisions.js";
 
@@ -9,7 +10,7 @@ const DEFAULT_RISK_INSTRUCTIONS =
 
 export interface OpenAIAutoModeMiddlewareOptions {
   /** Tools to classify before they run. Other tools run unchecked. */
-  tools: (string | { name: string })[];
+  tools: (string | ClientTool)[];
   /** A Decisions model name, or an `OpenAIDecisions` instance. */
   model: string | OpenAIDecisionsLike;
   /** The risk question. Describe what counts as risky and safe. */
