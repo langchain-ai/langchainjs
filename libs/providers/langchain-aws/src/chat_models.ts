@@ -1029,12 +1029,12 @@ export class ChatBedrockConverse
         : undefined,
       toolConfig,
       additionalModelRequestFields:
-        this.additionalModelRequestFields ??
-        options?.additionalModelRequestFields,
+        options?.additionalModelRequestFields ??
+        this.additionalModelRequestFields,
       additionalModelResponseFieldPaths:
         options?.additionalModelResponseFieldPaths ??
         this.additionalModelResponseFieldPaths,
-      guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
+      guardrailConfig: options?.guardrailConfig ?? this.guardrailConfig,
       performanceConfig: options?.performanceConfig,
       serviceTier: serviceTierType
         ? {
