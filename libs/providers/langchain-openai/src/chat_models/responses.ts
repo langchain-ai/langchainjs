@@ -318,12 +318,24 @@ export class ChatOpenAIResponses<
     );
 
     try {
+      // `response.created` arrives when the request is accepted, before any
+      // output. Merge it into the next chunk so it isn't reported as the
+      // first token, while keeping the response id on the first chunk.
+      let createdChunk: ChatGenerationChunk | undefined;
       for await (const data of streamIterable) {
         if (options.signal?.aborted) {
           return;
         }
-        const chunk = convertResponsesDeltaToChatGenerationChunk(data);
+        let chunk = convertResponsesDeltaToChatGenerationChunk(data);
         if (chunk == null) continue;
+        if (data.type === "response.created") {
+          createdChunk = chunk;
+          continue;
+        }
+        if (createdChunk !== undefined) {
+          chunk = createdChunk.concat(chunk);
+          createdChunk = undefined;
+        }
         yield chunk;
         await runManager?.handleLLMNewToken(
           chunk.text || "",
