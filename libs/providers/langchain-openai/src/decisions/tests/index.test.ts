@@ -1,4 +1,4 @@
-import { describe, it, expect, expectTypeOf, vi } from "vitest";
+import { afterEach, describe, it, expect, expectTypeOf, vi } from "vitest";
 import {
   AIMessage,
   HumanMessage,
@@ -157,6 +157,55 @@ describe("OpenAIDecisions", () => {
     expect(decisions.model).toBe("gpt-6-luna");
     expect(new OpenAIDecisions({ model: "m", apiKey: "k" }).model).toBe("m");
     expect(() => new OpenAIDecisions("", { apiKey: "k" })).toThrow();
+  });
+
+  describe("LangSmith gateway", () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    async function requestFor(fields: { apiKey?: string } = {}) {
+      const fetch = vi.fn(
+        async (_url: RequestInfo | URL, _init?: RequestInit) =>
+          new Response(JSON.stringify(body), {
+            headers: { "content-type": "application/json" },
+          })
+      );
+      await new OpenAIDecisions("gpt-6-luna", {
+        ...fields,
+        configuration: { fetch, maxRetries: 0 },
+      }).invoke({ input: "a", questions });
+      const [url, init] = fetch.mock.calls[0];
+      return {
+        url: String(url),
+        auth: new Headers(init?.headers).get("authorization"),
+      };
+    }
+
+    it("routes through the gateway with the LangSmith key", async () => {
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      vi.stubEnv("OPENAI_API_KEY", "openai-key");
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      expect(await requestFor()).toEqual({
+        url: "https://gateway.smith.langchain.com/openai/v1/decisions",
+        auth: "Bearer gateway-key",
+      });
+    });
+
+    it("lets an explicit base URL or API key win", async () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "https://gateway.example.com/");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      expect(await requestFor({ apiKey: "own-key" })).toEqual({
+        url: "https://gateway.example.com/openai/v1/decisions",
+        auth: "Bearer own-key",
+      });
+      vi.stubEnv("OPENAI_BASE_URL", "https://proxy.example.com/v1");
+      expect((await requestFor({ apiKey: "own-key" })).url).toBe(
+        "https://proxy.example.com/v1/decisions"
+      );
+    });
   });
 
   it("supports batch and composition", async () => {

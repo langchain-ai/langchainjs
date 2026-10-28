@@ -1,6 +1,7 @@
 import { OpenAI as OpenAIClient, type ClientOptions } from "openai";
 import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import { wrapOpenAIClientError } from "../utils/client.js";
 import { toDecisionInput } from "./input.js";
 import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
@@ -34,9 +35,16 @@ export type {
 export interface OpenAIDecisionsFields {
   /** Decisions model name, such as `gpt-6-luna`. */
   model: string;
-  /** Falls back to the `OPENAI_API_KEY` environment variable. */
+  /**
+   * Falls back to the LangSmith gateway key when routing through the gateway, then
+   * to the `OPENAI_API_KEY` environment variable.
+   */
   apiKey?: string;
-  /** OpenAI SDK client options, such as `baseURL`, `timeout` or `fetch`. */
+  /**
+   * OpenAI SDK client options, such as `baseURL`, `timeout` or `fetch`. Without a
+   * `baseURL`, `OPENAI_API_BASE` or `OPENAI_BASE_URL`, setting `LANGSMITH_GATEWAY`
+   * routes requests through the LangSmith gateway, as with `ChatOpenAI`.
+   */
   configuration?: Omit<ClientOptions, "apiKey">;
 }
 
@@ -87,9 +95,19 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
     if (!fields.model?.trim())
       throw new Error("An OpenAI Decisions model is required.");
     this.model = fields.model;
+    const gateway = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields.configuration?.baseURL ??
+        (getEnvironmentVariable("OPENAI_API_BASE") ||
+          getEnvironmentVariable("OPENAI_BASE_URL") ||
+          undefined),
+      providerPath: "openai/v1",
+    });
     this.client = new OpenAIClient({
       ...fields.configuration,
-      apiKey: apiKey ?? getEnvironmentVariable("OPENAI_API_KEY"),
+      baseURL: gateway.baseURL,
+      apiKey:
+        apiKey ?? gateway.apiKey ?? getEnvironmentVariable("OPENAI_API_KEY"),
     });
   }
 
