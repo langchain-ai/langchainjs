@@ -125,17 +125,20 @@ describe("modelRouterMiddleware", () => {
 
   test("sends the choices as the Choice criteria under the model_route id", async () => {
     const fetchMock = stubFetch({ model_route: choiceAnswer("fast") });
-    const mw = modelRouterMiddleware({
-      choices: {
-        fast: {
-          model: fakeModel().respond(new AIMessage("ok")),
-          criteria: "Simple, well-scoped tasks.",
-        },
-        powerful: {
-          model: fakeModel(),
-          criteria: "Complex tasks requiring deeper reasoning.",
-        },
+    const choices = {
+      fast: {
+        model: fakeModel()
+          .respond(new AIMessage("ok"))
+          .respond(new AIMessage("ok again")),
+        criteria: "Simple, well-scoped tasks.",
       },
+      powerful: {
+        model: fakeModel(),
+        criteria: "Complex tasks requiring deeper reasoning.",
+      },
+    };
+    const mw = modelRouterMiddleware({
+      choices,
       instructions: "Choose the least costly model suited to the task.",
       classifierOptions: {
         ...OPTS,
@@ -155,6 +158,11 @@ describe("modelRouterMiddleware", () => {
     expect(questions.model_route.criteria).toEqual({
       fast: "Simple, well-scoped tasks.",
       powerful: "Complex tasks requiring deeper reasoning.",
+    });
+    choices.fast.criteria = "Updated selection criteria.";
+    await agent.invoke({ messages: [new HumanMessage("another request")] });
+    expect(sentBody(fetchMock, 1).questions).toMatchObject({
+      model_route: { criteria: { fast: "Updated selection criteria." } },
     });
   });
 

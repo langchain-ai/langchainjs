@@ -281,6 +281,30 @@ describe("autoModeMiddleware", () => {
     );
   });
 
+  test("validates generated questions when a watched tool is called", async () => {
+    const fetchMock = stubFetch(0.01);
+    const mw = autoModeMiddleware({
+      tools: ["run_sql"],
+      instructions: 42 as never,
+      criteria: null,
+      classifierOptions: opts(fetchMock),
+    });
+    const model = fakeModel().respondWithTools([
+      { name: "run_sql", args: { query: "SELECT 1" }, id: "c1" },
+    ]);
+    const executed = vi.fn();
+    const agent = createAgent({
+      model,
+      tools: [makeRunSqlTool(executed)],
+      middleware: [mw],
+    });
+    await expect(
+      agent.invoke({ messages: [new HumanMessage("Read one row.")] })
+    ).rejects.toThrow(/Invalid TypeSafe question/);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(executed).not.toHaveBeenCalled();
+  });
+
   test("null classifies on instructions alone", async () => {
     const fetchMock = stubFetch(0.01);
     const runSql = makeRunSqlTool();
