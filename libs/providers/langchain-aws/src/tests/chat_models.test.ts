@@ -15,6 +15,11 @@ import {
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
   ServiceTierType,
+  AccessDeniedException,
+  ModelNotReadyException,
+  ServiceUnavailableException,
+  ThrottlingException,
+  ValidationException,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
@@ -22,6 +27,173 @@ import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { load } from "@langchain/core/load";
+
+describe("Bedrock retry safeguards", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+  };
+
+  test("disables SDK retries by default", async () => {
+    const model = new ChatBedrockConverse(baseConstructorArgs);
+
+    await expect(model.client.config.maxAttempts()).resolves.toBe(1);
+  });
+
+  test.each([4, async () => 5])(
+    "preserves explicit SDK maxAttempts %s",
+    async (maxAttempts) => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        clientOptions: { maxAttempts },
+      });
+
+      await expect(model.client.config.maxAttempts()).resolves.toBe(
+        typeof maxAttempts === "number" ? maxAttempts : 5
+      );
+    }
+  );
+
+  test("leaves an injected client's retry configuration unchanged", async () => {
+    const client = new BedrockRuntimeClient({
+      ...baseConstructorArgs,
+      maxAttempts: 4,
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client,
+      clientOptions: { maxAttempts: 2 },
+    });
+
+    expect(model.client).toBe(client);
+    await expect(client.config.maxAttempts()).resolves.toBe(4);
+  });
+
+  const errorCases = [
+    {
+      name: "400 ValidationException",
+      createError: () =>
+        new ValidationException({
+          message: "Invalid request",
+          $metadata: { httpStatusCode: 400 },
+        }),
+      sends: 1,
+    },
+    {
+      name: "403 AccessDeniedException",
+      createError: () =>
+        new AccessDeniedException({
+          message: "Access denied",
+          $metadata: { httpStatusCode: 403 },
+        }),
+      sends: 1,
+    },
+    {
+      name: "content-filter error without HTTP status",
+      createError: () => new Error("Blocked by the content filtering policy"),
+      sends: 1,
+    },
+    {
+      name: "ThrottlingException",
+      createError: () =>
+        new ThrottlingException({
+          message: "Too many requests",
+          $metadata: { httpStatusCode: 429 },
+        }),
+      sends: 3,
+    },
+    {
+      name: "ModelNotReadyException",
+      createError: () =>
+        new ModelNotReadyException({
+          message: "Model not ready",
+          $metadata: { httpStatusCode: 429 },
+        }),
+      sends: 3,
+    },
+    {
+      name: "503 ServiceUnavailableException",
+      createError: () =>
+        new ServiceUnavailableException({
+          message: "Service unavailable",
+          $metadata: { httpStatusCode: 503 },
+        }),
+      sends: 3,
+    },
+    {
+      name: "plain object 400 error",
+      createError: () => ({
+        message: "Invalid request",
+        $metadata: { httpStatusCode: 400 },
+      }),
+      sends: 1,
+    },
+    {
+      name: "plain object content-filter error",
+      createError: () => ({
+        Message: "Blocked by the content filtering policy",
+      }),
+      sends: 1,
+    },
+    {
+      name: "unknown metadata-only 429",
+      createError: () => ({
+        message: "Too many requests",
+        $metadata: { httpStatusCode: 429 },
+      }),
+      sends: 1,
+    },
+  ];
+
+  describe.each(["invoke", "legacy stream", "event stream"])(
+    "%s",
+    (operation) => {
+      test.each(errorCases)(
+        "$name makes $sends send(s) with maxRetries: 2",
+        async ({ createError, sends }) => {
+          vi.useFakeTimers();
+          try {
+            const error = createError();
+            const mockSend = vi.fn().mockRejectedValue(error);
+            const model = new ChatBedrockConverse({
+              ...baseConstructorArgs,
+              client: { send: mockSend } as unknown as BedrockRuntimeClient,
+              maxRetries: 2,
+            });
+            const result = (async () => {
+              if (operation === "invoke") {
+                return model.invoke([new HumanMessage("Hello")]);
+              }
+              const stream =
+                operation === "legacy stream"
+                  ? model._streamResponseChunks([new HumanMessage("Hello")], {})
+                  : model._streamChatModelEvents(
+                      [new HumanMessage("Hello")],
+                      {}
+                    );
+              for await (const _chunk of stream) {
+                continue;
+              }
+            })();
+            const assertion = expect(result).rejects.toMatchObject({
+              message: "message" in error ? error.message : error.Message,
+            });
+            await vi.runAllTimersAsync();
+            await assertion;
+
+            expect(mockSend).toHaveBeenCalledTimes(sends);
+          } finally {
+            vi.useRealTimers();
+          }
+        }
+      );
+    }
+  );
+});
 
 describe("convertToConverseMessages", () => {
   const testCases: {
