@@ -186,6 +186,6 @@ export function createNotificationMessage(
   const body: MessageContent =
     typeof content === "string"
       ? `${intro}\n${content}`
-      : [{ type: "text", text: intro }, ...content];
+      : [{ type: "text", text: `${intro}\n` }, ...content];
   return new HumanMessage({ content: body, additional_kwargs, id });
 }

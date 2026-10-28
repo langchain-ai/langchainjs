@@ -63,7 +63,7 @@ describe("createNotificationMessage", () => {
     });
 
     expect(message.content).toEqual([
-      { type: "text", text: `${NOTIFICATION_HEADER}\nFrames from a video.` },
+      { type: "text", text: `${NOTIFICATION_HEADER}\nFrames from a video.\n` },
       text,
       image,
     ]);
