@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { OpenAIDecisions } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 import { openAIModelRouterMiddleware } from "../modelRouter.js";
 import { createAgent } from "../../../../index.js";
@@ -18,7 +19,7 @@ describe("openAIModelRouterMiddleware", () => {
         model: new FakeToolCallingModel(),
         middleware: [
           openAIModelRouterMiddleware({
-            model: "gpt-6-luna",
+            model: new OpenAIDecisions("gpt-6-luna"),
             instructions: "Choose the least costly model suited to the task.",
             choices: {
               fast: {

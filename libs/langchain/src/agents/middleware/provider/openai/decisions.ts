@@ -22,36 +22,16 @@ export interface OpenAIDecisionsLike {
   ): Promise<{ answers: Record<string, DecisionAnswer> }>;
 }
 
-async function loadDecisions(
-  model: string | OpenAIDecisionsLike
-): Promise<OpenAIDecisionsLike> {
-  if (typeof model !== "string") return model;
-  const pkg = "@langchain/openai";
-  try {
-    const { OpenAIDecisions } = await import(/* @vite-ignore */ pkg);
-    return new OpenAIDecisions(model);
-  } catch (error) {
-    throw new Error(
-      "OpenAI Decisions middleware requires @langchain/openai. Install it or pass an `OpenAIDecisions` instance as `model`.",
-      { cause: error }
-    );
-  }
-}
-
-/** Asks a single question, loading the Decisions model on first use. */
+/** Asks a single question and returns its answer. */
 export function decider(
-  model: string | OpenAIDecisionsLike,
+  model: OpenAIDecisionsLike,
   questions: DecisionQuestions
 ) {
-  let decisions: Promise<OpenAIDecisionsLike> | undefined;
   return async (input: unknown, signal?: AbortSignal) => {
-    decisions ??= loadDecisions(model).catch((error) => {
-      decisions = undefined;
-      throw error;
-    });
-    const { answers } = await (
-      await decisions
-    ).invoke({ input: input as never, questions }, { signal });
+    const { answers } = await model.invoke(
+      { input: input as never, questions },
+      { signal }
+    );
     return Object.values(answers)[0];
   };
 }

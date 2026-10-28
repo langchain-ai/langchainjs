@@ -82,8 +82,8 @@ describe("openAIAutoModeMiddleware", () => {
   });
 
   it("validates options", () => {
-    expect(() => openAIAutoModeMiddleware({ model: "m", tools: [] })).toThrow(
-      "at least one tool"
-    );
+    expect(() =>
+      openAIAutoModeMiddleware({ model: decisions([]).model, tools: [] })
+    ).toThrow("at least one tool");
   });
 });

@@ -17,8 +17,8 @@ export interface OpenAIModelRouterMiddlewareOptions {
   choices: Record<string, ModelChoice>;
   /** The routing question, e.g. "Choose the least costly model for the task." */
   instructions: string;
-  /** A Decisions model name, or an `OpenAIDecisions` instance. */
-  model: string | OpenAIDecisionsLike;
+  /** An `OpenAIDecisions` instance from `@langchain/openai`. */
+  model: OpenAIDecisionsLike;
 }
 
 const routeSchema = z.object({

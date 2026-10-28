@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { OpenAIDecisions } from "@langchain/openai";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v4";
@@ -55,7 +56,12 @@ describe("openAIAutoModeMiddleware", () => {
           toolCalls: [[{ id: "call_live", name, args }], []],
         }),
         tools,
-        middleware: [openAIAutoModeMiddleware({ model: "gpt-6-luna", tools })],
+        middleware: [
+          openAIAutoModeMiddleware({
+            model: new OpenAIDecisions("gpt-6-luna"),
+            tools,
+          }),
+        ],
       });
 
       const result = await agent.invoke({

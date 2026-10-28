@@ -11,8 +11,8 @@ const DEFAULT_RISK_INSTRUCTIONS =
 export interface OpenAIAutoModeMiddlewareOptions {
   /** Tools to classify before they run. Other tools run unchecked. */
   tools: (string | ClientTool)[];
-  /** A Decisions model name, or an `OpenAIDecisions` instance. */
-  model: string | OpenAIDecisionsLike;
+  /** An `OpenAIDecisions` instance from `@langchain/openai`. */
+  model: OpenAIDecisionsLike;
   /** The risk question. Describe what counts as risky and safe. */
   instructions?: string;
 }
