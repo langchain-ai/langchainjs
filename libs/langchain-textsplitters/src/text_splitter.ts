@@ -181,15 +181,15 @@ export abstract class TextSplitter
   }
 
   async mergeSplits(splits: string[], separator: string): Promise<string[]> {
+    const separatorLength = separator
+      ? await this.lengthFunction(separator)
+      : 0;
     const docs: string[] = [];
     const currentDoc: string[] = [];
     let total = 0;
     for (const d of splits) {
       const _len = await this.lengthFunction(d);
-      if (
-        total + _len + currentDoc.length * separator.length >
-        this.chunkSize
-      ) {
+      if (total + _len + currentDoc.length * separatorLength > this.chunkSize) {
         if (total > this.chunkSize) {
           console.warn(
             `Created a chunk of size ${total}, +
@@ -206,7 +206,7 @@ which is longer than the specified ${this.chunkSize}`
           // - or if we still have any chunks and the length is long
           while (
             total > this.chunkOverlap ||
-            (total + _len + currentDoc.length * separator.length >
+            (total + _len + currentDoc.length * separatorLength >
               this.chunkSize &&
               total > 0)
           ) {
