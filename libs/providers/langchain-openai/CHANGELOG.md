@@ -1,5 +1,20 @@
 # @langchain/openai
 
+## 1.8.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
+## 1.7.1
+
+### Patch Changes
+
+- [#12046](https://github.com/langchain-ai/langchainjs/pull/12046) [`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): refresh model profiles from models.dev
+
+  - Add GPT-6.1 Terra
+  - Remove `gpt-5.2-chat-latest` and `gpt-5.3-chat-latest`, which OpenAI shut down on Aug 10, 2026
+
 ## 1.7.0
 
 ### Minor Changes

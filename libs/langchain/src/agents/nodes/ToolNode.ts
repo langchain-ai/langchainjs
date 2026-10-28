@@ -13,6 +13,7 @@ import {
   isCommand,
   Command,
   Send,
+  isGraphDrained,
   isGraphInterrupt,
   type LangGraphRunnableConfig,
   StateDefinitionInit,
@@ -234,11 +235,12 @@ export class ToolNode<
     isMiddlewareError: boolean
   ): ToolMessage {
     /**
-     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
-     * As such, they are not recoverable by the agent and shouldn't be fed
-     * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop,
+     * and a drain stops the run to resume it later. Neither is recoverable
+     * by the agent, so neither is fed back: re-throw them even when
+     * `handleToolErrors = true`.
      */
-    if (isGraphInterrupt(error)) {
+    if (isGraphInterrupt(error) || isGraphDrained(error)) {
       throw error;
     }
 

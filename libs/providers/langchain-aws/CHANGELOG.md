@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.5.1
+
+### Patch Changes
+
+- [#11463](https://github.com/langchain-ai/langchainjs/pull/11463) [`52d2ba8`](https://github.com/langchain-ai/langchainjs/commit/52d2ba8ea50149f2314df63b79582f8508034a3b) Thanks [@syedsohailhussain1](https://github.com/syedsohailhussain1)! - fix(aws): use this.caller in ChatBedrockConverse to support maxRetries, timeout, and onFailedAttempt
+
 ## 1.5.0
 
 ### Minor Changes
