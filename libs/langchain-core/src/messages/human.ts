@@ -4,6 +4,7 @@ import {
   mergeContent,
   _mergeDicts,
   type BaseMessageFields,
+  type MessageContent,
 } from "./base.js";
 import type { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
@@ -103,4 +104,88 @@ export function isHumanMessageChunk<TStructure extends MessageStructure>(
   x: BaseMessageChunk
 ): x is HumanMessageChunk<TStructure> {
   return x.getType() === "human";
+}
+
+/** First line of a notification's content. */
+export const NOTIFICATION_HEADER = "[SYSTEM NOTIFICATION - NOT USER INPUT]";
+
+/**
+ * Options for `createNotificationMessage`.
+ *
+ * @experimental
+ */
+export interface NotificationMessageOptions {
+  /** Which feature added the message. */
+  source: string;
+  /** Fields for code that handles this source. Must be JSON-serializable. */
+  data?: Record<string, unknown>;
+  /** A line shown to the model under the header. */
+  note?: string;
+  /** Prefix the content with `NOTIFICATION_HEADER`. Defaults to `true`. */
+  header?: boolean;
+  /** The message ID. */
+  id?: string;
+}
+
+/**
+ * Create a message the agent harness adds to the conversation.
+ *
+ * Use it for content the user didn't type, such as a background task update or
+ * a conversation summary. It sets these `additional_kwargs` keys, which chat
+ * model integrations don't send to the model:
+ *
+ * - `lc_synthetic`: `true`.
+ * - `lc_source`: the feature that added the message, e.g. `"async_subagent"`.
+ * - `lc_data`: that feature's fields, when given.
+ *
+ * Anyone who can send input to a thread can set these keys. Don't use them to
+ * decide whether to trust a message.
+ *
+ * `mergeMessageRuns` and chunk `concat` join a notification with adjacent human
+ * messages; the merged message keeps `lc_synthetic` and concatenates `lc_source`.
+ *
+ * Beta: the keys and header may change.
+ *
+ * @experimental
+ *
+ * @param content - The text or content blocks the model reads. Escape untrusted input.
+ * @param options - The message's source, data, note, header and ID.
+ * @returns A `HumanMessage`.
+ * @throws If `note` is given with `header: false`.
+ *
+ * @example
+ * ```typescript
+ * import { createNotificationMessage } from "@langchain/core/messages";
+ *
+ * const message = createNotificationMessage("<task-id>t_42</task-id>", {
+ *   source: "async_subagent",
+ *   data: { task_id: "t_42", status: "success" },
+ *   note: "A background task you started has an update.",
+ * });
+ * ```
+ */
+export function createNotificationMessage(
+  content: MessageContent,
+  options: NotificationMessageOptions
+): HumanMessage {
+  const { source, data, note, header = true, id } = options;
+  if (note && !header) {
+    throw new Error("`note` requires `header: true`.");
+  }
+  const additional_kwargs: Record<string, unknown> = {
+    lc_synthetic: true,
+    lc_source: source,
+  };
+  if (data !== undefined) {
+    additional_kwargs.lc_data = { ...data };
+  }
+  if (!header) {
+    return new HumanMessage({ content, additional_kwargs, id });
+  }
+  const intro = note ? `${NOTIFICATION_HEADER}\n${note}` : NOTIFICATION_HEADER;
+  const body: MessageContent =
+    typeof content === "string"
+      ? `${intro}\n${content}`
+      : [{ type: "text", text: intro }, ...content];
+  return new HumanMessage({ content: body, additional_kwargs, id });
 }
