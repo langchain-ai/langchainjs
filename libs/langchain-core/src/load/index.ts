@@ -77,6 +77,7 @@ import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from ".
 import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
+import { SERIALIZABLE_MAPPING } from "./mapping.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { isEscapedObject, unescapeValue } from "./validation.js";
 
@@ -218,6 +219,22 @@ interface ReviverContext {
  * 3. LC constructor objects - instantiated
  * 4. Regular objects/arrays - recursed into
  */
+/** The module exporting the longest matching prefix of `namespace`, if any. */
+function findModule<M extends Record<string, unknown>>(
+  namespace: string[],
+  importMap: M
+): M[keyof M] | null {
+  const path = namespace.slice();
+  while (path.length > 0) {
+    const key = path.join("__");
+    if (key in importMap) {
+      return importMap[key as keyof M];
+    }
+    path.pop();
+  }
+  return null;
+}
+
 async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
   const {
     optionalImportsMap,
@@ -309,11 +326,9 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
-    const importMaps = { langchain_core: coreImportMap, langchain: importMap };
-
     let module:
-      | (typeof importMaps)["langchain_core"][keyof (typeof importMaps)["langchain_core"]]
-      | (typeof importMaps)["langchain"][keyof (typeof importMaps)["langchain"]]
+      | (typeof coreImportMap)[keyof typeof coreImportMap]
+      | (typeof importMap)[keyof typeof importMap]
       | OptionalImportMap[keyof OptionalImportMap]
       | null = null;
 
@@ -344,38 +359,17 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
           )}" for ${pathStr} in load(optionalImportsMap={})`
         );
       }
+    } else if (namespace[0] === "langchain_core") {
+      module = findModule(namespace.slice(1), coreImportMap);
+    } else if (namespace[0] === "langchain") {
+      // A legacy id resolves through the caller's import map first, then
+      // through the same classes under their `langchain_core` id.
+      const legacy = SERIALIZABLE_MAPPING[serialized.id.join("/")];
+      module =
+        findModule(namespace.slice(1), importMap) ??
+        (legacy ? findModule(legacy.slice(1, -1), coreImportMap) : null);
     } else {
-      let finalImportMap:
-        | (typeof importMaps)["langchain"]
-        | (typeof importMaps)["langchain_core"];
-      // Currently, we only support langchain and langchain_core imports.
-      if (namespace[0] === "langchain" || namespace[0] === "langchain_core") {
-        finalImportMap = importMaps[namespace[0]];
-        namespace.shift();
-      } else {
-        throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
-      }
-
-      // The root namespace "langchain" is not a valid import.
-      if (namespace.length === 0) {
-        throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
-      }
-
-      // Find the longest matching namespace.
-      let importMapKey: string;
-      do {
-        importMapKey = namespace.join("__");
-        if (importMapKey in finalImportMap) {
-          break;
-        } else {
-          namespace.pop();
-        }
-      } while (namespace.length > 0);
-
-      // If no matching namespace is found, throw an error.
-      if (importMapKey in finalImportMap) {
-        module = finalImportMap[importMapKey as keyof typeof finalImportMap];
-      }
+      throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
     if (typeof module !== "object" || module === null) {

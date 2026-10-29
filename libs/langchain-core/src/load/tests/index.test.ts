@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { load } from "../index.js";
 import { HumanMessage, AIMessage } from "../../messages/index.js";
+import { ChatPromptTemplate } from "../../prompts/chat.js";
 
 const SENTINEL_ENV_VAR = "TEST_SECRET_INJECTION_VAR";
 /** Sentinel value that should NEVER appear in serialized output. */
@@ -681,6 +682,82 @@ describe("`load()`", () => {
       expect(deserialized.additional_kwargs.second).not.toBeInstanceOf(
         AIMessage
       );
+    });
+  });
+
+  describe("legacy `langchain` ids", () => {
+    // What Python's langchain_core writes for a message today.
+    const pythonMessage = {
+      lc: 1,
+      type: "constructor",
+      id: ["langchain", "schema", "messages", "HumanMessage"],
+      kwargs: { content: "from python", type: "human" },
+    };
+
+    it("loads a Python-written message without an import map", async () => {
+      const loaded = await load<HumanMessage>(JSON.stringify(pythonMessage));
+      expect(loaded).toBeInstanceOf(HumanMessage);
+      expect(loaded.content).toBe("from python");
+    });
+
+    it("loads a legacy prompt id", async () => {
+      const loaded = await load<ChatPromptTemplate>(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "prompts", "chat", "ChatPromptTemplate"],
+          kwargs: {
+            input_variables: ["name"],
+            messages: [
+              {
+                lc: 1,
+                type: "constructor",
+                id: [
+                  "langchain",
+                  "prompts",
+                  "chat",
+                  "HumanMessagePromptTemplate",
+                ],
+                kwargs: {
+                  prompt: {
+                    lc: 1,
+                    type: "constructor",
+                    id: ["langchain", "prompts", "prompt", "PromptTemplate"],
+                    kwargs: {
+                      input_variables: ["name"],
+                      template: "hi {name}",
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        })
+      );
+      expect(loaded).toBeInstanceOf(ChatPromptTemplate);
+      const value = await loaded.invoke({ name: "ada" });
+      expect(value.toChatMessages()[0].content).toBe("hi ada");
+    });
+
+    it("prefers the caller's import map", async () => {
+      class Custom extends HumanMessage {}
+      const loaded = await load(JSON.stringify(pythonMessage), {
+        importMap: { schema__messages: { HumanMessage: Custom } },
+      });
+      expect(loaded).toBeInstanceOf(Custom);
+    });
+
+    it("still rejects an unknown legacy id", async () => {
+      await expect(
+        load(
+          JSON.stringify({
+            lc: 1,
+            type: "constructor",
+            id: ["langchain", "schema", "messages", "NoSuchMessage"],
+            kwargs: {},
+          })
+        )
+      ).rejects.toThrow(/Invalid namespace/);
     });
   });
 });
