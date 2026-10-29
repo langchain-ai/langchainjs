@@ -1415,6 +1415,7 @@ describe("audio content block conversion", () => {
 describe("applicationInferenceProfile parameter", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
+    maxRetries: 0,
     credentials: {
       secretAccessKey: "test-secret-key",
       accessKeyId: "test-access-key",
@@ -2356,5 +2357,96 @@ describe("document content block conversion", () => {
     expect(name1).toBeDefined();
     expect(name2).toBeDefined();
     expect(name1).not.toBe(name2);
+  });
+});
+
+describe("additionalModelResponseFieldPaths / Anthropic thinking tokens", () => {
+  const nativeUsage = {
+    usage: {
+      output_tokens: 565,
+      output_tokens_details: { thinking_tokens: 562 },
+    },
+  };
+  const usage = { inputTokens: 20, outputTokens: 565, totalTokens: 585 };
+
+  function createModel() {
+    return new ChatBedrockConverse({
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      region: "us-east-1",
+      credentials: { accessKeyId: "fake", secretAccessKey: "fake" },
+      additionalModelResponseFieldPaths: ["/usage"],
+    });
+  }
+
+  test("forwards additionalModelResponseFieldPaths, call option first", () => {
+    const model = createModel();
+    expect(
+      model.invocationParams({}).additionalModelResponseFieldPaths
+    ).toEqual(["/usage"]);
+    expect(
+      model.invocationParams({
+        additionalModelResponseFieldPaths: ["/stop_sequence"],
+      }).additionalModelResponseFieldPaths
+    ).toEqual(["/stop_sequence"]);
+    expect(
+      new ChatBedrockConverse({
+        model: "anthropic.claude-3-haiku-20240307-v1:0",
+        region: "us-east-1",
+        credentials: { accessKeyId: "fake", secretAccessKey: "fake" },
+      }).invocationParams({}).additionalModelResponseFieldPaths
+    ).toBeUndefined();
+  });
+
+  test("invoke maps thinking tokens to output_token_details.reasoning", async () => {
+    const model = createModel();
+    const send = vi.spyOn(model.client, "send").mockResolvedValue({
+      output: { message: { role: "assistant", content: [{ text: "42" }] } },
+      stopReason: "end_turn",
+      usage,
+      additionalModelResponseFields: nativeUsage,
+    } as never);
+
+    const result = await model.invoke("Hello");
+
+    expect(
+      (send.mock.calls[0][0] as { input: Record<string, unknown> }).input
+        .additionalModelResponseFieldPaths
+    ).toEqual(["/usage"]);
+    expect(result.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+
+  test("stream maps thinking tokens to output_token_details.reasoning", async () => {
+    const model = createModel();
+    vi.spyOn(model.client, "send").mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: { contentBlockIndex: 0, delta: { text: "42" } },
+        };
+        yield {
+          messageStop: {
+            stopReason: "end_turn",
+            additionalModelResponseFields: nativeUsage,
+          },
+        };
+        yield { metadata: { usage } };
+      })(),
+    } as never);
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Hello")) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+
+    expect(full?.usage_metadata).toMatchObject({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
   });
 });

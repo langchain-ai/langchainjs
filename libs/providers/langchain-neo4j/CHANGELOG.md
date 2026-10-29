@@ -1,5 +1,40 @@
 # @langchain/neo4j
 
+## 0.1.29
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.57
+
+## 0.1.28
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.56
+
+## 0.1.27
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.55
+
+## 0.1.26
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.54
+
+## 0.1.25
+
+### Patch Changes
+
+- Updated dependencies [[`93d62b0`](https://github.com/langchain-ai/langchainjs/commit/93d62b008e13e10f28724a5ab09ab6eda584f1cb), [`d3e6fe6`](https://github.com/langchain-ai/langchainjs/commit/d3e6fe66a5f902fa615f076ca71d9541f1291166)]:
+  - @langchain/classic@1.0.53
+
 ## 0.1.24
 
 ### Patch Changes

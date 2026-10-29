@@ -5,6 +5,6 @@
     "outDir": "dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["node_modules", "dist", "docs"],
   "references": [{ "path": "../../langchain-core" }]
 }

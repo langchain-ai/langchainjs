@@ -1,5 +1,33 @@
 # @langchain/aws
 
+## 1.5.1
+
+### Patch Changes
+
+- [#11463](https://github.com/langchain-ai/langchainjs/pull/11463) [`52d2ba8`](https://github.com/langchain-ai/langchainjs/commit/52d2ba8ea50149f2314df63b79582f8508034a3b) Thanks [@syedsohailhussain1](https://github.com/syedsohailhussain1)! - fix(aws): use this.caller in ChatBedrockConverse to support maxRetries, timeout, and onFailedAttempt
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
+## 1.4.7
+
+### Patch Changes
+
+- [#11916](https://github.com/langchain-ai/langchainjs/pull/11916) [`73a739c`](https://github.com/langchain-ai/langchainjs/commit/73a739c871fb8191976848482052c1a8b30c68ba) Thanks [@zduric-langchain](https://github.com/zduric-langchain)! - Report Bedrock thinking tokens as `output_token_details.reasoning`
+
+  `ChatBedrockConverse` now accepts `additionalModelResponseFieldPaths` (constructor and call option, matching `additional_model_response_field_paths` in Python) and forwards it to Converse and ConverseStream. When the response includes Anthropic's native usage (`additionalModelResponseFields.usage.output_tokens_details.thinking_tokens`, returned when requesting `["/usage"]`), the count is mapped to `usage_metadata.output_token_details.reasoning` for `invoke()`, `.stream()` and `streamEvents()`. `output_tokens` is unchanged, and nothing changes when the field is absent.
+
 ## 1.4.6
 
 ### Patch Changes

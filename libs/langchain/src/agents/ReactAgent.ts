@@ -387,6 +387,16 @@ export class ReactAgent<
      * to allow middleware to handle dynamically registered tools.
      */
     const hasWrapToolCallMiddleware = middleware.some((m) => m.wrapToolCall);
+    if (
+      this.#toolBehaviorVersion === "v1" &&
+      middleware.some(
+        (m) => m.name === "HumanInTheLoopMiddleware" && m.wrapToolCall
+      )
+    ) {
+      throw new Error(
+        'humanInTheLoopMiddleware({ interruptMode: "per_call" }) requires createAgent version "v2" (the default). Version "v1" runs every tool call in one task, so per-call interrupts would share an ID.'
+      );
+    }
     const clientTools = toolClasses.filter(isClientTool);
 
     /**
@@ -397,6 +407,9 @@ export class ReactAgent<
       const toolNode = new ToolNode(clientTools, {
         signal: this.options.signal,
         wrapToolCall: wrapToolCall(middleware),
+        stateKeys: Object.keys(workflow.channels).filter(
+          (key) => key !== "jumpTo"
+        ),
       });
       allNodeWorkflows.addNode(TOOLS_NODE_NAME, toolNode);
     }
@@ -878,8 +891,7 @@ export class ReactAgent<
       }
 
       return regularToolCalls.map(
-        (toolCall) =>
-          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+        (toolCall) => new Send(TOOLS_NODE_NAME, { lg_tool_call: toolCall })
       );
     };
   }
@@ -955,8 +967,7 @@ export class ReactAgent<
           return TOOLS_NODE_NAME;
         }
         return pendingToolCalls.map(
-          (toolCall) =>
-            new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+          (toolCall) => new Send(TOOLS_NODE_NAME, { lg_tool_call: toolCall })
         );
       }
 
@@ -1018,8 +1029,7 @@ export class ReactAgent<
       }
 
       return regularToolCalls.map(
-        (toolCall) =>
-          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+        (toolCall) => new Send(TOOLS_NODE_NAME, { lg_tool_call: toolCall })
       );
     };
   }
