@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { AIMessage } from "../ai.js";
 import { HumanMessage } from "../human.js";
 import {
   addNotificationMetadata,
   getNotificationMetadata,
 } from "../notification.js";
-import { SystemMessage } from "../system.js";
-import { ToolMessage } from "../tool.js";
 import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
@@ -36,40 +33,16 @@ describe("addNotificationMetadata", () => {
     expect(original.additional_kwargs).toEqual({ other: 1 });
   });
 
-  it("keeps the fields of other message types", () => {
-    const ai = new AIMessage({
-      content: "",
-      tool_calls: [{ id: "c1", name: "search", args: {} }],
-    });
-    const tool = new ToolMessage({ content: "ok", tool_call_id: "c1" });
-
-    const markedAi = addNotificationMetadata(ai, { source: "a" });
-    const markedTool = addNotificationMetadata(tool, { source: "t" });
-
-    expect(markedAi).toBeInstanceOf(AIMessage);
-    expect(markedAi.tool_calls).toEqual(ai.tool_calls);
-    expect(markedTool.tool_call_id).toBe("c1");
-    expect(
-      getNotificationMetadata(
-        addNotificationMetadata(new SystemMessage("skills"), { source: "s" })
-      )
-    ).toEqual({ source: "s" });
-  });
-
   it("keeps fields set after the message was built", () => {
-    const ai = new AIMessage({ content: "answer" });
-    ai.response_metadata = { model_name: "m", finish_reason: "stop" };
-    ai.usage_metadata = { input_tokens: 1, output_tokens: 2, total_tokens: 3 };
     const human = new HumanMessage("first");
+    human.response_metadata = { source: "slack" };
     human.id = "msg_1";
     human.name = "user";
     human.content = "second";
 
-    const markedAi = addNotificationMetadata(ai, { source: "a" });
     const markedHuman = addNotificationMetadata(human, { source: "h" });
 
-    expect(markedAi.response_metadata).toEqual(ai.response_metadata);
-    expect(markedAi.usage_metadata).toEqual(ai.usage_metadata);
+    expect(markedHuman.response_metadata).toEqual({ source: "slack" });
     expect(markedHuman.id).toBe("msg_1");
     expect(markedHuman.name).toBe("user");
     expect(markedHuman.content).toBe("second");

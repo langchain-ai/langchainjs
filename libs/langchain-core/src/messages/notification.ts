@@ -1,5 +1,5 @@
 import type { BaseMessage } from "./base.js";
-import type { Constructor } from "./utils.js";
+import { HumanMessage } from "./human.js";
 
 /** Which feature added a message, and that feature's fields. */
 export interface NotificationMetadata {
@@ -12,11 +12,11 @@ export interface NotificationMetadata {
 /**
  * Return a copy of `message` marked as added by the agent harness.
  *
- * Use it for any message the user didn't type, such as a background task update
- * or a conversation summary. It sets `additional_kwargs.lc_source` and, when
- * `data` is given, `additional_kwargs.lc_data`. Any earlier `lc_source` and
- * `lc_data` are removed first. LangChain's chat model integrations don't send
- * these keys to the model.
+ * Use it for a human message the user didn't type, such as a background task
+ * update or a conversation summary. It sets `additional_kwargs.lc_source`
+ * and, when `data` is given, `additional_kwargs.lc_data`. Any earlier
+ * `lc_source` and `lc_data` are removed first. LangChain's chat model
+ * integrations don't send these keys to the model.
  *
  * It doesn't change the content. Write the content the model reads yourself.
  *
@@ -24,7 +24,7 @@ export interface NotificationMetadata {
  * decide whether to trust a message.
  *
  * `mergeMessageRuns` and chunk `concat` join a notification with adjacent
- * messages of its type; the merged message keeps the metadata and concatenates
+ * human messages; the merged message keeps the metadata and concatenates
  * `lc_source`.
  *
  * @param message - The message to mark.
@@ -41,10 +41,10 @@ export interface NotificationMetadata {
  * );
  * ```
  */
-export function addNotificationMetadata<M extends BaseMessage>(
-  message: M,
+export function addNotificationMetadata(
+  message: HumanMessage,
   metadata: NotificationMetadata
-): M {
+): HumanMessage {
   const { lc_data: _, ...kwargs } = message.additional_kwargs ?? {};
   const additional_kwargs: Record<string, unknown> = {
     ...kwargs,
@@ -60,8 +60,7 @@ export function addNotificationMetadata<M extends BaseMessage>(
     type: _type,
     ...fields
   } = message;
-  const Cls = message.constructor as Constructor<M>;
-  return new Cls({ ...fields, additional_kwargs });
+  return new HumanMessage({ ...fields, additional_kwargs });
 }
 
 /**
