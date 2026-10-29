@@ -3,6 +3,8 @@ import { load } from "../index.js";
 import { HumanMessage, AIMessage } from "../../messages/index.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
+import { NumberedListOutputParser } from "../../output_parsers/list.js";
+import { Document } from "../../documents/document.js";
 
 const SENTINEL_ENV_VAR = "TEST_SECRET_INJECTION_VAR";
 /** Sentinel value that should NEVER appear in serialized output. */
@@ -740,12 +742,37 @@ describe("`load()`", () => {
       expect(value.toChatMessages()[0].content).toBe("hi ada");
     });
 
+    it("loads a Python StrOutputParser as StringOutputParser", async () => {
+      const loaded = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "schema", "output_parser", "StrOutputParser"],
+          kwargs: {},
+        })
+      );
+      expect(loaded).toBeInstanceOf(StringOutputParser);
+    });
+
     it("prefers the caller's import map", async () => {
       class Custom extends HumanMessage {}
       const loaded = await load(JSON.stringify(pythonMessage), {
-        importMap: { schema__messages: { HumanMessage: Custom } },
+        importMap: { schema: { HumanMessage: Custom } },
       });
       expect(loaded).toBeInstanceOf(Custom);
+    });
+
+    it("falls back per class when the caller's module lacks it", async () => {
+      const loaded = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "schema", "document", "Document"],
+          kwargs: { page_content: "x" },
+        }),
+        { importMap: { schema: { HumanMessage } } }
+      );
+      expect(loaded).toBeInstanceOf(Document);
     });
 
     it("still rejects an unknown legacy id", async () => {
@@ -758,19 +785,14 @@ describe("`load()`", () => {
             kwargs: {},
           })
         )
-      ).rejects.toThrow(/Invalid (namespace|identifer)/);
+      ).rejects.toThrow(/Invalid identifer/);
     });
 
-    it("loads a Python StrOutputParser as StringOutputParser", async () => {
-      const loaded = await load(
-        JSON.stringify({
-          lc: 1,
-          type: "constructor",
-          id: ["langchain", "schema", "output_parser", "StrOutputParser"],
-          kwargs: {},
-        })
-      );
-      expect(loaded).toBeInstanceOf(StringOutputParser);
+    it("does not shadow current ids", async () => {
+      // Serialized under langchain_core/output_parsers/list, a namespace a
+      // legacy alias also names.
+      const loaded = await load(JSON.stringify(new NumberedListOutputParser()));
+      expect(loaded).toBeInstanceOf(NumberedListOutputParser);
     });
   });
 });

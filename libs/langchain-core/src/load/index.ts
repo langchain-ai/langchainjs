@@ -75,6 +75,7 @@ import {
 } from "./serializable.js";
 import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from "./import_constants.js";
 import * as coreImportMap from "./import_map.js";
+import * as legacyImportMap from "./import_map_legacy.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -209,22 +210,6 @@ interface ReviverContext {
   maxDepth: number;
 }
 
-/** The module exporting the longest matching prefix of `namespace`, if any. */
-function findModule<M extends Record<string, unknown>>(
-  namespace: string[],
-  importMap: M
-): M[keyof M] | null {
-  const path = namespace.slice();
-  while (path.length > 0) {
-    const key = path.join("__");
-    if (key in importMap) {
-      return importMap[key as keyof M];
-    }
-    path.pop();
-  }
-  return null;
-}
-
 /**
  * Recursively revive a value, handling escape markers and LC objects.
  *
@@ -234,6 +219,37 @@ function findModule<M extends Record<string, unknown>>(
  * 3. LC constructor objects - instantiated
  * 4. Regular objects/arrays - recursed into
  */
+/** The module registered for the longest prefix of `namespace`, if any. */
+function findModule(
+  namespace: string[],
+  importMap: Record<string, unknown>
+): object | null {
+  const key = namespace
+    .map((_, i) => namespace.slice(0, i + 1).join("__"))
+    .reverse()
+    .find((prefix) => prefix in importMap);
+  const module = key === undefined ? null : importMap[key];
+  return typeof module === "object" && module !== null ? module : null;
+}
+
+/** The class exported by `module` as `name`, or whose `lc_name` is `name` when minified. */
+function findClass(
+  module: object,
+  name: string
+): typeof Serializable | undefined {
+  const found =
+    module[name as keyof typeof module] ??
+    Object.values(module).find(
+      (v) =>
+        typeof v === "function" &&
+        get_lc_unique_name(v as typeof Serializable) === name
+    );
+  // Import maps hold Serializable classes; anything else is not a constructor record target.
+  return typeof found === "function"
+    ? (found as typeof Serializable)
+    : undefined;
+}
+
 async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
   const {
     optionalImportsMap,
@@ -325,11 +341,7 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
-    let module:
-      | (typeof coreImportMap)[keyof typeof coreImportMap]
-      | (typeof importMap)[keyof typeof importMap]
-      | OptionalImportMap[keyof OptionalImportMap]
-      | null = null;
+    let module: object | null = null;
 
     const optionalImportNamespaceAliases = [namespace.join("/")];
     if (namespace[0] === "langchain_community") {
@@ -361,31 +373,23 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
     } else if (namespace[0] === "langchain_core") {
       module = findModule(namespace.slice(1), coreImportMap);
     } else if (namespace[0] === "langchain") {
-      // A legacy id resolves through the caller's import map first, then
-      // through this package's own aliases for those ids (see tsdown.config.ts).
+      // A legacy id: the caller's import map first, then this package's own
+      // aliases for those ids, unless the caller's module already has the class.
+      const own = findModule(namespace.slice(1), importMap);
       module =
-        findModule(namespace.slice(1), importMap) ??
-        findModule(namespace.slice(1), coreImportMap);
+        own && findClass(own, name)
+          ? own
+          : (findModule(namespace.slice(1), legacyImportMap) ?? own);
     } else {
       throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
-    if (typeof module !== "object" || module === null) {
+    if (module === null) {
       throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
-    // Extract the builder from the import map.
-    const builder =
-      // look for a named export with the same name as the class
-      module[name as keyof typeof module] ??
-      // look for an export with a lc_name property matching the class name
-      // this is necessary for classes that are minified
-      Object.values(module).find(
-        (v) =>
-          typeof v === "function" &&
-          get_lc_unique_name(v as typeof Serializable) === name
-      );
-    if (typeof builder !== "function") {
+    const builder = findClass(module, name);
+    if (builder === undefined) {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);
     }
 
