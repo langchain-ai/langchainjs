@@ -5,6 +5,7 @@ import { ChatPromptTemplate } from "../../prompts/chat.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import { NumberedListOutputParser } from "../../output_parsers/list.js";
 import { Document } from "../../documents/document.js";
+import { ChatPromptValue } from "../../prompt_values.js";
 
 const SENTINEL_ENV_VAR = "TEST_SECRET_INJECTION_VAR";
 /** Sentinel value that should NEVER appear in serialized output. */
@@ -760,6 +761,22 @@ describe("`load()`", () => {
         importMap: { schema: { HumanMessage: Custom } },
       });
       expect(loaded).toBeInstanceOf(Custom);
+    });
+
+    it("loads a Python chat prompt value next to the chat prompt templates", async () => {
+      // Python writes both under langchain/prompts/chat; they live in two modules here.
+      const value = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "prompts", "chat", "ChatPromptValue"],
+          kwargs: { messages: [pythonMessage] },
+        })
+      );
+      expect(value).toBeInstanceOf(ChatPromptValue);
+      expect((value as ChatPromptValue).toChatMessages()[0].content).toBe(
+        "from python"
+      );
     });
 
     it("falls back per class when the caller's module lacks it", async () => {

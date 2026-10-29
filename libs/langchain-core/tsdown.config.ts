@@ -133,6 +133,11 @@ export default getBuildConfig({
         },
         {
           modules: ["*"],
+          alias: ["prompts", "chat"],
+          path: "../prompt_values.js",
+        },
+        {
+          modules: ["*"],
           alias: ["output_parsers"],
           path: "../output_parsers/index.js",
         },

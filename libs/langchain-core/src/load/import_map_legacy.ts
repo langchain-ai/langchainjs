@@ -8,4 +8,5 @@ export * as schema__prompt_template from "../prompts/index.js";
 export * as schema__runnable from "../runnables/index.js";
 export * as prompts from "../prompts/index.js";
 export * as prompts__base from "../prompt_values.js";
+export * as prompts__chat from "../prompt_values.js";
 export * as output_parsers from "../output_parsers/index.js";

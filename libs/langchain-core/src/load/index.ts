@@ -210,6 +210,40 @@ interface ReviverContext {
   maxDepth: number;
 }
 
+/** The modules registered for prefixes of `namespace`, longest prefix first. */
+function findModules(
+  namespace: string[],
+  importMap: Record<string, unknown>
+): object[] {
+  return namespace
+    .map((_, i) => namespace.slice(0, i + 1).join("__"))
+    .reverse()
+    .map((prefix) => importMap[prefix])
+    .filter(
+      (module): module is object =>
+        typeof module === "object" && module !== null
+    );
+}
+
+/** The class `modules` export as `name`, or whose `lc_name` is `name` when minified. */
+function findClass(
+  modules: object[],
+  name: string
+): typeof Serializable | undefined {
+  for (const module of modules) {
+    const found =
+      module[name as keyof typeof module] ??
+      Object.values(module).find(
+        (v) =>
+          typeof v === "function" &&
+          get_lc_unique_name(v as typeof Serializable) === name
+      );
+    // Import maps hold Serializable classes.
+    if (typeof found === "function") return found as typeof Serializable;
+  }
+  return undefined;
+}
+
 /**
  * Recursively revive a value, handling escape markers and LC objects.
  *
@@ -219,37 +253,6 @@ interface ReviverContext {
  * 3. LC constructor objects - instantiated
  * 4. Regular objects/arrays - recursed into
  */
-/** The module registered for the longest prefix of `namespace`, if any. */
-function findModule(
-  namespace: string[],
-  importMap: Record<string, unknown>
-): object | null {
-  const key = namespace
-    .map((_, i) => namespace.slice(0, i + 1).join("__"))
-    .reverse()
-    .find((prefix) => prefix in importMap);
-  const module = key === undefined ? null : importMap[key];
-  return typeof module === "object" && module !== null ? module : null;
-}
-
-/** The class exported by `module` as `name`, or whose `lc_name` is `name` when minified. */
-function findClass(
-  module: object,
-  name: string
-): typeof Serializable | undefined {
-  const found =
-    module[name as keyof typeof module] ??
-    Object.values(module).find(
-      (v) =>
-        typeof v === "function" &&
-        get_lc_unique_name(v as typeof Serializable) === name
-    );
-  // Import maps hold Serializable classes; anything else is not a constructor record target.
-  return typeof found === "function"
-    ? (found as typeof Serializable)
-    : undefined;
-}
-
 async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
   const {
     optionalImportsMap,
@@ -341,7 +344,7 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
-    let module: object | null = null;
+    let modules: object[] = [];
 
     const optionalImportNamespaceAliases = [namespace.join("/")];
     if (namespace[0] === "langchain_community") {
@@ -359,10 +362,11 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
       matchingNamespaceAlias
     ) {
       if (matchingNamespaceAlias !== undefined) {
-        module =
+        modules = [
           await optionalImportsMap[
             matchingNamespaceAlias as keyof typeof optionalImportsMap
-          ];
+          ],
+        ];
       } else {
         throw new Error(
           `Missing key "${namespace.join(
@@ -371,24 +375,22 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
         );
       }
     } else if (namespace[0] === "langchain_core") {
-      module = findModule(namespace.slice(1), coreImportMap);
+      modules = findModules(namespace.slice(1), coreImportMap);
     } else if (namespace[0] === "langchain") {
-      // A legacy id: the caller's import map first, then this package's own
-      // aliases for those ids, unless the caller's module already has the class.
-      const own = findModule(namespace.slice(1), importMap);
-      module =
-        own && findClass(own, name)
-          ? own
-          : (findModule(namespace.slice(1), legacyImportMap) ?? own);
+      // A legacy id: the caller's import map, then this package's own aliases.
+      modules = [
+        ...findModules(namespace.slice(1), importMap),
+        ...findModules(namespace.slice(1), legacyImportMap),
+      ];
     } else {
       throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
-    if (module === null) {
+    if (modules.length === 0) {
       throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
-    const builder = findClass(module, name);
+    const builder = findClass(modules, name);
     if (builder === undefined) {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);
     }
