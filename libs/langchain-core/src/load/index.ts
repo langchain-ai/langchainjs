@@ -77,7 +77,6 @@ import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from ".
 import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
-import { SERIALIZABLE_MAPPING } from "./mapping.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { isEscapedObject, unescapeValue } from "./validation.js";
 
@@ -363,11 +362,10 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
       module = findModule(namespace.slice(1), coreImportMap);
     } else if (namespace[0] === "langchain") {
       // A legacy id resolves through the caller's import map first, then
-      // through the same classes under their `langchain_core` id.
-      const legacy = SERIALIZABLE_MAPPING[serialized.id.join("/")];
+      // through this package's own aliases for those ids (see tsdown.config.ts).
       module =
         findModule(namespace.slice(1), importMap) ??
-        (legacy ? findModule(legacy.slice(1, -1), coreImportMap) : null);
+        findModule(namespace.slice(1), coreImportMap);
     } else {
       throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }

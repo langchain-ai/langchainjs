@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { load } from "../index.js";
 import { HumanMessage, AIMessage } from "../../messages/index.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
 
 const SENTINEL_ENV_VAR = "TEST_SECRET_INJECTION_VAR";
 /** Sentinel value that should NEVER appear in serialized output. */
@@ -757,7 +758,19 @@ describe("`load()`", () => {
             kwargs: {},
           })
         )
-      ).rejects.toThrow(/Invalid namespace/);
+      ).rejects.toThrow(/Invalid (namespace|identifer)/);
+    });
+
+    it("loads a Python StrOutputParser as StringOutputParser", async () => {
+      const loaded = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "schema", "output_parser", "StrOutputParser"],
+          kwargs: {},
+        })
+      );
+      expect(loaded).toBeInstanceOf(StringOutputParser);
     });
   });
 });
