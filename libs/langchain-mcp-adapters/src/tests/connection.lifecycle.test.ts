@@ -243,8 +243,8 @@ describe("connection ownership", () => {
         await rejected;
         expect.soft(connect).toHaveBeenCalledTimes(1);
         expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
-          "first__echo",
-          "second__echo",
+          "first_echo",
+          "second_echo",
         ]);
         expect(connect).toHaveBeenCalledTimes(3);
       } finally {
@@ -292,8 +292,8 @@ describe("connection ownership", () => {
       expect.soft(connect).toHaveBeenCalledTimes(1);
       expect.soft(onConnectionError).toHaveBeenCalledTimes(1);
       expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
-        "first__echo",
-        "second__echo",
+        "first_echo",
+        "second_echo",
       ]);
     } finally {
       releaseHandler();
@@ -321,10 +321,10 @@ describe("connection ownership", () => {
 
       try {
         expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
-          "second__echo",
+          "second_echo",
         ]);
         expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
-          "second__echo",
+          "second_echo",
         ]);
         expect(connect).toHaveBeenCalledTimes(2);
         expect(handler).toHaveBeenCalledTimes(policy === "handler" ? 1 : 0);

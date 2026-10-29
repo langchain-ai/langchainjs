@@ -53,8 +53,10 @@ jobs:
       matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}
     steps:
       - id: set-matrix
+        env:
+          CHANGED_FILES: ${{ needs.get-changed-files.outputs.changed_files }}
         run: |
-          changed_files="${{ needs.get-changed-files.outputs.changed_files }}"
+          changed_files="$CHANGED_FILES"
           echo "Changed files: $changed_files"
           # Convert PACKAGES environment variable into an array
           IFS=',' read -r -a packages <<< "$PACKAGES"
@@ -67,10 +69,10 @@ jobs:
             first_entry=true
             for package in "${packages[@]}"; do
               if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
               fi
             done
           else
@@ -82,10 +84,10 @@ jobs:
               if echo "$changed_files" | grep -q "$package"; then
                 echo "Package $package found in changed files."
                 if [ "$first_entry" = true ]; then
-                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
                 first_entry=false
               else
-                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22\", \"package\": \"$package\"}"
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"22.23.4\", \"package\": \"$package\"}"
               fi
               fi
             done
@@ -111,7 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup pnpm
-        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - name: Use Node.js (build)
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:

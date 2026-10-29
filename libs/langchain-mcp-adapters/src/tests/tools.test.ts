@@ -1054,7 +1054,7 @@ describe("Simplified Tool Adapter Tests", () => {
 
       const toolCall: NonNullable<AIMessage["tool_calls"]>[number] = {
         args: { input: "test input" },
-        name: "mcp__mockServer(should load tools with specified response format)__tool1",
+        name: "mcp__mockServer(should load tools with specified response format)_tool1",
         id: "tool_call_id_123",
         type: "tool_call",
       };

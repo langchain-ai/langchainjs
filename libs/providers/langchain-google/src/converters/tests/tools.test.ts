@@ -3,7 +3,7 @@ import * as z from "zod";
 import {
   convertToolChoiceToGeminiConfig,
   schemaToGeminiParameters,
-} from "../tools.js";
+} from "../generate_content/tools.js";
 
 describe("convertToolChoiceToGeminiConfig", () => {
   test("returns undefined when toolChoice is undefined", () => {
@@ -43,6 +43,74 @@ describe("convertToolChoiceToGeminiConfig", () => {
       functionCallingConfig: { mode: "NONE" },
     });
   });
+
+  test('maps "validated" to VALIDATED mode', () => {
+    const result = convertToolChoiceToGeminiConfig("validated", true);
+    expect(result).toEqual({
+      functionCallingConfig: { mode: "VALIDATED" },
+    });
+  });
+
+  test('maps object mode "validated" to VALIDATED mode', () => {
+    const result = convertToolChoiceToGeminiConfig(
+      { mode: "validated" } as never,
+      true
+    );
+    expect(result).toEqual({
+      functionCallingConfig: { mode: "VALIDATED" },
+    });
+  });
+
+  test.each([
+    ["AUTO", "AUTO"],
+    ["AuTo", "AUTO"],
+    ["ANY", "ANY"],
+    ["AnY", "ANY"],
+    ["REQUIRED", "ANY"],
+    ["ReQuIrEd", "ANY"],
+    ["NONE", "NONE"],
+    ["NoNe", "NONE"],
+    ["VALIDATED", "VALIDATED"],
+    ["VaLiDaTeD", "VALIDATED"],
+  ])(
+    "matches mode %s case-insensitively in string and object forms",
+    (mode, expected) => {
+      for (const toolChoice of [mode, { mode }]) {
+        expect(convertToolChoiceToGeminiConfig(toolChoice, true)).toEqual({
+          functionCallingConfig: { mode: expected },
+        });
+      }
+    }
+  );
+
+  test.each(["getWeather", { mode: "getWeather" }])(
+    "preserves the case of a function name in %o",
+    (toolChoice) => {
+      expect(convertToolChoiceToGeminiConfig(toolChoice, true)).toEqual({
+        functionCallingConfig: {
+          mode: "ANY",
+          allowedFunctionNames: ["getWeather"],
+        },
+      });
+    }
+  );
+
+  test.each([{ name: "getWeather" }, { name: ["getWeather", "GetForecast"] }])(
+    "preserves explicit function names %o when normalizing the mode",
+    ({ name }) => {
+      expect(
+        convertToolChoiceToGeminiConfig(
+          { mode: "AnY", function: { name } },
+          true
+        )
+      ).toEqual({
+        functionCallingConfig: {
+          mode: "ANY",
+          allowedFunctionNames: Array.isArray(name) ? name : [name],
+        },
+      });
+    }
+  );
 
   test("maps a function name string to ANY mode with allowedFunctionNames", () => {
     const result = convertToolChoiceToGeminiConfig("my_function", true);

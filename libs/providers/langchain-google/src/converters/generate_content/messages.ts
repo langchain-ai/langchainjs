@@ -21,9 +21,12 @@ import {
 } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Converter } from "@langchain/core/utils/format";
-import type { Gemini } from "../chat_models/types.js";
-import { iife } from "../utils/misc.js";
-import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
+import type { Gemini } from "../../chat_models/types.js";
+import { iife } from "../../utils/misc.js";
+import {
+  InvalidInputError,
+  ToolCallNotFoundError,
+} from "../../utils/errors.js";
 
 /**
  * Standard content block converter for Google Gemini API.
@@ -941,6 +944,7 @@ export const convertMessagesToGeminiContents: Converter<
     // const content: Gemini.Content | null = convertContentMessageToGeminiContent(message, messages);
     const content: Gemini.Content | null = iife(() => {
       const outputVersion =
+        message.response_metadata &&
         "output_version" in message.response_metadata
           ? (message.response_metadata?.output_version as string)
           : "v0";

@@ -1,4 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
@@ -253,8 +254,35 @@ export abstract class ChatGoogleBase<AuthOptions>
     this.safetyHandler =
       fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
-    const client = this.buildClient(fields);
-    this.buildConnection(fields ?? {}, client);
+    const platform =
+      fields?.platformType ?? (fields?.vertexai === true ? "gcp" : undefined);
+    const gateway =
+      platform === "gcp" && fields?.endpoint === undefined
+        ? resolveLangSmithGatewayConfig({ providerPath: "vertex" })
+        : {};
+    const connectionFields =
+      gateway.baseURL === undefined
+        ? fields
+        : {
+            ...fields,
+            endpoint: gateway.baseURL,
+            apiKey: fields?.apiKey ?? gateway.apiKey,
+          };
+    let client = this.buildClient(connectionFields);
+    if (gateway.baseURL !== undefined) {
+      const gatewayClient = client;
+      const regional =
+        gatewayClient.clientType === "apiKey" &&
+        fields?.authOptions !== undefined;
+      client = {
+        clientType: regional ? "gateway-regional" : gatewayClient.clientType,
+        request: gatewayClient.request.bind(gatewayClient),
+        getProjectId: regional
+          ? () => this.buildAbstractedClient(fields).getProjectId()
+          : gatewayClient.getProjectId.bind(gatewayClient),
+      };
+    }
+    this.buildConnection(connectionFields ?? {}, client);
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
