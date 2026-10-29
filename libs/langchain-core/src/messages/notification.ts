@@ -1,9 +1,6 @@
 import type { BaseMessage } from "./base.js";
 import type { Constructor } from "./utils.js";
 
-/** A first line for a notification's content, marking it as not from the user. */
-export const NOTIFICATION_HEADER = "[SYSTEM NOTIFICATION - NOT USER INPUT]";
-
 /** Which feature added a message, and that feature's fields. */
 export interface NotificationMetadata {
   /** The feature that added the message, e.g. `"async_subagent"`. */
@@ -21,8 +18,7 @@ export interface NotificationMetadata {
  * `lc_data` are removed first. LangChain's chat model integrations don't send
  * these keys to the model.
  *
- * It doesn't change the content. Write the content the model reads yourself,
- * e.g. starting with `NOTIFICATION_HEADER`.
+ * It doesn't change the content. Write the content the model reads yourself.
  *
  * Anyone who can send input to a thread can set these keys. Don't use them to
  * decide whether to trust a message.
@@ -37,14 +33,10 @@ export interface NotificationMetadata {
  *
  * @example
  * ```typescript
- * import {
- *   HumanMessage,
- *   NOTIFICATION_HEADER,
- *   addNotificationMetadata,
- * } from "@langchain/core/messages";
+ * import { HumanMessage, addNotificationMetadata } from "@langchain/core/messages";
  *
  * const message = addNotificationMetadata(
- *   new HumanMessage(`${NOTIFICATION_HEADER}\n<task-id>t_42</task-id>`),
+ *   new HumanMessage("Background task t_42 finished."),
  *   { source: "async_subagent", data: { task_id: "t_42", status: "success" } }
  * );
  * ```
