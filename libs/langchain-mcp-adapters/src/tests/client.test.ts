@@ -565,7 +565,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             ["sse-server", "multi-sse"],
           ]) {
             const selected = tools.find(
-              (tool) => tool.name === `${server}__test_tool`
+              (tool) => tool.name === `${server}_test_tool`
             );
 
             expect(selected).toBeDefined();
@@ -723,7 +723,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const toolsWithoutPrefix = await clientWithoutPrefix.listTools();
 
         const prefixedTool = toolsWithPrefix.find((t) =>
-          t.name.includes("custom__test-server__")
+          t.name.includes("custom__test-server_")
         );
         const unprefixedTool = toolsWithoutPrefix.find(
           (t) => t.name === "test_tool"
@@ -2821,14 +2821,13 @@ describe("server tool schemas", () => {
       await expect(tool.invoke({ value: 1 })).resolves.toBeDefined();
     });
 
-    it("does not mutate descriptors without properties", async () => {
+    it("gives the model empty properties without mutating the descriptor", async () => {
       const schema = Object.freeze({
         type: "object",
       } satisfies Tool["inputSchema"]);
 
-      await expect(
-        loadMcpTools("test", mockClient(schema))
-      ).resolves.toHaveLength(1);
+      const [tool] = await loadMcpTools("test", mockClient(schema));
+      expect(tool.schema).toEqual({ type: "object", properties: {} });
       expect(schema).toEqual({ type: "object" });
     });
 
@@ -3059,8 +3058,8 @@ describe("protocol negotiation with live servers", () => {
     });
 
     try {
-      const tools = await adapter.listTools();
-      const modern = tools.find((tool) => tool.name === "modern_echo");
+      const tools = await adapter.listTools("modern");
+      const modern = tools.find((tool) => tool.name === "modern_modern_echo");
 
       if (!modern) throw new Error("Modern tool was not discovered");
       expect(await modern.invoke({ value: "modern response" })).toContain(
@@ -3073,7 +3072,7 @@ describe("protocol negotiation with live servers", () => {
         "legacy"
       );
       const stdio = (await adapter.listToolsets()).stdio.find(
-        (tool) => tool.name === "legacy_tool"
+        (tool) => tool.name === "stdio_legacy_tool"
       );
       if (!stdio) {
         throw new Error("SDK 1 tool was not discovered");
@@ -3169,7 +3168,7 @@ describe("modern wire boundaries", () => {
     try {
       const tools = await adapter.listTools();
       expect(tools.map((tool) => tool.name)).toEqual(
-        values.map((_, index) => `json_${index}`)
+        values.map((_, index) => `test_json_${index}`)
       );
 
       for (const [index, tool] of tools.entries()) {

@@ -36,7 +36,7 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
-import { convertMessagesToGeminiContents } from "../../converters/messages.js";
+import { convertMessagesToGeminiContents } from "../../converters/generate_content/messages.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -48,6 +48,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import type { ToolChoice } from "@langchain/core/language_models/chat_models";
 import type { LLMResult } from "@langchain/core/outputs";
 
 /**
@@ -140,6 +141,12 @@ const allModelInfo: ModelInfo[] = [
   },
   {
     model: "gemini-3.8-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-4-argon",
     testConfig: {
       isThinking: true,
     },
@@ -985,6 +992,48 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
+    const toolChoices: ToolChoice[] = ["validated", { mode: "VALIDATED" }];
+
+    describe.each(toolChoices)("VALIDATED tool choice: %o", (toolChoice) => {
+      test("accepts a function call with schema-conforming arguments", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage('Call get_weather with location set to "New York".'),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls).toHaveLength(1);
+        expect(result.tool_calls?.[0]).toMatchObject({
+          name: "get_weather",
+          args: { location: "New York" },
+        });
+        expect(
+          weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
+        ).toBe(true);
+      });
+
+      test("also permits a text response without forcing a function", async () => {
+        const llm = newChatGoogle().bindTools([weatherTool], {
+          tool_choice: toolChoice,
+        });
+        const result = await llm.invoke([
+          new HumanMessage(
+            "Do not use any tools. Reply with the single word Hello."
+          ),
+        ]);
+
+        expect(recorder.request?.body?.toolConfig).toEqual({
+          functionCallingConfig: { mode: "VALIDATED" },
+        });
+        expect(result.tool_calls ?? []).toHaveLength(0);
+        expect(result.text).toMatch(/hello/i);
+      });
+    });
+
     test("Supports GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
@@ -1085,9 +1134,11 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke(
         "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
       );
-      expect(result.tool_calls?.some((c) => c.name === "custom_tool")).toBe(
-        true
-      );
+      expect(
+        result.tool_calls?.some(
+          (c: { name: string }) => c.name === "custom_tool"
+        )
+      ).toBe(true);
     });
 
     test(`function - stream tools`, async () => {
@@ -1782,6 +1833,15 @@ describe.each(thinkingModelInfo)(
       warnSpy.mockRestore();
     });
 
+    test.each([{ maxReasoningTokens: 0 }, { reasoningEffort: "minimal" }])(
+      "minimal thinking %o",
+      async (fields) => {
+        const llm = newChatGoogle(fields as DefaultGoogleParams);
+        const result = await llm.invoke("What is 1 + 1?");
+        expect(result.text.length).toBeGreaterThan(0);
+      }
+    );
+
     test("thought signature - text", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "low",
@@ -1845,7 +1905,7 @@ describe.each(thinkingModelInfo)(
         new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
       ]);
       const modelTurn = contents.find((c) => c.role === "model");
-      const sentFunctionCallPart = modelTurn?.parts.find(
+      const sentFunctionCallPart = modelTurn?.parts?.find(
         (p): p is Gemini.Part.FunctionCall => "functionCall" in p
       );
 
@@ -2145,7 +2205,7 @@ const ttsModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true,
 ]);
 
-describe.sequential.each(ttsModelInfo)(
+describe.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -2317,7 +2377,7 @@ const audioModelInfo: ModelInfo[] = filterTestableModels([
 console.log(audioModelInfo);
 
 // Audio tests fail on Vertex
-describe.sequential.each(audioModelInfo)(
+describe.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;

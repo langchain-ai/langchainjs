@@ -581,10 +581,7 @@ export abstract class BaseLanguageModel<
    */
   _getSerializedCacheKeyParametersForCall(
     // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
-    {
-      config,
-      ...callOptions
-    }: CallOptions & { config?: RunnableConfig }
+    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {

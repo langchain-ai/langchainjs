@@ -33,3 +33,28 @@ credentials from the first of the following that apply:
    `GOOGLE_WEB_CREDENTIALS`
 5. The Service Account credentials that are saved directly into the
    `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` (deprecated)
+
+## LangSmith gateway
+
+Set `LANGSMITH_GATEWAY=true` and `LANGSMITH_GATEWAY_API_KEY` to route
+`ChatVertexAI` through the gateway's `/vertex` endpoint. The gateway key falls
+back to `LANGSMITH_API_KEY`. Set `LANGSMITH_GATEWAY` to a custom gateway root URL
+to use a different host or path prefix.
+
+```typescript
+import { ChatVertexAI } from "@langchain/google-vertexai-web";
+
+const model = new ChatVertexAI({ model: "gemini-2.5-flash" });
+const response = await model.invoke("Hello!");
+console.log(response.content);
+```
+
+Vertex Express requests do not require Google web credentials when a gateway API
+key is configured. To preserve project and regional routing, pass service-account
+credentials in `authOptions.credentials` and a `location`. The project ID comes
+from those credentials, but requests use the selected API key rather than Google
+OAuth. An explicit `apiKey` takes precedence over the gateway key. An explicit
+`endpoint` opts out of automatic gateway routing and gateway-key selection.
+
+Keep gateway API keys in trusted server or edge runtimes, not public browser
+bundles.

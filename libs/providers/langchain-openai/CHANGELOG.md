@@ -1,5 +1,59 @@
 # @langchain/openai
 
+## 1.8.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
+## 1.7.1
+
+### Patch Changes
+
+- [#12046](https://github.com/langchain-ai/langchainjs/pull/12046) [`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): refresh model profiles from models.dev
+
+  - Add GPT-6.1 Terra
+  - Remove `gpt-5.2-chat-latest` and `gpt-5.3-chat-latest`, which OpenAI shut down on Aug 10, 2026
+
+## 1.7.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
+## 1.6.3
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): declare mid-conversation support in model profiles. GPT-4.1, GPT-5.x, GPT-6.x and o3 set `midConversationSystemMessages` and `midConversationTools`. `midConversationTools` is `false` on Chat Completions, since only the Responses API carries an `additional_tools` input item, so `ChatOpenAI` reports it only when it routes to the Responses API. `AzureChatOpenAI` and `AzureChatOpenAIResponses` leave it unset, since it is unverified on Azure's API.
+
+  Regenerating the profiles from models.dev also adds GPT-6 Sol, GPT-6 Luna and GPT-6.1 Sol.
+
+## 1.6.2
+
+### Patch Changes
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): support `additional_tools` on the Responses API. An `additional_tools` block on a `SystemMessage`, either bare in `content` or wrapped in a `non_standard` block, is sent verbatim as a top-level input item preceding the message.
+
+  `additional_tools` cannot work anywhere else, so it now throws instead of being dropped: on Chat Completions (set `useResponsesApi: true`), or on any message other than a `SystemMessage`. Assistant messages are exempt.
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - fix(openai): accept `non_standard`-wrapped `configuration_update` and `mcp_approval_response` blocks. Previously only a bare block in `content` was hoisted to a top-level Responses API input item; a wrapped block, or one on a message built with `contentBlocks`, was silently dropped. Chat Completions now also sends the payload of a `non_standard` block rather than the wrapper.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11771](https://github.com/langchain-ai/langchainjs/pull/11771) [`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `fileMimeTypes` to `ModelProfile` so models can advertise the MIME types they accept as generic file inputs. OpenAI Responses API models now report the file types `input_file` supports;
+  Chat Completions profiles are unchanged.
+
 ## 1.6.0
 
 ### Minor Changes

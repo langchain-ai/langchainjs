@@ -4,7 +4,7 @@ import type { Gemini } from "../../chat_models/types.js";
 import {
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
-} from "../messages.js";
+} from "../generate_content/messages.js";
 
 describe("convertGeminiPartsToToolCalls", () => {
   test("uses native functionCall.id when present", () => {
@@ -1186,8 +1186,9 @@ describe("convertMessagesToGeminiContents", () => {
       }),
       new ToolMessage({
         content: [
-          { type: "text", text: "Here is the screenshot." },
-          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+          {
+            inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" },
+          } as unknown as { type: string },
         ],
         tool_call_id: "call-native-inline",
       }),
@@ -1455,11 +1456,10 @@ describe("executableCode and codeExecutionResult round-trip", () => {
       tool_calls: [],
     });
 
-    const result = convertMessagesToGeminiContents(
-      "gemini-2.0-flash",
-      [new HumanMessage("Calculate 1+1"), message],
-      false
-    );
+    const result = convertMessagesToGeminiContents([
+      new HumanMessage("Calculate 1+1"),
+      message,
+    ]);
 
     const modelContent = result.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();

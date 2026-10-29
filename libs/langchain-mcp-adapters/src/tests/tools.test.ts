@@ -1054,7 +1054,7 @@ describe("Simplified Tool Adapter Tests", () => {
 
       const toolCall: NonNullable<AIMessage["tool_calls"]>[number] = {
         args: { input: "test input" },
-        name: "mcp__mockServer(should load tools with specified response format)__tool1",
+        name: "mcp__mockServer(should load tools with specified response format)_tool1",
         id: "tool_call_id_123",
         type: "tool_call",
       };
@@ -1312,6 +1312,37 @@ describe("Simplified Tool Adapter Tests", () => {
 
       const result = await tools[0].invoke({ name: "World" });
       expect(result).toBe("Hello!");
+    });
+
+    test("fails only the calls of a tool whose input schema cannot be compiled", async () => {
+      mockClient.listTools.mockResolvedValue({
+        tools: [
+          { name: "good", inputSchema: { type: "object", properties: {} } },
+          {
+            name: "bad",
+            // #11351: valid ECMAScript, but invalid under the `u` flag.
+            inputSchema: {
+              type: "object",
+              properties: {
+                url: { type: "string", pattern: "^https\\:\\/\\/" },
+              },
+            },
+          },
+        ],
+      });
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "ok" }],
+      });
+
+      const [good, bad] = await loadMcpTools("test", mockClient);
+
+      expect(bad.name).toBe("bad");
+      expect(await good.invoke({})).toBe("ok");
+      // Given a `url`, core's own validator rejects the pattern first.
+      await expect(bad.invoke({})).rejects.toThrow(
+        /Invalid regular expression/
+      );
+      expect(mockClient.callTool).toHaveBeenCalledTimes(1);
     });
 
     test("should handle complex real-world schema from bug report #9804", async () => {

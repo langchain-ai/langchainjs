@@ -1,5 +1,36 @@
 # @langchain/google
 
+## 0.2.12
+
+### Patch Changes
+
+- [#11968](https://github.com/langchain-ai/langchainjs/pull/11968) [`84eca2b`](https://github.com/langchain-ai/langchainjs/commit/84eca2b11c0900a67775dca258ebec04f8e852a2) Thanks [@afirstenberg](https://github.com/afirstenberg)! - refactoring in preparation for Interactions API
+
+  - Protocol-specific operations are now done through `GoogleChatApiHandler`
+    subclass
+  - Converters for generate_content and shared converters
+  - Types moved into protocol-specific generated file
+  - Includes support Gemini 4 Argon parity (thinking config, model profile,
+    usage-only streaming)
+
+## 0.2.11
+
+### Patch Changes
+
+- [#11940](https://github.com/langchain-ai/langchainjs/pull/11940) [`57d0e02`](https://github.com/langchain-ai/langchainjs/commit/57d0e02b2256da85dec6e5062d3e1bde2271c5de) Thanks [@hntrl](https://github.com/hntrl)! - Support Gemini 4 Argon model capabilities and Gemini 3+ compatibility; preserve usage-only streaming chunks.
+
+## 0.2.10
+
+### Patch Changes
+
+- [#11696](https://github.com/langchain-ai/langchainjs/pull/11696) [`824d07b`](https://github.com/langchain-ai/langchainjs/commit/824d07bd992bb47cdd319fd16b552895dd3ad6b4) Thanks [@dvd233](https://github.com/dvd233)! - Support Gemini's `VALIDATED` function-calling mode through `tool_choice`.
+
+## 0.2.9
+
+### Patch Changes
+
+- [#11806](https://github.com/langchain-ai/langchainjs/pull/11806) [`241a046`](https://github.com/langchain-ai/langchainjs/commit/241a046a2b8750df1c18ad8a013c0a038c9c99d7) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): send thinkingLevel LOW instead of MINIMAL to Gemini 3 models that reject MINIMAL (e.g. gemini-3.7-flash, gemini-3.8-flash), so `thinkingBudget: 0` and `reasoningEffort: "minimal"` no longer 400
+
 ## 0.2.8
 
 ### Patch Changes
