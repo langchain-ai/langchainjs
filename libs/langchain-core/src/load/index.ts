@@ -210,15 +210,6 @@ interface ReviverContext {
   maxDepth: number;
 }
 
-/**
- * Recursively revive a value, handling escape markers and LC objects.
- *
- * This function handles:
- * 1. Escaped dicts - unwrapped and returned as plain objects
- * 2. LC secret objects - resolved from secretsMap or env
- * 3. LC constructor objects - instantiated
- * 4. Regular objects/arrays - recursed into
- */
 /** The module exporting the longest matching prefix of `namespace`, if any. */
 function findModule<M extends Record<string, unknown>>(
   namespace: string[],
@@ -235,6 +226,15 @@ function findModule<M extends Record<string, unknown>>(
   return null;
 }
 
+/**
+ * Recursively revive a value, handling escape markers and LC objects.
+ *
+ * This function handles:
+ * 1. Escaped dicts - unwrapped and returned as plain objects
+ * 2. LC secret objects - resolved from secretsMap or env
+ * 3. LC constructor objects - instantiated
+ * 4. Regular objects/arrays - recursed into
+ */
 async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
   const {
     optionalImportsMap,
