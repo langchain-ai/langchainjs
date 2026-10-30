@@ -259,7 +259,11 @@ test("Test ChatOpenAI prompt value", async () => {
 });
 
 test("OpenAI Chat, docs, prompt templates", async () => {
-  const chat = new ChatOpenAI({ temperature: 0, maxTokens: 10 });
+  const chat = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    maxTokens: 10,
+  });
 
   const systemPrompt = PromptTemplate.fromTemplate(
     "You are a helpful assistant that translates {input_language} to {output_language}."
@@ -280,14 +284,18 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 }, 5000);
 
 test("Test OpenAI with stop", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", maxTokens: 5 });
   await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5, maxRetries: 0 });
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    maxTokens: 5,
+    maxRetries: 0,
+  });
   await expect(() =>
     model.invoke([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
@@ -296,7 +304,11 @@ test("Test OpenAI with timeout in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5, maxRetries: 0 });
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    maxTokens: 5,
+    maxRetries: 0,
+  });
   await expect(() =>
     model.invoke([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
@@ -305,7 +317,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
     const ret = model.invoke([new HumanMessage("Print hello world")], {
@@ -825,7 +837,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
 });
 
 test("Finish reason is 'stop'", async () => {
-  const model = new ChatOpenAI();
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
   const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;
   for await (const chunk of response) {
@@ -840,7 +852,7 @@ test("Finish reason is 'stop'", async () => {
 });
 
 test("Streaming tokens can be found in usage_metadata field", async () => {
-  const model = new ChatOpenAI();
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
   const response = await model.stream("Hello, how are you?");
   let finalResult: AIMessageChunk | undefined;
   for await (const chunk of response) {
@@ -859,6 +871,7 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
 
 test("streaming: true tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     streaming: true,
   });
   const response = await model.invoke("Hello, how are you?", {
@@ -875,6 +888,7 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
 
 test("streaming: streamUsage will not override stream_options", async () => {
   const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     streaming: true,
   });
   const response = await model.invoke("Hello, how are you?", {
@@ -885,7 +899,7 @@ test("streaming: streamUsage will not override stream_options", async () => {
 });
 
 test("streaming: streamUsage default is true", async () => {
-  const model = new ChatOpenAI();
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
   const response = await model.invoke("Hello, how are you?");
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeTruthy();
@@ -895,7 +909,7 @@ test("streaming: streamUsage default is true", async () => {
 });
 
 test("populates ID field on AIMessage", async () => {
-  const model = new ChatOpenAI();
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
   const response = await model.invoke("Hell");
   expect(response.id?.length).toBeGreaterThan(1);
   expect(response?.id?.startsWith("chatcmpl-")).toBe(true);
