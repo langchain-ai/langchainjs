@@ -174,13 +174,35 @@ export type Score = z.infer<typeof scoreQuestionSchema>;
 export type Question = z.infer<typeof questionSchema>;
 
 /**
+ * A Score as a caller writes it, accepting a `readonly` rubric. The
+ * classifier's `const` type parameter makes an inline rubric a `readonly`
+ * tuple, which `Score["criteria"]` rejects. A type-level widening only:
+ * at runtime it is an ordinary array, validated unchanged.
+ */
+export type ScoreInput = Omit<Score, "criteria"> & {
+  criteria: readonly JsonValue[];
+};
+
+/** A question as a caller writes it. See `ScoreInput`. */
+export type QuestionInput = Noul | Choice | ScoreInput;
+
+/** A questions map as a caller writes it. See `ScoreInput`. */
+export type QuestionsInput = Record<string, QuestionInput>;
+
+/**
  * A questions map that has been through `parseQuestions`: every entry
  * matches `questionSchema` — cardinality rules included — and the map has
  * at least one entry. Branded so a plain, unparsed `Record<string,
  * Question>` cannot be assigned where this type is required; only
  * `parseQuestions` can produce one.
+ *
+ * `QS` carries the caller's own map through unchanged. Intersected with
+ * zod's brand rather than inferred from `questionsMapSchema`, whose
+ * `Record<string, Question>` index signature would widen every entry back
+ * to the full union and undo the narrowing.
  */
-export type ValidatedQuestions = z.infer<typeof questionsMapSchema>;
+export type ValidatedQuestions<QS extends QuestionsInput = QuestionsInput> =
+  QS & z.core.$brand<"ValidatedQuestions">;
 
 /**
  * A Noul answer: a bare probability, with no `confidence` and no
@@ -189,18 +211,104 @@ export type ValidatedQuestions = z.infer<typeof questionsMapSchema>;
  */
 export type NoulAnswer = z.infer<typeof noulAnswerSchema>;
 
-/** A Choice answer. `probabilities` is keyed by option label. */
-export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;
+/**
+ * Swaps selected members of `T` for those in `R`, keeping a FLAT object
+ * type, so the answer types below can take a parameter and stay derived
+ * from their schema. Flatness is not cosmetic: `Omit<T, "k"> & { k: V }`
+ * has the same members but is not IDENTICAL to a plain object type, and
+ * identity is what keeps an unparameterized `ChoiceAnswer` unchanged.
+ */
+type Replace<T, R> = { [K in keyof T]: K extends keyof R ? R[K] : T[K] };
 
 /**
- * A Score answer. `legend` and `probabilities` are keyed by level index,
- * typed `Record<string, ...>` because JSON keys are strings —
- * `answer.legend[0]` still works. Do not "fix" them to `Record<number>`:
- * `Object.keys` yields strings regardless, so that would be fiction.
+ * A Choice answer. `probabilities` is keyed by option label.
+ *
+ * `L` is the set of labels the question defined, narrowed by `AnswerFor`
+ * when the map is statically known. Defaults to `string`, reproducing the
+ * schema's own inference.
  */
-export type ScoreAnswer = z.infer<typeof scoreAnswerSchema>;
+export type ChoiceAnswer<L extends string = string> = Replace<
+  z.infer<typeof choiceAnswerSchema>,
+  { choice: L; probabilities: Record<L, number> }
+>;
+
+/**
+ * The level keys a rubric produces: `"0" | "1" | "2"` when its length is
+ * known, `string` when it is not. Strings, not numbers, because JSON keys
+ * are strings. `legend[0]` still works: TypeScript accepts a numeric index
+ * against `"0"`.
+ */
+type LevelsOf<C extends readonly JsonValue[]> = number extends C["length"]
+  ? string
+  : Extract<keyof C, `${number}`>;
+
+/** The rubric echoed back level by level, when the levels are known. */
+type LegendOf<C extends readonly JsonValue[]> = number extends C["length"]
+  ? Record<string, JsonValue>
+  : { [K in Extract<keyof C, `${number}`>]: C[K] };
+
+/**
+ * A Score answer. `legend` and `probabilities` are keyed by level index.
+ *
+ * `C` is the rubric the question defined. Defaults to an open-ended array,
+ * whose unknown length collapses both fields back to the `Record<string,
+ * ...>` the schema infers. When the length IS known, the keys narrow to
+ * its indices and `legend` echoes each description.
+ *
+ * `score` stays `number`, deliberately: it is probability-weighted and may
+ * land BETWEEN levels, so a three-level rubric can answer 1.3.
+ */
+export type ScoreAnswer<C extends readonly JsonValue[] = readonly JsonValue[]> =
+  Replace<
+    z.infer<typeof scoreAnswerSchema>,
+    { legend: LegendOf<C>; probabilities: Record<LevelsOf<C>, number> }
+  >;
 
 export type Answer = z.infer<typeof answerSchema>;
+
+/**
+ * The answer a single question produces, selected by its `type`. Choice
+ * and Score carry their `criteria` into the answer. Distributes over a
+ * union, so `AnswerFor<Question>` is `Answer`.
+ */
+export type AnswerFor<Q extends QuestionInput> = Q extends { type: "noul" }
+  ? NoulAnswer
+  : Q extends { type: "choice"; criteria: infer C }
+    ? ChoiceAnswer<Extract<keyof C, string>>
+    : Q extends {
+          type: "score";
+          criteria: infer C extends readonly JsonValue[];
+        }
+      ? ScoreAnswer<C>
+      : never;
+
+/**
+ * The `answers` map a given questions map produces, id by id.
+ *
+ * `-readonly` is load-bearing: the `const` type parameter marks every key
+ * of the caller's literal `readonly`, and a mapped type would inherit it
+ * and return a frozen `answers`. The input being a literal says nothing
+ * about a server response, so the modifier is stripped.
+ */
+export type AnswersFor<QS extends QuestionsInput> = {
+  -readonly [K in keyof QS]: AnswerFor<QS[K]>;
+};
+
+/**
+ * The answers of one variant, keyed by the ids of the questions that asked
+ * for it: the type-level form of the `nouls`/`choices`/`scores`
+ * accessors.
+ *
+ * `[Extract<...>] extends [never]` rather than `QS[K] extends { type: T }`:
+ * an indexed access does not distribute, so against a map whose values are
+ * the whole union the direct form answers `false` for every variant and
+ * drops every id. The tuple also stops the `never` distributing.
+ */
+type AnswersOfType<QS extends QuestionsInput, T extends Question["type"]> = {
+  -readonly [
+    K in keyof QS as [Extract<QS[K], { type: T }>] extends [never] ? never : K
+  ]: AnswerFor<Extract<QS[K], { type: T }>>;
+};
 
 /**
  * Token usage. Output tokens are billed at zero by TypeSafe.
@@ -220,19 +328,38 @@ export interface Usage {
  * three accessors are attached afterwards by `withAnswerAccessors` and so
  * are not part of the schema.
  */
-export type ParsedResponse = z.infer<typeof classificationResponseSchema> & {
+export type ParsedResponse<QS extends QuestionsInput = QuestionsInput> = Omit<
+  z.infer<typeof classificationResponseSchema>,
+  "answers"
+> & {
+  /** One entry per question, typed by that question's variant. */
+  answers: AnswersFor<QS>;
   /** From the `x-typesafe-request-id` response header, when present. */
   requestId?: string;
 };
 
-export type ClassificationResponse = ParsedResponse & {
-  /** Noul answers only, keyed by question id. Non-enumerable. */
-  readonly nouls: Record<string, NoulAnswer>;
-  /** Choice answers only, keyed by question id. Non-enumerable. */
-  readonly choices: Record<string, ChoiceAnswer>;
-  /** Score answers only, keyed by question id. Non-enumerable. */
-  readonly scores: Record<string, ScoreAnswer>;
-};
+/**
+ * A parsed response, typed against the questions that produced it.
+ *
+ * `QS` defaults to its own constraint, collapsing everything below back to
+ * what it meant before the parameter existed. The default is the
+ * constraint and not the narrower `Record<string, Question>` on purpose: a
+ * Score written inline is a `readonly` tuple, not assignable to
+ * `Question`, so a narrower default would make a narrowed response
+ * unassignable to a bare one.
+ *
+ * The runtime guarantee is unchanged: `classificationResponseSchema`
+ * validates every answer against its own `type` discriminant.
+ */
+export type ClassificationResponse<QS extends QuestionsInput = QuestionsInput> =
+  ParsedResponse<QS> & {
+    /** Noul answers only, keyed by question id. Non-enumerable. */
+    readonly nouls: AnswersOfType<QS, "noul">;
+    /** Choice answers only, keyed by question id. Non-enumerable. */
+    readonly choices: AnswersOfType<QS, "choice">;
+    /** Score answers only, keyed by question id. Non-enumerable. */
+    readonly scores: AnswersOfType<QS, "score">;
+  };
 
 /**
  * Attaches the type-partitioned answer accessors to a parsed response.
@@ -248,16 +375,19 @@ export type ClassificationResponse = ParsedResponse & {
  * Call this LAST, after any spread. `{...response}` copies only own
  * enumerable properties and would silently drop these.
  */
-export function withAnswerAccessors(
-  response: ParsedResponse
-): ClassificationResponse {
+export function withAnswerAccessors<QS extends QuestionsInput = QuestionsInput>(
+  response: ParsedResponse<QS>
+): ClassificationResponse<QS> {
+  // The body works on the erased view: partitioning is by the runtime
+  // `type` discriminant, which is what `AnswersOfType` mirrors statically.
+  const erased = response as ParsedResponse;
   const define = <T extends Answer>(name: string, type: T["type"]) => {
-    Object.defineProperty(response, name, {
+    Object.defineProperty(erased, name, {
       enumerable: false,
       configurable: true,
       get(): Record<string, T> {
         const out: Record<string, T> = {};
-        for (const [id, answer] of Object.entries(response.answers)) {
+        for (const [id, answer] of Object.entries(erased.answers)) {
           if (answer.type === type) {
             out[id] = answer as T;
           }
@@ -269,7 +399,7 @@ export function withAnswerAccessors(
   define<NoulAnswer>("nouls", "noul");
   define<ChoiceAnswer>("choices", "choice");
   define<ScoreAnswer>("scores", "score");
-  return response as ClassificationResponse;
+  return response as ClassificationResponse<QS>;
 }
 
 /**
@@ -291,7 +421,9 @@ export function withAnswerAccessors(
  *    `undefined`, which `JSON.stringify` drops); a `null` *value* inside
  *    `criteria` is preserved. Never add a null-stripping pass.
  */
-export function serializeQuestion(question: Question): Record<string, unknown> {
+export function serializeQuestion(
+  question: QuestionInput
+): Record<string, unknown> {
   if (question.type === "noul") {
     const wire: Record<string, unknown> = { type: "noul" };
     if (question.instructions !== undefined) {
@@ -327,10 +459,13 @@ export function serializeQuestion(question: Question): Record<string, unknown> {
  * under-specified input — e.g. from parsed JSON/YAML rather than a
  * hand-written literal — fails with an error naming the question id
  * instead of a bare `TypeError` at request time.
+ *
+ * Generic so the caller's literal map survives the parse: what goes in is
+ * what comes back, branded.
  */
-export function parseQuestions(
-  questions: Record<string, Question>
-): ValidatedQuestions {
+export function parseQuestions<QS extends QuestionsInput>(
+  questions: QS
+): ValidatedQuestions<QS> {
   for (const id of Object.keys(questions)) {
     const question = questions[id];
     let shape: ReturnType<typeof questionSchema.safeParse>;
@@ -372,5 +507,8 @@ export function parseQuestions(
   if (!map.success) {
     throw new Error(map.error.issues[0].message);
   }
-  return map.data;
+  // `map.data` IS `questions`: `questionsMapSchema` is a `z.custom` with
+  // only a refinement, so it validates in place and rebuilds nothing. The
+  // assertion re-attaches the element types its index signature erases.
+  return map.data as ValidatedQuestions<QS>;
 }
