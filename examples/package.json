@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc --declaration --outDir dist/",
     "clean": "rm -rf .turbo dist/",
+    "typecheck": "tsc --noEmit --composite false --incremental false",
     "start": "tsx --experimental-wasm-modules -r dotenv/config src/index.ts",
     "start:dist": "pnpm build && node -r dotenv/config dist/index.js",
     "precommit": "lint-staged"
