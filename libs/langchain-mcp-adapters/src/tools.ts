@@ -179,17 +179,22 @@ function createToolInvocation(
    */
   const executor =
     (connectedClient: MCPInstance): ToolRound =>
-    (request, options) =>
+    (request, options) => {
+      const merged = { ...request._meta, ..._meta };
       // `callTool` deliberately does not widen its return type for
       // `allowInputRequired`; `isInputRequiredResult` does the narrowing.
-      connectedClient.callTool(
-        { ...request, _meta },
+      return connectedClient.callTool(
+        {
+          ...request,
+          _meta: Object.keys(merged).length > 0 ? merged : undefined,
+        },
         {
           ...options,
           toolDefinition: roundDefinition,
           ...(inBand ? { allowInputRequired: true } : {}),
         }
       ) as Promise<CallToolResult | InputRequiredResult>;
+    };
 
   const unbound = executor(client);
 
@@ -350,9 +355,11 @@ async function prepareToolCall(
   }
 
   const finalArgs = parsed.data;
+  const meta = beforeToolCallInterception?._meta;
   const initialRequest = {
     name: toolName,
     arguments: finalArgs,
+    ...(meta ? { _meta: meta } : {}),
   } satisfies CallToolRequest["params"];
 
   return {
