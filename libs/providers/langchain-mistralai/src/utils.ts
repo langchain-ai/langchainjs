@@ -1,4 +1,5 @@
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
+import { ThinkChunk as MistralAIThinkChunk } from "@mistralai/mistralai/models/components/thinkchunk.js";
 import { ContentBlock, MessageContent } from "@langchain/core/messages";
 
 // Mistral enforces a specific pattern for tool call IDs
@@ -91,4 +92,50 @@ export function _mistralContentChunkToMessageContentComplex(
     // forward-compatible "Unknown" variants), pass through as-is.
     return contentChunk as ContentBlock;
   });
+}
+
+/**
+ * Append a thinking chunk to Mistral content, merging it into the previous
+ * chunk when that one is also a thinking chunk. Streamed responses produce one
+ * thinking chunk per delta, so this keeps the history sent back compact.
+ */
+export function _pushThinkingChunk(
+  content: MistralAIContentChunk[],
+  chunk: MistralAIThinkChunk
+): void {
+  const thinking = chunk.thinking ?? [];
+  const previous = content[content.length - 1];
+  if (previous?.type !== "thinking") {
+    content.push({ type: "thinking", thinking: [...thinking] });
+    return;
+  }
+  for (const part of thinking) {
+    const last = previous.thinking[previous.thinking.length - 1];
+    if (last?.type === "text" && part.type === "text") {
+      previous.thinking[previous.thinking.length - 1] = {
+        ...last,
+        text: last.text + part.text,
+      };
+    } else {
+      previous.thinking.push(part);
+    }
+  }
+}
+
+/**
+ * Get the text of a Mistral response content, ignoring non-text chunks such
+ * as the thinking chunks returned by reasoning models
+ */
+export function _mistralContentToText(
+  content: string | MistralAIContentChunk[] | null | undefined
+): string {
+  if (!content) {
+    return "";
+  }
+  if (typeof content === "string") {
+    return content;
+  }
+  return content
+    .map((chunk) => (chunk.type === "text" ? chunk.text : ""))
+    .join("");
 }
