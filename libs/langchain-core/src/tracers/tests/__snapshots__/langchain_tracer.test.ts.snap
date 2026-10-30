@@ -2,6 +2,7 @@
 
 exports[`LangChainTracer payload snapshots for run create and update 1`] = `
 {
+  "address": undefined,
   "attachments": undefined,
   "child_runs": [],
   "dotted_order": Any<String>,
@@ -46,6 +47,7 @@ exports[`LangChainTracer payload snapshots for run create and update 1`] = `
 
 exports[`LangChainTracer payload snapshots for run create and update 2`] = `
 {
+  "address": undefined,
   "attachments": undefined,
   "child_runs": [],
   "dotted_order": Any<String>,
@@ -90,6 +92,7 @@ exports[`LangChainTracer payload snapshots for run create and update 2`] = `
 
 exports[`LangChainTracer payload snapshots for run create and update 3`] = `
 {
+  "address": undefined,
   "attachments": undefined,
   "dotted_order": Any<String>,
   "end_time": Any<Number>,
@@ -105,9 +108,6 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
       "library": "langchain-js",
       "runtime": "node",
     },
-  },
-  "inputs": {
-    "input": "test input",
   },
   "name": Any<String>,
   "outputs": {
@@ -125,6 +125,7 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
 
 exports[`LangChainTracer payload snapshots for run create and update 4`] = `
 {
+  "address": undefined,
   "attachments": undefined,
   "dotted_order": Any<String>,
   "end_time": Any<Number>,
@@ -140,9 +141,6 @@ exports[`LangChainTracer payload snapshots for run create and update 4`] = `
       "library": "langchain-js",
       "runtime": "node",
     },
-  },
-  "inputs": {
-    "input": "test input",
   },
   "name": Any<String>,
   "outputs": {

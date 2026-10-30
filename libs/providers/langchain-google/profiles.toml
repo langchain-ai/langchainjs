@@ -1,2 +1,5 @@
 provider = "google"
 output = "src/chat_models/profiles.ts"
+
+[overrides."gemini-4-argon"]
+maxOutputTokens = 65536

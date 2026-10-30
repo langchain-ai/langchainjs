@@ -757,7 +757,7 @@ export interface GeminiRequest {
   tools?: GeminiTool[];
   toolConfig?: {
     functionCallingConfig?: {
-      mode: "auto" | "any" | "none";
+      mode: "AUTO" | "ANY" | "NONE";
       allowedFunctionNames?: string[];
     };
     /**

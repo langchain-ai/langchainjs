@@ -3,6 +3,67 @@ import { HumanMessage } from "@langchain/core/messages";
 import { describe, it, expect, vi } from "vitest";
 import { ChatOpenAIResponses } from "../responses.js";
 
+class TraceableChatOpenAIResponses extends ChatOpenAIResponses {
+  traceParams(options: Parameters<ChatOpenAIResponses["invocationParams"]>[0]) {
+    return this._getInvocationParamsForTracing(options);
+  }
+
+  traceOptions(
+    options: Parameters<ChatOpenAIResponses["invocationParams"]>[0]
+  ) {
+    const params = this._getInvocationParamsForTracing(options);
+    return this._getCallOptionsForTracing(options ?? {}, params);
+  }
+}
+
+describe("MCP credential tracing", () => {
+  it("redacts MCP credentials without changing request params", () => {
+    const model = new TraceableChatOpenAIResponses({ model: "gpt-4o" });
+    const functionTool = {
+      type: "function" as const,
+      function: {
+        name: "lookup",
+        parameters: { type: "object", properties: {} },
+      },
+    };
+    const options = {
+      temperature: 0.3,
+      tools: [
+        functionTool,
+        {
+          type: "mcp" as const,
+          server_label: "private-server",
+          server_url: "https://example.com/mcp",
+          headers: { Authorization: "Bearer header-secret" },
+          authorization: "Bearer authorization-secret",
+        },
+      ],
+    };
+
+    const requestParams = model.invocationParams(options);
+    const traceParams = model.traceParams(options);
+    const traceOptions = model.traceOptions(options);
+
+    expect(requestParams.tools?.[1]).toMatchObject({
+      headers: { Authorization: "Bearer header-secret" },
+      authorization: "Bearer authorization-secret",
+    });
+    expect(traceParams.tools?.[1]).toMatchObject({
+      headers: "**REDACTED**",
+      authorization: "**REDACTED**",
+    });
+    expect(traceOptions.tools?.[1]).toMatchObject({
+      headers: "**REDACTED**",
+      authorization: "**REDACTED**",
+    });
+    expect(traceOptions.temperature).toBe(options.temperature);
+    expect(traceOptions.tools?.[0]).toBe(functionTool);
+    expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
+      "secret"
+    );
+  });
+});
+
 describe("constructor shorthand", () => {
   it("supports string model shorthand", () => {
     const model = new ChatOpenAIResponses("gpt-4o-mini", { temperature: 0.3 });

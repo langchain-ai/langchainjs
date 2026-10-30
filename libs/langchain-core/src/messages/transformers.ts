@@ -1,4 +1,3 @@
-import { BaseDocumentTransformer } from "../documents/transformers.js";
 import { BaseLanguageModel } from "../language_models/base.js";
 import { Runnable, RunnableLambda } from "../runnables/base.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
@@ -293,8 +292,10 @@ function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
 }
 
 // Since we can not import from `@langchain/textsplitters` we need
-// to reconstruct the interface here.
-interface _TextSplitterInterface extends BaseDocumentTransformer {
+// to reconstruct the interface here. Only `splitText` is used by
+// `trimMessages`, so we avoid coupling to the full `BaseDocumentTransformer`
+// surface and just require the method we call.
+interface _TextSplitterInterface {
   splitText(text: string): Promise<string[]>;
 }
 
@@ -684,7 +685,7 @@ async function _trimMessagesHelper(
     defaultTextSplitter;
   if (textSplitter) {
     if ("splitText" in textSplitter) {
-      textSplitterFunc = textSplitter.splitText;
+      textSplitterFunc = textSplitter.splitText.bind(textSplitter);
     } else {
       textSplitterFunc = async (text: string): Promise<string[]> =>
         textSplitter(text);

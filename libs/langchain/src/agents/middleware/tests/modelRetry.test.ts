@@ -1,6 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ContextOverflowError, stampRetryable } from "@langchain/core/errors";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
@@ -471,6 +472,69 @@ describe("modelRetryMiddleware", () => {
     });
   });
 
+  describe("Default retryability classification", () => {
+    const runWithDefaultRetryOn = async (error: Error, threadId: string) => {
+      const model = new AlwaysFailingModel(error);
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          modelRetryMiddleware({
+            maxRetries: 2,
+            initialDelayMs: 10,
+            jitter: false,
+            onFailure: "continue",
+          }),
+        ] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: threadId } }
+      );
+
+      return model._generate;
+    };
+
+    it("should not retry an error marked non-retryable", async () => {
+      const generate = await runWithDefaultRetryOn(
+        stampRetryable(new Error("Invalid API key"), false),
+        "non-retryable"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+
+    it("should retry an error marked retryable", async () => {
+      const generate = await runWithDefaultRetryOn(
+        stampRetryable(new Error("Rate limited"), true),
+        "retryable"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(3);
+    });
+
+    it("should retry an unclassified error", async () => {
+      const generate = await runWithDefaultRetryOn(
+        new Error("Who knows"),
+        "unclassified"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(3);
+    });
+
+    it("should not retry a core error that is non-retryable by construction", async () => {
+      const generate = await runWithDefaultRetryOn(
+        new ContextOverflowError(),
+        "context-overflow"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("Backoff behavior", () => {
     it("should apply exponential backoff", async () => {
       class BackoffTestModel extends FakeToolCallingModel {
@@ -603,5 +667,64 @@ describe("modelRetryMiddleware", () => {
       expect(avgDelay).toBeLessThan(150);
       expect(model._generate).toHaveBeenCalledTimes(3);
     });
+  });
+});
+
+describe("Retry-After handling", () => {
+  it("waits at least as long as the error asks", async () => {
+    const error = Object.assign(new Error("rate limited"), {
+      retryAfterMs: 300,
+    });
+    const model = new AlwaysFailingModel(error);
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [
+        modelRetryMiddleware({
+          maxRetries: 1,
+          initialDelayMs: 1,
+          jitter: false,
+          onFailure: "continue",
+        }),
+      ] as const,
+      checkpointer: new MemorySaver(),
+    });
+
+    const start = Date.now();
+    await agent.invoke(
+      { messages: [new HumanMessage("Hello")] },
+      { configurable: { thread_id: "retry-after" } }
+    );
+
+    expect(Date.now() - start).toBeGreaterThanOrEqual(280);
+    expect(model._generate).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses its own backoff when no hint is present", async () => {
+    const model = new AlwaysFailingModel(new Error("boom"));
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [
+        modelRetryMiddleware({
+          maxRetries: 1,
+          initialDelayMs: 1,
+          jitter: false,
+          onFailure: "continue",
+        }),
+      ] as const,
+      checkpointer: new MemorySaver(),
+    });
+
+    const start = Date.now();
+    await agent.invoke(
+      { messages: [new HumanMessage("Hello")] },
+      { configurable: { thread_id: "no-hint" } }
+    );
+
+    expect(Date.now() - start).toBeLessThan(200);
+    expect(model._generate).toHaveBeenCalledTimes(2);
   });
 });

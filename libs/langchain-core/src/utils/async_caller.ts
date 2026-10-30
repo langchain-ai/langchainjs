@@ -1,5 +1,6 @@
 import PQueueMod from "p-queue";
 
+import { getRetryable, stampRetryable } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
@@ -13,6 +14,7 @@ const STATUS_NO_RETRY = [
   406, // Not Acceptable
   407, // Proxy Authentication Required
   409, // Conflict
+  413, // Payload Too Large
 ];
 
 const RETRY_AFTER_AUTO_RETRY_THRESHOLD_MS = 60_000;
@@ -258,6 +260,11 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     return;
   }
 
+  // Honor a verdict already reached inside the callable, e.g. by a provider.
+  if (getRetryable(error) === false) {
+    throw error;
+  }
+
   if (
     ("message" in error &&
       typeof error.message === "string" &&
@@ -267,7 +274,8 @@ const defaultFailedAttemptHandler = (error: unknown) => {
       typeof error.name === "string" &&
       error.name === "AbortError")
   ) {
-    throw error;
+    // Deliberate cancellation, not a failure worth another attempt.
+    throw stampRetryable(error, false);
   }
   if (
     "code" in error &&
@@ -278,7 +286,8 @@ const defaultFailedAttemptHandler = (error: unknown) => {
   }
   const status = getResponseStatus(error) ?? getDirectStatus(error);
   if (status && STATUS_NO_RETRY.includes(+status)) {
-    throw error;
+    // Deterministic client error; retrying it unchanged fails identically.
+    throw stampRetryable(error, false);
   }
 
   const code = getErrorCode(error);
@@ -292,13 +301,15 @@ const defaultFailedAttemptHandler = (error: unknown) => {
       action: "stop",
       reason: "insufficient_quota",
     });
-    throw err;
+    // Exhausted quota needs an account action, not another attempt.
+    throw stampRetryable(err, false);
   }
 
   const rateLimitClassification = classifyRateLimitError(error);
   if (rateLimitClassification) {
     if (rateLimitClassification.action === "wait") {
       setRateLimitMetadata(error, rateLimitClassification);
+      stampRetryable(error, true);
       return;
     }
 
@@ -313,7 +324,8 @@ const defaultFailedAttemptHandler = (error: unknown) => {
           : "RateLimitCapacityError";
     }
     setRateLimitMetadata(err, rateLimitClassification);
-    throw err;
+    // Only "stop" is exhausted quota; "capacity" can still succeed later.
+    throw stampRetryable(err, rateLimitClassification.action !== "stop");
   }
 };
 
@@ -341,6 +353,7 @@ export interface AsyncCallerParams {
 
 export interface AsyncCallerCallOptions {
   signal?: AbortSignal;
+  maxRetries?: number;
 }
 
 /**
@@ -382,6 +395,19 @@ export class AsyncCaller {
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
+    return this.callWithRetries(this.maxRetries, callable, args);
+  }
+
+  private callWithRetries<
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    A extends any[],
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    T extends (...args: A) => Promise<any>,
+  >(
+    retries: AsyncCallerParams["maxRetries"],
+    callable: T,
+    args: Parameters<T>
+  ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
         pRetry(
@@ -396,7 +422,7 @@ export class AsyncCaller {
             }),
           {
             onFailedAttempt: ({ error }) => this.onFailedAttempt?.(error),
-            retries: this.maxRetries,
+            retries,
             randomize: true,
             // If needed we can change some of the defaults here,
             // but they're quite sensible.
@@ -412,12 +438,13 @@ export class AsyncCaller {
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
+    const retries = options.maxRetries ?? this.maxRetries;
     // Note this doesn't cancel the underlying request,
     // when available prefer to use the signal option of the underlying call
     if (options.signal) {
       let listener: (() => void) | undefined;
       return Promise.race([
-        this.call<A, T>(callable, ...args),
+        this.callWithRetries<A, T>(retries, callable, args),
         new Promise<never>((_, reject) => {
           listener = () => {
             reject(getAbortSignalError(options.signal));
@@ -430,7 +457,7 @@ export class AsyncCaller {
         }
       });
     }
-    return this.call<A, T>(callable, ...args);
+    return this.callWithRetries<A, T>(retries, callable, args);
   }
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {

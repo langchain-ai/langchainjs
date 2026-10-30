@@ -1,5 +1,131 @@
 # @langchain/neo4j
 
+## 0.1.29
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.57
+
+## 0.1.28
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.56
+
+## 0.1.27
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.55
+
+## 0.1.26
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.54
+
+## 0.1.25
+
+### Patch Changes
+
+- Updated dependencies [[`93d62b0`](https://github.com/langchain-ai/langchainjs/commit/93d62b008e13e10f28724a5ab09ab6eda584f1cb), [`d3e6fe6`](https://github.com/langchain-ai/langchainjs/commit/d3e6fe66a5f902fa615f076ca71d9541f1291166)]:
+  - @langchain/classic@1.0.53
+
+## 0.1.24
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.52
+
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.51
+
+## 0.1.22
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.50
+
+## 0.1.21
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.49
+
+## 0.1.20
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.48
+
+## 0.1.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.47
+
+## 0.1.19-rc.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.47-rc.0
+
+## 0.1.18
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.46
+
+## 0.1.17
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.45
+
+## 0.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`7df258c`](https://github.com/langchain-ai/langchainjs/commit/7df258c0af8362fede14d42bb982597a56f41b78)]:
+  - @langchain/classic@1.0.44
+
+## 0.1.15
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.43
+
+## 0.1.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.42
+
+## 0.1.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/classic@1.0.41
+
 ## 0.1.12
 
 ### Patch Changes

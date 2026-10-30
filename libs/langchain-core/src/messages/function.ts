@@ -35,6 +35,14 @@ export class FunctionMessage<
     super(fields);
     this.name = fields.name;
   }
+
+  static isInstance(obj: unknown): obj is FunctionMessage {
+    return super.isInstance(obj) && obj.type === "function";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 /**
@@ -65,6 +73,14 @@ export class FunctionMessageChunk<
       name: this.name ?? "",
       id: this.id ?? chunk.id,
     });
+  }
+
+  static isInstance(obj: unknown): obj is FunctionMessageChunk {
+    return super.isInstance(obj) && obj.type === "function";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }
 

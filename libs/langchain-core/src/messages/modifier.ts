@@ -45,4 +45,8 @@ export class RemoveMessage extends BaseMessage {
   static isInstance(obj: unknown): obj is RemoveMessage {
     return super.isInstance(obj) && obj.type === "remove";
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }

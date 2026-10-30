@@ -8,7 +8,7 @@ import type {
   SearchOptions,
 } from "redis";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
-import { SchemaFieldTypes, VectorAlgorithms } from "redis";
+import { SCHEMA_FIELD_TYPE, SCHEMA_VECTOR_FIELD_ALGORITHM } from "redis";
 import {
   FilterExpression,
   AndFilter,
@@ -186,7 +186,7 @@ export class FluentRedisVectorStore extends VectorStore {
     this.redisClient = _dbConfig.redisClient;
     this.indexName = _dbConfig.indexName;
     this.indexOptions = _dbConfig.indexOptions ?? {
-      ALGORITHM: VectorAlgorithms.HNSW,
+      ALGORITHM: SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
       DISTANCE_METRIC: "COSINE",
     };
     this.keyPrefix = _dbConfig.keyPrefix ?? `doc:${this.indexName}:`;
@@ -461,12 +461,12 @@ export class FluentRedisVectorStore extends VectorStore {
     // Build the RediSearch schema
     let schema: RediSearchSchema = {
       [this.vectorKey]: {
-        type: SchemaFieldTypes.VECTOR,
+        type: SCHEMA_FIELD_TYPE.VECTOR,
         TYPE: "FLOAT32",
         DIM: dimensions,
         ...this.indexOptions,
       },
-      [this.contentKey]: SchemaFieldTypes.TEXT,
+      [this.contentKey]: SCHEMA_FIELD_TYPE.TEXT,
     };
 
     schema = buildMetadataSchema(this.customSchema, schema);

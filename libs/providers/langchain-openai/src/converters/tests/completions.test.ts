@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsDeltaToBaseMessageChunk,
@@ -37,6 +42,35 @@ describe("convertCompletionsMessageToBaseMessage", () => {
     expect(result.additional_kwargs.reasoning_content).toBe(
       "The user asked 1+1."
     );
+  });
+
+  it("includes usage in response_metadata when system_fingerprint is absent", () => {
+    const mockMessage = {
+      role: "assistant" as const,
+      content: "Hello",
+    };
+
+    const mockRawResponse = {
+      id: "chatcmpl-no-fingerprint",
+      model: "gpt-5.2",
+      // Newer OpenAI models no longer populate system_fingerprint
+      system_fingerprint: null,
+      choices: [{ index: 0, message: mockMessage, finish_reason: "stop" }],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        total_tokens: 30,
+        prompt_tokens_details: { cached_tokens: 5 },
+      },
+    };
+
+    const result = convertCompletionsMessageToBaseMessage({
+      message: mockMessage as unknown as ChatCompletionMessage,
+      rawResponse: mockRawResponse as any,
+    }) as AIMessage;
+
+    expect(result.response_metadata.usage).toEqual(mockRawResponse.usage);
+    expect(result.response_metadata.system_fingerprint).toBeUndefined();
   });
 
   it("preserves delta reasoning_content in streaming chunks", () => {
@@ -252,6 +286,162 @@ describe("convertCompletionsMessageToBaseMessage", () => {
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it("preserves prompt cache breakpoints and drops other extras", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            extras: {
+              prompt_cache_breakpoint: { mode: "explicit" },
+              unsupported: true,
+            },
+          },
+          {
+            type: "image",
+            source_type: "url",
+            url: "https://example.com/image.png",
+            extras: { prompt_cache_breakpoint: null },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+      ]);
+    });
+
+    it("passes provider-specific text block fields through unchanged", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            cache_control: { type: "ephemeral" },
+          },
+          {
+            type: "text",
+            text: "Top-level breakpoint",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "text",
+          text: "Top-level breakpoint",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
+    it("keeps other text block fields when lifting a breakpoint from extras", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            cache_control: { type: "ephemeral" },
+            extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          cache_control: { type: "ephemeral" },
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+      ]);
+    });
+
+    it("lifts prompt cache breakpoints from v1 standard content blocks", () => {
+      const breakpoint = { prompt_cache_breakpoint: { mode: "explicit" } };
+      const messages = [
+        new SystemMessage({
+          content: [{ type: "text", text: "Instructions", extras: breakpoint }],
+          response_metadata: { output_version: "v1" },
+        }),
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Stable prefix", extras: breakpoint },
+            {
+              type: "image",
+              url: "https://example.com/image.png",
+              extras: breakpoint,
+            },
+          ],
+          response_metadata: { output_version: "v1" },
+        }),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Earlier answer", extras: breakpoint },
+          ],
+          response_metadata: { output_version: "v1" },
+        }),
+      ];
+
+      const result = convertMessagesToCompletionsMessageParams({ messages });
+
+      expect(result.map((m) => m.content)).toEqual([
+        [
+          {
+            type: "text",
+            text: "Instructions",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            text: "Stable prefix",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+          {
+            type: "image_url",
+            image_url: { url: "https://example.com/image.png" },
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            text: "Earlier answer",
+            prompt_cache_breakpoint: { mode: "explicit" },
+          },
+        ],
+      ]);
+    });
+
     it("should preserve AIMessage content when tool_calls are present", () => {
       const message = new AIMessage({
         content:
@@ -320,7 +510,7 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
-    it("should preserve tool_calls for output_version v1 assistant messages", () => {
+    it("should send content null (not []) for output_version v1 tool-call-only assistant messages", () => {
       const message = new AIMessage({
         content: [
           {
@@ -347,9 +537,11 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
 
       expect(result).toHaveLength(1);
+      // Must be `null`, not `[]`: the OpenAI Chat Completions API rejects an
+      // assistant message with an empty content array (issue #11416).
       expect(result[0]).toEqual({
         role: "assistant",
-        content: [],
+        content: null,
         tool_calls: [
           {
             id: "call_123",
@@ -593,5 +785,144 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         { type: "text", text: "The answer is 42." },
       ]);
     });
+  });
+
+  describe("Google GenAI cross-provider compatibility", () => {
+    // Regression for https://github.com/langchain-ai/langchainjs/issues/9705:
+    // ChatGoogleGenerativeAI embeds a Gemini-native `functionCall` block in
+    // content alongside `tool_calls`. Echoing it back verbatim is rejected by
+    // the Chat Completions API: "Invalid value: 'functionCall'. Supported
+    // values are: 'text', 'image_url', 'input_audio', 'refusal', 'audio',
+    // and 'file'."
+    it("should drop functionCall blocks from content (already in tool_calls)", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "text", text: "Let me check the weather." },
+          {
+            type: "functionCall",
+            functionCall: { name: "get_weather", args: { location: "SF" } },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "get_weather",
+            args: { location: "SF" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [{ type: "text", text: "Let me check the weather." }],
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: {
+              name: "get_weather",
+              arguments: '{"location":"SF"}',
+            },
+          },
+        ],
+      });
+    });
+  });
+});
+
+describe("non_standard content on Chat Completions", () => {
+  it("forwards the provider payload of a wrapped block, not the wrapper", () => {
+    const audio = {
+      type: "input_audio",
+      input_audio: { data: "UklGRg==", format: "wav" },
+    };
+
+    const result = convertMessagesToCompletionsMessageParams({
+      messages: [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Transcribe this." },
+            { type: "non_standard", value: audio },
+          ],
+        }),
+      ],
+      model: "gpt-4o-audio-preview",
+    });
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        content: [{ type: "text", text: "Transcribe this." }, audio],
+      },
+    ]);
+  });
+});
+
+describe("additional_tools on Chat Completions", () => {
+  const additionalTools = {
+    type: "additional_tools",
+    role: "developer",
+    tools: [{ type: "function", name: "get_customer", parameters: {} }],
+  };
+
+  it.each([
+    ["bare", () => new SystemMessage({ content: [additionalTools] })],
+    [
+      "wrapped",
+      () =>
+        new SystemMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "contentBlocks",
+      () =>
+        new SystemMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+  ])(
+    "rejects a %s block on a SystemMessage, naming the Responses API",
+    (_spelling, makeMessage) => {
+      expect(() =>
+        convertMessagesToCompletionsMessageParams({
+          messages: [makeMessage(), new HumanMessage("Hi")],
+          model: "gpt-4o",
+        })
+      ).toThrow(
+        "`additional_tools` requires the Responses API and cannot be sent via Chat Completions. Set `useResponsesApi: true`."
+      );
+    }
+  );
+
+  it("rejects the block on any other message, naming SystemMessage", () => {
+    expect(() =>
+      convertMessagesToCompletionsMessageParams({
+        messages: [
+          new HumanMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+          }),
+        ],
+        model: "gpt-4o",
+      })
+    ).toThrow("`additional_tools` must be carried on a `SystemMessage`");
+  });
+
+  it("does not reject the block on an assistant message", () => {
+    expect(() =>
+      convertMessagesToCompletionsMessageParams({
+        messages: [
+          new AIMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+          }),
+        ],
+        model: "gpt-4o",
+      })
+    ).not.toThrow();
   });
 });

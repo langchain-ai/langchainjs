@@ -1,5 +1,151 @@
 # @langchain/openai
 
+## 1.8.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
+## 1.7.1
+
+### Patch Changes
+
+- [#12046](https://github.com/langchain-ai/langchainjs/pull/12046) [`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): refresh model profiles from models.dev
+
+  - Add GPT-6.1 Terra
+  - Remove `gpt-5.2-chat-latest` and `gpt-5.3-chat-latest`, which OpenAI shut down on Aug 10, 2026
+
+## 1.7.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
+## 1.6.3
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): declare mid-conversation support in model profiles. GPT-4.1, GPT-5.x, GPT-6.x and o3 set `midConversationSystemMessages` and `midConversationTools`. `midConversationTools` is `false` on Chat Completions, since only the Responses API carries an `additional_tools` input item, so `ChatOpenAI` reports it only when it routes to the Responses API. `AzureChatOpenAI` and `AzureChatOpenAIResponses` leave it unset, since it is unverified on Azure's API.
+
+  Regenerating the profiles from models.dev also adds GPT-6 Sol, GPT-6 Luna and GPT-6.1 Sol.
+
+## 1.6.2
+
+### Patch Changes
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(openai): support `additional_tools` on the Responses API. An `additional_tools` block on a `SystemMessage`, either bare in `content` or wrapped in a `non_standard` block, is sent verbatim as a top-level input item preceding the message.
+
+  `additional_tools` cannot work anywhere else, so it now throws instead of being dropped: on Chat Completions (set `useResponsesApi: true`), or on any message other than a `SystemMessage`. Assistant messages are exempt.
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - fix(openai): accept `non_standard`-wrapped `configuration_update` and `mcp_approval_response` blocks. Previously only a bare block in `content` was hoisted to a top-level Responses API input item; a wrapped block, or one on a message built with `contentBlocks`, was silently dropped. Chat Completions now also sends the payload of a `non_standard` block rather than the wrapper.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11771](https://github.com/langchain-ai/langchainjs/pull/11771) [`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `fileMimeTypes` to `ModelProfile` so models can advertise the MIME types they accept as generic file inputs. OpenAI Responses API models now report the file types `input_file` supports;
+  Chat Completions profiles are unchanged.
+
+## 1.6.0
+
+### Minor Changes
+
+- [#11232](https://github.com/langchain-ai/langchainjs/pull/11232) [`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34) Thanks [@ccurme](https://github.com/ccurme)! - feat(openai): support explicit prompt cache options and content-block breakpoints
+
+### Patch Changes
+
+- [#11735](https://github.com/langchain-ai/langchainjs/pull/11735) [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(openai): send `promptCacheRetention: "in-memory"` as `"in_memory"` (the API rejects the hyphenated value), and apply `promptCacheKey`/`promptCacheRetention` in the same order as `promptCacheOptions`: per-call option, then `modelKwargs`, then the constructor field. On Chat Completions, `modelKwargs` values are no longer dropped and now take precedence over the constructor field.
+
+## 1.5.14
+
+### Patch Changes
+
+- [#11625](https://github.com/langchain-ai/langchainjs/pull/11625) [`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d) Thanks [@chiliec](https://github.com/chiliec)! - Recognize gpt-6 models as reasoning models so explicit `reasoning` config is forwarded.
+
+- [#11690](https://github.com/langchain-ai/langchainjs/pull/11690) [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Send image tool results on the Responses API as native `input_image` items in `function_call_output` instead of serializing them as JSON text, so the model can see them.
+  On Chat Completions, when OpenAI rejects a request with a 400 and a tool message contains an image, the error message now explains that Chat Completions does not support images in tool messages and points to `useResponsesApi: true`.
+  Messages with `output_version: "v1"` are unchanged.
+
+- [#11536](https://github.com/langchain-ai/langchainjs/pull/11536) [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be) Thanks [@hntrl](https://github.com/hntrl)! - Route the full GPT-5.6 model family to the Responses API for function tools with reasoning.
+
+## 1.5.13
+
+### Patch Changes
+
+- [#11590](https://github.com/langchain-ai/langchainjs/pull/11590) [`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fix OpenAI Responses API replay under Zero Data Retention when a response contains more than one reasoning item, for both v0 and v1. In v0, the default replay path now reuses `response_metadata.output` directly, preserving every reasoning item's `id`/`encrypted_content` in original order. In v1, `AIMessage.contentBlocks` (`outputVersion: "v1"`) is fixed the same way. `additional_kwargs.reasoning` is unchanged.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11560](https://github.com/langchain-ai/langchainjs/pull/11560) [`6bd3a18`](https://github.com/langchain-ai/langchainjs/commit/6bd3a182a4dc558f3a5d3c87da69f17d9a35f934) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Support `configuration_update` content blocks for changing reasoning effort mid-conversation without invalidating the cached prompt prefix.
+
+- [#11588](https://github.com/langchain-ai/langchainjs/pull/11588) [`7d6e1b0`](https://github.com/langchain-ai/langchainjs/commit/7d6e1b098723690bd1b98bc36ed18c75fa5a85ed) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(openai): Fix base url deserialization
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
+## 1.5.12-rc.0
+
+### Patch Changes
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
+## 1.5.11
+
+### Patch Changes
+
+- [#11448](https://github.com/langchain-ai/langchainjs/pull/11448) [`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): resolve encrypted content with zdr when streaming
+
+  OpenAI recently changed the disposition of `encrypted_content` to contain the canonical payload on the final `done` event. Encrypted content also does not need to be a parameter in the `include` call options in order to propagate.
+
+## 1.5.10
+
+### Patch Changes
+
+- [#11419](https://github.com/langchain-ai/langchainjs/pull/11419) [`c26c87e`](https://github.com/langchain-ai/langchainjs/commit/c26c87e41bccd01111e170c32ba1e5eec94ba3a6) Thanks [@chiliec](https://github.com/chiliec)! - fix(openai): send content null (not []) for tool-call-only v1 assistant messages
+
+## 1.5.9
+
+### Patch Changes
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - update to v7 openai sdk
+
+- [#11403](https://github.com/langchain-ai/langchainjs/pull/11403) [`fe8eec1`](https://github.com/langchain-ai/langchainjs/commit/fe8eec1915cc5580b8e7a2f3d4f68fe5e577d641) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Drop Gemini-native `functionCall` content blocks (already carried in `tool_calls`) when converting messages to Chat Completions API params, fixing requests that fail when a `ChatGoogleGenerativeAI` message is passed to `ChatOpenAI` (e.g. a cross-provider handoff in LangGraph).
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - Map OpenAI's `cache_write_tokens` to `cache_creation` in `usage_metadata.input_token_details`, mirroring the existing `cached_tokens` -> `cache_read` mapping across the Chat Completions and Responses APIs. Previously, prompt cache-write token counts were silently dropped.
+
+## 1.5.8
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): mark OpenAI provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts and rate limits are marked retryable; aborts, context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `openai` SDK error types is unaffected.
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11347](https://github.com/langchain-ai/langchainjs/pull/11347) [`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6) Thanks [@talarari](https://github.com/talarari)! - fix(openai): include `usage` in `response_metadata` when `system_fingerprint` is absent
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
 ## 1.5.5
 
 ### Patch Changes

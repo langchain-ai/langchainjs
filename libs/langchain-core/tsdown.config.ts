@@ -67,6 +67,7 @@ export default getBuildConfig({
     "./src/utils/event_source_parse.ts",
     "./src/utils/format.ts",
     "./src/utils/function_calling.ts",
+    "./src/utils/gateway.ts",
     "./src/utils/hash.ts",
     "./src/utils/json_patch.ts",
     "./src/utils/json_schema.ts",

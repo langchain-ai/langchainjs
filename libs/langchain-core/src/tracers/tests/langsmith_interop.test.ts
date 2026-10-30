@@ -872,7 +872,6 @@ test.each(["true", "false"])(
           },
         },
       },
-      inputs: {},
       trace_id: parentCallCreateParams.id,
       dotted_order: expect.stringContaining(
         `${parentCallCreateParams.dotted_order}.`

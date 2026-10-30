@@ -1,5 +1,29 @@
 # @langchain/google-common
 
+## 2.3.4
+
+No changes in this release.
+
+## 2.3.3
+
+### Patch Changes
+
+- [#11988](https://github.com/langchain-ai/langchainjs/pull/11988) [`2a37b67`](https://github.com/langchain-ai/langchainjs/commit/2a37b672115a99136d645c3f96633d00421312d6) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Backport LangSmith gateway routing to `ChatVertexAI` in the Node and web packages through `@langchain/google-common`, including streaming, custom gateway URLs, and explicit regional project configuration. Honor custom endpoints in Vertex Express requests.
+
+## 2.3.2
+
+## 2.3.1
+
+### Patch Changes
+
+- [#11266](https://github.com/langchain-ai/langchainjs/pull/11266) [`2750442`](https://github.com/langchain-ai/langchainjs/commit/2750442d9aad08446153b87a1f3ff334d7c30d21) Thanks [@jackjin1997](https://github.com/jackjin1997)! - fix Google tool choice modes sent to Vertex AI
+
+## 2.3.0
+
+### Patch Changes
+
+- [#11032](https://github.com/langchain-ai/langchainjs/pull/11032) [`477c75a`](https://github.com/langchain-ai/langchainjs/commit/477c75a97f4883f2ae9a40b83ca589405b8944cb) Thanks [@neuralmanacle](https://github.com/neuralmanacle)! - Fixes endpoint routing and parameter validation for the "eu" multi-region location.
+
 ## 2.2.0
 
 ### Minor Changes

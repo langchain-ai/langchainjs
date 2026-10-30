@@ -82,6 +82,10 @@ export class ToolInvocationError extends Error {
       error["~brand"] === "ToolInvocationError"
     );
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 /**
@@ -134,5 +138,9 @@ export class MiddlewareError extends Error {
       "~brand" in error &&
       error["~brand"] === "MiddlewareError"
     );
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }

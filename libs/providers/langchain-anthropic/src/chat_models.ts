@@ -6,6 +6,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -31,9 +32,13 @@ import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
+  getTopLevelSchemaCompositionKeys,
   handleToolChoice,
 } from "./utils/tools.js";
-import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
+import {
+  _convertMessagesToAnthropicPayload,
+  _getToolChangeKind,
+} from "./utils/message_inputs.js";
 import {
   getSamplingParams,
   getTaskBudgetBetas,
@@ -72,6 +77,8 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
+
 // Default max output tokens per model family (prefix-matched).
 // These are sensible defaults for the `max_tokens` API parameter when
 // the user does not explicitly set `maxTokens`. Values are based on the
@@ -84,6 +91,9 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
 > = {
   // Claude 5 — 128K max output
+  "claude-opus-5": 16384,
+  "claude-sonnet-5": 16384,
+  "claude-fable-5-1": 16384,
   "claude-fable-5": 16384,
   "claude-mythos-5": 16384,
   "claude-mythos-preview": 16384,
@@ -285,6 +295,42 @@ function _combineBetas(
   return Array.from(
     new Set([...(a ?? []), ...(b ?? []), ...rest.flatMap((x) => Array.from(x))])
   );
+}
+
+const MID_CONVERSATION_TOOL_CHANGES_BETA: AnthropicBeta =
+  "mid-conversation-tool-changes-2026-07-01";
+
+// Required to define a tool by value in a `tool_addition` block. It also
+// covers tool changes by reference, in place of the tool changes beta.
+const INLINE_TOOLS_BETA: AnthropicBeta = "inline-tools-2026-09-15";
+
+/**
+ * Builds a request payload from invocation params and the messages to send.
+ *
+ * Betas in `params` are derived from call options alone. This adds the ones
+ * the message content itself requires, which can only be known once the
+ * messages are converted.
+ */
+function _buildMessagesRequest(
+  params: AnthropicInvocationParams,
+  messages: BaseMessage[]
+) {
+  const formattedMessages = _convertMessagesToAnthropicPayload(messages);
+  const toolChangeKind = _getToolChangeKind(formattedMessages);
+  const toolChangeBeta =
+    toolChangeKind === "inline"
+      ? INLINE_TOOLS_BETA
+      : toolChangeKind === "reference" &&
+          !params.betas?.includes(INLINE_TOOLS_BETA)
+        ? MID_CONVERSATION_TOOL_CHANGES_BETA
+        : undefined;
+  return {
+    ...params,
+    ...formattedMessages,
+    ...(toolChangeBeta
+      ? { betas: _combineBetas(params.betas, [toolChangeBeta]) }
+      : {}),
+  };
 }
 
 /**
@@ -1061,9 +1107,19 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields.anthropicApiUrl ??
+        fields.clientOptions?.baseURL ??
+        (getEnvironmentVariable("ANTHROPIC_API_URL") ||
+          getEnvironmentVariable("ANTHROPIC_BASE_URL") ||
+          undefined),
+      providerPath: "anthropic",
+    });
     this.anthropicApiKey =
-      fields?.apiKey ??
-      fields?.anthropicApiKey ??
+      fields.apiKey ??
+      fields.anthropicApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
 
     if (!this.anthropicApiKey && !fields?.createClient) {
@@ -1074,7 +1130,7 @@ export class ChatAnthropicMessages<
     this.apiKey = this.anthropicApiKey;
 
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
-    this.apiUrl = fields?.anthropicApiUrl;
+    this.apiUrl = gatewayConfig.baseURL;
 
     /** Keep modelName for backwards compatibility */
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
@@ -1134,7 +1190,7 @@ export class ChatAnthropicMessages<
     if (!tools) {
       return undefined;
     }
-    return tools.map((tool) => {
+    const formattedTools = tools.map((tool) => {
       if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
         return tool.extras
           .providerToolDefinition as Anthropic.Messages.ToolUnion;
@@ -1190,6 +1246,17 @@ export class ChatAnthropicMessages<
           2
         )}`
       );
+    });
+
+    return formattedTools.filter((tool) => {
+      if (!isAnthropicTool(tool)) {
+        return true;
+      }
+      const compositionKeys = getTopLevelSchemaCompositionKeys(tool);
+      if (compositionKeys.length === 0) {
+        return true;
+      }
+      return false;
     });
   }
 
@@ -1252,14 +1319,29 @@ export class ChatAnthropicMessages<
       : [];
     const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
 
+    const tools = this.formatStructuredToolToAnthropic(options?.tools, {
+      strict: options?.strict,
+    });
+    if (
+      tool_choice?.type === "tool" &&
+      !tools?.some((tool) => "name" in tool && tool.name === tool_choice.name)
+    ) {
+      throw new Error(
+        `Anthropic tool_choice references "${tool_choice.name}", but that tool is not available.`
+      );
+    }
+    if (tool_choice?.type === "any" && (!tools || tools.length === 0)) {
+      throw new Error(
+        "Anthropic tool_choice requires at least one available tool."
+      );
+    }
+
     const output: AnthropicInvocationParams = {
       model: this.model,
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools, {
-        strict: options?.strict,
-      }),
+      tools,
       tool_choice,
       thinking: this.thinkingExplicitlySet ? this.thinking : undefined,
       context_management: this.contextManagement,
@@ -1280,7 +1362,9 @@ export class ChatAnthropicMessages<
 
     validateInvocationParamCompatibility({
       model: this.model,
-      thinking: this.thinking,
+      thinking: output.thinking ?? this.thinking,
+      thinkingExplicitlySet: output.thinking !== undefined,
+      outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,
       temperature: this.temperature,
@@ -1298,6 +1382,48 @@ export class ChatAnthropicMessages<
     );
 
     return output;
+  }
+
+  protected override _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    const params = this.invocationParams(options);
+    if (!Array.isArray(params.mcp_servers)) {
+      return params;
+    }
+    return {
+      ...params,
+      mcp_servers: params.mcp_servers.map((server) => {
+        if (!("authorization_token" in server)) {
+          return server;
+        }
+        return {
+          ...server,
+          authorization_token: MCP_CREDENTIALS_REDACTED,
+        };
+      }),
+    };
+  }
+
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.mcp_servers)) {
+      return options;
+    }
+    return {
+      ...options,
+      mcp_servers: options.mcp_servers.map((server) => {
+        if (!("authorization_token" in server)) {
+          return server;
+        }
+        return {
+          ...server,
+          authorization_token: MCP_CREDENTIALS_REDACTED,
+        };
+      }),
+    };
   }
 
   /** @ignore */
@@ -1324,11 +1450,9 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
-      ...params,
-      ...formattedMessages,
+      ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
     const coerceContentToString =
@@ -1340,6 +1464,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     for await (const data of stream) {
@@ -1401,17 +1526,16 @@ export class ChatAnthropicMessages<
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
     const params = this.invocationParams(options);
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
-      ...params,
-      ...formattedMessages,
+      ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
 
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
@@ -1447,13 +1571,10 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
     const response = await this.completionWithRetry(
       {
-        ...params,
+        ..._buildMessagesRequest(params, messages),
         stream: false,
-        ...formattedMessages,
       },
       requestOptions
     );
@@ -1507,6 +1628,7 @@ export class ChatAnthropicMessages<
       return this._generateNonStreaming(messages, params, {
         signal: options.signal,
         headers: options.headers,
+        maxRetries: options.maxRetries,
       });
     }
   }
@@ -1561,7 +1683,10 @@ export class ChatAnthropicMessages<
         throw error;
       }
     };
-    return this.caller.call(makeCompletionRequest);
+    return this.caller.callWithOptions(
+      { maxRetries: options?.maxRetries },
+      makeCompletionRequest
+    );
   }
 
   /** @ignore */
@@ -1607,7 +1732,7 @@ export class ChatAnthropicMessages<
       }
     };
     return this.caller.callWithOptions(
-      { signal: options.signal ?? undefined },
+      { signal: options.signal ?? undefined, maxRetries: options.maxRetries },
       makeCompletionRequest
     );
   }
