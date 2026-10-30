@@ -5,6 +5,7 @@ import type {
 import type {
   StateDefinitionInit,
   StreamTransformer,
+  TracePolicy,
 } from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
@@ -114,6 +115,14 @@ export function createMiddleware<
    * Merged with `createAgent({ streamTransformers })` when the agent compiles.
    */
   streamTransformers?: TStreamTransformers;
+  /**
+   * Controls the payloads recorded by this middleware's lifecycle hook spans.
+   * Processors affect chain callback payloads, including `streamEvents`; output
+   * omission can suppress messages directly returned by a lifecycle hook, and
+   * input omission can affect message deduplication. Processors must not mutate
+   * payloads, which are shared with agent execution.
+   */
+  tracePolicy?: TracePolicy;
   /**
    * Wraps tool execution with custom logic. This allows you to:
    * - Modify tool call parameters before execution
@@ -272,6 +281,7 @@ export function createMiddleware<
     afterAgent: config.afterAgent,
     tools: config.tools,
     streamTransformers: config.streamTransformers,
+    tracePolicy: config.tracePolicy,
   };
 
   return middleware;
