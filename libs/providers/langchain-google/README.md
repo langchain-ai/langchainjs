@@ -36,6 +36,78 @@ well as Gemini-specific "Specialty Tools" (like Code Execution and Grounding).
 See the [LangChain.js documentation](https://docs.langchain.com/oss/javascript/integrations/chat/google).
 for details.
 
+## Long Decode
+
+Models such as `gemini-4-argon` support
+[Long Decode](https://ai.google.dev/gemini-api/docs/generate-content/long-decode),
+which produces very long outputs across several requests ("hops"). Set
+`maxOutputTokens` above 65,536 (it is the total for all hops) and continue
+manually: `ChatGoogle` never sends a follow-up request on its own.
+
+```typescript
+import { ChatGoogle } from "@langchain/google";
+import { HumanMessage } from "@langchain/core/messages";
+
+const model = new ChatGoogle({
+  model: "gemini-4-argon",
+  maxOutputTokens: 262_144,
+});
+// Send the same messages and settings on every hop. Do not add the partial
+// output to the messages; the token carries the model's progress.
+const messages = [new HumanMessage("Write the complete report.")];
+
+let text = "";
+let continuationToken: string | undefined;
+for (;;) {
+  const result = await model.invoke(messages, { continuationToken });
+  text += result.text;
+  continuationToken = result.response_metadata.continuationToken as
+    string | undefined;
+  if (result.response_metadata.finishReason !== "CONTINUATION") break;
+}
+```
+
+- A hop may return empty `text` while the model is thinking. That is normal
+  progress; keep going while `finishReason` is `"CONTINUATION"`.
+- `MAX_TOKENS` can also return a token. Resuming it requires a higher
+  `maxOutputTokens` than the tokens used so far. Check Google's
+  `finishReason` to tell the two apart; LangChain's normalized
+  `finish_reason` may be `"length"` for both.
+- With `model.stream()`, combine the chunks (`chunk.concat(...)`); the combined
+  message carries the latest token in `response_metadata.continuationToken`.
+- Each hop is billed, including hops that only think.
+- The token you pass in is redacted from LangChain traces. The token returned
+  in `response_metadata` is part of the traced response; to keep it out,
+  give the LangSmith `Client` a `hideOutputs` function that removes it.
+
+### Timeouts
+
+When `maxOutputTokens` is above 64,000, each call gets a 20-minute `timeout`
+(the longest Google lets a single Long Decode request run) covering the
+request, its retries and reading a streamed response. Other requests keep
+`fetch`'s default behavior. To choose your own limit, set `timeout` in
+milliseconds in the constructor (`new ChatGoogle({ ..., timeout: 600_000 })`),
+or `0` to disable it. A per-call `timeout` or `signal` can shorten it, but not
+extend it.
+
+On Node.js, the built-in `fetch` also gives up if the server sends no response
+headers, or no streamed data, for 5 minutes. Google allows a non-streaming hop
+to run for up to 10 minutes, so on Node.js either stream Long Decode requests,
+or raise Node's limits using its supported mechanism: install
+[`undici`](https://undici.nodejs.org) in your application and set a global
+dispatcher once at startup.
+
+```typescript
+import { Agent, setGlobalDispatcher } from "undici";
+
+setGlobalDispatcher(
+  new Agent({ headersTimeout: 1_200_000, bodyTimeout: 1_200_000 })
+);
+```
+
+This changes every `fetch` in the process. Other runtimes have their own
+network timeouts; check them for long non-streaming hops.
+
 ## Reporting issues
 
 Please report any problems encountered with the library in the

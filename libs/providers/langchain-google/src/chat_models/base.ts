@@ -49,6 +49,8 @@ export type {
   GooglePlatformType,
 } from "./types.js";
 
+const CONTINUATION_TOKEN_REDACTED = "**REDACTED**";
+
 function hasVertexCredentials(params: {
   credentials?: unknown;
   googleAuthOptions?: unknown;
@@ -151,6 +153,8 @@ export abstract class BaseChatGoogle<
 
   streamUsage: boolean = true;
 
+  protected _timeout?: number;
+
   protected _platform?: GooglePlatformType;
 
   protected _endpoint?: string;
@@ -194,6 +198,16 @@ export abstract class BaseChatGoogle<
 
     this.streamUsage = params?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
+
+    this._timeout = params?.timeout;
+    if (
+      this._timeout !== undefined &&
+      (!Number.isFinite(this._timeout) || this._timeout < 0)
+    ) {
+      throw new ConfigurationError(
+        `timeout must be a non-negative number of milliseconds, got ${this._timeout}`
+      );
+    }
   }
 
   _llmType(): string {
@@ -268,6 +282,7 @@ export abstract class BaseChatGoogle<
       streaming: this.streaming,
       streamUsage: this.streamUsage,
       customHeaders: this._customHeaders,
+      timeout: this._timeout,
       apiClient: this.apiClient,
       caller: this.caller,
     };
@@ -319,6 +334,19 @@ export abstract class BaseChatGoogle<
     options: this["ParsedCallOptions"]
   ): Record<string, unknown> {
     return this.apiHandler.invocationParams(options) as Record<string, unknown>;
+  }
+
+  // Continuation tokens are opaque model state meant only for Google. The
+  // handler keeps them out of invocationParams (and so out of traced metadata);
+  // this keeps them out of the traced call options.
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!options.continuationToken) {
+      return options;
+    }
+    return { ...options, continuationToken: CONTINUATION_TOKEN_REDACTED };
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
