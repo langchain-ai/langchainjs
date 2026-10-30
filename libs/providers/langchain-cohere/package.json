@@ -42,6 +42,7 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
+    "@types/node": "^26.6.3",
     "@vitest/coverage-v8": "^5.0.2",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
