@@ -1,6 +1,7 @@
 import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
+import { addLangChainErrorFields } from "../errors/index.js";
 import {
   MAX_PROMPT_TEMPLATE_DEPTH,
   createPromptTemplateDepthError,
