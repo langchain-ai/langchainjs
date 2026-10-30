@@ -92,6 +92,9 @@ type CallToolArgs = {
    */
   onProgress?: Notifications["onProgress"];
 
+  /** Whether progress notifications reset the SDK request timeout. */
+  resetTimeoutOnProgress?: boolean;
+
   /**
    * `beforeToolCall` callbacks used for tool calls.
    */
@@ -290,6 +293,7 @@ async function prepareToolCall(
     args,
     config,
     onProgress,
+    resetTimeoutOnProgress,
     beforeToolCall,
     inputSchema,
   }: CallToolArgs,
@@ -308,8 +312,14 @@ async function prepareToolCall(
 
   if (config?.signal) requestOptions.signal = config.signal;
 
-  if (onProgress) {
+  if (resetTimeoutOnProgress !== undefined) {
+    requestOptions.resetTimeoutOnProgress = resetTimeoutOnProgress;
+  }
+
+  if (onProgress || resetTimeoutOnProgress) {
     requestOptions.onprogress = (progress) => {
+      // A callback requests the SDK's progress token even without an observer.
+      if (!onProgress) return;
       Promise.resolve()
         .then(() =>
           onProgress(progress, {
@@ -505,6 +515,7 @@ export async function convertMcpTools(
     additionalToolNamePrefix,
     outputHandling,
     defaultToolTimeout,
+    resetTimeoutOnProgress,
     logLevel,
     elicitation,
   } = {
@@ -565,6 +576,7 @@ export async function convertMcpTools(
                   config,
                   outputHandling,
                   onProgress: parsedOptions.onProgress,
+                  resetTimeoutOnProgress,
                   beforeToolCall: parsedOptions.beforeToolCall,
                   afterToolCall: parsedOptions.afterToolCall,
                 });
