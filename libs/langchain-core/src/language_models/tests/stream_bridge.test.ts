@@ -807,3 +807,63 @@ describe("_streamChatModelEvents bridge", () => {
     });
   });
 });
+
+describe("additional_kwargs passthrough", () => {
+  test("chunk additional_kwargs are carried through to message-finish", async () => {
+    class FakeAdditionalKwargsModel extends BaseChatModel {
+      _llmType() {
+        return "fake-additional-kwargs";
+      }
+
+      async _generate(
+        _messages: BaseMessage[],
+        _options: this["ParsedCallOptions"],
+        _runManager?: CallbackManagerForLLMRun
+      ): Promise<ChatResult> {
+        return { generations: [] };
+      }
+
+      async *_streamResponseChunks(
+        _messages: BaseMessage[],
+        _options: this["ParsedCallOptions"],
+        _runManager?: CallbackManagerForLLMRun
+      ): AsyncGenerator<ChatGenerationChunk> {
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "Hi",
+            additional_kwargs: {
+              reasoning: { id: "rs_123", type: "reasoning", summary: [] },
+            },
+          }),
+          text: "Hi",
+        });
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: {
+              __openai_function_call_ids__: { call_abc: "fc_abc" },
+            },
+          }),
+          text: "",
+        });
+      }
+    }
+
+    const model = new FakeAdditionalKwargsModel({});
+    const events: ChatModelStreamEvent[] = [];
+    for await (const event of model._streamChatModelEvents(
+      [],
+      {} as BaseChatModelCallOptions
+    )) {
+      events.push(event);
+    }
+
+    const finish = events.find((e) => e.event === "message-finish") as {
+      additionalKwargs?: Record<string, unknown>;
+    };
+    expect(finish.additionalKwargs).toEqual({
+      reasoning: { id: "rs_123", type: "reasoning", summary: [] },
+      __openai_function_call_ids__: { call_abc: "fc_abc" },
+    });
+  });
+});

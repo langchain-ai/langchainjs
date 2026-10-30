@@ -47,8 +47,9 @@ import {
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
-const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
-const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
+export const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+export const _CUSTOM_TOOL_CALL_IDS_MAP_KEY =
+  "__openai_custom_tool_call_ids__";
 
 /** Streaming-only marker; not part of @langchain/core ToolCallChunk. */
 type OpenAICustomToolCallChunk = ToolCallChunk & { isCustomTool?: true };
@@ -1490,6 +1491,35 @@ export const convertStandardContentMessageToResponsesInput: Converter<
  * });
  * ```
  */
+/**
+ * Returns the preserved raw Responses API output items from a message's
+ * response metadata, when present and well-formed. These are stored by the
+ * Responses API converters so multi-turn input can replay the original
+ * items (including reasoning items) verbatim.
+ */
+function getPreservedResponsesOutput(
+  lcMsg: BaseMessage
+): ResponseInputItemLike[] | undefined {
+  const responseMetadata = lcMsg.response_metadata as
+    | Record<string, unknown>
+    | undefined;
+  if (
+    responseMetadata?.output != null &&
+    Array.isArray(responseMetadata.output) &&
+    responseMetadata.output.length > 0 &&
+    responseMetadata.output.every(
+      (item) =>
+        typeof item === "object" &&
+        item != null &&
+        "type" in item &&
+        typeof item.type === "string"
+    )
+  ) {
+    return responseMetadata.output as ResponseInputItemLike[];
+  }
+  return undefined;
+}
+
 export const convertMessagesToResponsesInput: Converter<
   { messages: BaseMessage[]; zdrEnabled: boolean; model: string },
   ResponsesInputItem[]
@@ -1500,6 +1530,18 @@ export const convertMessagesToResponsesInput: Converter<
         | Record<string, unknown>
         | undefined;
       if (responseMetadata?.output_version === "v1") {
+        // Messages assembled from standard content blocks (output_version
+        // "v1") normally rebuild their input items from those blocks. When
+        // the original Responses API output items were preserved in
+        // response metadata, replaying them verbatim keeps reasoning items,
+        // function call item IDs and their canonical ordering intact - the
+        // same fast path used for non-streamed responses below.
+        const output = getPreservedResponsesOutput(lcMsg);
+        if (output != null) {
+          return zdrEnabled
+            ? toResponseInputItems(output)
+            : (output as ResponsesInputItem[]);
+        }
         return convertStandardContentMessageToResponsesInput(lcMsg);
       }
       assertAdditionalToolsPlacement(lcMsg, "responses");
