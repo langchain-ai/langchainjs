@@ -18,7 +18,6 @@
     "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
-    "precommit": "turbo precommit",
     "prerelease": "BUILD_MODE=prerelease pnpm build",
     "release": "changeset publish",
     "test": "pnpm test:unit && pnpm test:exports:docker",
