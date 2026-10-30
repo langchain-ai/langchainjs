@@ -1004,4 +1004,199 @@ describe("PGVectorStore", () => {
       ).toBe(true);
     });
   });
+
+  describe("hybridSearchWithScore", () => {
+    test("runs both branches and RRF fusion in a single query", async () => {
+      const pool = createMockPool();
+      pool.query.mockResolvedValue({
+        rows: [
+          {
+            id: "uuid-1",
+            text: "hello world",
+            metadata: { key: "value" },
+            embedding: "[0.1,0.2,0.3,0.4]",
+            _score: 0.032,
+          },
+        ],
+      });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      const results = await store.hybridSearchWithScore("hello", 5);
+
+      expect(pool.query).toHaveBeenCalledTimes(1);
+      const [sql, params] = pool.query.mock.calls[0];
+      expect(sql).toContain('WITH "vector_ranks"');
+      expect(sql).toContain('"fulltext_ranks"');
+      expect(sql).toContain("websearch_to_tsquery('english', $2)");
+      expect(sql).toContain("to_tsvector('english', \"text\")");
+      expect(sql).toContain("FULL OUTER JOIN");
+      // [embedding, query, vectorWeight, fullTextWeight, rrfK, fetchK, k]
+      expect(params).toEqual(["[0.1,0.2,0.3,0.4]", "hello", 1, 1, 60, 20, 5]);
+
+      expect(results).toHaveLength(1);
+      expect(results[0][0].pageContent).toBe("hello world");
+      expect(results[0][0].metadata).toEqual({ key: "value" });
+      expect(results[0][0].id).toBe("uuid-1");
+      expect(results[0][1]).toBe(0.032);
+    });
+
+    test("passes custom weights, rrfK, fetchK, and text search config", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.hybridSearchWithScore("hello", 3, {
+        vectorWeight: 0.7,
+        fullTextWeight: 0.3,
+        rrfK: 10,
+        fetchK: 50,
+        textSearchConfig: "simple",
+      });
+
+      const [sql, params] = pool.query.mock.calls[0];
+      expect(sql).toContain("websearch_to_tsquery('simple', $2)");
+      expect(sql).toContain("to_tsvector('simple', \"text\")");
+      expect(params).toEqual([
+        "[0.1,0.2,0.3,0.4]",
+        "hello",
+        0.7,
+        0.3,
+        10,
+        50,
+        3,
+      ]);
+    });
+
+    test("applies metadata filter to both branches", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.hybridSearchWithScore("hello", 5, {
+        filter: { category: "test" },
+      });
+
+      const [sql, params] = pool.query.mock.calls[0];
+      const filterOccurrences = sql.split("metadata ->> $").length - 1;
+      expect(filterOccurrences).toBe(2);
+      expect(params).toContain("test");
+      expect(params).toContain("category");
+    });
+
+    test("scopes both branches to the collection when configured", async () => {
+      const pool = createMockPool();
+      // getOrCreateCollection SELECT returns an existing collection id
+      pool.query.mockResolvedValueOnce({ rows: [{ uuid: "collection-1" }] });
+      pool.query.mockResolvedValue({ rows: [] });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+        collectionTableName: "collections",
+        collectionName: "test",
+      });
+
+      await store.hybridSearchWithScore("hello", 5);
+
+      const lastCall = pool.query.mock.calls[pool.query.mock.calls.length - 1];
+      const [sql, params] = lastCall;
+      const collectionOccurrences = sql.split("collection_id = $8").length - 1;
+      expect(collectionOccurrences).toBe(2);
+      expect(params).toContain("collection-1");
+    });
+
+    test("rejects an invalid text search configuration", async () => {
+      const store = createStore();
+      await expect(
+        store.hybridSearchWithScore("hello", 5, {
+          textSearchConfig: "english'; DROP TABLE test_table; --",
+        })
+      ).rejects.toThrow("Invalid text search configuration");
+    });
+
+    test("returns an empty list when nothing matches", async () => {
+      const store = createStore();
+      const results = await store.hybridSearchWithScore("hello", 5);
+      expect(results).toEqual([]);
+    });
+  });
+
+  describe("hybridSearch", () => {
+    test("returns documents without scores", async () => {
+      const pool = createMockPool();
+      pool.query.mockResolvedValue({
+        rows: [
+          {
+            id: "uuid-1",
+            text: "hello world",
+            metadata: { key: "value" },
+            embedding: "[0.1,0.2,0.3,0.4]",
+            _score: 0.05,
+          },
+        ],
+      });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      const results = await store.hybridSearch("hello", 5);
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toBeInstanceOf(Document);
+      expect(results[0].pageContent).toBe("hello world");
+    });
+  });
+
+  describe("createHybridSearchIndex", () => {
+    test("creates a GIN expression index over the content column", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.createHybridSearchIndex();
+
+      const [sql] = pool.query.mock.calls[0];
+      expect(sql).toContain("CREATE INDEX IF NOT EXISTS");
+      expect(sql).toContain("USING gin");
+      expect(sql).toContain("to_tsvector('english', \"text\")");
+    });
+
+    test("honors a custom text search config and namespace", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.createHybridSearchIndex({
+        textSearchConfig: "simple",
+        namespace: "myns",
+      });
+
+      const [sql] = pool.query.mock.calls[0];
+      expect(sql).toContain("myns_test_table_text_fulltext_gin_idx");
+      expect(sql).toContain("to_tsvector('simple', \"text\")");
+    });
+
+    test("rejects an invalid text search configuration", async () => {
+      const store = createStore();
+      await expect(
+        store.createHybridSearchIndex({
+          textSearchConfig: "english); DROP TABLE test_table; --",
+        })
+      ).rejects.toThrow("Invalid text search configuration");
+    });
+  });
 });

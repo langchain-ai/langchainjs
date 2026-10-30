@@ -71,6 +71,53 @@ type Metadata = Record<string, unknown>;
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
 
 /**
+ * Options for hybrid (vector + full-text) search.
+ */
+export interface HybridSearchOptions {
+  /**
+   * Optional metadata filter applied to both the vector and full-text
+   * branches of the search.
+   */
+  filter?: MetadataFilter;
+  /**
+   * Number of candidates each branch (vector and full-text) retrieves
+   * before rank fusion.
+   * @default 20
+   */
+  fetchK?: number;
+  /**
+   * Smoothing constant used by reciprocal rank fusion. Higher values reduce
+   * the influence of top-ranked outliers.
+   * @default 60
+   */
+  rrfK?: number;
+  /**
+   * Weight applied to the vector branch's reciprocal rank contribution.
+   * @default 1
+   */
+  vectorWeight?: number;
+  /**
+   * Weight applied to the full-text branch's reciprocal rank contribution.
+   * @default 1
+   */
+  fullTextWeight?: number;
+  /**
+   * Postgres text search configuration used to parse the document text and
+   * the query (e.g. "english", "simple"). Must match the configuration used
+   * by `createHybridSearchIndex` for the index to be usable.
+   * @default "english"
+   */
+  textSearchConfig?: string;
+}
+
+/**
+ * Text search configurations are interpolated into SQL as literals (a GIN
+ * expression index is only planner-eligible when the query expression uses
+ * the same constant configuration), so restrict them to simple identifiers.
+ */
+const TEXT_SEARCH_CONFIG_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
@@ -1200,5 +1247,203 @@ export class PGVectorStore extends VectorStore {
       return docs[index][0];
     });
     return mmrDocs;
+  }
+
+  /**
+   * Hybrid search combining vector similarity with Postgres full-text search
+   * via reciprocal rank fusion (RRF).
+   *
+   * Each branch independently ranks up to `fetchK` candidates (the vector
+   * branch by the configured distance strategy, the full-text branch by
+   * `ts_rank_cd` over a `websearch_to_tsquery` match), and the fused score of
+   * a document is `vectorWeight / (rrfK + vectorRank) + fullTextWeight /
+   * (rrfK + fullTextRank)`, treating a miss in either branch as a zero
+   * contribution. Fusing ranks rather than raw scores avoids mixing
+   * incomparable scales (cosine distance vs. `ts_rank_cd`).
+   *
+   * Runs entirely in a single SQL round trip. For large tables, create a GIN
+   * index for the full-text branch with `createHybridSearchIndex` (the vector
+   * branch uses the HNSW index from `createHnswIndex` as usual).
+   *
+   * @param query Text to look up documents similar to.
+   * @param k Number of documents to return. Defaults to 4.
+   * @param options Hybrid search options (filter, weights, `fetchK`, `rrfK`,
+   *     text search configuration).
+   * @returns List of documents ranked by fused score.
+   */
+  async hybridSearch(
+    query: string,
+    k = 4,
+    options: HybridSearchOptions = {}
+  ): Promise<Document[]> {
+    const results = await this.hybridSearchWithScore(query, k, options);
+    return results.map(([doc]) => doc);
+  }
+
+  /**
+   * Hybrid search combining vector similarity with Postgres full-text search
+   * via reciprocal rank fusion. See {@link hybridSearch} for details.
+   *
+   * The returned score is the fused RRF score (higher = more relevant). It is
+   * a rank-based quantity, so `scoreNormalization` does not apply to it.
+   *
+   * @param query Text to look up documents similar to.
+   * @param k Number of documents to return. Defaults to 4.
+   * @param options Hybrid search options (filter, weights, `fetchK`, `rrfK`,
+   *     text search configuration).
+   * @returns Promise that resolves with an array of tuples, each containing a
+   *     `Document` and its fused RRF score.
+   */
+  async hybridSearchWithScore(
+    query: string,
+    k = 4,
+    options: HybridSearchOptions = {}
+  ): Promise<[Document, number][]> {
+    const {
+      filter,
+      fetchK = 20,
+      rrfK = 60,
+      vectorWeight = 1,
+      fullTextWeight = 1,
+      textSearchConfig = "english",
+    } = options;
+
+    if (!TEXT_SEARCH_CONFIG_REGEX.test(textSearchConfig)) {
+      throw new Error(
+        `Invalid text search configuration: "${textSearchConfig}". Expected a simple identifier such as "english" or "simple".`
+      );
+    }
+
+    const embedding = await this.embeddings.embedQuery(query);
+    const embeddingString = `[${embedding.join(",")}]`;
+    const _filter: this["FilterType"] = filter ?? {};
+
+    let collectionId;
+    if (this.collectionTableName) {
+      collectionId = await this.getOrCreateCollection();
+    }
+
+    const baseParameters: unknown[] = [
+      embeddingString,
+      query,
+      vectorWeight,
+      fullTextWeight,
+      rrfK,
+      fetchK,
+      k,
+    ];
+    const baseClauses: string[] = [];
+    let paramOffset = 7;
+
+    if (collectionId) {
+      paramOffset = 8;
+      baseParameters.push(collectionId);
+      baseClauses.push("collection_id = $8");
+    }
+
+    const { whereClauses, parameters } = this.buildFilterClauses(
+      _filter,
+      paramOffset
+    );
+
+    const allParameters = [...baseParameters, ...parameters];
+    // Both branches see the same collection and filter clauses; the full-text
+    // branch additionally requires a text match. Placeholders can be shared
+    // because both clause lists bind against the same parameter array.
+    const sharedClauses = [...baseClauses, ...whereClauses];
+    const tsVector = `to_tsvector('${textSearchConfig}', "${this.contentColumnName}")`;
+    const tsQuery = `websearch_to_tsquery('${textSearchConfig}', $2)`;
+    const fullTextClauses = [`${tsVector} @@ ${tsQuery}`, ...sharedClauses];
+
+    const vectorWhereClause = sharedClauses.length
+      ? `WHERE ${sharedClauses.join(" AND ")}`
+      : "";
+    const fullTextWhereClause = `WHERE ${fullTextClauses.join(" AND ")}`;
+
+    const queryString = `
+      WITH "vector_ranks" AS (
+        SELECT "${this.idColumnName}" AS "_id",
+          RANK() OVER (ORDER BY "${this.vectorColumnName}" ${this.computedOperatorString} $1) AS "_rank"
+        FROM ${this.computedTableName}
+        ${vectorWhereClause}
+        ORDER BY "_rank" ASC
+        LIMIT $6
+      ),
+      "fulltext_ranks" AS (
+        SELECT "${this.idColumnName}" AS "_id",
+          RANK() OVER (ORDER BY ts_rank_cd(${tsVector}, ${tsQuery}) DESC) AS "_rank"
+        FROM ${this.computedTableName}
+        ${fullTextWhereClause}
+        ORDER BY "_rank" ASC
+        LIMIT $6
+      )
+      SELECT "t".*,
+        COALESCE($3::float8 / ($5::float8 + "vector_ranks"."_rank"), 0) +
+        COALESCE($4::float8 / ($5::float8 + "fulltext_ranks"."_rank"), 0) AS "_score"
+      FROM "vector_ranks"
+      FULL OUTER JOIN "fulltext_ranks"
+        ON "vector_ranks"."_id" = "fulltext_ranks"."_id"
+      JOIN ${this.computedTableName} "t"
+        ON "t"."${this.idColumnName}" = COALESCE("vector_ranks"."_id", "fulltext_ranks"."_id")
+      ORDER BY "_score" DESC
+      LIMIT $7;
+      `;
+
+    const documents = (await this.pool.query(queryString, allParameters)).rows;
+
+    const results = [] as [Document, number][];
+    for (const doc of documents) {
+      if (doc._score != null && doc[this.contentColumnName] != null) {
+        const document = new Document({
+          pageContent: doc[this.contentColumnName],
+          metadata: doc[this.metadataColumnName],
+          id: doc[this.idColumnName],
+        });
+        results.push([document, Number(doc._score)]);
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Method to create a GIN index for the full-text branch of
+   * {@link hybridSearch}. The index is built over the same
+   * `to_tsvector(<config>, <content column>)` expression the search uses, so
+   * it applies to existing tables without schema changes — but it is only
+   * usable when searches run with the same `textSearchConfig`.
+   *
+   * @param config.textSearchConfig - Postgres text search configuration to index with. Must match the `textSearchConfig` passed to `hybridSearch`. Defaults to "english".
+   * @param config.namespace - The namespace is used to create the index with a specific name. This is useful when you want to create multiple indexes on the same database schema (within the same schema in PostgreSQL, the index name must be unique across all tables).
+   * @returns Promise that resolves with the query response of creating the index.
+   */
+  async createHybridSearchIndex(
+    config: {
+      textSearchConfig?: string;
+      namespace?: string;
+    } = {}
+  ): Promise<void> {
+    const textSearchConfig = config.textSearchConfig ?? "english";
+    if (!TEXT_SEARCH_CONFIG_REGEX.test(textSearchConfig)) {
+      throw new Error(
+        `Invalid text search configuration: "${textSearchConfig}". Expected a simple identifier such as "english" or "simple".`
+      );
+    }
+    const prefix = config.namespace ? `${config.namespace}_` : "";
+
+    // Index names are schema-global in Postgres, so include the table name in
+    // the default to keep stores on different tables from colliding (the
+    // CREATE INDEX IF NOT EXISTS would otherwise silently no-op).
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${prefix}${this.tableName}_${
+      this.contentColumnName
+    }_fulltext_gin_idx
+        ON ${this.computedTableName} USING gin (to_tsvector('${textSearchConfig}', "${this.contentColumnName}"));`;
+
+    try {
+      await this.pool.query(createIndexQuery);
+    } catch (e) {
+      console.error(
+        `Failed to create full-text GIN index on table ${this.computedTableName}, error: ${e}`
+      );
+    }
   }
 }
