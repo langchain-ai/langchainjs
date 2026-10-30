@@ -117,7 +117,7 @@ test("Escaped variables", async () => {
 
 test("Rejects deeply nested mustache sections", () => {
   const depth = MAX_PROMPT_TEMPLATE_DEPTH + 1;
-  const template = "{{#dos}}".repeat(depth) + "x" + "{{/dos}}".repeat(depth);
+  const template = `${"{{#dos}}".repeat(depth)}x${"{{/dos}}".repeat(depth)}`;
 
   try {
     PromptTemplate.fromTemplate(template, {
