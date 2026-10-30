@@ -473,7 +473,16 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     if (!content.text) {
       return undefined;
     }
-    return { type: "text", text: content.text };
+    return {
+      type: "text",
+      text: content.text,
+      ...("cache_control" in content
+        ? {
+            cache_control:
+              content.cache_control as AnthropicCacheControl | null,
+          }
+        : {}),
+    };
   }
 
   function extractMimeType(
@@ -563,10 +572,10 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return redactedThinkingContentToAnthropicContent(
           content as Record<string, unknown>
         );
+      case "tool_call":
+      case "input_json_delta":
+        return undefined;
       default:
-        if (type === "tool_call") {
-          return undefined;
-        }
         console.warn(`Unexpected content type: ${type}`, content);
         return undefined;
     }
@@ -851,6 +860,14 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     const ret = baseRoleToAnthropicMessage(base, "assistant");
 
     const content = ret.content as AnthropicMessageContent[];
+    for (const block of content) {
+      if (block.type === "tool_use") {
+        const toolCall = base.tool_calls?.find((call) => call.id === block.id);
+        if (toolCall) {
+          block.input = toolCall.args;
+        }
+      }
+    }
     const existingToolUseIds = new Set(
       content
         .filter(
@@ -962,7 +979,25 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return ret;
   }
 
-  function formatSystem(input: BaseMessage[]): string {
+  function formatSystem(
+    input: BaseMessage[]
+  ): string | AnthropicMessageContentText[] {
+    const blocks = input
+      .filter((message) => message._getType() === "system")
+      .flatMap((message) =>
+        contentToAnthropicContent(
+          typeof message.content === "string"
+            ? message.content
+            : message.content.filter((block) => block.type === "text")
+        )
+      )
+      .filter(
+        (block): block is AnthropicMessageContentText => block.type === "text"
+      );
+    if (blocks.some((block) => block.cache_control)) {
+      return blocks;
+    }
+
     let ret = "";
 
     input.forEach((message) => {
