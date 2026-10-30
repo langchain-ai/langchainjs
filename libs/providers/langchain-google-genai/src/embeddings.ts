@@ -26,16 +26,12 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
 
   /**
    * Type of task for which the embedding will be used
-   *
-   * Note: currently only supported by `embedding-001` model
    */
   taskType?: TaskType;
 
   /**
    * An optional title for the text. Only applicable when TaskType is
    * `RETRIEVAL_DOCUMENT`
-   *
-   * Note: currently only supported by `embedding-001` model
    */
   title?: string;
 
@@ -68,7 +64,7 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
  * ```typescript
  * const model = new GoogleGenerativeAIEmbeddings({
  *   apiKey: "<YOUR API KEY>",
- *   modelName: "embedding-001",
+ *   model: "gemini-embedding-2",
  * });
  *
  * // Embed a single query
@@ -88,9 +84,9 @@ export class GoogleGenerativeAIEmbeddings
 {
   apiKey?: string;
 
-  modelName = "embedding-001";
+  modelName = "gemini-embedding-2";
 
-  model = "embedding-001";
+  model = "gemini-embedding-2";
 
   taskType?: TaskType;
 
