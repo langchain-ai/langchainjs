@@ -411,6 +411,64 @@ describe("modelRetryMiddleware", () => {
       expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
     });
 
+    it("should retry on subclasses of a listed error type", async () => {
+      class ProviderError extends Error {}
+      class ProviderRateLimitError extends ProviderError {}
+      const model = new AlwaysFailingModel(
+        new ProviderRateLimitError("rate limited")
+      );
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 0,
+        jitter: false,
+        retryOn: [ProviderError],
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      expect(model._generate).toHaveBeenCalledTimes(3);
+    });
+
+    it("should not retry a superclass of a listed error type", async () => {
+      class ProviderError extends Error {}
+      class ProviderRateLimitError extends ProviderError {}
+      const model = new AlwaysFailingModel(new ProviderError("generic"));
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 0,
+        jitter: false,
+        retryOn: [ProviderRateLimitError],
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      expect(model._generate).toHaveBeenCalledTimes(1);
+    });
+
     it("should use custom retry function", async () => {
       class RateLimitFailureModel extends FakeToolCallingModel {
         private attempt = 0;
