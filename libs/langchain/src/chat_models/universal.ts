@@ -294,6 +294,7 @@ export function _inferModelProvider(modelName: string): string | undefined {
     modelName.startsWith("gpt-3") ||
     modelName.startsWith("gpt-4") ||
     modelName.startsWith("gpt-5") ||
+    modelName.startsWith("gpt-6") ||
     modelName.startsWith("o1") ||
     modelName.startsWith("o3") ||
     modelName.startsWith("o4")
