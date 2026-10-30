@@ -237,11 +237,19 @@ export function anthropicPromptCachingMiddleware(
        *
        * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
        */
+      const existingCacheControl =
+        request.modelSettings?.cache_control ??
+        (
+          request.model as {
+            invocationKwargs?: { cache_control?: unknown };
+          }
+        ).invocationKwargs?.cache_control;
+
       return handler({
         ...request,
         modelSettings: {
           ...request.modelSettings,
-          cache_control: {
+          cache_control: existingCacheControl ?? {
             type: "ephemeral" as const,
             ttl,
           },
