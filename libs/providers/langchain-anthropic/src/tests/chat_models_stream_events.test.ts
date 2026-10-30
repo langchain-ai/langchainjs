@@ -665,6 +665,33 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       };
       expect(start.usage).toBeUndefined();
     });
+
+    test("per-call streamUsage false wins over instance default true", async () => {
+      const model = new MockStreamChatAnthropic(cacheUsageEvents());
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: false,
+      } as ChatAnthropicCallOptions)) {
+        events.push(event);
+      }
+
+      const usageEvents = events.filter((e) => e.event === "usage");
+      expect(usageEvents.length).toBe(0);
+    });
+
+    test("per-call streamUsage true wins over instance false", async () => {
+      const model = new MockStreamChatAnthropic(cacheUsageEvents());
+      model.streamUsage = false;
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: true,
+      } as ChatAnthropicCallOptions)) {
+        events.push(event);
+      }
+
+      const usageEvents = events.filter((e) => e.event === "usage");
+      expect(usageEvents.length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   describe("provider passthrough", () => {
