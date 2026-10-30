@@ -15,9 +15,13 @@ import {
   convertReasoningEffortToReasoningTokens,
   convertReasoningTokensToReasoningEffort,
   getModelVersion,
+  getModelVersionValue,
   getModelSpecialty,
   getModelFamily,
+  speechConfigVersion,
 } from "../shared/params.js";
+
+export { speechConfigVersion };
 
 // Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".
 // TODO: Move this to model profile.
@@ -87,7 +91,7 @@ export function convertFieldsToThinkingConfig(
   if (
     thinkingLevel === "MINIMAL" &&
     getModelFamily(model) === "gemini" &&
-    Number(getModelVersion(model)) >= 3 &&
+    getModelVersionValue(model) >= 3 &&
     !supportsMinimalThinkingLevel(model)
   ) {
     thinkingLevel = "LOW";
@@ -132,11 +136,13 @@ export function convertFieldsToThinkingConfig(
  * Builds the `speechConfig` object for the Gemini `generationConfig`,
  * normalising the user-friendly simplified forms into the wire format.
  *
+ * @param model  The full Gemini model name (e.g. "gemini-2.5-flash-preview-tts").
  * @param fields The combined user/call-option fields.
  * @returns A populated {@link Gemini.SpeechConfig}, or `{}`
  *          when no speech config was provided.
  */
 export function convertFieldsToSpeechConfig(
+  model: string,
   fields: ChatGoogleFields
 ): Gemini.SpeechConfig | undefined {
   const config: Gemini.SpeechConfig | SimplifiedSpeechConfig | undefined =
@@ -182,17 +188,27 @@ export function convertFieldsToSpeechConfig(
     voice = config;
   }
 
+  const version = speechConfigVersion(model);
+
   let ret: Gemini.SpeechConfig;
 
   if (typeof voice === "string") {
     // They just provided the prebuilt voice configuration name. Use it.
-    ret = {
-      voiceConfig: {
-        prebuiltVoiceConfig: {
-          voiceName: voice,
+    if (version === 1) {
+      ret = {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: voice,
+          },
         },
-      },
-    };
+      };
+    } else {
+      ret = {
+        voiceConfig: {
+          voice,
+        },
+      };
+    }
   } else {
     // This is multi-speaker, so we have speaker/name pairs
     // If we have just one (why?), turn it into an array for the moment

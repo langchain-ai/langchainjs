@@ -222,7 +222,7 @@ export abstract class BaseChatGoogle<
     } else if (this.platform === "gai") {
       return "v1beta";
     } else {
-      return "v1";
+      return "v1beta1";
     }
   }
 
