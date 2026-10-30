@@ -14,7 +14,13 @@ import {
 } from "../index.js";
 import type { AgentBuiltInState } from "../runtime.js";
 import type { InferAgentState } from "../types.js";
-import type { InferMiddlewareType } from "../middleware/types.js";
+import type {
+  InferMiddlewareType,
+  InferMiddlewareState,
+  InferMiddlewareInputState,
+  InferMiddlewareContext,
+  InferMiddlewareContextInput,
+} from "../middleware/types.js";
 import type { InferAgentStreamTransformers } from "../types.js";
 import type { JsonSchemaFormat } from "../responses.js";
 
@@ -520,5 +526,32 @@ describe("middleware types", () => {
     expectTypeOf<AgentStreamTransformers[1]>().toEqualTypeOf<
       typeof eventCounter
     >();
+  });
+  it("should infer state and input state as empty object when middleware has no stateSchema", () => {
+    const middleware = createMiddleware({
+      name: "NoSchemaMiddleware",
+    });
+
+    type State = InferMiddlewareState<typeof middleware>;
+    expectTypeOf<State>().toEqualTypeOf<{}>();
+
+    type InputState = InferMiddlewareInputState<typeof middleware>;
+    expectTypeOf<InputState>().toEqualTypeOf<{}>();
+
+    type Context = InferMiddlewareContext<typeof middleware>;
+    expectTypeOf<Context>().toEqualTypeOf<{}>();
+
+    type ContextInput = InferMiddlewareContextInput<typeof middleware>;
+    expectTypeOf<ContextInput>().toEqualTypeOf<{}>();
+
+    const agent = createAgent({
+      model: "gpt-4",
+      tools: [],
+      middleware: [middleware],
+    });
+
+    expectTypeOf(agent.invoke).toBeCallableWith({
+      messages: [new HumanMessage("Hello, world!")],
+    });
   });
 });
