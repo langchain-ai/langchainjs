@@ -536,3 +536,32 @@ test("Test lines loc on iterative text splitter.", async () => {
 
   expect(docs).toEqual(expectedDocs);
 });
+
+test("RecursiveCharacterTextSplitter measures each split only once", async () => {
+  const measured: string[] = [];
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 20,
+    chunkOverlap: 10,
+    lengthFunction: (text: string) => {
+      measured.push(text);
+      return text.length;
+    },
+  });
+  const text =
+    "alpha bravo charlie delta echo foxtrot golf hotel india juliett kilo lima\n\nmike november oscar papa quebec romeo sierra tango";
+  const output = await splitter.splitText(text);
+
+  expect(output).toEqual([
+    "alpha bravo charlie",
+    "charlie delta echo",
+    "echo foxtrot golf",
+    "golf hotel india",
+    "india juliett kilo",
+    "kilo lima",
+    "mike november oscar",
+    "oscar papa quebec",
+    "quebec romeo sierra",
+    "sierra tango",
+  ]);
+  expect(new Set(measured).size).toBe(measured.length);
+});
