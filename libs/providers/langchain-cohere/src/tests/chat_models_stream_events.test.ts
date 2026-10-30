@@ -85,4 +85,33 @@ describe("ChatCohere.streamEvents", () => {
       total_tokens: 6,
     });
   });
+
+  describe("streamUsage call option", () => {
+    async function collectUsage(
+      model: ChatCohere,
+      streamUsage: boolean
+    ): Promise<unknown[]> {
+      const usages: unknown[] = [];
+      for await (const chunk of await model.stream("Hello", { streamUsage })) {
+        if (chunk.usage_metadata) usages.push(chunk.usage_metadata);
+      }
+      return usages;
+    }
+
+    test("call option streamUsage: false overrides the instance default", async () => {
+      const model = mockCohere(cohereUsageStream());
+      expect(model.streamUsage).toBe(true);
+
+      expect(await collectUsage(model, false)).toEqual([]);
+    });
+
+    test("call option streamUsage: true overrides an instance streamUsage of false", async () => {
+      const model = mockCohere(cohereUsageStream());
+      model.streamUsage = false;
+
+      expect(await collectUsage(model, true)).toEqual([
+        { input_tokens: 4, output_tokens: 2, total_tokens: 6 },
+      ]);
+    });
+  });
 });
