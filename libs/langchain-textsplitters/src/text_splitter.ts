@@ -770,6 +770,122 @@ export class TokenTextSplitter
   }
 }
 
+export type MarkdownHeaderTextSplitterParams = {
+  headersToSplitOn: Array<[string, string]>;
+  returnEachLine?: boolean;
+  stripHeaders?: boolean;
+  customHeaderPatterns?: Record<string, number>;
+};
+
+type MarkdownHeaderLine = { content: string; metadata: Record<string, string> };
+
+/** Splits Markdown into documents while preserving configured header metadata. */
+export class MarkdownHeaderTextSplitter {
+  private readonly headersToSplitOn: Array<[string, string]>;
+  private readonly returnEachLine: boolean;
+  private readonly stripHeaders: boolean;
+  private readonly customHeaderPatterns: Record<string, number>;
+
+  constructor(fields: MarkdownHeaderTextSplitterParams) {
+    this.headersToSplitOn = [...fields.headersToSplitOn].sort((a, b) => b[0].length - a[0].length);
+    this.returnEachLine = fields.returnEachLine ?? false;
+    this.stripHeaders = fields.stripHeaders ?? true;
+    this.customHeaderPatterns = fields.customHeaderPatterns ?? {};
+  }
+
+  private isCustomHeader(line: string, separator: string): boolean {
+    if (!(separator in this.customHeaderPatterns)) return false;
+    const escaped = separator.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = line.match(new RegExp(`^${escaped}(?!${escaped})(.+?)(?<!${escaped})${escaped}$`));
+    if (!match) return false;
+    const content = match[1].trim();
+    return content.length > 0 && ![...content.replaceAll(" ", "")].every((char) => separator.includes(char));
+  }
+
+  private aggregateLines(lines: MarkdownHeaderLine[]): Document[] {
+    const chunks: MarkdownHeaderLine[] = [];
+    for (const line of lines) {
+      const previous = chunks[chunks.length - 1];
+      if (previous && JSON.stringify(previous.metadata) === JSON.stringify(line.metadata)) {
+        previous.content += `  \n${line.content}`;
+      } else if (
+        previous && !this.stripHeaders &&
+        Object.keys(previous.metadata).length < Object.keys(line.metadata).length &&
+        previous.content.split("\n").at(-1)?.startsWith("#")
+      ) {
+        previous.content += `  \n${line.content}`;
+        previous.metadata = line.metadata;
+      } else {
+        chunks.push({ content: line.content, metadata: { ...line.metadata } });
+      }
+    }
+    return chunks.map(({ content, metadata }) => new Document({ pageContent: content, metadata }));
+  }
+
+  splitText(text: string): Document[] {
+    const linesWithMetadata: MarkdownHeaderLine[] = [];
+    const currentContent: string[] = [];
+    const currentMetadata: Record<string, string> = {};
+    const headerStack: Array<{ level: number; name: string; data: string }> = [];
+    let inCodeBlock = false;
+    let openingFence = "";
+
+    const flush = () => {
+      if (currentContent.length > 0) {
+        linesWithMetadata.push({ content: currentContent.join("\n"), metadata: { ...currentMetadata } });
+        currentContent.length = 0;
+      }
+    };
+
+    for (const rawLine of text.split("\n")) {
+      const line = [...rawLine.trim()].filter((char) => char.charCodeAt(0) >= 32 || char === "\t").join("");
+      if (!inCodeBlock) {
+        if (line.startsWith("```") && line.match(/```/g)?.length === 1) {
+          inCodeBlock = true;
+          openingFence = "```";
+        } else if (line.startsWith("~~~")) {
+          inCodeBlock = true;
+          openingFence = "~~~";
+        }
+      } else if (line.startsWith(openingFence)) {
+        inCodeBlock = false;
+        openingFence = "";
+      }
+      if (inCodeBlock) {
+        currentContent.push(line);
+        continue;
+      }
+
+      let matchedHeader = false;
+      for (const [separator, name] of this.headersToSplitOn) {
+        const standard = line.startsWith(separator) &&
+          (line.length === separator.length || line[separator.length] === " ");
+        const custom = this.isCustomHeader(line, separator);
+        if (!standard && !custom) continue;
+        matchedHeader = true;
+        flush();
+        const level = this.customHeaderPatterns[separator] ?? [...separator].filter((char) => char === "#").length;
+        while (headerStack.length && headerStack.at(-1)!.level >= level) {
+          delete currentMetadata[headerStack.pop()!.name];
+        }
+        const headerText = custom ? line.slice(separator.length, -separator.length).trim() : line.slice(separator.length).trim();
+        headerStack.push({ level, name, data: headerText });
+        currentMetadata[name] = headerText;
+        if (!this.stripHeaders) currentContent.push(line);
+        break;
+      }
+      if (matchedHeader) continue;
+      if (line.length > 0) currentContent.push(line);
+      else flush();
+    }
+    flush();
+    if (this.returnEachLine) {
+      return linesWithMetadata.map(({ content, metadata }) => new Document({ pageContent: content, metadata }));
+    }
+    return this.aggregateLines(linesWithMetadata);
+  }
+}
+
 export type MarkdownTextSplitterParams = TextSplitterParams;
 
 export class MarkdownTextSplitter
