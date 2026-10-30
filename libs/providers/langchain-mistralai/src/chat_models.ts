@@ -346,7 +346,6 @@ export function convertMessagesToMistralMessages(
           ),
         } as MistralAIMessage,
       ];
-      // Mistral "assistant" role can only support either content or tool calls but not both
     } else if (AIMessage.isInstance(message)) {
       if (toolCalls === undefined) {
         return [
@@ -380,9 +379,15 @@ export function convertMessagesToMistralMessages(
           ];
         }
 
+        // Keep the assistant's text alongside its tool calls, as in Mistral's
+        // function-calling docs, unless it is empty.
+        const hasContent =
+          (typeof content === "string" && content.trim() !== "") ||
+          (Array.isArray(content) && content.length > 0);
         return [
           {
             role: getRole(message.getType()),
+            ...(hasContent ? { content } : {}),
             toolCalls: filteredToolCalls as MistralAIToolCall[],
           } as MistralAIMessage,
         ];
