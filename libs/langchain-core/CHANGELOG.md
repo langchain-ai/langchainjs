@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.3.2
+
+### Patch Changes
+
+- [#12051](https://github.com/langchain-ai/langchainjs/pull/12051) [`71fd01a`](https://github.com/langchain-ai/langchainjs/commit/71fd01ab6edb530a3d52cebcfc191674c10138d2) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add `addNotificationMetadata`, `getNotificationMetadata` and the `NotificationMetadata` type for marking messages the agent harness adds.
+
 ## 1.3.1
 
 ### Patch Changes
