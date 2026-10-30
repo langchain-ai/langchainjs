@@ -2715,6 +2715,70 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(modelPart.thoughtSignature).toEqual("decafe42");
   });
 
+  test("5-2. Functions - parallel function replies are named after their calls", async () => {
+    const toolCalls = [
+      { id: "call_a", name: "get_weather", args: { city: "Paris" } },
+      { id: "call_b", name: "get_time", args: { tz: "CET" } },
+    ];
+
+    async function sentFunctionResponses(
+      toolMessages: ToolMessage[]
+    ): Promise<{ name: string; content: unknown }[]> {
+      const record: Record<string, any> = {};
+      const model = new ChatGoogle({
+        authOptions: {
+          record,
+          projectId: mockId(),
+          resultFile: "chat-1-mock.json",
+        },
+      });
+      await model.invoke([
+        new HumanMessage("What is the weather and the time in Paris?"),
+        new AIMessage({ content: "", tool_calls: toolCalls }),
+        ...toolMessages,
+      ]);
+
+      const contents: any[] = record?.opts?.data?.contents ?? [];
+      return contents
+        .flatMap((content) => content.parts)
+        .filter((part) => part.functionResponse !== undefined)
+        .map((part) => ({
+          name: part.functionResponse.name,
+          content: part.functionResponse.response.content,
+        }));
+    }
+
+    // Results in the order of the calls, ToolMessages without a name
+    expect(
+      await sentFunctionResponses([
+        new ToolMessage({ tool_call_id: "call_a", content: "18C" }),
+        new ToolMessage({ tool_call_id: "call_b", content: "10:00" }),
+      ])
+    ).toEqual([
+      { name: "get_weather", content: "18C" },
+      { name: "get_time", content: "10:00" },
+    ]);
+
+    // Results in a different order than the calls, ToolMessages with a name
+    expect(
+      await sentFunctionResponses([
+        new ToolMessage({
+          tool_call_id: "call_b",
+          name: "get_time",
+          content: "10:00",
+        }),
+        new ToolMessage({
+          tool_call_id: "call_a",
+          name: "get_weather",
+          content: "18C",
+        }),
+      ])
+    ).toEqual([
+      { name: "get_time", content: "10:00" },
+      { name: "get_weather", content: "18C" },
+    ]);
+  });
+
   test("6. GoogleSearchRetrievalTool result", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
