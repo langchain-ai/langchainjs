@@ -87,6 +87,49 @@ describe("ChatOllama.streamEvents", () => {
     ]);
   });
 
+  test.each(["together", "separate", "mixed"])(
+    "streams every tool call through the SDK (%s chunks)",
+    async (grouping) => {
+      const calls = [
+        { function: { name: "get_weather", arguments: { city: "Paris" } } },
+        { function: { name: "get_weather", arguments: { city: "Tokyo" } } },
+        { function: { name: "get_time", arguments: { city: "Tokyo" } } },
+      ];
+      const groups =
+        grouping === "together"
+          ? [calls]
+          : grouping === "separate"
+            ? calls.map((call) => [call])
+            : [calls.slice(0, 2), calls.slice(2)];
+      const chunks = [
+        ...groups.map((tool_calls) => ({
+          message: { role: "assistant", content: "", tool_calls },
+          done: false,
+        })),
+        { message: { role: "assistant", content: "" }, done: true },
+      ];
+      const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+        new Response(
+          `${chunks.map((chunk) => JSON.stringify(chunk)).join("\n")}\n`,
+          {
+            headers: { "Content-Type": "application/x-ndjson" },
+          }
+        )
+      );
+      const model = new ChatOllama({ model: "llama3", fetch });
+
+      await expect(
+        model.streamEvents("Check both cities")
+      ).toHaveStreamToolCalls(
+        calls.map((call) => ({
+          name: call.function.name,
+          args: call.function.arguments,
+        }))
+      );
+      expect(fetch).toHaveBeenCalledOnce();
+    }
+  );
+
   test("streams usage", async () => {
     await expect(
       mockOllama(ollamaUsageChunks()).streamEvents("Hello")

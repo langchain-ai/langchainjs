@@ -47,6 +47,7 @@ export async function* convertOllamaStream(
   >();
   const blockKeyToIndex = new Map<BlockKey, number>();
   let nextBlockIndex = 0;
+  let nextToolCallIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
@@ -140,7 +141,8 @@ export async function* convertOllamaStream(
     if (message.tool_calls?.length) {
       for (let i = 0; i < message.tool_calls.length; i++) {
         const tc = message.tool_calls[i]!;
-        const key: BlockKey = `tool:${i}`;
+        const toolCallIndex = nextToolCallIndex++;
+        const key: BlockKey = `tool:${toolCallIndex}`;
         const args =
           typeof tc.function.arguments === "string"
             ? tc.function.arguments
@@ -149,7 +151,7 @@ export async function* convertOllamaStream(
           type: "tool_call_chunk",
           name: tc.function.name,
           args: "",
-          index: i,
+          index: toolCallIndex,
         });
         if (isNew) {
           yield {
@@ -159,7 +161,7 @@ export async function* convertOllamaStream(
               type: "tool_call_chunk",
               name: tc.function.name,
               args: "",
-              index: i,
+              index: toolCallIndex,
             } as ContentBlock,
           };
         }
