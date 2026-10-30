@@ -66,12 +66,6 @@ test("Constructor supports string model shorthand", () => {
   expect(shorthand.temperature).toBe(explicit.temperature);
 });
 
-/**
- * Test to make sure that the logic in convertMessagesToMistralMessages that makes sure
- * tool calls are only included if there is a corresponding ToolMessage works as expected
- *
- * Or else the Mistral API will reject the request
- */
 test("convertMessagesToMistralMessages keeps assistant content alongside tool calls", () => {
   const converted = convertMessagesToMistralMessages([
     new HumanMessage("What is 2 + 2?"),
@@ -87,6 +81,12 @@ test("convertMessagesToMistralMessages keeps assistant content alongside tool ca
   expect(converted[1].toolCalls).toHaveLength(1);
 });
 
+/**
+ * Test to make sure that the logic in convertMessagesToMistralMessages that makes sure
+ * tool calls are only included if there is a corresponding ToolMessage works as expected
+ *
+ * Or else the Mistral API will reject the request
+ */
 test("convertMessagesToMistralMessages converts roles and filters toolCalls", () => {
   const msgs = [
     new HumanMessage("hi"),

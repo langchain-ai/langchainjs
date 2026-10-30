@@ -362,11 +362,12 @@ export function convertMessagesToMistralMessages(
           )
         );
 
+        const isEmptyContent =
+          (typeof content === "string" && content.trim() === "") ||
+          (Array.isArray(content) && content.length === 0);
+
         if (filteredToolCalls.length === 0) {
           // If there are no matching tool responses, and there's no content, drop this message
-          const isEmptyContent =
-            (typeof content === "string" && content.trim() === "") ||
-            (Array.isArray(content) && content.length === 0);
           if (isEmptyContent) {
             return [];
           }
@@ -381,13 +382,10 @@ export function convertMessagesToMistralMessages(
 
         // Keep the assistant's text alongside its tool calls, as in Mistral's
         // function-calling docs, unless it is empty.
-        const hasContent =
-          (typeof content === "string" && content.trim() !== "") ||
-          (Array.isArray(content) && content.length > 0);
         return [
           {
             role: getRole(message.getType()),
-            ...(hasContent ? { content } : {}),
+            ...(!isEmptyContent ? { content } : {}),
             toolCalls: filteredToolCalls as MistralAIToolCall[],
           } as MistralAIMessage,
         ];
