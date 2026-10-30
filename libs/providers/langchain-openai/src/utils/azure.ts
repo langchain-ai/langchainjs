@@ -33,9 +33,10 @@ export interface OpenAIEndpointConfig {
  *
  * @throws Will throw an error if the necessary parameters for generating the URL are missing.
  *
+ * @param api Responses uses the resource endpoint; explicit legacy base paths are preserved.
  * @returns {string | undefined} The generated (Azure) OpenAI endpoint URL.
  */
-export function getEndpoint(config: OpenAIEndpointConfig) {
+export function getEndpoint(config: OpenAIEndpointConfig, api?: "responses") {
   const {
     azureOpenAIApiDeploymentName,
     azureOpenAIApiInstanceName,
@@ -58,6 +59,9 @@ export function getEndpoint(config: OpenAIEndpointConfig) {
     azureOpenAIEndpoint &&
     azureOpenAIApiDeploymentName
   ) {
+    if (api === "responses") {
+      return `${azureOpenAIEndpoint.replace(/\/+$/, "")}/openai`;
+    }
     return `${azureOpenAIEndpoint}/openai/deployments/${azureOpenAIApiDeploymentName}`;
   }
 
@@ -71,6 +75,9 @@ export function getEndpoint(config: OpenAIEndpointConfig) {
       throw new Error(
         "azureOpenAIApiDeploymentName is a required parameter when using azureOpenAIApiKey"
       );
+    }
+    if (api === "responses") {
+      return `https://${azureOpenAIApiInstanceName}.openai.azure.com/openai`;
     }
     return `https://${azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${azureOpenAIApiDeploymentName}`;
   }
