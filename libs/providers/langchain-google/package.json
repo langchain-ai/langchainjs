@@ -27,7 +27,9 @@
     "typegen:sparktype": "sparktype generate",
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
     "typegen:check": "sparktype check",
-    "typegen:fetch": "curl -o src/openapi/generate-content-openapi.json 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta'"
+    "typegen:fetch": "pnpm run typegen:fetch:genContent && pnpm run typegen:fetch:interactions",
+    "typegen:fetch:genContent": "curl -o - 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta' | jq -S . > src/openapi/generate-content-openapi.json",
+    "typegen:fetch:interactions": "curl -o - 'https://ai.google.dev/static/api/interactions.openapi.json' | jq -S . > src/openapi/interactions-openapi.json"
   },
   "dependencies": {
     "eventsource-parser": "^4.1.1",
