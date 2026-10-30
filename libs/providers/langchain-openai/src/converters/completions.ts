@@ -35,9 +35,13 @@ import type {
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import {
+  applyPromptCacheBreakpoint,
+  assertAdditionalToolsPlacement,
   getRequiredFilenameFromMetadata,
   isReasoningModel,
+  liftExtrasPromptCacheBreakpoint,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 
 /**
@@ -300,11 +304,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
+        usage: { ...rawResponse.usage },
         ...(rawResponse.system_fingerprint
-          ? {
-              usage: { ...rawResponse.usage },
-              system_fingerprint: rawResponse.system_fingerprint,
-            }
+          ? { system_fingerprint: rawResponse.system_fingerprint }
           : {}),
       };
 
@@ -645,6 +647,7 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   { message: BaseMessage; model?: string },
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam
 > = ({ message, model }) => {
+  assertAdditionalToolsPlacement(message, "chat/completions");
   let role = messageToOpenAIRole(message);
   if (role === "system" && isReasoningModel(model)) {
     role = "developer";
@@ -652,18 +655,25 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   if (role === "developer") {
     return {
       role: "developer",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "system") {
     return {
       role: "system",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "assistant") {
+    const textContent = message.contentBlocks
+      .filter((block) => block.type === "text")
+      .map(liftExtrasPromptCacheBreakpoint);
     const completionParam: OpenAIClient.Chat.Completions.ChatCompletionAssistantMessageParam =
       {
         role: "assistant",
-        content: message.contentBlocks.filter((block) => block.type === "text"),
+        content: textContent,
       };
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
@@ -673,12 +683,26 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       completionParam.tool_calls = message.additional_kwargs
         .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
     }
+    // The OpenAI Chat Completions API rejects an assistant message whose
+    // `content` is an empty array ("empty array. Expected an array with minimum
+    // length 1"). A tool-call-only AIMessage (all content blocks are tool_call
+    // blocks, so the text filter yields []) must therefore send `content: null`
+    // instead of `[]`; tool_calls carry the payload.
+    if (
+      Array.isArray(completionParam.content) &&
+      completionParam.content.length === 0 &&
+      completionParam.tool_calls != null
+    ) {
+      completionParam.content = null;
+    }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
       tool_call_id: message.tool_call_id,
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "function") {
     return {
@@ -693,14 +717,14 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   function* iterateUserContent(blocks: ContentBlock.Standard[]) {
     for (const block of blocks) {
       if (block.type === "text") {
-        yield {
+        yield applyPromptCacheBreakpoint(block, {
           type: "text" as const,
           text: block.text,
-        };
+        });
       }
       const data = convertStandardContentBlockToCompletionsContentPart(block);
       if (data) {
-        yield data;
+        yield applyPromptCacheBreakpoint(block, data);
       }
     }
   }
@@ -792,6 +816,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     ) {
       return convertStandardContentMessageToCompletionsMessage({ message });
     }
+    assertAdditionalToolsPlacement(message, "chat/completions");
     let role = messageToOpenAIRole(message);
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
@@ -800,21 +825,40 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     const content =
       typeof message.content === "string"
         ? message.content
-        : message.content.flatMap((m) => {
+        : message.content.flatMap((block) => {
+            const m = unwrapNonStandard(block);
             if (isDataContentBlock(m)) {
-              return convertToProviderContentBlock(
+              return applyPromptCacheBreakpoint(
                 m,
-                completionsApiContentBlockConverter
+                convertToProviderContentBlock(
+                  m,
+                  completionsApiContentBlockConverter
+                )
               );
             }
-            // Drop Anthropic tool_use blocks from content — these are
-            // already represented in message.tool_calls and would cause
-            // an API error if passed through to OpenAI.
+            if (m.type === "text") {
+              return liftExtrasPromptCacheBreakpoint(m);
+            }
+            // Drop content blocks the Chat Completions API rejects as input:
+            //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
+            //    `functionCall`) are already carried in message.tool_calls,
+            //    so resending them as content would be a duplicate/invalid
+            //    part.
+            //  - Reasoning traces (`reasoning`, `reasoning_content`,
+            //    `thinking`) are output-only.
+            // Echoing any of these back in the request history is rejected by
+            // strict openai-compatible providers, e.g. DeepSeek:
+            // "unknown variant `reasoning`, expected `text`".
             if (
               typeof m === "object" &&
               m !== null &&
               "type" in m &&
-              m.type === "tool_use"
+              (m.type === "tool_use" ||
+                m.type === "tool_call" ||
+                m.type === "functionCall" ||
+                m.type === "reasoning" ||
+                m.type === "reasoning_content" ||
+                m.type === "thinking")
             ) {
               return [];
             }

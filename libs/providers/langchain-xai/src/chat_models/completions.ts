@@ -876,4 +876,8 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   get profile(): ModelProfile {
     return PROFILES[this.model] ?? {};
   }
+
+  protected override get streamEventProvider(): string {
+    return "xai";
+  }
 }

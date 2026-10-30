@@ -69,9 +69,18 @@ export {
   type ToolRetryMiddlewareConfig,
 } from "./toolRetry.js";
 export {
+  toolErrorMiddleware,
+  type ToolErrorHandler,
+  type ToolErrorMiddlewareConfig,
+} from "./toolError.js";
+export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export {
+  providerToolSearchMiddleware,
+  type ProviderToolSearchMiddlewareConfig,
+} from "./providerToolSearch.js";
 
 /**
  * Provider specific middleware
@@ -84,9 +93,24 @@ export {
   anthropicPromptCachingMiddleware,
   type PromptCachingMiddlewareConfig,
 } from "./provider/anthropic/promptCaching.js";
+export {
+  bedrockPromptCachingMiddleware,
+  type BedrockConversePromptCachingMiddlewareConfig,
+} from "./provider/aws/promptCaching.js";
 
 /**
  * Types and utilities
  */
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
+
+export {
+  openAIAutoModeMiddleware,
+  type OpenAIAutoModeMiddlewareOptions,
+} from "./provider/openai/autoMode.js";
+export {
+  openAIModelRouterMiddleware,
+  type OpenAIModelRouterMiddlewareOptions,
+  type ModelChoice,
+} from "./provider/openai/modelRouter.js";
+export { type OpenAIDecisionsLike } from "./provider/openai/decisions.js";

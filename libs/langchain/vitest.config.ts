@@ -1,20 +1,20 @@
 import {
   configDefaults,
   defineConfig,
-  type UserConfigExport,
+  type ViteUserConfigExport,
 } from "vitest/config";
 import pkg from "./package.json" with { type: "json" };
 
 const define = { __PKG_VERSION__: JSON.stringify(pkg.version) };
 
 export default defineConfig((env) => {
-  const common: UserConfigExport = {
+  const common: ViteUserConfigExport = {
     test: {
       environment: "node",
       hideSkippedTests: true,
       globals: true,
       testTimeout: 30_000,
-      maxWorkers: 0.5,
+      maxWorkers: "50%",
       exclude: [
         "**/*.int.test.ts",
         "**/*.bench.test.ts",
@@ -35,7 +35,7 @@ export default defineConfig((env) => {
         include: ["**/*.int.test.ts"],
         name: "int",
       },
-    } satisfies UserConfigExport;
+    } satisfies ViteUserConfigExport;
   }
 
   if (env.mode === "bench") {
@@ -50,7 +50,7 @@ export default defineConfig((env) => {
         name: "bench",
         environment: "node",
       },
-    } satisfies UserConfigExport;
+    } satisfies ViteUserConfigExport;
   }
 
   return {
@@ -60,5 +60,5 @@ export default defineConfig((env) => {
       include: configDefaults.include,
       typecheck: { enabled: true },
     },
-  } satisfies UserConfigExport;
+  } satisfies ViteUserConfigExport;
 });

@@ -2,11 +2,12 @@
  * Tests for ToolRetryMiddleware functionality.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
+import { Command, interrupt } from "@langchain/langgraph";
 import { performance } from "node:perf_hooks";
 
 import { createAgent, createMiddleware } from "../../index.js";
@@ -425,6 +426,72 @@ describe("toolRetryMiddleware", () => {
       // Should succeed on 3rd attempt
       expect(toolMessages[0].content).toContain("Success after 3 attempts");
       expect(toolMessages[0].status).not.toBe("error");
+    });
+  });
+
+  describe("Graph control flow", () => {
+    it("bubbles graph interrupts without retrying or handling them", async () => {
+      let completedToolCalls = 0;
+      const retryOn = vi.fn(() => true);
+      const onFailure = vi.fn(() => "must not handle graph control flow");
+      const interruptTool = tool(
+        async () => {
+          const approval = interrupt<{ action: string }, string>({
+            action: "approve",
+          });
+          completedToolCalls += 1;
+          return `Approved: ${approval}`;
+        },
+        {
+          name: "interrupt_tool",
+          description: "Tool that pauses for approval",
+          schema: z.object({}),
+        }
+      );
+      const agent = createAgent({
+        model: new FakeToolCallingModel({
+          toolCalls: [[{ name: "interrupt_tool", args: {}, id: "call_1" }], []],
+        }),
+        tools: [interruptTool],
+        middleware: [
+          toolRetryMiddleware({
+            maxRetries: 2,
+            initialDelayMs: 0,
+            jitter: false,
+            retryOn,
+            onFailure,
+          }),
+        ] as const,
+        checkpointer: new MemorySaver(),
+      });
+      const config = {
+        configurable: { thread_id: "tool-retry-graph-interrupt" },
+      };
+
+      const interrupted = await agent.invoke(
+        { messages: [new HumanMessage("Use the interrupt tool")] },
+        config
+      );
+
+      expect(interrupted.__interrupt__).toHaveLength(1);
+      expect(interrupted.__interrupt__?.[0].value).toEqual({
+        action: "approve",
+      });
+      expect(completedToolCalls).toBe(0);
+      expect(retryOn).not.toHaveBeenCalled();
+      expect(onFailure).not.toHaveBeenCalled();
+
+      const resumed = await agent.invoke(
+        new Command({ resume: "approved" }),
+        config
+      );
+      const toolMessages = resumed.messages.filter(ToolMessage.isInstance);
+
+      expect(toolMessages).toHaveLength(1);
+      expect(toolMessages[0].content).toBe("Approved: approved");
+      expect(completedToolCalls).toBe(1);
+      expect(retryOn).not.toHaveBeenCalled();
+      expect(onFailure).not.toHaveBeenCalled();
     });
   });
 
@@ -973,5 +1040,32 @@ describe("toolRetryMiddleware", () => {
       expect(toolMessages).toHaveLength(1);
       expect(toolMessages[0].content).toContain("Success: test");
     });
+  });
+});
+
+describe("calculateRetryDelay retryAfterMs floor", () => {
+  const config = {
+    backoffFactor: 2.0,
+    initialDelayMs: 100,
+    maxDelayMs: 60000,
+    jitter: false,
+  };
+
+  it("raises the delay to the hint when the hint is larger", () => {
+    expect(calculateRetryDelay(config, 0, 5000)).toBe(5000);
+  });
+
+  it("keeps the backoff when it already exceeds the hint", () => {
+    expect(calculateRetryDelay(config, 0, 50)).toBe(100);
+  });
+
+  it("ignores maxDelayMs for the hint", () => {
+    expect(calculateRetryDelay({ ...config, maxDelayMs: 200 }, 0, 9000)).toBe(
+      9000
+    );
+  });
+
+  it("is unchanged when no hint is given", () => {
+    expect(calculateRetryDelay(config, 0)).toBe(100);
   });
 });

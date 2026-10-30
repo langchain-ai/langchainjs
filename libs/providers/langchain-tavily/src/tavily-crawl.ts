@@ -264,7 +264,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
   override description: string =
     "A powerful web crawler that initiates a structured web crawl starting from a specified " +
-    "base URL. The crawler uses a BFS Depth: refering to the number of link hops from the root URL. " +
+    "base URL. The crawler uses a BFS Depth: referring to the number of link hops from the root URL. " +
     "A page directly linked from the root is at BFS depth 1, regardless of its URL structure. " +
     "You can control how deep and wide it goes, and guide it to focus on specific sections of the site.";
 

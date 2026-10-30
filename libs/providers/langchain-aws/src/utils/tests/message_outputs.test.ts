@@ -1,9 +1,72 @@
 import { describe, expect, test } from "vitest";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
+import { concat } from "@langchain/core/utils/stream";
 import {
   convertConverseMessageToLangChainMessage,
+  handleConverseStreamContentBlockDelta,
   handleConverseStreamMetadata,
 } from "../message_outputs.js";
+
+describe("reasoning output conversion", () => {
+  test("uses standard reasoning content by default", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      {
+        role: "assistant",
+        content: [
+          {
+            reasoningContent: {
+              reasoningText: {
+                text: "Reasoning summary",
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+      },
+      {
+        stopReason: "end_turn",
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+        },
+        metrics: { latencyMs: 0 },
+      }
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+      },
+    ]);
+    expect(result.response_metadata).not.toHaveProperty("output_version");
+  });
+
+  test("merges streaming reasoning and signature into a standard block", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const signature = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { signature: "opaque-signature" } },
+    });
+
+    const result = concat(reasoning.message, signature.message);
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+        index: 0,
+      },
+    ]);
+    expect(result.response_metadata).not.toHaveProperty("output_version");
+  });
+});
 
 describe("message output usage metadata conversion", () => {
   test("maps Bedrock prompt cache tokens for non-stream responses", () => {
@@ -80,6 +143,58 @@ describe("message output usage metadata conversion", () => {
         cache_read: 9,
         cache_creation: 6,
       },
+    });
+  });
+});
+
+describe("thinking token usage conversion", () => {
+  const nativeUsage = {
+    usage: {
+      output_tokens: 565,
+      output_tokens_details: { thinking_tokens: 562 },
+    },
+  };
+
+  test("maps thinking tokens from additionalModelResponseFields for non-stream responses", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      { role: "assistant", content: [{ text: "Hello" }] },
+      {
+        usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        additionalModelResponseFields: nativeUsage,
+      } as Omit<Bedrock.ConverseResponse, "output">
+    );
+
+    expect(result.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+
+  test("does not add output_token_details when thinking tokens are absent", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      { role: "assistant", content: [{ text: "Hello" }] },
+      {
+        usage: { inputTokens: 20, outputTokens: 5, totalTokens: 25 },
+        additionalModelResponseFields: { usage: { output_tokens: 5 } },
+      } as Omit<Bedrock.ConverseResponse, "output">
+    );
+
+    expect(result.usage_metadata?.output_token_details).toBeUndefined();
+  });
+
+  test("maps thinking tokens for stream metadata", () => {
+    const result = handleConverseStreamMetadata(
+      { usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 } },
+      { streamUsage: true, reasoningTokens: 562 }
+    );
+
+    expect(result.message.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
     });
   });
 });

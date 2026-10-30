@@ -1,4 +1,8 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
+import {
+  streamMatchers,
+  type StreamMatchers,
+} from "../utils/testing/stream.js";
 import { BaseMessage } from "../messages/index.js";
 import { HumanMessage } from "../messages/index.js";
 import { AIMessage } from "../messages/index.js";
@@ -426,9 +430,10 @@ export const langchainMatchers = {
   toHaveToolMessages,
   toHaveBeenInterrupted,
   toHaveStructuredResponse,
+  ...streamMatchers,
 };
 
-export interface LangChainMatchers<R = unknown> {
+export interface LangChainMatchers<R = unknown> extends StreamMatchers<R> {
   toBeHumanMessage(expected?: string | { content?: string; id?: string }): R;
   toBeAIMessage(expected?: string | { content?: string; name?: string }): R;
   toBeSystemMessage(
@@ -467,9 +472,4 @@ export interface LangChainMatchers<R = unknown> {
   ): R;
   toHaveBeenInterrupted(expectedValue?: unknown): R;
   toHaveStructuredResponse(expected?: Record<string, unknown>): R;
-}
-
-declare module "vitest" {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  interface Matchers<T = any> extends LangChainMatchers<T> {}
 }

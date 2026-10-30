@@ -1,5 +1,79 @@
 # @langchain/aws
 
+## 1.5.1
+
+### Patch Changes
+
+- [#11463](https://github.com/langchain-ai/langchainjs/pull/11463) [`52d2ba8`](https://github.com/langchain-ai/langchainjs/commit/52d2ba8ea50149f2314df63b79582f8508034a3b) Thanks [@syedsohailhussain1](https://github.com/syedsohailhussain1)! - fix(aws): use this.caller in ChatBedrockConverse to support maxRetries, timeout, and onFailedAttempt
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
+## 1.4.7
+
+### Patch Changes
+
+- [#11916](https://github.com/langchain-ai/langchainjs/pull/11916) [`73a739c`](https://github.com/langchain-ai/langchainjs/commit/73a739c871fb8191976848482052c1a8b30c68ba) Thanks [@zduric-langchain](https://github.com/zduric-langchain)! - Report Bedrock thinking tokens as `output_token_details.reasoning`
+
+  `ChatBedrockConverse` now accepts `additionalModelResponseFieldPaths` (constructor and call option, matching `additional_model_response_field_paths` in Python) and forwards it to Converse and ConverseStream. When the response includes Anthropic's native usage (`additionalModelResponseFields.usage.output_tokens_details.thinking_tokens`, returned when requesting `["/usage"]`), the count is mapped to `usage_metadata.output_token_details.reasoning` for `invoke()`, `.stream()` and `streamEvents()`. `output_tokens` is unchanged, and nothing changes when the field is absent.
+
+## 1.4.6
+
+### Patch Changes
+
+- [#11641](https://github.com/langchain-ai/langchainjs/pull/11641) [`12626c2`](https://github.com/langchain-ai/langchainjs/commit/12626c25a9acdd72d2c8a68788479440916d38a1) Thanks [@ccurme](https://github.com/ccurme)! - Add `LANGSMITH_GATEWAY` direct routing for Bedrock Converse and Vertex AI chat models.
+
+## 1.4.5
+
+### Patch Changes
+
+- [#11307](https://github.com/langchain-ai/langchainjs/pull/11307) [`e927605`](https://github.com/langchain-ai/langchainjs/commit/e92760538352ba43599b18d94753ba15e7dc363f) Thanks [@taoche](https://github.com/taoche)! - fix(aws): add claude-sonnet-5, claude-opus-5, and claude-haiku-5 to supportedToolChoiceValuesForModel
+
+## 1.4.4
+
+### Patch Changes
+
+- [#11345](https://github.com/langchain-ai/langchainjs/pull/11345) [`8ba1fd9`](https://github.com/langchain-ai/langchainjs/commit/8ba1fd996ff9efe93e5cb75afa946204c00528a4) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(aws): put `lc_error_code` directly on Bedrock Converse stream-idle timeouts, cover the pre-response hang window
+
+  `ChatBedrockConverse`'s stream watchdog previously threw a bare `Error` with `lc_error_code` nested under `cause`, making the timeout undetectable via a plain `error.lc_error_code` check. It now sets `lc_error_code: "MODEL_STREAM_TIMEOUT"` directly on the error, matching the convention used elsewhere in the codebase. The `streamIdleTimeout` watchdog also now covers the window before the initial response is received, not just gaps between stream chunks.
+
+## 1.4.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
+## 1.4.2
+
+### Patch Changes
+
+- [#11098](https://github.com/langchain-ai/langchainjs/pull/11098) [`72ffc4b`](https://github.com/langchain-ai/langchainjs/commit/72ffc4bf17dc6dca390546c0e6c9503607198f26) Thanks [@hntrl](https://github.com/hntrl)! - Add a default Bedrock Converse stream idle timeout to prevent stalled response bodies from hanging forever.
+
+## 1.4.1
+
+### Patch Changes
+
+- [#11082](https://github.com/langchain-ai/langchainjs/pull/11082) [`a186aba`](https://github.com/langchain-ai/langchainjs/commit/a186abacb7dc85f8c5f54895f817eb823eec9d84) Thanks [@hntrl](https://github.com/hntrl)! - fix: support Bedrock bearer token auth
+
+## 1.4.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(aws): add native Bedrock Converse streamEvents events
+
 ## 1.3.9
 
 ### Patch Changes

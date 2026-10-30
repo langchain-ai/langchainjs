@@ -2,8 +2,17 @@ import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
 import { HumanMessage } from "@langchain/core/messages";
-import { ChatAnthropic } from "../chat_models.js";
-import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import {
+  ChatAnthropic,
+  type ChatAnthropicCallOptions,
+} from "../chat_models.js";
+import type { Stream } from "@anthropic-ai/sdk/streaming";
+import type {
+  AnthropicMessageStreamEvent,
+  AnthropicRequestOptions,
+  AnthropicStreamingMessageCreateParams,
+  Kwargs,
+} from "../types.js";
 
 /**
  * Builds a mock Anthropic that returns a canned SSE stream.
@@ -11,29 +20,29 @@ import type { BaseChatModelCallOptions } from "@langchain/core/language_models/c
  * to return a fake async iterable of Anthropic events.
  */
 class MockStreamChatAnthropic extends ChatAnthropic {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  private mockEvents: any[];
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  capturedRequest: any | undefined;
+  private mockEvents: unknown[];
 
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(mockEvents: any[]) {
+  capturedRequest: (AnthropicStreamingMessageCreateParams & Kwargs) | undefined;
+
+  constructor(mockEvents: unknown[]) {
     super({ apiKey: "fake-key", model: "claude-sonnet-4-20250514" });
     this.mockEvents = mockEvents;
   }
 
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async createStreamWithRetry(request: any): Promise<any> {
+  protected async createStreamWithRetry(
+    request: AnthropicStreamingMessageCreateParams & Kwargs,
+    _options?: AnthropicRequestOptions
+  ): Promise<Stream<AnthropicMessageStreamEvent>> {
     this.capturedRequest = request;
     const events = this.mockEvents;
     return {
       controller: { abort: () => {} },
       async *[Symbol.asyncIterator]() {
         for (const event of events) {
-          yield event;
+          yield event as AnthropicMessageStreamEvent;
         }
       },
-    };
+    } as unknown as Stream<AnthropicMessageStreamEvent>;
   }
 }
 
@@ -173,6 +182,11 @@ function toolCallEvents() {
     {
       type: "content_block_delta" as const,
       index: 1,
+      delta: { type: "input_json_delta" as const, partial_json: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 1,
       delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
     },
     {
@@ -184,6 +198,102 @@ function toolCallEvents() {
     {
       type: "message_delta" as const,
       delta: { stop_reason: "tool_use" as const, stop_sequence: null },
+      usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function serverToolCallEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_05MNO",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 100, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "server_tool_use" as const,
+        id: "srvtoolu_01ABC",
+        name: "web_search",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: ':"weather"}' },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+      usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function mcpToolUseEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_06PQR",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 100, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "mcp_tool_use" as const,
+        id: "mcptoolu_01ABC",
+        name: "search",
+        server_name: "docs",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: ':"weather"}' },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
       usage: { output_tokens: 15 },
     },
     { type: "message_stop" as const },
@@ -241,16 +351,16 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       };
       for await (const _event of model._streamChatModelEvents(
         [new HumanMessage("hello")],
-        callOptions as BaseChatModelCallOptions
+        callOptions as ChatAnthropicCallOptions
       )) {
         // Consume stream to trigger request construction.
       }
 
       expect(model.capturedRequest).toBeDefined();
-      expect(model.capturedRequest.cache_control).toEqual(
+      expect(model.capturedRequest?.cache_control).toEqual(
         callOptions.cache_control
       );
-      expect(JSON.stringify(model.capturedRequest.messages)).not.toContain(
+      expect(JSON.stringify(model.capturedRequest?.messages)).not.toContain(
         '"cache_control"'
       );
     });
@@ -261,7 +371,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -278,7 +388,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -295,7 +405,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -325,18 +435,16 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
-      const finish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 0
-      ) as { content: { type: string; text: string } };
-      expect(finish).toBeDefined();
-      expect(finish.content.type).toBe("text");
-      expect(finish.content.text).toBe("Hello world");
+      expect(
+        events.find((e) => e.event === "content-block-finish" && e.index === 0)
+      ).toMatchObject({
+        content: { type: "text", text: "Hello world" },
+      });
     });
 
     test("message-finish carries stop reason", async () => {
@@ -344,7 +452,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -362,7 +470,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -388,12 +496,11 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(rd2.delta.reasoning).toBe(" reason...");
 
       // Reasoning finish
-      const reasoningFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 0
-      ) as { content: { type: string; reasoning: string } };
-      expect(reasoningFinish.content.type).toBe("reasoning");
-      expect(reasoningFinish.content.reasoning).toBe("Let me reason...");
+      expect(
+        events.find((e) => e.event === "content-block-finish" && e.index === 0)
+      ).toMatchObject({
+        content: { type: "reasoning", reasoning: "Let me reason..." },
+      });
     });
 
     test("text block follows reasoning with correct index", async () => {
@@ -401,17 +508,16 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
-      const textFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 1
-      ) as { content: { type: string; text: string } };
-      expect(textFinish.content.type).toBe("text");
-      expect(textFinish.content.text).toBe("The answer is 42.");
+      expect(
+        events.find((e) => e.event === "content-block-finish" && e.index === 1)
+      ).toMatchObject({
+        content: { type: "text", text: "The answer is 42." },
+      });
     });
 
     test("signature delta is handled as non_standard", async () => {
@@ -419,7 +525,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -439,72 +545,26 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
   });
 
   describe("tool call streaming", () => {
-    test("tool call args accumulate correctly", async () => {
-      const model = new MockStreamChatAnthropic(toolCallEvents());
-      const events: ChatModelStreamEvent[] = [];
-      for await (const event of model._streamChatModelEvents(
-        [],
-        {} as BaseChatModelCallOptions
-      )) {
-        events.push(event);
-      }
-
-      // Start event for tool call
-      const toolStart = events.find(
-        (e) =>
-          e.event === "content-block-start" && "index" in e && e.index === 1
-      ) as { content: { type: string; name: string; id: string } };
-      expect(toolStart.content.type).toBe("tool_call_chunk");
-      expect(toolStart.content.name).toBe("web_search");
-      expect(toolStart.content.id).toBe("toolu_01ABC");
-
-      // Deltas carry accumulated tool_call_chunk field snapshots
-      const toolDeltas = events.filter(
-        (e) =>
-          e.event === "content-block-delta" && "index" in e && e.index === 1
-      );
-      expect(toolDeltas.length).toBe(2);
-
-      const td1 = toolDeltas[0] as {
-        delta: { type: string; fields: { type: string; args?: string } };
-      };
-      expect(td1.delta.type).toBe("block-delta");
-      expect(td1.delta.fields.type).toBe("tool_call_chunk");
-      expect(td1.delta.fields.args).toBe('{"query"');
-
-      const td2 = toolDeltas[1] as {
-        delta: { type: string; fields: { type: string; args?: string } };
-      };
-      expect(td2.delta.type).toBe("block-delta");
-      expect(td2.delta.fields.type).toBe("tool_call_chunk");
-      expect(td2.delta.fields.args).toBe('{"query":"weather"}');
-    });
-
     test("tool call finish has parsed args", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
-      const toolFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 1
-      ) as {
+      expect(
+        events.find((e) => e.event === "content-block-finish" && e.index === 1)
+      ).toMatchObject({
         content: {
-          type: string;
-          name: string;
-          id: string;
-          args: unknown;
-        };
-      };
-      expect(toolFinish.content.type).toBe("tool_call");
-      expect(toolFinish.content.name).toBe("web_search");
-      expect(toolFinish.content.id).toBe("toolu_01ABC");
-      expect(toolFinish.content.args).toEqual({ query: "weather" });
+          type: "tool_call",
+          name: "web_search",
+          id: "toolu_01ABC",
+          args: { query: "weather" },
+        },
+      });
     });
 
     test("message-finish has tool_use reason", async () => {
@@ -512,7 +572,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -530,7 +590,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -555,7 +615,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -574,7 +634,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -592,7 +652,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: false,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -613,7 +673,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -638,7 +698,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -654,7 +714,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("text sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const text = await stream.text;
       expect(text).toBe("Hello world");
@@ -663,7 +723,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("toolCalls sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const calls = await stream.toolCalls;
       expect(calls.length).toBe(1);
@@ -674,7 +734,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("reasoning sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const reasoning = await stream.reasoning;
       expect(reasoning).toBe("Let me reason...");
@@ -683,7 +743,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("output assembles correct AIMessage", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const message = await stream.output;
 
@@ -715,7 +775,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const stream = new ChatModelStream(
         model._streamChatModelEvents([], {
           streamUsage: true,
-        } as BaseChatModelCallOptions)
+        } as ChatAnthropicCallOptions)
       );
       const usage = await stream.usage;
       expect(usage?.input_tokens).toBe(800);
@@ -725,7 +785,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("await stream returns AIMessage directly", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       const message = await new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("msg_01ABC");
@@ -734,7 +794,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("sequential sub-stream consumption", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
 
       // Sequential consumption works reliably.
@@ -755,7 +815,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -770,6 +830,152 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(text).toBe("Let me search.");
       expect(tools.length).toBe(1);
       expect(tools[0]!.name).toBe("web_search");
+    });
+  });
+
+  // The mock only replaces Anthropic's network stream; these assertions exercise
+  // the real streamEvents() conversion into ChatModelStream sub-streams.
+  describe("streaming events", () => {
+    test("streams text", async () => {
+      const model = new MockStreamChatAnthropic(textOnlyEvents());
+      await expect(model.streamEvents("Hello")).toHaveStreamText("Hello world");
+    });
+
+    test("streams reasoning", async () => {
+      const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
+      await expect(model.streamEvents("Hello")).toHaveStreamReasoning(
+        "Let me reason..."
+      );
+    });
+
+    test("streams tool calls", async () => {
+      const model = new MockStreamChatAnthropic(toolCallEvents());
+      await expect(model.streamEvents("Hello")).toHaveStreamToolCalls([
+        { name: "web_search", args: { query: "weather" } },
+      ]);
+    });
+
+    test("tool call args stream as slices", async () => {
+      const model = new MockStreamChatAnthropic(toolCallEvents());
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(
+        events.filter(
+          (e) =>
+            e.event.startsWith("content-block") && "index" in e && e.index === 1
+        )
+      ).toEqual([
+        {
+          event: "content-block-start",
+          index: 1,
+          content: {
+            type: "tool_call_chunk",
+            id: "toolu_01ABC",
+            name: "web_search",
+            args: "",
+            index: 1,
+          },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: '{"query"' },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: ':"weather"}' },
+        },
+        {
+          event: "content-block-finish",
+          index: 1,
+          content: {
+            type: "tool_call",
+            id: "toolu_01ABC",
+            name: "web_search",
+            args: { query: "weather" },
+          },
+        },
+      ]);
+      expect((await stream).tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "toolu_01ABC",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      ]);
+    });
+
+    test("server tool call args stream as slices", async () => {
+      const model = new MockStreamChatAnthropic(serverToolCallEvents());
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual(
+        [
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "server_tool_call_chunk",
+              id: "srvtoolu_01ABC",
+              name: "web_search",
+              args: "",
+              index: 0,
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: '{"query"' },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: ':"weather"}' },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "server_tool_call",
+              id: "srvtoolu_01ABC",
+              name: "web_search",
+              args: { query: "weather" },
+            },
+          },
+        ]
+      );
+      expect((await stream).content).toEqual([
+        {
+          type: "server_tool_call",
+          id: "srvtoolu_01ABC",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      ]);
+    });
+
+    test("sends no tool-call-delta for JSON input on a non-tool-call block", async () => {
+      const model = new MockStreamChatAnthropic(mcpToolUseEvents());
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model.streamEvents("Hello")) {
+        events.push(event);
+      }
+
+      expect(
+        events.flatMap((e) =>
+          e.event === "content-block-delta" ? [e.delta.type] : []
+        )
+      ).toEqual(["block-delta", "block-delta"]);
     });
   });
 });

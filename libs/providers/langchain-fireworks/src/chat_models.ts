@@ -3,6 +3,7 @@ import type {
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   ChatOpenAICompletions,
   type ChatOpenAICallOptions,
@@ -91,9 +92,18 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
 
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields.configuration?.baseURL ??
+        (getEnvironmentVariable("FIREWORKS_API_BASE") ||
+          getEnvironmentVariable("FIREWORKS_BASE_URL") ||
+          undefined),
+      providerPath: "fireworks",
+    });
     const fireworksApiKey =
       fields.apiKey ||
       fields.fireworksApiKey ||
+      gatewayConfig.apiKey ||
       getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
@@ -107,8 +117,8 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
       model: fields.model ?? fields.modelName ?? DEFAULT_FIREWORKS_CHAT_MODEL,
       apiKey: fireworksApiKey,
       configuration: {
-        baseURL: FIREWORKS_BASE_URL,
         ...fields.configuration,
+        baseURL: gatewayConfig.baseURL ?? FIREWORKS_BASE_URL,
       },
       streamUsage: false,
     });
@@ -175,6 +185,10 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
     delete request.functions;
 
     return super.completionWithRetry(request, options);
+  }
+
+  protected override get streamEventProvider(): string {
+    return "fireworks";
   }
 }
 

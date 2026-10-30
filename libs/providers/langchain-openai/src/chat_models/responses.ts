@@ -1,5 +1,7 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { isOpenAITool as isOpenAIFunctionTool } from "@langchain/core/language_models/base";
@@ -26,6 +28,9 @@ import {
   convertResponsesMessageToAIMessage,
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
+import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
+import { normalizePromptCacheRetention } from "../utils/misc.js";
+import { profileForApi } from "../utils/profile.js";
 
 export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
@@ -79,6 +84,10 @@ export class ChatOpenAIResponses<
     fieldsArg?: Omit<BaseChatOpenAIFields, "model">
   ) {
     super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
+  override get profile(): ModelProfile {
+    return profileForApi(super.profile, true);
   }
 
   override invocationParams(
@@ -154,11 +163,21 @@ export class ChatOpenAIResponses<
       })(),
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
-      prompt_cache_retention:
-        options?.promptCacheRetention ?? this.promptCacheRetention,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
+      prompt_cache_key:
+        options?.promptCacheKey ??
+        this.modelKwargs?.prompt_cache_key ??
+        this.promptCacheKey,
+      prompt_cache_retention: normalizePromptCacheRetention(
+        options?.promptCacheRetention ??
+          this.modelKwargs?.prompt_cache_retention ??
+          this.promptCacheRetention
+      ),
+      prompt_cache_options:
+        options?.promptCacheOptions ??
+        this.modelKwargs?.prompt_cache_options ??
+        this.promptCacheOptions,
     };
 
     const reasoning = this._getReasoningParams(options);
@@ -206,7 +225,11 @@ export class ChatOpenAIResponses<
           ...invocationParams,
           stream: false,
         },
-        { signal: options?.signal, ...options?.options }
+        {
+          signal: options?.signal,
+          maxRetries: options?.maxRetries,
+          ...options?.options,
+        }
       );
 
       return {
@@ -230,6 +253,52 @@ export class ChatOpenAIResponses<
     }
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const streamIterable = await this.completionWithRetry(
+      {
+        ...this.invocationParams(options),
+        input: convertMessagesToResponsesInput({
+          messages,
+          zdrEnabled: this.zdrEnabled ?? false,
+          model: this.model,
+        }),
+        stream: true,
+      },
+      options
+    );
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAIResponsesStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -248,24 +317,29 @@ export class ChatOpenAIResponses<
       options
     );
 
-    for await (const data of streamIterable) {
-      if (options.signal?.aborted) {
-        return;
+    try {
+      for await (const data of streamIterable) {
+        if (options.signal?.aborted) {
+          return;
+        }
+        const chunk = convertResponsesDeltaToChatGenerationChunk(data);
+        if (chunk == null) continue;
+        yield chunk;
+        await runManager?.handleLLMNewToken(
+          chunk.text || "",
+          {
+            prompt: options.promptIndex ?? 0,
+            completion: 0,
+          },
+          undefined,
+          undefined,
+          undefined,
+          { chunk }
+        );
       }
-      const chunk = convertResponsesDeltaToChatGenerationChunk(data);
-      if (chunk == null) continue;
-      yield chunk;
-      await runManager?.handleLLMNewToken(
-        chunk.text || "",
-        {
-          prompt: options.promptIndex ?? 0,
-          completion: 0,
-        },
-        undefined,
-        undefined,
-        undefined,
-        { chunk }
-      );
+    } catch (e) {
+      const error = wrapOpenAIClientError(e);
+      throw error;
     }
   }
 
@@ -292,8 +366,11 @@ export class ChatOpenAIResponses<
     | AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>
     | OpenAIClient.Responses.Response
   > {
-    return this.caller.call(async () => {
-      const clientOptions = this._getClientOptions(requestOptions);
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = requestOptions ?? {};
+    const clientOptions = this._getClientOptions(sdkOptions);
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         // use parse if dealing with json_schema
         if (request.text?.format?.type === "json_schema" && !request.stream) {

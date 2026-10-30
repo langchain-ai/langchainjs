@@ -49,6 +49,9 @@ function convertToV1FromChatVertexMessage(
         };
         continue;
       } else if (_isContentBlock(block, "text") && _isString(block.text)) {
+        if (block.text === "") {
+          continue;
+        }
         yield { type: "text", text: block.text };
         continue;
       } else if (_isContentBlock(block, "image_url")) {
@@ -75,6 +78,14 @@ function convertToV1FromChatVertexMessage(
         continue;
       }
       yield { type: "non_standard", value: block };
+    }
+    for (const toolCall of message.tool_calls ?? []) {
+      yield {
+        type: "tool_call",
+        id: toolCall.id,
+        name: toolCall.name,
+        args: toolCall.args,
+      };
     }
   }
   return Array.from(iterateContent());

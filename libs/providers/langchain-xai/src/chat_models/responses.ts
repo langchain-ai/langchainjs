@@ -1,4 +1,5 @@
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import {
   BaseChatModel,
@@ -28,6 +29,7 @@ import {
   convertStreamEventToChunk,
   extractTextFromOutput,
 } from "../converters/responses.js";
+import { convertXAIResponsesStream } from "../utils/responses_stream_events.js";
 
 // Re-export types for convenience
 export type {
@@ -378,6 +380,40 @@ export class ChatXAIResponses<
           : undefined,
       },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const invocationParams = this.invocationParams(options);
+    const input = convertMessagesToResponsesInput(messages);
+
+    const streamIterable = await this._makeRequest({
+      input,
+      ...invocationParams,
+      stream: true,
+    } as XAIResponsesCreateParamsStreaming);
+
+    const shouldStreamUsage = options.streamUsage ?? true;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<XAIResponsesStreamEvent>,
+      signal?: AbortSignal
+    ) {
+      for await (const event of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield event;
+      }
+    };
+
+    yield* convertXAIResponsesStream(
+      abortableStream(streamIterable, options.signal),
+      { streamUsage: shouldStreamUsage }
+    );
   }
 
   async *_streamResponseChunks(

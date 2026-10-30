@@ -13,6 +13,7 @@ import {
   isCommand,
   Command,
   Send,
+  isGraphDrained,
   isGraphInterrupt,
   type LangGraphRunnableConfig,
   StateDefinitionInit,
@@ -20,7 +21,7 @@ import {
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { mergeAbortSignals } from "./utils.js";
-import { ToolInvocationError } from "../errors.js";
+import { MiddlewareError, ToolInvocationError } from "../errors.js";
 import type {
   WrapToolCallHook,
   ToolCallRequest,
@@ -85,6 +86,8 @@ export interface ToolNodeOptions {
    * The wrapper receives the tool call request and a handler function to execute the tool.
    */
   wrapToolCall?: WrapToolCallHook;
+  /** Graph channels to read for tool-call-only Send inputs. */
+  stateKeys?: string[];
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -117,11 +120,12 @@ function defaultHandleToolErrors(
   error: unknown,
   toolCall: ToolCall
 ): ToolMessage | undefined {
-  if (error instanceof ToolInvocationError) {
+  if (ToolInvocationError.isInstance(error)) {
     return new ToolMessage({
       content: error.message,
       tool_call_id: toolCall.id!,
       name: toolCall.name,
+      status: "error",
     });
   }
   /**
@@ -131,6 +135,7 @@ function defaultHandleToolErrors(
     content: `${error}\n Please fix your mistakes.`,
     tool_call_id: toolCall.id!,
     name: toolCall.name,
+    status: "error",
   });
 }
 
@@ -230,11 +235,12 @@ export class ToolNode<
     isMiddlewareError: boolean
   ): ToolMessage {
     /**
-     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
-     * As such, they are not recoverable by the agent and shouldn't be fed
-     * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop,
+     * and a drain stops the run to resume it later. Neither is recoverable
+     * by the agent, so neither is fed back: re-throw them even when
+     * `handleToolErrors = true`.
      */
-    if (isGraphInterrupt(error)) {
+    if (isGraphInterrupt(error) || isGraphDrained(error)) {
       throw error;
     }
 
@@ -246,45 +252,68 @@ export class ToolNode<
     }
 
     /**
+     * A recoverable tool error (e.g. tool-input schema validation) can be
+     * rewrapped as a {@link MiddlewareError} with the original error on `.cause`
+     * — once per `wrapToolCall` middleware, so it may be nested several layers
+     * deep. Walk the cause chain to the root; if it's a {@link ToolInvocationError},
+     * unwrap it so the intended `handleToolErrors` self-correction path still
+     * applies. Genuine middleware errors stay fatal by default.
+     */
+    let effectiveError = error;
+    let errorFromMiddleware = isMiddlewareError;
+    if (isMiddlewareError) {
+      let unwrapped: unknown = error;
+      while (MiddlewareError.isInstance(unwrapped)) {
+        unwrapped = unwrapped.cause;
+      }
+      if (ToolInvocationError.isInstance(unwrapped)) {
+        effectiveError = unwrapped;
+        errorFromMiddleware = false;
+      }
+    }
+
+    /**
      * If error is from middleware and handleToolErrors is not true, bubble up
      * (default handler and false both re-raise middleware errors)
      */
-    if (isMiddlewareError && this.handleToolErrors !== true) {
-      throw error;
+    if (errorFromMiddleware && this.handleToolErrors !== true) {
+      throw effectiveError;
     }
 
     /**
      * If handleToolErrors is false, throw all errors
      */
     if (!this.handleToolErrors) {
-      throw error;
+      throw effectiveError;
     }
 
     /**
      * Apply handleToolErrors to the error
      */
     if (typeof this.handleToolErrors === "function") {
-      const result = this.handleToolErrors(error, call);
+      const result = this.handleToolErrors(effectiveError, call);
       if (result && ToolMessage.isInstance(result)) {
+        result.status ??= "error";
         return result;
       }
 
       /**
        * `handleToolErrors` returned undefined - re-raise
        */
-      throw error;
+      throw effectiveError;
     } else if (this.handleToolErrors) {
       return new ToolMessage({
         name: call.name,
-        content: `${error}\n Please fix your mistakes.`,
+        content: `${effectiveError}\n Please fix your mistakes.`,
         tool_call_id: call.id!,
+        status: "error",
       });
     }
 
     /**
      * Shouldn't reach here, but throw as fallback
      */
-    throw error;
+    throw effectiveError;
   }
 
   protected async runTool(
@@ -367,7 +396,7 @@ export class ToolNode<
              */
             config,
             toolCallId: toolCall.id!,
-            state: config.configurable?.__pregel_scratchpad?.currentTaskInput,
+            state,
             signal: mergeAbortSignals(this.signal, config.signal),
           }
         );
@@ -456,7 +485,24 @@ export class ToolNode<
 
     if (isSendInput(state)) {
       const { lg_tool_call: _, jumpTo: __, ...newState } = state;
-      outputs = [await this.runTool(state.lg_tool_call, config, newState)];
+      let toolState = newState;
+      if (Object.keys(newState).length === 0 && this.options?.stateKeys) {
+        const read = config.configurable?.__pregel_read;
+        if (typeof read !== "function") {
+          throw new Error(
+            "ToolNode requires a graph state reader for compact Send inputs."
+          );
+        }
+        toolState = read(this.options.stateKeys, true);
+        if (!isMessagesState(toolState)) {
+          throw new Error("ToolNode could not read messages from graph state.");
+        }
+        const scratchpad = config.configurable?.__pregel_scratchpad;
+        if (scratchpad) {
+          scratchpad.currentTaskInput = { ...toolState, ...state };
+        }
+      }
+      outputs = [await this.runTool(state.lg_tool_call, config, toolState)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {

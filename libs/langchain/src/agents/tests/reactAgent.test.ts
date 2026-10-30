@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
@@ -6,6 +7,7 @@ import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import {
   BaseMessage,
   AIMessage,
+  AIMessageChunk,
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -16,6 +18,9 @@ import { RunnableLambda } from "@langchain/core/runnables";
 import {
   Command,
   getCurrentTaskInput,
+  MessagesAnnotation,
+  START,
+  StateGraph,
   type BaseCheckpointSaver,
   type BaseStore,
 } from "@langchain/langgraph";
@@ -25,6 +30,7 @@ import type { LangSmithTracingClientInterface } from "langsmith";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type { Serialized } from "@langchain/core/load/serializable";
 import type { ChainValues } from "@langchain/core/utils/types";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
 
 import {
   providerStrategy,
@@ -405,6 +411,126 @@ describe("createAgent", () => {
     expect((result.messages[2] as ToolMessage).name).toBe("toolNormal");
     expect(AIMessage.isInstance(result.messages[3])).toBe(true);
     expect((result.messages[3] as AIMessage).tool_calls?.length).toBe(0);
+  });
+
+  it("passes a Command from another copy of langgraph to the graph unchanged", async () => {
+    class ForeignCommand {
+      readonly lg_name = "Command";
+
+      resume = "approved";
+    }
+    const agent = createAgent({
+      model: new FakeToolCallingModel(),
+      tools: [],
+      middleware: [createMiddleware({ name: "noop" })],
+      checkpointer: syncCheckpointer,
+    });
+    const graphInvoke = vi.spyOn(agent.graph, "invoke");
+    const command = new ForeignCommand();
+
+    await agent.invoke(command as unknown as Command, {
+      configurable: { thread_id: "foreign-command" },
+    });
+
+    expect(graphInvoke.mock.calls[0][0]).toBe(command);
+  });
+
+  describe("returnDirect tool errors", () => {
+    const renderCall = (id: string, ui: string) => [
+      { name: "render", args: { ui }, id },
+    ];
+
+    it("returns a tool that throws to the model instead of ending the run", async () => {
+      let attempts = 0;
+      const render = tool(
+        async (input: { ui: string }) => {
+          attempts += 1;
+          if (attempts === 1) throw new Error(`invalid_ui: ${input.ui}`);
+          return `rendered ${input.ui}`;
+        },
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.string() }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+      });
+      const agent = createAgent({ model, tools: [render] });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      // Two model calls: the failed call went back to the model, and the
+      // successful retry ended the run.
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+      const last = result.messages.at(-1) as ToolMessage;
+      expect(ToolMessage.isInstance(last)).toBe(true);
+      expect(last.content).toBe("rendered Table");
+    });
+
+    it("returns invalid tool arguments to the model instead of ending the run", async () => {
+      const render = tool(
+        async (input: { ui: "Table" | "Chart" }) => `rendered ${input.ui}`,
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.enum(["Table", "Chart"]) }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+      });
+      const agent = createAgent({ model, tools: [render] });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+      expect((result.messages.at(-1) as ToolMessage).content).toBe(
+        "rendered Table"
+      );
+    });
+
+    it("calls the model after a failed returnDirect tool when a response format is set", async () => {
+      const render = tool(
+        async (input: { ui: "Table" | "Chart" }) => `rendered ${input.ui}`,
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.enum(["Table", "Chart"]) }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+        structuredResponse: { rendered: true },
+      });
+      const agent = createAgent({
+        model,
+        tools: [render],
+        responseFormat: z.object({ rendered: z.boolean() }),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      // The model node must not short-circuit on the failed call: it runs
+      // again, and the successful retry then ends the run.
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+    });
   });
 
   it("should work with store integration", async () => {
@@ -882,6 +1008,52 @@ describe("createAgent", () => {
         })
       ).toThrow("`model` option is required to create an agent.");
     });
+
+    describe("OpenAI API selection", () => {
+      const requestedPath = async (model: string | ChatOpenAI) => {
+        const urls: string[] = [];
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(async (input: RequestInfo | URL) => {
+            urls.push(input instanceof Request ? input.url : String(input));
+            return new Response(
+              JSON.stringify({ error: { message: "stop" } }),
+              {
+                status: 400,
+                headers: { "content-type": "application/json" },
+              }
+            );
+          })
+        );
+        const agent = createAgent({ model, tools: [] });
+        await agent
+          .invoke({ messages: [{ role: "user", content: "hi" }] })
+          .catch(() => {});
+        return urls
+          .map((url) => new URL(url).pathname)
+          .find((path) => /\/(responses|chat\/completions)$/.test(path));
+      };
+
+      afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+      });
+
+      it("uses the Responses API for openai: strings", async () => {
+        vi.stubEnv("OPENAI_API_KEY", "test");
+        expect(await requestedPath("openai:gpt-5.5")).toMatch(/\/responses$/);
+      });
+
+      it("keeps an explicit Chat Completions model instance", async () => {
+        const model = new ChatOpenAI({
+          model: "gpt-5.5",
+          apiKey: "test",
+          useResponsesApi: false,
+          maxRetries: 0,
+        });
+        expect(await requestedPath(model)).toMatch(/\/chat\/completions$/);
+      });
+    });
   });
 
   it("should make passed in state available in context", async () => {
@@ -1107,6 +1279,165 @@ describe("createAgent", () => {
   });
 
   describe("withConfig", () => {
+    describe.each(["array", "manager"] as const)("%s callbacks", (kind) => {
+      const callbacks = (handler: BaseCallbackHandler, format = kind) => {
+        if (format === "array") return [handler];
+        const manager = new CallbackManager();
+        manager.addHandler(handler);
+        return manager;
+      };
+
+      it.each([
+        [false, "invoke"],
+        [true, "invoke"],
+        [true, "streamEvents"],
+      ] as const)(
+        "preserves callbacks on the extracted graph (copy: %s, method: %s)",
+        async (copy, method) => {
+          const existing = BaseCallbackHandler.fromMethods({
+            handleChatModelStart: vi.fn(),
+          });
+          const bound = BaseCallbackHandler.fromMethods({
+            handleChatModelStart: vi.fn(),
+          });
+          const invoked = BaseCallbackHandler.fromMethods({
+            handleChatModelStart: vi.fn(),
+          });
+          const original = createAgent({ model: new FakeToolCallingModel() });
+          let agent = original
+            .withConfig({ callbacks: callbacks(existing) })
+            .withConfig({ callbacks: callbacks(bound), recursionLimit: 100 });
+          if (copy) agent = agent.withConfig({ tags: ["copied"] });
+
+          const graph = agent.graph.withConfig({
+            metadata: { extracted: true },
+          });
+          const input = { messages: [new HumanMessage("hello")] };
+          const config = { callbacks: callbacks(invoked) };
+          if (method === "invoke") {
+            await graph.invoke(input, config);
+          } else {
+            for await (const _chunk of graph.streamEvents(input, {
+              ...config,
+              version: "v2",
+            })) {
+              // Consume the stream to complete callback delivery.
+            }
+          }
+
+          for (const handler of [existing, bound, invoked]) {
+            expect(handler.handleChatModelStart).toHaveBeenCalledTimes(1);
+          }
+          expect(original.graph.config?.callbacks).toBeUndefined();
+          expect(graph.config?.recursionLimit).toBe(100);
+          expect(graph.config?.metadata).toMatchObject({
+            ls_integration: "langchain_create_agent",
+            extracted: true,
+          });
+          if (copy) expect(graph.config?.tags).toContain("copied");
+        }
+      );
+
+      describe.each(["array", "manager", undefined] as const)(
+        "with %s invocation callbacks",
+        (invocationKind) => {
+          it.each([
+            "invoke",
+            "stream",
+            "streamEvents",
+            "streamEventsV3",
+          ] as const)("calls each handler once through %s", async (method) => {
+            const bound = BaseCallbackHandler.fromMethods({
+              handleChainStart: vi.fn(),
+              handleChainEnd: vi.fn(),
+              handleChatModelStart: vi.fn(),
+            });
+            const invoked = BaseCallbackHandler.fromMethods({
+              handleChainStart: vi.fn(),
+              handleChainEnd: vi.fn(),
+              handleChatModelStart: vi.fn(),
+            });
+            const agent = createAgent({ model: new FakeToolCallingModel() })
+              .withConfig({ callbacks: callbacks(bound) })
+              .withConfig({ tags: ["copied"] });
+            const input = { messages: [new HumanMessage("hello")] };
+            const config = {
+              callbacks: invocationKind
+                ? callbacks(invoked, invocationKind)
+                : undefined,
+            };
+
+            if (method === "invoke") {
+              await agent.invoke(input, config);
+            } else if (method === "streamEventsV3") {
+              const stream = await agent.streamEvents(input, {
+                ...config,
+                version: "v3",
+              });
+              await stream.output;
+            } else {
+              const stream =
+                method === "stream"
+                  ? await agent.stream(input, config)
+                  : agent.streamEvents(input, { ...config, version: "v2" });
+              for await (const _chunk of stream) {
+                // Consume the stream to complete callback delivery.
+              }
+            }
+
+            for (const handler of invocationKind ? [bound, invoked] : [bound]) {
+              expect(handler.handleChatModelStart).toHaveBeenCalledTimes(1);
+              const starts = vi.mocked(handler.handleChainStart!).mock.calls;
+              const ends = vi.mocked(handler.handleChainEnd!).mock.calls;
+              expect(starts.length).toBeGreaterThan(0);
+              expect(new Set(starts.map((call) => call[2])).size).toBe(
+                starts.length
+              );
+              expect(new Set(ends.map((call) => call[1])).size).toBe(
+                ends.length
+              );
+              expect(ends).toHaveLength(starts.length);
+            }
+          });
+        }
+      );
+    });
+
+    it.each(["invoke", "stream", "streamEventsV3"] as const)(
+      "preserves middleware state initialization through %s with callbacks",
+      async (method) => {
+        const beforeModel = vi.fn();
+        const handler = BaseCallbackHandler.fromMethods({
+          handleChatModelStart: vi.fn(),
+        });
+        const agent = createAgent({
+          model: new FakeToolCallingModel(),
+          middleware: [
+            createMiddleware({
+              name: "defaults",
+              stateSchema: z.object({ count: z.number().default(7) }),
+              beforeModel: (state) => {
+                beforeModel(state.count);
+              },
+            }),
+          ],
+        }).withConfig({ callbacks: [handler] });
+        const input = { messages: [new HumanMessage("hello")] };
+        if (method === "invoke") {
+          await agent.invoke(input);
+        } else if (method === "stream") {
+          for await (const _chunk of await agent.stream(input)) {
+            // Consume the stream to complete callback delivery.
+          }
+        } else {
+          const stream = await agent.streamEvents(input, { version: "v3" });
+          await stream.output;
+        }
+        expect(beforeModel).toHaveBeenCalledExactlyOnceWith(7);
+        expect(handler.handleChatModelStart).toHaveBeenCalledTimes(1);
+      }
+    );
+
     it("should return a new ReactAgent instance", () => {
       const model = new FakeToolCallingModel();
       const agent = createAgent({
@@ -1153,6 +1484,32 @@ describe("createAgent", () => {
 
       // Both agents should have the same options
       expect(configuredAgent.options.systemPrompt).toBe(systemPrompt);
+    });
+
+    it("should propagate withConfig defaults to the compiled graph", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      }).withConfig({ recursionLimit: 1000, tags: ["test"] });
+
+      expect(agent.graph.config?.recursionLimit).toBe(1000);
+      expect(agent.graph.config?.tags).toContain("test");
+    });
+
+    it("should apply built-in default metadata to the compiled graph", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+        name: "weather-agent",
+      });
+
+      expect(agent.graph.config?.metadata?.ls_integration).toBe(
+        "langchain_create_agent"
+      );
+      expect(agent.graph.config?.metadata?.lc_agent_name).toBe("weather-agent");
+      expect(agent.graph.config?.configurable?.ls_agent_type).toBe("root");
     });
 
     it("should propagate configurable values to tools", async () => {
@@ -1516,5 +1873,61 @@ describe("createAgent", () => {
       expect(postedRun).toBeDefined();
       expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
     });
+  });
+
+  describe("streamEvents inside a LangGraph node", () => {
+    it.each(["handler", "plain object"] as const)(
+      "delivers each token once to a %s passed in when the outer run is traced",
+      async (kind) => {
+        let handlerTokens = 0;
+        const handleLLMNewToken = (token: string) => {
+          if (token) handlerTokens += 1;
+        };
+        const counter =
+          kind === "handler"
+            ? BaseCallbackHandler.fromMethods({ handleLLMNewToken })
+            : { handleLLMNewToken };
+        const agent = createAgent({
+          model: new FakeStreamingChatModel({
+            chunks: ["Hello", "!", " How are you?"].map(
+              (content) => new AIMessageChunk({ content })
+            ),
+          }),
+          tools: [],
+        });
+        let streamedChunks = 0;
+        const graph = new StateGraph(MessagesAnnotation)
+          .addNode("run_agent", async () => {
+            const events = agent.streamEvents(
+              { messages: [new HumanMessage("hi")] },
+              { version: "v2", callbacks: [counter] }
+            );
+            for await (const event of events) {
+              if (
+                event.event === "on_chat_model_stream" &&
+                event.data.chunk.text
+              ) {
+                streamedChunks += 1;
+              }
+            }
+            return {};
+          })
+          .addEdge(START, "run_agent")
+          .compile();
+        const tracer = new LangChainTracer({
+          client: {
+            createRun: vi.fn().mockResolvedValue(undefined),
+            updateRun: vi.fn().mockResolvedValue(undefined),
+          } as LangSmithTracingClientInterface,
+        });
+
+        await graph.invoke({ messages: [] }, { callbacks: [tracer] });
+
+        expect({ handlerTokens, streamedChunks }).toEqual({
+          handlerTokens: 3,
+          streamedChunks: 3,
+        });
+      }
+    );
   });
 });

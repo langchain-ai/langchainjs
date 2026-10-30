@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   AIMessage,
   AIMessageChunk,
@@ -15,13 +16,18 @@ import {
   type ChatResult,
 } from "@langchain/core/outputs";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { wrapOpenAIClientError } from "../utils/client.js";
+import { profileForApi } from "../utils/profile.js";
 import {
   OpenAIToolChoice,
   formatToOpenAIToolChoice,
   _convertToOpenAITool,
 } from "../utils/tools.js";
-import { isReasoningModel } from "../utils/misc.js";
+import {
+  isReasoningModel,
+  normalizePromptCacheRetention,
+} from "../utils/misc.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAICallOptions,
@@ -33,6 +39,7 @@ import {
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
+import { convertOpenAICompletionsStream } from "../utils/stream_events.js";
 
 export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
@@ -40,6 +47,34 @@ type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
   "messages"
 >;
+
+const TOOL_IMAGE_HINT =
+  "Chat Completions does not support images in tool messages. " +
+  "Use the Responses API (`useResponsesApi: true`) to send images from tool results.";
+
+/** Points a 400 caused by a tool-result image at the Responses API. */
+function addToolImageHint(
+  error: unknown,
+  messages: OpenAIClient.Chat.ChatCompletionMessageParam[]
+) {
+  const hasToolImage = messages.some(
+    (message) =>
+      message.role === "tool" &&
+      Array.isArray(message.content) &&
+      message.content.some(
+        (part) => (part as { type: string }).type === "image"
+      )
+  );
+  if (
+    hasToolImage &&
+    error instanceof Error &&
+    "status" in error &&
+    error.status === 400
+  ) {
+    error.message = `${error.message}\n\n${TOOL_IMAGE_HINT}`;
+  }
+  return error;
+}
 
 /**
  * OpenAI Completions API implementation.
@@ -58,6 +93,10 @@ export class ChatOpenAICompletions<
     super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
   }
 
+  override get profile(): ModelProfile {
+    return profileForApi(super.profile, false);
+  }
+
   /** @internal */
   override invocationParams(
     options?: this["ParsedCallOptions"],
@@ -68,6 +107,22 @@ export class ChatOpenAICompletions<
       strict = options.strict;
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
+    }
+
+    // A `json_schema` response format goes through the SDK `.parse()` helper,
+    // which requires strict function tools — but only on the NON-streaming path
+    // (`completionWithRetry` uses `.parse()` only when `!request.stream`).
+    // Streaming structured output uses `create()`, which doesn't need strict, so
+    // don't force it there. Default to strict for the parse path unless the
+    // caller set strict:false. (Re-applied here because the agent core no longer
+    // forces strict for every provider.)
+    const isStreaming = this.streaming || extra?.streaming;
+    if (
+      !isStreaming &&
+      options?.response_format?.type === "json_schema" &&
+      strict !== false
+    ) {
+      strict = true;
     }
 
     let streamOptionsConfig = {};
@@ -112,9 +167,19 @@ export class ChatOpenAICompletions<
         ? { modalities: this.modalities || options?.modalities }
         : {}),
       ...this.modelKwargs,
-      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
-      prompt_cache_retention:
-        options?.promptCacheRetention ?? this.promptCacheRetention,
+      prompt_cache_key:
+        options?.promptCacheKey ??
+        this.modelKwargs?.prompt_cache_key ??
+        this.promptCacheKey,
+      prompt_cache_retention: normalizePromptCacheRetention(
+        options?.promptCacheRetention ??
+          this.modelKwargs?.prompt_cache_retention ??
+          this.promptCacheRetention
+      ),
+      prompt_cache_options:
+        options?.promptCacheOptions ??
+        this.modelKwargs?.prompt_cache_options ??
+        this.promptCacheOptions,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
@@ -209,6 +274,7 @@ export class ChatOpenAICompletions<
         },
         {
           signal: options?.signal,
+          maxRetries: options?.maxRetries,
           ...options?.options,
         }
       );
@@ -238,7 +304,8 @@ export class ChatOpenAICompletions<
 
       if (
         promptTokensDetails?.audio_tokens !== null ||
-        promptTokensDetails?.cached_tokens !== null
+        promptTokensDetails?.cached_tokens !== null ||
+        promptTokensDetails?.cache_write_tokens != null
       ) {
         usageMetadata.input_token_details = {
           ...(promptTokensDetails?.audio_tokens !== null && {
@@ -246,6 +313,9 @@ export class ChatOpenAICompletions<
           }),
           ...(promptTokensDetails?.cached_tokens !== null && {
             cache_read: promptTokensDetails?.cached_tokens,
+          }),
+          ...(promptTokensDetails?.cache_write_tokens != null && {
+            cache_creation: promptTokensDetails?.cache_write_tokens,
           }),
         };
       }
@@ -303,6 +373,58 @@ export class ChatOpenAICompletions<
         },
       };
     }
+  }
+
+  /**
+   * Native implementation of the content-block-centric streaming protocol
+   * for OpenAI Chat Completions.
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
+      convertMessagesToCompletionsMessageParams({
+        messages,
+        model: this.model,
+      });
+
+    const params = {
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
+      messages: messagesMapped,
+      stream: true as const,
+    };
+
+    const streamIterable = await this.completionWithRetry(params, options);
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAICompletionsStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
   }
 
   async *_streamResponseChunks(
@@ -395,6 +517,9 @@ export class ChatOpenAICompletions<
         ...(usage.prompt_tokens_details?.cached_tokens !== null && {
           cache_read: usage.prompt_tokens_details?.cached_tokens,
         }),
+        ...(usage.prompt_tokens_details?.cache_write_tokens != null && {
+          cache_creation: usage.prompt_tokens_details?.cache_write_tokens,
+        }),
       };
       const outputTokenDetails = {
         ...(usage.completion_tokens_details?.audio_tokens !== null && {
@@ -456,10 +581,13 @@ export class ChatOpenAICompletions<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
-    const clientOptions = this._getClientOptions(requestOptions);
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = requestOptions ?? {};
+    const clientOptions = this._getClientOptions(sdkOptions);
     const isParseableFormat =
       request.response_format && request.response_format.type === "json_schema";
-    return this.caller.call(async () => {
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         if (isParseableFormat && !request.stream) {
           return await this.client.chat.completions.parse(
@@ -474,7 +602,7 @@ export class ChatOpenAICompletions<
         }
       } catch (e) {
         const error = wrapOpenAIClientError(e);
-        throw error;
+        throw addToolImageHint(error, request.messages);
       }
     });
   }

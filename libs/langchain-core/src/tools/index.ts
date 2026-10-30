@@ -292,10 +292,20 @@ export abstract class StructuredTool<
       toolCallId = config.toolCall.id;
     }
 
+    let callbackInput: string | Record<string, unknown> | undefined;
+    if (
+      typeof inputForValidation === "object" &&
+      inputForValidation !== null &&
+      !Array.isArray(inputForValidation)
+    ) {
+      callbackInput = inputForValidation as Record<string, unknown>;
+    }
+    if (!callbackInput) {
+      callbackInput = typeof arg === "string" ? arg : JSON.stringify(arg);
+    }
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
-      // Log the original raw input arg
-      typeof arg === "string" ? arg : JSON.stringify(arg),
+      callbackInput,
       config.runId,
       undefined,
       undefined,
@@ -1024,6 +1034,10 @@ export function tool<
   >;
 }
 
+function _isMessageContentBlockShaped(item: unknown) {
+  return typeof item === "object" && item !== null && "type" in item;
+}
+
 function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   content: TOutput;
   name: string;
@@ -1035,8 +1049,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   if (toolCallId && !isDirectToolOutput(content)) {
     if (
       typeof content === "string" ||
-      (Array.isArray(content) &&
-        content.every((item) => typeof item === "object"))
+      (Array.isArray(content) && content.every(_isMessageContentBlockShaped))
     ) {
       return new ToolMessage({
         status: "success",

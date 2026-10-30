@@ -15,8 +15,6 @@ import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 
 import { ChatBedrockConverse } from "../chat_models.js";
-import { concatenateLangchainReasoningBlocks } from "../utils/message_inputs.js";
-import { MessageContentReasoningBlockReasoningText } from "../types.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -437,7 +435,7 @@ test("Model can handle empty content messages", async () => {
   expect(result.content.length).toBeGreaterThan(1);
 });
 
-test("Test reasoning_content blocks multiturn invoke", async () => {
+test("Test standard reasoning blocks multiturn invoke", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
     model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -452,22 +450,16 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
 
     expect(Array.isArray(response.content)).toBe(true);
     const content = response.content as MessageContentComplex[];
-    expect(content.some((block) => block.type === "reasoning_content")).toBe(
-      true
-    );
+    expect(content.some((block) => block.type === "reasoning")).toBe(true);
 
     for (const block of content) {
       expect(typeof block).toBe("object");
-      if (block.type === "reasoning_content") {
+      if (block.type === "reasoning") {
         expect(Object.keys(block).sort()).toEqual(
-          ["type", "reasoningText"].sort()
+          ["type", "reasoning", "signature"].sort()
         );
-        expect(block.reasoningText).toBeTruthy();
-        expect(typeof block.reasoningText).toBe("object");
-        expect(block.reasoningText.text).toBeTruthy();
-        expect(typeof block.reasoningText.text).toBe("string");
-        expect(block.reasoningText.signature).toBeTruthy();
-        expect(typeof block.reasoningText.signature).toBe("string");
+        expect(typeof block.reasoning).toBe("string");
+        expect(typeof block.signature).toBe("string");
       }
     }
     return response;
@@ -482,7 +474,7 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
   await model.invoke(invokeMessages);
 });
 
-test("Test reasoning_content blocks multiturn streaming", async () => {
+test("Test standard reasoning blocks multiturn streaming", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
     model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -499,28 +491,18 @@ test("Test reasoning_content blocks multiturn streaming", async () => {
     }
     expect(full).toBeInstanceOf(AIMessageChunk);
     expect(Array.isArray(full?.content)).toBe(true);
-    const content = concatenateLangchainReasoningBlocks(
-      full?.content as MessageContentComplex[]
-    );
-    expect(content.some((block) => block.type === "reasoning_content")).toBe(
-      true
-    );
+    const content = full?.content as MessageContentComplex[];
+    expect(content.some((block) => block.type === "reasoning")).toBe(true);
 
     for (const block of content) {
       expect(typeof block).toBe("object");
-      if (block.type === "reasoning_content") {
+      if (block.type === "reasoning") {
         expect(Object.keys(block).sort()).toEqual(
-          ["type", "reasoningText"].sort()
+          ["type", "reasoning", "signature", "index"].sort()
         );
-
-        const reasoningBlock =
-          block as MessageContentReasoningBlockReasoningText;
-        expect(reasoningBlock.reasoningText).toBeTruthy();
-        expect(typeof reasoningBlock.reasoningText).toBe("object");
-        expect(reasoningBlock.reasoningText.text).toBeTruthy();
-        expect(typeof reasoningBlock.reasoningText.text).toBe("string");
-        expect(reasoningBlock.reasoningText.signature).toBeTruthy();
-        expect(typeof reasoningBlock.reasoningText.signature).toBe("string");
+        expect(typeof block.reasoning).toBe("string");
+        expect(typeof block.signature).toBe("string");
+        expect(typeof block.index).toBe("number");
       }
     }
     return full as AIMessageChunk;
@@ -587,7 +569,7 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
 });
 
 describe("AWS Bedrock Reasoning with contentBlocks", () => {
-  test("invoke returns reasoning_content as reasoning in contentBlocks", async () => {
+  test("invoke returns standard reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -612,7 +594,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
     expect(textBlocks.length).toBeGreaterThan(0);
   });
 
-  test("stream returns reasoning_content as reasoning in contentBlocks", async () => {
+  test("stream returns standard reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",

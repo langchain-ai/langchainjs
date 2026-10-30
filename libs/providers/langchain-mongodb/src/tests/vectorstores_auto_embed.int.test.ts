@@ -19,24 +19,6 @@ import {
   waitForDocumentsIndexed,
 } from "./utils.js";
 
-/**
- * The following json can be used to create an index in atlas for Cohere embeddings.
- * Use "langchain.test" for the namespace and "default" for the index name.
-
-{
-  "mappings": {
-    "fields": {
-      "e": { "type": "number" },
-      "embedding": {
-        "dimensions": 1536,
-        "similarity": "euclidean",
-        "type": "knnVector"
-      }
-    }
-  }
-}
-*/
-
 const tempClient = new MongoClient(uri());
 await tempClient.connect();
 const admin = tempClient.db().admin();

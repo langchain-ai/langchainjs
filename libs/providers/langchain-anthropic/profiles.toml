@@ -8,3 +8,44 @@ pdfInputs = true
 pdfToolMessage = true
 imageToolMessage = true
 structuredOutput = false
+
+[overrides."claude-opus-4-8"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-opus-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-opus-5-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-sonnet-5-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-sonnet-5"]
+midConversationSystemMessages = true
+midConversationTools = false
+
+[overrides."claude-haiku-5-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-fable-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-fable-5-1"]
+structuredOutput = true
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-mythos-5"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."claude-mythos-5-1"]
+midConversationSystemMessages = true
+midConversationTools = true

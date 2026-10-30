@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { StructuredTool, tool } from "@langchain/core/tools";
+import { StructuredTool, tool, type ToolRuntime } from "@langchain/core/tools";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
 import {
@@ -16,8 +16,10 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
   Annotation,
   Command,
+  GraphDrained,
   GraphInterrupt,
   messagesStateReducer,
+  RunControl,
   Send,
   StateGraph,
   MessagesAnnotation,
@@ -25,6 +27,7 @@ import {
 } from "@langchain/langgraph";
 
 import { ToolNode } from "../ToolNode.js";
+import { MiddlewareError } from "../../errors.js";
 
 import {
   _AnyIdAIMessage,
@@ -55,6 +58,42 @@ class SearchAPI extends StructuredTool {
 }
 
 describe("ToolNode", () => {
+  it("preserves explicit state in legacy Send payloads", async () => {
+    const state = {
+      messages: [new HumanMessage("legacy snapshot")],
+      value: "legacy",
+    };
+    const read = vi.fn(() => ({ ...state, value: "current" }));
+    const inspectState = tool(
+      (_input, runtime: ToolRuntime) => {
+        expect(runtime.state).toEqual(state);
+        return "ok";
+      },
+      {
+        name: "inspect_state",
+        description: "Inspect state",
+        schema: z.object({}),
+      }
+    );
+    const node = new ToolNode([inspectState], {
+      stateKeys: ["messages", "value"],
+      wrapToolCall: (request, handler) => {
+        expect(request.state).toEqual(state);
+        return handler(request);
+      },
+    });
+    const result = await node.invoke(
+      {
+        ...state,
+        lg_tool_call: { name: "inspect_state", args: {}, id: "legacy-call" },
+        jumpTo: undefined,
+      },
+      { configurable: { __pregel_read: read } }
+    );
+    expect(result).toMatchObject({ messages: [{ content: "ok" }] });
+    expect(read).not.toHaveBeenCalled();
+  });
+
   it("Should work when nested with a callback manager passed", async () => {
     const toolNode = new ToolNode([new SearchAPI()]);
     const wrapper = RunnableLambda.from(async (_) => {
@@ -797,6 +836,40 @@ describe("ToolNode error handling", () => {
     ).rejects.toThrow(GraphInterrupt);
   });
 
+  it("should raise GraphDrained when a tool's inner run is drained", async () => {
+    const control = new RunControl();
+    const inner = new StateGraph(MessagesAnnotation)
+      .addNode("requestDrain", () => {
+        control.requestDrain();
+        return {};
+      })
+      .addNode("after", () => ({}))
+      .addEdge("__start__", "requestDrain")
+      .addEdge("requestDrain", "after")
+      .compile();
+    const drainedTool = tool(
+      async () => {
+        await inner.invoke({ messages: [] }, { control });
+        return "unreachable";
+      },
+      {
+        name: "drained",
+        description: "A tool whose inner graph run is drained",
+        schema: z.object({}),
+      }
+    );
+    const agent = createAgent({
+      model: new FakeToolCallingModel({
+        toolCalls: [[{ name: "drained", args: {}, id: "1" }], []],
+      }),
+      tools: [drainedTool],
+    });
+
+    await expect(
+      agent.invoke({ messages: [new HumanMessage("run the drained tool")] })
+    ).rejects.toThrow(GraphDrained);
+  });
+
   it("should handle tool errors by default", async () => {
     const toolWithError = tool(
       async (_) => {
@@ -820,6 +893,72 @@ describe("ToolNode error handling", () => {
     expect(result.messages[0].content).toBe(
       "Error: some error\n Please fix your mistakes."
     );
+  });
+
+  it("recovers a schema error nested under multiple MiddlewareError wrappers", async () => {
+    // A tool whose args must satisfy a schema.
+    const strictTool = tool(async () => "ok", {
+      name: "strict_tool",
+      description: "requires a field",
+      schema: z.object({ required_field: z.string() }),
+    });
+    // Simulate two stacked wrapToolCall middlewares: the composer wraps once
+    // per middleware, so the recoverable error is nested
+    // MiddlewareError -> MiddlewareError -> ToolInvocationError.
+    const toolNode = new ToolNode([strictTool], {
+      wrapToolCall: async (request, handler) => {
+        try {
+          return await handler(request);
+        } catch (error) {
+          throw MiddlewareError.wrap(
+            MiddlewareError.wrap(error, "inner_middleware"),
+            "outer_middleware"
+          );
+        }
+      },
+    });
+
+    // Invalid args → ToolInputParsingException → ToolInvocationError →
+    // wrapped as MiddlewareError. It should still be recovered into a
+    // ToolMessage rather than aborting the run.
+    const result = await toolNode.invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [{ name: "strict_tool", args: {}, id: "testid" }],
+        }),
+      ],
+    });
+
+    expect(ToolMessage.isInstance(result.messages[0])).toBe(true);
+    expect(result.messages[0].content).toContain(
+      "did not match expected schema"
+    );
+  });
+
+  it("still throws non-recoverable middleware errors by default", async () => {
+    const okTool = tool(async () => "ok", {
+      name: "ok_tool",
+      description: "a tool",
+      schema: z.object({}),
+    });
+    // A genuine middleware failure (cause is not a ToolInvocationError).
+    const toolNode = new ToolNode([okTool], {
+      wrapToolCall: async () => {
+        throw MiddlewareError.wrap(new Error("boom"), "test_middleware");
+      },
+    });
+
+    await expect(
+      toolNode.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: [{ name: "ok_tool", args: {}, id: "testid" }],
+          }),
+        ],
+      })
+    ).rejects.toThrow();
   });
 
   it("should throw if handleToolErrors is false", async () => {

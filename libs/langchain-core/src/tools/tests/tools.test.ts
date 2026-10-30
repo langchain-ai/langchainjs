@@ -13,6 +13,8 @@ import {
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
+import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { FakeTracer } from "../../utils/testing/index.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -59,6 +61,34 @@ test("Tool works if responseFormat is content_and_artifact and returns a tuple",
   expect(toolResult).toBe("msg_content");
 });
 
+test("ToolCall ID is recorded in trace extras through the callback manager", async () => {
+  const collector = new RunCollectorCallbackHandler();
+  const weatherTool = tool((input) => input.location, {
+    name: "weather",
+    schema: z.object({ location: z.string() }),
+  });
+
+  await weatherTool.invoke(
+    {
+      id: "call_abc123",
+      name: "weather",
+      args: { location: "San Francisco" },
+      type: "tool_call",
+    },
+    { callbacks: [collector], metadata: { source: "test" } }
+  );
+  await awaitAllCallbacks();
+
+  expect(collector.tracedRuns).toHaveLength(1);
+  expect(collector.tracedRuns[0]).toMatchObject({
+    run_type: "tool",
+    extra: {
+      tool_call_id: "call_abc123",
+      metadata: { source: "test" },
+    },
+  });
+});
+
 test("ToolMessage content coerces to empty string when tool returns undefined", async () => {
   const weatherSchema = z.object({
     location: z.string(),
@@ -85,6 +115,54 @@ test("ToolMessage content coerces to empty string when tool returns undefined", 
 
   expect(toolResult).toBeInstanceOf(ToolMessage);
   expect(toolResult).toHaveProperty("content", "");
+});
+
+test("ToolMessage content is JSON-stringified when a tool returns an array of plain objects", async () => {
+  const toolCall = {
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  } as const;
+
+  const forecast = [
+    { day: "Mon", highF: 64, condition: "Foggy" },
+    { day: "Tue", highF: 67, condition: "Sunny" },
+  ];
+
+  const weatherTool = tool(() => forecast, {
+    name: "weather",
+    schema: z.object({ location: z.string() }),
+  });
+
+  const toolResult = await weatherTool.invoke(toolCall);
+
+  expect(toolResult).toBeInstanceOf(ToolMessage);
+  expect(toolResult.content).toBe(JSON.stringify(forecast));
+});
+
+test("ToolMessage content passes an array of content blocks through unchanged", async () => {
+  const toolCall = {
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  } as const;
+
+  const blocks = [
+    { type: "text", text: "Sunny" },
+    { type: "image_url", image_url: { url: "https://example.com/sf.png" } },
+  ];
+
+  const weatherTool = tool(() => blocks, {
+    name: "weather",
+    schema: z.object({ location: z.string() }),
+  });
+
+  const toolResult = await weatherTool.invoke(toolCall);
+
+  expect(toolResult).toBeInstanceOf(ToolMessage);
+  expect(toolResult.content).toEqual(blocks);
 });
 
 test("Does not return tool message if responseFormat is content_and_artifact and returns a tuple and a tool call with no id is passed in", async () => {
@@ -664,6 +742,26 @@ describe("Generator tools (async function*)", () => {
     await awaitAllCallbacks();
 
     expect(events).toEqual(["start", "stream", "stream", "end"]);
+  });
+
+  test("structured tool inputs remain structured in tracer runs", async () => {
+    const tracer = new FakeTracer();
+    const testTool = tool((input) => input.command, {
+      name: "execute",
+      schema: z.object({ command: z.string(), timeout: z.number() }),
+      description: "Execute a command",
+    });
+
+    await testTool.invoke(
+      { command: "echo hello", timeout: 1 },
+      { callbacks: [tracer] }
+    );
+    await awaitAllCallbacks();
+
+    expect(tracer.runs[0].inputs).toEqual({
+      command: "echo hello",
+      timeout: 1,
+    });
   });
 
   test("handleToolStart receives toolCallId when invoked with ToolCall", async () => {

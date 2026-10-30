@@ -10,7 +10,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
  * in the examples folder.
  */
 const datasource = {
-  type: "sqlite",
+  type: "better-sqlite3",
   database: "Chinook.db",
 } as const;
 

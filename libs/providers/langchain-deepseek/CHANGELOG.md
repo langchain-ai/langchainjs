@@ -1,5 +1,170 @@
 # @langchain/deepseek
 
+## 1.1.21
+
+### Patch Changes
+
+- Updated dependencies [[`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977)]:
+  - @langchain/openai@1.8.0
+
+## 1.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da)]:
+  - @langchain/openai@1.7.1
+
+## 1.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da)]:
+  - @langchain/openai@1.7.0
+
+## 1.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d)]:
+  - @langchain/openai@1.6.3
+
+## 1.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289), [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289)]:
+  - @langchain/openai@1.6.2
+
+## 1.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a)]:
+  - @langchain/openai@1.6.1
+
+## 1.1.15
+
+### Patch Changes
+
+- Updated dependencies [[`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34), [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c)]:
+  - @langchain/openai@1.6.0
+
+## 1.1.14
+
+### Patch Changes
+
+- Updated dependencies [[`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d), [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771), [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be)]:
+  - @langchain/openai@1.5.14
+
+## 1.1.13
+
+### Patch Changes
+
+- Updated dependencies [[`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c)]:
+  - @langchain/openai@1.5.13
+
+## 1.1.12
+
+### Patch Changes
+
+- Updated dependencies [[`6bd3a18`](https://github.com/langchain-ai/langchainjs/commit/6bd3a182a4dc558f3a5d3c87da69f17d9a35f934), [`7d6e1b0`](https://github.com/langchain-ai/langchainjs/commit/7d6e1b098723690bd1b98bc36ed18c75fa5a85ed), [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a)]:
+  - @langchain/openai@1.5.12
+
+## 1.1.12-rc.0
+
+### Patch Changes
+
+- Updated dependencies [[`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a)]:
+  - @langchain/openai@1.5.12-rc.0
+
+## 1.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216)]:
+  - @langchain/openai@1.5.11
+
+## 1.1.10
+
+### Patch Changes
+
+- Updated dependencies [[`c26c87e`](https://github.com/langchain-ai/langchainjs/commit/c26c87e41bccd01111e170c32ba1e5eec94ba3a6)]:
+  - @langchain/openai@1.5.10
+
+## 1.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027), [`fe8eec1`](https://github.com/langchain-ai/langchainjs/commit/fe8eec1915cc5580b8e7a2f3d4f68fe5e577d641), [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027)]:
+  - @langchain/openai@1.5.9
+
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41)]:
+  - @langchain/openai@1.5.8
+
+## 1.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6)]:
+  - @langchain/openai@1.5.7
+
+## 1.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723)]:
+  - @langchain/openai@1.5.6
+
+## 1.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`a9f123a`](https://github.com/langchain-ai/langchainjs/commit/a9f123a49c1c50fd32d54fe4cb15963d21252d5d), [`09e7f6d`](https://github.com/langchain-ai/langchainjs/commit/09e7f6d3408323fee5e19fc9af277114b1e8c89d)]:
+  - @langchain/openai@1.5.5
+
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`988ca7d`](https://github.com/langchain-ai/langchainjs/commit/988ca7dc9f1debd48278c6e888553e11c7845ca3)]:
+  - @langchain/openai@1.5.4
+
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`3205b35`](https://github.com/langchain-ai/langchainjs/commit/3205b35ac83037a2fff2998f16a66b5126b306f8)]:
+  - @langchain/openai@1.5.3
+
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`05936ab`](https://github.com/langchain-ai/langchainjs/commit/05936ab45ce1bbb04b955c3ebdd03dc1451b655c), [`798cb70`](https://github.com/langchain-ai/langchainjs/commit/798cb705222f43759e94d02a790ebb706ef2f099), [`80c790b`](https://github.com/langchain-ai/langchainjs/commit/80c790b593ad19668f1101f84f06c175db114909)]:
+  - @langchain/openai@1.5.2
+
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef)]:
+  - @langchain/openai@1.5.1
+
+## 1.1.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(deepseek): enable native OpenAI-compatible streamEvents events
+
+### Patch Changes
+
+- Updated dependencies [[`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1)]:
+  - @langchain/openai@1.5.0
+
 ## 1.0.27
 
 ### Patch Changes

@@ -1,7 +1,9 @@
 import { vi, test, expect, describe } from "vitest";
 import {
   AIMessage,
+  type BaseMessage,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   AIMessageChunk,
 } from "@langchain/core/messages";
@@ -10,9 +12,69 @@ import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
 import { ContentBlockParam as AnthropicContentBlockParam } from "@anthropic-ai/sdk/resources";
-import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
+import {
+  ChatAnthropic,
+  type ChatAnthropicInput,
+  ChatAnthropicMessages,
+} from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
+
+class TraceableChatAnthropic extends ChatAnthropicMessages {
+  traceParams(
+    options: Parameters<ChatAnthropicMessages["invocationParams"]>[0]
+  ) {
+    return this._getInvocationParamsForTracing(options);
+  }
+
+  traceOptions(
+    options: Parameters<ChatAnthropicMessages["invocationParams"]>[0]
+  ) {
+    const params = this._getInvocationParamsForTracing(options);
+    return this._getCallOptionsForTracing(options ?? {}, params);
+  }
+}
+
+test("MCP authorization tokens are redacted from traces", () => {
+  const model = new TraceableChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+  const publicServer = {
+    type: "url" as const,
+    url: "https://example.com/public-mcp",
+    name: "public-server",
+  };
+  const options = {
+    stop: ["done"],
+    mcp_servers: [
+      publicServer,
+      {
+        type: "url" as const,
+        url: "https://example.com/mcp",
+        name: "private-server",
+        authorization_token: "authorization-secret",
+      },
+    ],
+  };
+
+  const requestParams = model.invocationParams(options);
+  const traceParams = model.traceParams(options);
+  const traceOptions = model.traceOptions(options);
+
+  expect(requestParams.mcp_servers?.[1].authorization_token).toBe(
+    "authorization-secret"
+  );
+  expect(traceParams.mcp_servers?.[1].authorization_token).toBe("**REDACTED**");
+  expect(traceOptions.mcp_servers?.[1].authorization_token).toBe(
+    "**REDACTED**"
+  );
+  expect(traceOptions.stop).toBe(options.stop);
+  expect(traceOptions.mcp_servers?.[0]).toBe(publicServer);
+  expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
+    "authorization-secret"
+  );
+});
 
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
@@ -21,6 +83,25 @@ test("constructor supports model shorthand for ChatAnthropicMessages", () => {
 
   expect(model.model).toBe("claude-haiku-4-5-20251001");
   expect(model.modelName).toBe("claude-haiku-4-5-20251001");
+  expect(model.apiUrl).toBeUndefined();
+});
+
+test("constructor uses LangSmith Gateway environment configuration", () => {
+  vi.stubEnv("LANGSMITH_GATEWAY", "true");
+  vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+  vi.stubEnv("ANTHROPIC_API_URL", "");
+  vi.stubEnv("ANTHROPIC_BASE_URL", "");
+  vi.stubEnv("ANTHROPIC_API_KEY", "provider-key");
+  try {
+    const model = new ChatAnthropicMessages({
+      model: "claude-haiku-4-5-20251001",
+    });
+
+    expect(model.apiKey).toBe("gateway-key");
+    expect(model.apiUrl).toBe("https://gateway.smith.langchain.com/anthropic");
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 
 test("withStructuredOutput with output validation", async () => {
@@ -296,6 +377,42 @@ test("invocationParams includes container with thinking enabled", () => {
   const params = model.invocationParams({ container: "container_456" });
 
   expect(params.container).toBe("container_456");
+  expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
+});
+
+test("invocationParams omits thinking when not explicitly configured", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toBeUndefined();
+});
+
+test("invocationParams includes thinking when explicitly disabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+    thinking: { type: "disabled" },
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toEqual({ type: "disabled" });
+});
+
+test("invocationParams includes thinking when explicitly enabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 1,
+    anthropicApiKey: "testing",
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  const params = model.invocationParams({});
+
   expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
 });
 
@@ -1013,6 +1130,105 @@ describe("formatStructuredToolToAnthropic", () => {
 
     expect(result).toEqual([]);
   });
+
+  test("drops tools with top-level schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const result = model.formatStructuredToolToAnthropic([
+      {
+        name: "invalid_tool",
+        description: "Uses unsupported root composition.",
+        input_schema: {
+          type: "object",
+          oneOf: [],
+          anyOf: [],
+          allOf: [],
+        },
+      },
+    ]);
+
+    expect(result).toEqual([]);
+  });
+
+  test("retains tools with nested schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const tool = {
+      name: "valid_tool",
+      description: "Uses nested composition.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          choice: {
+            anyOf: [{ type: "string" }, { type: "number" }],
+          },
+        },
+      },
+    };
+    const result = model.formatStructuredToolToAnthropic([tool]);
+
+    expect(result).toEqual([tool]);
+  });
+});
+
+describe("tool choice with filtered tools", () => {
+  const rootCompositionTool = {
+    name: "invalid_composition_tool",
+    description: "Uses unsupported root composition.",
+    input_schema: {
+      type: "object" as const,
+      anyOf: [],
+    },
+  };
+
+  test("throws when a named choice references a filtered tool", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    expect(() =>
+      model.invocationParams({
+        tools: [rootCompositionTool],
+        tool_choice: { type: "tool", name: rootCompositionTool.name },
+      })
+    ).toThrow(
+      'Anthropic tool_choice references "invalid_composition_tool", but that tool is not available.'
+    );
+  });
+
+  test("throws when required tool use has no remaining tools", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    expect(() =>
+      model.invocationParams({
+        tools: [rootCompositionTool],
+        tool_choice: "required",
+      })
+    ).toThrow("Anthropic tool_choice requires at least one available tool.");
+  });
+
+  test("allows automatic tool choice when all tools are filtered", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    const params = model.invocationParams({
+      tools: [rootCompositionTool],
+      tool_choice: "auto",
+    });
+
+    expect(params.tools).toEqual([]);
+    expect(params.tool_choice).toEqual({ type: "auto" });
+  });
 });
 
 describe("Tool search beta auto-append", () => {
@@ -1113,6 +1329,200 @@ describe("Tool search beta auto-append", () => {
       paramsWithoutToolSearch.betas === undefined ||
         !paramsWithoutToolSearch.betas.includes("advanced-tool-use-2025-11-20")
     ).toBe(true);
+  });
+});
+
+describe("Mid-conversation tool change beta auto-append", () => {
+  const BETA = "mid-conversation-tool-changes-2026-07-01";
+  const toolRemoval = {
+    type: "tool_removal",
+    tool: { type: "tool_reference", name: "get_weather" },
+  };
+  const responseMessage = {
+    id: "msg_test",
+    type: "message",
+    role: "assistant",
+    model: "claude-haiku-4-5-20251001",
+    content: [{ type: "text", text: "OK" }],
+    stop_reason: "end_turn",
+    stop_sequence: null,
+    usage: { input_tokens: 1, output_tokens: 1 },
+  };
+
+  function makeMockFetch() {
+    return vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(init?.body as string);
+      if (!body.stream) {
+        return new Response(JSON.stringify(responseMessage), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const events = [
+        {
+          type: "message_start",
+          message: { ...responseMessage, content: [], stop_reason: null },
+        },
+        { type: "message_stop" },
+      ];
+      return new Response(
+        events
+          .map((e) => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`)
+          .join(""),
+        { status: 200, headers: { "content-type": "text/event-stream" } }
+      );
+    });
+  }
+
+  function makeMockedModel(fields?: Partial<ChatAnthropicInput>) {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      apiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      ...fields,
+    });
+    return { model, mockFetch };
+  }
+
+  function sentBetas(mockFetch: ReturnType<typeof makeMockFetch>) {
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [, init] = mockFetch.mock.calls[0];
+    const header = new Headers(init?.headers).get("anthropic-beta");
+    return header ? header.split(",").map((beta) => beta.trim()) : [];
+  }
+
+  const entryPoints = {
+    invoke: async (model: ChatAnthropic, messages: BaseMessage[]) => {
+      await model.invoke(messages);
+    },
+    stream: async (model: ChatAnthropic, messages: BaseMessage[]) => {
+      for await (const _chunk of await model.stream(messages)) {
+        // drain
+      }
+    },
+    streamEvents: async (model: ChatAnthropic, messages: BaseMessage[]) => {
+      for await (const _event of model.streamEvents(messages)) {
+        // drain
+      }
+    },
+  };
+
+  describe.each(Object.entries(entryPoints))("via %s", (_name, send) => {
+    test("adds the beta when a system turn carries a tool-change block", async () => {
+      const { model, mockFetch } = makeMockedModel();
+
+      await send(model, [
+        new HumanMessage("Review foo()"),
+        new SystemMessage({
+          content: [{ type: "non_standard", value: toolRemoval }],
+        }),
+      ]);
+
+      expect(sentBetas(mockFetch)).toEqual([BETA]);
+    });
+  });
+
+  test("adds the beta once when the caller already requested it", async () => {
+    const { model, mockFetch } = makeMockedModel({ betas: [BETA] });
+
+    await model.invoke([
+      new HumanMessage("Review foo()"),
+      new SystemMessage({ content: [toolRemoval] }),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([BETA]);
+  });
+
+  test("adds the beta for a tool-change block forwarded to the top-level system field", async () => {
+    // Anthropic, not the converter, rejects this placement, and it needs the
+    // beta to recognise the block when it does.
+    const { model, mockFetch } = makeMockedModel();
+
+    await model.invoke([
+      new SystemMessage({ content: [toolRemoval] }),
+      new HumanMessage("Review foo()"),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([BETA]);
+  });
+
+  test("omits the beta when no tool-change block is present", async () => {
+    const { model, mockFetch } = makeMockedModel();
+
+    await model.invoke([
+      new SystemMessage("You are a code reviewer."),
+      new HumanMessage("Review foo()"),
+      new SystemMessage("Be concise."),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([]);
+  });
+
+  test("omits the beta when the tool-change block was dropped", async () => {
+    // Only system content carries tool changes; on a human message the block
+    // is dropped like any other unrecognized block, so it enables nothing.
+    const { model, mockFetch } = makeMockedModel();
+
+    await model.invoke([
+      new HumanMessage({
+        content: [{ type: "text", text: "Review foo()" }, toolRemoval],
+      }),
+    ]);
+
+    expect(sentBetas(mockFetch)).toEqual([]);
+  });
+
+  describe("inline tool definitions", () => {
+    const INLINE_TOOLS_BETA = "inline-tools-2026-09-15";
+    const inlineDefinition = {
+      type: "tool_addition",
+      tool: {
+        type: "tool_definition",
+        definition: {
+          name: "db_query",
+          description:
+            "Run a read-only SQL query against the analytics database.",
+          input_schema: {
+            type: "object",
+            properties: { sql: { type: "string" } },
+            required: ["sql"],
+          },
+        },
+      },
+    };
+
+    test("sends the inline tools beta in place of the tool changes beta", async () => {
+      // The inline tools beta also covers changes by reference, so the tool
+      // changes beta is not sent alongside it.
+      const { model, mockFetch } = makeMockedModel();
+
+      await model.invoke([
+        new HumanMessage("Review foo()"),
+        new SystemMessage({ content: [toolRemoval] }),
+        new AIMessage("Done."),
+        new HumanMessage("How many orders shipped yesterday?"),
+        new SystemMessage({
+          content: [{ type: "non_standard", value: inlineDefinition }],
+        }),
+      ]);
+
+      expect(sentBetas(mockFetch)).toEqual([INLINE_TOOLS_BETA]);
+    });
+
+    test("adds no tool changes beta when the caller already sent the inline tools beta", async () => {
+      const { model, mockFetch } = makeMockedModel({
+        betas: [INLINE_TOOLS_BETA],
+      });
+
+      await model.invoke([
+        new HumanMessage("Review foo()"),
+        new SystemMessage({ content: [toolRemoval] }),
+      ]);
+
+      expect(sentBetas(mockFetch)).toEqual([INLINE_TOOLS_BETA]);
+    });
   });
 });
 
@@ -2001,86 +2411,119 @@ describe("Opus 4.6", () => {
   });
 });
 
-describe("Opus 4.7", () => {
-  test("default max_tokens for claude-opus-4-7 is 16384", () => {
+describe("Opus 4.7 and 5", () => {
+  const adaptiveOnlyOpusModels = [
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-opus-5",
+  ] as const;
+
+  test.each(["claude-opus-4-7", "claude-opus-5"] as const)(
+    "default max_tokens for %s is 16384",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.max_tokens).toBe(16384);
+    }
+  );
+
+  test("does not explicitly set thinking for claude-opus-5", () => {
     const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
+      model: "claude-opus-5",
       apiKey: "testing",
     });
 
-    const params = model.invocationParams({});
-
-    expect(params.max_tokens).toBe(16384);
+    expect(model.invocationParams({}).thinking).toBeUndefined();
   });
 
-  test("rejects thinking.type=enabled for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      thinking: { type: "enabled", budget_tokens: 2048 } as any,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "rejects thinking.type=enabled for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: "enabled", budget_tokens: 2048 } as any,
+      });
 
-    expect(() => model.invocationParams({})).toThrow(
-      'thinking.type="enabled" is not supported for claude-opus-4-7; use thinking.type="adaptive" instead'
-    );
-  });
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="enabled" is not supported for ${modelName}; use thinking.type="adaptive" instead`
+      );
+    }
+  );
 
-  test("rejects thinking.budget_tokens for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      thinking: { type: "adaptive", budget_tokens: 2048 } as any,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "rejects thinking.budget_tokens for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: "adaptive", budget_tokens: 2048 } as any,
+      });
 
-    expect(() => model.invocationParams({})).toThrow(
-      "thinking.budget_tokens is not supported for claude-opus-4-7; use outputConfig.effort instead"
-    );
-  });
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.budget_tokens is not supported for ${modelName}; use outputConfig.effort instead`
+      );
+    }
+  );
 
-  test("rejects non-default sampling params for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      temperature: 0.1,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "rejects non-default sampling params for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        temperature: 0.1,
+      });
 
-    expect(() => model.invocationParams({})).toThrow(
-      "temperature is not supported for claude-opus-4-7 when set to non-default values"
-    );
-  });
+      expect(() => model.invocationParams({})).toThrow(
+        `temperature is not supported for ${modelName} when set to non-default values`
+      );
+    }
+  );
 
-  test("does not include sampling params for claude-opus-4-7 even if set to defaults", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      temperature: 1,
-      topP: 1,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "does not include sampling params for %s even if set to defaults",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        temperature: 1,
+        topP: 1,
+      });
 
-    const params = model.invocationParams({});
+      const params = model.invocationParams({});
 
-    expect(params.temperature).toBeUndefined();
-    expect(params.top_p).toBeUndefined();
-    expect(params.top_k).toBeUndefined();
-  });
+      expect(params.temperature).toBeUndefined();
+      expect(params.top_p).toBeUndefined();
+      expect(params.top_k).toBeUndefined();
+    }
+  );
 
-  test("passes thinking.display through for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      thinking: { type: "adaptive", display: "summarized" } as any,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "passes thinking.display through for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: "adaptive", display: "summarized" } as any,
+      });
 
-    const params = model.invocationParams({});
+      const params = model.invocationParams({});
 
-    expect(params.thinking).toEqual({
-      type: "adaptive",
-      display: "summarized",
-    });
-  });
+      expect(params.thinking).toEqual({
+        type: "adaptive",
+        display: "summarized",
+      });
+    }
+  );
 
   test("auto-adds task budget beta when outputConfig.task_budget is provided", () => {
     const model = new ChatAnthropic({
@@ -2103,6 +2546,196 @@ describe("Opus 4.7", () => {
         total: 128000,
       },
     });
+  });
+
+  test.each(["xhigh", "max"] as const)(
+    "rejects disabled thinking with %s effort for claude-opus-5",
+    (effort) => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-5",
+        apiKey: "testing",
+        thinking: { type: "disabled" },
+        outputConfig: { effort },
+      });
+
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="disabled" is not supported for claude-opus-5 with outputConfig.effort="${effort}"; use thinking.type="adaptive" or omit thinking instead`
+      );
+    }
+  );
+
+  test("allows disabled thinking with high effort for claude-opus-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-5",
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+      outputConfig: { effort: "high" },
+    });
+
+    expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
+  });
+});
+
+describe("Fable 5 and Mythos 5", () => {
+  const modelNames = [
+    "claude-fable-5",
+    "claude-fable-5-1",
+    "claude-mythos-5",
+  ] as const;
+  test.each(modelNames)("default max_tokens for %s is 16384", (modelName) => {
+    const model = new ChatAnthropic({
+      model: modelName,
+      apiKey: "testing",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.max_tokens).toBe(16384);
+  });
+
+  test.each(modelNames)(
+    "does not explicitly set thinking for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+      });
+
+      expect(model.invocationParams({}).thinking).toBeUndefined();
+    }
+  );
+
+  test.each(modelNames)("handles disabled thinking for %s", (modelName) => {
+    const model = new ChatAnthropic({
+      model: modelName,
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+    });
+
+    if (modelName.startsWith("claude-fable-")) {
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
+      );
+    } else {
+      expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
+    }
+  });
+
+  test("rejects disabled thinking from invocationKwargs for Fable 5.1", () => {
+    const model = new ChatAnthropic({
+      model: "claude-fable-5-1",
+      apiKey: "testing",
+      invocationKwargs: { thinking: { type: "disabled" } },
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      'thinking.type="disabled" is not supported for claude-fable-5-1; omit thinking to use adaptive thinking instead'
+    );
+  });
+
+  test.each(modelNames)("rejects thinking.type=enabled for %s", (modelName) => {
+    const model = new ChatAnthropic({
+      model: modelName,
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "enabled", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `thinking.type="enabled" is not supported for ${modelName}; use thinking.type="adaptive" instead`
+    );
+  });
+
+  test.each(modelNames)(
+    "does not include sampling params for %s even if set to defaults",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        temperature: 1,
+        topP: 1,
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.temperature).toBeUndefined();
+      expect(params.top_p).toBeUndefined();
+      expect(params.top_k).toBeUndefined();
+    }
+  );
+});
+
+describe("Sonnet 5", () => {
+  test("default max_tokens for claude-sonnet-5 is 16384", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.max_tokens).toBe(16384);
+  });
+
+  test("rejects thinking.type=enabled for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "enabled", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `thinking.type="enabled" is not supported for claude-sonnet-5; use thinking.type="adaptive" instead`
+    );
+  });
+
+  test("rejects thinking.budget_tokens for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "adaptive", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `thinking.budget_tokens is not supported for claude-sonnet-5; use outputConfig.effort instead`
+    );
+  });
+
+  test("rejects non-default sampling params for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      temperature: 0.1,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `temperature is not supported for claude-sonnet-5 when set to non-default values`
+    );
+  });
+
+  test("does not include sampling params for claude-sonnet-5 even if set to defaults", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      temperature: 1,
+      topP: 1,
+    });
+
+    const params = model.invocationParams({});
+
+    expect(params.temperature).toBeUndefined();
+    expect(params.top_p).toBeUndefined();
+    expect(params.top_k).toBeUndefined();
+  });
+
+  test("allows disabled thinking for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+    });
+
+    expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
   });
 });
 
@@ -2287,5 +2920,36 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect((result as any).parsed).toEqual({
       alerts: [{ description: "test", severity: "MEDIUM" }],
     });
+  });
+});
+
+describe("profile mid-conversation support", () => {
+  test.each([
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "claude-haiku-5-5",
+    "claude-mythos-5",
+  ])("%s supports mid-conversation system messages and tools", (model) => {
+    const chatModel = new ChatAnthropic({ model, apiKey: "test" });
+    expect(chatModel.profile.midConversationSystemMessages).toBe(true);
+    expect(chatModel.profile.midConversationTools).toBe(true);
+  });
+
+  test("claude-sonnet-5 supports system messages but not tools", () => {
+    const chatModel = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "test",
+    });
+    expect(chatModel.profile.midConversationSystemMessages).toBe(true);
+    expect(chatModel.profile.midConversationTools).toBe(false);
+  });
+
+  test("older models leave the capability unset", () => {
+    const chatModel = new ChatAnthropic({
+      model: "claude-sonnet-4-6",
+      apiKey: "test",
+    });
+    expect(chatModel.profile.midConversationSystemMessages).toBeUndefined();
+    expect(chatModel.profile.midConversationTools).toBeUndefined();
   });
 });

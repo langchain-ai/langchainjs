@@ -1,4 +1,4 @@
-import { AIMessage } from "../../ai.js";
+import { AIMessage, AIMessageChunk } from "../../ai.js";
 import { ContentBlock } from "../../content/index.js";
 import { convertToV1FromChatBedrockConverseInput } from "../bedrock_converse.js";
 
@@ -93,7 +93,14 @@ describe("ChatBedrockConverseTranslator", () => {
         },
         {
           type: "reasoning_content",
-          reasoningText: "foo",
+          reasoningText: {
+            text: "foo",
+            signature: "opaque-signature",
+          },
+        },
+        {
+          type: "reasoning_content",
+          reasoningText: "legacy reasoning",
         },
         {
           type: "reasoning_content",
@@ -197,7 +204,15 @@ describe("ChatBedrockConverseTranslator", () => {
         mimeType: "image/jpeg",
         data: Buffer.from("image_bytes"),
       },
-      { type: "reasoning", reasoning: "foo" },
+      {
+        type: "reasoning",
+        reasoning: "foo",
+        signature: "opaque-signature",
+      },
+      {
+        type: "reasoning",
+        reasoning: "legacy reasoning",
+      },
       {
         type: "non_standard",
         value: {
@@ -242,6 +257,30 @@ describe("ChatBedrockConverseTranslator", () => {
     ];
     expect(message.contentBlocks).toEqual(expectedContent);
   });
+
+  it.each([
+    { name: "AIMessage", MessageClass: AIMessage },
+    { name: "AIMessageChunk", MessageClass: AIMessageChunk },
+  ])(
+    "should preserve standard reasoning blocks in $name contentBlocks",
+    ({ MessageClass }) => {
+      const reasoningBlock: ContentBlock.Reasoning = {
+        type: "reasoning",
+        reasoning: "reasoning text",
+        signature: "opaque-signature",
+        index: 0,
+      };
+      const message = new MessageClass({
+        content: [reasoningBlock],
+        response_metadata: {
+          model_provider: "bedrock-converse",
+        },
+      });
+
+      expect(message.contentBlocks).toEqual([reasoningBlock]);
+    }
+  );
+
   it("should translate ChatBedrockConverse inputs to standard content blocks", () => {
     const message = new AIMessage([
       { type: "text", text: "foo" },

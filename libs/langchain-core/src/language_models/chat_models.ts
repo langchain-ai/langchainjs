@@ -6,7 +6,6 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   AIMessageChunk,
-  isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
   MessageOutputVersion,
@@ -71,6 +70,11 @@ import { assembleStructuredOutputPipeline } from "./structured_output.js";
 import type { ChatModelStreamEvent } from "./event.js";
 import { ChatModelStream } from "./stream.js";
 import { convertChunksToEvents } from "./compat.js";
+import {
+  EventStreamCallbackHandlerInput,
+  StreamEvent,
+} from "../tracers/event_stream.js";
+import { IterableReadableStream } from "../utils/stream.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -341,6 +345,75 @@ export abstract class BaseChatModel<
   }
 
   /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & { version: "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & {
+      version: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & {
+      version: "v1" | "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
    * Create a {@link ChatModelStream} for the given input.
    *
    * Returns a stream object that is both `AsyncIterable<ChatModelStreamEvent>`
@@ -351,23 +424,63 @@ export abstract class BaseChatModel<
    * @param options - Optional call options.
    * @returns A {@link ChatModelStream}.
    *
+   * When `options.version` is `"v1"` or `"v2"`, this delegates to
+   * {@link Runnable.streamEvents} for callback-based tracing events instead.
+   * That path is deprecated on chat models; prefer calling `streamEvents()`
+   * without a `version` option.
+   *
    * @example
    * ```ts
-   * const stream = model.streamV2([{ role: "user", content: "Hello" }]);
+   * const stream = model.streamEvents([{ role: "user", content: "Hello" }]);
    *
    * // Stream text
    * for await (const token of stream.text) {
    *   process.stdout.write(token);
    * }
    *
+   * // Stream tool calls
+   * for await (const toolCall of stream.toolCalls) {
+   *   console.log(toolCall);
+   * }
+   *
+   * // Stream reasoning
+   * for await (const reasoning of stream.reasoning) {
+   *   console.log(reasoning);
+   * }
+   *
+   * // Stream usage
+   * for await (const usage of stream.usage) {
+   *   console.log(usage);
+   * }
+   *
    * // Or await the full message
    * const message = await stream;
    * ```
    */
-  streamV2(
+  streamEvents(
     input: BaseLanguageModelInput,
     options?: Partial<CallOptions>
-  ): ChatModelStream {
+  ): ChatModelStream;
+
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options?: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): ChatModelStream | IterableReadableStream<StreamEvent | Uint8Array> {
+    if (options?.version === "v1" || options?.version === "v2") {
+      return super.streamEvents(
+        input,
+        options as Partial<CallOptions> & {
+          version: "v1" | "v2";
+          encoding?: "text/event-stream" | undefined;
+        },
+        streamOptions
+      );
+    }
+
     const prompt = BaseChatModel._convertInputToPromptValue(input);
     const messages = prompt.toChatMessages();
     const [, callOptions] =
@@ -376,6 +489,16 @@ export abstract class BaseChatModel<
     const generator = this._streamChatModelEvents(messages, callOptions);
 
     return new ChatModelStream(generator);
+  }
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} instead. This method will be removed in the next major version.
+   */
+  streamV2(
+    input: BaseLanguageModelInput,
+    options?: Partial<CallOptions>
+  ): ChatModelStream {
+    return this.streamEvents(input, options);
   }
 
   async *_streamIterator(
@@ -399,7 +522,7 @@ export abstract class BaseChatModel<
         ...runnableConfig.metadata,
         ...this.getLsParamsWithDefaults(callOptions),
       };
-      const invocationParams = this.invocationParams(callOptions);
+      const invocationParams = this._getInvocationParamsForTracing(callOptions);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -414,7 +537,7 @@ export abstract class BaseChatModel<
         }
       );
       const extra = {
-        options: callOptions,
+        options: this._getCallOptionsForTracing(callOptions, invocationParams),
         invocation_params: invocationParams,
         batch_size: 1,
       };
@@ -430,8 +553,6 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -459,18 +580,6 @@ export abstract class BaseChatModel<
           } else {
             generationChunk = generationChunk.concat(chunk);
           }
-          if (
-            isAIMessageChunk(chunk.message) &&
-            chunk.message.usage_metadata !== undefined
-          ) {
-            llmOutput = {
-              tokenUsage: {
-                promptTokens: chunk.message.usage_metadata.input_tokens,
-                completionTokens: chunk.message.usage_metadata.output_tokens,
-                totalTokens: chunk.message.usage_metadata.total_tokens,
-              },
-            };
-          }
         }
         // Throw error if stream ended due to abort (provider returned early)
         callOptions.signal?.throwIfAborted();
@@ -481,6 +590,22 @@ export abstract class BaseChatModel<
           )
         );
         throw err;
+      }
+      // Built from the fully-accumulated chunk, not any single chunk's delta.
+      let llmOutput: LLMResult["llmOutput"];
+      if (
+        generationChunk &&
+        AIMessageChunk.isInstance(generationChunk.message) &&
+        generationChunk.message.usage_metadata !== undefined
+      ) {
+        llmOutput = {
+          tokenUsage: {
+            promptTokens: generationChunk.message.usage_metadata.input_tokens,
+            completionTokens:
+              generationChunk.message.usage_metadata.output_tokens,
+            totalTokens: generationChunk.message.usage_metadata.total_tokens,
+          },
+        };
       }
       await Promise.all(
         (runManagers ?? []).map((runManager) =>
@@ -540,7 +665,8 @@ export abstract class BaseChatModel<
         ...handledOptions.metadata,
         ...this.getLsParamsWithDefaults(parsedOptions),
       };
-      const invocationParams = this.invocationParams(parsedOptions);
+      const invocationParams =
+        this._getInvocationParamsForTracing(parsedOptions);
       // create callback manager and start run
       const callbackManager_ = await CallbackManager.configure(
         handledOptions.callbacks,
@@ -556,7 +682,10 @@ export abstract class BaseChatModel<
         }
       );
       const extra = {
-        options: parsedOptions,
+        options: this._getCallOptionsForTracing(
+          parsedOptions,
+          invocationParams
+        ),
         invocation_params: invocationParams,
         batch_size: 1,
       };
@@ -661,8 +790,6 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated: ChatGenerationChunk | undefined;
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
           // Check for abort signal - throw ModelAbortError with partial output
           if (parsedOptions.signal?.aborted) {
@@ -682,18 +809,6 @@ export abstract class BaseChatModel<
             aggregated = chunk;
           } else {
             aggregated = concat(aggregated, chunk);
-          }
-          if (
-            isAIMessageChunk(chunk.message) &&
-            chunk.message.usage_metadata !== undefined
-          ) {
-            llmOutput = {
-              tokenUsage: {
-                promptTokens: chunk.message.usage_metadata.input_tokens,
-                completionTokens: chunk.message.usage_metadata.output_tokens,
-                totalTokens: chunk.message.usage_metadata.total_tokens,
-              },
-            };
           }
         }
         // Check if stream ended due to abort (provider returned early)
@@ -715,6 +830,20 @@ export abstract class BaseChatModel<
           ) as AIMessageChunk;
         }
         generations.push([aggregated]);
+        // Built from the fully-accumulated chunk, same as _streamIterator above.
+        let llmOutput: LLMResult["llmOutput"];
+        if (
+          AIMessageChunk.isInstance(aggregated.message) &&
+          aggregated.message.usage_metadata !== undefined
+        ) {
+          llmOutput = {
+            tokenUsage: {
+              promptTokens: aggregated.message.usage_metadata.input_tokens,
+              completionTokens: aggregated.message.usage_metadata.output_tokens,
+              totalTokens: aggregated.message.usage_metadata.total_tokens,
+            },
+          };
+        }
         await runManagers?.[0].handleLLMEnd({
           generations,
           llmOutput,
@@ -820,7 +949,7 @@ export abstract class BaseChatModel<
       ...handledOptions.metadata,
       ...this.getLsParamsWithDefaults(parsedOptions),
     };
-    const invocationParams = this.invocationParams(parsedOptions);
+    const invocationParams = this._getInvocationParamsForTracing(parsedOptions);
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -836,7 +965,7 @@ export abstract class BaseChatModel<
       }
     );
     const extra = {
-      options: parsedOptions,
+      options: this._getCallOptionsForTracing(parsedOptions, invocationParams),
       invocation_params: invocationParams,
       batch_size: 1,
     };
@@ -1026,6 +1155,19 @@ export abstract class BaseChatModel<
     }
 
     return { generations, llmOutput } as LLMResult;
+  }
+
+  protected _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    return this.invocationParams(options);
+  }
+
+  protected _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    return options;
   }
 
   /**

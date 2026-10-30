@@ -52,6 +52,30 @@ describe("OpenRouterError.fromResponse", () => {
     expect(err.code).toBe(429);
   });
 
+  it("preserves response headers on rate limit errors", async () => {
+    const res = new Response(
+      JSON.stringify({
+        error: { message: "Rate limit exceeded", code: 429 },
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": "5",
+        },
+      }
+    );
+    const err = await OpenRouterError.fromResponse(res);
+
+    expect(OpenRouterRateLimitError.isInstance(err)).toBe(true);
+    expect(err.headers).toEqual(
+      expect.objectContaining({
+        "content-type": "application/json",
+        "retry-after": "5",
+      })
+    );
+  });
+
   it("returns base OpenRouterError for 500", async () => {
     const res = jsonResponse(500, {
       error: { message: "Internal error", code: 500 },

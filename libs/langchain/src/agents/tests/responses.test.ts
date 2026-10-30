@@ -1,15 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { fakeModel } from "@langchain/core/testing";
 
-import { createAgent, toolStrategy, providerStrategy } from "../index.js";
+import {
+  createAgent,
+  createMiddleware,
+  toolStrategy,
+  providerStrategy,
+} from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
 import {
   hasSupportForJsonSchemaOutput,
@@ -708,6 +714,48 @@ describe("structured output handling", () => {
       });
     });
 
+    describe("ProviderStrategy.parse", () => {
+      const parseSchema = z.object({ result: z.string() });
+
+      it("should parse structured output from a plain string response", () => {
+        const strategy = providerStrategy(parseSchema);
+        const parsed = strategy.parse(
+          new AIMessage({ content: JSON.stringify({ result: "ok" }) })
+        );
+        expect(parsed).toEqual({ result: "ok" });
+      });
+
+      it("should parse structured output from the first text block in array content", () => {
+        const strategy = providerStrategy(parseSchema);
+        const parsed = strategy.parse(
+          new AIMessage({
+            content: [{ type: "text", text: JSON.stringify({ result: "ok" }) }],
+          })
+        );
+        expect(parsed).toEqual({ result: "ok" });
+      });
+
+      it("should skip a leading thought text block and parse the structured response", () => {
+        // Regression test for #11435: @langchain/google represents a Gemini
+        // thought summary as `{ type: "text", thought: true }` followed by the
+        // structured JSON block. parse() must ignore the thought block.
+        const strategy = providerStrategy(parseSchema);
+        const parsed = strategy.parse(
+          new AIMessage({
+            content: [
+              {
+                type: "text",
+                thought: true,
+                text: "A returned thought summary.",
+              },
+              { type: "text", text: JSON.stringify({ result: "ok" }) },
+            ],
+          })
+        );
+        expect(parsed).toEqual({ result: "ok" });
+      });
+    });
+
     describe("ToolStrategy.fromSchema with Standard Schema", () => {
       it("should create a ToolStrategy from a Standard Schema", () => {
         const schema = makeSerializableSchema({
@@ -777,5 +825,63 @@ describe("hasSupportForJsonSchemaOutput", () => {
       anthropicApiKey: "foobar",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
+  });
+});
+
+describe("native structured output does not force strict tools", () => {
+  const echo = tool(async () => "ok", {
+    name: "echo",
+    description: "Echo the text.",
+    schema: z.object({ text: z.string(), times: z.number().optional() }),
+  });
+  const schema = z.object({ answer: z.string() });
+
+  /** Spy on bindTools, run the agent, and return the options it bound with. */
+  async function bindOptions(
+    responseFormat: ProviderStrategy<Record<string, unknown>>,
+    middleware?: Parameters<typeof createAgent>[0]["middleware"]
+  ) {
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage('{"answer":"ok"}')],
+    });
+    const bindTools = vi.spyOn(model, "bindTools");
+    const agent = createAgent({
+      model,
+      tools: [echo],
+      responseFormat,
+      middleware,
+    });
+    await agent.invoke({ messages: [new HumanMessage("hi")] });
+    // `bindTools` is declared with a single `tools` param, but the agent passes
+    // call options as a 2nd argument at runtime. Widen the captured call to read
+    // the `strict` flag and `response_format` it bound with.
+    const [, options] = bindTools.mock.calls[0] as unknown as [
+      unknown,
+      { strict?: boolean; response_format?: unknown } | undefined,
+    ];
+    return options ?? {};
+  }
+
+  it("leaves tools non-strict for a default ProviderStrategy (strict defaults true)", async () => {
+    const opts = await bindOptions(ProviderStrategy.fromSchema(schema));
+    expect(opts.strict).toBeUndefined();
+    expect(opts.response_format).toBeDefined(); // native output still requested
+  });
+
+  it("honors an explicit modelSettings.strict override", async () => {
+    const forceStrict = createMiddleware({
+      name: "forceStrict",
+      wrapModelCall: async (request, handler) =>
+        handler({ ...request, modelSettings: { strict: true } }),
+    });
+    const opts = await bindOptions(ProviderStrategy.fromSchema(schema), [
+      forceStrict,
+    ]);
+    expect(opts.strict).toBe(true);
+  });
+
+  it("keeps tools non-strict for an explicit providerStrategy strict: false", async () => {
+    const opts = await bindOptions(ProviderStrategy.fromSchema(schema, false));
+    expect(opts.strict).toBeUndefined();
   });
 });

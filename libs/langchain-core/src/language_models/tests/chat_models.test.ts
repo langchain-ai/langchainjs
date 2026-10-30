@@ -1,16 +1,24 @@
-import { test, expect, vi } from "vitest";
+import { test, expect, expectTypeOf, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
+import type { BaseMessage } from "../../messages/base.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { BaseCallbackHandler } from "../../callbacks/base.js";
+import { ChatGenerationChunk } from "../../outputs.js";
+import type { LLMResult, ChatResult } from "../../outputs.js";
+import { BaseChatModel } from "../chat_models.js";
+import type { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { awaitAllCallbacks } from "../../callbacks/promises.js";
+import type { ChatModelStream } from "../stream.js";
+import type { IterableReadableStream } from "../../utils/stream.js";
+import type { StreamEvent } from "../../tracers/event_stream.js";
 import type { LangSmithTracingClientInterface } from "langsmith";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
@@ -30,6 +38,39 @@ test("Test ChatModel accepts object shorthand for messages", async () => {
     },
   ]);
   expect(response.content).toEqual("Hello there!");
+});
+
+test("ChatModel streamEvents preserves chat and runnable overloads", () => {
+  const model = new FakeChatModel({});
+  const version: "v1" | "v2" = Math.random() > 0.5 ? "v1" : "v2";
+
+  expectTypeOf(
+    model.streamEvents("Hello there!")
+  ).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {})
+  ).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", { version: "v1" })
+  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", { version: "v2" })
+  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {
+      version: "v2",
+      encoding: "text/event-stream",
+    })
+  ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
+  expectTypeOf(model.streamEvents("Hello there!", { version })).toMatchTypeOf<
+    IterableReadableStream<StreamEvent>
+  >();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {
+      version,
+      encoding: "text/event-stream",
+    })
+  ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
 });
 
 test("Test ChatModel accepts object with role for messages", async () => {
@@ -579,4 +620,105 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
       text: "Hello world!",
     },
   ]);
+});
+
+class DeltaUsageChatModel extends BaseChatModel {
+  _llmType() {
+    return "delta-usage-fake";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    throw new Error("DeltaUsageChatModel only supports streaming");
+  }
+
+  async *_streamResponseChunks(): AsyncGenerator<ChatGenerationChunk> {
+    const deltas = [
+      {
+        content: "Hello",
+        usage: { input_tokens: 10, output_tokens: 1, total_tokens: 11 },
+      },
+      {
+        content: " world",
+        usage: { input_tokens: 0, output_tokens: 4, total_tokens: 4 },
+      },
+      {
+        content: "!",
+        usage: { input_tokens: 0, output_tokens: 7, total_tokens: 7 },
+      },
+    ];
+    for (const d of deltas) {
+      yield new ChatGenerationChunk({
+        text: d.content,
+        message: new AIMessageChunk({
+          content: d.content,
+          usage_metadata: d.usage,
+        }),
+      });
+    }
+  }
+}
+
+test("Test ChatModel .stream() builds llmOutput.tokenUsage from accumulated usage, not the last chunk's delta", async () => {
+  const model = new DeltaUsageChatModel({});
+  let callbackResult: LLMResult | undefined;
+
+  const stream = await model.stream("hi", {
+    callbacks: [
+      {
+        handleLLMEnd: async (output: LLMResult) => {
+          callbackResult = output;
+        },
+      },
+    ],
+  });
+
+  let full: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    full = full ? full.concat(chunk) : chunk;
+  }
+
+  expect(full?.usage_metadata).toMatchObject({
+    input_tokens: 10,
+    output_tokens: 12,
+    total_tokens: 22,
+  });
+  expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+    promptTokens: 10,
+    completionTokens: 12,
+    totalTokens: 22,
+  });
+});
+
+test("Test ChatModel .invoke() with a streaming-preferring callback builds llmOutput.tokenUsage from accumulated usage", async () => {
+  class PreferStreamingCallbackHandler extends BaseCallbackHandler {
+    name = "prefer-streaming";
+
+    lc_prefer_streaming = true;
+
+    handleLLMNewToken() {}
+  }
+
+  const model = new DeltaUsageChatModel({});
+  let callbackResult: LLMResult | undefined;
+
+  await model.invoke("hi", {
+    callbacks: [
+      new PreferStreamingCallbackHandler(),
+      {
+        handleLLMEnd: async (output: LLMResult) => {
+          callbackResult = output;
+        },
+      },
+    ],
+  });
+
+  expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+    promptTokens: 10,
+    completionTokens: 12,
+    totalTokens: 22,
+  });
 });

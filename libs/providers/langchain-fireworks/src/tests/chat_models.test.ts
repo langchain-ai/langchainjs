@@ -16,6 +16,42 @@ describe("ChatFireworks", () => {
     expect(model.temperature).toBe(0.2);
   });
 
+  test("uses LangSmith Gateway environment configuration", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    vi.stubEnv("FIREWORKS_API_BASE", "");
+    vi.stubEnv("FIREWORKS_BASE_URL", "");
+    vi.stubEnv("FIREWORKS_API_KEY", "provider-key");
+    try {
+      const model = new ChatFireworks();
+
+      expect(model.apiKey).toBe("gateway-key");
+      expect(model.clientConfig.baseURL).toBe(
+        "https://gateway.smith.langchain.com/fireworks"
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  test("prefers the Fireworks base URL environment configuration", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    vi.stubEnv("FIREWORKS_API_BASE", "");
+    vi.stubEnv("FIREWORKS_BASE_URL", "https://fireworks.example.com/v1");
+    vi.stubEnv("FIREWORKS_API_KEY", "provider-key");
+    try {
+      const model = new ChatFireworks();
+
+      expect(model.apiKey).toBe("provider-key");
+      expect(model.clientConfig.baseURL).toBe(
+        "https://fireworks.example.com/v1"
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   test("serializes with Fireworks secret aliases", () => {
     const model = new ChatFireworks({
       apiKey: "test-api-key",

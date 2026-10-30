@@ -135,7 +135,10 @@ export function supportedToolChoiceValuesForModel(
     model.includes("claude-4") ||
     model.includes("claude-haiku-4") ||
     model.includes("claude-opus-4") ||
-    model.includes("claude-sonnet-4")
+    model.includes("claude-sonnet-4") ||
+    model.includes("claude-haiku-5") ||
+    model.includes("claude-opus-5") ||
+    model.includes("claude-sonnet-5")
   ) {
     return ["auto", "any", "tool"];
   }

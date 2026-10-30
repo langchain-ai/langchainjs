@@ -1,4 +1,3 @@
-/* oxlint-disable no-instanceof/no-instanceof */
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
@@ -9,6 +8,7 @@ import {
   Send,
   Command,
   CompiledStateGraph,
+  isCommand,
   type GetStateOptions,
   type LangGraphRunnableConfig,
   type StreamMode,
@@ -54,9 +54,10 @@ import {
 } from "./nodes/utils.js";
 import {
   createToolCallTransformer,
+  createSubagentTransformer,
   type AgentRunStream,
   type InferStreamExtensions,
-} from "./stream.js";
+} from "./transformers/index.js";
 
 import type {
   WithStateGraphNodes,
@@ -69,6 +70,7 @@ import type { BuiltInState, JumpTo, UserInput } from "./types.js";
 import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
+  AnyAgentMiddleware,
   InferMiddlewareContextInputs,
   InferMiddlewareStates,
   InferMiddlewareInputStates,
@@ -79,6 +81,7 @@ import type {
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 import { getHookConstraint } from "./middleware/utils.js";
+import { toGraphDefaultConfig } from "./utils.js";
 
 /**
  * In the ReAct pattern we have three main nodes:
@@ -163,7 +166,7 @@ export class ReactAgent<
     Record<string, any>,
     undefined,
     AnyAnnotationRoot,
-    readonly AgentMiddleware[],
+    readonly AnyAgentMiddleware[],
     readonly (ClientTool | ServerTool)[],
     ReadonlyArray<() => StreamTransformer<any>>
   >,
@@ -384,6 +387,16 @@ export class ReactAgent<
      * to allow middleware to handle dynamically registered tools.
      */
     const hasWrapToolCallMiddleware = middleware.some((m) => m.wrapToolCall);
+    if (
+      this.#toolBehaviorVersion === "v1" &&
+      middleware.some(
+        (m) => m.name === "HumanInTheLoopMiddleware" && m.wrapToolCall
+      )
+    ) {
+      throw new Error(
+        'humanInTheLoopMiddleware({ interruptMode: "per_call" }) requires createAgent version "v2" (the default). Version "v1" runs every tool call in one task, so per-call interrupts would share an ID.'
+      );
+    }
     const clientTools = toolClasses.filter(isClientTool);
 
     /**
@@ -394,6 +407,9 @@ export class ReactAgent<
       const toolNode = new ToolNode(clientTools, {
         signal: this.options.signal,
         wrapToolCall: wrapToolCall(middleware),
+        stateKeys: Object.keys(workflow.channels).filter(
+          (key) => key !== "jumpTo"
+        ),
       });
       allNodeWorkflows.addNode(TOOLS_NODE_NAME, toolNode);
     }
@@ -671,8 +687,15 @@ export class ReactAgent<
     /**
      * compile the graph with native + user-defined stream transformers
      */
+    const middlewareStreamTransformers = (
+      this.options.middleware ?? []
+    ).flatMap((m) => m.streamTransformers ?? []);
     const compileTransformers = [
+      /* built-in stream transformers */
       createToolCallTransformer([]),
+      createSubagentTransformer([]),
+      /* middleware stream transformers */
+      ...middlewareStreamTransformers,
       /* user-defined stream transformers */
       ...(this.options.streamTransformers ?? []),
     ];
@@ -684,6 +707,18 @@ export class ReactAgent<
       description: this.options.description,
       transformers: compileTransformers,
     }) as unknown as AgentGraph<Types>;
+
+    /**
+     * LangGraph API resolves exported agents by unwrapping ReactAgent to the
+     * inner compiled graph (see langgraph-api load.utils `afterResolve`) and
+     * calls streamEvents on that pregel directly. That path only sees config
+     * baked into the graph via `.withConfig()`, not ReactAgent's #defaultConfig
+     * merged at invoke/stream time — so propagate static defaults here.
+     */
+    const graphDefaultConfig = toGraphDefaultConfig(this.#defaultConfig);
+    if (Object.keys(graphDefaultConfig).length > 0) {
+      this.#graph = this.#graph.withConfig(graphDefaultConfig);
+    }
   }
 
   /**
@@ -741,6 +776,13 @@ export class ReactAgent<
     );
   }
 
+  #getGraphConfig(config?: RunnableConfig) {
+    return mergeConfigs(
+      { ...this.#defaultConfig, callbacks: undefined },
+      config
+    );
+  }
+
   /**
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
@@ -780,10 +822,12 @@ export class ReactAgent<
       const messages = builtInState.messages;
       const lastMessage = messages[messages.length - 1];
 
-      // Check if we just executed a returnDirect tool
+      // Check if we just executed a returnDirect tool successfully. A failed
+      // call goes back to the model so it can correct itself and retry.
       if (
         ToolMessage.isInstance(lastMessage) &&
         lastMessage.name &&
+        lastMessage.status !== "error" &&
         shouldReturnDirect.has(lastMessage.name)
       ) {
         // If we have a response format, route to agent to generate structured response
@@ -847,8 +891,7 @@ export class ReactAgent<
       }
 
       return regularToolCalls.map(
-        (toolCall) =>
-          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+        (toolCall) => new Send(TOOLS_NODE_NAME, { lg_tool_call: toolCall })
       );
     };
   }
@@ -924,8 +967,7 @@ export class ReactAgent<
           return TOOLS_NODE_NAME;
         }
         return pendingToolCalls.map(
-          (toolCall) =>
-            new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+          (toolCall) => new Send(TOOLS_NODE_NAME, { lg_tool_call: toolCall })
         );
       }
 
@@ -987,8 +1029,7 @@ export class ReactAgent<
       }
 
       return regularToolCalls.map(
-        (toolCall) =>
-          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+        (toolCall) => new Send(TOOLS_NODE_NAME, { lg_tool_call: toolCall })
       );
     };
   }
@@ -1105,7 +1146,7 @@ export class ReactAgent<
     if (
       !this.options.middleware ||
       this.options.middleware.length === 0 ||
-      state instanceof Command ||
+      isCommand(state) ||
       !state
     ) {
       return state;
@@ -1191,7 +1232,7 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<Types>;
-    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+    const mergedConfig = this.#getGraphConfig(config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       mergedConfig as RunnableConfig
@@ -1199,12 +1240,7 @@ export class ReactAgent<
 
     return this.#graph.invoke(
       initializedState,
-      mergedConfig as unknown as InferContextInput<
-        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-          ? Types["Context"]
-          : AnyAnnotationRoot
-      > &
-        InferMiddlewareContextInputs<Types["Middleware"]>
+      mergedConfig
     ) as Promise<FullState>;
   }
 
@@ -1268,15 +1304,12 @@ export class ReactAgent<
       TEncoding
     >
   ) {
-    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+    const mergedConfig = this.#getGraphConfig(config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       mergedConfig as RunnableConfig
     );
-    return this.#graph.stream(
-      initializedState,
-      mergedConfig as Record<string, any>
-    ) as Promise<
+    return this.#graph.stream(initializedState, mergedConfig) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
@@ -1448,7 +1481,7 @@ export class ReactAgent<
       >
     | IterableReadableStream<StreamEvent> {
     if (config?.version !== "v3" || streamOptions != null) {
-      const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+      const mergedConfig = this.#getGraphConfig(config);
       const version =
         config?.version === "v1" || config?.version === "v2"
           ? config.version
@@ -1491,7 +1524,7 @@ export class ReactAgent<
         version: _version,
         ...restConfig
       } = agentConfig ?? {};
-      const mergedConfig = mergeConfigs(this.#defaultConfig, restConfig);
+      const mergedConfig = this.#getGraphConfig(restConfig);
       const initializedState = await this.#initializeMiddlewareStates(
         state,
         mergedConfig as RunnableConfig

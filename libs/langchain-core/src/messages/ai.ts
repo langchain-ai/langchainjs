@@ -22,6 +22,19 @@ import {
 } from "./tool.js";
 import { collapseToolCallChunks, Constructor } from "./utils.js";
 
+function coerceToContentBlocks(value: unknown): ContentBlock.Standard[] {
+  if (typeof value === "string") {
+    return value.length > 0 ? [{ type: "text", text: value }] : [];
+  }
+  if (Array.isArray(value)) {
+    return value as Array<ContentBlock.Standard>;
+  }
+  if (value == null) {
+    return [];
+  }
+  return [value as ContentBlock.Standard];
+}
+
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "ai"> {
@@ -98,18 +111,25 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         initParams.invalid_tool_calls = [];
       }
 
-      // Convert content to content blocks if output version is v1
+      // Convert content to content blocks if output version is v1.
+      // Serialized LangGraph payloads often still carry string `content` even
+      // when `output_version` is "v1"; normalize to an array before mutating.
       if (
         initParams.response_metadata !== undefined &&
         "output_version" in initParams.response_metadata &&
-        initParams.response_metadata.output_version === "v1"
+        initParams.response_metadata.output_version === "v1" &&
+        initParams.content !== undefined
       ) {
-        initParams.contentBlocks =
-          initParams.content as Array<ContentBlock.Standard>;
+        initParams.contentBlocks = coerceToContentBlocks(initParams.content);
         initParams.content = undefined;
       }
 
       if (initParams.contentBlocks !== undefined) {
+        if (!Array.isArray(initParams.contentBlocks)) {
+          initParams.contentBlocks = coerceToContentBlocks(
+            initParams.contentBlocks
+          );
+        }
         // Add constructor tool calls as content blocks only when they are not
         // already represented in the v1 content payload.
         if (initParams.tool_calls) {
@@ -239,6 +259,10 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
   ): obj is AIMessage<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 /**
@@ -313,12 +337,9 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
-      const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
+      // Collapsed lazily on first read; see _defineLazyToolCallGetters.
       initParams = {
         ...fields,
-        tool_call_chunks: collapsed.tool_call_chunks,
-        tool_calls: collapsed.tool_calls as $InferToolCalls<TStructure>[],
-        invalid_tool_calls: collapsed.invalid_tool_calls,
         usage_metadata:
           fields.usage_metadata !== undefined
             ? fields.usage_metadata
@@ -330,10 +351,58 @@ export class AIMessageChunk<
     super(initParams);
     this.tool_call_chunks =
       initParams.tool_call_chunks ?? this.tool_call_chunks;
-    this.tool_calls = initParams.tool_calls ?? this.tool_calls;
-    this.invalid_tool_calls =
-      initParams.invalid_tool_calls ?? this.invalid_tool_calls;
+    if (
+      typeof fields !== "string" &&
+      !Array.isArray(fields) &&
+      fields.tool_call_chunks !== undefined &&
+      fields.tool_call_chunks.length > 0
+    ) {
+      this._defineLazyToolCallGetters(
+        fields.tool_call_chunks.map((chunk) => ({ ...chunk }))
+      );
+    } else {
+      this.tool_calls = initParams.tool_calls ?? this.tool_calls;
+      this.invalid_tool_calls =
+        initParams.invalid_tool_calls ?? this.invalid_tool_calls;
+    }
     this.usage_metadata = initParams.usage_metadata;
+  }
+
+  /**
+   * Lazily collapses tool_call_chunks into tool_calls / invalid_tool_calls on first read.
+   * Own-property getters (not prototype accessors) so spread / Object.entries still see
+   * the values; mirrored on lc_kwargs so serialized output matches the eager behavior.
+   */
+  private _defineLazyToolCallGetters(toolCallChunks: ToolCallChunk[]) {
+    let collapsed: ReturnType<typeof collapseToolCallChunks> | undefined;
+    const getCollapsed = () => {
+      collapsed ??= collapseToolCallChunks(toolCallChunks);
+      return collapsed;
+    };
+    const defineLazy = (
+      target: object,
+      prop: "tool_calls" | "invalid_tool_calls"
+    ) => {
+      Object.defineProperty(target, prop, {
+        get: () => getCollapsed()[prop],
+        // Writing to the property replaces the getter with a plain value,
+        // restoring normal assignment semantics.
+        set: (value: unknown) => {
+          Object.defineProperty(target, prop, {
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        },
+        enumerable: true,
+        configurable: true,
+      });
+    };
+    defineLazy(this, "tool_calls");
+    defineLazy(this, "invalid_tool_calls");
+    defineLazy(this.lc_kwargs, "tool_calls");
+    defineLazy(this.lc_kwargs, "invalid_tool_calls");
   }
 
   get lc_aliases(): Record<string, string> {
@@ -432,7 +501,12 @@ export class AIMessageChunk<
         combinedFields.tool_call_chunks = rawToolCalls as ToolCallChunk[];
       }
     }
-    if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {
+    // Skip when chunks exist: the constructor derives tool_calls, and reading here forces a collapse.
+    if (
+      (combinedFields.tool_call_chunks === undefined ||
+        combinedFields.tool_call_chunks.length === 0) &&
+      (this.tool_calls !== undefined || chunk.tool_calls !== undefined)
+    ) {
       const rawToolCalls = _mergeLists(
         this.tool_calls as ContentBlock.Tools.ToolCall[],
         chunk.tool_calls as ContentBlock.Tools.ToolCall[]
@@ -472,5 +546,9 @@ export class AIMessageChunk<
     obj: BaseMessage<T> | unknown
   ): obj is AIMessageChunk<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }

@@ -5,7 +5,7 @@ import { tool } from "@langchain/core/tools";
 import { fakeModel } from "@langchain/core/testing";
 import { StreamChannel, type StreamTransformer } from "@langchain/langgraph";
 
-import { createAgent } from "../index.js";
+import { createAgent, createMiddleware } from "../index.js";
 
 describe("streamEvents types", () => {
   it("should type tool calls as a discriminated union", async () => {
@@ -102,5 +102,40 @@ describe("streamEvents types", () => {
       StreamChannel<number>
     >();
     expectTypeOf(run.extensions.methods).toEqualTypeOf<StreamChannel<string>>();
+  });
+
+  it("should type run.extensions from middleware streamTransformers", async () => {
+    const model = fakeModel().respond(new AIMessage("ok"));
+
+    const eventCounter = (): StreamTransformer<{
+      eventCount: StreamChannel<number>;
+    }> => ({
+      init: () => ({ eventCount: StreamChannel.remote<number>("eventCount") }),
+      process() {
+        return true;
+      },
+    });
+
+    const middleware = createMiddleware({
+      name: "StreamMiddleware",
+      streamTransformers: [eventCounter],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware],
+    });
+
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hi")],
+      },
+      { version: "v3" }
+    );
+
+    expectTypeOf(run.extensions.eventCount).toEqualTypeOf<
+      StreamChannel<number>
+    >();
   });
 });

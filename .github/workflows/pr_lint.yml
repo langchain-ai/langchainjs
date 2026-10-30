@@ -60,7 +60,6 @@ jobs:
             exa
             fireworks
             google
-            google-cloud-sql-pg
             google-common
             google-gauth
             google-genai
@@ -82,12 +81,14 @@ jobs:
             redis
             tavily
             together-ai
+            typesafe
             weaviate
             xai
             internal
             infra
             examples
             deps
+            deps-dev
           requireScope: false
           disallowScopes: |
             release

@@ -1,6 +1,39 @@
 # @langchain/mongodb
 
-## 1.2.1
+## 1.3.1
+
+### Patch Changes
+
+- [#11672](https://github.com/langchain-ai/langchainjs/pull/11672) [`946e3d8`](https://github.com/langchain-ai/langchainjs/commit/946e3d856ff1f8ce7f7b9374c83f680a6ada79af) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(mongodb): reject non-string sessionId in MongoDBChatMessageHistory and wrap query filters with $eq (GHSA-m6rx-h84q-8r95)
+
+  Breaking: `sessionId: ""` now throws instead of silently working.
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10944](https://github.com/langchain-ai/langchainjs/pull/10944) [`32bbacf`](https://github.com/langchain-ai/langchainjs/commit/32bbacfd6df5c5f933fa56ed76265cc51bb8f70d) Thanks [@caseyclements](https://github.com/caseyclements)! - feat(mongodb): add `$rerank` aggregation pipeline support to `MongoDBAtlasVectorSearch`
+
+  Adds an optional `rerankOptions` constructor parameter that appends a `$rerank` stage after `$vectorSearch` to reorder results by semantic relevance using a MongoDB Atlas reranking model. The rerank score is returned as the numeric score in the `[Document, number]` tuple and copied to `document.metadata.relevanceScore`.
+
+- [#11046](https://github.com/langchain-ai/langchainjs/pull/11046) [`e6d2660`](https://github.com/langchain-ai/langchainjs/commit/e6d26605832f827bc3a0ee1cac109deb70b68aad) Thanks [@caseyclements](https://github.com/caseyclements)! - feat(mongodb): add VoyageEmbeddings, migrated from @langchain/community
+
+  `VoyageEmbeddings` is now exported directly from `@langchain/mongodb`. It was previously
+  available via `@langchain/community/embeddings/voyage`, which has been removed from this
+  monorepo.
+
+  **Migration:** update your import path:
+
+  ```ts
+  // before
+  import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
+
+  // after
+  import { VoyageEmbeddings } from "@langchain/mongodb";
+  ```
+
+  Note: the default model has been updated from `voyage-01` (retired) to `voyage-3`. If you
+  rely on the default, re-embed any existing indexes after migrating.
 
 ### Patch Changes
 

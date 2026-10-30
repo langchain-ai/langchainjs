@@ -312,17 +312,13 @@ export abstract class BaseMessage<
 
   /** Get text content of the message. */
   get text(): string {
-    if (typeof this.content === "string") {
-      return this.content;
-    }
-    if (!Array.isArray(this.content)) return "";
-    return this.content
-      .map((c) => {
-        if (typeof c === "string") return c;
-        if (c.type === "text") return c.text;
-        return "";
-      })
-      .join("");
+    const textBlocks: ContentBlock.Text[] = this.contentBlocks.filter(
+      (block: ContentBlock.Standard) => block.type === "text"
+    );
+    return textBlocks.reduce(
+      (acc: string, block: ContentBlock.Text) => acc + (block.text ?? ""),
+      ""
+    );
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
@@ -373,6 +369,10 @@ export abstract class BaseMessage<
       (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 
   // this private method is used to update the ID for the runtime
@@ -717,6 +717,10 @@ export abstract class BaseMessageChunk<
     }
     return false;
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 export type MessageFieldWithRole = {
@@ -736,6 +740,12 @@ export type BaseMessageLike =
   | MessageFieldWithRole
   | [MessageType, MessageContent]
   | string
+  /**
+   * Serialized form of {@link RemoveMessage}. At runtime,
+   * {@link coerceMessageLikeToMessage} converts this to a `RemoveMessage`
+   * instance which the `add_messages` reducer uses to delete messages by ID.
+   */
+  | { type: "remove"; id: string }
   /**
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */

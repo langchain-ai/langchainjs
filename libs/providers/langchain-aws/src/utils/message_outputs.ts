@@ -4,11 +4,20 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import {
-  MessageContentReasoningBlock,
-  MessageContentReasoningBlockReasoningTextPartial,
-  MessageContentReasoningBlockRedacted,
-} from "../types.js";
+import { MessageContentReasoningBlockRedacted } from "../types.js";
+
+type AnthropicNativeUsage = {
+  usage?: { output_tokens_details?: { thinking_tokens?: unknown } };
+};
+
+export function getReasoningTokensFromAdditionalFields(
+  additionalModelResponseFields: __DocumentType | undefined
+): number | undefined {
+  const thinkingTokens = (
+    additionalModelResponseFields as AnthropicNativeUsage | undefined
+  )?.usage?.output_tokens_details?.thinking_tokens;
+  return typeof thinkingTokens === "number" ? thinkingTokens : undefined;
+}
 
 export function convertConverseMessageToLangChainMessage(
   message: Bedrock.Message,
@@ -50,6 +59,9 @@ export function convertConverseMessageToLangChainMessage(
       cacheReadInputTokens +
       cacheWriteInputTokens;
     const output_tokens = responseMetadata.usage.outputTokens ?? 0;
+    const reasoningTokens = getReasoningTokensFromAdditionalFields(
+      responseMetadata.additionalModelResponseFields
+    );
     tokenUsage = {
       input_tokens,
       output_tokens,
@@ -58,6 +70,9 @@ export function convertConverseMessageToLangChainMessage(
       input_token_details: Object.keys(inputTokenDetails).length
         ? inputTokenDetails
         : undefined,
+      ...(reasoningTokens !== undefined && {
+        output_token_details: { reasoning: reasoningTokens },
+      }),
     };
   }
 
@@ -92,11 +107,9 @@ export function convertConverseMessageToLangChainMessage(
         content.push({ type: "guard_content", guardContent: c.guardContent });
       } else if ("image" in c) {
         content.push({ type: "image", image: c.image });
-      } else if ("reasoningContent" in c) {
+      } else if ("reasoningContent" in c && c.reasoningContent) {
         content.push(
-          bedrockReasoningBlockToLangchainReasoningBlock(
-            c.reasoningContent as Bedrock.ReasoningContentBlock
-          )
+          bedrockReasoningBlockToLangchainReasoningBlock(c.reasoningContent)
         );
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
@@ -166,7 +179,8 @@ export function handleConverseStreamContentBlockDelta(
       message: new AIMessageChunk({
         content: [
           bedrockReasoningDeltaToLangchainPartialReasoningBlock(
-            contentBlockDelta.delta.reasoningContent
+            contentBlockDelta.delta.reasoningContent,
+            contentBlockDelta.contentBlockIndex
           ),
         ],
       }),
@@ -209,6 +223,7 @@ export function handleConverseStreamMetadata(
   metadata: Bedrock.ConverseStreamMetadataEvent,
   extra: {
     streamUsage: boolean;
+    reasoningTokens?: number;
   }
 ): ChatGenerationChunk {
   const cacheReadInputTokens = metadata.usage?.cacheReadInputTokens ?? 0;
@@ -233,6 +248,9 @@ export function handleConverseStreamMetadata(
     input_token_details: Object.keys(inputTokenDetails).length
       ? inputTokenDetails
       : undefined,
+    ...(extra.reasoningTokens !== undefined && {
+      output_token_details: { reasoning: extra.reasoningTokens },
+    }),
   };
   return new ChatGenerationChunk({
     text: "",
@@ -249,21 +267,23 @@ export function handleConverseStreamMetadata(
 }
 
 export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
-  reasoningContent: Bedrock.ReasoningContentBlockDelta
-):
-  | MessageContentReasoningBlockReasoningTextPartial
-  | MessageContentReasoningBlockRedacted {
+  reasoningContent: Bedrock.ReasoningContentBlockDelta,
+  index?: number
+): ContentBlock.Reasoning | MessageContentReasoningBlockRedacted {
   const { text, redactedContent, signature } = reasoningContent;
   if (typeof text === "string") {
     return {
-      type: "reasoning_content",
-      reasoningText: { text },
+      type: "reasoning",
+      reasoning: text,
+      ...(index !== undefined ? { index } : {}),
     };
   }
-  if (signature) {
+  if (typeof signature === "string") {
     return {
-      type: "reasoning_content",
-      reasoningText: { signature },
+      type: "reasoning",
+      reasoning: "",
+      signature,
+      ...(index !== undefined ? { index } : {}),
     };
   }
   if (redactedContent) {
@@ -277,12 +297,15 @@ export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
 
 export function bedrockReasoningBlockToLangchainReasoningBlock(
   reasoningContent: Bedrock.ReasoningContentBlock
-): MessageContentReasoningBlock {
+): ContentBlock.Reasoning | MessageContentReasoningBlockRedacted {
   const { reasoningText, redactedContent } = reasoningContent;
-  if (reasoningText) {
+  if (reasoningText && typeof reasoningText.text === "string") {
     return {
-      type: "reasoning_content",
-      reasoningText: reasoningText as Required<Bedrock.ReasoningTextBlock>,
+      type: "reasoning",
+      reasoning: reasoningText.text,
+      ...(typeof reasoningText.signature === "string"
+        ? { signature: reasoningText.signature }
+        : {}),
     };
   }
 

@@ -19,6 +19,7 @@ export * as language_models__chat_models from "../language_models/chat_models.js
 export * as language_models__compat from "../language_models/compat.js";
 export * as language_models__event from "../language_models/event.js";
 export * as language_models__llms from "../language_models/llms.js";
+export * as language_models__openai_completions_stream from "../language_models/openai_completions_stream.js";
 export * as language_models__profile from "../language_models/profile.js";
 export * as language_models__stream from "../language_models/stream.js";
 export * as language_models__structured_output from "../language_models/structured_output.js";
@@ -54,6 +55,7 @@ export * as utils__env from "../utils/env.js";
 export * as utils__event_source_parse from "../utils/event_source_parse.js";
 export * as utils__format from "../utils/format.js";
 export * as utils__function_calling from "../utils/function_calling.js";
+export * as utils__gateway from "../utils/gateway.js";
 export * as utils__hash from "../utils/hash.js";
 export * as utils__json_patch from "../utils/json_patch.js";
 export * as utils__json_schema from "../utils/json_schema.js";

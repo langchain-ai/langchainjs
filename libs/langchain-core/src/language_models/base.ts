@@ -323,6 +323,10 @@ export interface BaseLanguageModelCallOptions
    * If not provided, the default stop tokens for the model will be used.
    */
   stop?: string[];
+  /**
+   * Overrides the model's configured `maxRetries` for this call only.
+   */
+  maxRetries?: number;
 }
 
 export interface FunctionDefinition {
@@ -577,10 +581,7 @@ export abstract class BaseLanguageModel<
    */
   _getSerializedCacheKeyParametersForCall(
     // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
-    {
-      config,
-      ...callOptions
-    }: CallOptions & { config?: RunnableConfig }
+    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {

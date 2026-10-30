@@ -5,14 +5,16 @@ import type { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 
 export function isUsingLocalAtlas() {
   // oxlint-disable-next-line no-process-env
-  return !process.env.MONGODB_ATLAS_URI;
+  const mongoUri =
+    process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI || "";
+  return !mongoUri.startsWith("mongodb+srv://");
 }
 export function uri() {
-  return (
-    // oxlint-disable-next-line no-process-env
-    process.env.MONGODB_ATLAS_URI ||
-    "mongodb://localhost:27017?directConnection=true"
-  );
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_ATLAS_URI) return process.env.MONGODB_ATLAS_URI;
+  return "mongodb://localhost:27017?directConnection=true";
 }
 
 /**

@@ -1,5 +1,11 @@
 # @langchain/weaviate
 
+## 1.1.0
+
+### Minor Changes
+
+- [#10785](https://github.com/langchain-ai/langchainjs/pull/10785) [`1160784`](https://github.com/langchain-ai/langchainjs/commit/1160784032bce394e6bb2e93f41ba9e09f812517) Thanks [@dudanogueira](https://github.com/dudanogueira)! - feat(weaviate): add jsonSchema support via createFromJson and upgrade client to v3.13.0
+
 ## 1.0.3
 
 ### Patch Changes

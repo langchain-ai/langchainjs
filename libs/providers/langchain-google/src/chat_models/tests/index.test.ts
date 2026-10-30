@@ -17,6 +17,7 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { LLMResult } from "@langchain/core/outputs";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { Runnable } from "@langchain/core/runnables";
@@ -208,11 +209,14 @@ class MockErrorApiClient extends ApiClient {
 
   response: Response;
 
+  calls = 0;
+
   constructor(private options: MockErrorApiClientOptions) {
     super();
   }
 
   async fetch(request: Request): Promise<Response> {
+    this.calls += 1;
     this.request = request;
     this.response = new Response(this.options.bodyText, {
       status: this.options.status,
@@ -312,6 +316,61 @@ describe("Google Mock", () => {
     // console.log('request',recorder.request);
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
+    );
+  });
+
+  test.each(["eu", "us"])(
+    "uses the Vertex %s multi-region endpoint",
+    async (location) => {
+      const apiClient = new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      });
+      const llm = new ChatGoogle({
+        model: "gemini-2.5-flash",
+        platformType: "gcp",
+        location,
+        apiClient,
+      });
+
+      await llm.invoke("What is 1+1?");
+
+      expect(apiClient.request.url).toBe(
+        `https://aiplatform.${location}.rep.googleapis.com/v1/projects/unknown-project-id/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
+      );
+    }
+  );
+
+  test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
+    let callbackResult: LLMResult | undefined;
+
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient: new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      }),
+      callbacks: [
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    const result = await llm.invoke("What is 1+1?");
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: 9,
+      completionTokens: 36,
+      totalTokens: 45,
+    });
+    expect(callbackResult?.llmOutput?.usageMetadata).toMatchObject({
+      input_tokens: 9,
+      output_tokens: 36,
+      total_tokens: 45,
+    });
+    expect(result.response_metadata.tokenUsage).toEqual(
+      callbackResult?.llmOutput?.tokenUsage
     );
   });
 
@@ -555,6 +614,57 @@ describe("Google Mock", () => {
     expect((caughtError as RequestError).message).not.toContain(
       "Request failed with status code 400"
     );
+  });
+
+  test("retries wait-style 429 responses through AsyncCaller in non-streaming invoke", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "1",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Rate limit exceeded, retry after 1 second",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 1,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RequestError);
+    expect(apiClient.calls).toBe(2);
+  });
+
+  test("does not retry quota-style 429 responses through AsyncCaller", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "120",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Usage quota exceeded",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 3,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toMatchObject({
+      name: "RequestError",
+      rateLimitType: "stop",
+    });
+    expect(apiClient.calls).toBe(1);
   });
 
   test("getLsParams normalizes provider and includes model metadata for web and node", () => {
@@ -805,6 +915,36 @@ describe("Google Mock", () => {
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
     },
+    {
+      model: "gemini-3.5-flash-lite",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.6-flash",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.7-flash",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.8-flash",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.8-flash",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
   ];
   const testReasoning25Effort: TestReasoning[] = [
     {
@@ -977,6 +1117,18 @@ describe("Google Mock", () => {
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
     },
+    {
+      model: "gemini-3.8-flash",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.8-flash",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
   ];
 
   const testReasoning: TestReasoning[] = [
@@ -1086,6 +1238,101 @@ describe("Google Mock", () => {
 
       expect(res).toBeDefined();
       expect(res!.usage_metadata).toBeUndefined();
+    });
+  });
+
+  describe("llmOutput.tokenUsage across call styles (#11424)", () => {
+    test("invoke(), streaming off", async () => {
+      let callbackResult: LLMResult | undefined;
+      const llm = new ChatGoogle({
+        model: "gemini-3.8-flash",
+        apiClient: new MockApiClient({ fileName: "gemini-chat-001.json" }),
+        callbacks: [
+          {
+            async handleLLMEnd(output: LLMResult) {
+              callbackResult = output;
+            },
+          },
+        ],
+      });
+
+      const result = await llm.invoke("What is 1+1?");
+
+      expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: result.usage_metadata!.input_tokens,
+        completionTokens: result.usage_metadata!.output_tokens,
+        totalTokens: result.usage_metadata!.total_tokens,
+      });
+    });
+
+    test("invoke({streaming: true})", async () => {
+      let callbackResult: LLMResult | undefined;
+      const llm = new ChatGoogle({
+        model: "gemini-3.8-flash",
+        streaming: true,
+        apiClient: new MockApiClient({
+          fileName: "gemini-stream-001.txt",
+          streaming: true,
+        }),
+        callbacks: [
+          {
+            async handleLLMEnd(output: LLMResult) {
+              callbackResult = output;
+            },
+          },
+        ],
+      });
+
+      const result = await llm.invoke("Why is the sky blue?");
+
+      // Message-level usage_metadata is the concatenated, correct total.
+      expect(result.usage_metadata).toMatchObject({
+        input_tokens: 10,
+        output_tokens: 12,
+        total_tokens: 22,
+      });
+
+      // llmOutput.tokenUsage should agree with it.
+      expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: 10,
+        completionTokens: 12,
+        totalTokens: 22,
+      });
+    });
+
+    test(".stream()", async () => {
+      let callbackResult: LLMResult | undefined;
+      const llm = new ChatGoogle({
+        model: "gemini-3.8-flash",
+        apiClient: new MockApiClient({
+          fileName: "gemini-stream-001.txt",
+          streaming: true,
+        }),
+        callbacks: [
+          {
+            async handleLLMEnd(output: LLMResult) {
+              callbackResult = output;
+            },
+          },
+        ],
+      });
+
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        res = res ? res.concat(chunk) : chunk;
+      }
+
+      expect(res?.usage_metadata).toMatchObject({
+        input_tokens: 10,
+        output_tokens: 12,
+        total_tokens: 22,
+      });
+
+      expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: 10,
+        completionTokens: 12,
+        totalTokens: 22,
+      });
     });
   });
 
@@ -1586,3 +1833,62 @@ describe("withStructuredOutput type narrowing", () => {
     assertType<true>(_check);
   });
 });
+
+test.each([true, false])(
+  "usage-only streaming respects streamUsage=%s",
+  async (streamUsage) => {
+    const llm = new ChatGoogle({
+      model: "gemini-4-argon",
+      streamUsage,
+      apiClient: new MockStreamingApiClient([
+        {
+          candidates: [
+            { content: { parts: [{ text: "Hello" }], role: "model" } },
+          ],
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 1,
+            totalTokenCount: 6,
+          },
+        },
+        {},
+        {
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 3,
+            totalTokenCount: 8,
+          },
+        },
+        {
+          candidates: [],
+          usageMetadata: {
+            promptTokenCount: 5,
+            candidatesTokenCount: 4,
+            totalTokenCount: 9,
+          },
+        },
+      ]),
+    });
+    const chunks: AIMessageChunk[] = [];
+    for await (const chunk of await llm.stream("Hello")) chunks.push(chunk);
+    expect(chunks).toHaveLength(streamUsage ? 3 : 1);
+    expect(chunks[0].content).toBe("Hello");
+    if (streamUsage) {
+      expect(chunks[1].usage_metadata).toMatchObject({
+        input_tokens: 0,
+        output_tokens: 2,
+        total_tokens: 2,
+      });
+      expect(chunks[2].usage_metadata).toMatchObject({
+        input_tokens: 0,
+        output_tokens: 1,
+        total_tokens: 1,
+      });
+      expect(chunks.reduce((a, b) => a.concat(b)).usage_metadata).toMatchObject(
+        { input_tokens: 5, output_tokens: 4, total_tokens: 9 }
+      );
+    } else {
+      expect(chunks[0].usage_metadata).toBeUndefined();
+    }
+  }
+);

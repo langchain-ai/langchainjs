@@ -10,9 +10,12 @@ export default defineConfig((env) => {
       environment: "node",
       hideSkippedTests: true,
       testTimeout: 30_000,
-      maxWorkers: 0.5,
+      maxWorkers: "50%",
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
-      setupFiles: ["dotenv/config"],
+      setupFiles: [
+        "dotenv/config",
+        "../../langchain-core/src/testing/setup.ts",
+      ],
     },
   };
 

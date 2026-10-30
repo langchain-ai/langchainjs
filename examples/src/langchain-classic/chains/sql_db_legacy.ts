@@ -9,7 +9,7 @@ import { SqlDatabaseChain } from "@langchain/classic/chains/sql_db";
  */
 const db = await SqlDatabase.fromOptionsParams({
   appDataSourceOptions: {
-    type: "sqlite",
+    type: "better-sqlite3",
     database: "Chinook.db",
   },
 });

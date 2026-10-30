@@ -3,6 +3,7 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
+import type { JSONSchema } from "@langchain/core/utils/json_schema";
 import type {
   START,
   END,
@@ -35,6 +36,7 @@ import type {
 import type { AgentLanguageModelLike } from "./model.js";
 import type {
   AgentMiddleware,
+  AnyAgentMiddleware,
   AnyAnnotationRoot,
   InferSchemaInput,
   InferSchemaValue,
@@ -67,10 +69,10 @@ import type { JumpToTarget } from "./constants.js";
  * @typeParam TTools - The combined tools type from both `createAgent` tools parameter
  *   and middleware tools. This is a readonly array of `ClientTool | ServerTool`.
  *
- * @typeParam TStreamTransformers - The tuple of user-supplied stream transformer
- *   factories registered at `createAgent({ streamTransformers })`. Used to type
- *   `run.extensions` on the stream returned from
- *   `streamEvents(..., { version: "v3" })`.
+ * @typeParam TStreamTransformers - The combined tuple of stream transformer
+ *   factories from `createAgent({ streamTransformers })` and middleware
+ *   `streamTransformers`. Used to type `run.extensions` on the stream returned
+ *   from `streamEvents(..., { version: "v3" })`.
  *
  * @example
  * ```typescript
@@ -98,7 +100,8 @@ export interface AgentTypeConfig<
   TContext extends AnyAnnotationRoot | InteropZodObject =
     | AnyAnnotationRoot
     | InteropZodObject,
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -133,7 +136,7 @@ export interface DefaultAgentTypeConfig extends AgentTypeConfig {
   Response: Record<string, any>;
   State: undefined;
   Context: AnyAnnotationRoot;
-  Middleware: readonly AgentMiddleware[];
+  Middleware: readonly AnyAgentMiddleware[];
   Tools: readonly (ClientTool | ServerTool)[];
   StreamTransformers: readonly [];
 }
@@ -143,22 +146,34 @@ export interface DefaultAgentTypeConfig extends AgentTypeConfig {
  * Extracts the TTools type parameter from AgentMiddleware.
  */
 export type InferMiddlewareTools<T extends AgentMiddleware> =
-  T extends AgentMiddleware<any, any, any, infer TTools>
+  T extends AgentMiddleware<any, any, any, infer TTools, any>
     ? TTools extends readonly (ClientTool | ServerTool)[]
       ? TTools
       : readonly []
     : readonly [];
 
 /**
+ * Helper type to infer stream transformers from a single middleware instance.
+ */
+export type InferMiddlewareStreamTransformers<T extends AgentMiddleware> =
+  T extends AgentMiddleware<any, any, any, any, infer TStreamTransformers>
+    ? [TStreamTransformers] extends [readonly []]
+      ? readonly []
+      : TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>>
+        ? TStreamTransformers
+        : readonly []
+    : readonly [];
+
+/**
  * Helper type to infer and merge tools from an array of middleware.
  * Recursively extracts tools from each middleware and combines them into a single tuple.
  */
-export type InferMiddlewareToolsArray<T extends readonly AgentMiddleware[]> =
+export type InferMiddlewareToolsArray<T extends readonly AnyAgentMiddleware[]> =
   T extends readonly []
     ? readonly []
     : T extends readonly [infer First, ...infer Rest]
       ? First extends AgentMiddleware
-        ? Rest extends readonly AgentMiddleware[]
+        ? Rest extends readonly AnyAgentMiddleware[]
           ? readonly [
               ...InferMiddlewareTools<First>,
               ...InferMiddlewareToolsArray<Rest>,
@@ -172,8 +187,37 @@ export type InferMiddlewareToolsArray<T extends readonly AgentMiddleware[]> =
  */
 export type CombineTools<
   TAgentTools extends readonly (ClientTool | ServerTool)[],
-  TMiddleware extends readonly AgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[],
 > = readonly [...TAgentTools, ...InferMiddlewareToolsArray<TMiddleware>];
+
+/**
+ * Helper type to infer and merge stream transformers from an array of middleware.
+ */
+export type InferMiddlewareStreamTransformersArray<
+  T extends readonly AnyAgentMiddleware[],
+> = T extends readonly []
+  ? readonly []
+  : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AnyAgentMiddleware[]
+        ? readonly [
+            ...InferMiddlewareStreamTransformers<First>,
+            ...InferMiddlewareStreamTransformersArray<Rest>,
+          ]
+        : InferMiddlewareStreamTransformers<First>
+      : readonly []
+    : readonly [];
+
+/**
+ * Helper type to combine agent stream transformers with middleware stream transformers.
+ */
+export type CombineStreamTransformers<
+  TAgentStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>>,
+  TMiddleware extends readonly AnyAgentMiddleware[],
+> = readonly [
+  ...TAgentStreamTransformers,
+  ...InferMiddlewareStreamTransformersArray<TMiddleware>,
+];
 
 /**
  * Helper type to extract the tool name, input type, and output type from a tool.
@@ -216,9 +260,9 @@ type ExtractToolDefinition<T> =
 export type ToolsToMessageToolSet<
   T extends readonly (ClientTool | ServerTool)[],
 > = {
-  [K in T[number] as K extends { name: infer N extends string }
-    ? N
-    : never]: ExtractToolDefinition<K>;
+  [
+    K in T[number] as K extends { name: infer N extends string } ? N : never
+  ]: ExtractToolDefinition<K>;
 };
 
 /**
@@ -421,6 +465,11 @@ export interface Interrupt<TValue = unknown> {
    * The requests for human input.
    */
   value: TValue;
+  /**
+   * JSON schema for the expected resume value, when the interrupt sets one (for
+   * example, a `humanInTheLoopMiddleware` tool approval in `"per_call"` mode).
+   */
+  response_schema?: JSONSchema;
 }
 
 export interface BuiltInState<
@@ -795,7 +844,7 @@ export type CreateAgentParams<
    *
    * @see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}
    */
-  middleware?: readonly AgentMiddleware[];
+  middleware?: readonly AnyAgentMiddleware[];
 
   /**
    * An optional name for the agent.
