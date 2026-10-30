@@ -75,6 +75,7 @@ import {
 } from "./serializable.js";
 import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from "./import_constants.js";
 import * as coreImportMap from "./import_map.js";
+import * as legacyImportMap from "./import_map_legacy.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -209,6 +210,40 @@ interface ReviverContext {
   maxDepth: number;
 }
 
+/** The modules registered for prefixes of `namespace`, longest prefix first. */
+function findModules(
+  namespace: string[],
+  importMap: Record<string, unknown>
+): object[] {
+  return namespace
+    .map((_, i) => namespace.slice(0, i + 1).join("__"))
+    .reverse()
+    .map((prefix) => importMap[prefix])
+    .filter(
+      (module): module is object =>
+        typeof module === "object" && module !== null
+    );
+}
+
+/** The class `modules` export as `name`, or whose `lc_name` is `name` when minified. */
+function findClass(
+  modules: object[],
+  name: string
+): typeof Serializable | undefined {
+  for (const module of modules) {
+    const found =
+      module[name as keyof typeof module] ??
+      Object.values(module).find(
+        (v) =>
+          typeof v === "function" &&
+          get_lc_unique_name(v as typeof Serializable) === name
+      );
+    // Import maps hold Serializable classes.
+    if (typeof found === "function") return found as typeof Serializable;
+  }
+  return undefined;
+}
+
 /**
  * Recursively revive a value, handling escape markers and LC objects.
  *
@@ -309,13 +344,7 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
-    const importMaps = { langchain_core: coreImportMap, langchain: importMap };
-
-    let module:
-      | (typeof importMaps)["langchain_core"][keyof (typeof importMaps)["langchain_core"]]
-      | (typeof importMaps)["langchain"][keyof (typeof importMaps)["langchain"]]
-      | OptionalImportMap[keyof OptionalImportMap]
-      | null = null;
+    let modules: object[] = [];
 
     const optionalImportNamespaceAliases = [namespace.join("/")];
     if (namespace[0] === "langchain_community") {
@@ -333,10 +362,11 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
       matchingNamespaceAlias
     ) {
       if (matchingNamespaceAlias !== undefined) {
-        module =
+        modules = [
           await optionalImportsMap[
             matchingNamespaceAlias as keyof typeof optionalImportsMap
-          ];
+          ],
+        ];
       } else {
         throw new Error(
           `Missing key "${namespace.join(
@@ -344,56 +374,24 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
           )}" for ${pathStr} in load(optionalImportsMap={})`
         );
       }
+    } else if (namespace[0] === "langchain_core") {
+      modules = findModules(namespace.slice(1), coreImportMap);
+    } else if (namespace[0] === "langchain") {
+      // A legacy id: the caller's import map, then this package's own aliases.
+      modules = [
+        ...findModules(namespace.slice(1), importMap),
+        ...findModules(namespace.slice(1), legacyImportMap),
+      ];
     } else {
-      let finalImportMap:
-        | (typeof importMaps)["langchain"]
-        | (typeof importMaps)["langchain_core"];
-      // Currently, we only support langchain and langchain_core imports.
-      if (namespace[0] === "langchain" || namespace[0] === "langchain_core") {
-        finalImportMap = importMaps[namespace[0]];
-        namespace.shift();
-      } else {
-        throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
-      }
-
-      // The root namespace "langchain" is not a valid import.
-      if (namespace.length === 0) {
-        throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
-      }
-
-      // Find the longest matching namespace.
-      let importMapKey: string;
-      do {
-        importMapKey = namespace.join("__");
-        if (importMapKey in finalImportMap) {
-          break;
-        } else {
-          namespace.pop();
-        }
-      } while (namespace.length > 0);
-
-      // If no matching namespace is found, throw an error.
-      if (importMapKey in finalImportMap) {
-        module = finalImportMap[importMapKey as keyof typeof finalImportMap];
-      }
-    }
-
-    if (typeof module !== "object" || module === null) {
       throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
-    // Extract the builder from the import map.
-    const builder =
-      // look for a named export with the same name as the class
-      module[name as keyof typeof module] ??
-      // look for an export with a lc_name property matching the class name
-      // this is necessary for classes that are minified
-      Object.values(module).find(
-        (v) =>
-          typeof v === "function" &&
-          get_lc_unique_name(v as typeof Serializable) === name
-      );
-    if (typeof builder !== "function") {
+    if (modules.length === 0) {
+      throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
+    }
+
+    const builder = findClass(modules, name);
+    if (builder === undefined) {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);
     }
 
