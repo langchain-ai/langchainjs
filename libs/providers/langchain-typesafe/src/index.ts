@@ -8,6 +8,8 @@ export type {
   Choice,
   ChoiceAnswer,
   ClassificationResponse,
+  ClassifierRequest,
+  ClassifierResponse,
   JsonValue,
   Noul,
   NoulAnswer,

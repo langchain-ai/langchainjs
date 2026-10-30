@@ -22,20 +22,8 @@ export interface ModelRouterMiddlewareConfig {
   choices: Record<string, ModelChoice>;
   /** Extra guidance for the selection, e.g. "Choose the least costly model." */
   instructions: QuestionContent;
-  /**
-   * Transport and model settings forwarded to the classifier this middleware
-   * builds — everything `TypeSafeClassifier` accepts EXCEPT `questions`.
-   *
-   * The question is the middleware's own business and cannot be supplied by
-   * the caller: `TypeSafeClassifier.questions` is `readonly` and fixed at
-   * construction, and `TypeSafeClassifierCallOptions` has no `questions`
-   * field, so there is no way to bind one per call. Accepting a whole
-   * classifier instance would therefore force the caller to author the very
-   * criteria that `choices` already describes.
-   *
-   * Pass `fetch` here to make unit tests network-free.
-   */
-  classifierOptions?: Omit<TypeSafeClassifierFields, "questions">;
+  /** Transport and model settings; questions are derived per call. */
+  classifierOptions?: TypeSafeClassifierFields;
 }
 
 const stateSchema = z.object({
@@ -159,20 +147,7 @@ export function latestHumanMessage(
 export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
   const { choices: choicesInput, instructions, classifierOptions } = config;
   const choices = parseChoices(choicesInput);
-  const routes = Object.keys(choices);
-
-  const classifier = new TypeSafeClassifier({
-    ...classifierOptions,
-    questions: {
-      [QUESTION_ID]: {
-        type: "choice",
-        instructions,
-        criteria: Object.fromEntries(
-          routes.map((r) => [r, choices[r].criteria])
-        ),
-      },
-    },
-  });
+  const classifier = new TypeSafeClassifier({ ...classifierOptions });
 
   const modelFor = createModelResolver(choices);
 
@@ -187,7 +162,21 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
           "modelRouterMiddleware: state contains no human message to route on."
         );
       }
-      const response = await classifier.invoke(latest);
+      const response = await classifier.invoke({
+        state: latest,
+        questions: {
+          [QUESTION_ID]: {
+            type: "choice",
+            instructions,
+            criteria: Object.fromEntries(
+              Object.entries(choices).map(([route, choice]) => [
+                route,
+                choice.criteria,
+              ])
+            ),
+          },
+        },
+      });
       const answer = response.choices[QUESTION_ID];
       if (answer === undefined) {
         throw new Error(

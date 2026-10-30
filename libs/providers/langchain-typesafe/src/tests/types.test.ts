@@ -1,4 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, expectTypeOf, test, vi } from "vitest";
+
+import { TypeSafeClassifier } from "../classifier.js";
 
 import {
   classificationResponseSchema,
@@ -355,5 +357,77 @@ describe("classificationResponseSchema", () => {
     expect(() =>
       classificationResponseSchema.parse({ model: "jev", answers: [] })
     ).toThrow();
+  });
+});
+
+afterEach(() => vi.restoreAllMocks());
+
+describe("per-call inference", () => {
+  test("infers answer variants, choice labels, and accessor keys per call", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            model: "jev-1.13.0",
+            answers: {
+              department: {
+                type: "choice",
+                choice: "billing",
+                probabilities: { billing: 0.9, technical: 0.1 },
+                confidence: 0.8,
+              },
+              urgent: { type: "noul", noul: 0.9 },
+              frustration: {
+                type: "score",
+                score: 0.5,
+                probabilities: { "0": 0.5, "1": 0.5 },
+                legend: { "0": "calm", "1": "angry" },
+                confidence: 0.8,
+              },
+              satisfied: { type: "noul", noul: 0.9 },
+            },
+            usage: {},
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+    );
+    const classifier = new TypeSafeClassifier({ apiKey: "test-api-key" });
+    const response = await classifier.invoke({
+      state: "help",
+      questions: {
+        department: {
+          type: "choice",
+          criteria: { billing: "Payments", technical: null },
+        },
+        urgent: { type: "noul", instructions: "Urgent?" },
+        frustration: { type: "score", criteria: ["calm", "angry"] },
+      },
+    });
+
+    expectTypeOf(response.answers.department.type).toEqualTypeOf<"choice">();
+    expectTypeOf(response.answers.department.choice).toEqualTypeOf<
+      "billing" | "technical"
+    >();
+    expectTypeOf(response.answers.urgent.noul).toEqualTypeOf<number>();
+    expectTypeOf(response.answers.frustration.score).toEqualTypeOf<number>();
+    expectTypeOf<keyof typeof response.choices>().toEqualTypeOf<"department">();
+    expectTypeOf<keyof typeof response.nouls>().toEqualTypeOf<"urgent">();
+    expectTypeOf<keyof typeof response.scores>().toEqualTypeOf<"frustration">();
+    // @ts-expect-error An unasked question has no answer.
+    expectTypeOf(response.answers.unasked).toBeUnknown();
+    // @ts-expect-error A score answer is not a choice.
+    expectTypeOf(response.choices.frustration).toBeUnknown();
+    // @ts-expect-error A choice answer is not a noul.
+    expectTypeOf(response.nouls.department).toBeUnknown();
+    // @ts-expect-error A noul answer is not a score.
+    expectTypeOf(response.scores.urgent).toBeUnknown();
+
+    const next = await classifier.invoke({
+      state: "another request",
+      questions: { satisfied: { type: "noul", instructions: "Satisfied?" } },
+    });
+    expectTypeOf(next.answers.satisfied.noul).toEqualTypeOf<number>();
+    // @ts-expect-error Questions from earlier invocations are not retained.
+    expectTypeOf(next.answers.urgent).toBeUnknown();
   });
 });

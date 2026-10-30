@@ -27,7 +27,13 @@ Set `TYPESAFE_API_KEY` in your environment, then:
 ```ts
 import { TypeSafeClassifier } from "@langchain/typesafe";
 
-const classifier = new TypeSafeClassifier({
+const classifier = new TypeSafeClassifier({});
+
+const result = await classifier.invoke({
+  state: {
+    message: "Help! My payouts have been failing for 3 days.",
+    account_tier: "enterprise",
+  },
   questions: {
     department: {
       type: "choice",
@@ -47,15 +53,12 @@ const classifier = new TypeSafeClassifier({
   },
 });
 
-const result = await classifier.invoke({
-  message: "Help! My payouts have been failing for 3 days.",
-  account_tier: "enterprise",
-});
-
 result.answers.department; // { type: "choice", choice: "billing", confidence: 0.99, probabilities: {...} }
 result.answers.urgent; // { type: "noul", noul: 0.97 }
 result.answers.frustration; // { type: "score", score: 1.3, legend: { 0: "calm", ... }, ... }
 ```
+
+Pass `state` and `questions` on each invocation. Reuse the same classifier with different questions for later or concurrent calls. TypeScript infers each answer variant, the allowed choice labels, and the keys in `choices`, `nouls`, and `scores` from that call's questions.
 
 `result.model` is the versioned model that actually answered (e.g. `jev-1.13.0`), not the alias you sent — `jev-latest` in, `jev-1.13.0` out.
 
@@ -86,13 +89,23 @@ A Noul answer carries **no `confidence` and no `probabilities`**. For a binary q
 LangChain messages are the common unit of context, so they are accepted anywhere in the input and converted automatically:
 
 ```ts
-await classifier.invoke([new HumanMessage("..."), new AIMessage("...")]);
-await classifier.invoke({ conversation: messages, account: { tier: "pro" } });
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+
+const messages = [new HumanMessage("..."), new AIMessage("...")];
+const questions = {
+  urgent: { type: "noul", instructions: "Does this convey urgency?" },
+} as const;
+
+await classifier.invoke({ state: messages, questions });
+await classifier.invoke({
+  state: { conversation: messages, account: { tier: "pro" } },
+  questions,
+});
 ```
 
 ### Tracing
 
-`TypeSafeClassifier` is a `Runnable`, so calls appear in LangSmith traces with their inputs, outputs and configuration, nested inside whatever agent or chain invoked them. The API key is redacted before it reaches the tracer. Note that LangSmith does not attribute token cost to non-LLM runs, so `usage` appears in the traced output rather than as a costed metric.
+`TypeSafeClassifier` is a `Runnable`, so calls appear in LangSmith traces with their request inputs (`state` and `questions`), outputs, and configuration, nested inside whatever agent or chain invoked them. The API key is redacted before it reaches the tracer. Note that LangSmith does not attribute token cost to non-LLM runs, so `usage` appears in the traced output rather than as a costed metric.
 
 ### Errors
 
@@ -100,7 +113,12 @@ await classifier.invoke({ conversation: messages, account: { tier: "pro" } });
 import { TypeSafeRateLimitError } from "@langchain/typesafe";
 
 try {
-  await classifier.invoke(input);
+  await classifier.invoke({
+    state: "Help! My payouts have been failing for 3 days.",
+    questions: {
+      urgent: { type: "noul", instructions: "Does this convey urgency?" },
+    },
+  });
 } catch (error) {
   if (TypeSafeRateLimitError.isInstance(error)) {
     console.log(error.retryAfterMs, error.requestId);
@@ -172,7 +190,7 @@ const agent = createAgent({
 });
 ```
 
-Both middlewares build their own `TypeSafeClassifier` internally; pass `classifierOptions` (everything `TypeSafeClassifier` accepts except `questions`) to configure transport and model settings.
+Both middlewares build their own `TypeSafeClassifier` internally and supply questions on each invocation; pass `classifierOptions` to configure transport and model settings.
 
 ## Development
 
