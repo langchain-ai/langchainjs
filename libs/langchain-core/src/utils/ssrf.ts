@@ -266,7 +266,9 @@ export function isLocalhost(hostname: string, ip?: string): boolean {
 /**
  * Validate that a URL is safe to connect to.
  * Performs static validation checks against hostnames and direct IP addresses.
- * Does not perform DNS resolution.
+ * Does not perform DNS resolution, so a hostname that resolves to a private or
+ * metadata IP passes. On servers, use {@link validateSafeUrlAsync}, which also
+ * resolves the hostname and checks every address.
  *
  * @param url URL to validate
  * @param options.allowPrivate Allow private IPs (default: false)
@@ -378,6 +380,172 @@ export function isSafeUrl(
 ): boolean {
   try {
     validateSafeUrl(url, options);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * If `ip` is an IPv4-mapped IPv6 address (`::ffff:a.b.c.d` or
+ * `::ffff:XXXX:XXXX`), return the embedded IPv4 address. Otherwise return
+ * `ip` unchanged.
+ */
+function unmapIpv4MappedIpv6(ip: string): string {
+  const lower = ip.toLowerCase();
+  if (lower.startsWith("::ffff:")) {
+    const tail = lower.slice("::ffff:".length);
+    if (isIPv4(tail)) {
+      return tail;
+    }
+  }
+  const expanded = expandIpv6(lower);
+  if (!expanded) {
+    return ip;
+  }
+  const groups = expanded.split(":");
+  const isMapped =
+    groups.slice(0, 5).every((g) => g === "0000") && groups[5] === "ffff";
+  if (!isMapped) {
+    return ip;
+  }
+  const hi = parseInt(groups[6], 16);
+  const lo = parseInt(groups[7], 16);
+  return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join(".");
+}
+
+/**
+ * Check a single resolved (or literal) IP address against the SSRF policy.
+ * Throws if the address is not allowed.
+ */
+function assertSafeResolvedIp(
+  hostname: string,
+  address: string,
+  allowPrivate: boolean
+): void {
+  const ip = unmapIpv4MappedIpv6(address);
+
+  // Cloud metadata is always blocked
+  if (isCloudMetadata(hostname, ip)) {
+    throw new Error(`URL resolves to cloud metadata IP: ${ip} (${hostname})`);
+  }
+
+  if (allowPrivate) {
+    return;
+  }
+
+  if (isLocalhost(hostname, ip)) {
+    throw new Error(`URL resolves to localhost: ${ip} (${hostname})`);
+  }
+
+  if (isPrivateIp(ip)) {
+    throw new Error(
+      `URL resolves to private IP: ${ip} (${hostname}). Set allowPrivate: true to allow.`
+    );
+  }
+}
+
+type ResolvedAddress = { address: string; family: number };
+
+/**
+ * Resolve every address for a hostname using Node's `dns` module.
+ * `node:dns` is imported lazily so this module still loads in browsers and
+ * edge runtimes; there, resolution fails closed with a clear error.
+ */
+async function resolveAllAddresses(
+  hostname: string
+): Promise<ResolvedAddress[]> {
+  let dns: typeof import("node:dns");
+  try {
+    dns = await import(/* webpackIgnore: true */ "node:dns");
+  } catch {
+    throw new Error(
+      `DNS resolution is not available in this environment, so ${hostname} cannot be checked. validateSafeUrlAsync requires Node.js (or a runtime that provides node:dns); use validateSafeUrl for static checks only.`
+    );
+  }
+  try {
+    return await dns.promises.lookup(hostname, { all: true, verbatim: true });
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? ` (${String((error as { code: unknown }).code)})`
+        : "";
+    throw new Error(`Could not resolve hostname: ${hostname}${code}`);
+  }
+}
+
+/**
+ * Validate that a URL is safe to connect to, resolving its hostname with DNS.
+ *
+ * Runs the same static checks as {@link validateSafeUrl}, then resolves every
+ * address for the hostname (`dns.lookup` with `all: true`) and rejects the URL
+ * if any of them is a private, loopback, link-local or cloud metadata address.
+ * IPv4-mapped IPv6 addresses (e.g. `::ffff:127.0.0.1`) are checked as the IPv4
+ * address they embed. Use this on servers, where a hostname that resolves to an
+ * internal address would otherwise pass the static checks.
+ *
+ * Requires Node.js (or a runtime that provides `node:dns`). Where DNS is not
+ * available it throws rather than falling back to the static checks, so a
+ * caller relying on DNS validation never silently gets less protection.
+ *
+ * Limitation: this checks the addresses at validation time only. The HTTP
+ * client resolves the hostname again when it connects, so DNS rebinding
+ * (a record that changes between the check and the request) is not prevented.
+ * To close that gap, connect to the validated IP directly or pin it in your
+ * HTTP agent's `lookup`.
+ *
+ * @param url URL to validate
+ * @param options.allowPrivate Allow private and loopback IPs (default: false). Cloud metadata IPs are always blocked.
+ * @param options.allowHttp Allow http:// scheme (default: false)
+ * @returns The validated URL
+ * @throws Error if URL is not safe or the hostname cannot be resolved
+ */
+export async function validateSafeUrlAsync(
+  url: string,
+  options?: { allowPrivate?: boolean; allowHttp?: boolean }
+): Promise<string> {
+  const allowPrivate = options?.allowPrivate ?? false;
+
+  // Static checks first (scheme, metadata hostnames, localhost, literal IPs)
+  validateSafeUrl(url, options);
+
+  let hostname = new URL(url).hostname;
+  // IPv6 literals come back from URL with brackets, e.g. "[::1]"
+  if (hostname.startsWith("[") && hostname.endsWith("]")) {
+    hostname = hostname.slice(1, -1);
+  }
+
+  if (isIP(hostname)) {
+    assertSafeResolvedIp(hostname, hostname, allowPrivate);
+    return url;
+  }
+
+  const addresses = await resolveAllAddresses(hostname);
+  if (addresses.length === 0) {
+    throw new Error(`Could not resolve hostname: ${hostname}`);
+  }
+  for (const { address } of addresses) {
+    assertSafeResolvedIp(hostname, address, allowPrivate);
+  }
+
+  return url;
+}
+
+/**
+ * Check if a URL is safe to connect to, resolving its hostname with DNS
+ * (non-throwing version of {@link validateSafeUrlAsync}).
+ *
+ * @param url URL to check
+ * @param options.allowPrivate Allow private and loopback IPs (default: false)
+ * @param options.allowHttp Allow http:// scheme (default: false)
+ * @returns true if URL is safe, false otherwise
+ */
+export async function isSafeUrlAsync(
+  url: string,
+  options?: { allowPrivate?: boolean; allowHttp?: boolean }
+): Promise<boolean> {
+  try {
+    await validateSafeUrlAsync(url, options);
     return true;
   } catch {
     return false;
