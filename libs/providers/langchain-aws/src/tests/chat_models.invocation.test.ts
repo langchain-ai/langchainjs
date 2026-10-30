@@ -628,4 +628,61 @@ describe("ChatBedrockConverse invocationParams", () => {
       expect(onFailedAttempt).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe("call options take precedence over constructor values", () => {
+    const constructorGuardrail = {
+      guardrailIdentifier: "constructor-guardrail",
+      guardrailVersion: "1",
+    };
+    const callGuardrail = {
+      guardrailIdentifier: "call-guardrail",
+      guardrailVersion: "2",
+    };
+
+    test("guardrailConfig from call options overrides the constructor value", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        guardrailConfig: constructorGuardrail,
+      });
+
+      const params = model.invocationParams({ guardrailConfig: callGuardrail });
+
+      expect(params.guardrailConfig).toEqual(callGuardrail);
+    });
+
+    test("guardrailConfig falls back to the constructor value when no call option is set", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        guardrailConfig: constructorGuardrail,
+      });
+
+      expect(model.invocationParams({}).guardrailConfig).toEqual(
+        constructorGuardrail
+      );
+    });
+
+    test("additionalModelRequestFields from call options overrides the constructor value", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        additionalModelRequestFields: { source: "constructor" },
+      });
+
+      const params = model.invocationParams({
+        additionalModelRequestFields: { source: "call" },
+      });
+
+      expect(params.additionalModelRequestFields).toEqual({ source: "call" });
+    });
+
+    test("additionalModelRequestFields falls back to the constructor value when no call option is set", () => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        additionalModelRequestFields: { source: "constructor" },
+      });
+
+      expect(model.invocationParams({}).additionalModelRequestFields).toEqual({
+        source: "constructor",
+      });
+    });
+  });
 });
