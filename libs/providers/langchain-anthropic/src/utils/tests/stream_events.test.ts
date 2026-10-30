@@ -5,10 +5,11 @@ import { convertAnthropicStream } from "../stream_events.js";
 interface StreamOverrides {
   cost?: unknown;
   streamUsage?: boolean;
+  stopReason?: string;
 }
 
 /** One response's raw Anthropic events, optionally with a gateway `cost` on the terminal usage. */
-function rawEvents({ cost }: StreamOverrides = {}) {
+function rawEvents({ cost, stopReason = "end_turn" }: StreamOverrides = {}) {
   return [
     {
       type: "message_start" as const,
@@ -36,7 +37,7 @@ function rawEvents({ cost }: StreamOverrides = {}) {
     { type: "content_block_stop" as const, index: 0 },
     {
       type: "message_delta" as const,
-      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+      delta: { stop_reason: stopReason, stop_sequence: null },
       usage: {
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
@@ -46,9 +47,13 @@ function rawEvents({ cost }: StreamOverrides = {}) {
   ];
 }
 
-async function convert({ cost, streamUsage }: StreamOverrides = {}) {
+async function convert({
+  cost,
+  streamUsage,
+  stopReason,
+}: StreamOverrides = {}) {
   const source = (async function* () {
-    yield* rawEvents({ cost });
+    yield* rawEvents({ cost, stopReason });
   })();
   const events = [];
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,6 +95,21 @@ describe("convertAnthropicStream", () => {
 
     expect(messageFinish(events).responseMetadata).toEqual({});
   });
+
+  test.each([
+    { stopReason: "end_turn", reason: "stop" },
+    { stopReason: "stop_sequence", reason: "stop" },
+    { stopReason: "tool_use", reason: "tool_use" },
+    { stopReason: "max_tokens", reason: "length" },
+    { stopReason: "model_context_window_exceeded", reason: "length" },
+  ])(
+    "maps the $stopReason stop reason to the $reason finish reason",
+    async ({ stopReason, reason }) => {
+      const events = await convert({ stopReason });
+
+      expect(messageFinish(events).reason).toBe(reason);
+    }
+  );
 
   test("leaves the rest of the message-finish event untouched", async () => {
     const events = await convert({ cost: 0.0123 });
