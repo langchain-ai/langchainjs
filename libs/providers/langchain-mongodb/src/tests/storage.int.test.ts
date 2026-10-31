@@ -322,6 +322,37 @@ describe("yieldKeys()", () => {
     );
   });
 
+  test.each([
+    ["tenant.a", "tenantXa", undefined],
+    ["tenant.a", "tenantXa", "doc."],
+    ["project[1]", "project1", undefined],
+    ["project[1]", "project1", "doc."],
+    ["ordinary", "ordinaryOther", undefined],
+    ["ordinary", "ordinaryOther", "doc."],
+  ])(
+    "treats namespace %s literally, excluding %s, with prefix %s",
+    async (namespace, otherNamespace, prefix) => {
+      const store = new MongoDBStore({ collection, namespace });
+      const otherStore = new MongoDBStore({
+        collection,
+        namespace: otherNamespace,
+      });
+      const value = new TextEncoder().encode("value");
+      await store.mset([
+        ["doc.1", value],
+        ["docX1", value],
+        ["other", value],
+      ]);
+      await otherStore.mset([["doc.2", value]]);
+
+      const yieldedKeys = await arrayFromAsyncGenerator(
+        store.yieldKeys(prefix)
+      );
+      const expectedKeys = prefix ? ["doc.1"] : ["doc.1", "docX1", "other"];
+      expect(new Set(yieldedKeys)).toEqual(new Set(expectedKeys));
+    }
+  );
+
   test("batches are fetched in batches of `yieldKeysScanBatchSize`", async () => {
     const events: { batchSize: number; command: "find" | "getMore" }[] = [];
     client.on("commandStarted", (event) => {

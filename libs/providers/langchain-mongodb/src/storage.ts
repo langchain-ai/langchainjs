@@ -172,6 +172,10 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
    * @returns An AsyncGenerator that yields keys from the MongoDB database.
    */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
+    const namespacePrefix = this._getPrefixedKey("").replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&"
+    );
     let regexPattern;
     if (prefix) {
       // Convert wildcard (*) to regex equivalent (.*)
@@ -180,9 +184,9 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       const regexPrefix = escapedPrefix.endsWith("*")
         ? escapedPrefix.slice(0, -1)
         : escapedPrefix;
-      regexPattern = `^${this._getPrefixedKey(regexPrefix)}.*`;
+      regexPattern = `^${namespacePrefix}${regexPrefix}.*`;
     } else {
-      regexPattern = `^${this._getPrefixedKey(".*")}`;
+      regexPattern = `^${namespacePrefix}.*`;
     }
 
     const cursor = this.collection
