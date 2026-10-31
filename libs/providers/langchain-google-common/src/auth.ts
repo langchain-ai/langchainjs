@@ -123,6 +123,12 @@ export abstract class GoogleAbstractedFetchClient implements GoogleAbstractedCli
           }
         }
 
+        // For streamed responses gaxios reads the body into its own error
+        // message and leaves response.data undefined.
+        if (body === undefined && typeof err?.message === "string") {
+          body = err.message;
+        }
+
         this._throwRequestError(
           status,
           body,
