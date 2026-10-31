@@ -178,10 +178,21 @@ export function getHeadersWithUserAgent(
   const normalizedHeaders = normalizeHeaders(headers);
   const env = getFormattedEnv();
   const library = `langchainjs${isAzure ? "-azure" : ""}-openai`;
+  const libraryUserAgent = `${library}/${version} (${env})`;
+
+  // `normalizeHeaders` goes through `Headers`, which lowercases every name, so
+  // the caller's user agent is always keyed `user-agent`. Remove it from the
+  // spread rather than letting it sit beside the `User-Agent` added below:
+  // two entries differing only in case are the same header, and a transport
+  // joins them with a comma, which is not the whitespace-separated list of
+  // product tokens RFC 9110 §10.1.5 defines for `User-Agent`.
+  const { "user-agent": callerUserAgent, ...restHeaders } = normalizedHeaders;
+
   return {
-    ...normalizedHeaders,
-    "User-Agent": normalizedHeaders["User-Agent"]
-      ? `${library}/${version} (${env})${normalizedHeaders["User-Agent"]}`
-      : `${library}/${version} (${env})`,
+    ...restHeaders,
+    "User-Agent":
+      typeof callerUserAgent === "string" && callerUserAgent
+        ? `${libraryUserAgent} ${callerUserAgent}`
+        : libraryUserAgent,
   };
 }
