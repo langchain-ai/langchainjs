@@ -70,7 +70,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   }
 
   get callKeys() {
-    return [...super.callKeys, "options"];
+    return [...super.callKeys, "options", "seed"];
   }
 
   lc_serializable = true;
@@ -106,6 +106,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   bestOf?: number;
 
   logitBias?: Record<string, number>;
+
+  seed?: number;
 
   model = "gpt-3.5-turbo-instruct";
 
@@ -187,6 +189,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     this.n = fields?.n ?? this.n;
     this.bestOf = fields?.bestOf ?? this.bestOf;
     this.logitBias = fields?.logitBias;
+    this.seed = fields?.seed ?? this.seed;
     this.stop = fields?.stopSequences ?? fields?.stop;
     this.stopSequences = this.stop;
     this.user = fields?.user;
@@ -221,6 +224,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       n: this.n,
       best_of: this.bestOf,
       logit_bias: this.logitBias,
+      seed: options?.seed ?? this.seed,
       stop: options?.stop ?? this.stopSequences,
       user: this.user,
       stream: this.streaming,
