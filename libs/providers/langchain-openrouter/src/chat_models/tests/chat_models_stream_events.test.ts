@@ -81,3 +81,42 @@ describe("ChatOpenRouter.streamEvents", () => {
     });
   });
 });
+
+test("streamEvents retries a transient HTTP failure", async () => {
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(
+      Response.json(
+        { error: { message: "Provider unavailable" } },
+        { status: 503 }
+      )
+    )
+    .mockResolvedValueOnce(sseResponseFromOpenAIChunks(openAITextOnlyChunks()));
+  const model = new ChatOpenRouter({
+    apiKey: "fake-key",
+    model: "test",
+    maxRetries: 1,
+  });
+  await expect(model.streamEvents("Hi")).toHaveStreamText("Hello world");
+  expect(fetchSpy).toHaveBeenCalledTimes(2);
+});
+
+test("streamEvents honors maxRetries zero", async () => {
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(
+      Response.json(
+        { error: { message: "Provider unavailable" } },
+        { status: 503 }
+      )
+    );
+  const model = new ChatOpenRouter({
+    apiKey: "fake-key",
+    model: "test",
+    maxRetries: 0,
+  });
+  await expect(model.streamEvents("Hi").output).rejects.toThrow(
+    "Provider unavailable"
+  );
+  expect(fetchSpy).toHaveBeenCalledOnce();
+});
