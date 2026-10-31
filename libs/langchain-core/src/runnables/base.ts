@@ -2051,26 +2051,73 @@ export class RunnableSequence<
     );
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let nextStepInputs: any = inputs;
+    let remainingIndexes = inputs.map((_, index) => index);
+    const failedResults = new Map<number, Error>();
+    const maxConcurrency =
+      configList[0]?.maxConcurrency ?? batchOptions?.maxConcurrency;
     try {
       for (let i = 0; i < this.steps.length; i += 1) {
+        if (batchOptions?.returnExceptions && remainingIndexes.length === 0) {
+          break;
+        }
         const step = this.steps[i];
         const promise = step.batch(
           nextStepInputs,
-          runManagers.map((runManager, j) => {
-            const childRunManager = runManager?.getChild(
+          remainingIndexes.map((j, index) => {
+            const childRunManager = runManagers[j]?.getChild(
               this.omitSequenceTags ? undefined : `seq:step:${i + 1}`
             );
-            return patchConfig(configList[j], { callbacks: childRunManager });
+            return patchConfig(configList[j], {
+              callbacks: childRunManager,
+              // The first remaining config controls the next batch's concurrency.
+              ...(batchOptions?.returnExceptions && index === 0 && j !== 0
+                ? { maxConcurrency }
+                : {}),
+            });
           }),
           batchOptions
         );
         nextStepInputs = await raceWithSignal(promise, configList[0]?.signal);
+        if (batchOptions?.returnExceptions) {
+          const nextIndexes: number[] = [];
+          nextStepInputs = nextStepInputs.filter(
+            (result: unknown, j: number) => {
+              const originalIndex = remainingIndexes[j];
+              // oxlint-disable-next-line no-instanceof/no-instanceof
+              if (result instanceof Error) {
+                failedResults.set(originalIndex, result);
+                return false;
+              }
+              nextIndexes.push(originalIndex);
+              return true;
+            }
+          );
+          remainingIndexes = nextIndexes;
+        }
       }
     } catch (e) {
       await Promise.all(
-        runManagers.map((runManager) => runManager?.handleChainError(e))
+        runManagers.map((runManager, i) =>
+          runManager?.handleChainError(failedResults.get(i) ?? e)
+        )
       );
       throw e;
+    }
+    if (batchOptions?.returnExceptions) {
+      let nextIndex = 0;
+      const results = inputs.map((_, i) =>
+        failedResults.has(i)
+          ? failedResults.get(i)!
+          : nextStepInputs[nextIndex++]
+      ) as (RunOutput | Error)[];
+      await Promise.all(
+        runManagers.map((runManager, i) =>
+          failedResults.has(i)
+            ? runManager?.handleChainError(failedResults.get(i))
+            : runManager?.handleChainEnd(_coerceToDict(results[i], "output"))
+        )
+      );
+      return results;
     }
     await Promise.all(
       runManagers.map((runManager) =>
