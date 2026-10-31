@@ -3078,9 +3078,6 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
-    if (batchOptions?.returnExceptions) {
-      throw new Error("Not implemented.");
-    }
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
       configList.map((config) => getCallbackManagerForConfig(config))
@@ -3100,6 +3097,72 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
         return handleStartRes;
       })
     );
+
+    if (batchOptions?.returnExceptions) {
+      const outputs: (RunOutput | Error)[] = new Array(inputs.length);
+      const firstErrors = new Map<number, Error>();
+      let pendingIndices = inputs.map((_, index) => index);
+
+      for (const runnable of this.runnables()) {
+        if (pendingIndices.length === 0) {
+          break;
+        }
+
+        const currentIndices = pendingIndices;
+        let currentOutputs: (RunOutput | Error)[];
+        try {
+          currentOutputs = await runnable.batch(
+            currentIndices.map((index) => inputs[index]),
+            currentIndices.map((index) =>
+              patchConfig(configList[index], {
+                callbacks: runManagers[index]?.getChild(),
+              })
+            ),
+            { ...batchOptions, returnExceptions: true }
+          );
+        } catch (error) {
+          const batchError =
+            error instanceof Error ? error : new Error(String(error));
+          for (const index of currentIndices) {
+            if (!firstErrors.has(index)) {
+              firstErrors.set(index, batchError);
+            }
+          }
+          continue;
+        }
+
+        const nextPendingIndices: number[] = [];
+        await Promise.all(
+          currentIndices.map(async (index, outputIndex) => {
+            const output = currentOutputs[outputIndex];
+            if (output instanceof Error) {
+              if (!firstErrors.has(index)) {
+                firstErrors.set(index, output);
+              }
+              nextPendingIndices.push(index);
+              return;
+            }
+
+            outputs[index] = output;
+            await runManagers[index]?.handleChainEnd(
+              _coerceToDict(output, "output")
+            );
+          })
+        );
+        pendingIndices = nextPendingIndices;
+      }
+
+      await Promise.all(
+        pendingIndices.map(async (index) => {
+          const error =
+            firstErrors.get(index) ??
+            new Error("No error stored at end of fallbacks.");
+          outputs[index] = error;
+          await runManagers[index]?.handleChainError(error);
+        })
+      );
+      return outputs;
+    }
 
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let firstError: any;
