@@ -61,7 +61,15 @@ export function toJsonSchema(
 
   let result: JSONSchema;
 
-  if (isStandardJsonSchema(schema) && !isZodSchemaV4(schema)) {
+  // Zod v3 schemas (including ZodDefault, ZodEffects, etc.) may implement
+  // the Standard Schema spec in newer Zod releases (v3.24+) by adding a
+  // `~standard.jsonSchema` property. However, that implementation returns
+  // raw Zod internals (the `_def` tree) rather than a proper JSON Schema for
+  // wrapped types like ZodDefault(ZodEffects(ZodObject)), which causes the
+  // Anthropic API to reject the tool definition with "Field required: type".
+  // Always route Zod v3 through `zodToJsonSchema` (the `zod-to-json-schema`
+  // library), which handles all Zod v3 wrapper types correctly.
+  if (isStandardJsonSchema(schema) && !isZodSchemaV4(schema) && !isZodSchemaV3(schema)) {
     result = schema["~standard"].jsonSchema.input({
       target: "draft-07",
     }) as JSONSchema;
