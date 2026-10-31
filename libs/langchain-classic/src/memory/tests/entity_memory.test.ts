@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { describe, test, expect } from "vitest";
 
 import { LLMResult } from "@langchain/core/outputs";
 import { BaseLLM } from "@langchain/core/language_models/llms";
@@ -53,5 +53,81 @@ test("Test entity memory with pre-loaded history", async () => {
   expect(result).toStrictEqual({
     history: pastMessages,
     entities: { foo: "No current information known." },
+  });
+});
+
+class RecordingLLM extends BaseLLM {
+  prompts: string[] = [];
+
+  _llmType(): string {
+    return "recording";
+  }
+
+  async _generate(prompts: string[]): Promise<LLMResult> {
+    this.prompts.push(...prompts);
+    return { generations: [[{ text: "foo" }]] };
+  }
+}
+
+describe("Test entity memory window size", () => {
+  const saveTurns = async (memory: EntityMemory, turns: number) => {
+    for (let i = 1; i <= turns; i += 1) {
+      await memory.loadMemoryVariables({ input: `question ${i}` });
+      await memory.saveContext(
+        { input: `question ${i}` },
+        { output: `answer ${i}` }
+      );
+    }
+  };
+
+  test.each([
+    [0, 0],
+    [1, 2],
+    [2, 4],
+    [10, 8],
+  ])(
+    "k = %i returns %i messages when 4 turns are saved",
+    async (k, expectedCount) => {
+      const memory = new EntityMemory({
+        llm: new RecordingLLM({}),
+        k,
+        returnMessages: true,
+      });
+      await saveTurns(memory, 4);
+
+      const { history } = await memory.loadMemoryVariables({ input: "foo" });
+      expect(history).toHaveLength(expectedCount);
+    }
+  );
+
+  test("k = 0 returns an empty history string and sends no history to the LLM", async () => {
+    const llm = new RecordingLLM({});
+    const memory = new EntityMemory({ llm, k: 0 });
+    await saveTurns(memory, 4);
+    llm.prompts = [];
+
+    const { history } = await memory.loadMemoryVariables({ input: "foo" });
+    expect(history).toBe("");
+    await memory.saveContext({ input: "foo" }, { output: "bar" });
+
+    expect(llm.prompts.length).toBeGreaterThan(0);
+    for (const prompt of llm.prompts) {
+      expect(prompt).not.toMatch(/(question|answer) \d/);
+    }
+  });
+
+  test("k = 1 only sends the last turn to the LLM", async () => {
+    const llm = new RecordingLLM({});
+    const memory = new EntityMemory({ llm, k: 1 });
+    await saveTurns(memory, 4);
+    llm.prompts = [];
+
+    const { history } = await memory.loadMemoryVariables({ input: "foo" });
+    expect(history).toBe("Human: question 4\nAI: answer 4");
+    expect(llm.prompts.length).toBeGreaterThan(0);
+    for (const prompt of llm.prompts) {
+      expect(prompt).toContain("question 4");
+      expect(prompt).not.toMatch(/(question|answer) [123]/);
+    }
   });
 });
