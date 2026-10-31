@@ -22,8 +22,7 @@ const model = new ChatWatsonx({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
   projectId: "your-project-id",
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
   maxTokens: 200,
 });
 
@@ -83,8 +82,7 @@ const gatewayModel = new ChatWatsonx({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
   modelGateway: true,
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
 });
 ```
 
@@ -95,8 +93,7 @@ const deployedModel = new ChatWatsonx({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
   idOrName: "your-deployment-id",
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
 });
 ```
 
@@ -112,8 +109,7 @@ const llm = new WatsonxLLM({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
   projectId: "your-project-id",
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
   maxNewTokens: 200,
   temperature: 0.7,
 });
@@ -134,8 +130,7 @@ const embeddings = new WatsonxEmbeddings({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
   projectId: "your-project-id",
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
 });
 
 const vector = await embeddings.embedQuery("Hello world");
@@ -155,8 +150,7 @@ const reranker = new WatsonxRerank({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
   projectId: "your-project-id",
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
 });
 
 const documents = [
@@ -181,8 +175,7 @@ import { WatsonxToolkit } from "@langchain/ibm";
 const toolkit = await WatsonxToolkit.init({
   version: "2024-05-31",
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
-  watsonxAIApikey: "your-api-key",
-  watsonxAIAuthType: "iam",
+  apiKey: "your-api-key",
 });
 
 const tools = toolkit.getTools();
@@ -191,9 +184,48 @@ const searchTool = toolkit.getTool("GoogleSearch", { maxResults: 5 });
 
 ## Authentication
 
-The package supports multiple authentication methods:
+The package supports multiple authentication methods.
 
-### IAM Authentication
+### IAM authentication
+
+```typescript
+{
+  authType: "iam",
+  apiKey: "your-api-key",
+}
+```
+
+Passing only the API key is also supported (defaults to IAM authentication):
+
+```typescript
+{
+  apiKey: "your-api-key",
+}
+```
+
+### Bearer Token authentication
+
+```typescript
+{
+  authType: "bearertoken",
+  bearerToken: "your-token",
+}
+```
+
+### IBM watsonx.ai software authentication
+
+```typescript
+{
+  authType: "cp4d",
+  username: "your-username",
+  password: "your-password",
+  authUrl: "your-cp4d-url",
+}
+```
+
+### Legacy Property Names
+
+For backward compatibility, the original `watsonxAI`-prefixed property names are still supported:
 
 ```typescript
 {
@@ -202,25 +234,7 @@ The package supports multiple authentication methods:
 }
 ```
 
-### Bearer Token Authentication
-
-```typescript
-{
-  watsonxAIAuthType: "bearertoken",
-  watsonxAIBearerToken: "your-token",
-}
-```
-
-### Cloud Pak for Data (CP4D) Authentication
-
-```typescript
-{
-  watsonxAIAuthType: "cp4d",
-  watsonxAIUsername: "your-username",
-  watsonxAIPassword: "your-password",
-  watsonxAIUrl: "your-cp4d-url",
-}
-```
+**Note:** While both naming conventions are supported, we recommend using the shorter property names (`apiKey`, `authType`, etc.) for new code. Avoid mixing both styles for the same property.
 
 ## Related
 

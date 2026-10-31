@@ -3,6 +3,10 @@ import { ChatsToolChoice } from "@ibm-cloud/watsonx-ai/gateway";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { BaseLLMParams } from "@langchain/core/language_models/llms";
 
+/**
+ * Utility type that makes all properties of T optional and never.
+ * Useful for creating mutually exclusive type unions.
+ */
 export type Neverify<T> = {
   [K in keyof T]?: never;
 };
@@ -26,6 +30,13 @@ export interface WatsonxAuth {
   watsonxAIAuthType?: string;
   disableSSL?: boolean;
   serviceUrl: string;
+  // new fields
+  apiKey?: string;
+  bearerToken?: string;
+  username?: string;
+  password?: string;
+  authType?: string;
+  authUrl?: string;
 }
 
 export interface WatsonxInit {
