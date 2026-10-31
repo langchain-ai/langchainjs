@@ -25,6 +25,35 @@ export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
   additionalProperties?: boolean;
 }
 
+function removeExclusiveBounds(
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+) {
+  const isInteger = obj.type === "integer";
+
+  if ("exclusiveMinimum" in obj) {
+    const { exclusiveMinimum } = obj;
+    delete obj.exclusiveMinimum;
+
+    if (typeof exclusiveMinimum === "number" && !("minimum" in obj)) {
+      obj.minimum = isInteger
+        ? Math.floor(exclusiveMinimum) + 1
+        : exclusiveMinimum;
+    }
+  }
+
+  if ("exclusiveMaximum" in obj) {
+    const { exclusiveMaximum } = obj;
+    delete obj.exclusiveMaximum;
+
+    if (typeof exclusiveMaximum === "number" && !("maximum" in obj)) {
+      obj.maximum = isInteger
+        ? Math.ceil(exclusiveMaximum) - 1
+        : exclusiveMaximum;
+    }
+  }
+}
+
 export function removeAdditionalProperties(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
@@ -41,6 +70,8 @@ export function removeAdditionalProperties(
     if ("strict" in newObj) {
       delete newObj.strict;
     }
+
+    removeExclusiveBounds(newObj);
 
     for (const key in newObj) {
       if (key in newObj) {
