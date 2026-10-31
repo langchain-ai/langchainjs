@@ -16,6 +16,7 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/core --output-logs new-only",
     "build:compile": "tsdown",
+    "prepack": "pnpm build",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest watch",
