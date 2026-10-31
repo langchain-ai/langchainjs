@@ -549,17 +549,17 @@ export class ChatPerplexity
     if (message._getType() === "human") {
       return {
         role: "user",
-        content: message.content.toString(),
+        content: message.text,
       };
     } else if (message._getType() === "ai") {
       return {
         role: "assistant",
-        content: message.content.toString(),
+        content: message.text,
       };
     } else if (message._getType() === "system") {
       return {
         role: "system",
-        content: message.content.toString(),
+        content: message.text,
       };
     }
     throw new Error(`Unknown message type: ${message}`);
