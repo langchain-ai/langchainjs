@@ -146,6 +146,24 @@ export class AgentNode<
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
   #systemMessage: SystemMessage;
 
+  /**
+   * Memoized result of {@link AgentNode.#getResponseFormat}, keyed by the
+   * `model` and `responseFormat` references it was derived from.
+   *
+   * `#getResponseFormat` runs on every model request. Recomputing it rebuilds
+   * the structured-output strategies from scratch, and an unnamed schema is
+   * assigned a fresh `extract-<n>` tool name from a module-global counter each
+   * time. That makes the model see a different tool definition on every call,
+   * which defeats provider prompt caching (e.g. Anthropic, Gemini). Reusing the
+   * previous result whenever the inputs are unchanged keeps the tool definition
+   * stable across the agent loop.
+   */
+  #responseFormatCache?: {
+    model: string | LanguageModelLike;
+    responseFormat: ResponseFormatInput | undefined;
+    result: ResponseFormat | undefined;
+  };
+
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
   ) {
@@ -179,6 +197,20 @@ export class AgentNode<
       return undefined;
     }
 
+    /**
+     * Reuse the previously computed response format when neither the model nor
+     * the responseFormat reference has changed, so the structured-output tool
+     * keeps a stable name across model requests within an agent loop.
+     */
+    const cached = this.#responseFormatCache;
+    if (
+      cached &&
+      cached.model === model &&
+      cached.responseFormat === responseFormat
+    ) {
+      return cached.result;
+    }
+
     let resolvedModel: LanguageModelLike | undefined;
     if (isConfigurableModel(model)) {
       resolvedModel = await (
@@ -196,22 +228,19 @@ export class AgentNode<
       resolvedModel
     );
 
+    let result: ResponseFormat | undefined;
     if (strategies.length === 0) {
-      return undefined;
-    }
-
-    /**
-     * we either define a list of provider strategies or a list of tool strategies
-     */
-    const isProviderStrategy = strategies.every(
-      (format) => format instanceof ProviderStrategy
-    );
-
-    /**
-     * Populate a list of structured tool info.
-     */
-    if (!isProviderStrategy) {
-      return {
+      result = undefined;
+    } else if (
+      /**
+       * we either define a list of provider strategies or a list of tool strategies
+       */
+      !strategies.every((format) => format instanceof ProviderStrategy)
+    ) {
+      /**
+       * Populate a list of structured tool info.
+       */
+      result = {
         type: "tool",
         tools: (
           strategies.filter(
@@ -225,15 +254,18 @@ export class AgentNode<
           {} as Record<string, ToolStrategy>
         ),
       };
+    } else {
+      result = {
+        type: "native",
+        /**
+         * there can only be one provider strategy
+         */
+        strategy: strategies[0] as ProviderStrategy,
+      };
     }
 
-    return {
-      type: "native",
-      /**
-       * there can only be one provider strategy
-       */
-      strategy: strategies[0] as ProviderStrategy,
-    };
+    this.#responseFormatCache = { model, responseFormat, result };
+    return result;
   }
 
   async #run(
