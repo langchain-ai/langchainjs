@@ -14,7 +14,7 @@ import {
   FakeRetriever,
   FakeStreamingLLM,
 } from "../../utils/testing/index.js";
-import { RunnableSequence, RunnableMap } from "../base.js";
+import { RunnableSequence, RunnableMap, RunnableParallel } from "../base.js";
 import { RunnablePassthrough } from "../passthrough.js";
 
 test("Create a runnable sequence with a runnable map", async () => {
@@ -309,3 +309,49 @@ test("Should stream chunks through runnable passthrough and assign", async () =>
     await chainWithPickMulti.invoke("What is your name?")
   );
 });
+
+for (const MapType of [RunnableMap, RunnableParallel]) {
+  const keys = ["__proto__", "constructor", "toString", "normal"];
+
+  test(`${MapType.name} preserves all own step keys`, () => {
+    const steps = Object.fromEntries(keys.map((key) => [key, () => key]));
+    const map = new MapType({ steps });
+    expect(map.getStepsKeys()).toEqual(keys);
+  });
+
+  test(`${MapType.name} preserves prototype property names in invoke and batch`, async () => {
+    for (const value of ["text", { result: "value" }, null]) {
+      const steps = Object.fromEntries(keys.map((key) => [key, () => value]));
+      const map = new MapType({ steps });
+      const outputs = [await map.invoke(null), ...(await map.batch([null]))];
+      for (const output of outputs) {
+        expect(Object.keys(output).sort()).toEqual([...keys].sort());
+        expect(Object.getPrototypeOf(output)).toBe(Object.prototype);
+        for (const key of keys) {
+          expect(Object.getOwnPropertyDescriptor(output, key)).toEqual({
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        }
+      }
+    }
+  });
+
+  test(`${MapType.name} streams every own step key`, async () => {
+    const steps = Object.fromEntries(keys.map((key) => [key, () => key]));
+    const map = new MapType({ steps });
+    const chunks = [];
+    for await (const chunk of await map.stream(null)) {
+      chunks.push(chunk);
+    }
+    expect(chunks.flatMap(Object.keys).sort()).toEqual([...keys].sort());
+    for (const chunk of chunks) {
+      for (const key of Object.keys(chunk)) {
+        expect(Object.hasOwn(chunk, key)).toBe(true);
+        expect(chunk[key]).toBe(key);
+      }
+    }
+  });
+}
