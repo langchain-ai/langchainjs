@@ -573,6 +573,22 @@ function convertSystemMessageToConverseMessage(
   );
 }
 
+type ToolCallContentBlock = {
+  type: "tool_call";
+  id?: string;
+  name: string;
+  args?: unknown;
+};
+
+function isToolCallContentBlock(
+  block: MessageContentComplex
+): block is ToolCallContentBlock {
+  return (
+    block.type === "tool_call" &&
+    typeof (block as { name?: unknown }).name === "string"
+  );
+}
+
 function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
   if (msg.response_metadata?.output_version === "v1") {
     return {
@@ -620,6 +636,32 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         }
       } else if (isDefaultCachePoint(block)) {
         contentBlocks.push(convertCachePointBlock(block));
+      } else if (isToolCallContentBlock(block)) {
+        // A `tool_call` block and an entry in `msg.tool_calls` are two views of
+        // the same call, and an AIMessage carries both -- so throwing here
+        // rejected a message shape this class produces itself. The
+        // `msg.tool_calls` pass below already emits the `toolUse`, hence the
+        // skip.
+        //
+        // It is only a duplicate when the two agree, though. Core syncs them
+        // when an AIMessage is built with `contentBlocks`, but a message
+        // assembled through `content` can carry the block with `tool_calls`
+        // empty. Converting that one here rather than skipping it keeps a
+        // hand-assembled call from being dropped silently, which is the
+        // failure the throw was there to prevent.
+        const alreadyEmittedFromToolCalls = msg.tool_calls?.some(
+          (toolCall) => toolCall.id === block.id && toolCall.name === block.name
+        );
+        if (!alreadyEmittedFromToolCalls) {
+          contentBlocks.push({
+            toolUse: {
+              toolUseId: block.id,
+              name: block.name,
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+              input: block.args as any,
+            },
+          });
+        }
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
