@@ -250,6 +250,56 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   ).toBeUndefined();
 });
 
+test("removeAdditionalProperties remaps exclusiveMinimum/exclusiveMaximum for integer schemas and strips them otherwise", () => {
+  const integerSchema = removeAdditionalProperties({
+    type: "integer",
+    exclusiveMinimum: 0,
+    exclusiveMaximum: 10,
+  });
+  expect(integerSchema).not.toHaveProperty("exclusiveMinimum");
+  expect(integerSchema).not.toHaveProperty("exclusiveMaximum");
+  expect(integerSchema.minimum).toBe(1);
+  expect(integerSchema.maximum).toBe(9);
+
+  const numberSchema = removeAdditionalProperties({
+    type: "number",
+    exclusiveMinimum: 0,
+    exclusiveMaximum: 1,
+  });
+  expect(numberSchema).not.toHaveProperty("exclusiveMinimum");
+  expect(numberSchema).not.toHaveProperty("exclusiveMaximum");
+  expect(numberSchema).not.toHaveProperty("minimum");
+  expect(numberSchema).not.toHaveProperty("maximum");
+
+  const tighterMin = removeAdditionalProperties({
+    type: "integer",
+    minimum: 5,
+    exclusiveMinimum: 2,
+  });
+  expect(tighterMin.minimum).toBe(5);
+
+  const looserMin = removeAdditionalProperties({
+    type: "integer",
+    minimum: 0,
+    exclusiveMinimum: 5,
+  });
+  expect(looserMin.minimum).toBe(6);
+
+  const nestedSchema = removeAdditionalProperties({
+    type: "object",
+    properties: {
+      duration_minutes: {
+        type: "integer",
+        exclusiveMinimum: 0,
+      },
+    },
+  });
+  expect(nestedSchema.properties?.duration_minutes).not.toHaveProperty(
+    "exclusiveMinimum"
+  );
+  expect(nestedSchema.properties?.duration_minutes.minimum).toBe(1);
+});
+
 test("convertMessageContentToParts correctly handles message types", () => {
   const messages = [
     new SystemMessage("You are a helpful assistant"),
