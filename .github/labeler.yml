@@ -38,7 +38,7 @@ pkg:@langchain/classic:
           - libs/langchain-classic/**/*
 
 pkg:@langchain/core:
-  - changed-flies:
+  - changed-files:
       - any-glob-to-any-file:
           - libs/langchain-core/**
           - libs/langchain-core/**/*
