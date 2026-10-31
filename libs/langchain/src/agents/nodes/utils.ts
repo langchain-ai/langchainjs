@@ -16,6 +16,48 @@ import { END, StateSchema, ReducedValue } from "@langchain/langgraph";
 import type { JumpTo } from "../types.js";
 import type { AnyAgentMiddleware } from "../middleware/types.js";
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Read `configurable.middleware_context` from a LangGraph invoke config.
+ *
+ * Prompt-caching middleware historically documented this nested key as the way
+ * to pass per-call context. Typed invoke context (`config.context`) is the
+ * canonical API; this helper exists so the documented alias still works.
+ *
+ * @see https://github.com/langchain-ai/langchainjs/issues/9871
+ */
+function getConfigurableMiddlewareContext(
+  configurable: unknown
+): Record<string, unknown> {
+  if (!isPlainRecord(configurable)) {
+    return {};
+  }
+  const raw = configurable.middleware_context;
+  if (!isPlainRecord(raw)) {
+    return {};
+  }
+  return raw;
+}
+
+/**
+ * Resolve middleware invoke context from LangGraph config.
+ *
+ * Merges `configurable.middleware_context` with `context`. When both define
+ * the same key, `context` wins.
+ */
+export function resolveInvokeContext(config?: {
+  context?: unknown;
+  configurable?: unknown;
+}): Record<string, unknown> {
+  return {
+    ...getConfigurableMiddlewareContext(config?.configurable),
+    ...(isPlainRecord(config?.context) ? config.context : {}),
+  };
+}
+
 /**
  * Helper function to initialize middleware state defaults.
  * This is used to ensure all middleware state properties are initialized.
