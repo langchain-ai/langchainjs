@@ -149,6 +149,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
     let result;
+    let matched = false;
     for (let i = 0; i < this.branches.length; i += 1) {
       const [condition, branchRunnable] = this.branches[i];
       const conditionValue = await condition.invoke(
@@ -164,10 +165,11 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
             callbacks: runManager?.getChild(`branch:${i + 1}`),
           })
         );
+        matched = true;
         break;
       }
     }
-    if (!result) {
+    if (!matched) {
       result = await this.default.invoke(
         input,
         patchConfig(config, {
