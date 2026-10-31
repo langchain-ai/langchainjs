@@ -82,5 +82,31 @@ describe.each(testModels)(
       expect(typeof res[0]).toBe("number");
       expect(res.length).toEqual(testDimensions);
     });
+
+    test("taskType", async () => {
+      const embeddings = new VertexAIEmbeddings({
+        model: modelName,
+        location,
+        onFailedAttempt,
+        taskType: "RETRIEVAL_QUERY",
+      });
+      const res = await embeddings.embedQuery("What is the capital of France?");
+      expect(typeof res[0]).toBe("number");
+      expect(res.length).toEqual(defaultOutputDimensions);
+    });
+
+    test("taskType with dimensions", async () => {
+      const testDimensions: number = 512;
+      const embeddings = new VertexAIEmbeddings({
+        model: modelName,
+        location,
+        onFailedAttempt,
+        taskType: "SEMANTIC_SIMILARITY",
+        dimensions: testDimensions,
+      });
+      const res = await embeddings.embedQuery("Hello world");
+      expect(typeof res[0]).toBe("number");
+      expect(res.length).toEqual(testDimensions);
+    });
   }
 );
