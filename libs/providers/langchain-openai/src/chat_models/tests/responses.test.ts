@@ -248,3 +248,36 @@ describe("tool search support", () => {
     expect(tools[1]).toHaveProperty("name", "get_weather");
   });
 });
+
+describe("service_tier", () => {
+  type Options = Parameters<ChatOpenAIResponses["invocationParams"]>[0];
+
+  it("prefers the per-call value over the constructor default", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4.1-mini",
+      apiKey: "sk-not-used",
+      service_tier: "default",
+    });
+    const params = model.invocationParams({
+      service_tier: "flex",
+    } as Options);
+    expect(params.service_tier).toBe("flex");
+  });
+
+  it("falls back to the constructor value when the call omits one", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4.1-mini",
+      apiKey: "sk-not-used",
+      service_tier: "default",
+    });
+    expect(model.invocationParams({} as Options).service_tier).toBe("default");
+  });
+
+  it("is undefined when neither the call nor the constructor sets one", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4.1-mini",
+      apiKey: "sk-not-used",
+    });
+    expect(model.invocationParams({} as Options).service_tier).toBeUndefined();
+  });
+});
