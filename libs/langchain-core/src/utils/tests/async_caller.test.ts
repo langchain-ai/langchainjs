@@ -121,6 +121,23 @@ describe("AsyncCaller", () => {
     expect(callable).toHaveBeenCalledTimes(1);
   });
 
+  test("defaultFailedAttemptHandler retries configured status codes", async () => {
+    const caller = new AsyncCaller({
+      maxRetries: 2,
+      retryableStatusCodes: [404],
+    });
+
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Provider returned error"), { status: 404 })
+      )
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+
   test("defaultFailedAttemptHandler retries on 5xx errors with direct status", async () => {
     const caller = new AsyncCaller({ maxRetries: 2 });
 
