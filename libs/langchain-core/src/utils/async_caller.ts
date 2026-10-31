@@ -1,7 +1,7 @@
 import PQueueMod from "p-queue";
 
 import { getRetryable, stampRetryable } from "../errors/index.js";
-import { getAbortSignalError } from "./signal.js";
+import { getAbortSignalError, raceWithSignal } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
 const STATUS_NO_RETRY = [
@@ -352,6 +352,10 @@ export interface AsyncCallerParams {
 }
 
 export interface AsyncCallerCallOptions {
+  /**
+   * Abort queued calls and retry delays. Running calls must handle cancellation
+   * themselves and keep their concurrency slot until they settle.
+   */
   signal?: AbortSignal;
   maxRetries?: number;
 }
@@ -406,7 +410,8 @@ export class AsyncCaller {
   >(
     retries: AsyncCallerParams["maxRetries"],
     callable: T,
-    args: Parameters<T>
+    args: Parameters<T>,
+    signal?: AbortSignal
   ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
@@ -423,6 +428,7 @@ export class AsyncCaller {
           {
             onFailedAttempt: ({ error }) => this.onFailedAttempt?.(error),
             retries,
+            signal,
             randomize: true,
             // If needed we can change some of the defaults here,
             // but they're quite sensible.
@@ -439,23 +445,16 @@ export class AsyncCaller {
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
     const retries = options.maxRetries ?? this.maxRetries;
+    if (options.signal?.aborted) {
+      return Promise.reject(getAbortSignalError(options.signal));
+    }
     // Note this doesn't cancel the underlying request,
     // when available prefer to use the signal option of the underlying call
     if (options.signal) {
-      let listener: (() => void) | undefined;
-      return Promise.race([
-        this.callWithRetries<A, T>(retries, callable, args),
-        new Promise<never>((_, reject) => {
-          listener = () => {
-            reject(getAbortSignalError(options.signal));
-          };
-          options.signal?.addEventListener("abort", listener, { once: true });
-        }),
-      ]).finally(() => {
-        if (options.signal && listener) {
-          options.signal.removeEventListener("abort", listener);
-        }
-      });
+      return raceWithSignal(
+        this.callWithRetries<A, T>(retries, callable, args, options.signal),
+        options.signal
+      );
     }
     return this.callWithRetries<A, T>(retries, callable, args);
   }
