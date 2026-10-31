@@ -819,7 +819,14 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     const ensuredConfig = { ...config };
     // Deepseek does not support json schema yet
     if (ensuredConfig?.method === undefined) {
-      ensuredConfig.method = "functionCalling";
+      // DeepSeek reasoning models (deepseek-v4-pro / deepseek-v4-flash /
+      // deepseek-reasoner) reject `tool_choice` while routed to thinking
+      // mode, so the functionCalling structured-output path dies with a 400
+      // ("Thinking mode does not support this tool_choice"). JSON mode does
+      // not send `tool_choice`, so fall back to it for reasoning models.
+      // See https://github.com/langchain-ai/langchainjs/issues/10954
+      ensuredConfig.method =
+        this.profile.reasoningOutput === true ? "jsonMode" : "functionCalling";
     }
     return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
