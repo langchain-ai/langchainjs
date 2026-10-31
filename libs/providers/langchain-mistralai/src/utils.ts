@@ -32,6 +32,19 @@ function _simpleHash(str: string): number {
   return Math.abs(hash);
 }
 
+export function _normalizeStreamedToolCallId(
+  id: string | null | undefined
+): string | undefined {
+  if (id == null) {
+    return undefined;
+  }
+  const trimmed = id.trim();
+  if (trimmed === "" || trimmed === "null" || trimmed === "undefined") {
+    return undefined;
+  }
+  return trimmed;
+}
+
 export function _convertToolCallIdToMistralCompatible(
   toolCallId: string
 ): string {
