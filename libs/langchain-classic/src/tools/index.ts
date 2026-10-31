@@ -19,6 +19,7 @@ export {
 export { RequestsGetTool, RequestsPostTool } from "./requests.js";
 export { VectorStoreQATool } from "./vectorstore.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";
+export { HackerNewsTopStoriesTool } from "./hacker_news.js";
 export {
   convertToOpenAIFunction as formatToOpenAIFunction,
   convertToOpenAITool as formatToOpenAITool,
