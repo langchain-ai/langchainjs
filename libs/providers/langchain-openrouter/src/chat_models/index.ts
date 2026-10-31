@@ -304,6 +304,7 @@ export class ChatOpenRouter extends BaseChatModel<
     this.appCategories = fields.appCategories;
     this.modelKwargs = fields.modelKwargs;
     this.streamUsage = fields.streamUsage ?? true;
+    this.disableStreaming = fields.disableStreaming === true;
   }
 
   _llmType(): string {
@@ -496,6 +497,13 @@ export class ChatOpenRouter extends BaseChatModel<
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
+          if (value?.error) {
+            throw new OpenRouterError(
+              value.error.message,
+              undefined,
+              value.error.code
+            );
+          }
           if (value) yield value;
         }
       } finally {
@@ -560,6 +568,13 @@ export class ChatOpenRouter extends BaseChatModel<
         const { done, value: data } = await reader.read();
         if (done) break;
         if (!data) continue;
+        if (data.error) {
+          throw new OpenRouterError(
+            data.error.message,
+            undefined,
+            data.error.code
+          );
+        }
 
         const choice = data.choices?.[0];
         if (!choice?.delta) continue;
