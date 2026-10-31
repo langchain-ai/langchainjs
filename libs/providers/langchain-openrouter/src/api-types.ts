@@ -544,6 +544,12 @@ export namespace OpenRouter {
     choices: ChatResponseChoice[];
     created: number;
     model: string;
+    /**
+     * The upstream inference provider that actually served the request
+     * (e.g. `"DigitalOcean"`, `"Together"`). OpenRouter routes each call to
+     * one of several upstreams, and this names the one that answered.
+     */
+    provider?: string;
     object: "chat.completion";
     system_fingerprint?: string | null;
     usage?: ChatGenerationTokenUsage;
