@@ -71,6 +71,15 @@ type Metadata = Record<string, unknown>;
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
 
 /**
+ * Result returned by {@link PGVectorStore.buildFilterClauses}.
+ */
+export interface FilterClausesResult {
+  whereClauses: string[];
+  parameters: unknown[];
+  paramCount: number;
+}
+
+/**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
@@ -334,7 +343,7 @@ export class PGVectorStore extends VectorStore {
   async similaritySearchVectorWithScores(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, { distance: number; similarity: number }][]> {
     const results = await this.searchPostgres(query, k, filter, false);
     const enhancedResults: [
@@ -404,7 +413,7 @@ export class PGVectorStore extends VectorStore {
       config.collectionTableName === undefined
     ) {
       throw new Error(
-        `If supplying a "collectionName", you must also supply a "collectionTableName".`
+        `If supplying a "collectionName", you must also supply a "collectionTableName".`,
       );
     }
     this.collectionTableName = config.collectionTableName;
@@ -423,7 +432,7 @@ export class PGVectorStore extends VectorStore {
 
     if (!config.postgresConnectionOptions && !config.pool) {
       throw new Error(
-        "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
+        "You must provide either a `postgresConnectionOptions` object or a `pool` instance.",
       );
     }
     const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
@@ -488,7 +497,7 @@ export class PGVectorStore extends VectorStore {
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs & { dimensions?: number }
+    config: PGVectorStoreArgs & { dimensions?: number },
   ): Promise<PGVectorStore> {
     const { dimensions, ...rest } = config;
     const postgresqlVectorStore = new PGVectorStore(embeddings, rest);
@@ -516,14 +525,14 @@ export class PGVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] },
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options
+      options,
     );
   }
 
@@ -576,7 +585,7 @@ export class PGVectorStore extends VectorStore {
    */
   private generatePlaceholderForRowAt(
     index: number,
-    numOfColumns: number
+    numOfColumns: number,
   ): string {
     const placeholders = [];
     for (let i = 0; i < numOfColumns; i += 1) {
@@ -640,13 +649,13 @@ export class PGVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] },
   ): Promise<void> {
     const ids = options?.ids;
 
     if (ids !== undefined && ids.length !== vectors.length) {
       throw new Error(
-        "The number of ids must match the number of vectors provided."
+        "The number of ids must match the number of vectors provided.",
       );
     }
 
@@ -663,7 +672,7 @@ export class PGVectorStore extends VectorStore {
       values.push(
         documents[i].pageContent.replace(/\0/g, ""),
         embeddingString.replace(/\0/g, ""),
-        documents[i].metadata
+        documents[i].metadata,
       );
       if (collectionId) {
         values.push(collectionId);
@@ -714,11 +723,25 @@ export class PGVectorStore extends VectorStore {
   /**
    * Builds WHERE clause conditions and parameters for metadata filtering.
    *
+   * This method is `protected` to allow subclasses of `PGVectorStore` to extend or
+   * override filter behavior (for example, to support Postgres-specific operators like
+   * JSONB containment `@>`, full-text search, or custom SQL predicates).
+   *
    * @param filter - The metadata filter object.
-   * @param paramOffset - Starting parameter index offset.
-   * @returns Object containing whereClauses array and parameters array.
+   * @param paramOffset - Starting parameter index offset. Subclasses adding parameters must
+   * increment parameter indices starting after `paramOffset` (e.g. `$1`, `$2`, ...) to avoid
+   * conflicting with preceding query parameters.
+   * @returns Object containing `whereClauses` array, `parameters` array, and the final `paramCount`.
+   *
+   * @remarks
+   * When creating a custom subclass of `PGVectorStore`, instantiate it directly using
+   * `new CustomVectorStore(...)` rather than the static `PGVectorStore.initialize(...)` factory,
+   * which instantiates the base `PGVectorStore`.
    */
-  private buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
+  protected buildFilterClauses(
+    filter: MetadataFilter,
+    paramOffset = 0,
+  ): FilterClausesResult {
     const whereClauses: string[] = [];
     const parameters: unknown[] = [];
     let paramCount = paramOffset;
@@ -733,30 +756,36 @@ export class PGVectorStore extends VectorStore {
         const _value = value as Record<string, unknown>;
 
         if (Array.isArray(_value.in)) {
-          const placeholders = _value.in
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
-          );
+          if (_value.in.length === 0) {
+            whereClauses.push("FALSE");
+          } else {
+            const placeholders = _value.in
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`,
+            );
+          }
         }
 
         if (Array.isArray(_value.notIn)) {
-          const placeholders = _value.notIn
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`
-          );
+          if (_value.notIn.length > 0) {
+            const placeholders = _value.notIn
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`,
+            );
+          }
         }
 
         if (Array.isArray(_value.arrayContains)) {
           const keyPlaceholder = addParameter(key);
           const valuesPlaceholder = addParameter(_value.arrayContains);
           whereClauses.push(
-            `(${this.metadataColumnName} -> ${keyPlaceholder}) ?| ${valuesPlaceholder}::text[]`
+            `(${this.metadataColumnName} -> ${keyPlaceholder}) ?| ${valuesPlaceholder}::text[]`,
           );
         }
 
@@ -775,7 +804,7 @@ export class PGVectorStore extends VectorStore {
             const keyPlaceholder = addParameter(key);
             const valuePlaceholder = addParameter(_value[opKey]);
             whereClauses.push(
-              `(${this.metadataColumnName} ->> ${keyPlaceholder})::numeric ${sqlOp} ${valuePlaceholder}`
+              `(${this.metadataColumnName} ->> ${keyPlaceholder})::numeric ${sqlOp} ${valuePlaceholder}`,
             );
           }
         }
@@ -784,14 +813,14 @@ export class PGVectorStore extends VectorStore {
           const keyPlaceholder = addParameter(key);
           const valuePlaceholder = addParameter(String(_value.neq));
           whereClauses.push(
-            `(${this.metadataColumnName} ->> ${keyPlaceholder} IS NULL OR (${this.metadataColumnName} ->> ${keyPlaceholder})::text != ${valuePlaceholder})`
+            `(${this.metadataColumnName} ->> ${keyPlaceholder} IS NULL OR (${this.metadataColumnName} ->> ${keyPlaceholder})::text != ${valuePlaceholder})`,
           );
         }
       } else {
         const keyPlaceholder = addParameter(key);
         const valuePlaceholder = addParameter(value);
         whereClauses.push(
-          `${this.metadataColumnName} ->> ${keyPlaceholder} = ${valuePlaceholder}`
+          `${this.metadataColumnName} ->> ${keyPlaceholder} = ${valuePlaceholder}`,
         );
       }
     }
@@ -824,7 +853,7 @@ export class PGVectorStore extends VectorStore {
 
     const { whereClauses, parameters } = this.buildFilterClauses(
       filter,
-      paramOffset
+      paramOffset,
     );
 
     const allParameters = [...baseParameters, ...parameters];
@@ -864,13 +893,13 @@ export class PGVectorStore extends VectorStore {
 
     if (!(ids || filter)) {
       throw new Error(
-        "You must specify either ids or a filter when deleting documents."
+        "You must specify either ids or a filter when deleting documents.",
       );
     }
 
     if (ids && filter) {
       throw new Error(
-        "You cannot specify both ids and a filter when deleting documents."
+        "You cannot specify both ids and a filter when deleting documents.",
       );
     }
 
@@ -893,7 +922,7 @@ export class PGVectorStore extends VectorStore {
     query: number[],
     k: number,
     filter?: this["FilterType"],
-    includeEmbedding?: boolean
+    includeEmbedding?: boolean,
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter: this["FilterType"] = filter ?? {};
@@ -915,7 +944,7 @@ export class PGVectorStore extends VectorStore {
 
     const { whereClauses, parameters } = this.buildFilterClauses(
       _filter,
-      paramOffset
+      paramOffset,
     );
 
     const allParameters = [...baseParameters, ...parameters];
@@ -965,7 +994,7 @@ export class PGVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]> {
     return this.searchPostgres(query, k, filter, false);
   }
@@ -1037,7 +1066,7 @@ export class PGVectorStore extends VectorStore {
       if (!(e as Error).message.includes("already exists")) {
         console.error(e);
         throw new Error(
-          `Error adding column or creating index: ${(e as Error).message}`
+          `Error adding column or creating index: ${(e as Error).message}`,
         );
       }
     }
@@ -1058,7 +1087,7 @@ export class PGVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs & { dimensions?: number }
+    dbConfig: PGVectorStoreArgs & { dimensions?: number },
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -1085,7 +1114,7 @@ export class PGVectorStore extends VectorStore {
   static override async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs & { dimensions?: number }
+    dbConfig: PGVectorStoreArgs & { dimensions?: number },
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });
@@ -1151,7 +1180,7 @@ export class PGVectorStore extends VectorStore {
       await this.pool.query(createIndexQuery);
     } catch (e) {
       console.error(
-        `Failed to create HNSW index on table ${this.computedTableName}, error: ${e}`
+        `Failed to create HNSW index on table ${this.computedTableName}, error: ${e}`,
       );
     }
   }
@@ -1171,7 +1200,7 @@ export class PGVectorStore extends VectorStore {
    */
   override async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
   ): Promise<Document[]> {
     const { k = 4, fetchK = 20, lambda = 0.5, filter } = options;
     const queryEmbedding = await this.embeddings.embedQuery(query);
@@ -1180,18 +1209,18 @@ export class PGVectorStore extends VectorStore {
       queryEmbedding,
       fetchK,
       filter,
-      true
+      true,
     );
 
     const embeddingList = docs.map((doc) =>
-      JSON.parse(doc[0].metadata[this.vectorColumnName])
+      JSON.parse(doc[0].metadata[this.vectorColumnName]),
     );
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
       lambda,
-      k
+      k,
     );
 
     const mmrDocs = mmrIndexes.map((index) => {

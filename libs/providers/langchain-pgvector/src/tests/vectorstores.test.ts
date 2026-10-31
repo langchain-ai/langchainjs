@@ -2,7 +2,11 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { PGVectorStore } from "../vectorstores.js";
-import type { PGVectorStoreArgs } from "../vectorstores.js";
+import type {
+  PGVectorStoreArgs,
+  MetadataFilter,
+  FilterClausesResult,
+} from "../vectorstores.js";
 
 class MockEmbeddings implements EmbeddingsInterface {
   embedQuery(_text: string): Promise<number[]> {
@@ -26,7 +30,7 @@ function createMockPool() {
 }
 
 function createStore(
-  overrides: Partial<PGVectorStoreArgs> = {}
+  overrides: Partial<PGVectorStoreArgs> = {},
 ): PGVectorStore {
   const pool = createMockPool();
   return new PGVectorStore(new MockEmbeddings(), {
@@ -64,9 +68,9 @@ describe("PGVectorStore", () => {
         () =>
           new PGVectorStore(new MockEmbeddings(), {
             tableName: "test_table",
-          } as PGVectorStoreArgs)
+          } as PGVectorStoreArgs),
       ).toThrow(
-        "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
+        "You must provide either a `postgresConnectionOptions` object or a `pool` instance.",
       );
     });
 
@@ -74,9 +78,9 @@ describe("PGVectorStore", () => {
       expect(() =>
         createStore({
           collectionName: "my_collection",
-        })
+        }),
       ).toThrow(
-        `If supplying a "collectionName", you must also supply a "collectionTableName".`
+        `If supplying a "collectionName", you must also supply a "collectionTableName".`,
       );
     });
 
@@ -181,7 +185,7 @@ describe("PGVectorStore", () => {
         collectionName: "test",
       });
       expect(store.computedCollectionTableName).toBe(
-        '"my_schema"."collections"'
+        '"my_schema"."collections"',
       );
     });
   });
@@ -212,7 +216,7 @@ describe("PGVectorStore", () => {
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       store.distanceStrategy = "unknown" as any;
       expect(() => store.computedOperatorString).toThrow(
-        "Unknown distance strategy: unknown"
+        "Unknown distance strategy: unknown",
       );
     });
   });
@@ -244,7 +248,7 @@ describe("PGVectorStore", () => {
 
       await store.addDocuments(
         [new Document({ pageContent: "hello", metadata: {} })],
-        { ids: ["test-id-1"] }
+        { ids: ["test-id-1"] },
       );
 
       expect(pool.query).toHaveBeenCalled();
@@ -260,10 +264,10 @@ describe("PGVectorStore", () => {
         store.addVectors(
           [[0.1, 0.2]],
           [new Document({ pageContent: "a", metadata: {} })],
-          { ids: ["1", "2"] }
-        )
+          { ids: ["1", "2"] },
+        ),
       ).rejects.toThrow(
-        "The number of ids must match the number of vectors provided."
+        "The number of ids must match the number of vectors provided.",
       );
     });
 
@@ -276,7 +280,7 @@ describe("PGVectorStore", () => {
 
       await store.addVectors(
         [[0.1, 0.2]],
-        [new Document({ pageContent: "hello\0world", metadata: {} })]
+        [new Document({ pageContent: "hello\0world", metadata: {} })],
       );
 
       const lastCall = pool.query.mock.calls[pool.query.mock.calls.length - 1];
@@ -293,7 +297,7 @@ describe("PGVectorStore", () => {
 
       const docs = Array.from(
         { length: 5 },
-        (_, i) => new Document({ pageContent: `doc${i}`, metadata: {} })
+        (_, i) => new Document({ pageContent: `doc${i}`, metadata: {} }),
       );
       const vectors = Array.from({ length: 5 }, () => [0.1, 0.2]);
 
@@ -301,7 +305,8 @@ describe("PGVectorStore", () => {
 
       const insertCalls = pool.query.mock.calls.filter(
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        (call: any) => typeof call[0] === "string" && call[0].includes("INSERT")
+        (call: any) =>
+          typeof call[0] === "string" && call[0].includes("INSERT"),
       );
       expect(insertCalls.length).toBe(3);
     });
@@ -317,8 +322,8 @@ describe("PGVectorStore", () => {
       await expect(
         store.addVectors(
           [[0.1]],
-          [new Document({ pageContent: "test", metadata: {} })]
-        )
+          [new Document({ pageContent: "test", metadata: {} })],
+        ),
       ).rejects.toThrow("Error inserting: connection refused");
     });
   });
@@ -327,16 +332,16 @@ describe("PGVectorStore", () => {
     test("throws when neither ids nor filter provided", async () => {
       const store = createStore();
       await expect(store.delete({})).rejects.toThrow(
-        "You must specify either ids or a filter when deleting documents."
+        "You must specify either ids or a filter when deleting documents.",
       );
     });
 
     test("throws when both ids and filter provided", async () => {
       const store = createStore();
       await expect(
-        store.delete({ ids: ["1"], filter: { key: "value" } })
+        store.delete({ ids: ["1"], filter: { key: "value" } }),
       ).rejects.toThrow(
-        "You cannot specify both ids and a filter when deleting documents."
+        "You cannot specify both ids and a filter when deleting documents.",
       );
     });
 
@@ -351,7 +356,7 @@ describe("PGVectorStore", () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("DELETE FROM"),
-        expect.arrayContaining([["id1", "id2"]])
+        expect.arrayContaining([["id1", "id2"]]),
       );
     });
 
@@ -366,7 +371,7 @@ describe("PGVectorStore", () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("DELETE FROM"),
-        expect.arrayContaining(["test"])
+        expect.arrayContaining(["test"]),
       );
     });
   });
@@ -393,7 +398,7 @@ describe("PGVectorStore", () => {
 
       const results = await store.similaritySearchVectorWithScore(
         [0.1, 0.2, 0.3],
-        5
+        5,
       );
 
       expect(results).toHaveLength(1);
@@ -476,6 +481,24 @@ describe("PGVectorStore", () => {
       expect(queryCall[0]).toContain("NOT IN");
     });
 
+    test("handles empty 'in' list by producing FALSE clause without invalid SQL", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: [] },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("FALSE");
+      expect(queryCall[0]).not.toContain("IN ()");
+    });
+
+    test("handles empty 'notIn' list by omitting clause without invalid SQL", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { notIn: [] },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).not.toContain("NOT IN");
+      expect(queryCall[0]).not.toContain("WHERE");
+    });
+
     test("handles 'arrayContains' operator", async () => {
       await store.similaritySearchVectorWithScore([0.1], 5, {
         tags: { arrayContains: ["tag1", "tag2"] },
@@ -537,6 +560,80 @@ describe("PGVectorStore", () => {
       expect(queryCall[0]).not.toContain(maliciousKey);
       expect(queryCall[1]).toContain(maliciousKey);
       expect(queryCall[1]).toContain("test");
+    });
+  });
+
+  describe("subclassing and custom filter clauses", () => {
+    class CustomPGVectorStore extends PGVectorStore {
+      protected override buildFilterClauses(
+        filter: MetadataFilter,
+        paramOffset = 0,
+      ): FilterClausesResult {
+        const base = super.buildFilterClauses(filter, paramOffset);
+        let paramCount = base.paramCount;
+        const whereClauses = [...base.whereClauses];
+        const parameters = [...base.parameters];
+
+        for (const [key, value] of Object.entries(filter)) {
+          if (
+            typeof value === "object" &&
+            value !== null &&
+            "contains" in value
+          ) {
+            paramCount += 1;
+            parameters.push(key);
+            const keyPlaceholder = `$${paramCount}`;
+
+            paramCount += 1;
+            parameters.push(
+              JSON.stringify((value as { contains: unknown }).contains),
+            );
+            const valuePlaceholder = `$${paramCount}`;
+
+            whereClauses.push(
+              `(${this.metadataColumnName} -> ${keyPlaceholder}) @> ${valuePlaceholder}::jsonb`,
+            );
+          }
+        }
+
+        return { whereClauses, parameters, paramCount };
+      }
+    }
+
+    test("allows subclasses to override buildFilterClauses for custom operators like @>", async () => {
+      const pool = createMockPool();
+      const customStore = new CustomPGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await customStore.similaritySearchVectorWithScore([0.1], 5, {
+        profile: { contains: { tier: "gold" } },
+      } as never);
+
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("@> $");
+      expect(queryCall[0]).toContain("::jsonb");
+      expect(queryCall[1]).toContain("profile");
+      expect(queryCall[1]).toContain(JSON.stringify({ tier: "gold" }));
+    });
+
+    test("custom filter override is used by delete with filter", async () => {
+      const pool = createMockPool();
+      const customStore = new CustomPGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await customStore.delete({
+        filter: { profile: { contains: { tier: "gold" } } } as never,
+      });
+
+      const deleteCall = pool.query.mock.calls[0];
+      expect(deleteCall[0]).toContain("@> $");
+      expect(deleteCall[0]).toContain("::jsonb");
+      expect(deleteCall[1]).toContain("profile");
+      expect(deleteCall[1]).toContain(JSON.stringify({ tier: "gold" }));
     });
   });
 
@@ -623,7 +720,7 @@ describe("PGVectorStore", () => {
 
       const results = await store.similaritySearchVectorWithScores(
         [0.1, 0.2],
-        5
+        5,
       );
 
       expect(results).toHaveLength(1);
@@ -661,10 +758,10 @@ describe("PGVectorStore", () => {
       await store.ensureTableInDatabase();
 
       expect(pool.query).toHaveBeenCalledWith(
-        "CREATE EXTENSION IF NOT EXISTS vector;"
+        "CREATE EXTENSION IF NOT EXISTS vector;",
       );
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("CREATE TABLE IF NOT EXISTS")
+        expect.stringContaining("CREATE TABLE IF NOT EXISTS"),
       );
     });
 
@@ -679,7 +776,7 @@ describe("PGVectorStore", () => {
       await store.ensureTableInDatabase();
 
       expect(pool.query).toHaveBeenCalledWith(
-        `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA "ext";`
+        `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA "ext";`,
       );
     });
 
@@ -723,7 +820,7 @@ describe("PGVectorStore", () => {
       await store.ensureCollectionTableInDatabase();
 
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("CREATE TABLE IF NOT EXISTS collections")
+        expect.stringContaining("CREATE TABLE IF NOT EXISTS collections"),
       );
     });
 
@@ -745,7 +842,7 @@ describe("PGVectorStore", () => {
     test("silently handles 'already exists' errors", async () => {
       const pool = createMockPool();
       pool.query.mockRejectedValueOnce(
-        new Error("column already exists in table")
+        new Error("column already exists in table"),
       );
       const store = new PGVectorStore(new MockEmbeddings(), {
         tableName: "test_table",
@@ -755,7 +852,7 @@ describe("PGVectorStore", () => {
       });
 
       await expect(
-        store.ensureCollectionTableInDatabase()
+        store.ensureCollectionTableInDatabase(),
       ).resolves.toBeUndefined();
     });
 
@@ -770,7 +867,7 @@ describe("PGVectorStore", () => {
       });
 
       await expect(store.ensureCollectionTableInDatabase()).rejects.toThrow(
-        "Error adding column or creating index"
+        "Error adding column or creating index",
       );
     });
   });
@@ -824,7 +921,7 @@ describe("PGVectorStore", () => {
       await store.createHnswIndex({ dimensions: 1536 });
 
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("vector_cosine_ops")
+        expect.stringContaining("vector_cosine_ops"),
       );
       expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("hnsw"));
     });
@@ -840,7 +937,7 @@ describe("PGVectorStore", () => {
       await store.createHnswIndex({ dimensions: 1536 });
 
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("vector_ip_ops")
+        expect.stringContaining("vector_ip_ops"),
       );
     });
 
@@ -855,7 +952,7 @@ describe("PGVectorStore", () => {
       await store.createHnswIndex({ dimensions: 1536 });
 
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("vector_l2_ops")
+        expect.stringContaining("vector_l2_ops"),
       );
     });
 
@@ -874,7 +971,7 @@ describe("PGVectorStore", () => {
 
       expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("m=32"));
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("ef_construction=128")
+        expect.stringContaining("ef_construction=128"),
       );
     });
 
@@ -891,7 +988,7 @@ describe("PGVectorStore", () => {
       });
 
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("my_ns_")
+        expect.stringContaining("my_ns_"),
       );
     });
 
@@ -966,7 +1063,7 @@ describe("PGVectorStore", () => {
       expect(store).toBeInstanceOf(PGVectorStore);
       expect(pool.connect).toHaveBeenCalled();
       expect(pool.query).toHaveBeenCalledWith(
-        "CREATE EXTENSION IF NOT EXISTS vector;"
+        "CREATE EXTENSION IF NOT EXISTS vector;",
       );
     });
 
@@ -995,12 +1092,12 @@ describe("PGVectorStore", () => {
 
       const calls = pool.query.mock.calls.map(
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        (c: any) => c[0]
+        (c: any) => c[0],
       );
       expect(
         calls.some((c: string) =>
-          c.includes("CREATE TABLE IF NOT EXISTS collections")
-        )
+          c.includes("CREATE TABLE IF NOT EXISTS collections"),
+        ),
       ).toBe(true);
     });
   });
