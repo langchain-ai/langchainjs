@@ -47,7 +47,7 @@ Integrations are a core component of LangChain. LangChain provides standard inte
 - **Interoperability**: LangChain components expose a standard interface, allowing developers to easily swap them for each other. If you implement a LangChain integration, any developer using a different component will easily be able to swap yours in.
 - **Best Practices**: Through their standard interface, LangChain components encourage and facilitate best practices (streaming, async, etc.) that improve developer experience and application performance.
 
-See our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns. You can also check out the [guides on extending LangChain.js](https://docs.langchain.com/oss/javascript/langchain/how_to/#custom) in our docs.
+See our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns. You can also check out the [guides on extending LangChain.js](https://docs.langchain.com/oss/javascript/learn) in our docs.
 
 #### Integration Packages
 
@@ -146,8 +146,8 @@ Dev releases are useful for:
 This project uses the following tools, which are worth getting familiar with if you plan to contribute:
 
 - **[pnpm](https://pnpm.io/) (v10.14.0)** - dependency management
-- **[oxlint](https://oxc.rs/docs/guide/usage/linter/)** - enforcing standard lint rules
-- **[oxfmt](https://oxc.rs/docs/guide/usage/formatter/)** - enforcing standard code formatting
+- **[oxlint](https://oxc.rs/docs/guide/usage/linter)** - enforcing standard lint rules
+- **[oxfmt](https://oxc.rs/docs/guide/usage/formatter)** - enforcing standard code formatting
 - **[vitest](https://vitest.dev/)** - testing code
 
 ## 🚀 Quick Start
@@ -195,7 +195,7 @@ pnpm --filter @langchain/core build
 
 ### Linting
 
-We use [oxlint](https://oxc.rs/docs/guide/usage/linter/) to enforce standard lint rules. To run the linter:
+We use [oxlint](https://oxc.rs/docs/guide/usage/linter) to enforce standard lint rules. To run the linter:
 
 ```bash
 pnpm --filter langchain lint
@@ -203,7 +203,7 @@ pnpm --filter langchain lint
 
 ### Formatting
 
-We use [oxfmt](https://oxc.rs/docs/guide/usage/formatter/) to enforce code formatting style. To run the formatter:
+We use [oxfmt](https://oxc.rs/docs/guide/usage/formatter) to enforce code formatting style. To run the formatter:
 
 ```bash
 pnpm format
