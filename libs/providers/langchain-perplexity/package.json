@@ -25,7 +25,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
-    "openai": "^7.23.0"
+    "openai": "^7.45.1"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

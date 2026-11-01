@@ -31,7 +31,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "cohere-ai": "^8.1.0"
+    "cohere-ai": "^8.3.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"

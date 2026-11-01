@@ -44,10 +44,10 @@
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
     "lint-staged": "^17.6.0",
-    "oxfmt": "^0.71.0",
-    "oxlint": "^1.86.0",
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0",
     "semver": "^7.8.5",
-    "tsdown": "^0.23.0",
+    "tsdown": "^0.23.3",
     "tsx": "^4.23.15",
     "turbo": "^2.11.5",
     "typescript": "^7.0.2"
