@@ -1050,7 +1050,7 @@ export class ChatMistralAI<
     MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest,
     "messages"
   > {
-    const { response_format, tools, tool_choice } = options ?? {};
+    const { response_format, tools, tool_choice, stop } = options ?? {};
     const mistralAITools: Array<MistralAITool> | undefined = tools?.length
       ? _convertToolToMistralTool(tools)
       : undefined;
@@ -1062,6 +1062,7 @@ export class ChatMistralAI<
       topP: this.topP,
       randomSeed: this.seed,
       safePrompt: this.safePrompt,
+      stop,
       toolChoice: tool_choice,
       responseFormat: response_format,
       presencePenalty: this.presencePenalty,

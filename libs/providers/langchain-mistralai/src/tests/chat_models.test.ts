@@ -66,6 +66,39 @@ test("Constructor supports string model shorthand", () => {
   expect(shorthand.temperature).toBe(explicit.temperature);
 });
 
+describe("stop sequences", () => {
+  test("invocationParams forwards the stop call option", () => {
+    const model = new ChatMistralAI({ apiKey: "foo" });
+    expect(model.invocationParams({ stop: ["\n"] }).stop).toEqual(["\n"]);
+    expect(model.invocationParams({}).stop).toBeUndefined();
+  });
+
+  test("invoke sends stop to the Mistral API", async () => {
+    const model = new ChatMistralAI({ apiKey: "foo" });
+    const spy = vi.spyOn(model, "completionWithRetry").mockResolvedValue({
+      id: "test-id",
+      object: "chat.completion",
+      created: 0,
+      model: "mistral-small-latest",
+      usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: "Hello" },
+          finishReason: "stop",
+        },
+      ],
+    });
+
+    await model.invoke([new HumanMessage("Hi")], { stop: ["\n", "END"] });
+
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({ stop: ["\n", "END"] }),
+      false
+    );
+  });
+});
+
 /**
  * Test to make sure that the logic in convertMessagesToMistralMessages that makes sure
  * tool calls are only included if there is a corresponding ToolMessage works as expected
