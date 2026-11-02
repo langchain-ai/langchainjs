@@ -46,6 +46,7 @@ import {
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
+import { TRACE_POLICY_KEY, type TracePolicy } from "../tracers/trace_policy.js";
 import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
@@ -1909,10 +1910,12 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
   last: Runnable<any, RunOutput>;
   name?: string;
   omitSequenceTags?: boolean;
-  /** Receives the input by reference and must not mutate it. */
-  processInputs?: (input: RunInput) => unknown;
-  /** Receives the output by reference and must not mutate it. */
-  processOutputs?: (output: RunOutput) => unknown;
+  /**
+   * Shapes what `LangChainTracer` sends to LangSmith for this sequence's own
+   * run. It does not change execution, child runs, `streamEvents`, or any
+   * other callback handler. Not serialized, and not kept by `pipe()`.
+   */
+  tracePolicy?: TracePolicy;
 };
 
 /**
@@ -1945,51 +1948,28 @@ export class RunnableSequence<
 
   omitSequenceTags = false;
 
-  protected processInputs?: (input: RunInput) => unknown;
-
-  protected processOutputs?: (output: RunOutput) => unknown;
+  private _tracePolicy?: TracePolicy;
 
   lc_serializable = true;
 
   lc_namespace = ["langchain_core", "runnables"];
 
   constructor(fields: RunnableSequenceFields<RunInput, RunOutput>) {
-    super(fields);
+    const { tracePolicy, ...serializableFields } = fields;
+    super(serializableFields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
     this.name = fields.name;
     this.omitSequenceTags = fields.omitSequenceTags ?? this.omitSequenceTags;
-    this.processInputs = fields.processInputs;
-    this.processOutputs = fields.processOutputs;
+    this._tracePolicy = tracePolicy;
   }
 
-  get lc_serializable_keys(): string[] {
-    return ["first", "middle", "last", "name", "omitSequenceTags"];
-  }
-
-  protected _processTraceInput(input: RunInput): unknown {
-    return this._processTraceValue(input, this.processInputs, "input");
-  }
-
-  protected _processTraceOutput(output: RunOutput): unknown {
-    return this._processTraceValue(output, this.processOutputs, "output");
-  }
-
-  private _processTraceValue<T>(
-    value: T,
-    processor: ((value: T) => unknown) | undefined,
-    type: "input" | "output"
-  ): unknown {
-    if (processor === undefined) {
-      return value;
-    }
-    try {
-      return processor(value);
-    } catch (error) {
-      console.warn(`Failed to process RunnableSequence trace ${type}.`, error);
-      return value;
-    }
+  /** `extra` for this sequence's run, carrying its trace policy. */
+  private get _runExtra(): Record<string, unknown> | undefined {
+    return this._tracePolicy
+      ? { [TRACE_POLICY_KEY]: this._tracePolicy }
+      : undefined;
   }
 
   get steps() {
@@ -1998,16 +1978,17 @@ export class RunnableSequence<
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
     const config = ensureConfig(options);
-    const traceInput = this._processTraceInput(input);
     const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      _coerceToDict(traceInput, "input"),
+      _coerceToDict(input, "input"),
       config.runId,
       undefined,
       undefined,
       undefined,
-      config?.runName
+      config?.runName,
+      undefined,
+      this._runExtra
     );
     delete config.runId;
     let nextStepInput = input;
@@ -2042,8 +2023,7 @@ export class RunnableSequence<
       await runManager?.handleChainError(e);
       throw e;
     }
-    const traceOutput = this._processTraceOutput(finalOutput);
-    await runManager?.handleChainEnd(_coerceToDict(traceOutput, "output"));
+    await runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
     return finalOutput;
   }
 
@@ -2071,7 +2051,6 @@ export class RunnableSequence<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
-    const processInputs = inputs.map((input) => this._processTraceInput(input));
     const callbackManagers = await Promise.all(
       configList.map(getCallbackManagerForConfig)
     );
@@ -2079,12 +2058,14 @@ export class RunnableSequence<
       callbackManagers.map(async (callbackManager, i) => {
         const handleStartRes = await callbackManager?.handleChainStart(
           this.toJSON(),
-          _coerceToDict(processInputs[i], "input"),
+          _coerceToDict(inputs[i], "input"),
           configList[i].runId,
           undefined,
           undefined,
           undefined,
-          configList[i].runName
+          configList[i].runName,
+          undefined,
+          this._runExtra
         );
         delete configList[i].runId;
         return handleStartRes;
@@ -2115,9 +2096,7 @@ export class RunnableSequence<
     }
     await Promise.all(
       runManagers.map((runManager, i) =>
-        runManager?.handleChainEnd(
-          _coerceToDict(this._processTraceOutput(nextStepInputs[i]), "output")
-        )
+        runManager?.handleChainEnd(_coerceToDict(nextStepInputs[i], "output"))
       )
     );
     return nextStepInputs;
@@ -2132,17 +2111,18 @@ export class RunnableSequence<
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
-    const traceInput = this._processTraceInput(input);
     const callbackManager_ = await getCallbackManagerForConfig(options);
     const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      _coerceToDict(traceInput, "input"),
+      _coerceToDict(input, "input"),
       runId,
       undefined,
       undefined,
       undefined,
-      otherOptions?.runName
+      otherOptions?.runName,
+      undefined,
+      this._runExtra
     );
     const steps = [this.first, ...this.middle, this.last];
     let concatSupported = true;
@@ -2191,8 +2171,7 @@ export class RunnableSequence<
       await runManager?.handleChainError(e);
       throw e;
     }
-    const traceOutput = this._processTraceOutput(finalOutput);
-    await runManager?.handleChainEnd(_coerceToDict(traceOutput, "output"));
+    await runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
   }
 
   getGraph(config?: RunnableConfig): Graph {
@@ -2232,7 +2211,7 @@ export class RunnableSequence<
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): RunnableSequence<RunInput, Exclude<NewRunOutput, Error>> {
     if (RunnableSequence.isRunnableSequence(coerceable)) {
-      return new RunnableSequence<RunInput, Exclude<NewRunOutput, Error>>({
+      return new RunnableSequence({
         first: this.first,
         middle: this.middle.concat([
           this.last,
@@ -2241,23 +2220,13 @@ export class RunnableSequence<
         ]),
         last: coerceable.last,
         name: this.name ?? coerceable.name,
-        omitSequenceTags: this.omitSequenceTags,
-        processInputs: this.processInputs,
-        processOutputs: this.processOutputs as
-          | ((output: Exclude<NewRunOutput, Error>) => unknown)
-          | undefined,
       });
     } else {
-      return new RunnableSequence<RunInput, Exclude<NewRunOutput, Error>>({
+      return new RunnableSequence({
         first: this.first,
         middle: [...this.middle, this.last],
         last: _coerceToRunnable(coerceable),
         name: this.name,
-        omitSequenceTags: this.omitSequenceTags,
-        processInputs: this.processInputs,
-        processOutputs: this.processOutputs as
-          | ((output: Exclude<NewRunOutput, Error>) => unknown)
-          | undefined,
       });
     }
   }
