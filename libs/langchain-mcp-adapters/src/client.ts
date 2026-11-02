@@ -221,40 +221,38 @@ export class MCPAdapter {
     const { signal } = this.#epoch;
     const { servers } = this.#config;
 
-    // Servers are independent, so connect and list them concurrently. Each
-    // entry resolves to its tools, or undefined when skipped or failed.
-    const toolsets = await Promise.all(
-      Object.entries(servers).map(async ([serverName, connection]) => {
-        // A completed close may already have installed a fresh epoch. This
-        // discovery must not acquire connections owned by that later epoch.
-        if (signal.aborted) return undefined;
-
-        const key = this.#clientConnections.identity(
+    // Previously failed servers stay skipped (see #failedServers); the rest
+    // are independent, so connect and list them concurrently.
+    const targets = Object.entries(servers)
+      .map(([serverName, connection]) => ({
+        serverName,
+        connection,
+        key: this.#clientConnections.identity(
           this.#transportOptions(serverName, customTransportOptions)
-        );
+        ),
+      }))
+      .filter(({ key }) => !this.#failedServers.has(key));
 
-        if (this.#failedServers.has(key)) return undefined;
-
+    const toolsets = await Promise.all(
+      targets.map(async ({ serverName, connection, key }) => {
         try {
           await this._initializeConnection(
             serverName,
             connection,
             customTransportOptions
           );
-
-          if (signal.aborted) return undefined;
-
           const client = this.#clientConnections.get(
             this.#transportOptions(serverName, customTransportOptions)
           );
-
-          if (!client) return undefined;
-          return await this._loadToolsForServer(
+          // A close during the handshake owns teardown; don't list after it.
+          if (!client || signal.aborted) return undefined;
+          const tools = await this._loadToolsForServer(
             serverName,
             client,
             customTransportOptions?.cacheMode,
             signal
           );
+          return [serverName, tools] as const;
         } catch (error) {
           if (signal.aborted) return undefined;
 
@@ -286,11 +284,8 @@ export class MCPAdapter {
       );
     }
 
-    const catalog: Record<string, DynamicStructuredTool[]> = {};
-    Object.keys(servers).forEach((serverName, i) => {
-      if (toolsets[i]) catalog[serverName] = toolsets[i];
-    });
-    return catalog;
+    // Promise.all keeps input order, so the catalog stays in config order.
+    return Object.fromEntries(toolsets.filter((entry) => entry !== undefined));
   }
 
   #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
