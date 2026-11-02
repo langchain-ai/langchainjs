@@ -70,6 +70,22 @@ export interface ModelProfile {
   videoInputs?: boolean;
 
   /**
+   * MIME types the model accepts as generic file inputs.
+   *
+   * Covers file types beyond those with dedicated flags (e.g. {@link pdfInputs}),
+   * such as office documents, source code, or plain text. When undefined, the
+   * model's support for generic file inputs is unknown.
+   *
+   * @example
+   * ```typescript
+   * const profile: ModelProfile = {
+   *   fileMimeTypes: ["text/plain", "text/csv", "application/json"]
+   * };
+   * ```
+   */
+  fileMimeTypes?: readonly string[];
+
+  /**
    * Whether the model supports image content in tool messages.
    *
    * When `true`, tool responses can include images that the model can process
@@ -164,6 +180,29 @@ export interface ModelProfile {
    * @see {@link toolCalling} for basic tool calling support
    */
   toolChoice?: boolean;
+
+  /**
+   * Whether a system message after the first turn is sent where it sits.
+   *
+   * When `true`, the instruction applies from its position onwards, and the
+   * prompt prefix before it stays unchanged. Absent or `false` means the chat
+   * model may move it into the leading system prompt, or the provider may
+   * reject it.
+   */
+  midConversationSystemMessages?: boolean;
+
+  /**
+   * Whether tools can be added mid-conversation.
+   *
+   * The tool is added through a message rather than the request's tool list,
+   * so the prompt prefix before it stays unchanged. Implies
+   * {@link midConversationSystemMessages}.
+   *
+   * The message format is provider-specific. Every provider that sets this
+   * accepts a tool's full definition; some also accept a reference to a tool
+   * already in the request, or can remove a tool.
+   */
+  midConversationTools?: boolean;
 
   /**
    * Whether the model supports structured output generation.

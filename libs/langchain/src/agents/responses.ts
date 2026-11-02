@@ -255,11 +255,15 @@ export class ProviderStrategy<T = unknown> {
           block !== null &&
           "type" in block &&
           block.type === "text" &&
+          // Skip reasoning/thought summaries (e.g. Gemini represents these as
+          // `{ type: "text", thought: true }`), which are not the structured
+          // response and would otherwise fail JSON parsing.
+          !("thought" in block && block.thought === true) &&
           "text" in block &&
           typeof block.text === "string"
         ) {
           textContent = block.text;
-          break; // Use the first text block found
+          break; // Use the first non-thought text block found
         }
       }
     }

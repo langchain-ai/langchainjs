@@ -151,6 +151,12 @@ pkg:@langchain/redis:
           - libs/providers/langchain-redis/**
           - libs/providers/langchain-redis/**/*
 
+pkg:@langchain/typesafe:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-typesafe/**
+          - libs/providers/langchain-typesafe/**/*
+
 pkg:@langchain/xai:
   - changed-files:
       - any-glob-to-any-file:

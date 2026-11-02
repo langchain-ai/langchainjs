@@ -66,6 +66,73 @@ describe("reasoning output conversion", () => {
     ]);
     expect(result.response_metadata).not.toHaveProperty("output_version");
   });
+
+  test("merges streaming text deltas after a reasoning block", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const firstText = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Hello" },
+    });
+    const secondText = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: " world" },
+    });
+
+    const result = concat(
+      concat(reasoning.message, firstText.message),
+      secondText.message
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        index: 0,
+      },
+      {
+        type: "text",
+        text: "Hello world",
+        index: 1,
+      },
+    ]);
+  });
+
+  test("preserves a reasoning signature after streamed text", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const signature = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { signature: "opaque-signature" } },
+    });
+    const text = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Answer" },
+    });
+
+    const result = concat(
+      concat(reasoning.message, signature.message),
+      text.message
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+        index: 0,
+      },
+      {
+        type: "text",
+        text: "Answer",
+        index: 1,
+      },
+    ]);
+  });
 });
 
 describe("message output usage metadata conversion", () => {
@@ -143,6 +210,58 @@ describe("message output usage metadata conversion", () => {
         cache_read: 9,
         cache_creation: 6,
       },
+    });
+  });
+});
+
+describe("thinking token usage conversion", () => {
+  const nativeUsage = {
+    usage: {
+      output_tokens: 565,
+      output_tokens_details: { thinking_tokens: 562 },
+    },
+  };
+
+  test("maps thinking tokens from additionalModelResponseFields for non-stream responses", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      { role: "assistant", content: [{ text: "Hello" }] },
+      {
+        usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        additionalModelResponseFields: nativeUsage,
+      } as Omit<Bedrock.ConverseResponse, "output">
+    );
+
+    expect(result.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+
+  test("does not add output_token_details when thinking tokens are absent", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      { role: "assistant", content: [{ text: "Hello" }] },
+      {
+        usage: { inputTokens: 20, outputTokens: 5, totalTokens: 25 },
+        additionalModelResponseFields: { usage: { output_tokens: 5 } },
+      } as Omit<Bedrock.ConverseResponse, "output">
+    );
+
+    expect(result.usage_metadata?.output_token_details).toBeUndefined();
+  });
+
+  test("maps thinking tokens for stream metadata", () => {
+    const result = handleConverseStreamMetadata(
+      { usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 } },
+      { streamUsage: true, reasoningTokens: 562 }
+    );
+
+    expect(result.message.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
     });
   });
 });

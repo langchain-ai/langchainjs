@@ -295,9 +295,9 @@ export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
     maxConcurrency: config.maxConcurrency,
     timeout: config.timeout,
     signal: config.signal,
-    // @ts-expect-error - Store is a LangGraph-specific property
-    // which wewant to pass through to all runnables.
-    // (eg. tools should have access to writing to the store)
+    // Preserve LangGraph runtime fields for helpers inside child runnables/tools.
+    // @ts-expect-error - Store and context are not declared on RunnableConfig.
     store: config.store,
+    context: config.context,
   };
 }

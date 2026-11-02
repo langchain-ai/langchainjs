@@ -174,26 +174,18 @@ export async function* convertOpenAIResponsesStream(
             type: "tool_call_chunk",
             id: event.item.call_id,
             name: event.item.name,
-            args: initialArgs,
+            args: "",
             index: event.output_index,
           } as ContentBlock,
         };
-      }
-      if (initialArgs) {
-        const acc = blockAccumulators.get(index)!;
-        yield {
-          event: "content-block-delta" as const,
-          index,
-          delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
-          },
-        };
+        // The initial args go out once, as the call's first slice.
+        if (initialArgs) {
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: { type: "tool-call-delta" as const, args: initialArgs },
+          };
+        }
       }
       continue;
     }
@@ -223,21 +215,15 @@ export async function* convertOpenAIResponsesStream(
           } as ContentBlock,
         };
       }
-      const acc = blockAccumulators.get(index)!;
-      acc.args = (acc.args ?? "") + event.delta;
-      yield {
-        event: "content-block-delta" as const,
-        index,
-        delta: {
-          type: "block-delta" as const,
-          fields: {
-            type: "tool_call_chunk",
-            ...(acc.id != null ? { id: acc.id } : {}),
-            ...(acc.name != null ? { name: acc.name } : {}),
-            args: acc.args,
-          },
-        },
-      };
+      if (event.delta) {
+        const acc = blockAccumulators.get(index)!;
+        acc.args = (acc.args ?? "") + event.delta;
+        yield {
+          event: "content-block-delta" as const,
+          index,
+          delta: { type: "tool-call-delta" as const, args: event.delta },
+        };
+      }
       continue;
     }
 

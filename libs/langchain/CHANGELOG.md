@@ -1,5 +1,85 @@
 # langchain
 
+## 1.6.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
+## 1.5.20
+
+### Patch Changes
+
+- [#12043](https://github.com/langchain-ai/langchainjs/pull/12043) [`81577b3`](https://github.com/langchain-ai/langchainjs/commit/81577b3e84c3f38581e76e8335faa89511e99d74) Thanks [@eliornl](https://github.com/eliornl)! - fix(langchain): re-throw a drained tool from the agent's `ToolNode`
+
+  A tool that throws `GraphDrained`, for example one whose inner graph run is drained with `RunControl.requestDrain()`, now stops the agent run with that error, as an interrupt already did, instead of coming back as an error `ToolMessage` that lets the agent go on as if the tool had failed.
+
+## 1.5.19
+
+### Patch Changes
+
+- [#11990](https://github.com/langchain-ai/langchainjs/pull/11990) [`0c5e7bc`](https://github.com/langchain-ai/langchainjs/commit/0c5e7bc688f651c6acc78b2d8b6ad48f6b161165) Thanks [@hntrl](https://github.com/hntrl)! - Avoid copying full agent state into every parallel tool task. Restore tool and middleware state from graph channels for compact tasks while continuing to support full-state tasks saved in older checkpoints.
+
+- [#11989](https://github.com/langchain-ai/langchainjs/pull/11989) [`f096a32`](https://github.com/langchain-ai/langchainjs/commit/f096a32187d194b9f334cf7ec62e05c0050a1cfd) Thanks [@hntrl](https://github.com/hntrl)! - Align the default todo-list system prompt and tool description with Python, including guidance to deliver the substantive final answer after the last `write_todos` result.
+
+## 1.5.18
+
+### Patch Changes
+
+- [#11877](https://github.com/langchain-ai/langchainjs/pull/11877) [`2f4d891`](https://github.com/langchain-ai/langchainjs/commit/2f4d891cf3aa750caebff5d969d1ee7820fc8a52) Thanks [@byhow](https://github.com/byhow)! - feat(agents): add opt-in `interruptMode: "per_call"` to `humanInTheLoopMiddleware`. Each gated tool call raises its own interrupt (`type: "tool_approval"`, with a typed `responseSchema` built from the tool's allowed decisions), answered by interrupt ID. `respond` is supported. Edits are pinned to the called tool and checked against the input side of its Zod v4 schema, so its transforms run once, when the tool does. An invalid answer throws without being saved. Also adds `Interrupt.response_schema`. In both modes, `interruptOn: { tool: true }` now allows every decision, `respond` included, as in Python; batched mode is otherwise unchanged.
+
+## 1.5.17
+
+### Patch Changes
+
+- [#11956](https://github.com/langchain-ai/langchainjs/pull/11956) [`93d62b0`](https://github.com/langchain-ai/langchainjs/commit/93d62b008e13e10f28724a5ab09ab6eda584f1cb) Thanks [@hntrl](https://github.com/hntrl)! - Require langsmith >=0.11.0 to include the restored NullableHeaders type declarations.
+
+- [#11498](https://github.com/langchain-ai/langchainjs/pull/11498) [`227f01c`](https://github.com/langchain-ai/langchainjs/commit/227f01c818996bf107dbcedc3e0ffa1620b7719e) Thanks [@xianjianlf2](https://github.com/xianjianlf2)! - feat(langchain): support HITL respond decisions
+
+- [#11822](https://github.com/langchain-ai/langchainjs/pull/11822) [`d3e6fe6`](https://github.com/langchain-ai/langchainjs/commit/d3e6fe66a5f902fa615f076ca71d9541f1291166) Thanks [@dqbd](https://github.com/dqbd)! - Add explicit agent address support to `LangChainTracer`, inherit project and address destinations together, and delegate default destination resolution to the LangSmith SDK.
+
+## 1.5.16
+
+### Patch Changes
+
+- [#11880](https://github.com/langchain-ai/langchainjs/pull/11880) [`22ea038`](https://github.com/langchain-ai/langchainjs/commit/22ea03827873cfd07bf6aa6d4e2562dd6aa9b1ad) Thanks [@eliornl](https://github.com/eliornl)! - fix(langchain): `createAgent` with middleware now passes a `Command` built by a different copy of `@langchain/langgraph` to the graph as-is, instead of merging it into the input state as a plain object.
+
+## 1.5.15
+
+### Patch Changes
+
+- [#11649](https://github.com/langchain-ai/langchainjs/pull/11649) [`17b6bba`](https://github.com/langchain-ai/langchainjs/commit/17b6bba8343bdd3f3dfc5c59578e0b72337ec740) Thanks [@byhow](https://github.com/byhow)! - Preserve LangGraph interrupts in `toolRetryMiddleware` instead of retrying them or converting them into tool errors. Interrupted tool calls can pause and resume through their checkpointer without being treated as failures.
+
+## 1.5.14
+
+### Patch Changes
+
+- [#11712](https://github.com/langchain-ai/langchainjs/pull/11712) [`34edee1`](https://github.com/langchain-ai/langchainjs/commit/34edee1153f0fa40ba6997c8ff7bd45834ca8ce8) Thanks [@blove](https://github.com/blove)! - `createAgent` no longer ends the run when a `returnDirect` tool fails. A tool error, including arguments that fail the tool's schema, now goes back to the model so it can correct the call and retry; the run still ends on the first successful `returnDirect` result. Error `ToolMessage`s produced by the tool node now carry `status: "error"`, and a `ToolMessage` returned from a custom `handleToolErrors` function defaults to that status when it sets none.
+
+## 1.5.13
+
+### Patch Changes
+
+- [#11698](https://github.com/langchain-ai/langchainjs/pull/11698) [`1f66c83`](https://github.com/langchain-ai/langchainjs/commit/1f66c838c344a65581cce6fc22699cd6fc7194df) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - `createAgent` now uses the OpenAI Responses API by default when `model` is an `openai:` string. To keep using Chat Completions, pass a model instance, e.g. `new ChatOpenAI({ model: "gpt-5.5", useResponsesApi: false })`.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11682](https://github.com/langchain-ai/langchainjs/pull/11682) [`a8c336f`](https://github.com/langchain-ai/langchainjs/commit/a8c336f3c75b76e9d94236cb4a05f2b2f414cac6) Thanks [@casparb](https://github.com/casparb)! - Preserve ReactAgent callbacks when its compiled graph is extracted, without duplicate calls through the agent.
+
+## 1.5.11
+
+### Patch Changes
+
+- [#11436](https://github.com/langchain-ai/langchainjs/pull/11436) [`702be70`](https://github.com/langchain-ai/langchainjs/commit/702be70bcaadbfe9a47a3fcccbb75bdea17cae04) Thanks [@chiliec](https://github.com/chiliec)! - fix(agents): ignore thought/reasoning text blocks when parsing structured output in `ProviderStrategy`
+
+## 1.5.11-rc.0
+
+### Patch Changes
+
+- [#11568](https://github.com/langchain-ai/langchainjs/pull/11568) [`fbc3206`](https://github.com/langchain-ai/langchainjs/commit/fbc32067aee6068dd7f96aff1889deba76d5c838) Thanks [@hntrl](https://github.com/hntrl)! - Add opt-in middleware `tracePolicy` support for transforming hook span input and output payloads, plus re-exports of LangGraph's `TracePolicy` and `omitPayload`.
+
 ## 1.5.10
 
 ### Patch Changes

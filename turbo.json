@@ -25,7 +25,7 @@
     "test:int": {
       "dependsOn": ["build:compile"],
       "cache": false,
-      "env": ["XAI_API_KEY"]
+      "env": ["TYPESAFE_API_KEY", "XAI_API_KEY"]
     },
     "test:integration": {
       "dependsOn": ["build:compile"],
