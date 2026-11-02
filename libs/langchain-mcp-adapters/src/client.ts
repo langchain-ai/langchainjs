@@ -220,65 +220,64 @@ export class MCPAdapter {
 
     const { signal } = this.#epoch;
     const { servers } = this.#config;
-    const catalog: Record<string, DynamicStructuredTool[]> = {};
 
-    for (const [serverName, connection] of Object.entries(servers)) {
-      // A completed close may already have installed a fresh epoch. This
-      // discovery must not acquire connections owned by that later epoch.
-      if (signal.aborted) break;
+    // Servers are independent, so connect and list them concurrently. Each
+    // entry resolves to its tools, or undefined when skipped or failed.
+    const toolsets = await Promise.all(
+      Object.entries(servers).map(async ([serverName, connection]) => {
+        // A completed close may already have installed a fresh epoch. This
+        // discovery must not acquire connections owned by that later epoch.
+        if (signal.aborted) return undefined;
 
-      const key = this.#clientConnections.identity(
-        this.#transportOptions(serverName, customTransportOptions)
-      );
-
-      if (this.#failedServers.has(key)) {
-        continue;
-      }
-
-      try {
-        await this._initializeConnection(
-          serverName,
-          connection,
-          customTransportOptions
-        );
-
-        if (signal.aborted) break;
-
-        const client = this.#clientConnections.get(
+        const key = this.#clientConnections.identity(
           this.#transportOptions(serverName, customTransportOptions)
         );
 
-        if (client) {
-          catalog[serverName] = await this._loadToolsForServer(
+        if (this.#failedServers.has(key)) return undefined;
+
+        try {
+          await this._initializeConnection(
+            serverName,
+            connection,
+            customTransportOptions
+          );
+
+          if (signal.aborted) return undefined;
+
+          const client = this.#clientConnections.get(
+            this.#transportOptions(serverName, customTransportOptions)
+          );
+
+          if (!client) return undefined;
+          return await this._loadToolsForServer(
             serverName,
             client,
             customTransportOptions?.cacheMode,
             signal
           );
+        } catch (error) {
+          if (signal.aborted) return undefined;
+
+          if (this.#onConnectionError === "throw") {
+            throw error;
+          }
+
+          if (typeof this.#onConnectionError === "function") {
+            await this.#onConnectionError({ serverName, error });
+          }
+
+          // An async error handler may outlive close(). Do not write failures
+          // into the reused adapter after it returns.
+          if (signal.aborted) return undefined;
+
+          // A login can complete later (finishAuth, a refreshed token), so an
+          // auth failure must not block the server for this adapter's lifetime.
+          if (!isAuthenticationError(error)) this.#failedServers.add(key);
+          return undefined;
         }
-      } catch (error) {
-        if (signal.aborted) break;
+      })
+    );
 
-        if (this.#onConnectionError === "throw") {
-          throw error;
-        }
-
-        if (typeof this.#onConnectionError === "function") {
-          await this.#onConnectionError({ serverName, error });
-        }
-
-        // An async error handler may outlive close(). Do not write failures
-        // into the reused adapter or continue discovery after it returns.
-        if (signal.aborted) break;
-
-        // A login can complete later (finishAuth, a refreshed token), so an
-        // auth failure must not block the server for this adapter's lifetime.
-        if (!isAuthenticationError(error)) this.#failedServers.add(key);
-      }
-    }
-
-    // This also covers a close while discovering the final server, where
-    // there is no next iteration to check before returning the catalog.
     if (signal.aborted) {
       throw new MCPClientError(
         "MCP connections closed during discovery",
@@ -287,6 +286,10 @@ export class MCPAdapter {
       );
     }
 
+    const catalog: Record<string, DynamicStructuredTool[]> = {};
+    Object.keys(servers).forEach((serverName, i) => {
+      if (toolsets[i]) catalog[serverName] = toolsets[i];
+    });
     return catalog;
   }
 
