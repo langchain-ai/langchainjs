@@ -22,7 +22,7 @@
     "test:int": "vitest run --mode int"
   },
   "dependencies": {
-    "neo4j-driver": "^6.2.0"
+    "neo4j-driver": "^6.3.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^",

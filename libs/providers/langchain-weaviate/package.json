@@ -32,7 +32,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "weaviate-client": "^3.14.0"
+    "weaviate-client": "^3.15.3"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
