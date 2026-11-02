@@ -7,7 +7,11 @@ import { RunTree } from "langsmith/run_trees";
 import * as uuid from "../../utils/uuid/index.js";
 
 import { RunnableLambda, RunnableSequence } from "../../runnables/base.js";
-import { LangChainTracer, type TracePolicy } from "../tracer_langchain.js";
+import {
+  LangChainTracer,
+  omitPayload,
+  type TracePolicy,
+} from "../tracer_langchain.js";
 import { RunCollectorCallbackHandler } from "../run_collector.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/async_local_storage/index.js";
@@ -584,8 +588,6 @@ describe("LangChainTracer trace policy", () => {
     );
   });
 
-  const omit = () => ({});
-
   function makeSequence(tracePolicy?: TracePolicy) {
     return new RunnableSequence({
       first: RunnableLambda.from((x: { n: number }) => ({ n: x.n + 1 })),
@@ -611,7 +613,10 @@ describe("LangChainTracer trace policy", () => {
   test("policy shapes only the sequence's own LangSmith run", async () => {
     const { tracer, created, updated } = makeTracer();
     const collector = new RunCollectorCallbackHandler();
-    const seq = makeSequence({ processInputs: omit, processOutputs: omit });
+    const seq = makeSequence({
+      processInputs: omitPayload,
+      processOutputs: omitPayload,
+    });
 
     const result = await seq.invoke(
       { n: 1 },
@@ -735,7 +740,7 @@ describe("LangChainTracer trace policy", () => {
   });
 
   test("policy is not serialized and is not kept by pipe()", () => {
-    const withPolicy = makeSequence({ processInputs: omit });
+    const withPolicy = makeSequence({ processInputs: omitPayload });
     expect(JSON.stringify(withPolicy)).toEqual(JSON.stringify(makeSequence()));
 
     const piped = withPolicy.pipe(RunnableLambda.from((x: unknown) => x));

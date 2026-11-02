@@ -20,7 +20,7 @@ import { AIMessage } from "../messages/ai.js";
 import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
 import { TRACE_POLICY_KEY, type TracePolicy } from "./trace_policy.js";
 
-export type { TracePolicy } from "./trace_policy.js";
+export { omitPayload, type TracePolicy } from "./trace_policy.js";
 
 export interface Run extends BaseRun {
   id: string;
