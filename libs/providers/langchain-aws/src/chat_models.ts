@@ -906,6 +906,7 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        maxAttempts: fields.clientOptions?.maxAttempts ?? 1,
         ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
