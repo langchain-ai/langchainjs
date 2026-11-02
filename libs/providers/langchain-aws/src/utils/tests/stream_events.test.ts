@@ -74,4 +74,37 @@ describe("convertBedrockConverseStream", () => {
       reason: "length",
     });
   });
+
+  test("maps thinking tokens from messageStop into usage", async () => {
+    const messageStop = {
+      messageStop: {
+        stopReason: "end_turn",
+        additionalModelResponseFields: {
+          usage: {
+            output_tokens: 565,
+            output_tokens_details: { thinking_tokens: 562 },
+          },
+        },
+      },
+    };
+    const metadata = {
+      metadata: {
+        usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+      },
+    };
+
+    for (const order of [
+      [messageStop, metadata],
+      [metadata, messageStop],
+    ]) {
+      const events = await collectEvents(order);
+      const finish = events.find((e) => e.event === "message-finish");
+      expect(finish).toMatchObject({
+        usage: {
+          output_tokens: 565,
+          output_token_details: { reasoning: 562 },
+        },
+      });
+    }
+  });
 });

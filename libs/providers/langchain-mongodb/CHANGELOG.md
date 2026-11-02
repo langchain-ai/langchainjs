@@ -1,5 +1,13 @@
 # @langchain/mongodb
 
+## 1.3.1
+
+### Patch Changes
+
+- [#11672](https://github.com/langchain-ai/langchainjs/pull/11672) [`946e3d8`](https://github.com/langchain-ai/langchainjs/commit/946e3d856ff1f8ce7f7b9374c83f680a6ada79af) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(mongodb): reject non-string sessionId in MongoDBChatMessageHistory and wrap query filters with $eq (GHSA-m6rx-h84q-8r95)
+
+  Breaking: `sessionId: ""` now throws instead of silently working.
+
 ## 1.3.0
 
 ### Minor Changes

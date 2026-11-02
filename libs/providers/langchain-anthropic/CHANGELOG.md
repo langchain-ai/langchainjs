@@ -1,5 +1,75 @@
 # @langchain/anthropic
 
+## 1.6.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
+## 1.5.13
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): declare mid-conversation support in model profiles. Claude Opus 4.8, Opus 5, Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5 and 5.1, and Mythos 5 and 5.1 set `midConversationSystemMessages` and `midConversationTools`. Sonnet 5 sets system messages only.
+
+  Regenerating the profiles from models.dev also adds Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5, removes Claude Opus 4.1, and lowers Claude Sonnet 4.5's `maxInputTokens` to 200,000.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): support mid-conversation tool changes. A `SystemMessage` can now carry Anthropic's `tool_addition` and `tool_removal` blocks, either bare in `content` or wrapped in a `non_standard` block, and they reach the provider verbatim. The required beta is added automatically: `mid-conversation-tool-changes-2026-07-01` for tools named by reference, or `inline-tools-2026-09-15` when a `tool_addition` defines a tool by value (`tool: { type: "tool_definition", definition }`).
+
+  System content is now narrowed to what Anthropic accepts there. `text`, `tool_addition` and `tool_removal` are sent; any other block is dropped instead of being forwarded for the provider to reject. A system message left with no content is omitted.
+
+## 1.5.11
+
+### Patch Changes
+
+- [#11669](https://github.com/langchain-ai/langchainjs/pull/11669) [`fb2a9f3`](https://github.com/langchain-ai/langchainjs/commit/fb2a9f378e752a2dddea4af14d9c33deb185f067) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): accept a `SystemMessage` anywhere in the message list. Previously only the first message could be a system message. Anything else threw.
+
+  A system message that isn't first is now sent at its own position. It applies from that point in the conversation onwards, and adding one leaves the prompt cache for the earlier turns intact.
+
+  Two smaller changes come with it. A leading run of two or more `SystemMessage`s now merges into the top-level `system` field instead of being rejected. System content built from standard content blocks no longer sends the internal block `id` to the provider.
+
+## 1.5.10
+
+### Patch Changes
+
+- [#11530](https://github.com/langchain-ai/langchainjs/pull/11530) [`c9b7eac`](https://github.com/langchain-ai/langchainjs/commit/c9b7eac3523cbaa3aead92196d6bca275ebaf55c) Thanks [@hntrl](https://github.com/hntrl)! - Add support for Claude Fable 5.1.
+
+## 1.5.10-rc.0
+
+### Patch Changes
+
+- [#11530](https://github.com/langchain-ai/langchainjs/pull/11530) [`c9b7eac`](https://github.com/langchain-ai/langchainjs/commit/c9b7eac3523cbaa3aead92196d6bca275ebaf55c) Thanks [@hntrl](https://github.com/hntrl)! - Add support for Claude Fable 5.1.
+
+## 1.5.9
+
+### Patch Changes
+
+- [#11475](https://github.com/langchain-ai/langchainjs/pull/11475) [`6bffc71`](https://github.com/langchain-ai/langchainjs/commit/6bffc7120a8d696089cc2f88e2eb15ad871deeca) Thanks [@davila7](https://github.com/davila7)! - feat(anthropic): add claude-sonnet-5 support
+
+## 1.5.8
+
+### Patch Changes
+
+- [#11421](https://github.com/langchain-ai/langchainjs/pull/11421) [`041a755`](https://github.com/langchain-ai/langchainjs/commit/041a75581666a7fd551e6df62226dcf873be50cc) Thanks [@priprocess](https://github.com/priprocess)! - Preserve the generic `tool_search_tool_result` block type in streaming output and message payload conversion. The Anthropic API emits this un-suffixed type for both tool search variants; previously only the variant-suffixed names were allowlisted, so multi-turn conversations using tool search still failed with INVALID_TOOL_RESULTS after a client-tool round-trip.
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11407](https://github.com/langchain-ai/langchainjs/pull/11407) [`3ceef4b`](https://github.com/langchain-ai/langchainjs/commit/3ceef4baadfaec8f0b1e43191b9363cfcc04187f) Thanks [@chenzimin](https://github.com/chenzimin)! - Round-trip the tool search server-tool result blocks (`tool_search_tool_bm25_tool_result` / `tool_search_tool_regex_tool_result`) through message translation, mirroring `web_search_tool_result`. Without this, a multi-turn conversation using the tool search tool fails on the next request with `400 invalid_request_error … tool use … found without a corresponding … tool_result block`, because the result block was dropped from the assistant message (streaming capture) and on re-send (`toolTypes` passthrough).
+
 ## 1.5.6
 
 ### Patch Changes

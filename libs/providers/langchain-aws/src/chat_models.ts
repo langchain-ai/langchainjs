@@ -62,6 +62,7 @@ import {
   handleConverseStreamContentBlockDelta,
   handleConverseStreamContentBlockStart,
   handleConverseStreamMetadata,
+  getReasoningTokensFromAdditionalFields,
 } from "./utils/message_outputs.js";
 import { normalizeBedrockError } from "./utils/errors.js";
 import {
@@ -75,6 +76,7 @@ import {
   AWS_BEARER_TOKEN_BEDROCK,
   createBedrockBearerTokenClientConfig,
   resolveBedrockBearerToken,
+  resolveBedrockGatewayConfig,
 } from "./utils/bedrock_auth.js";
 import {
   isSerializableSchema,
@@ -124,6 +126,7 @@ export interface ChatBedrockConverseInput
 
   /**
    * Bedrock API key for bearer-token authentication. Falls back to the
+   * LangSmith Gateway key when gateway routing is enabled, then to the
    * `AWS_BEARER_TOKEN_BEDROCK` environment variable.
    */
   bedrockBearerToken?: string;
@@ -199,6 +202,11 @@ export interface ChatBedrockConverseInput
    */
   additionalModelRequestFields?: __DocumentType;
   /**
+   * JSON pointers to return in `additionalModelResponseFields`; `["/usage"]` adds thinking tokens to `usage_metadata`.
+   * @link https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html#bedrock-runtime_Converse-request-additionalModelResponseFieldPaths
+   */
+  additionalModelResponseFieldPaths?: string[];
+  /**
    * Whether or not to include usage data, like token counts
    * in the streamed response chunks. Passing as a call option will
    * take precedence over the class-level setting.
@@ -265,6 +273,7 @@ export interface ChatBedrockConverseCallOptions
     Pick<
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
+      | "additionalModelResponseFieldPaths"
       | "streamUsage"
       | "streamIdleTimeout"
       | "guardrailConfig"
@@ -786,6 +795,8 @@ export class ChatBedrockConverse
 
   additionalModelRequestFields?: __DocumentType;
 
+  additionalModelResponseFieldPaths?: string[];
+
   streamUsage = true;
 
   streamIdleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT;
@@ -852,8 +863,9 @@ export class ChatBedrockConverse
     const bedrockApiSessionToken =
       rest?.bedrockApiSessionToken ??
       getEnvironmentVariable("BEDROCK_AWS_SESSION_TOKEN");
+    const gatewayConfig = resolveBedrockGatewayConfig(rest?.endpointHost);
     const bedrockBearerToken = resolveBedrockBearerToken(
-      rest?.bedrockBearerToken
+      rest?.bedrockBearerToken ?? gatewayConfig.bearerToken
     );
 
     let credentials: CredentialType | undefined;
@@ -894,12 +906,11 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        maxAttempts: fields.clientOptions?.maxAttempts ?? 1,
         ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
-        endpoint: rest.endpointHost
-          ? `https://${rest.endpointHost}`
-          : undefined,
+        endpoint: gatewayConfig.endpoint,
       });
 
     if (rest?.defaultHeaders && Object.keys(rest.defaultHeaders).length > 0) {
@@ -929,6 +940,8 @@ export class ChatBedrockConverse
     this.bedrockBearerToken = bedrockBearerToken;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
+    this.additionalModelResponseFieldPaths =
+      rest?.additionalModelResponseFieldPaths;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.streamIdleTimeout = rest?.streamIdleTimeout ?? this.streamIdleTimeout;
     this.guardrailConfig = rest?.guardrailConfig;
@@ -1019,6 +1032,9 @@ export class ChatBedrockConverse
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
+      additionalModelResponseFieldPaths:
+        options?.additionalModelResponseFieldPaths ??
+        this.additionalModelResponseFieldPaths,
       guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
       performanceConfig: options?.performanceConfig,
       serviceTier: serviceTierType
@@ -1084,9 +1100,18 @@ export class ChatBedrockConverse
         requestMetadata: options.requestMetadata,
         ...params,
       });
-      const response = await this.client.send(command, {
-        abortSignal: options.signal,
-      });
+      const response = await this.caller.callWithOptions(
+        { signal: options.signal, maxRetries: options.maxRetries },
+        async () => {
+          try {
+            return await this.client.send(command, {
+              abortSignal: options.signal,
+            });
+          } catch (error) {
+            throw normalizeBedrockError(error);
+          }
+        }
+      );
       const { output, ...responseMetadata } = response;
       if (!output?.message) {
         throw new Error("No message found in Bedrock response.");
@@ -1145,12 +1170,21 @@ export class ChatBedrockConverse
         const streamIdleTimeout = resolveStreamIdleTimeout(
           options.streamIdleTimeout ?? this.streamIdleTimeout
         );
-        const response = await withRequestIdleTimeout(
-          this.client.send(command, {
-            abortSignal: abortController.signal,
-          }),
-          streamIdleTimeout,
-          abortController
+        const response = await this.caller.callWithOptions(
+          { signal: abortController.signal, maxRetries: options.maxRetries },
+          async () => {
+            try {
+              return await withRequestIdleTimeout(
+                this.client.send(command, {
+                  abortSignal: abortController.signal,
+                }),
+                streamIdleTimeout,
+                abortController
+              );
+            } catch (error) {
+              throw normalizeBedrockError(error);
+            }
+          }
         );
         if (!response.stream) {
           return;
@@ -1221,14 +1255,24 @@ export class ChatBedrockConverse
         const streamIdleTimeout = resolveStreamIdleTimeout(
           options.streamIdleTimeout ?? this.streamIdleTimeout
         );
-        const response = await withRequestIdleTimeout(
-          this.client.send(command, {
-            abortSignal: abortController.signal,
-          }),
-          streamIdleTimeout,
-          abortController
+        const response = await this.caller.callWithOptions(
+          { signal: abortController.signal, maxRetries: options.maxRetries },
+          async () => {
+            try {
+              return await withRequestIdleTimeout(
+                this.client.send(command, {
+                  abortSignal: abortController.signal,
+                }),
+                streamIdleTimeout,
+                abortController
+              );
+            } catch (error) {
+              throw normalizeBedrockError(error);
+            }
+          }
         );
         if (response.stream) {
+          let reasoningTokens: number | undefined;
           for await (const chunk of withStreamIdleTimeout(
             response.stream,
             streamIdleTimeout,
@@ -1270,8 +1314,14 @@ export class ChatBedrockConverse
             } else if (chunk.metadata) {
               yield handleConverseStreamMetadata(chunk.metadata, {
                 streamUsage,
+                reasoningTokens,
               });
             } else {
+              if (chunk.messageStop) {
+                reasoningTokens = getReasoningTokensFromAdditionalFields(
+                  chunk.messageStop.additionalModelResponseFields
+                );
+              }
               yield new ChatGenerationChunk({
                 text: "",
                 message: new AIMessageChunk({

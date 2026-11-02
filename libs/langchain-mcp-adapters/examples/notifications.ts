@@ -1,38 +1,40 @@
 /**
  * Simple example showing how to listen for log events and progress updates
- * using @modelcontextprotocol/server-everything with MultiServerMCPClient.
+ * using @modelcontextprotocol/server-everything with MCPAdapter.
  */
 
-import { MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapter } from "../src/index.js";
 
 // Create an MCP client that starts the Everything server over stdio
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     everything: {
+      mode: "legacy",
       transport: "stdio" as const,
+      // Receive log/notification messages from the server
+      onMessage: (log, context) => {
+        console.log(`[${context.server}] ${log.data}`);
+      },
+
+      // Receive progress updates (e.g. from long‑running tool calls)
+      onProgress: (progress, context) => {
+        const pct =
+          progress.progress != null && progress.total
+            ? Math.round((progress.progress / progress.total) * 100)
+            : undefined;
+
+        if (pct != null) {
+          const origin =
+            context.type === "tool"
+              ? `${context.server}/${context.name}`
+              : "unknown";
+
+          console.log(`[progress:${origin}] ${pct}%`);
+        }
+      },
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-everything"],
     },
-  },
-
-  // Receive log/notification messages from the server
-  onMessage: (log, context) => {
-    console.log(`[${context.server}] ${log.data}`);
-  },
-
-  // Receive progress updates (e.g. from long‑running tool calls)
-  onProgress: (progress, context) => {
-    const pct =
-      progress.progress != null && progress.total
-        ? Math.round((progress.progress / progress.total) * 100)
-        : undefined;
-    if (pct != null) {
-      const origin =
-        context.type === "tool"
-          ? `${context.server}/${context.name}`
-          : "unknown";
-      console.log(`[progress:${origin}] ${pct}%`);
-    }
   },
 });
 
@@ -40,7 +42,7 @@ try {
   console.log(
     "Connecting to @modelcontextprotocol/server-everything and discovering tools..."
   );
-  const tools = await client.getTools();
+  const tools = await client.listTools();
   console.log(`Loaded ${tools.length} tools`);
 
   if (tools.length === 0) {
