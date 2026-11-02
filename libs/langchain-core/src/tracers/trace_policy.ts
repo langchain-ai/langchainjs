@@ -17,3 +17,11 @@ export interface TracePolicy {
  * @internal
  */
 export const TRACE_POLICY_KEY = Symbol.for("langchain.trace_policy");
+
+/**
+ * Records an empty payload while keeping the run, its timing, and its children.
+ * Use as `processInputs` and/or `processOutputs` in a {@link TracePolicy}.
+ */
+export function omitPayload(_payload: KVMap): KVMap {
+  return {};
+}
