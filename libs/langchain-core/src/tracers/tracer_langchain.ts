@@ -193,7 +193,8 @@ export class LangChainTracer
         error ??= e;
       }
     }
-    if (error !== undefined) runTree.error = this.stringifyError(error);
+    // Keep the run's own error, if it failed; the policy error is still rethrown.
+    if (error !== undefined) runTree.error ??= this.stringifyError(error);
     return error;
   }
 

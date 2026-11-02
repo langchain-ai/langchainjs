@@ -707,6 +707,33 @@ describe("LangChainTracer trace policy", () => {
     }
   );
 
+  test("a throwing processor keeps the run's own error", async () => {
+    const { tracer, created, updated } = makeTracer();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const seq = new RunnableSequence({
+      first: RunnableLambda.from((x: { n: number }) => x),
+      last: RunnableLambda.from(() => {
+        throw new Error("runnable failed");
+      }),
+      tracePolicy: {
+        processInputs: () => {
+          throw new Error("boom");
+        },
+      },
+    });
+
+    await expect(seq.invoke({ n: 1 }, { callbacks: [tracer] })).rejects.toThrow(
+      "runnable failed"
+    );
+    await awaitAllCallbacks();
+
+    const [run] = created("RunnableSequence");
+    const end = updated(run.id).at(-1);
+    expect(end.error).toContain("runnable failed");
+    expect(end.error).not.toContain("boom");
+    warn.mockRestore();
+  });
+
   test("policy is not serialized and is not kept by pipe()", () => {
     const withPolicy = makeSequence({ processInputs: omit });
     expect(JSON.stringify(withPolicy)).toEqual(JSON.stringify(makeSequence()));
