@@ -1,5 +1,11 @@
 # @langchain/mcp-adapters
 
+## 2.0.2
+
+### Patch Changes
+
+- [#12101](https://github.com/langchain-ai/langchainjs/pull/12101) [`a947c9c`](https://github.com/langchain-ai/langchainjs/commit/a947c9c3ead4225ff111e30145abe684c3652a43) Thanks [@hntrl](https://github.com/hntrl)! - Connect to and list tools from configured MCP servers concurrently during discovery instead of one server at a time, so `listTools()`/`listToolsets()` take as long as the slowest server rather than the sum of all of them.
+
 ## 2.0.1
 
 ### Patch Changes
