@@ -154,12 +154,17 @@ export class LangChainTracer
   async onRunUpdate(run: Run): Promise<void> {
     _patchMissingTracingDefaults(this, run);
     const runTree = this.getRunTreeWithTracingConfig(run.id);
-    if (runTree) _applyTracePolicy(runTree);
+    const outputsError = runTree ? _applyTracePolicy(runTree) : undefined;
+    // Still end the run, with outputs dropped, so it doesn't hang as pending.
+    if (runTree && outputsError !== undefined) {
+      runTree.error = this.stringifyError(outputsError);
+    }
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();
     } else {
       await runTree?.patchRun();
     }
+    if (outputsError !== undefined) throw outputsError;
   }
 
   onLLMEnd(run: BaseTracerRun): void {
@@ -332,20 +337,27 @@ export class LangChainTracer
 
 /**
  * Applies the run's trace policy to the copy that gets sent to LangSmith, and
- * drops the policy from that copy's `extra`.
+ * drops the policy from that copy's `extra`. If `processOutputs` throws, the
+ * outputs are dropped and the error is returned instead of thrown.
  */
-function _applyTracePolicy(runTree: RunTree): void {
+function _applyTracePolicy(runTree: RunTree): unknown {
   const { [TRACE_POLICY_KEY]: policy, ...extra } = (runTree.extra ??
     {}) as Record<PropertyKey, unknown>;
-  if (policy === undefined) return;
+  if (policy === undefined) return undefined;
   const { processInputs, processOutputs } = policy as TracePolicy;
   runTree.extra = extra;
   if (processInputs && runTree.inputs !== undefined) {
     runTree.inputs = processInputs(runTree.inputs);
   }
   if (processOutputs && runTree.outputs !== undefined) {
-    runTree.outputs = processOutputs(runTree.outputs);
+    try {
+      runTree.outputs = processOutputs(runTree.outputs);
+    } catch (error) {
+      runTree.outputs = undefined;
+      return error;
+    }
   }
+  return undefined;
 }
 
 function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {

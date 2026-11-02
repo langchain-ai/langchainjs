@@ -693,6 +693,27 @@ describe("LangChainTracer trace policy", () => {
     warn.mockRestore();
   });
 
+  test("a throwing processOutputs still ends the run, without outputs", async () => {
+    const { tracer, created, updated } = makeTracer();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const seq = makeSequence({
+      processOutputs: () => {
+        throw new Error("boom");
+      },
+    });
+
+    await seq.invoke({ n: 1 }, { callbacks: [tracer] });
+    await awaitAllCallbacks();
+
+    const [run] = created("RunnableSequence");
+    const end = updated(run.id).at(-1);
+    expect(end.end_time).toBeDefined();
+    expect(end.outputs).toBeUndefined();
+    expect(end.error).toContain("boom");
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   test("policy is not serialized and is not kept by pipe()", () => {
     const withPolicy = makeSequence({ processInputs: omit });
     expect(JSON.stringify(withPolicy)).toEqual(JSON.stringify(makeSequence()));
