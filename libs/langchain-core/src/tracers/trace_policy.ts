@@ -4,7 +4,7 @@ import type { KVMap } from "langsmith/schemas";
  * Transforms what `LangChainTracer` sends to LangSmith for a run. Execution
  * values and every other callback handler (including `streamEvents`) still
  * see the raw inputs and outputs. Processors receive the recorded values by
- * reference and must not mutate them; if one throws, the raw value is sent.
+ * reference and must not mutate them.
  */
 export interface TracePolicy {
   processInputs?: (inputs: KVMap) => KVMap;

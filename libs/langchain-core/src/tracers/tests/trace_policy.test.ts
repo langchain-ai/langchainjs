@@ -49,7 +49,7 @@ test("policy shapes only the sequence's own LangSmith run", async () => {
   expect(result).toEqual({ n: 4 });
   const [run] = created("RunnableSequence");
   expect(run.inputs).toEqual({});
-  expect(JSON.stringify(run.extra)).not.toContain("processInputs");
+  expect(Object.getOwnPropertySymbols(run.extra)).toEqual([]);
   expect(updated(run.id).at(-1).outputs).toEqual({});
 
   // Child runs and other handlers keep the raw payloads.
@@ -104,7 +104,7 @@ test("batch runs each record their own output", async () => {
   );
 });
 
-test("a throwing processor sends the raw value", async () => {
+test("a throwing processor fails the trace instead of sending the raw value", async () => {
   const { tracer, created } = makeTracer();
   const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   const seq = makeSequence({
@@ -116,8 +116,7 @@ test("a throwing processor sends the raw value", async () => {
   await seq.invoke({ n: 1 }, { callbacks: [tracer] });
   await awaitAllCallbacks();
 
-  expect(created("RunnableSequence")[0].inputs).toEqual({ n: 1 });
-  expect(warn).toHaveBeenCalled();
+  expect(created("RunnableSequence")).toEqual([]);
   warn.mockRestore();
 });
 

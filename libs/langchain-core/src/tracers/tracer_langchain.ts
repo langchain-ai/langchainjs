@@ -330,30 +330,21 @@ export class LangChainTracer
   }
 }
 
-function _process(
-  values: KVMap,
-  processor: ((values: KVMap) => KVMap) | undefined
-): KVMap {
-  if (processor === undefined) return values;
-  try {
-    return processor(values);
-  } catch (e) {
-    console.warn("Trace policy processor failed; sending the raw value.", e);
-    return values;
-  }
-}
-
-/** Applies the run's trace policy to the copy that gets sent to LangSmith. */
+/**
+ * Applies the run's trace policy to the copy that gets sent to LangSmith, and
+ * drops the policy from that copy's `extra`.
+ */
 function _applyTracePolicy(runTree: RunTree): void {
-  const policy = (runTree.extra as Record<symbol, unknown> | undefined)?.[
-    TRACE_POLICY_KEY
-  ] as TracePolicy | undefined;
+  const { [TRACE_POLICY_KEY]: policy, ...extra } = (runTree.extra ??
+    {}) as Record<PropertyKey, unknown>;
   if (policy === undefined) return;
-  if (runTree.inputs !== undefined) {
-    runTree.inputs = _process(runTree.inputs, policy.processInputs);
+  const { processInputs, processOutputs } = policy as TracePolicy;
+  runTree.extra = extra;
+  if (processInputs && runTree.inputs !== undefined) {
+    runTree.inputs = processInputs(runTree.inputs);
   }
-  if (runTree.outputs !== undefined) {
-    runTree.outputs = _process(runTree.outputs, policy.processOutputs);
+  if (processOutputs && runTree.outputs !== undefined) {
+    runTree.outputs = processOutputs(runTree.outputs);
   }
 }
 
