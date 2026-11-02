@@ -462,7 +462,15 @@ export class AsyncCaller {
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
     return this.call(() =>
-      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res)))
+      fetch(...args).then((res) => {
+        if (!res.ok) {
+          throw Object.assign(
+            new Error(`Request failed with status ${res.status}`),
+            { response: res }
+          );
+        }
+        return res;
+      })
     );
   }
 }
