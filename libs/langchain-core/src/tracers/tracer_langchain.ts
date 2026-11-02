@@ -18,6 +18,9 @@ import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 import { ChatGeneration } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
 import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
+import { TRACE_POLICY_KEY, type TracePolicy } from "./trace_policy.js";
+
+export type { TracePolicy } from "./trace_policy.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -143,6 +146,7 @@ export class LangChainTracer
     _patchMissingTracingDefaults(this, run);
     if (!run.extra?.lc_defers_inputs) {
       const runTree = this.getRunTreeWithTracingConfig(run.id);
+      if (runTree) _applyTracePolicy(runTree);
       await runTree?.postRun();
     }
   }
@@ -150,6 +154,7 @@ export class LangChainTracer
   async onRunUpdate(run: Run): Promise<void> {
     _patchMissingTracingDefaults(this, run);
     const runTree = this.getRunTreeWithTracingConfig(run.id);
+    if (runTree) _applyTracePolicy(runTree);
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();
     } else {
@@ -322,6 +327,24 @@ export class LangChainTracer
       "getRunTreeWithTracingConfig" in candidate &&
       typeof candidate.getRunTreeWithTracingConfig === "function"
     );
+  }
+}
+
+/**
+ * Applies the run's trace policy to the copy that gets sent to LangSmith, and
+ * drops the policy from that copy's `extra`.
+ */
+function _applyTracePolicy(runTree: RunTree): void {
+  const { [TRACE_POLICY_KEY]: policy, ...extra } = (runTree.extra ??
+    {}) as Record<PropertyKey, unknown>;
+  if (policy === undefined) return;
+  const { processInputs, processOutputs } = policy as TracePolicy;
+  runTree.extra = extra;
+  if (processInputs && runTree.inputs !== undefined) {
+    runTree.inputs = processInputs(runTree.inputs);
+  }
+  if (processOutputs && runTree.outputs !== undefined) {
+    runTree.outputs = processOutputs(runTree.outputs);
   }
 }
 
