@@ -886,7 +886,7 @@ describe("convertToConverseMessages", () => {
 });
 
 describe("reasoning content replay", () => {
-  it("omits signature-only standard reasoning and preserves tool use", () => {
+  it("replays signature-only standard reasoning and preserves tool use", () => {
     const result = convertToConverseMessages([
       new AIMessage({
         content: [
@@ -916,6 +916,14 @@ describe("reasoning content replay", () => {
         role: "assistant",
         content: [
           {
+            reasoningContent: {
+              reasoningText: {
+                text: "",
+                signature: "opaque-signature",
+              },
+            },
+          },
+          {
             toolUse: {
               toolUseId: "tool-call-1",
               name: "get_weather",
@@ -935,6 +943,185 @@ describe("reasoning content replay", () => {
           },
         ],
       },
+    ]);
+  });
+
+  it("replays signature-only legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              text: "",
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy provider-native reasoning that has a signature but no text field", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("omits unsigned empty standard reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
+    ]);
+  });
+
+  it("omits unsigned empty legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning_content", reasoningText: { text: "" } },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
+    ]);
+  });
+
+  it("drops whitespace after signed empty reasoning instead of merging it in", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "", signature: "opaque-signature" },
+          { type: "text", text: "\n\n" },
+        ],
+        tool_calls: [{ id: "tool-call-1", name: "get_weather", args: {} }],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: { text: "", signature: "opaque-signature" },
+        },
+      },
+      { toolUse: { toolUseId: "tool-call-1", name: "get_weather", input: {} } },
+    ]);
+  });
+
+  it("still merges whitespace into the previous text block", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "text", text: "Checking." },
+          { type: "text", text: "\n\n" },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "Checking.\n\n" },
+    ]);
+  });
+
+  it("joins split standard reasoning so the signature covers its text", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Let me " },
+          { type: "reasoning", reasoning: "think.", signature: "sig" },
+          { type: "text", text: "Answer" },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: { text: "Let me think.", signature: "sig" },
+        },
+      },
+      { text: "Answer" },
+    ]);
+  });
+
+  it("keeps separately signed reasoning blocks apart", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "First.", signature: "sig-1" },
+          { type: "reasoning", reasoning: "Second.", signature: "sig-2" },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: { text: "First.", signature: "sig-1" },
+        },
+      },
+      {
+        reasoningContent: {
+          reasoningText: { text: "Second.", signature: "sig-2" },
+        },
+      },
+    ]);
+  });
+
+  it("treats an empty signature as unsigned", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "", signature: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
     ]);
   });
 
@@ -1100,6 +1287,87 @@ describe("reasoning content replay", () => {
           },
         },
       },
+    ]);
+  });
+
+  it("replays signature-only standard reasoning from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "",
+            signature: "opaque-signature",
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy Bedrock reasoning with a signature but no text field from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              type: "reasoning_content",
+              reasoningText: {
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("omits unsigned empty standard reasoning from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
     ]);
   });
 });
