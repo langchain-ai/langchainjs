@@ -233,6 +233,38 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
       });
     });
 
+    test("per-call streamUsage false overrides the instance default", async () => {
+      const model = new MockStreamChatOpenAIResponses(textEvents());
+      expect(model.streamUsage).toBe(true);
+
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: false,
+      } as BaseChatModelCallOptions)) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event === "usage").length).toBe(0);
+      const finish = events.find((e) => e.event === "message-finish") as {
+        usage?: unknown;
+      };
+      expect(finish.usage).toBeUndefined();
+    });
+
+    test("per-call streamUsage true overrides an instance value of false", async () => {
+      const model = new MockStreamChatOpenAIResponses(textEvents());
+      model.streamUsage = false;
+
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: true,
+      } as BaseChatModelCallOptions)) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event === "usage").length).toBe(1);
+    });
+
     test("streams reasoning", async () => {
       const model = new MockStreamChatOpenAIResponses(reasoningEvents());
       await expect(model.streamEvents("Hello")).toHaveStreamReasoning(
