@@ -72,6 +72,7 @@ import {
 import {
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
+  _normalizeStopSequences,
 } from "./utils.js";
 import {
   isSerializableSchema,
@@ -91,10 +92,7 @@ interface TokenUsage {
 
 type ChatMistralAIToolType = MistralAIToolCall | MistralAITool | BindToolsInput;
 
-export interface ChatMistralAICallOptions extends Omit<
-  BaseLanguageModelCallOptions,
-  "stop"
-> {
+export interface ChatMistralAICallOptions extends BaseLanguageModelCallOptions {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -1034,6 +1032,7 @@ export class ChatMistralAI<
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
       ls_max_tokens: params.maxTokens ?? undefined,
+      ls_stop: _normalizeStopSequences(options.stop),
     };
   }
 
@@ -1062,7 +1061,7 @@ export class ChatMistralAI<
       topP: this.topP,
       randomSeed: this.seed,
       safePrompt: this.safePrompt,
-      stop,
+      stop: _normalizeStopSequences(stop),
       toolChoice: tool_choice,
       responseFormat: response_format,
       presencePenalty: this.presencePenalty,

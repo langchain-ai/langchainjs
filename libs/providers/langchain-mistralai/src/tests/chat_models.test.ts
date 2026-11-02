@@ -14,6 +14,7 @@ import {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
+  _normalizeStopSequences,
 } from "../utils.js";
 import { ChatCompletionRequest } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 
@@ -71,6 +72,98 @@ describe("stop sequences", () => {
     const model = new ChatMistralAI({ apiKey: "foo" });
     expect(model.invocationParams({ stop: ["\n"] }).stop).toEqual(["\n"]);
     expect(model.invocationParams({}).stop).toBeUndefined();
+  });
+
+  test("invocationParams omits an empty stop array", () => {
+    const model = new ChatMistralAI({ apiKey: "foo" });
+    expect(model.invocationParams({ stop: [] }).stop).toBeUndefined();
+  });
+
+  test.each([
+    { input: undefined, expected: undefined },
+    { input: null, expected: undefined },
+    { input: [], expected: undefined },
+    { input: [""], expected: undefined },
+    { input: "", expected: undefined },
+    { input: ["", "END"], expected: ["END"] },
+    { input: "END", expected: ["END"] },
+    { input: [" ", "\n"], expected: [" ", "\n"] },
+  ])("_normalizeStopSequences($input) -> $expected", ({ input, expected }) => {
+    expect(_normalizeStopSequences(input)).toEqual(expected);
+  });
+
+  test("stream sends stop to the Mistral API", async () => {
+    const model = new ChatMistralAI({ apiKey: "foo" });
+    async function* fakeStream() {
+      yield {
+        data: {
+          id: "test-id",
+          model: "mistral-small-latest",
+          choices: [
+            {
+              index: 0,
+              delta: { role: "assistant", content: "Hello" },
+              finishReason: "stop",
+            },
+          ],
+        },
+      };
+    }
+    const spy = vi
+      .spyOn(model, "completionWithRetry")
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .mockResolvedValue(fakeStream() as any);
+
+    const stream = await model.stream([new HumanMessage("Hi")], {
+      stop: ["END"],
+    });
+    for await (const _chunk of stream) {
+      // drain
+    }
+
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({ stop: ["END"] }),
+      true
+    );
+  });
+
+  test("invoke with a timeout (internal streaming path) sends stop", async () => {
+    const model = new ChatMistralAI({ apiKey: "foo" });
+    async function* fakeStream() {
+      yield {
+        data: {
+          id: "test-id",
+          model: "mistral-small-latest",
+          choices: [
+            {
+              index: 0,
+              delta: { role: "assistant", content: "Hello" },
+              finishReason: "stop",
+            },
+          ],
+        },
+      };
+    }
+    const spy = vi
+      .spyOn(model, "completionWithRetry")
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .mockResolvedValue(fakeStream() as any);
+
+    await model.invoke([new HumanMessage("Hi")], {
+      stop: ["END"],
+      timeout: 5000,
+    });
+
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({ stop: ["END"] }),
+      true
+    );
+  });
+
+  test("getLsParams includes ls_stop matching the request", () => {
+    const model = new ChatMistralAI({ apiKey: "foo" });
+    expect(model.getLsParams({ stop: ["END"] }).ls_stop).toEqual(["END"]);
+    expect(model.getLsParams({ stop: [] }).ls_stop).toBeUndefined();
   });
 
   test("invoke sends stop to the Mistral API", async () => {

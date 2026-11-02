@@ -20,6 +20,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { _normalizeStopSequences } from "./utils.js";
 
 export interface MistralAICallOptions extends BaseLanguageModelCallOptions {
   /**
@@ -242,7 +243,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       maxTokens: this.maxTokens,
       topP: this.topP,
       randomSeed: this.randomSeed,
-      stop: options.stop,
+      stop: _normalizeStopSequences(options.stop),
     };
   }
 
