@@ -677,42 +677,35 @@ describe("LangChainTracer trace policy", () => {
     );
   });
 
-  test("a throwing processor fails the trace instead of sending the raw value", async () => {
-    const { tracer, created } = makeTracer();
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const seq = makeSequence({
-      processInputs: () => {
-        throw new Error("boom");
-      },
-    });
+  test.each(["processInputs", "processOutputs"] as const)(
+    "a throwing %s still sends and ends the run, without that payload",
+    async (processor) => {
+      const { tracer, created, updated } = makeTracer();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const seq = makeSequence({
+        [processor]: () => {
+          throw new Error("boom");
+        },
+      });
 
-    await seq.invoke({ n: 1 }, { callbacks: [tracer] });
-    await awaitAllCallbacks();
+      await seq.invoke({ n: 1 }, { callbacks: [tracer] });
+      await awaitAllCallbacks();
 
-    expect(created("RunnableSequence")).toEqual([]);
-    warn.mockRestore();
-  });
-
-  test("a throwing processOutputs still ends the run, without outputs", async () => {
-    const { tracer, created, updated } = makeTracer();
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const seq = makeSequence({
-      processOutputs: () => {
-        throw new Error("boom");
-      },
-    });
-
-    await seq.invoke({ n: 1 }, { callbacks: [tracer] });
-    await awaitAllCallbacks();
-
-    const [run] = created("RunnableSequence");
-    const end = updated(run.id).at(-1);
-    expect(end.end_time).toBeDefined();
-    expect(end.outputs).toBeUndefined();
-    expect(end.error).toContain("boom");
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
-  });
+      const [run] = created("RunnableSequence");
+      const end = updated(run.id).at(-1);
+      expect(end.end_time).toBeDefined();
+      expect(end.error).toContain("boom");
+      if (processor === "processInputs") {
+        expect(run.inputs).toEqual({});
+        expect(end.inputs).not.toEqual({ n: 1 });
+      } else {
+        expect(run.inputs).toEqual({ n: 1 });
+        expect(end.outputs).toBeUndefined();
+      }
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    }
+  );
 
   test("policy is not serialized and is not kept by pipe()", () => {
     const withPolicy = makeSequence({ processInputs: omit });

@@ -2,4 +2,4 @@
 "@langchain/core": patch
 ---
 
-`LangChainTracer` now still ends a run when its trace policy's `processOutputs` throws, sending the end update with outputs dropped and the error set, instead of leaving the run pending in LangSmith.
+`LangChainTracer` now still sends and ends a run when its trace policy's `processInputs` or `processOutputs` throws, with that payload dropped and the error set, instead of skipping the run or leaving it pending in LangSmith.
