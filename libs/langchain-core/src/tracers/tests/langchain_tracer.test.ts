@@ -677,19 +677,60 @@ describe("LangChainTracer trace policy", () => {
     );
   });
 
-  test("a throwing processor fails the trace instead of sending the raw value", async () => {
-    const { tracer, created } = makeTracer();
+  test.each(["processInputs", "processOutputs"] as const)(
+    "a throwing %s still sends and ends the run, without that payload",
+    async (processor) => {
+      const { tracer, created, updated } = makeTracer();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const seq = makeSequence({
+        [processor]: () => {
+          throw new Error("boom");
+        },
+      });
+
+      await seq.invoke({ n: 1 }, { callbacks: [tracer] });
+      await awaitAllCallbacks();
+
+      const [run] = created("RunnableSequence");
+      const end = updated(run.id).at(-1);
+      expect(end.end_time).toBeDefined();
+      expect(end.error).toContain("boom");
+      if (processor === "processInputs") {
+        expect(run.inputs).toEqual({});
+        expect(end.inputs).not.toEqual({ n: 1 });
+      } else {
+        expect(run.inputs).toEqual({ n: 1 });
+        expect(end.outputs).toBeUndefined();
+      }
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    }
+  );
+
+  test("a throwing processor keeps the run's own error", async () => {
+    const { tracer, created, updated } = makeTracer();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const seq = makeSequence({
-      processInputs: () => {
-        throw new Error("boom");
+    const seq = new RunnableSequence({
+      first: RunnableLambda.from((x: { n: number }) => x),
+      last: RunnableLambda.from(() => {
+        throw new Error("runnable failed");
+      }),
+      tracePolicy: {
+        processInputs: () => {
+          throw new Error("boom");
+        },
       },
     });
 
-    await seq.invoke({ n: 1 }, { callbacks: [tracer] });
+    await expect(seq.invoke({ n: 1 }, { callbacks: [tracer] })).rejects.toThrow(
+      "runnable failed"
+    );
     await awaitAllCallbacks();
 
-    expect(created("RunnableSequence")).toEqual([]);
+    const [run] = created("RunnableSequence");
+    const end = updated(run.id).at(-1);
+    expect(end.error).toContain("runnable failed");
+    expect(end.error).not.toContain("boom");
     warn.mockRestore();
   });
 
