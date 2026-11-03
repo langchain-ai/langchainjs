@@ -1,5 +1,11 @@
 # langchain
 
+## 1.6.1
+
+### Patch Changes
+
+- [#11437](https://github.com/langchain-ai/langchainjs/pull/11437) [`272d651`](https://github.com/langchain-ai/langchainjs/commit/272d65140496b12c4895d6585c84d2640cd48383) Thanks [@zhdanovartur](https://github.com/zhdanovartur)! - fix(langchain): humanInTheLoopMiddleware — execute approved, edited and auto-approved tool calls when other calls in the same interrupt are rejected, instead of dropping them without a ToolMessage (caused "400 No tool output found for function call" on subsequent model requests)
+
 ## 1.6.0
 
 ### Minor Changes
