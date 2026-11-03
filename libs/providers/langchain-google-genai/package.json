@@ -38,7 +38,7 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "hnswlib-node": "^3.0.0",
     "typescript": "~7.0.2",
