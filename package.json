@@ -42,7 +42,7 @@
     "@types/jest": "^30.0.0",
     "@types/semver": "^7",
     "commander": "^15.0.0",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "lint-staged": "^17.6.0",
     "oxfmt": "^0.71.0",
     "oxlint": "^1.86.0",

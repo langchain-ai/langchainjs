@@ -59,7 +59,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^5.0.5",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "typescript": "~7.0.2",

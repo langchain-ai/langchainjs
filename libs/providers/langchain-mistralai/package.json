@@ -25,7 +25,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
-    "@mistralai/mistralai": "2.2.1"
+    "@mistralai/mistralai": "3.4.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -36,7 +36,7 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^5.0.5",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
     "vitest": "^5.0.5",
