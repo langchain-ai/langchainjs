@@ -41,7 +41,7 @@
     "@pinecone-database/pinecone": "^8.2.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@types/flat": "^5.0.5",
+    "@types/flat": "^6.0.1",
     "@vitest/coverage-v8": "^5.0.5",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",

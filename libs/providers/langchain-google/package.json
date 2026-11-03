@@ -41,7 +41,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "dpdm": "^4.3.0",
     "sparktype": "^0.1.3",
     "typescript": "~7.0.2",
