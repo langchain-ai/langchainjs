@@ -55,7 +55,7 @@
     "@types/js-yaml": "^4",
     "@types/jsdom": "^30.0.0",
     "@types/ws": "^8",
-    "@vitest/coverage-v8": "^5.0.2",
+    "@vitest/coverage-v8": "^5.0.5",
     "cheerio": "1.2.0",
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
@@ -67,7 +67,7 @@
     "tinybench": "^6.2.0",
     "typeorm": "^1.1.1",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2",
+    "vitest": "^5.0.5",
     "yaml": "^2.9.1"
   },
   "peerDependencies": {
