@@ -1,5 +1,19 @@
 # @langchain/core
 
+## 1.3.4
+
+### Patch Changes
+
+- [#12104](https://github.com/langchain-ai/langchainjs/pull/12104) [`e006308`](https://github.com/langchain-ai/langchainjs/commit/e006308a58a746da8ca10b8ca483611d869e9a19) Thanks [@hntrl](https://github.com/hntrl)! - Export `omitPayload` from `@langchain/core/tracers/tracer_langchain`, a `TracePolicy` processor that records an empty payload while keeping the run.
+
+- [#12102](https://github.com/langchain-ai/langchainjs/pull/12102) [`6d157ae`](https://github.com/langchain-ai/langchainjs/commit/6d157ae5c0816851ea30f5d14fe68184da44c69e) Thanks [@hntrl](https://github.com/hntrl)! - `LangChainTracer` now still sends and ends a run when its trace policy's `processInputs` or `processOutputs` throws, with that payload dropped and the error set, instead of skipping the run or leaving it pending in LangSmith.
+
+## 1.3.3
+
+### Patch Changes
+
+- [#11567](https://github.com/langchain-ai/langchainjs/pull/11567) [`d92aba6`](https://github.com/langchain-ai/langchainjs/commit/d92aba67d3ffef8e1e0fa62cdb97cbd6e7022582) Thanks [@hntrl](https://github.com/hntrl)! - Add `tracePolicy` to `RunnableSequence`. Its `processInputs`/`processOutputs` shape only what `LangChainTracer` sends to LangSmith for the sequence's own run. Batched sequence runs now each record their own output.
+
 ## 1.3.2
 
 ### Patch Changes
