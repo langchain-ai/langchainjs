@@ -96,6 +96,53 @@ export default getBuildConfig({
         "callbacks/dispatch/index",
       ],
     }),
+    // Ids under the legacy `langchain` namespace, as older packages and
+    // Python's langchain_core write them, each aliased to the module that
+    // holds those classes now. Read only for such ids (see load/index.ts).
+    importMapPlugin({
+      outputPath: "src/load/import_map_legacy.ts",
+      includeEntrypoints: false,
+      extraEntries: [
+        { modules: ["*"], alias: ["schema"], path: "../messages/index.js" },
+        {
+          modules: ["*"],
+          alias: ["schema", "document"],
+          path: "../documents/index.js",
+        },
+        { modules: ["*"], alias: ["schema", "output"], path: "../outputs.js" },
+        {
+          modules: ["*"],
+          alias: ["schema", "output_parser"],
+          path: "../output_parsers/index.js",
+        },
+        {
+          modules: ["*"],
+          alias: ["schema", "prompt_template"],
+          path: "../prompts/index.js",
+        },
+        {
+          modules: ["*"],
+          alias: ["schema", "runnable"],
+          path: "../runnables/index.js",
+        },
+        { modules: ["*"], alias: ["prompts"], path: "../prompts/index.js" },
+        {
+          modules: ["*"],
+          alias: ["prompts", "base"],
+          path: "../prompt_values.js",
+        },
+        {
+          modules: ["*"],
+          alias: ["prompts", "chat"],
+          path: "../prompt_values.js",
+        },
+        {
+          modules: ["*"],
+          alias: ["output_parsers"],
+          path: "../output_parsers/index.js",
+        },
+      ],
+    }),
     importConstantsPlugin(),
   ],
 });

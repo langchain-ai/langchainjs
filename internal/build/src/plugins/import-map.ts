@@ -23,6 +23,8 @@ export interface ImportMapPluginOptions {
   enabled?: boolean;
   /** The output path for the generated import map file. Defaults to "src/load/import_map.ts". */
   outputPath?: string;
+  /** Whether the build's entrypoints are re-exported. Defaults to true; false writes only `extraEntries`. */
+  includeEntrypoints?: boolean;
 
   /** List of entrypoint keys that import optional dependencies and should be excluded. */
   importsOptionalDependencies?: string[];
@@ -79,6 +81,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
   const options = {
     enabled: true,
     outputPath: "src/load/import_map.ts",
+    includeEntrypoints: true,
     importsOptionalDependencies: [],
     nodeOnly: [],
     omitFromImportMap: [],
@@ -96,7 +99,9 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
     async buildStart({ input }) {
       if (!options.enabled) return;
 
-      const entrypoints = Object.entries(input)
+      const entrypoints = (
+        options.includeEntrypoints ? Object.entries(input) : []
+      )
         .filter(([key]) => {
           // Skip if it's the special "load" entrypoint
           if (key === "load") return false;
@@ -177,6 +182,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
         ),
         // Generate alias declarations and exports for extra entries
         ...options.extraEntries.reduce((acc, { modules, alias }) => {
+          if (modules.includes("*")) return acc;
           const exportAlias = alias.join("__");
           acc.push(`const ${exportAlias} = {\n  ${modules.join(",\n  ")}\n};`);
           acc.push(`export { ${exportAlias} };`);
