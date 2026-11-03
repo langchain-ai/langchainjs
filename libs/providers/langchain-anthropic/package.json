@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^1.1.0",
-    "@cfworker/json-schema": "^4.1.1",
+    "@cfworker/json-schema": "^4.1.4",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

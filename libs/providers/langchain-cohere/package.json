@@ -31,13 +31,13 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "cohere-ai": "^8.1.0"
+    "cohere-ai": "^8.3.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@cfworker/json-schema": "^4.1.1",
+    "@cfworker/json-schema": "^4.1.4",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

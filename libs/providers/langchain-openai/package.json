@@ -28,15 +28,15 @@
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "^7.45.1",
+    "openai": "^7.47.0",
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@azure/identity": "^4.13.3",
-    "@cfworker/json-schema": "^4.1.1",
+    "@azure/identity": "^4.14.1",
+    "@cfworker/json-schema": "^4.1.4",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
