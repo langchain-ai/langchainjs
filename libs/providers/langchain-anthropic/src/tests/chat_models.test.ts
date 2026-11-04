@@ -35,6 +35,22 @@ class TraceableChatAnthropic extends ChatAnthropicMessages {
   }
 }
 
+test("Can format mid-conversation system messages", () => {
+  const formattedMessages = _convertMessagesToAnthropicPayload([
+    new SystemMessage("You are a coding assistant."),
+    new HumanMessage("Update this project."),
+    new SystemMessage("Follow the project README."),
+  ]);
+
+  expect(formattedMessages).toEqual({
+    system: "You are a coding assistant.",
+    messages: [
+      { role: "user", content: "Update this project." },
+      { role: "system", content: "Follow the project README." },
+    ],
+  });
+});
+
 test("MCP authorization tokens are redacted from traces", () => {
   const model = new TraceableChatAnthropic({
     modelName: "claude-haiku-4-5-20251001",
