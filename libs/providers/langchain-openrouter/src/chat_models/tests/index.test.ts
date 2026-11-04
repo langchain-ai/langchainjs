@@ -12,7 +12,7 @@ import { AIMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
-import { OpenRouterAuthError } from "../../utils/errors.js";
+import { OpenRouterError, OpenRouterAuthError } from "../../utils/errors.js";
 
 let savedKey: string | undefined;
 let savedSessionId: string | undefined;
@@ -543,6 +543,35 @@ describe("retry behavior", () => {
         rateLimitReason: "quota_message",
       });
       expect(fetchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+});
+
+describe("missing choices in a 200 response (#11417)", () => {
+  it("throws OpenRouterError, not a bare TypeError, when the body has no choices", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
+
+    // A 200 body with no `choices` key at all — some providers do this.
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({ id: "chatcmpl-1", model: "openai/gpt-4o-mini" }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    try {
+      let thrown: unknown;
+      try {
+        await model.invoke("Hello");
+      } catch (e) {
+        thrown = e;
+      }
+      // Without optional chaining this is a bare `TypeError: Cannot read
+      // properties of undefined (reading '0')` rather than the intended error.
+      expect(OpenRouterError.isInstance(thrown)).toBe(true);
+      expect((thrown as Error).message).toBe("No choices returned in response.");
     } finally {
       fetchSpy.mockRestore();
     }
