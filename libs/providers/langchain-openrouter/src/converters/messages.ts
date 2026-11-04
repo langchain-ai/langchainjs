@@ -133,7 +133,9 @@ export function convertOpenRouterDeltaToBaseMessageChunk(
 
   chunk.response_metadata = {
     ...chunk.response_metadata,
+    model: rawChunk.model,
     model_provider: "openrouter",
+    model_name: rawChunk.model,
   };
 
   return chunk;

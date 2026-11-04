@@ -123,7 +123,7 @@ describe("convertOpenRouterResponseToBaseMessage metadata", () => {
 });
 
 describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
-  it("patches response_metadata with model_provider", () => {
+  it("patches response_metadata with openrouter fields", () => {
     const delta: OpenRouter.ChatStreamingMessageChunk = {
       role: "assistant",
       content: "hi",
@@ -143,7 +143,9 @@ describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
     );
 
     const meta = chunk.response_metadata as Record<string, unknown>;
+    expect(meta.model).toBe("openai/gpt-4o");
     expect(meta.model_provider).toBe("openrouter");
+    expect(meta.model_name).toBe("openai/gpt-4o");
   });
 });
 
