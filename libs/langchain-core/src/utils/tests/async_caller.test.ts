@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from "vitest";
+import { ContextOverflowError } from "../../errors/index.js";
 import {
   ContextOverflowError,
   getRetryable,
@@ -119,6 +120,20 @@ describe("AsyncCaller", () => {
 
     await expect(() => caller.call(callable)).rejects.toThrow("Bad Request");
     expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler treats wrapped context overflow errors as non-retryable", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    const err = Object.assign(new Error("prompt is too long"), { status: 400 });
+    const wrapped = ContextOverflowError.fromError(err);
+    const callable = vi.fn(async () => Promise.reject(wrapped));
+
+    await expect(() => caller.call(callable)).rejects.toThrow(
+      "prompt is too long"
+    );
+    expect(callable).toHaveBeenCalledTimes(1);
+    expect(wrapped.status).toBe(400);
   });
 
   test("defaultFailedAttemptHandler retries on 5xx errors with direct status", async () => {
