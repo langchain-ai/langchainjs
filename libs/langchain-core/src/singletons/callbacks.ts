@@ -47,15 +47,44 @@ export async function consumeCallback<T>(
   } else {
     queue = getQueue();
     // oxlint-disable-next-line no-void
-    void queue.add(async () => {
-      const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
-      if (asyncLocalStorageInstance !== undefined) {
-        await asyncLocalStorageInstance.run(undefined, async () => promiseFn());
-      } else {
-        await promiseFn();
-      }
-    });
+    void queue.add(
+      bindToCallerContext(async () => {
+        const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
+        if (asyncLocalStorageInstance !== undefined) {
+          await asyncLocalStorageInstance.run(undefined, async () =>
+            promiseFn()
+          );
+        } else {
+          await promiseFn();
+        }
+      })
+    );
   }
+}
+
+type AsyncLocalStorageClass = {
+  snapshot?: () => <R>(fn: () => R) => R;
+};
+
+/**
+ * Binds `fn` to the async context that is active when the callback is queued.
+ *
+ * The queue starts a waiting task from inside the task that just finished, so
+ * an unbound callback runs in that earlier caller's async context, and handlers
+ * that read any `AsyncLocalStorage` (e.g. OpenTelemetry context) see another
+ * caller's values. The class is taken from the registered global instance
+ * because this module must not import `node:async_hooks`; without one, `fn`
+ * is returned unchanged.
+ */
+function bindToCallerContext<T>(fn: () => Promise<T>): () => Promise<T> {
+  const storageClass = getGlobalAsyncLocalStorageInstance()?.constructor as
+    | AsyncLocalStorageClass
+    | undefined;
+  if (typeof storageClass?.snapshot !== "function") {
+    return fn;
+  }
+  const runInCallerContext = storageClass.snapshot();
+  return () => runInCallerContext(fn);
 }
 
 /**
