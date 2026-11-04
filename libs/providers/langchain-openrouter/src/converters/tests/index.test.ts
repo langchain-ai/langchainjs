@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { formatToolChoice } from "../tools.js";
 import {
   convertUsageMetadata,
+  convertMessagesToOpenRouterParams,
   convertOpenRouterResponseToBaseMessage,
   convertOpenRouterDeltaToBaseMessageChunk,
 } from "../messages.js";
@@ -96,6 +102,44 @@ describe("convertUsageMetadata", () => {
 });
 
 // ─── Response metadata smoke tests ──────────────────────────────────
+
+describe("convertMessagesToOpenRouterParams reasoning", () => {
+  it("echoes assistant reasoning_details back in the request", () => {
+    const reasoningDetails: OpenRouter.ReasoningDetail[] = [
+      {
+        type: "reasoning.text",
+        text: "Check the weather.",
+        signature: "sig-1",
+        format: "anthropic-claude-v1",
+        index: 0,
+      },
+    ];
+    const params = convertMessagesToOpenRouterParams([
+      new HumanMessage("weather?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [{ id: "toolu_1", name: "weather", args: {} }],
+        additional_kwargs: { reasoning_details: reasoningDetails },
+      }),
+      new ToolMessage({ tool_call_id: "toolu_1", content: "sunny" }),
+    ]);
+
+    expect(params).toHaveLength(3);
+    expect(params[0]).not.toHaveProperty("reasoning_details");
+    expect(params[1]).toMatchObject({
+      role: "assistant",
+      reasoning_details: reasoningDetails,
+    });
+    expect(params[2]).not.toHaveProperty("reasoning_details");
+  });
+
+  it("omits reasoning_details from the request when the message has none", () => {
+    const params = convertMessagesToOpenRouterParams([
+      new AIMessage({ content: "hi" }),
+    ]);
+    expect(params[0]).not.toHaveProperty("reasoning_details");
+  });
+});
 
 describe("convertOpenRouterResponseToBaseMessage metadata", () => {
   it("patches response_metadata with openrouter fields", () => {

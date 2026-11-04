@@ -1,4 +1,5 @@
 import {
+  AIMessage,
   BaseMessage,
   BaseMessageChunk,
   UsageMetadata,
@@ -31,9 +32,22 @@ export function convertMessagesToOpenRouterParams(
   messages: BaseMessage[],
   model?: string
 ): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
-  return convertMessagesToCompletionsMessageParams({
-    messages,
-    model,
+  return messages.flatMap((message) => {
+    const params = convertMessagesToCompletionsMessageParams({
+      messages: [message],
+      model,
+    });
+    const reasoningDetails = AIMessage.isInstance(message)
+      ? message.additional_kwargs.reasoning_details
+      : undefined;
+    if (!Array.isArray(reasoningDetails) || reasoningDetails.length === 0) {
+      return params;
+    }
+    return params.map((param) =>
+      param.role === "assistant"
+        ? { ...param, reasoning_details: reasoningDetails }
+        : param
+    );
   });
 }
 
