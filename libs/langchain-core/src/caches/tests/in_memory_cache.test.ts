@@ -19,6 +19,18 @@ test("InMemoryCache works", async () => {
   expect(result[0].text).toBe("text1");
 });
 
+test("InMemoryCache keeps distinct prompt and LLM keys separate", async () => {
+  const cache = new InMemoryCache();
+
+  await cache.update("a_b", "c", [{ text: "first" }]);
+
+  expect(await cache.lookup("a", "b_c")).toBeNull();
+
+  await cache.update("a", "b_c", [{ text: "second" }]);
+  expect(await cache.lookup("a_b", "c")).toEqual([{ text: "first" }]);
+  expect(await cache.lookup("a", "b_c")).toEqual([{ text: "second" }]);
+});
+
 test("InMemoryCache works with complex message types", async () => {
   const cache = new InMemoryCache<ContentBlock[]>();
 
