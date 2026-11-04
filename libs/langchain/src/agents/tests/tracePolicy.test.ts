@@ -1,92 +1,78 @@
 import { describe, expect, it, vi } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { FakeTracer } from "@langchain/core/utils/testing";
+import {
+  LangChainTracer,
+  omitPayload,
+} from "@langchain/core/tracers/tracer_langchain";
 import { z } from "zod/v3";
 
-import { createAgent, createMiddleware, omitPayload } from "../index.js";
+import { createAgent, createMiddleware } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
-function runsFor(tracer: FakeTracer, name: string) {
-  const flatten = (runs: typeof tracer.runs): typeof tracer.runs =>
-    runs.flatMap((run) => [run, ...flatten(run.child_runs)]);
-  return flatten(tracer.runs).filter((run) => run.name === name);
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
+type SentRun = Record<string, any>;
+
+/** A LangChainTracer whose client records what would be sent to LangSmith. */
+function mockTracer() {
+  const client = { createRun: vi.fn(), updateRun: vi.fn() };
+  const tracer = new LangChainTracer({
+    client: client as unknown as LangChainTracer["client"],
+  });
+  /** The first run with this name, with its final outputs merged in. */
+  const sent = (name: string): SentRun => {
+    const run = client.createRun.mock.calls
+      .map(([r]) => r)
+      .find((r) => r.name === name);
+    const end = client.updateRun.mock.calls
+      .filter(([id]) => id === run?.id)
+      .at(-1)?.[1];
+    return { ...run, outputs: end?.outputs };
+  };
+  return { tracer, sent };
 }
 
+const hello = { messages: [new HumanMessage("hello")] };
+
 describe("middleware tracePolicy", () => {
-  it("preserves default hook payloads and agent results", async () => {
-    const middleware = createMiddleware({
-      name: "Default",
-      beforeModel: () => undefined,
-    });
-    const agent = createAgent({
-      model: new FakeToolCallingModel(),
-      middleware: [middleware],
-      tools: [],
-    });
-    const tracer = new FakeTracer();
-
-    const result = await agent.invoke(
-      { messages: [new HumanMessage("hello")] },
-      { callbacks: [tracer] }
-    );
-
-    expect(result.messages.at(-1)?.content).toBe("hello");
-    expect(runsFor(tracer, "Default.before_model")[0].inputs).toMatchObject({
-      messages: [expect.objectContaining({ content: "hello" })],
-    });
-  });
-
-  it("applies policies independently for each middleware", async () => {
+  it("applies each middleware's policy only to its own hook runs", async () => {
     const inputOnly = createMiddleware({
       name: "InputOnly",
       tracePolicy: { processInputs: omitPayload },
-      beforeModel: () => undefined,
+      beforeModel: () => ({ messages: [] }),
     });
     const outputOnly = createMiddleware({
       name: "OutputOnly",
       tracePolicy: { processOutputs: omitPayload },
-      beforeModel: () => undefined,
+      beforeModel: () => ({ messages: [] }),
     });
     const unfiltered = createMiddleware({
       name: "Unfiltered",
-      beforeModel: () => undefined,
+      beforeModel: () => ({ messages: [] }),
     });
     const agent = createAgent({
       model: new FakeToolCallingModel(),
       middleware: [inputOnly, outputOnly, unfiltered],
       tools: [],
     });
-    const tracer = new FakeTracer();
+    const { tracer, sent } = mockTracer();
 
-    await agent.invoke(
-      { messages: [new HumanMessage("hello")] },
-      { callbacks: [tracer] }
-    );
+    const result = await agent.invoke(hello, { callbacks: [tracer] });
 
-    expect(runsFor(tracer, "InputOnly.before_model")[0].inputs).toEqual({});
-    expect(runsFor(tracer, "InputOnly.before_model")[0].outputs).toHaveProperty(
-      "jumpTo"
-    );
-    expect(runsFor(tracer, "OutputOnly.before_model")[0].inputs).toMatchObject({
-      messages: [expect.anything()],
-    });
-    expect(runsFor(tracer, "OutputOnly.before_model")[0].outputs).toEqual({});
-    expect(runsFor(tracer, "Unfiltered.before_model")[0].inputs).toMatchObject({
-      messages: [expect.anything()],
-    });
-    expect(
-      runsFor(tracer, "Unfiltered.before_model")[0].outputs
-    ).toHaveProperty("jumpTo");
+    expect(result.messages.at(-1)?.content).toBe("hello");
+    const raw = { messages: [expect.anything()] };
+    expect(sent("InputOnly.before_model").inputs).toEqual({});
+    expect(sent("InputOnly.before_model").outputs).toEqual({ messages: [] });
+    expect(sent("OutputOnly.before_model").inputs).toMatchObject(raw);
+    expect(sent("OutputOnly.before_model").outputs).toEqual({});
+    expect(sent("Unfiltered.before_model").inputs).toMatchObject(raw);
+    expect(sent("Unfiltered.before_model").outputs).toEqual({ messages: [] });
   });
 
-  it("filters all lifecycle hook spans while preserving child model traces", async () => {
+  it("covers every lifecycle hook and leaves model runs raw", async () => {
     const middleware = createMiddleware({
       name: "Filtered",
-      tracePolicy: {
-        processInputs: omitPayload,
-        processOutputs: omitPayload,
-      },
+      tracePolicy: { processInputs: omitPayload, processOutputs: omitPayload },
       beforeAgent: () => undefined,
       beforeModel: () => undefined,
       afterModel: () => undefined,
@@ -97,155 +83,29 @@ describe("middleware tracePolicy", () => {
       middleware: [middleware],
       tools: [],
     });
-    const tracer = new FakeTracer();
+    const { tracer, sent } = mockTracer();
+    const big = "x".repeat(10_000);
 
     const result = await agent.invoke(
-      { messages: [new HumanMessage("x".repeat(10_000))] },
+      { messages: [new HumanMessage(big)] },
       { callbacks: [tracer] }
     );
 
-    expect(result.messages.at(-1)?.content).toBe("x".repeat(10_000));
+    expect(result.messages.at(-1)?.content).toBe(big);
     for (const hook of [
       "before_agent",
       "before_model",
       "after_model",
       "after_agent",
     ]) {
-      const [run] = runsFor(tracer, `Filtered.${hook}`);
+      const run = sent(`Filtered.${hook}`);
       expect(run.inputs).toEqual({});
       expect(run.outputs).toEqual({});
     }
-    const [modelRun] = runsFor(tracer, "FakeToolCallingModel");
-    expect(JSON.stringify(modelRun.inputs)).toContain("x".repeat(10_000));
+    expect(JSON.stringify(sent("FakeToolCallingModel").inputs)).toContain(big);
   });
 
-  it("transforms hook outputs independently", async () => {
-    const middleware = createMiddleware({
-      name: "OutputOnly",
-      tracePolicy: { processOutputs: () => undefined },
-      beforeModel: () => ({}),
-    });
-    const tracer = new FakeTracer();
-    const agent = createAgent({
-      model: new FakeToolCallingModel(),
-      middleware: [middleware],
-      tools: [],
-    });
-
-    await agent.invoke(
-      { messages: [new HumanMessage("hello")] },
-      { callbacks: [tracer] }
-    );
-
-    const [run] = runsFor(tracer, "OutputOnly.before_model");
-    expect(run.inputs.messages[0].content).toBe("hello");
-    expect(run.outputs).toEqual({ output: undefined });
-  });
-
-  it("preserves null processor results", async () => {
-    const middleware = createMiddleware({
-      name: "NullOutput",
-      tracePolicy: { processOutputs: () => null },
-      beforeModel: () => ({}),
-    });
-    const tracer = new FakeTracer();
-    const agent = createAgent({
-      model: new FakeToolCallingModel(),
-      middleware: [middleware],
-      tools: [],
-    });
-
-    await agent.invoke(
-      { messages: [new HumanMessage("hello")] },
-      { callbacks: [tracer] }
-    );
-
-    expect(runsFor(tracer, "NullOutput.before_model")[0].outputs).toEqual({
-      output: null,
-    });
-  });
-
-  it("fails open when a processor throws", async () => {
-    const failure = new Error("processor failed");
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const middleware = createMiddleware({
-      name: "Failure",
-      tracePolicy: {
-        processInputs: () => {
-          throw failure;
-        },
-      },
-      beforeModel: () => undefined,
-    });
-    const tracer = new FakeTracer();
-    const agent = createAgent({
-      model: new FakeToolCallingModel(),
-      middleware: [middleware],
-      tools: [],
-    });
-
-    await expect(
-      agent.invoke(
-        { messages: [new HumanMessage("hello")] },
-        { callbacks: [tracer] }
-      )
-    ).resolves.toMatchObject({ messages: expect.any(Array) });
-    expect(runsFor(tracer, "Failure.before_model")[0].inputs).toMatchObject({
-      messages: [expect.anything()],
-    });
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining("untransformed payload"),
-      failure
-    );
-  });
-
-  it("transforms middleware chain events while unfiltered streams retain payloads", async () => {
-    const filtered = createMiddleware({
-      name: "FilteredStreaming",
-      tracePolicy: { processInputs: omitPayload, processOutputs: omitPayload },
-      beforeModel: () => undefined,
-    });
-    const unfiltered = createMiddleware({
-      name: "UnfilteredStreaming",
-      beforeModel: () => undefined,
-    });
-    const agent = createAgent({
-      model: new FakeToolCallingModel(),
-      middleware: [filtered, unfiltered],
-      tools: [],
-    });
-    const events = [];
-    for await (const event of agent.streamEvents(
-      { messages: [new HumanMessage("hello")] },
-      { version: "v2" }
-    )) {
-      events.push(event);
-    }
-
-    expect(
-      events.find(
-        (event) =>
-          event.name === "FilteredStreaming.before_model" &&
-          event.event === "on_chain_start"
-      )?.data.input
-    ).toEqual({});
-    expect(
-      events.find(
-        (event) =>
-          event.name === "FilteredStreaming.before_model" &&
-          event.event === "on_chain_end"
-      )?.data.output
-    ).toEqual({});
-    expect(
-      events.find(
-        (event) =>
-          event.name === "UnfilteredStreaming.before_model" &&
-          event.event === "on_chain_start"
-      )?.data.input
-    ).toMatchObject({ messages: [expect.anything()] });
-  });
-
-  it("preserves tool child trace payloads and hierarchy", async () => {
+  it("leaves tool runs raw", async () => {
     const model = new FakeToolCallingModel({
       toolCalls: [
         [{ id: "call_1", name: "weather", args: { city: "Tokyo" } }],
@@ -262,12 +122,12 @@ describe("middleware tracePolicy", () => {
       tracePolicy: { processInputs: omitPayload, processOutputs: omitPayload },
       afterModel: () => undefined,
     });
-    const tracer = new FakeTracer();
     const agent = createAgent({
       model,
       tools: [getWeather],
       middleware: [middleware],
     });
+    const { tracer, sent } = mockTracer();
 
     const result = await agent.invoke(
       { messages: [new HumanMessage("weather in Tokyo")] },
@@ -275,13 +135,34 @@ describe("middleware tracePolicy", () => {
     );
 
     expect(result.messages.some(ToolMessage.isInstance)).toBe(true);
-    expect(runsFor(tracer, "Filtered.after_model")[0]).toMatchObject({
+    expect(sent("Filtered.after_model")).toMatchObject({
       inputs: {},
       outputs: {},
     });
-    const [toolRun] = runsFor(tracer, "weather");
-    expect(toolRun.inputs).toEqual({ city: "Tokyo" });
-    expect(JSON.stringify(toolRun.outputs)).toContain("sunny");
-    expect(toolRun.parent_run_id).toBeDefined();
+    expect(sent("weather").inputs).toEqual({ city: "Tokyo" });
+    expect(JSON.stringify(sent("weather").outputs)).toContain("sunny");
+  });
+
+  it("leaves streamEvents payloads raw", async () => {
+    const middleware = createMiddleware({
+      name: "Filtered",
+      tracePolicy: { processInputs: omitPayload, processOutputs: omitPayload },
+      beforeModel: () => undefined,
+    });
+    const agent = createAgent({
+      model: new FakeToolCallingModel(),
+      middleware: [middleware],
+      tools: [],
+    });
+
+    const events = [];
+    for await (const event of agent.streamEvents(hello, { version: "v2" })) {
+      events.push(event);
+    }
+
+    const start = events.find(
+      (e) => e.name === "Filtered.before_model" && e.event === "on_chain_start"
+    );
+    expect(start?.data.input).toMatchObject({ messages: [expect.anything()] });
   });
 });

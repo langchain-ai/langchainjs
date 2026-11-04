@@ -1,20 +1,18 @@
 import { expectTypeOf, it } from "vitest";
-
 import {
-  createMiddleware,
   omitPayload,
-  type AgentMiddleware,
   type TracePolicy,
-} from "../index.js";
+} from "@langchain/core/tracers/tracer_langchain";
+
+import { createMiddleware, type AgentMiddleware } from "../index.js";
 
 it("supports trace policies on middleware", () => {
-  const policy: TracePolicy = {
-    processInputs: omitPayload,
-    processOutputs: (value) => ({ value }),
-  };
   const middleware = createMiddleware({
     name: "TracePolicy",
-    tracePolicy: policy,
+    tracePolicy: {
+      processInputs: omitPayload,
+      processOutputs: (outputs) => ({ keys: Object.keys(outputs) }),
+    },
     beforeModel: () => undefined,
   });
 

@@ -5,8 +5,8 @@ import type {
 import type {
   StateDefinitionInit,
   StreamTransformer,
-  TracePolicy,
 } from "@langchain/langgraph";
+import type { TracePolicy } from "@langchain/core/tracers/tracer_langchain";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import {
@@ -116,11 +116,9 @@ export function createMiddleware<
    */
   streamTransformers?: TStreamTransformers;
   /**
-   * Controls the payloads recorded by this middleware's lifecycle hook spans.
-   * Processors affect chain callback payloads, including `streamEvents`; output
-   * omission can suppress messages directly returned by a lifecycle hook, and
-   * input omission can affect message deduplication. Processors must not mutate
-   * payloads, which are shared with agent execution.
+   * Shapes what `LangChainTracer` sends to LangSmith for this middleware's
+   * lifecycle hook runs. Execution, streaming, and other callbacks still see
+   * the raw values.
    */
   tracePolicy?: TracePolicy;
   /**

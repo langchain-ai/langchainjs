@@ -20,11 +20,8 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import type {
-  Command,
-  StreamTransformer,
-  TracePolicy,
-} from "@langchain/langgraph";
+import type { Command, StreamTransformer } from "@langchain/langgraph";
+import type { TracePolicy } from "@langchain/core/tracers/tracer_langchain";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type { JumpToTarget } from "../constants.js";
@@ -474,15 +471,14 @@ export interface AgentMiddleware<
   streamTransformers?: TStreamTransformers;
 
   /**
-   * Controls the payloads recorded by this middleware's lifecycle hook spans.
-   * Processors affect chain callback payloads, including `streamEvents`; output
-   * omission can suppress messages directly returned by a lifecycle hook, and
-   * input omission can affect message deduplication. Processors must not mutate
-   * payloads, which are shared with agent execution.
+   * Shapes what `LangChainTracer` sends to LangSmith for this middleware's
+   * lifecycle hook runs. Execution, streaming, and other callbacks still see
+   * the raw values.
    *
    * @example
    * ```ts
-   * import { createMiddleware, omitPayload } from "langchain";
+   * import { createMiddleware } from "langchain";
+   * import { omitPayload } from "@langchain/core/tracers/tracer_langchain";
    *
    * const middleware = createMiddleware({
    *   name: "PrivateMiddleware",
