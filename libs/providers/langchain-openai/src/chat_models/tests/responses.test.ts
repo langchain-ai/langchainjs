@@ -248,3 +248,53 @@ describe("tool search support", () => {
     expect(tools[1]).toHaveProperty("name", "get_weather");
   });
 });
+
+describe("streaming callbacks", () => {
+  it("does not report response.created as the first new token", async () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const response = { id: "resp_0", model: "gpt-4o-2024-08-06" };
+
+    async function* stream() {
+      yield { type: "response.created", response, sequence_number: 0 };
+      yield { type: "response.in_progress", response, sequence_number: 1 };
+      yield {
+        type: "response.output_text.delta",
+        content_index: 0,
+        delta: "Foo",
+        item_id: "msg_0",
+        output_index: 0,
+        sequence_number: 2,
+      };
+      yield {
+        type: "response.output_text.delta",
+        content_index: 0,
+        delta: " bar",
+        item_id: "msg_0",
+        output_index: 0,
+        sequence_number: 3,
+      };
+    }
+
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(stream()) as typeof model.completionWithRetry;
+
+    const tokens: string[] = [];
+    const chunks = [];
+    for await (const chunk of await model.stream("hello", {
+      callbacks: [
+        {
+          handleLLMNewToken(token: string) {
+            tokens.push(token);
+          },
+        },
+      ],
+    })) {
+      chunks.push(chunk);
+    }
+
+    expect(tokens).toEqual(["Foo", " bar"]);
+    expect(chunks[0].id).toBe("resp_0");
+    expect(chunks[0].response_metadata.model_name).toBe("gpt-4o-2024-08-06");
+  });
+});
