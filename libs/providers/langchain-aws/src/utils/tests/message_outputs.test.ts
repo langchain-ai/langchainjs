@@ -8,7 +8,7 @@ import {
 } from "../message_outputs.js";
 
 describe("reasoning output conversion", () => {
-  test("uses standard reasoning content by default", () => {
+  test("uses provider-native reasoning content by default", () => {
     const result = convertConverseMessageToLangChainMessage(
       {
         role: "assistant",
@@ -36,15 +36,53 @@ describe("reasoning output conversion", () => {
 
     expect(result.content).toEqual([
       {
-        type: "reasoning",
-        reasoning: "Reasoning summary",
-        signature: "opaque-signature",
+        type: "reasoning_content",
+        reasoningText: {
+          text: "Reasoning summary",
+          signature: "opaque-signature",
+        },
       },
     ]);
     expect(result.response_metadata).not.toHaveProperty("output_version");
   });
 
-  test("merges streaming reasoning and signature into a standard block", () => {
+  test("uses standard reasoning content for v1 output", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      {
+        role: "assistant",
+        content: [
+          {
+            reasoningContent: {
+              reasoningText: {
+                text: "Reasoning summary",
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+      },
+      {
+        stopReason: "end_turn",
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+        },
+        metrics: { latencyMs: 0 },
+      },
+      "v1"
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+      },
+    ]);
+  });
+
+  test("uses provider-native reasoning chunks by default", () => {
     const reasoning = handleConverseStreamContentBlockDelta({
       contentBlockIndex: 0,
       delta: { reasoningContent: { text: "Reasoning summary" } },
@@ -53,6 +91,36 @@ describe("reasoning output conversion", () => {
       contentBlockIndex: 0,
       delta: { reasoningContent: { signature: "opaque-signature" } },
     });
+
+    expect(reasoning.message.content).toEqual([
+      {
+        type: "reasoning_content",
+        reasoningText: { text: "Reasoning summary" },
+      },
+    ]);
+    expect(signature.message.content).toEqual([
+      {
+        type: "reasoning_content",
+        reasoningText: { signature: "opaque-signature" },
+      },
+    ]);
+  });
+
+  test("merges streaming reasoning and signature for v1 output", () => {
+    const reasoning = handleConverseStreamContentBlockDelta(
+      {
+        contentBlockIndex: 0,
+        delta: { reasoningContent: { text: "Reasoning summary" } },
+      },
+      "v1"
+    );
+    const signature = handleConverseStreamContentBlockDelta(
+      {
+        contentBlockIndex: 0,
+        delta: { reasoningContent: { signature: "opaque-signature" } },
+      },
+      "v1"
+    );
 
     const result = concat(reasoning.message, signature.message);
 
