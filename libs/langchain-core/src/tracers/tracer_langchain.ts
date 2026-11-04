@@ -19,7 +19,7 @@ import { ChatGeneration } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
 import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
 import { TRACE_POLICY_KEY, type TracePolicy } from "./trace_policy.js";
-import { ExpectedCancellation } from "../errors/index.js";
+import { CancelReason } from "../errors/index.js";
 
 export { omitPayload, type TracePolicy } from "./trace_policy.js";
 
@@ -200,7 +200,7 @@ export class LangChainTracer
   }
 
   protected setRunError(run: BaseTracerRun, error: unknown): void {
-    if (!ExpectedCancellation.isExpected(error)) {
+    if (!CancelReason.hasCancelReason(error)) {
       super.setRunError(run, error);
       return;
     }

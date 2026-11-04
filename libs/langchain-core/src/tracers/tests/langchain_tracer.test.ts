@@ -19,7 +19,7 @@ import { AIMessage } from "../../messages/ai.js";
 import { Serialized } from "../../load/serializable.js";
 import { ChatGeneration } from "../../outputs.js";
 import { UsageMetadata } from "../../messages/metadata.js";
-import { ExpectedCancellation } from "../../errors/index.js";
+import { CancelReason } from "../../errors/index.js";
 
 test("LangChainTracer payload snapshots for run create and update", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
@@ -749,7 +749,7 @@ describe("LangChainTracer trace policy", () => {
   });
 });
 
-describe("LangChainTracer expected cancellation", () => {
+describe("LangChainTracer cancel reason", () => {
   beforeAll(() => {
     AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
       new AsyncLocalStorage()
@@ -773,10 +773,10 @@ describe("LangChainTracer expected cancellation", () => {
   }
 
   test.each([
-    ["the marker", new ExpectedCancellation()],
+    ["the marker", new CancelReason()],
     [
       "an error caused by the marker",
-      new Error("wrapped", { cause: new ExpectedCancellation() }),
+      new Error("wrapped", { cause: new CancelReason() }),
     ],
   ])("an abort with %s ends the run as cancelled", async (_, reason) => {
     const end = await runAborted(reason);
