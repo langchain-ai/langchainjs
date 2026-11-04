@@ -15,12 +15,14 @@ import {
 import { RunCollectorCallbackHandler } from "../run_collector.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/async_local_storage/index.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
 import { Serialized } from "../../load/serializable.js";
-import { ChatGeneration } from "../../outputs.js";
+import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { UsageMetadata } from "../../messages/metadata.js";
 import { ExpectedCancellation } from "../../errors/index.js";
 import { tool } from "../../tools/index.js";
+import { BaseChatModel } from "../../language_models/chat_models.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 
 test("LangChainTracer payload snapshots for run create and update", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
@@ -797,6 +799,52 @@ describe("LangChainTracer expected cancellation", () => {
     const end = await runAborted(abort);
     expect(end.error).toBeDefined();
     expect(end.extra?.metadata?.end_reason).toBeUndefined();
+  });
+
+  test("a streaming chat model aborted mid-stream ends as cancelled", async () => {
+    const client = { createRun: vi.fn(), updateRun: vi.fn() } as any;
+    const tracer = new LangChainTracer({ client });
+    const controller = new AbortController();
+    class AbortingModel extends BaseChatModel {
+      _llmType() {
+        return "aborting";
+      }
+
+      async _generate(): Promise<never> {
+        throw new Error("not used");
+      }
+
+      async *_streamResponseChunks() {
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk("partial"),
+          text: "partial",
+        });
+        controller.abort(new ExpectedCancellation());
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk("rest"),
+          text: "rest",
+        });
+      }
+    }
+    const streaming = BaseCallbackHandler.fromMethods({});
+    Object.assign(streaming, { lc_prefer_streaming: true });
+
+    await expect(
+      new AbortingModel({}).invoke("hi", {
+        callbacks: [tracer, streaming],
+        signal: controller.signal,
+      })
+    ).rejects.toThrow();
+    await awaitAllCallbacks();
+
+    const [run] = client.createRun.mock.calls
+      .map((c: any) => c[0])
+      .filter((r: any) => r.run_type === "llm");
+    const end = client.updateRun.mock.calls
+      .filter((c: any) => c[0] === run.id)
+      .at(-1)[1];
+    expect(end.error).toBeUndefined();
+    expect(end.extra.metadata.end_reason).toBe("cancelled");
   });
 
   test("an aborted tool ends its span", async () => {

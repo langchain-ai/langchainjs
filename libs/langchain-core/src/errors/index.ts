@@ -93,8 +93,8 @@ export function getRetryable(error: unknown): boolean | undefined {
 export class LangChainError extends ns.brand(Error) {
   readonly name: string = "LangChainError";
 
-  constructor(message?: string) {
-    super(message);
+  constructor(message?: string, options?: ErrorOptions) {
+    super(message, options);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
@@ -144,9 +144,14 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
    *
    * @param message - A human-readable message describing the abort event.
    * @param partialOutput - Any partial model output generated before the abort (optional).
+   * @param options - Standard error options, such as the abort signal's reason as `cause`.
    */
-  constructor(message: string, partialOutput?: AIMessageChunk) {
-    super(message);
+  constructor(
+    message: string,
+    partialOutput?: AIMessageChunk,
+    options?: ErrorOptions
+  ) {
+    super(message, options);
     this.partialOutput = partialOutput;
     // Retrying would mean ignoring the caller's explicit abort signal.
     stampRetryable(this, false);
@@ -250,7 +255,7 @@ export class ExpectedCancellation extends ns.brand(
 ) {
   readonly name: string = "ExpectedCancellation";
 
-  constructor(message?: string, options?: { cause?: unknown }) {
+  constructor(message?: string, options?: ErrorOptions) {
     super(message ?? "Cancelled", options);
     stampRetryable(this, false);
   }

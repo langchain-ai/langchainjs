@@ -798,7 +798,8 @@ export abstract class BaseChatModel<
               | undefined;
             throw new ModelAbortError(
               "Model invocation was aborted.",
-              partialMessage
+              partialMessage,
+              { cause: parsedOptions.signal.reason }
             );
           }
           if (chunk.message.id == null) {
@@ -818,7 +819,8 @@ export abstract class BaseChatModel<
             | undefined;
           throw new ModelAbortError(
             "Model invocation was aborted.",
-            partialMessage
+            partialMessage,
+            { cause: parsedOptions.signal.reason }
           );
         }
         if (aggregated === undefined) {
