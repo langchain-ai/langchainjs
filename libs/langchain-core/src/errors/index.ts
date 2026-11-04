@@ -252,6 +252,7 @@ export class ExpectedCancellation extends ns.brand(
 
   constructor(message?: string, options?: ErrorOptions) {
     super(message ?? "Cancelled", options);
+    stampRetryable(this, false);
   }
 
   static isExpected(error: unknown): boolean {
