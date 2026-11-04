@@ -170,6 +170,40 @@ class FakeToolCallStreamModel extends BaseChatModel {
 }
 
 /**
+ * A model that yields the given message chunks via _streamResponseChunks.
+ */
+class FakeChunkStreamModel extends BaseChatModel {
+  chunks: AIMessageChunk[];
+
+  constructor(chunks: AIMessageChunk[]) {
+    super({});
+    this.chunks = chunks;
+  }
+
+  _llmType() {
+    return "fake-chunk-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    for (const message of this.chunks) {
+      yield new ChatGenerationChunk({ message, text: "" });
+    }
+  }
+}
+
+/**
  * A model that yields chunks with usage_metadata.
  */
 class FakeUsageStreamModel extends BaseChatModel {
@@ -488,6 +522,117 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolFinish).toBeDefined();
       expect(toolFinish!.content.name).toBe("search");
       expect(toolFinish!.content.args).toEqual({ q: "hello" });
+    });
+
+    test("streams tool call args as slices", async () => {
+      const model = new FakeChunkStreamModel([
+        new AIMessageChunk({
+          content: "",
+          id: "msg_tools",
+          tool_call_chunks: [
+            { id: "call_1", name: "search", args: "", index: 0 },
+          ],
+        }),
+        new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [{ args: '{"q":', index: 0 }],
+        }),
+        new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [{ args: '"hello"}', index: 0 }],
+        }),
+      ]);
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual(
+        [
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "tool_call_chunk",
+              id: "call_1",
+              name: "search",
+              args: "",
+              index: 0,
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: '{"q":' },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: '"hello"}' },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "tool_call",
+              id: "call_1",
+              name: "search",
+              args: { q: "hello" },
+            },
+          },
+        ]
+      );
+      expect((await stream).tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "search",
+          args: { q: "hello" },
+        },
+      ]);
+    });
+
+    test("sends a late tool call id and name on the finish, not a delta", async () => {
+      const model = new FakeChunkStreamModel([
+        new AIMessageChunk({
+          content: "",
+          id: "msg_tools",
+          tool_call_chunks: [{ args: '{"q":', index: 0 }],
+        }),
+        new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [
+            { id: "call_1", name: "search", args: '"hello"}', index: 0 },
+          ],
+        }),
+      ]);
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event === "content-block-delta")).toEqual([
+        {
+          event: "content-block-delta",
+          index: 0,
+          delta: { type: "tool-call-delta", args: '{"q":' },
+        },
+        {
+          event: "content-block-delta",
+          index: 0,
+          delta: { type: "tool-call-delta", args: '"hello"}' },
+        },
+      ]);
+      expect((await stream).tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "search",
+          args: { q: "hello" },
+        },
+      ]);
     });
   });
 

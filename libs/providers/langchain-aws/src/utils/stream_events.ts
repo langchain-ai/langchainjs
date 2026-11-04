@@ -88,18 +88,14 @@ export async function* convertBedrockConverseStream(
           event: "content-block-delta" as const,
           index,
           delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
+            type: "tool-call-delta" as const,
+            args: delta.toolUse.input,
           },
         };
       } else if (delta.reasoningContent) {
         const text = delta.reasoningContent.text;
-        if (typeof text === "string") {
+        const signature = delta.reasoningContent.signature;
+        if (typeof text === "string" || typeof signature === "string") {
           if (!blockAccumulators.has(index)) {
             const initial = { type: "reasoning" as const, reasoning: "" };
             blockAccumulators.set(index, { ...initial });
@@ -110,12 +106,24 @@ export async function* convertBedrockConverseStream(
             };
           }
           const acc = blockAccumulators.get(index)!;
-          acc.reasoning = (acc.reasoning ?? "") + text;
-          yield {
-            event: "content-block-delta" as const,
-            index,
-            delta: { type: "reasoning-delta" as const, reasoning: text },
-          };
+          if (typeof text === "string") {
+            acc.reasoning = (acc.reasoning ?? "") + text;
+            yield {
+              event: "content-block-delta" as const,
+              index,
+              delta: { type: "reasoning-delta" as const, reasoning: text },
+            };
+          } else if (typeof signature === "string") {
+            acc.signature = (acc.signature ?? "") + signature;
+            yield {
+              event: "content-block-delta" as const,
+              index,
+              delta: {
+                type: "block-delta" as const,
+                fields: { type: "reasoning", signature: acc.signature },
+              },
+            };
+          }
         }
       }
     } else if (event.metadata?.usage && shouldStreamUsage) {

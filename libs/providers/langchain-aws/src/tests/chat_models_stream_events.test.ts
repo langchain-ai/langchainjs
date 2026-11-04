@@ -1,5 +1,8 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatBedrockConverse } from "../chat_models.js";
+import { HumanMessage } from "@langchain/core/messages";
+import { convertToConverseMessages } from "../utils/message_inputs.js";
 
 function bedrockTextStream() {
   return [
@@ -54,6 +57,37 @@ function bedrockToolStream() {
   ];
 }
 
+function bedrockSplitToolArgsStream() {
+  return [
+    {
+      contentBlockStart: {
+        contentBlockIndex: 0,
+        start: {
+          toolUse: { toolUseId: "toolu_1", name: "web_search" },
+        },
+      },
+    },
+    {
+      contentBlockDelta: {
+        contentBlockIndex: 0,
+        delta: { toolUse: { input: "" } },
+      },
+    },
+    {
+      contentBlockDelta: {
+        contentBlockIndex: 0,
+        delta: { toolUse: { input: '{"query"' } },
+      },
+    },
+    {
+      contentBlockDelta: {
+        contentBlockIndex: 0,
+        delta: { toolUse: { input: ':"weather"}' } },
+      },
+    },
+  ];
+}
+
 function bedrockUsageStream() {
   return [
     {
@@ -92,6 +126,48 @@ afterEach(() => {
 });
 
 describe("ChatBedrockConverse.streamEvents", () => {
+  test("preserves reasoning signatures when replaying streamed output", async () => {
+    const events = [
+      ...bedrockReasoningStream(),
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: { reasoningContent: { signature: "opaque-signature" } },
+        },
+      },
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 1,
+          delta: { text: "Answer" },
+        },
+      },
+    ];
+    const result = await mockBedrock(events).streamEvents("Hello").output;
+    expect(result.contentBlocks).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Let me reason...",
+        signature: "opaque-signature",
+      },
+      { type: "text", text: "Answer" },
+    ]);
+    const { converseMessages } = convertToConverseMessages([
+      new HumanMessage("Hello"),
+      result,
+    ]);
+    expect(converseMessages[1].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Let me reason...",
+            signature: "opaque-signature",
+          },
+        },
+      },
+      { text: "Answer" },
+    ]);
+  });
+
   test("streams text", async () => {
     await expect(
       mockBedrock(bedrockTextStream()).streamEvents("Hello")
@@ -109,6 +185,58 @@ describe("ChatBedrockConverse.streamEvents", () => {
       mockBedrock(bedrockToolStream()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
+    ]);
+  });
+
+  test("streams tool call args as slices", async () => {
+    const stream = mockBedrock(bedrockSplitToolArgsStream()).streamEvents(
+      "Hello"
+    );
+    const events: ChatModelStreamEvent[] = [];
+    for await (const event of stream) {
+      events.push(event);
+    }
+
+    expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual([
+      {
+        event: "content-block-start",
+        index: 0,
+        content: {
+          type: "tool_call_chunk",
+          id: "toolu_1",
+          name: "web_search",
+          args: "",
+          index: 0,
+        },
+      },
+      {
+        event: "content-block-delta",
+        index: 0,
+        delta: { type: "tool-call-delta", args: '{"query"' },
+      },
+      {
+        event: "content-block-delta",
+        index: 0,
+        delta: { type: "tool-call-delta", args: ':"weather"}' },
+      },
+      {
+        event: "content-block-finish",
+        index: 0,
+        content: {
+          type: "tool_call",
+          id: "toolu_1",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      },
+    ]);
+    expect((await stream).tool_calls).toEqual([
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "web_search",
+        args: { query: "weather" },
+      },
     ]);
   });
 
