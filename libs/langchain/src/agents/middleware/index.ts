@@ -59,6 +59,10 @@ export {
   modelCallLimitMiddleware,
   type ModelCallLimitMiddlewareConfig,
 } from "./modelCallLimit.js";
+export {
+  modelCallBudgetMiddleware,
+  type ModelCallBudgetMiddlewareConfig,
+} from "./modelCallBudget.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
 export {
   modelRetryMiddleware,
