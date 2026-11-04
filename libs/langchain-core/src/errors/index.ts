@@ -237,16 +237,11 @@ export class ContextOverflowError extends ns.brand(
 }
 
 /**
- * Marks an intentional stop that is not an execution failure, such as a
- * server cancelling or superseding a run on purpose.
- *
- * Abort with it to mark the stop as expected; tracers then end the run as
- * cancelled instead of as an error. Subclass it to carry extra detail.
+ * Marks an intentional stop that is not an execution failure.
  *
  * @example
  * ```typescript
- * const controller = new AbortController();
- * controller.abort(new ExpectedCancellation("Run superseded"));
+ * controller.abort(new ExpectedCancellation());
  * ```
  */
 export class ExpectedCancellation extends ns.brand(
@@ -257,18 +252,14 @@ export class ExpectedCancellation extends ns.brand(
 
   constructor(message?: string, options?: ErrorOptions) {
     super(message ?? "Cancelled", options);
-    stampRetryable(this, false);
   }
 
-  /**
-   * Whether `error` is an {@link ExpectedCancellation}, or its `cause` is one.
-   */
   static isExpected(error: unknown): boolean {
     return (
       ExpectedCancellation.isInstance(error) ||
-      (typeof error === "object" &&
-        error !== null &&
-        ExpectedCancellation.isInstance((error as { cause?: unknown }).cause))
+      ExpectedCancellation.isInstance(
+        (error as { cause?: unknown } | undefined)?.cause
+      )
     );
   }
 }
