@@ -147,6 +147,166 @@ describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
   });
 });
 
+describe("OpenRouter cost response_metadata", () => {
+  const costDetails: OpenRouter.ChatGenerationCostDetails = {
+    upstream_inference_cost: 0.00007745,
+    upstream_inference_prompt_cost: 0.00000895,
+    upstream_inference_completions_cost: 0.0000685,
+  };
+
+  const usageWithCost: OpenRouter.ChatGenerationTokenUsage = {
+    prompt_tokens: 100,
+    completion_tokens: 50,
+    total_tokens: 150,
+    cost: 0.000075,
+    cost_details: costDetails,
+  };
+
+  const usageTokensOnly: OpenRouter.ChatGenerationTokenUsage = {
+    prompt_tokens: 100,
+    completion_tokens: 50,
+    total_tokens: 150,
+  };
+
+  it("copies cost and cost_details on non-streaming responses when usage has them", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: { role: "assistant", content: "hello" },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-cost",
+      choices: [choice],
+      created: 0,
+      model: "openai/gpt-4o-mini",
+      object: "chat.completion",
+      usage: usageWithCost,
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+    const meta = msg.response_metadata as Record<string, unknown>;
+
+    expect(meta.cost).toBe(0.000075);
+    expect(meta.cost_details).toEqual(costDetails);
+    expect(meta.finish_reason).toBe("stop");
+  });
+
+  it("omits cost keys on non-streaming responses when usage has only tokens", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: { role: "assistant", content: "hello" },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-tokens",
+      choices: [choice],
+      created: 0,
+      model: "openai/gpt-4o-mini",
+      object: "chat.completion",
+      usage: usageTokensOnly,
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+    const meta = msg.response_metadata as Record<string, unknown>;
+
+    expect(meta).not.toHaveProperty("cost");
+    expect(meta).not.toHaveProperty("cost_details");
+  });
+
+  it("does not stamp cost on a streaming delta that has no usage", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "hi",
+    };
+    const rawChunk = {
+      id: "gen-stream-plain",
+      choices: [{ delta, finish_reason: null, index: 0 }],
+      created: 0,
+      model: "openai/gpt-4o-mini",
+      object: "chat.completion.chunk" as const,
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk,
+      "assistant"
+    );
+    const meta = chunk.response_metadata as Record<string, unknown>;
+
+    expect(meta.model_provider).toBe("openrouter");
+    expect(meta).not.toHaveProperty("cost");
+    expect(meta).not.toHaveProperty("cost_details");
+  });
+
+  it("copies cost onto the streaming chunk that actually carries usage", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "",
+    };
+    const rawChunk = {
+      id: "gen-stream-usage",
+      choices: [{ delta, finish_reason: "stop", index: 0 }],
+      created: 0,
+      model: "openai/gpt-4o-mini",
+      object: "chat.completion.chunk" as const,
+      usage: usageWithCost,
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk,
+      "assistant"
+    );
+    const meta = chunk.response_metadata as Record<string, unknown>;
+
+    expect(meta.cost).toBe(0.000075);
+    expect(meta.cost_details).toEqual(costDetails);
+  });
+
+  it("keeps cost and finish_reason after concat without doubling cost", () => {
+    const contentDelta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "hello",
+    };
+    const contentChunk = convertOpenRouterDeltaToBaseMessageChunk(
+      contentDelta,
+      {
+        id: "gen-concat",
+        choices: [{ delta: contentDelta, finish_reason: null, index: 0 }],
+        created: 0,
+        model: "openai/gpt-4o-mini",
+        object: "chat.completion.chunk",
+      },
+      "assistant"
+    ) as AIMessageChunk;
+    contentChunk.response_metadata = {
+      ...contentChunk.response_metadata,
+      finish_reason: "stop",
+    };
+
+    const usageDelta: OpenRouter.ChatStreamingMessageChunk = { content: "" };
+    const usageChunk = convertOpenRouterDeltaToBaseMessageChunk(
+      usageDelta,
+      {
+        id: "gen-concat",
+        choices: [{ delta: usageDelta, finish_reason: "stop", index: 0 }],
+        created: 0,
+        model: "openai/gpt-4o-mini",
+        object: "chat.completion.chunk",
+        usage: usageWithCost,
+      },
+      "assistant"
+    ) as AIMessageChunk;
+
+    const merged = contentChunk.concat(usageChunk);
+    const meta = merged.response_metadata as Record<string, unknown>;
+
+    expect(meta.finish_reason).toBe("stop");
+    expect(meta.cost).toBe(0.000075);
+    expect(meta.cost_details).toEqual(costDetails);
+  });
+});
+
 // ─── reasoning extraction ────────────────────────────────────────────
 
 describe("convertOpenRouterResponseToBaseMessage reasoning", () => {
