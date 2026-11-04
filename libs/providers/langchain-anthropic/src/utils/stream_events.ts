@@ -12,6 +12,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
+import { buildOutputTokenDetails } from "./message_outputs.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ export async function* convertAnthropicStream(
               input_tokens: 0,
               output_tokens: data.usage.output_tokens,
               total_tokens: data.usage.output_tokens,
+              ...buildOutputTokenDetails(data.usage),
             };
           } else {
             usageSnapshot = {
@@ -87,6 +89,7 @@ export async function* convertAnthropicStream(
                 usageSnapshot.input_tokens +
                 usageSnapshot.output_tokens +
                 data.usage.output_tokens,
+              ...buildOutputTokenDetails(data.usage),
             };
           }
           yield { event: "usage" as const, usage: usageSnapshot };

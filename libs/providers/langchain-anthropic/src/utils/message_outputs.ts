@@ -56,6 +56,7 @@ export function _makeMessageChunkFromAnthropicEvent(
       input_tokens: 0,
       output_tokens: data.usage.output_tokens,
       total_tokens: data.usage.output_tokens,
+      ...buildOutputTokenDetails(data.usage),
     };
     const responseMetadata = iife(() => {
       const output = {};
@@ -281,7 +282,10 @@ export function anthropicResponseToChatMessages(
   };
   const usage: Record<string, number> | null | undefined =
     additionalKwargs.usage as Record<string, number> | null | undefined;
-  const usageMetadata = usage != null ? buildUsageMetadata(usage) : undefined;
+  const usageMetadata =
+    usage != null
+      ? { ...buildUsageMetadata(usage), ...buildOutputTokenDetails(usage) }
+      : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
     return [
       {
@@ -313,6 +317,21 @@ export function anthropicResponseToChatMessages(
     ];
     return generations;
   }
+}
+
+type AnthropicOutputTokensDetails = {
+  output_tokens_details?: { thinking_tokens?: unknown } | null;
+};
+
+// Read from message_delta, not message_start: merged chunks sum details.
+export function buildOutputTokenDetails(
+  usage: object
+): Pick<UsageMetadata, "output_token_details"> {
+  const thinkingTokens = (usage as AnthropicOutputTokensDetails)
+    .output_tokens_details?.thinking_tokens;
+  return typeof thinkingTokens === "number"
+    ? { output_token_details: { reasoning: thinkingTokens } }
+    : {};
 }
 
 function buildUsageMetadata(

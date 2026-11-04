@@ -5,10 +5,11 @@ import { convertAnthropicStream } from "../stream_events.js";
 interface StreamOverrides {
   cost?: unknown;
   streamUsage?: boolean;
+  thinkingTokens?: number;
 }
 
 /** One response's raw Anthropic events, optionally with a gateway `cost` on the terminal usage. */
-function rawEvents({ cost }: StreamOverrides = {}) {
+function rawEvents({ cost, thinkingTokens }: StreamOverrides = {}) {
   return [
     {
       type: "message_start" as const,
@@ -40,15 +41,22 @@ function rawEvents({ cost }: StreamOverrides = {}) {
       usage: {
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
+        ...(thinkingTokens === undefined
+          ? {}
+          : { output_tokens_details: { thinking_tokens: thinkingTokens } }),
       },
     },
     { type: "message_stop" as const },
   ];
 }
 
-async function convert({ cost, streamUsage }: StreamOverrides = {}) {
+async function convert({
+  cost,
+  streamUsage,
+  thinkingTokens,
+}: StreamOverrides = {}) {
   const source = (async function* () {
-    yield* rawEvents({ cost });
+    yield* rawEvents({ cost, thinkingTokens });
   })();
   const events = [];
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,5 +156,38 @@ describe("convertAnthropicStream", () => {
 
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
     expect(message.usage_metadata?.output_tokens).toBe(43);
+  });
+});
+
+describe("thinking tokens in usage_metadata", () => {
+  test("message-finish usage reports thinking tokens as reasoning", async () => {
+    const events = await convert({ thinkingTokens: 30 });
+
+    expect(messageFinish(events).usage.output_token_details).toEqual({
+      reasoning: 30,
+    });
+  });
+
+  test("assembled message reports thinking tokens as reasoning", async () => {
+    const source = (async function* () {
+      yield* rawEvents({ thinkingTokens: 30 });
+    })();
+    const message = await new ChatModelStream(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      convertAnthropicStream(source as any) as any
+    );
+
+    expect(message.usage_metadata?.output_token_details).toEqual({
+      reasoning: 30,
+    });
+    expect(message.usage_metadata?.output_tokens).toBe(43);
+  });
+
+  test("no output_token_details without output_tokens_details", async () => {
+    const events = await convert();
+
+    expect(messageFinish(events).usage).not.toHaveProperty(
+      "output_token_details"
+    );
   });
 });
