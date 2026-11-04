@@ -19,6 +19,7 @@ import { ChatGeneration } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
 import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
 import { TRACE_POLICY_KEY, type TracePolicy } from "./trace_policy.js";
+import { ExpectedCancellation } from "../errors/index.js";
 
 export { omitPayload, type TracePolicy } from "./trace_policy.js";
 
@@ -196,6 +197,18 @@ export class LangChainTracer
     // Keep the run's own error, if it failed; the policy error is still rethrown.
     if (error !== undefined) runTree.error ??= this.stringifyError(error);
     return error;
+  }
+
+  protected setRunError(run: BaseTracerRun, error: unknown): void {
+    if (!ExpectedCancellation.isExpected(error)) {
+      super.setRunError(run, error);
+      return;
+    }
+    run.extra ??= {};
+    run.extra.metadata = {
+      ...(run.extra.metadata as Record<string, unknown> | undefined),
+      end_reason: "cancelled",
+    };
   }
 
   onLLMEnd(run: BaseTracerRun): void {

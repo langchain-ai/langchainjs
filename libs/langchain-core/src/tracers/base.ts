@@ -125,6 +125,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return `${error}`;
   }
 
+  protected setRunError(run: Run, error: unknown) {
+    run.error = this.stringifyError(error);
+  }
+
   protected abstract persistRun(run: Run): Promise<void>;
 
   protected _addChildRun(parentRun: Run, childRun: Run) {
@@ -389,7 +393,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -505,7 +509,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -611,7 +615,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No tool run to end");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -739,7 +743,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No retriever run to end");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),

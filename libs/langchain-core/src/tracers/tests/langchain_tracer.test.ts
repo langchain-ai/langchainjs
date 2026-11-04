@@ -19,6 +19,8 @@ import { AIMessage } from "../../messages/ai.js";
 import { Serialized } from "../../load/serializable.js";
 import { ChatGeneration } from "../../outputs.js";
 import { UsageMetadata } from "../../messages/metadata.js";
+import { ExpectedCancellation } from "../../errors/index.js";
+import { tool } from "../../tools/index.js";
 
 test("LangChainTracer payload snapshots for run create and update", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
@@ -745,5 +747,98 @@ describe("LangChainTracer trace policy", () => {
 
     const piped = withPolicy.pipe(RunnableLambda.from((x: unknown) => x));
     expect((piped as any)._tracePolicy).toBeUndefined();
+  });
+});
+
+describe("LangChainTracer expected cancellation", () => {
+  beforeAll(() => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+  });
+
+  class RunSuperseded extends ExpectedCancellation {}
+
+  async function runAborted(abort: (controller: AbortController) => void) {
+    const client = { createRun: vi.fn(), updateRun: vi.fn() } as any;
+    const tracer = new LangChainTracer({ client });
+    const controller = new AbortController();
+    const lambda = RunnableLambda.from(() => new Promise(() => {})).withConfig({
+      runName: "pending",
+    });
+    const pending = lambda.invoke(
+      {},
+      { callbacks: [tracer], signal: controller.signal }
+    );
+    abort(controller);
+    await expect(pending).rejects.toThrow();
+    await awaitAllCallbacks();
+    return client.updateRun.mock.calls.at(-1)[1];
+  }
+
+  test.each([
+    ["the marker", () => new ExpectedCancellation("stopped")],
+    ["a subclass", () => new RunSuperseded("superseded")],
+    [
+      "an error caused by the marker",
+      () => new Error("wrapped", { cause: new ExpectedCancellation() }),
+    ],
+  ])("an abort with %s ends the run as cancelled", async (_, reason) => {
+    const end = await runAborted((c) => c.abort(reason()));
+    expect(end.error).toBeUndefined();
+    expect(end.extra.metadata.end_reason).toBe("cancelled");
+  });
+
+  test.each([
+    ["a plain abort", (c: AbortController) => c.abort()],
+    ["a string reason", (c: AbortController) => c.abort("stop")],
+    ["a timeout", (c: AbortController) => c.abort(new Error("Timeout"))],
+  ])("%s still ends the run as an error", async (_, abort) => {
+    const end = await runAborted(abort);
+    expect(end.error).toBeDefined();
+    expect(end.extra?.metadata?.end_reason).toBeUndefined();
+  });
+
+  test("an aborted tool ends its span", async () => {
+    const client = { createRun: vi.fn(), updateRun: vi.fn() } as any;
+    const tracer = new LangChainTracer({ client });
+    const controller = new AbortController();
+    const slow = tool(() => new Promise<string>(() => {}), {
+      name: "slow",
+      schema: { type: "object", properties: {} },
+    });
+    const pending = slow.invoke(
+      {},
+      { callbacks: [tracer], signal: controller.signal }
+    );
+    controller.abort(new ExpectedCancellation());
+    await expect(pending).rejects.toBeInstanceOf(ExpectedCancellation);
+    await awaitAllCallbacks();
+
+    const [run] = client.createRun.mock.calls.map((c: any) => c[0]);
+    const end = client.updateRun.mock.calls.at(-1);
+    expect(end[0]).toBe(run.id);
+    expect(end[1].end_time).toBeDefined();
+    expect(end[1].error).toBeUndefined();
+    expect(end[1].extra.metadata.end_reason).toBe("cancelled");
+  });
+
+  test("a tool called with an already aborted signal ends its span", async () => {
+    const client = { createRun: vi.fn(), updateRun: vi.fn() } as any;
+    const tracer = new LangChainTracer({ client });
+    const controller = new AbortController();
+    controller.abort();
+    const echo = tool(() => "done", {
+      name: "echo",
+      schema: { type: "object", properties: {} },
+    });
+    await expect(
+      echo.invoke({}, { callbacks: [tracer], signal: controller.signal })
+    ).rejects.toThrow();
+    await awaitAllCallbacks();
+
+    const end = client.updateRun.mock.calls.at(-1)[1];
+    expect(end.end_time).toBeDefined();
+    expect(end.error).toBeDefined();
   });
 });
