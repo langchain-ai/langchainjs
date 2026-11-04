@@ -1892,6 +1892,23 @@ export const convertMessagesToResponsesInput: Converter<
               detail,
             });
           }
+          if (item.type === "file" && "file" in item) {
+            const file =
+              item.file as OpenAIClient.Chat.Completions.ChatCompletionContentPart.File["file"];
+            if (file.file_data) {
+              return applyPromptCacheBreakpoint(item, {
+                type: "input_file",
+                file_data: file.file_data,
+                ...(file.filename ? { filename: file.filename } : {}),
+              });
+            }
+            if (file.file_id) {
+              return applyPromptCacheBreakpoint(item, {
+                type: "input_file",
+                file_id: file.file_id,
+              });
+            }
+          }
           if (
             item.type === "input_text" ||
             item.type === "input_image" ||
