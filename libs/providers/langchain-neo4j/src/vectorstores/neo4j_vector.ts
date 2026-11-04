@@ -947,7 +947,17 @@ function combineQueries(
       }
       const newParamName = `${param}_${paramCounter[param]}`;
 
-      newQuery = newQuery.replace(`$${param}`, `$${newParamName}`);
+      // Match the whole parameter token, everywhere it appears. A plain string replace
+      // rewrites only the FIRST occurrence and happily matches a prefix of a longer
+      // parameter name, so `$param_1_1` would corrupt `$param_1_1_1_1`. `\b` will not match
+      // between a digit and an underscore, which is what keeps the names apart.
+      newQuery = newQuery.replace(
+        new RegExp(
+          `\\$${param.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+          "g"
+        ),
+        () => `$${newParamName}`
+      );
       combinedParams[newParamName] = value;
     }
 
