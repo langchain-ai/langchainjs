@@ -276,14 +276,17 @@ export function resolveRedactionRule(
       };
       // oxlint-disable-next-line no-instanceof/no-instanceof
     } else if (config.detector instanceof RegExp) {
+      // `exec` only advances `lastIndex` on global regexes, so a pattern
+      // without the `g` flag would return the same match forever. Scan with a
+      // fresh global copy on each call, which also ignores a stale `lastIndex`
+      // left on the caller's RegExp.
+      const { source, flags } = config.detector;
+      const globalFlags = flags.includes("g") ? flags : `${flags}g`;
       detector = (content: string) => {
-        // oxlint-disable-next-line no-instanceof/no-instanceof
-        if (!(config.detector instanceof RegExp)) {
-          throw new Error("Detector is required");
-        }
+        const regex = new RegExp(source, globalFlags);
         const matches: PIIMatch[] = [];
         let match: RegExpMatchArray | null;
-        while ((match = config.detector.exec(content)) !== null) {
+        while ((match = regex.exec(content)) !== null) {
           matches.push(regexMatchToPIIMatch(match));
         }
 
