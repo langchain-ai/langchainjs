@@ -89,25 +89,16 @@ export abstract class BaseCumulativeTransformOutputParser<
     let prevParsed: T | undefined;
     let accGen: GenerationChunk | undefined;
     for await (const chunk of inputGenerator) {
-      if (typeof chunk !== "string" && typeof chunk.content !== "string") {
-        throw new Error("Cannot handle non-string output.");
-      }
       let chunkGen: GenerationChunk;
       if (isBaseMessageChunk(chunk)) {
-        if (typeof chunk.content !== "string") {
-          throw new Error("Cannot handle non-string message output.");
-        }
         chunkGen = new ChatGenerationChunk({
           message: chunk,
-          text: chunk.content,
+          text: this._baseMessageToString(chunk),
         });
       } else if (isBaseMessage(chunk)) {
-        if (typeof chunk.content !== "string") {
-          throw new Error("Cannot handle non-string message output.");
-        }
         chunkGen = new ChatGenerationChunk({
           message: convertToChunk(chunk),
-          text: chunk.content,
+          text: this._baseMessageToString(chunk),
         });
       } else {
         chunkGen = new GenerationChunk({ text: chunk });
