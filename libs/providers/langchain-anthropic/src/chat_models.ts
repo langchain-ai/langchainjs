@@ -1472,7 +1472,7 @@ export class ChatAnthropicMessages<
         stream.controller.abort();
         return;
       }
-      const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+      const shouldStreamUsage = options.streamUsage ?? this.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
@@ -1538,7 +1538,7 @@ export class ChatAnthropicMessages<
       maxRetries: options.maxRetries,
     });
 
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+    const shouldStreamUsage = options.streamUsage ?? this.streamUsage;
 
     // Wrap the raw Anthropic stream with abort handling, then
     // delegate all event conversion to the pure converter.
