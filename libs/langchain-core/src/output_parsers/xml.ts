@@ -157,6 +157,7 @@ export function parseXMLMarkdown(s: string): XMLResult {
       currentElement.text += text;
     }
   };
+  parser.oncdata = parser.ontext;
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   parser.onattribute = (attr: any) => {
