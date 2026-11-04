@@ -241,21 +241,26 @@ export class ContextOverflowError extends ns.brand(
  *
  * @example
  * ```typescript
- * controller.abort(new CancelReason());
+ * controller.abort(new ExpectedCancellation());
  * ```
  */
-export class CancelReason extends ns.brand(Error, "cancel-reason") {
-  readonly name: string = "CancelReason";
+export class ExpectedCancellation extends ns.brand(
+  Error,
+  "expected-cancellation"
+) {
+  readonly name: string = "ExpectedCancellation";
 
   constructor(message?: string, options?: ErrorOptions) {
     super(message ?? "Cancelled", options);
     stampRetryable(this, false);
   }
 
-  static hasCancelReason(error: unknown): boolean {
+  static isExpected(error: unknown): boolean {
     return (
-      CancelReason.isInstance(error) ||
-      CancelReason.isInstance((error as { cause?: unknown } | undefined)?.cause)
+      ExpectedCancellation.isInstance(error) ||
+      ExpectedCancellation.isInstance(
+        (error as { cause?: unknown } | undefined)?.cause
+      )
     );
   }
 }
