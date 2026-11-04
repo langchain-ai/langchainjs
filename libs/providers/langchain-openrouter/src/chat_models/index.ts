@@ -602,6 +602,9 @@ export class ChatOpenRouter extends BaseChatModel<
         );
       }
     } finally {
+      // Releasing the lock alone leaves the HTTP body (and generation) running
+      // when a consumer stops early. Preserve any error from reading the stream.
+      await reader.cancel().catch(() => {});
       reader.releaseLock();
     }
   }

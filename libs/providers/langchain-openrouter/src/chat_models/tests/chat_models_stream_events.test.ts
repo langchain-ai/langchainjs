@@ -81,3 +81,31 @@ describe("ChatOpenRouter.streamEvents", () => {
     });
   });
 });
+
+describe("ChatOpenRouter.stream cancellation", () => {
+  test("cancels the response body when the consumer stops early", async () => {
+    const cancel = vi.fn();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          new TextEncoder().encode(
+            `data: ${JSON.stringify({
+              id: "test",
+              choices: [
+                { index: 0, delta: { role: "assistant", content: "Hello" } },
+              ],
+            })}\n\n`
+          )
+        );
+      },
+      cancel,
+    });
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(body));
+    const model = new ChatOpenRouter({ apiKey: "fake-key", model: "test" });
+    const stream = await model.stream("Hi");
+    for await (const _chunk of stream) {
+      break;
+    }
+    await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+  });
+});
