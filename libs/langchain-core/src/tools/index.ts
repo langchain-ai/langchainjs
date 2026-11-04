@@ -986,6 +986,10 @@ export function tool<
             cleanup();
             reject(getAbortSignalError(config.signal));
           };
+          if (config.signal.aborted) {
+            listener();
+            return;
+          }
           config.signal.addEventListener("abort", listener, { once: true });
         }
 
