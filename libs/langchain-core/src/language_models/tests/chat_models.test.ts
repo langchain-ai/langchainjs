@@ -2,7 +2,12 @@ import { test, expect, expectTypeOf, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeListChatModel,
+  FakeStreamingChatModel,
+} from "../../utils/testing/index.js";
+import { ModelAbortError } from "../../errors/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
@@ -721,4 +726,56 @@ test("Test ChatModel .invoke() with a streaming-preferring callback builds llmOu
     completionTokens: 12,
     totalTokens: 22,
   });
+});
+
+test("_streamIterator ends the callback run when the consumer stops early", async () => {
+  const makeModel = () =>
+    new FakeStreamingChatModel({
+      chunks: ["a", "b", "c"].map((c) => new AIMessageChunk(c)),
+    });
+  const track = () => {
+    const events: string[] = [];
+    const errors: unknown[] = [];
+    const callbacks = [
+      {
+        handleLLMStart: () => {
+          events.push("start");
+        },
+        handleLLMEnd: () => {
+          events.push("end");
+        },
+        handleLLMError: (err: unknown) => {
+          events.push("error");
+          errors.push(err);
+        },
+      },
+    ];
+    return { events, errors, callbacks };
+  };
+
+  const full = track();
+  // oxlint-disable-next-line no-unused-vars
+  for await (const _ of await makeModel().stream("hi", full)) {
+    // consume everything
+  }
+  expect(full.events).toEqual(["start", "end"]);
+
+  const broken = track();
+  // oxlint-disable-next-line no-unused-vars
+  for await (const _ of await makeModel().stream("hi", broken)) {
+    break;
+  }
+  await awaitAllCallbacks();
+  expect(broken.events).toEqual(["start", "error"]);
+  expect(broken.errors[0]).toBeInstanceOf(ModelAbortError);
+  expect((broken.errors[0] as ModelAbortError).partialOutput?.content).toBe(
+    "a"
+  );
+
+  const returned = track();
+  const stream = await makeModel().stream("hi", returned);
+  await stream.next();
+  await stream.return();
+  await awaitAllCallbacks();
+  expect(returned.events).toEqual(["start", "error"]);
 });
