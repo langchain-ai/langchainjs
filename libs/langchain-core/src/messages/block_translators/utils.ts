@@ -38,6 +38,12 @@ export function safeParseJson<T = unknown>(value: string): T | undefined {
 
 export const iife = <T>(fn: () => T): T => fn();
 
+// The REST API and the older `@google/generative-ai` SDK spell this differently.
+const GEMINI_UNSPECIFIED_BLOCK_REASONS = new Set([
+  "BLOCK_REASON_UNSPECIFIED",
+  "BLOCKED_REASON_UNSPECIFIED",
+]);
+
 const GEMINI_REFUSAL_FINISH_REASONS = new Set([
   "SAFETY",
   "PROHIBITED_CONTENT",
@@ -66,7 +72,10 @@ export function _geminiRefusalFromMetadata(
   const blockReason = _isObject(feedback)
     ? (feedback.blockReason ?? feedback.block_reason)
     : undefined;
-  if (_isString(blockReason) && blockReason !== "BLOCKED_REASON_UNSPECIFIED") {
+  if (
+    _isString(blockReason) &&
+    !GEMINI_UNSPECIFIED_BLOCK_REASONS.has(blockReason)
+  ) {
     extras.blockReason = blockReason;
   }
   if (Object.keys(extras).length === 0) return undefined;

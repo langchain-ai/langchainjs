@@ -216,16 +216,19 @@ describe.each(["google", "google-genai", "google-vertexai"])(
       }
     );
 
-    it("ignores an unspecified block reason", () => {
-      const message = new AIMessage({
-        content: "Hi.",
-        response_metadata: {
-          model_provider: provider,
-          promptFeedback: { blockReason: "BLOCKED_REASON_UNSPECIFIED" },
-        },
-      });
-      expect(refusals(message)).toEqual([]);
-    });
+    it.each(["BLOCK_REASON_UNSPECIFIED", "BLOCKED_REASON_UNSPECIFIED"])(
+      "ignores the unspecified block reason %s",
+      (blockReason) => {
+        const message = new AIMessage({
+          content: "Hi.",
+          response_metadata: {
+            model_provider: provider,
+            promptFeedback: { blockReason },
+          },
+        });
+        expect(refusals(message)).toEqual([]);
+      }
+    );
   }
 );
 
