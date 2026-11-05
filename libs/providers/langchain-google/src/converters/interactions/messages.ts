@@ -725,9 +725,12 @@ export function synthesizeMetadataFromInteractions(options: {
   builtInToolSteps: Gemini.Interactions.Step[];
 }): {
   groundingMetadata?: Gemini.GroundingMetadata;
+  grounding_metadata?: Gemini.GroundingMetadata;
   groundingSupport?: Gemini.GroundingSupport[];
   citationMetadata?: Gemini.CitationMetadata;
+  citation_metadata?: Gemini.CitationMetadata;
   urlContextMetadata?: Gemini.GenContent.Candidate["urlContextMetadata"];
+  url_context_metadata?: Gemini.GenContent.Candidate["urlContextMetadata"];
 } {
   const { textSegments, builtInToolSteps } = options;
 
@@ -845,6 +848,15 @@ export function synthesizeMetadataFromInteractions(options: {
           ...(item.url ? { retrievedUrl: item.url } : {}),
           urlRetrievalStatus: status,
         });
+        if (item.url && !urlToChunkIndex.has(item.url)) {
+          const chunkIndex = groundingChunks.length;
+          groundingChunks.push({
+            web: {
+              uri: item.url,
+            },
+          });
+          urlToChunkIndex.set(item.url, chunkIndex);
+        }
       }
     }
   }
@@ -982,12 +994,25 @@ export function synthesizeMetadataFromInteractions(options: {
     urlMetadataList.length > 0 ? { urlMetadata: urlMetadataList } : undefined;
 
   return {
-    ...(groundingMetadata ? { groundingMetadata } : {}),
-    ...(groundingSupport && groundingSupport.length > 0
-      ? { groundingSupport }
+    ...(groundingMetadata
+      ? {
+          groundingMetadata,
+          grounding_metadata: groundingMetadata,
+          groundingSupport: groundingSupport ?? [],
+        }
       : {}),
-    ...(citationMetadata ? { citationMetadata } : {}),
-    ...(urlContextMetadata ? { urlContextMetadata } : {}),
+    ...(citationMetadata
+      ? {
+          citationMetadata,
+          citation_metadata: citationMetadata,
+        }
+      : {}),
+    ...(urlContextMetadata
+      ? {
+          urlContextMetadata,
+          url_context_metadata: urlContextMetadata,
+        }
+      : {}),
   };
 }
 
