@@ -1,4 +1,5 @@
 import { test, expect } from "vitest";
+import { load } from "../../load/index.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { BytesOutputParser } from "../bytes.js";
 import {
@@ -83,3 +84,22 @@ for (const [Parser, input, output] of listTestCases) {
     await expect(parser.parse(input)).resolves.toEqual(output);
   });
 }
+
+test("MarkdownListOutputParser parses its format instruction example", async () => {
+  const parser = new MarkdownListOutputParser();
+  await expect(parser.parse(parser.getFormatInstructions())).resolves.toEqual([
+    "foo",
+    "bar",
+    "baz",
+  ]);
+});
+
+test("MarkdownListOutputParser preserves markdown parsing after serialization", async () => {
+  const parser = new MarkdownListOutputParser();
+  const deserialized = await load<ListOutputParser>(JSON.stringify(parser));
+  await expect(deserialized.parse("- foo\n- bar\n- baz")).resolves.toEqual([
+    "foo",
+    "bar",
+    "baz",
+  ]);
+});
