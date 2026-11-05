@@ -1,6 +1,5 @@
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import { ChatMistralAI, ChatMistralAICallOptions } from "../chat_models.js";
 
 class ChatMistralAIStandardUnitTests extends ChatModelUnitTests<
@@ -18,19 +17,6 @@ class ChatMistralAIStandardUnitTests extends ChatModelUnitTests<
     // which we call after instantiating the model will work.
     // (constructor will throw if API key is not set)
     process.env.MISTRAL_API_KEY = "test";
-  }
-
-  expectedLsParams(): Partial<LangSmithParams> {
-    console.warn(
-      "Overriding testStandardParams. ChatMistralAI does not support stop sequences."
-    );
-    return {
-      ls_provider: "string",
-      ls_model_name: "string",
-      ls_model_type: "chat",
-      ls_temperature: 0,
-      ls_max_tokens: 0,
-    };
   }
 
   testChatModelInitApiKey() {
