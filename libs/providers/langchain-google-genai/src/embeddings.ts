@@ -117,6 +117,8 @@ export class GoogleGenerativeAIEmbeddings
 
     this.title = fields?.title ?? this.title;
 
+    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
+
     this.outputDimensionality = fields?.outputDimensionality;
 
     if (this.title && this.taskType !== "RETRIEVAL_DOCUMENT") {
