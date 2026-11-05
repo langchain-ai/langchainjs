@@ -21,6 +21,23 @@ function throwIfRefused(message: BaseMessage | undefined): void {
 }
 
 /**
+ * The `StructuredOutputParsingError` behind `error`, if any.
+ *
+ * Middleware listed after this one wraps errors in `MiddlewareError`, so the
+ * parsing error can sit further down the `cause` chain.
+ */
+function parsingError(
+  error: unknown
+): StructuredOutputParsingError | undefined {
+  let current = error;
+  for (let depth = 0; depth < 32 && current != null; depth += 1) {
+    if (current instanceof StructuredOutputParsingError) return current;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
+}
+
+/**
  * Middleware that throws {@link ModelRefusalError} when the model refuses.
  *
  * Providers report a refusal, such as a safety-policy refusal, as a successful
@@ -59,9 +76,7 @@ export function modelRefusalMiddleware() {
       try {
         response = await handler(request);
       } catch (error) {
-        if (error instanceof StructuredOutputParsingError) {
-          throwIfRefused(error.aiMessage);
-        }
+        throwIfRefused(parsingError(error)?.aiMessage);
         throw error;
       }
       // A parsed structured response comes back as `{ structuredResponse, messages }`.
