@@ -102,8 +102,14 @@ const mustacheTemplateToNodes = (
       // These should both be considered variables.
       nodes.push({ type: "variable", name: temp[1] });
 
-      // If this is a section with nested content, recursively process it
-      if (temp[0] === "#" && temp.length > 4 && Array.isArray(temp[4])) {
+      // If this is a section with nested content, recursively process it.
+      // Inverted sections only render when their key is falsy, so anything
+      // inside them is read from the outer input values.
+      if (
+        (temp[0] === "#" || temp[0] === "^") &&
+        temp.length > 4 &&
+        Array.isArray(temp[4])
+      ) {
         const newContext = [...context, temp[1]];
         const nestedNodes = mustacheTemplateToNodes(temp[4], newContext);
         nodes.push(...nestedNodes);

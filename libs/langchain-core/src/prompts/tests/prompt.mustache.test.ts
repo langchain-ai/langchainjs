@@ -1,5 +1,6 @@
 import { test, expect } from "vitest";
 import { PromptTemplate } from "../prompt.js";
+import { PipelinePromptTemplate } from "../pipeline.js";
 import { parseTemplate } from "../template.js";
 
 test("Single input variable.", async () => {
@@ -91,6 +92,39 @@ yo
 hello
 is a test.`);
   expect(promptWithRepeats.inputVariables).toEqual(["foo", "bar"]);
+});
+
+test("inverted section variables", async () => {
+  const template = `{{^items}}No items for {{name}}.{{/items}}`;
+  const prompt = PromptTemplate.fromTemplate(template, {
+    templateFormat: "mustache",
+  });
+  const formattedPrompt = await prompt.format({ items: [], name: "Bob" });
+  expect(formattedPrompt).toBe("No items for Bob.");
+  expect(prompt.inputVariables).toEqual(["items", "name"]);
+});
+
+test("inverted section variables are passed through a pipeline prompt", async () => {
+  const pipelinePrompt = new PipelinePromptTemplate({
+    pipelinePrompts: [
+      {
+        name: "summary",
+        prompt: PromptTemplate.fromTemplate(
+          `{{^items}}No items for {{name}}.{{/items}}`,
+          { templateFormat: "mustache" }
+        ),
+      },
+    ],
+    finalPrompt: PromptTemplate.fromTemplate(`{{summary}}`, {
+      templateFormat: "mustache",
+    }),
+  });
+  const formattedPrompt = await pipelinePrompt.format({
+    items: [],
+    name: "Bob",
+  });
+  expect(formattedPrompt).toBe("No items for Bob.");
+  expect(pipelinePrompt.inputVariables).toEqual(["items", "name"]);
 });
 
 test("Escaped variables", async () => {
