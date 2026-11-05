@@ -69,6 +69,8 @@ export function convertToV1FromChatCompletions(
       args: toolCall.args,
     });
   }
+  const refusal = refusalFromAdditionalKwargs(message);
+  if (refusal) blocks.push(refusal);
   return blocks;
 }
 
@@ -131,6 +133,8 @@ export function convertToV1FromChatCompletionsChunk(
       args: toolCall.args,
     });
   }
+  const refusal = refusalFromAdditionalKwargs(message);
+  if (refusal) blocks.push(refusal);
   return blocks;
 }
 
@@ -172,6 +176,15 @@ export function convertToV1FromChatCompletionsInput(
     }
   }
   return convertedBlocks;
+}
+
+function refusalFromAdditionalKwargs(
+  message: AIMessage
+): ContentBlock.Refusal | undefined {
+  const refusal = message.additional_kwargs?.refusal;
+  return _isString(refusal) && refusal.length > 0
+    ? { type: "refusal", refusal }
+    : undefined;
 }
 
 function convertResponsesAnnotation(
@@ -553,6 +566,24 @@ export function convertToV1FromResponses(
           textBlockKey,
         ];
       }
+    }
+    let hasRefusalPart = false;
+    for (const block of content) {
+      if (_isContentBlock(block, "refusal") && _isString(block.refusal)) {
+        hasRefusalPart = true;
+        yield [
+          {
+            type: "refusal",
+            refusal: block.refusal,
+            ...(_isString(block.id) ? { id: block.id } : {}),
+          },
+          undefined,
+        ];
+      }
+    }
+    if (!hasRefusalPart) {
+      const refusal = refusalFromAdditionalKwargs(message);
+      if (refusal) yield [refusal, undefined];
     }
     for (const toolCall of message.tool_calls ?? []) {
       yield [

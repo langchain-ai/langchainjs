@@ -1,7 +1,13 @@
 import { AIMessage } from "../ai.js";
 import { ContentBlock } from "../content/index.js";
 import type { StandardContentBlockTranslator } from "./index.js";
-import { iife, _isContentBlock, _isObject, _isString } from "./utils.js";
+import {
+  _geminiRefusalFromMetadata,
+  iife,
+  _isContentBlock,
+  _isObject,
+  _isString,
+} from "./utils.js";
 
 function convertToV1FromChatGoogleMessage(
   message: AIMessage
@@ -125,7 +131,10 @@ function convertToV1FromChatGoogleMessage(
       continue;
     }
   }
-  return Array.from(iterateContent());
+  const blocks = Array.from(iterateContent());
+  const refusal = _geminiRefusalFromMetadata(message.response_metadata);
+  if (refusal) blocks.push(refusal);
+  return blocks;
 }
 
 export const ChatGoogleTranslator: StandardContentBlockTranslator = {

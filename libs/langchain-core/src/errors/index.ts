@@ -1,6 +1,8 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { AIMessageChunk } from "../messages/ai.js";
+import type { BaseMessage } from "../messages/base.js";
+import type { ContentBlock } from "../messages/content/index.js";
 import { ns as baseNs } from "../utils/namespace.js";
 
 export type { BrandedClass } from "../utils/namespace.js";
@@ -227,6 +229,101 @@ export class ContextOverflowError extends ns.brand(
   static fromError(obj: Error): ContextOverflowError {
     const error = new ContextOverflowError(obj.message);
     error.cause = obj;
+    return error;
+  }
+}
+
+const DEFAULT_REFUSAL_MESSAGE = "Model refused to produce the requested output";
+// The symbol `ns.brand` sets on `ModelRefusalError` instances.
+const MODEL_REFUSAL_BRAND = Symbol.for("langchain.error.model-refusal");
+
+/**
+ * Error class representing a model refusal.
+ *
+ * Providers report a refusal, such as a safety-policy refusal, as a successful
+ * response rather than an error. LangChain raises this error where a refusal
+ * cannot be treated as an answer, for example when structured output has
+ * nothing to parse, or when an agent uses refusal middleware.
+ *
+ * The {@link ModelRefusalError} extends the {@link LangChainError} base class with
+ * the marker `"model-refusal"`. Retrying the same request is unlikely to succeed,
+ * so the error is marked as not retryable.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.withStructuredOutput(schema).invoke(input);
+ * } catch (err) {
+ *   if (ModelRefusalError.isInstance(err)) {
+ *     console.warn("Model refused:", err.message, err.rawMessage);
+ *   } else {
+ *     throw err;
+ *   }
+ * }
+ * ```
+ */
+export class ModelRefusalError extends ns.brand(
+  LangChainError,
+  "model-refusal"
+) {
+  readonly name = "ModelRefusalError";
+
+  /**
+   * The refused model response, if available.
+   */
+  rawMessage?: BaseMessage;
+
+  constructor(message?: string, fields?: { rawMessage?: BaseMessage }) {
+    super(message ?? DEFAULT_REFUSAL_MESSAGE);
+    this.rawMessage = fields?.rawMessage;
+    // The same request is likely to be refused again.
+    stampRetryable(this, false);
+  }
+
+  /**
+   * Creates a {@link ModelRefusalError} from a refusal content block.
+   *
+   * The message includes the provider's refusal `category`, when present, and
+   * the refusal text.
+   *
+   * @param refusal - The refusal content block from the model response.
+   * @param rawMessage - The refused model response.
+   */
+  static fromRefusal(
+    refusal: ContentBlock.Refusal,
+    rawMessage?: BaseMessage
+  ): ModelRefusalError {
+    let message = DEFAULT_REFUSAL_MESSAGE;
+    const category = refusal.extras?.category;
+    if (category) {
+      message += ` (category='${String(category)}')`;
+    }
+    if (refusal.refusal) {
+      message += `: ${refusal.refusal}`;
+    }
+    return new ModelRefusalError(message, { rawMessage });
+  }
+
+  /**
+   * Marks an existing error as a model refusal.
+   *
+   * Use this when a provider raises its own error for a refusal, such as a
+   * blocked prompt. The error keeps its class, and
+   * `ModelRefusalError.isInstance(error)` also returns `true`.
+   *
+   * @param error - The provider error to mark.
+   * @param rawMessage - The refused model response, if available.
+   * @returns The same error, marked as a refusal.
+   */
+  static markAsRefusal<T extends Error>(
+    error: T,
+    rawMessage?: BaseMessage
+  ): T & { rawMessage?: BaseMessage } {
+    Object.defineProperty(error, MODEL_REFUSAL_BRAND, { value: true });
+    if (rawMessage) {
+      Object.assign(error, { rawMessage });
+    }
+    stampRetryable(error, false);
     return error;
   }
 }

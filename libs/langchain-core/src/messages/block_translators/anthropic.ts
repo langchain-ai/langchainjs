@@ -288,6 +288,7 @@ export function convertToV1FromAnthropicInput(
 export function convertToV1FromAnthropicMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
+  let hasRefusal = false;
   function* iterateContent(): Iterable<ContentBlock.Standard> {
     const content =
       typeof message.content === "string"
@@ -507,6 +508,11 @@ export function convertToV1FromAnthropicMessage(
         yield { id: block.id, type: "non_standard", value: block };
         continue;
       } else {
+        if (_isContentBlock(block, "refusal") && _isString(block.refusal)) {
+          hasRefusal = true;
+          yield block as ContentBlock.Refusal;
+          continue;
+        }
         // For all other blocks, we try to convert them to a standard block
         const stdBlock = convertToV1FromAnthropicContentBlock(block);
         if (stdBlock) {
@@ -516,8 +522,22 @@ export function convertToV1FromAnthropicMessage(
       }
       yield { type: "non_standard", value: block };
     }
+    if (!hasRefusal && message.response_metadata?.stop_reason === "refusal") {
+      yield refusalFromStopDetails(message.response_metadata.stop_details);
+    }
   }
   return Array.from(iterateContent());
+}
+
+function refusalFromStopDetails(details: unknown): ContentBlock.Refusal {
+  const stopDetails = _isObject(details) ? details : {};
+  const explanation = stopDetails.explanation;
+  const category = stopDetails.category;
+  return {
+    type: "refusal",
+    refusal: _isString(explanation) ? explanation : "",
+    ...(_isString(category) ? { extras: { category } } : {}),
+  };
 }
 
 export const ChatAnthropicTranslator: StandardContentBlockTranslator = {

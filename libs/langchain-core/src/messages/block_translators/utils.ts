@@ -37,3 +37,43 @@ export function safeParseJson<T = unknown>(value: string): T | undefined {
 }
 
 export const iife = <T>(fn: () => T): T => fn();
+
+const GEMINI_REFUSAL_FINISH_REASONS = new Set([
+  "SAFETY",
+  "PROHIBITED_CONTENT",
+  "BLOCKLIST",
+]);
+
+/**
+ * Builds a refusal block from a Gemini finish reason or prompt block reason.
+ *
+ * Gemini reports a blocked reply as a finish reason on the candidate, and a
+ * blocked prompt as a block reason in the prompt feedback.
+ */
+export function _geminiRefusalFromMetadata(
+  metadata: Record<string, unknown> | undefined
+): ContentBlock.Refusal | undefined {
+  if (!_isObject(metadata)) return undefined;
+  const extras: Record<string, unknown> = {};
+  const finishReason = metadata.finishReason ?? metadata.finish_reason;
+  if (
+    _isString(finishReason) &&
+    GEMINI_REFUSAL_FINISH_REASONS.has(finishReason)
+  ) {
+    extras.finishReason = finishReason;
+  }
+  const feedback = metadata.promptFeedback ?? metadata.prompt_feedback;
+  const blockReason = _isObject(feedback)
+    ? (feedback.blockReason ?? feedback.block_reason)
+    : undefined;
+  if (_isString(blockReason) && blockReason !== "BLOCKED_REASON_UNSPECIFIED") {
+    extras.blockReason = blockReason;
+  }
+  if (Object.keys(extras).length === 0) return undefined;
+  const finishMessage = metadata.finishMessage ?? metadata.finish_message;
+  return {
+    type: "refusal",
+    refusal: _isString(finishMessage) ? finishMessage : "",
+    extras,
+  };
+}
