@@ -1,4 +1,5 @@
 /* oxlint-disable no-instanceof/no-instanceof */
+import type { AIMessage } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import { isGraphBubbleUp } from "@langchain/langgraph";
 
@@ -37,7 +38,12 @@ export class StructuredOutputParsingError extends Error {
 
   public readonly errors: string[];
 
-  constructor(toolName: string, errors: string[]) {
+  /**
+   * The model response that failed to parse, when available.
+   */
+  public readonly aiMessage?: AIMessage;
+
+  constructor(toolName: string, errors: string[], aiMessage?: AIMessage) {
     super(
       `Failed to parse structured output for tool '${toolName}':${errors
         .map((e) => `\n  - ${e}`)
@@ -45,6 +51,7 @@ export class StructuredOutputParsingError extends Error {
     );
     this.toolName = toolName;
     this.errors = errors;
+    this.aiMessage = aiMessage;
   }
 }
 
