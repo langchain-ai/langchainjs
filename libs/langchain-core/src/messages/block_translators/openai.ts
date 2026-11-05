@@ -10,6 +10,16 @@ import {
   iife,
 } from "./utils.js";
 
+/** The refusal Chat Completions and Responses keep in `additional_kwargs`. */
+function refusalFromAdditionalKwargs(
+  message: AIMessage
+): ContentBlock.Refusal | undefined {
+  const refusal = message.additional_kwargs?.refusal;
+  return _isString(refusal) && refusal.length > 0
+    ? { type: "refusal", refusal }
+    : undefined;
+}
+
 /**
  * Converts a ChatOpenAICompletions message to an array of v1 standard content blocks.
  *
@@ -176,15 +186,6 @@ export function convertToV1FromChatCompletionsInput(
     }
   }
   return convertedBlocks;
-}
-
-function refusalFromAdditionalKwargs(
-  message: AIMessage
-): ContentBlock.Refusal | undefined {
-  const refusal = message.additional_kwargs?.refusal;
-  return _isString(refusal) && refusal.length > 0
-    ? { type: "refusal", refusal }
-    : undefined;
 }
 
 function convertResponsesAnnotation(
