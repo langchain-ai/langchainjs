@@ -5,6 +5,7 @@ import { ModelRefusalError } from "@langchain/core/errors";
 import { fakeModel } from "@langchain/core/testing";
 
 import { createAgent } from "../../index.js";
+import { createMiddleware } from "../../middleware.js";
 import { providerStrategy, toolStrategy } from "../../responses.js";
 import { modelFallbackMiddleware } from "../modelFallback.js";
 import { modelRefusalMiddleware } from "../modelRefusal.js";
@@ -81,6 +82,20 @@ describe("modelRefusalMiddleware", () => {
       tools: [],
       responseFormat: providerStrategy(z.object({ summary: z.string() })),
       middleware: [modelRefusalMiddleware()],
+    });
+    await expect(agent.invoke(ask)).rejects.toThrow(ModelRefusalError);
+  });
+
+  it("throws on a providerStrategy refusal wrapped by later middleware", async () => {
+    const inner = createMiddleware({
+      name: "Inner",
+      wrapModelCall: (request, handler) => handler(request),
+    });
+    const agent = createAgent({
+      model: fakeModel().respond(refusal()),
+      tools: [],
+      responseFormat: providerStrategy(z.object({ summary: z.string() })),
+      middleware: [modelRefusalMiddleware(), inner],
     });
     await expect(agent.invoke(ask)).rejects.toThrow(ModelRefusalError);
   });
