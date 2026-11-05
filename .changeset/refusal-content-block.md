@@ -1,5 +1,5 @@
 ---
-"@langchain/core": minor
+"@langchain/core": patch
 ---
 
 feat(core): add a standard `refusal` content block and `ModelRefusalError`

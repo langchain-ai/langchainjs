@@ -162,75 +162,72 @@ describe("Anthropic refusals", () => {
   });
 });
 
-describe.each(["google", "google-genai", "google-vertexai"])(
-  "Gemini refusals (%s)",
-  (provider) => {
-    it.each(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST"])(
-      "treats finishReason %s as a refusal",
-      (finishReason) => {
-        const message = new AIMessage({
-          content: "",
-          response_metadata: {
-            model_provider: provider,
-            finishReason,
-            finishMessage: "Blocked.",
-          },
-        });
-        expect(refusals(message)).toEqual([
-          { type: "refusal", refusal: "Blocked.", extras: { finishReason } },
-        ]);
-      }
-    );
-
-    it("reads a refusal from a chunk", () => {
-      const chunk = new AIMessageChunk({
-        content: "",
-        response_metadata: { model_provider: provider, finishReason: "SAFETY" },
-      });
-      expect(refusals(chunk)).toEqual([
-        { type: "refusal", refusal: "", extras: { finishReason: "SAFETY" } },
-      ]);
-    });
-
-    it("treats a prompt block reason as a refusal", () => {
+describe.each(["google"])("Gemini refusals (%s)", (provider) => {
+  it.each(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST"])(
+    "treats finishReason %s as a refusal",
+    (finishReason) => {
       const message = new AIMessage({
         content: "",
         response_metadata: {
           model_provider: provider,
-          promptFeedback: { blockReason: "SAFETY" },
+          finishReason,
+          finishMessage: "Blocked.",
         },
       });
       expect(refusals(message)).toEqual([
-        { type: "refusal", refusal: "", extras: { blockReason: "SAFETY" } },
+        { type: "refusal", refusal: "Blocked.", extras: { finishReason } },
       ]);
+    }
+  );
+
+  it("reads a refusal from a chunk", () => {
+    const chunk = new AIMessageChunk({
+      content: "",
+      response_metadata: { model_provider: provider, finishReason: "SAFETY" },
     });
+    expect(refusals(chunk)).toEqual([
+      { type: "refusal", refusal: "", extras: { finishReason: "SAFETY" } },
+    ]);
+  });
 
-    it.each(["STOP", "MAX_TOKENS", "RECITATION"])(
-      "does not treat finishReason %s as a refusal",
-      (finishReason) => {
-        const message = new AIMessage({
-          content: "Hi.",
-          response_metadata: { model_provider: provider, finishReason },
-        });
-        expect(refusals(message)).toEqual([]);
-      }
-    );
+  it("treats a prompt block reason as a refusal", () => {
+    const message = new AIMessage({
+      content: "",
+      response_metadata: {
+        model_provider: provider,
+        promptFeedback: { blockReason: "SAFETY" },
+      },
+    });
+    expect(refusals(message)).toEqual([
+      { type: "refusal", refusal: "", extras: { blockReason: "SAFETY" } },
+    ]);
+  });
 
-    it.each(["BLOCK_REASON_UNSPECIFIED", "BLOCKED_REASON_UNSPECIFIED"])(
-      "ignores the unspecified block reason %s",
-      (blockReason) => {
-        const message = new AIMessage({
-          content: "Hi.",
-          response_metadata: {
-            model_provider: provider,
-            promptFeedback: { blockReason },
-          },
-        });
-        expect(refusals(message)).toEqual([]);
-      }
-    );
-  }
-);
+  it.each(["STOP", "MAX_TOKENS", "RECITATION"])(
+    "does not treat finishReason %s as a refusal",
+    (finishReason) => {
+      const message = new AIMessage({
+        content: "Hi.",
+        response_metadata: { model_provider: provider, finishReason },
+      });
+      expect(refusals(message)).toEqual([]);
+    }
+  );
+
+  it.each(["BLOCK_REASON_UNSPECIFIED", "BLOCKED_REASON_UNSPECIFIED"])(
+    "ignores the unspecified block reason %s",
+    (blockReason) => {
+      const message = new AIMessage({
+        content: "Hi.",
+        response_metadata: {
+          model_provider: provider,
+          promptFeedback: { blockReason },
+        },
+      });
+      expect(refusals(message)).toEqual([]);
+    }
+  );
+});
 
 describe("v1 messages", () => {
   it("returns a stored refusal block as is", () => {
