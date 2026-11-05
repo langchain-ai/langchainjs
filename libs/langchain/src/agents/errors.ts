@@ -133,7 +133,8 @@ export class MiddlewareError extends Error {
     if (isGraphBubbleUp(error)) {
       return error;
     }
-    // Callers catch refusals by type, as they do outside agents.
+    // Pass through so callers can catch it by type and retry middleware sees
+    // its non-retryable flag.
     if (ModelRefusalError.isInstance(error)) {
       return error;
     }

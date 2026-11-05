@@ -95,6 +95,31 @@ describe("modelRefusalMiddleware", () => {
     await expect(agent.invoke(ask)).rejects.toThrow(ModelRefusalError);
   });
 
+  it("returns a parsed providerStrategy response", async () => {
+    const agent = createAgent({
+      model: fakeModel().respond(new AIMessage('{"summary": "a"}')),
+      tools: [],
+      responseFormat: providerStrategy(z.object({ summary: z.string() })),
+      middleware: [modelRefusalMiddleware()],
+    });
+    const result = await agent.invoke(ask);
+    expect(result.structuredResponse).toEqual({ summary: "a" });
+  });
+
+  it("returns a parsed toolStrategy response", async () => {
+    const responseFormat = toolStrategy(z.object({ summary: z.string() }));
+    const agent = createAgent({
+      model: fakeModel().respondWithTools([
+        { name: responseFormat[0].name, args: { summary: "a" }, id: "call_1" },
+      ]),
+      tools: [],
+      responseFormat,
+      middleware: [modelRefusalMiddleware()],
+    });
+    const result = await agent.invoke(ask);
+    expect(result.structuredResponse).toEqual({ summary: "a" });
+  });
+
   it("keeps the parse error when a providerStrategy failure is not a refusal", async () => {
     const agent = createAgent({
       model: fakeModel().respond(new AIMessage("not json")),
