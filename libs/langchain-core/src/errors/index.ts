@@ -277,7 +277,6 @@ export class ModelRefusalError extends ns.brand(
   constructor(message?: string, fields?: { rawMessage?: BaseMessage }) {
     super(message ?? DEFAULT_REFUSAL_MESSAGE);
     this.rawMessage = fields?.rawMessage;
-    // The same request is likely to be refused again.
     stampRetryable(this, false);
   }
 
