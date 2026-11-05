@@ -850,8 +850,6 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
     if (!rawResponse.choices[0]?.finish_reason) {
       delete responseMetadata.usage;
       delete messageChunk.usage_metadata;
-    } else {
-      messageChunk.usage_metadata = responseMetadata.usage;
     }
     return messageChunk;
   }
