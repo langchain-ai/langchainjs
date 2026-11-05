@@ -1908,7 +1908,10 @@ export class ChatAnthropicMessages<
         } as Partial<CallOptions>);
 
         const raiseIfNoToolCalls = (message: AIMessageChunk) => {
-          if (!message.tool_calls || message.tool_calls.length === 0) {
+          if (
+            (!message.tool_calls || message.tool_calls.length === 0) &&
+            !message.contentBlocks.some((block) => block.type === "refusal")
+          ) {
             throw new Error(thinkingAdmonition);
           }
           return message;

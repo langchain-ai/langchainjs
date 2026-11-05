@@ -301,6 +301,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       if (providerReasoningContent !== undefined) {
         additional_kwargs.reasoning_content = providerReasoningContent;
       }
+      if (message.refusal) {
+        additional_kwargs.refusal = message.refusal;
+      }
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
@@ -420,6 +423,9 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   }
   if (delta.reasoning_content !== undefined) {
     additional_kwargs.reasoning_content = delta.reasoning_content;
+  }
+  if (delta.refusal) {
+    additional_kwargs.refusal = delta.refusal;
   }
 
   if (delta.audio) {
@@ -842,6 +848,9 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             }
             if (m.type === "text") {
               return liftExtrasPromptCacheBreakpoint(m);
+            }
+            if (m.type === "refusal") {
+              return { type: "refusal", refusal: String(m.refusal ?? "") };
             }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
