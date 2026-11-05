@@ -1,6 +1,7 @@
 /* oxlint-disable no-instanceof/no-instanceof */
 import type { AIMessage } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
+import { ModelRefusalError } from "@langchain/core/errors";
 import { isGraphBubbleUp } from "@langchain/langgraph";
 
 export class MultipleToolsBoundError extends Error {
@@ -119,16 +120,21 @@ export class MiddlewareError extends Error {
 
   /**
    * Wrap an error in a MiddlewareError, unless it's a GraphBubbleUp error
-   * (like GraphInterrupt) which should propagate unchanged.
+   * (like GraphInterrupt) or a {@link ModelRefusalError}, which propagate unchanged.
    *
    * @param error - The error to wrap
    * @param middlewareName - The name of the middleware that threw the error
-   * @returns The original error if it's a GraphBubbleUp, otherwise a new MiddlewareError
+   * @returns The original error if it's a GraphBubbleUp or a ModelRefusalError,
+   * otherwise a new MiddlewareError
    */
   static wrap(error: unknown, middlewareName: string): Error {
     // Don't wrap GraphBubbleUp errors (GraphInterrupt, NodeInterrupt, etc.)
     // These are control flow mechanisms that need to bubble up unchanged
     if (isGraphBubbleUp(error)) {
+      return error;
+    }
+    // Callers catch refusals by type, as they do outside agents.
+    if (ModelRefusalError.isInstance(error)) {
       return error;
     }
     return new MiddlewareError(error, middlewareName);
