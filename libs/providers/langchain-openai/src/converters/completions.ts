@@ -688,8 +688,8 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
     const refusal = message.contentBlocks.find(
       (block) => block.type === "refusal"
     );
-    if (refusal) {
-      completionParam.refusal = String(refusal.refusal ?? "");
+    if (refusal?.refusal) {
+      completionParam.refusal = String(refusal.refusal);
     }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
@@ -703,13 +703,20 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
     // `content` is an empty array ("empty array. Expected an array with minimum
     // length 1"). A tool-call-only AIMessage (all content blocks are tool_call
     // blocks, so the text filter yields []) must therefore send `content: null`
-    // instead of `[]`; tool_calls or `refusal` carry the payload.
+    // instead of `[]`; tool_calls carry the payload.
     if (
       Array.isArray(completionParam.content) &&
       completionParam.content.length === 0 &&
-      (completionParam.tool_calls != null || completionParam.refusal != null)
+      completionParam.tool_calls != null
     ) {
       completionParam.content = null;
+    } else if (
+      Array.isArray(completionParam.content) &&
+      completionParam.content.length === 0 &&
+      completionParam.refusal != null
+    ) {
+      // Content is required without tool calls; the refusal carries the payload.
+      completionParam.content = "";
     }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {

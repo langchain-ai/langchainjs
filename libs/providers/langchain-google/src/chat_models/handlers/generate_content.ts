@@ -5,7 +5,6 @@ import {
   type UsageMetadata,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
-import { ModelRefusalError } from "@langchain/core/errors";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
@@ -29,8 +28,8 @@ import {
   usageMetadataToTokenUsage,
 } from "../../utils/metadata.js";
 import { iife } from "../../utils/misc.js";
+import { promptBlockedError } from "../../utils/refusal.js";
 import {
-  PromptBlockedError,
   NoCandidatesError,
   RequestError,
 } from "../../utils/errors.js";
@@ -65,23 +64,6 @@ import type {
 import { settableServiceTier } from "../types.js";
 
 type ServiceTier = Gemini.ServiceTier;
-
-const UNSPECIFIED_BLOCK_REASONS = new Set<string>([
-  "BLOCK_REASON_UNSPECIFIED",
-  "BLOCKED_REASON_UNSPECIFIED",
-]);
-
-/** Builds the error for a blocked prompt, marked as a refusal when it is one. */
-function promptBlockedError(
-  promptFeedback: Gemini.GenContent.GenerateContentResponse["promptFeedback"] &
-    object
-): PromptBlockedError {
-  const error = PromptBlockedError.fromPromptFeedback(promptFeedback);
-  if (!UNSPECIFIED_BLOCK_REASONS.has(String(promptFeedback.blockReason))) {
-    ModelRefusalError.markAsRefusal(error);
-  }
-  return error;
-}
 
 /**
  * Concrete wire protocol handler for Google's Generate Content API

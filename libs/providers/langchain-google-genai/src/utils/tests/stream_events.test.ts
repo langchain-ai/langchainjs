@@ -1,4 +1,6 @@
 import { describe, test, expect } from "vitest";
+import { ModelRefusalError } from "@langchain/core/errors";
+import { AIMessage } from "@langchain/core/messages";
 import type { EnhancedGenerateContentResponse } from "@google/generative-ai";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertGoogleGenAIStream } from "../stream_events.js";
@@ -85,5 +87,33 @@ describe("convertGoogleGenAIStream", () => {
     ).toMatchObject({
       content: { reasoning: "Let me think" },
     });
+  });
+});
+
+describe("refusals", () => {
+  test("throws a refusal for a blocked prompt", async () => {
+    const error = await collectEvents([
+      { promptFeedback: { blockReason: "SAFETY" } },
+    ]).catch((e: unknown) => e);
+    expect(ModelRefusalError.isInstance(error)).toBe(true);
+  });
+
+  test("keeps the finish reason so the message gets a refusal block", async () => {
+    const events = await collectEvents([
+      { candidates: [{ content: { parts: [{ text: "Partial" }] } }] },
+      { candidates: [{ finishReason: "SAFETY" }] },
+    ]);
+    const finish = events.find((e) => e.event === "message-finish") as {
+      responseMetadata: Record<string, unknown>;
+    };
+
+    expect(finish.responseMetadata.finishReason).toBe("SAFETY");
+    const message = new AIMessage({
+      content: "Partial",
+      response_metadata: finish.responseMetadata,
+    });
+    expect(message.contentBlocks).toContainEqual(
+      expect.objectContaining({ type: "refusal" })
+    );
   });
 });

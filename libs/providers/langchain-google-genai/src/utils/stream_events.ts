@@ -11,7 +11,8 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
-import { convertUsageMetadata } from "./common.js";
+import { ModelRefusalError } from "@langchain/core/errors";
+import { blockedPromptError, convertUsageMetadata } from "./common.js";
 
 export interface ConvertGoogleGenAIStreamOptions {
   streamUsage?: boolean;
@@ -35,6 +36,8 @@ export async function* convertGoogleGenAIStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason = "stop";
+  // Kept so the finished message gets the same refusal block as `invoke`.
+  let providerFinishReason: string | undefined;
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -68,9 +71,15 @@ export async function* convertGoogleGenAIStream(
       yield { event: "usage" as const, usage: usageSnapshot };
     }
 
+    if (!response.candidates?.length) {
+      const error = blockedPromptError(response.promptFeedback?.blockReason);
+      if (ModelRefusalError.isInstance(error)) throw error;
+    }
+
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
       finishReason = mapGeminiFinishReason(candidate.finishReason);
+      providerFinishReason = candidate.finishReason;
     }
 
     const parts = candidate?.content?.parts;
@@ -172,7 +181,10 @@ export async function* convertGoogleGenAIStream(
     event: "message-finish" as const,
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
-    responseMetadata: { model_provider: "google-genai" },
+    responseMetadata: {
+      model_provider: "google-genai",
+      ...(providerFinishReason ? { finishReason: providerFinishReason } : {}),
+    },
   };
 }
 

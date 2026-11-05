@@ -63,7 +63,7 @@ const REFUSAL_FINISH_REASONS = new Set<string>([
 ]);
 
 /** Error for a response with no candidates, marked as a refusal when it is one. */
-function blockedPromptError(blockReason: string | undefined) {
+export function blockedPromptError(blockReason: string | undefined) {
   const error = new EmptyContentError({ blockReason });
   if (blockReason && !UNSPECIFIED_BLOCK_REASONS.has(blockReason)) {
     ModelRefusalError.markAsRefusal(error);
