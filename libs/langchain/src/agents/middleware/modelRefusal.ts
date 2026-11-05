@@ -1,5 +1,9 @@
 import { ModelRefusalError } from "@langchain/core/errors";
-import type { BaseMessage, ContentBlock } from "@langchain/core/messages";
+import {
+  AIMessage,
+  type BaseMessage,
+  type ContentBlock,
+} from "@langchain/core/messages";
 
 import { StructuredOutputParsingError } from "../errors.js";
 import { createMiddleware } from "../middleware.js";
@@ -60,7 +64,13 @@ export function modelRefusalMiddleware() {
         }
         throw error;
       }
-      throwIfRefused(response);
+      // A parsed structured response comes back as `{ structuredResponse, messages }`.
+      const messages: unknown[] = AIMessage.isInstance(response)
+        ? [response]
+        : ((response as { messages?: unknown[] }).messages ?? []);
+      for (const message of messages) {
+        if (AIMessage.isInstance(message)) throwIfRefused(message);
+      }
       return response;
     },
   });
