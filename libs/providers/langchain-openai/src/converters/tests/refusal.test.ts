@@ -107,7 +107,7 @@ describe("Chat Completions refusal replay", () => {
 
     expect(params[0]).toMatchObject({
       role: "assistant",
-      content: null,
+      content: "",
       refusal: "No.",
     });
   });
