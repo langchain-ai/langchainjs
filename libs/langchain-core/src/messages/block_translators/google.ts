@@ -16,9 +16,9 @@ const GEMINI_REFUSAL_FINISH_REASONS = new Set([
  * `PromptBlockedError` for it instead.
  */
 function refusalFromMetadata(
-  metadata: Record<string, unknown> | undefined
+  message: AIMessage
 ): ContentBlock.Refusal | undefined {
-  if (!_isObject(metadata)) return undefined;
+  const metadata = message.response_metadata;
   // `invoke` sets `finish_reason`; streaming sets `finishReason`.
   const finishReason = metadata.finishReason ?? metadata.finish_reason;
   if (
@@ -157,7 +157,7 @@ function convertToV1FromChatGoogleMessage(
     }
   }
   const blocks = Array.from(iterateContent());
-  const refusal = refusalFromMetadata(message.response_metadata);
+  const refusal = refusalFromMetadata(message);
   if (refusal) blocks.push(refusal);
   return blocks;
 }
