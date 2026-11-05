@@ -412,7 +412,7 @@ describe("GenerateContentApiHandler", () => {
 
     test.each([
       ["SAFETY", true],
-      ["BLOCKED_REASON_UNSPECIFIED", false],
+      ["BLOCK_REASON_UNSPECIFIED", false],
     ])(
       "marks a streamed %s prompt block as a refusal: %s",
       async (blockReason, isRefusal) => {
