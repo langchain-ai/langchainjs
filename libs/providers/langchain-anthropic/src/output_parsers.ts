@@ -7,6 +7,8 @@ import {
   JsonOutputKeyToolsParserParamsSerializable,
 } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
+import { ModelRefusalError } from "@langchain/core/errors";
+import type { ContentBlock } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
   interopSafeParseAsync,
@@ -109,7 +111,20 @@ export class AnthropicToolsOutputParser<
     }
   }
 
+  /**
+   * @throws {ModelRefusalError} If the model refused instead of answering.
+   */
   async parseResult(generations: ChatGeneration[]): Promise<T> {
+    const message = generations[0]?.message;
+    const refusal = message?.contentBlocks.find(
+      (block) => block.type === "refusal"
+    );
+    if (refusal) {
+      throw ModelRefusalError.fromRefusal(
+        refusal as ContentBlock.Refusal,
+        message
+      );
+    }
     const tools = generations.flatMap((generation) => {
       const { message } = generation;
       if (!Array.isArray(message.content)) {

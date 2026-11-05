@@ -23,7 +23,9 @@ import {
   OutputTokenDetails,
   ModalitiesTokenDetails,
   HumanMessage,
+  isBaseMessage,
 } from "@langchain/core/messages";
+import { ModelRefusalError } from "@langchain/core/errors";
 import {
   ChatGeneration,
   ChatGenerationChunk,
@@ -99,6 +101,13 @@ export interface DefaultGeminiSafetySettings {
   errorFinish?: string[];
 }
 
+const UNSPECIFIED_BLOCK_REASONS = [
+  "BLOCK_REASON_UNSPECIFIED",
+  "BLOCKED_REASON_UNSPECIFIED",
+];
+
+const REFUSAL_FINISH_REASONS = ["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST"];
+
 export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
   errorFinish = ["SAFETY", "RECITATION", "OTHER"];
 
@@ -114,7 +123,14 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
     const promptFeedback = data?.promptFeedback;
     const blockReason = promptFeedback?.blockReason;
     if (blockReason) {
-      throw new GoogleAISafetyError(response, `Prompt blocked: ${blockReason}`);
+      const error = new GoogleAISafetyError(
+        response,
+        `Prompt blocked: ${blockReason}`
+      );
+      if (!UNSPECIFIED_BLOCK_REASONS.includes(blockReason)) {
+        ModelRefusalError.markAsRefusal(error);
+      }
+      throw error;
     }
     return data;
   }
@@ -126,7 +142,14 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
     const firstCandidate = data?.candidates?.[0];
     const finishReason = firstCandidate?.finishReason;
     if (this.errorFinish.includes(finishReason)) {
-      throw new GoogleAISafetyError(response, `Finish reason: ${finishReason}`);
+      const error = new GoogleAISafetyError(
+        response,
+        `Finish reason: ${finishReason}`
+      );
+      if (REFUSAL_FINISH_REASONS.includes(finishReason)) {
+        ModelRefusalError.markAsRefusal(error);
+      }
+      throw error;
     }
     return data;
   }
@@ -154,7 +177,11 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
       } catch (xx) {
         // oxlint-disable-next-line no-instanceof/no-instanceof
         if (xx instanceof GoogleAISafetyError) {
-          throw new GoogleAISafetyError(response, xx.message);
+          const error = new GoogleAISafetyError(response, xx.message);
+          if (ModelRefusalError.isInstance(xx)) {
+            ModelRefusalError.markAsRefusal(error);
+          }
+          throw error;
         } else {
           throw xx;
         }
@@ -729,6 +756,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           content as ContentBlock.Multimodal.PlainText,
           "text/plain"
         );
+      case "refusal":
+        // Gemini has no input part for refusals.
+        return null;
       default:
         throw new Error(
           `Unsupported type "${
@@ -1133,6 +1163,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return ret;
   }
 
+  function replyToMessage(reply: unknown): BaseMessage | undefined {
+    if (isBaseMessage(reply)) {
+      return reply;
+    }
+    const generation =
+      (reply as ChatResult)?.generations?.[0] ?? (reply as ChatGeneration);
+    return isBaseMessage(generation?.message) ? generation.message : undefined;
+  }
+
   function safeResponseTo<RetType>(
     response: GoogleLLMResponse,
     responseTo: (response: GoogleLLMResponse) => RetType
@@ -1147,6 +1186,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       if (xx instanceof GoogleAISafetyError) {
         const ret = responseTo(xx.response);
         xx.reply = ret;
+        if (ModelRefusalError.isInstance(xx)) {
+          ModelRefusalError.markAsRefusal(xx, replyToMessage(ret));
+        }
       }
       throw xx;
     }

@@ -5,6 +5,7 @@ import {
   type UsageMetadata,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
+import { ModelRefusalError } from "@langchain/core/errors";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
@@ -167,7 +168,11 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
-      throw PromptBlockedError.fromPromptFeedback(data.promptFeedback);
+      const error = PromptBlockedError.fromPromptFeedback(data.promptFeedback);
+      if (data.promptFeedback.blockReason !== "BLOCK_REASON_UNSPECIFIED") {
+        ModelRefusalError.markAsRefusal(error);
+      }
+      throw error;
     }
 
     // Check if we have candidates

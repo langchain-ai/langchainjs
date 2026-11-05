@@ -36,6 +36,7 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
+import { ModelRefusalError } from "@langchain/core/errors";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
@@ -50,6 +51,16 @@ import {
 } from "../types.js";
 import { assertNoEmptyStringEnums } from "./validate_schema.js";
 import { EmptyContentError } from "./errors.js";
+
+const UNSPECIFIED_BLOCK_REASONS = new Set<string>([
+  "BLOCK_REASON_UNSPECIFIED",
+  "BLOCKED_REASON_UNSPECIFIED",
+]);
+const REFUSAL_FINISH_REASONS = new Set<string>([
+  "SAFETY",
+  "PROHIBITED_CONTENT",
+  "BLOCKLIST",
+]);
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -446,6 +457,9 @@ function _convertLangChainContentToPart(
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
+  } else if (content.type === "refusal") {
+    // Gemini has no input part for refusals.
+    return undefined;
   } else {
     if ("type" in content) {
       throw new Error(`Unknown content type ${content.type}`);
@@ -633,16 +647,22 @@ export function mapGenerateContentResultToChatResult(
     response.candidates.length === 0 ||
     !response.candidates[0]
   ) {
-    throw new EmptyContentError({
-      blockReason: response.promptFeedback?.blockReason,
-    });
+    const blockReason = response.promptFeedback?.blockReason;
+    const error = new EmptyContentError({ blockReason });
+    if (blockReason && !UNSPECIFIED_BLOCK_REASONS.has(blockReason)) {
+      ModelRefusalError.markAsRefusal(error);
+    }
+    throw error;
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
-    throw new EmptyContentError({
-      finishReason: generationInfo.finishReason,
-    });
+    const { finishReason } = generationInfo;
+    const error = new EmptyContentError({ finishReason });
+    if (finishReason && REFUSAL_FINISH_REASONS.has(finishReason)) {
+      ModelRefusalError.markAsRefusal(error);
+    }
+    throw error;
   }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
