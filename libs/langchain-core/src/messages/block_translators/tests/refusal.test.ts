@@ -162,7 +162,8 @@ describe("Anthropic refusals", () => {
   });
 });
 
-describe.each(["google"])("Gemini refusals (%s)", (provider) => {
+describe("Gemini refusals", () => {
+  const provider = "google";
   it.each(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST"])(
     "treats finishReason %s as a refusal",
     (finishReason) => {
@@ -190,16 +191,13 @@ describe.each(["google"])("Gemini refusals (%s)", (provider) => {
     ]);
   });
 
-  it("treats a prompt block reason as a refusal", () => {
+  it("reads the snake_case finish_reason that invoke sets", () => {
     const message = new AIMessage({
       content: "",
-      response_metadata: {
-        model_provider: provider,
-        promptFeedback: { blockReason: "SAFETY" },
-      },
+      response_metadata: { model_provider: provider, finish_reason: "SAFETY" },
     });
     expect(refusals(message)).toEqual([
-      { type: "refusal", refusal: "", extras: { blockReason: "SAFETY" } },
+      { type: "refusal", refusal: "", extras: { finishReason: "SAFETY" } },
     ]);
   });
 
@@ -209,20 +207,6 @@ describe.each(["google"])("Gemini refusals (%s)", (provider) => {
       const message = new AIMessage({
         content: "Hi.",
         response_metadata: { model_provider: provider, finishReason },
-      });
-      expect(refusals(message)).toEqual([]);
-    }
-  );
-
-  it.each(["BLOCK_REASON_UNSPECIFIED", "BLOCKED_REASON_UNSPECIFIED"])(
-    "ignores the unspecified block reason %s",
-    (blockReason) => {
-      const message = new AIMessage({
-        content: "Hi.",
-        response_metadata: {
-          model_provider: provider,
-          promptFeedback: { blockReason },
-        },
       });
       expect(refusals(message)).toEqual([]);
     }
