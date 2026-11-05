@@ -3,6 +3,8 @@ import {
   OutputParserException,
 } from "@langchain/core/output_parsers";
 import { ChatGeneration } from "@langchain/core/outputs";
+import { ModelRefusalError } from "@langchain/core/errors";
+import { findRefusal } from "./utils/refusal.js";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
   InteropZodType,
@@ -86,7 +88,15 @@ export class GoogleGenerativeAIToolsOutputParser<
     }
   }
 
+  /**
+   * @throws {ModelRefusalError} If the model refused instead of answering.
+   */
   async parseResult(generations: ChatGeneration[]): Promise<T> {
+    const message = generations[0]?.message;
+    const refusal = message ? findRefusal(message) : undefined;
+    if (refusal) {
+      throw ModelRefusalError.fromRefusal(refusal, message);
+    }
     const tools = generations.flatMap((generation) => {
       const { message } = generation;
       if (!("tool_calls" in message) || !Array.isArray(message.tool_calls)) {

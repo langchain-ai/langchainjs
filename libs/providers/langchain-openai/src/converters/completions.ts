@@ -681,6 +681,12 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
         role: "assistant",
         content: textContent,
       };
+    const refusal = message.contentBlocks.find(
+      (block) => block.type === "refusal"
+    );
+    if (refusal) {
+      completionParam.refusal = String(refusal.refusal ?? "");
+    }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
@@ -693,11 +699,11 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
     // `content` is an empty array ("empty array. Expected an array with minimum
     // length 1"). A tool-call-only AIMessage (all content blocks are tool_call
     // blocks, so the text filter yields []) must therefore send `content: null`
-    // instead of `[]`; tool_calls carry the payload.
+    // instead of `[]`; tool_calls or `refusal` carry the payload.
     if (
       Array.isArray(completionParam.content) &&
       completionParam.content.length === 0 &&
-      completionParam.tool_calls != null
+      (completionParam.tool_calls != null || completionParam.refusal != null)
     ) {
       completionParam.content = null;
     }
@@ -846,7 +852,10 @@ export const convertMessagesToCompletionsMessageParams: Converter<
               return liftExtrasPromptCacheBreakpoint(m);
             }
             if (m.type === "refusal") {
-              return { type: "refusal", refusal: String(m.refusal ?? "") };
+              // Only assistant messages accept refusal parts.
+              return role === "assistant"
+                ? { type: "refusal", refusal: String(m.refusal ?? "") }
+                : [];
             }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
@@ -880,6 +889,14 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     };
     if (message.name != null) {
       completionParam.name = message.name;
+    }
+    const keptRefusal = message.additional_kwargs.refusal;
+    if (
+      role === "assistant" &&
+      typeof keptRefusal === "string" &&
+      !(Array.isArray(content) && content.some((m) => m.type === "refusal"))
+    ) {
+      completionParam.refusal = keptRefusal;
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
