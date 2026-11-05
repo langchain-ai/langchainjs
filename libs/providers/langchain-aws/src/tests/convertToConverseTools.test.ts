@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
+import type { Tool as BedrockTool } from "@aws-sdk/client-bedrock-runtime";
 import {
+  convertToBedrockToolChoice,
   convertToConverseTools,
   supportedToolChoiceValuesForModel,
 } from "../utils/tools.js";
@@ -336,5 +338,109 @@ describe("supportedToolChoiceValuesForModel", () => {
     expect(
       supportedToolChoiceValuesForModel("mistral.mistral-7b-instruct-v0:2")
     ).toBeUndefined();
+  });
+});
+
+describe("convertToBedrockToolChoice", () => {
+  const tools: BedrockTool[] = [
+    {
+      toolSpec: {
+        name: "get_weather",
+        description: "Get the weather for a location",
+        inputSchema: {
+          json: {
+            type: "object",
+            properties: {
+              location: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+  ];
+  const claudeFields = {
+    model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
+    supportsToolChoiceValues: ["auto", "any", "tool"] as Array<
+      "auto" | "any" | "tool"
+    >,
+  };
+  const mistralLargeFields = {
+    model: "mistral.mistral-large-2407-v1:0",
+    supportsToolChoiceValues: ["auto", "any"] as Array<"auto" | "any" | "tool">,
+  };
+
+  it("maps 'any' to Bedrock's any choice", () => {
+    expect(convertToBedrockToolChoice("any", tools, claudeFields)).toEqual({
+      any: {},
+    });
+  });
+
+  it("maps 'auto' to Bedrock's auto choice", () => {
+    expect(convertToBedrockToolChoice("auto", tools, claudeFields)).toEqual({
+      auto: {},
+    });
+  });
+
+  it("maps a bare tool name to Bedrock's tool choice", () => {
+    expect(
+      convertToBedrockToolChoice("get_weather", tools, claudeFields)
+    ).toEqual({ tool: { name: "get_weather" } });
+  });
+
+  it("throws when a bare tool name is not in the tools list", () => {
+    expect(() =>
+      convertToBedrockToolChoice("unknown_tool", tools, claudeFields)
+    ).toThrow("Tool with name unknown_tool not found in tools list.");
+  });
+
+  it("maps 'required' to Bedrock's any choice", () => {
+    expect(convertToBedrockToolChoice("required", tools, claudeFields)).toEqual(
+      { any: {} }
+    );
+    expect(
+      convertToBedrockToolChoice("required", tools, mistralLargeFields)
+    ).toEqual({ any: {} });
+  });
+
+  it("maps a function tool choice to Bedrock's tool choice", () => {
+    expect(
+      convertToBedrockToolChoice(
+        { type: "function", function: { name: "get_weather" } },
+        tools,
+        claudeFields
+      )
+    ).toEqual({ tool: { name: "get_weather" } });
+  });
+
+  it("throws when a function tool choice names a tool not in the tools list", () => {
+    expect(() =>
+      convertToBedrockToolChoice(
+        { type: "function", function: { name: "unknown_tool" } },
+        tools,
+        claudeFields
+      )
+    ).toThrow("Tool with name unknown_tool not found in tools list.");
+  });
+
+  it("throws when the model does not support forcing a function tool choice", () => {
+    expect(() =>
+      convertToBedrockToolChoice(
+        { type: "function", function: { name: "get_weather" } },
+        tools,
+        mistralLargeFields
+      )
+    ).toThrow(
+      "Model mistral.mistral-large-2407-v1:0 does not currently support 'tool_choice' of type tool."
+    );
+  });
+
+  it("passes a Bedrock tool choice through unchanged", () => {
+    expect(
+      convertToBedrockToolChoice(
+        { tool: { name: "get_weather" } },
+        tools,
+        claudeFields
+      )
+    ).toEqual({ tool: { name: "get_weather" } });
   });
 });
