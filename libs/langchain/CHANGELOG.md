@@ -1,5 +1,11 @@
 # langchain
 
+## 1.6.2
+
+### Patch Changes
+
+- [#11596](https://github.com/langchain-ai/langchainjs/pull/11596) [`db829f1`](https://github.com/langchain-ai/langchainjs/commit/db829f1cf96241215006acbaaa6c9138d6b24b09) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `tracePolicy` to `createMiddleware`, applied to the middleware's lifecycle hook runs. It only changes what `LangChainTracer` sends to LangSmith (use `omitPayload` from `@langchain/core/tracers/tracer_langchain`). Requires `@langchain/langgraph` >= 1.6.1.
+
 ## 1.6.1
 
 ### Patch Changes

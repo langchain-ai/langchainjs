@@ -1,5 +1,15 @@
 # @langchain/core
 
+## 1.3.5
+
+### Patch Changes
+
+- [#10961](https://github.com/langchain-ai/langchainjs/pull/10961) [`674b755`](https://github.com/langchain-ai/langchainjs/commit/674b755e17008b3875228feb63eeaec13c21c52a) Thanks [@hntrl](https://github.com/hntrl)! - fix(prompts): enforce maximum prompt template nesting depth
+
+  Add recursion depth guards for mustache template parsing and dict prompt template traversal to prevent stack-exhaustion DoS from deeply nested attacker-controlled templates.
+
+- [#12108](https://github.com/langchain-ai/langchainjs/pull/12108) [`fb61799`](https://github.com/langchain-ai/langchainjs/commit/fb6179926d70c76cc81a238aed4f2ad8c9531d4b) Thanks [@casparb](https://github.com/casparb)! - fix(core): end the `tool()` run when its signal is already aborted
+
 ## 1.3.4
 
 ### Patch Changes
