@@ -14,7 +14,7 @@ import {
 function refusalFromAdditionalKwargs(
   message: AIMessage
 ): ContentBlock.Refusal | undefined {
-  const refusal = message.additional_kwargs?.refusal;
+  const refusal = message.additional_kwargs.refusal;
   return _isString(refusal) && refusal.length > 0
     ? { type: "refusal", refusal }
     : undefined;

@@ -525,10 +525,10 @@ export function convertToV1FromAnthropicMessage(
     }
     // Streamed chunks carry `message_delta` fields in `additional_kwargs`.
     const stopFields =
-      message.response_metadata?.stop_reason !== undefined
+      message.response_metadata.stop_reason !== undefined
         ? message.response_metadata
         : message.additional_kwargs;
-    if (!hasRefusal && stopFields?.stop_reason === "refusal") {
+    if (!hasRefusal && stopFields.stop_reason === "refusal") {
       yield refusalFromStopDetails(stopFields.stop_details);
     }
   }
