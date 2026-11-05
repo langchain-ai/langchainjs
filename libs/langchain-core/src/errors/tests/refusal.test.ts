@@ -51,6 +51,12 @@ describe("ModelRefusalError", () => {
     expect(getRetryable(error)).toBe(false);
   });
 
+  it("returns a frozen error unchanged", () => {
+    const error = Object.freeze(new Error("x"));
+    expect(ModelRefusalError.markAsRefusal(error)).toBe(error);
+    expect(ModelRefusalError.isInstance(error)).toBe(false);
+  });
+
   it("uses the same brand as ModelRefusalError instances", () => {
     const brands = Object.getOwnPropertySymbols(new ModelRefusalError());
     const marked = Object.getOwnPropertySymbols(

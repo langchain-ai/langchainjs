@@ -53,6 +53,30 @@ describe("parsers raise ModelRefusalError on a refusal", () => {
     );
   });
 
+  it("does not throw on partial results", async () => {
+    await expect(
+      new JsonOutputParser().parsePartialResult([generation(REFUSED)])
+    ).resolves.toBeNull();
+    await expect(
+      new JsonOutputToolsParser().parsePartialResult([generation(REFUSED)])
+    ).resolves.toEqual([]);
+  });
+
+  it("ignores translator errors and parses as before", async () => {
+    const message = new AIMessage('{"answer": "4"}');
+    const result = generation(message);
+    Object.defineProperty(message, "contentBlocks", {
+      get() {
+        throw new Error("translator failed");
+      },
+    });
+    await expect(new JsonOutputParser().parseResult([result])).resolves.toEqual(
+      {
+        answer: "4",
+      }
+    );
+  });
+
   it("still parses a normal message", async () => {
     const message = new AIMessage('{"answer": "4"}');
     await expect(

@@ -577,13 +577,13 @@ export function convertToV1FromResponses(
             refusal: block.refusal,
             ...(_isString(block.id) ? { id: block.id } : {}),
           },
-          undefined,
+          textBlockKey,
         ];
       }
     }
     if (!hasRefusalPart) {
       const refusal = refusalFromAdditionalKwargs(message);
-      if (refusal) yield [refusal, undefined];
+      if (refusal) yield [refusal, textBlockKey];
     }
     for (const toolCall of message.tool_calls ?? []) {
       yield [

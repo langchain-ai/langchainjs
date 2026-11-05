@@ -48,6 +48,24 @@ describe("OpenAI refusals", () => {
     ]);
   });
 
+  it("keeps a Responses refusal next to its message item", () => {
+    const message = new AIMessage({
+      content: [{ type: "refusal", refusal: "No.", id: "msg_1" }],
+      tool_calls: [{ id: "call_1", name: "search", args: {} }],
+      response_metadata: {
+        model_provider: "openai",
+        output: [
+          { type: "message", id: "msg_1" },
+          { type: "function_call", call_id: "call_1" },
+        ],
+      },
+    });
+    expect(message.contentBlocks.map((block) => block.type)).toEqual([
+      "refusal",
+      "tool_call",
+    ]);
+  });
+
   it("ignores an empty refusal", () => {
     const message = new AIMessage({
       content: "Hello",
@@ -78,6 +96,20 @@ describe("Anthropic refusals", () => {
         refusal: "Blocked under the usage policy.",
         extras: { category: "cyber" },
       },
+    ]);
+  });
+
+  it("reads streamed stop fields from additional_kwargs", () => {
+    const chunk = new AIMessageChunk({
+      content: [],
+      additional_kwargs: {
+        stop_reason: "refusal",
+        stop_details: { category: "cyber", explanation: "Blocked." },
+      },
+      response_metadata: { model_provider: "anthropic" },
+    });
+    expect(refusals(chunk)).toEqual([
+      { type: "refusal", refusal: "Blocked.", extras: { category: "cyber" } },
     ]);
   });
 
@@ -149,6 +181,16 @@ describe.each(["google", "google-genai", "google-vertexai"])(
         ]);
       }
     );
+
+    it("reads a refusal from a chunk", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        response_metadata: { model_provider: provider, finishReason: "SAFETY" },
+      });
+      expect(refusals(chunk)).toEqual([
+        { type: "refusal", refusal: "", extras: { finishReason: "SAFETY" } },
+      ]);
+    });
 
     it("treats a prompt block reason as a refusal", () => {
       const message = new AIMessage({

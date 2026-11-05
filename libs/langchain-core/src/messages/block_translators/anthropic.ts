@@ -508,6 +508,7 @@ export function convertToV1FromAnthropicMessage(
         yield { id: block.id, type: "non_standard", value: block };
         continue;
       } else {
+        // Anthropic has no refusal part; this is a stored standard block.
         if (_isContentBlock(block, "refusal") && _isString(block.refusal)) {
           hasRefusal = true;
           yield block as ContentBlock.Refusal;
@@ -522,8 +523,13 @@ export function convertToV1FromAnthropicMessage(
       }
       yield { type: "non_standard", value: block };
     }
-    if (!hasRefusal && message.response_metadata?.stop_reason === "refusal") {
-      yield refusalFromStopDetails(message.response_metadata.stop_details);
+    // Streamed chunks carry `message_delta` fields in `additional_kwargs`.
+    const stopFields =
+      message.response_metadata?.stop_reason !== undefined
+        ? message.response_metadata
+        : message.additional_kwargs;
+    if (!hasRefusal && stopFields?.stop_reason === "refusal") {
+      yield refusalFromStopDetails(stopFields.stop_details);
     }
   }
   return Array.from(iterateContent());

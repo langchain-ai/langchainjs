@@ -14,7 +14,13 @@ export function throwIfRefused(
   if (!generation || !("message" in generation)) return;
   const { message } = generation;
   if (!isBaseMessage(message)) return;
-  for (const block of message.contentBlocks) {
+  let blocks;
+  try {
+    blocks = message.contentBlocks;
+  } catch {
+    return;
+  }
+  for (const block of blocks) {
     if (block.type === "refusal") {
       throw ModelRefusalError.fromRefusal(
         block as ContentBlock.Refusal,

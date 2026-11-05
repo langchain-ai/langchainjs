@@ -309,7 +309,8 @@ export class ModelRefusalError extends ns.brand(
    *
    * Use this when a provider raises its own error for a refusal, such as a
    * blocked prompt. The error keeps its class, and
-   * `ModelRefusalError.isInstance(error)` also returns `true`.
+   * `ModelRefusalError.isInstance(error)` also returns `true`. It does not
+   * make the error a `LangChainError`. A frozen error is returned unchanged.
    *
    * @param error - The provider error to mark.
    * @param rawMessage - The refused model response, if available.
@@ -319,6 +320,7 @@ export class ModelRefusalError extends ns.brand(
     error: T,
     rawMessage?: BaseMessage
   ): T & { rawMessage?: BaseMessage } {
+    if (!Object.isExtensible(error)) return error;
     Object.defineProperty(error, MODEL_REFUSAL_BRAND, { value: true });
     if (rawMessage) {
       Object.assign(error, { rawMessage });
