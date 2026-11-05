@@ -36,7 +36,6 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { ModelRefusalError } from "@langchain/core/errors";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
@@ -51,34 +50,6 @@ import {
 } from "../types.js";
 import { assertNoEmptyStringEnums } from "./validate_schema.js";
 import { EmptyContentError } from "./errors.js";
-
-const UNSPECIFIED_BLOCK_REASONS = new Set<string>([
-  "BLOCK_REASON_UNSPECIFIED",
-  "BLOCKED_REASON_UNSPECIFIED",
-]);
-const REFUSAL_FINISH_REASONS = new Set<string>([
-  "SAFETY",
-  "PROHIBITED_CONTENT",
-  "BLOCKLIST",
-]);
-
-/** Error for a response with no candidates, marked as a refusal when it is one. */
-export function blockedPromptError(blockReason: string | undefined) {
-  const error = new EmptyContentError({ blockReason });
-  if (blockReason && !UNSPECIFIED_BLOCK_REASONS.has(blockReason)) {
-    ModelRefusalError.markAsRefusal(error);
-  }
-  return error;
-}
-
-/** Error for a candidate with no content, marked as a refusal when it is one. */
-function emptyCandidateError(finishReason: string | undefined) {
-  const error = new EmptyContentError({ finishReason });
-  if (finishReason && REFUSAL_FINISH_REASONS.has(finishReason)) {
-    ModelRefusalError.markAsRefusal(error);
-  }
-  return error;
-}
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -475,9 +446,6 @@ function _convertLangChainContentToPart(
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
-  } else if (content.type === "refusal") {
-    // Gemini has no input part for refusals.
-    return undefined;
   } else {
     if ("type" in content) {
       throw new Error(`Unknown content type ${content.type}`);
@@ -665,12 +633,16 @@ export function mapGenerateContentResultToChatResult(
     response.candidates.length === 0 ||
     !response.candidates[0]
   ) {
-    throw blockedPromptError(response.promptFeedback?.blockReason);
+    throw new EmptyContentError({
+      blockReason: response.promptFeedback?.blockReason,
+    });
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
-    throw emptyCandidateError(generationInfo.finishReason);
+    throw new EmptyContentError({
+      finishReason: generationInfo.finishReason,
+    });
   }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
@@ -809,31 +781,15 @@ export function convertResponseContentToChatGenerationChunk(
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
-    const error = blockedPromptError(response.promptFeedback?.blockReason);
-    // Throw only refusals, so the stream fails the same way `invoke` does.
-    if (ModelRefusalError.isInstance(error)) throw error;
     return null;
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
     // No content on the candidate (e.g. safety/recitation filter triggered
-    // mid-stream, or finishReason is SAFETY/RECITATION/OTHER). Keep the text
-    // already streamed: a refusal ends with an empty chunk whose finish
-    // reason gives the message a refusal block; other chunks are skipped.
-    const { finishReason } = generationInfo;
-    if (!finishReason || !REFUSAL_FINISH_REASONS.has(finishReason)) {
-      return null;
-    }
-    return new ChatGenerationChunk({
-      text: "",
-      message: new AIMessageChunk({
-        content: "",
-        response_metadata: { model_provider: "google-genai" },
-        usage_metadata: extra.usageMetadata,
-      }),
-      generationInfo,
-    });
+    // mid-stream, or finishReason is SAFETY/RECITATION/OTHER). Skip this
+    // chunk rather than throwing on candidateContent.parts.
+    return null;
   }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
