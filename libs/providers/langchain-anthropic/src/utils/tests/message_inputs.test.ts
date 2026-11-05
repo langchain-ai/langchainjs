@@ -536,3 +536,103 @@ describe("non-system content is unaffected by system narrowing", () => {
     ]);
   });
 });
+
+describe("streamed server_tool_use input", () => {
+  // Shape of an AIMessage built from a stream that stopped for `set_plan`
+  // while a `web_search` call was still pending.
+  const streamedMessage = () =>
+    new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          index: 0,
+          id: "toolu_1",
+          name: "set_plan",
+          input: "",
+        },
+        { type: "input_json_delta", index: 0, input: '{"items":["a"]}' },
+        {
+          type: "server_tool_use",
+          index: 1,
+          id: "srvtoolu_1",
+          name: "web_search",
+          input: "",
+        },
+        { type: "input_json_delta", index: 1, input: '{"query": ' },
+        { type: "input_json_delta", index: 1, input: '"SAP news"}' },
+      ],
+      tool_calls: [{ id: "toolu_1", name: "set_plan", args: { items: ["a"] } }],
+    });
+
+  test("joins input_json_delta chunks into a pending server_tool_use", () => {
+    const { messages } = _convertMessagesToAnthropicPayload([
+      new HumanMessage("Search"),
+      streamedMessage(),
+      new ToolMessage({ tool_call_id: "toolu_1", content: "ok" }),
+    ]);
+
+    expect(messages[1]).toEqual({
+      role: "assistant",
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: "set_plan",
+          input: { items: ["a"] },
+        },
+        {
+          type: "server_tool_use",
+          id: "srvtoolu_1",
+          name: "web_search",
+          input: { query: "SAP news" },
+        },
+      ],
+    });
+  });
+
+  test("does not take chunks from another message with the same index", () => {
+    const { messages } = _convertMessagesToAnthropicPayload([
+      new HumanMessage("Search"),
+      new AIMessage({
+        content: [
+          { type: "input_json_delta", index: 0, input: '{"query":"other"}' },
+        ],
+      }),
+      new AIMessage({
+        content: [
+          {
+            type: "server_tool_use",
+            index: 0,
+            id: "srvtoolu_2",
+            name: "web_search",
+            input: "",
+          },
+        ],
+      }),
+    ]);
+
+    expect(messages.at(-1)?.content).toEqual([
+      {
+        type: "server_tool_use",
+        id: "srvtoolu_2",
+        name: "web_search",
+        input: {},
+      },
+    ]);
+  });
+
+  test("keeps an object input on a server_tool_use", () => {
+    const block = {
+      type: "server_tool_use",
+      id: "srvtoolu_3",
+      name: "web_search",
+      input: { query: "already parsed" },
+    };
+    const { messages } = _convertMessagesToAnthropicPayload([
+      new HumanMessage("Search"),
+      new AIMessage({ content: [block] }),
+    ]);
+
+    expect(messages[1].content).toEqual([block]);
+  });
+});
