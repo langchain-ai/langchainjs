@@ -53,6 +53,66 @@ describe("Chat Completions refusals", () => {
   });
 });
 
+describe("Chat Completions refusal replay", () => {
+  it("sends a refusal kept in additional_kwargs", () => {
+    const params = convertMessagesToCompletionsMessageParams({
+      messages: [
+        new AIMessage({ content: "", additional_kwargs: { refusal: "No." } }),
+      ],
+      model: "gpt-4o",
+    }) as any[];
+
+    expect(params[0].refusal).toBe("No.");
+  });
+
+  it("concatenates streamed refusal deltas", () => {
+    const chunks = ["I can", "not help."].map((refusal) =>
+      convertCompletionsDeltaToBaseMessageChunk({
+        delta: { role: "assistant", refusal } as any,
+        rawResponse,
+      })
+    );
+
+    expect(chunks[0].concat(chunks[1]).additional_kwargs.refusal).toBe(
+      "I cannot help."
+    );
+  });
+
+  it("drops refusal blocks from non-assistant messages", () => {
+    const params = convertMessagesToCompletionsMessageParams({
+      messages: [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Hi" },
+            { type: "refusal", refusal: "No." } as any,
+          ],
+        }),
+      ],
+      model: "gpt-4o",
+    }) as any[];
+
+    expect(params[0].content).toEqual([{ type: "text", text: "Hi" }]);
+  });
+
+  it("sends a v1 refusal block as the refusal field", () => {
+    const params = convertMessagesToCompletionsMessageParams({
+      messages: [
+        new AIMessage({
+          content: [{ type: "refusal", refusal: "No." }],
+          response_metadata: { output_version: "v1" },
+        }),
+      ],
+      model: "gpt-4o",
+    }) as any[];
+
+    expect(params[0]).toMatchObject({
+      role: "assistant",
+      content: null,
+      refusal: "No.",
+    });
+  });
+});
+
 describe("Responses refusals", () => {
   it("normalizes a refusal block and does not duplicate it", () => {
     const input = convertMessagesToResponsesInput({
@@ -94,6 +154,26 @@ describe("Responses refusals", () => {
       Array.isArray(item.content) ? item.content : []
     );
     expect(parts).toContainEqual({ type: "refusal", refusal: "No." });
+  });
+});
+
+describe("Responses v1 refusal replay", () => {
+  it("sends a v1 refusal block as a refusal part", () => {
+    const input = convertMessagesToResponsesInput({
+      messages: [
+        new AIMessage({
+          content: [{ type: "refusal", refusal: "No." }],
+          response_metadata: { output_version: "v1" },
+        }),
+      ],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    }) as any[];
+
+    const parts = input.flatMap((item) =>
+      Array.isArray(item.content) ? item.content : []
+    );
+    expect(parts).toEqual([{ type: "refusal", refusal: "No." }]);
   });
 });
 

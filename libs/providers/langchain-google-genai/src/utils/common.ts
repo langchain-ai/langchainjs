@@ -62,6 +62,24 @@ const REFUSAL_FINISH_REASONS = new Set<string>([
   "BLOCKLIST",
 ]);
 
+/** Error for a response with no candidates, marked as a refusal when it is one. */
+function blockedPromptError(blockReason: string | undefined) {
+  const error = new EmptyContentError({ blockReason });
+  if (blockReason && !UNSPECIFIED_BLOCK_REASONS.has(blockReason)) {
+    ModelRefusalError.markAsRefusal(error);
+  }
+  return error;
+}
+
+/** Error for a candidate with no content, marked as a refusal when it is one. */
+function emptyCandidateError(finishReason: string | undefined) {
+  const error = new EmptyContentError({ finishReason });
+  if (finishReason && REFUSAL_FINISH_REASONS.has(finishReason)) {
+    ModelRefusalError.markAsRefusal(error);
+  }
+  return error;
+}
+
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
 const DUMMY_SIGNATURE =
@@ -647,22 +665,12 @@ export function mapGenerateContentResultToChatResult(
     response.candidates.length === 0 ||
     !response.candidates[0]
   ) {
-    const blockReason = response.promptFeedback?.blockReason;
-    const error = new EmptyContentError({ blockReason });
-    if (blockReason && !UNSPECIFIED_BLOCK_REASONS.has(blockReason)) {
-      ModelRefusalError.markAsRefusal(error);
-    }
-    throw error;
+    throw blockedPromptError(response.promptFeedback?.blockReason);
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
-    const { finishReason } = generationInfo;
-    const error = new EmptyContentError({ finishReason });
-    if (finishReason && REFUSAL_FINISH_REASONS.has(finishReason)) {
-      ModelRefusalError.markAsRefusal(error);
-    }
-    throw error;
+    throw emptyCandidateError(generationInfo.finishReason);
   }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
@@ -801,15 +809,31 @@ export function convertResponseContentToChatGenerationChunk(
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
+    const error = blockedPromptError(response.promptFeedback?.blockReason);
+    // Throw only refusals, so the stream fails the same way `invoke` does.
+    if (ModelRefusalError.isInstance(error)) throw error;
     return null;
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
     // No content on the candidate (e.g. safety/recitation filter triggered
-    // mid-stream, or finishReason is SAFETY/RECITATION/OTHER). Skip this
-    // chunk rather than throwing on candidateContent.parts.
-    return null;
+    // mid-stream, or finishReason is SAFETY/RECITATION/OTHER). Keep the text
+    // already streamed: a refusal ends with an empty chunk whose finish
+    // reason gives the message a refusal block; other chunks are skipped.
+    const { finishReason } = generationInfo;
+    if (!finishReason || !REFUSAL_FINISH_REASONS.has(finishReason)) {
+      return null;
+    }
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: "",
+        response_metadata: { model_provider: "google-genai" },
+        usage_metadata: extra.usageMetadata,
+      }),
+      generationInfo,
+    });
   }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {

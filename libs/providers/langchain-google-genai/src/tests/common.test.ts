@@ -423,7 +423,7 @@ describe("Missing candidate content", () => {
   test("convertResponseContentToChatGenerationChunk returns null when a candidate has no content (streaming)", () => {
     const mockResponse = createMockResponse([
       {
-        finishReason: "SAFETY" as FinishReason,
+        finishReason: "OTHER" as FinishReason,
         index: 0,
         safetyRatings: [],
       } as unknown as GenerateContentCandidate,

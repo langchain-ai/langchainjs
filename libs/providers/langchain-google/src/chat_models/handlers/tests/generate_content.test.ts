@@ -410,6 +410,43 @@ describe("GenerateContentApiHandler", () => {
       }
     );
 
+    test.each([
+      ["SAFETY", true],
+      ["BLOCKED_REASON_UNSPECIFIED", false],
+    ])(
+      "marks a streamed %s prompt block as a refusal: %s",
+      async (blockReason, isRefusal) => {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ promptFeedback: { blockReason } })}\n\n`
+              )
+            );
+            controller.close();
+          },
+        });
+        const mockClient = new MockApiClient(
+          () =>
+            new Response(stream, {
+              headers: { "Content-Type": "text/event-stream" },
+            })
+        );
+        const handler = createHandler({ apiClient: mockClient });
+
+        const error = await (async () => {
+          for await (const _ of handler.streamResponseChunks([
+            new HumanMessage("unsafe prompt"),
+          ])) {
+            // drain
+          }
+        })().catch((e: unknown) => e);
+        expect(error).toBeInstanceOf(PromptBlockedError);
+        expect(ModelRefusalError.isInstance(error)).toBe(isRefusal);
+      }
+    );
+
     test("streams response chunks using streamResponseChunks", async () => {
       const chunks = [
         {

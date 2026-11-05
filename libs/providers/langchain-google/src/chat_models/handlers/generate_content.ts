@@ -66,6 +66,23 @@ import { settableServiceTier } from "../types.js";
 
 type ServiceTier = Gemini.ServiceTier;
 
+const UNSPECIFIED_BLOCK_REASONS = new Set<string>([
+  "BLOCK_REASON_UNSPECIFIED",
+  "BLOCKED_REASON_UNSPECIFIED",
+]);
+
+/** Builds the error for a blocked prompt, marked as a refusal when it is one. */
+function promptBlockedError(
+  promptFeedback: Gemini.GenContent.GenerateContentResponse["promptFeedback"] &
+    object
+): PromptBlockedError {
+  const error = PromptBlockedError.fromPromptFeedback(promptFeedback);
+  if (!UNSPECIFIED_BLOCK_REASONS.has(String(promptFeedback.blockReason))) {
+    ModelRefusalError.markAsRefusal(error);
+  }
+  return error;
+}
+
 /**
  * Concrete wire protocol handler for Google's Generate Content API
  * (`/v1beta/models/{model}:generateContent` and `:streamGenerateContent`).
@@ -168,11 +185,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
-      const error = PromptBlockedError.fromPromptFeedback(data.promptFeedback);
-      if (data.promptFeedback.blockReason !== "BLOCK_REASON_UNSPECIFIED") {
-        ModelRefusalError.markAsRefusal(error);
-      }
-      throw error;
+      throw promptBlockedError(data.promptFeedback);
     }
 
     // Check if we have candidates
@@ -315,6 +328,10 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                   })
                 );
                 return;
+              }
+
+              if (chunk.promptFeedback?.blockReason) {
+                throw promptBlockedError(chunk.promptFeedback);
               }
 
               // Extract text delta from the chunk

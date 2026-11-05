@@ -1355,6 +1355,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           [withBreakpoint(block, makeTextPart(block.text))],
           phase
         );
+      } else if (block.type === "refusal") {
+        // Only assistant messages accept refusal parts.
+        if (messageRole === "assistant") {
+          pushMessageContent([
+            {
+              type: "refusal",
+              refusal: String(block.refusal ?? ""),
+            } as unknown as ResponseInputMessageContentList[number],
+          ]);
+        }
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
