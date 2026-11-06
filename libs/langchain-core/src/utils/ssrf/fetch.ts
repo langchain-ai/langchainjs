@@ -74,6 +74,10 @@ const DECODERS: Record<string, keyof typeof Zlib> = {
  * (browsers, Deno, Cloudflare Workers, edge) can't resolve DNS, so only the
  * URL is checked there; rely on the platform's network egress controls.
  *
+ * On Node.js requests don't go through a proxy configured for the global
+ * `fetch` (an undici dispatcher or `HTTP_PROXY`). Behind a proxy, pass your own
+ * `fetch` to the tools that use this one.
+ *
  * @example
  * ```typescript
  * const safeFetch = createSafeFetch({ allowedHosts: ["models.internal"] });
@@ -255,7 +259,15 @@ function createNodeSender(policy: ResolvedSSRFPolicy): Sender {
           lookup: pinned ? lookup : undefined,
           signal,
         },
-        (res) => resolvePromise(toResponse(res, request.method, builtins))
+        (res) => {
+          // Response throws on statuses outside 200-599; reject instead of crashing the process.
+          try {
+            resolvePromise(toResponse(res, request.method, builtins));
+          } catch (error) {
+            res.destroy();
+            reject(error);
+          }
+        }
       );
       outgoing.on("error", reject);
       if (request.body instanceof ReadableStream) {

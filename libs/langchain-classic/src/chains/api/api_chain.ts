@@ -26,6 +26,7 @@ export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   /**
    * Fetch used to call the API. Defaults to `createSafeFetch`, which
    * refuses private network addresses and checks every redirect.
+   * Pass your own to go through a proxy.
    */
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
   /** Hosts the default fetch may reach even if they resolve to private addresses. */

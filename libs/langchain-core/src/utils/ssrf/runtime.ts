@@ -41,7 +41,6 @@ export function isNodeRuntime(): boolean {
   const proc = runtimeGlobals.process;
   return (
     proc?.release?.name === "node" &&
-    typeof proc.getBuiltinModule === "function" &&
     !proc.versions?.bun &&
     !proc.versions?.deno &&
     proc.title !== "workerd" &&
@@ -65,9 +64,13 @@ export interface NodeBuiltins {
 
 /** Node builtins, loaded without a static import so bundles for other runtimes still load. */
 export function getNodeBuiltins(): NodeBuiltins {
-  const load = runtimeGlobals.process?.getBuiltinModule as (
-    id: string
-  ) => unknown;
+  const load = runtimeGlobals.process?.getBuiltinModule;
+  if (typeof load !== "function") {
+    // Without it the address can't be checked, so refuse rather than check only the URL.
+    throw new Error(
+      "createSafeFetch needs Node.js 20.16 or later (process.getBuiltinModule). Pass your own fetch to use an older Node.js."
+    );
+  }
   return {
     dns: load("node:dns") as typeof Dns,
     http: load("node:http") as typeof Http,
@@ -79,31 +82,20 @@ export function getNodeBuiltins(): NodeBuiltins {
 
 export type HostResolver = (hostname: string) => Promise<ResolvedAddress[]>;
 
-/**
- * Resolve every A and AAAA record with c-ares, so a stalled nameserver times
- * out instead of holding a libuv thread like `dns.lookup` does.
- */
+/** Resolve every address with the system resolver, so /etc/hosts applies as it does for fetch. */
 export function createNodeResolver(dns: typeof Dns): HostResolver {
-  const resolver = new dns.promises.Resolver({ timeout: 2000, tries: 2 });
   return async (hostname) => {
-    const [v4, v6] = await Promise.allSettled([
-      resolver.resolve4(hostname),
-      resolver.resolve6(hostname),
-    ]);
-    const addresses: ResolvedAddress[] = [
-      ...(v4.status === "fulfilled" ? v4.value : []).map((address) => ({
-        address,
-        family: 4 as const,
-      })),
-      ...(v6.status === "fulfilled" ? v6.value : []).map((address) => ({
-        address,
-        family: 6 as const,
-      })),
-    ];
+    const addresses = await dns.promises.lookup(hostname, {
+      all: true,
+      verbatim: true,
+    });
     if (addresses.length === 0) {
       throw new Error(`Could not resolve hostname: ${hostname}`);
     }
-    return addresses;
+    return addresses.map(({ address, family }) => ({
+      address,
+      family: family === 6 ? 6 : 4,
+    }));
   };
 }
 

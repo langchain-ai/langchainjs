@@ -191,6 +191,7 @@ export interface WebBrowserArgs extends ToolParams {
   /**
    * Fetch used to load pages. Defaults to `createSafeFetch`, which
    * refuses private network addresses and checks every redirect.
+   * Pass your own to go through a proxy.
    */
   fetch?: FetchFn;
 

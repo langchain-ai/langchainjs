@@ -33,6 +33,11 @@ beforeAll(async () => {
       return;
     }
     if (url.pathname === "/slow") return;
+    if (url.pathname === "/odd-status") {
+      res.writeHead(999);
+      res.end();
+      return;
+    }
     if (url.pathname === "/empty") {
       res.writeHead(204);
       res.end();
@@ -74,16 +79,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** Point every hostname at the given IPv4 addresses. */
+/** Point every hostname at the given addresses. */
 function mockDns(v4: string[], v6: string[] = []) {
-  const fail = () =>
-    Promise.reject(Object.assign(new Error("no data"), { code: "ENODATA" }));
-  vi.spyOn(dns.promises.Resolver.prototype, "resolve4").mockImplementation(
-    (() => (v4.length ? Promise.resolve(v4) : fail())) as never
-  );
-  vi.spyOn(dns.promises.Resolver.prototype, "resolve6").mockImplementation(
-    (() => (v6.length ? Promise.resolve(v6) : fail())) as never
-  );
+  vi.spyOn(dns.promises, "lookup").mockImplementation((async () => [
+    ...v4.map((address) => ({ address, family: 4 })),
+    ...v6.map((address) => ({ address, family: 6 })),
+  ]) as never);
 }
 
 // Resolves test hostnames to the local server, which only a policy that
@@ -306,6 +307,30 @@ describe("createSafeFetch on Node", () => {
     expect(head.body).toBeNull();
     const cookies = await safeFetch(`http://a.example.com:${port}/cookies`);
     expect(cookies.headers.getSetCookie()).toEqual(["a=1", "b=2"]);
+  });
+
+  test("rejects a status Response can't represent", async () => {
+    await expect(
+      loopbackFetch()(`http://a.example.com:${port}/odd-status`)
+    ).rejects.toThrow(RangeError);
+  });
+
+  test("fails closed on Node.js without process.getBuiltinModule", async () => {
+    const { getBuiltinModule } = process;
+    Object.defineProperty(process, "getBuiltinModule", {
+      value: undefined,
+      configurable: true,
+    });
+    try {
+      await expect(createSafeFetch()("https://example.com/")).rejects.toThrow(
+        /Node\.js 20\.16/
+      );
+    } finally {
+      Object.defineProperty(process, "getBuiltinModule", {
+        value: getBuiltinModule,
+        configurable: true,
+      });
+    }
   });
 
   test("rejects schemes outside the policy", async () => {

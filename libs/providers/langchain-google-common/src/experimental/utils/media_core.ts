@@ -499,6 +499,7 @@ export interface SimpleWebBlobStoreOptions extends BlobStoreOptions {
   /**
    * Fetch used to download URLs. Defaults to `createSafeFetch`, which
    * refuses private network addresses and checks every redirect.
+   * Pass your own to go through a proxy.
    */
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
 
