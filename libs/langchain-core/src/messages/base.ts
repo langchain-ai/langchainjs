@@ -589,6 +589,10 @@ function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
  * 1. Both have index → match on index (+ id when both present)
  * 2. Neither has index, both have id → match on id alone
  * 3. Otherwise → no match (item should be appended)
+ *
+ * When several items qualify, the most recently added one wins. This matters
+ * for servers that reuse an `index` for successive tool calls: a continuation
+ * delta without an `id` belongs to the latest call, not the first one.
  */
 function _findMergeTarget<Content extends ContentBlock>(
   merged: Content[],
@@ -599,7 +603,7 @@ function _findMergeTarget<Content extends ContentBlock>(
 
   if (!itemHasIndex && !itemHasId) return -1;
 
-  return merged.findIndex((leftItem) => {
+  const isMergeTarget = (leftItem: Content): boolean => {
     const leftHasIndex = hasMergeableIndex(leftItem);
     const leftHasId = hasMergeableId(leftItem);
 
@@ -619,7 +623,13 @@ function _findMergeTarget<Content extends ContentBlock>(
     }
 
     return false;
-  });
+  };
+
+  // ES2022 lib has no `findLastIndex`, so scan from the end manually.
+  for (let i = merged.length - 1; i >= 0; i -= 1) {
+    if (isMergeTarget(merged[i])) return i;
+  }
+  return -1;
 }
 
 export function _mergeLists<Content extends ContentBlock>(

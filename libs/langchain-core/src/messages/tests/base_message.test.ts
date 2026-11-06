@@ -397,6 +397,203 @@ test("_mergeLists keeps separate entries for different ids when index is missing
   expect(merged.tool_call_chunks![1].id).toBe("call_bbb");
 });
 
+describe("AIMessageChunk concat when a tool call index is reused", () => {
+  // Each inner array is one streamed delta, concatenated left to right.
+  function stream(deltas: unknown[][]): AIMessageChunk {
+    return deltas
+      .map(
+        (tool_call_chunks) =>
+          new AIMessageChunk({
+            content: "",
+            tool_call_chunks: tool_call_chunks as ToolCallChunk[],
+          })
+      )
+      .reduce((acc, chunk) => acc.concat(chunk));
+  }
+
+  const start = (id: string, index: number, name = "get_weather") => ({
+    type: "tool_call_chunk",
+    index,
+    id,
+    name,
+    args: "",
+  });
+  const args = (index: number, value: string, extra = {}) => ({
+    type: "tool_call_chunk",
+    index,
+    args: value,
+    ...extra,
+  });
+
+  it("keeps two calls that reuse index 0 apart", () => {
+    const merged = stream([
+      [start("call_A", 0)],
+      [args(0, '{"city":"Paris"}')],
+      [start("call_B", 0)],
+      [args(0, '{"city":"Rome"}')],
+    ]);
+
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        id: "call_A",
+        name: "get_weather",
+        args: { city: "Paris" },
+      },
+      {
+        type: "tool_call",
+        id: "call_B",
+        name: "get_weather",
+        args: { city: "Rome" },
+      },
+    ]);
+  });
+
+  it("routes id-less deltas split across several chunks to the latest call", () => {
+    const merged = stream([
+      [start("call_A", 0)],
+      [args(0, '{"city":')],
+      [args(0, '"Paris"}')],
+      [start("call_B", 0)],
+      [args(0, '{"city":')],
+      [args(0, '"Rome"}')],
+    ]);
+
+    expect(merged.tool_call_chunks).toHaveLength(2);
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls?.map((c) => [c.id, c.args])).toEqual([
+      ["call_A", { city: "Paris" }],
+      ["call_B", { city: "Rome" }],
+    ]);
+  });
+
+  it("keeps calls apart when every delta repeats its id and name", () => {
+    const merged = stream([
+      [start("call_A", 0)],
+      [args(0, '{"city":"Paris"}', { id: "call_A", name: "get_weather" })],
+      [start("call_B", 0, "get_time")],
+      [args(0, '{"tz":"UTC"}', { id: "call_B", name: "get_time" })],
+    ]);
+
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls?.map((c) => [c.id, c.name, c.args])).toEqual([
+      ["call_A", "get_weather", { city: "Paris" }],
+      ["call_B", "get_time", { tz: "UTC" }],
+    ]);
+  });
+
+  it("does not duplicate a name repeated on id-less continuation deltas", () => {
+    const merged = stream([
+      [start("call_A", 0)],
+      [args(0, '{"city":"Paris"}', { name: "get_weather" })],
+      [start("call_B", 0)],
+      [args(0, '{"city":"Rome"}', { name: "get_weather" })],
+    ]);
+
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls?.map((c) => [c.id, c.name, c.args])).toEqual([
+      ["call_A", "get_weather", { city: "Paris" }],
+      ["call_B", "get_weather", { city: "Rome" }],
+    ]);
+  });
+
+  it("sends a delta that repeats an earlier call's id back to that call", () => {
+    const merged = stream([
+      [start("call_A", 0)],
+      [start("call_B", 0)],
+      [args(0, '{"city":"Paris"}', { id: "call_A" })],
+      [args(0, '{"city":"Rome"}', { id: "call_B" })],
+    ]);
+
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls?.map((c) => [c.id, c.args])).toEqual([
+      ["call_A", { city: "Paris" }],
+      ["call_B", { city: "Rome" }],
+    ]);
+  });
+
+  it("keeps merging continuation deltas into a single call with an empty-string, null or absent id", () => {
+    const variants: Record<string, Record<string, unknown>> = {
+      "empty-string id": { id: "" },
+      "null id": { id: null },
+      "absent id": {},
+    };
+    for (const [label, extra] of Object.entries(variants)) {
+      const merged = stream([
+        [start("call_A", 0)],
+        [args(0, '{"city":', extra)],
+        [args(0, '"Paris"}', extra)],
+      ]);
+
+      expect(merged.tool_call_chunks, label).toHaveLength(1);
+      expect(merged.invalid_tool_calls, label).toEqual([]);
+      expect(merged.tool_calls, label).toEqual([
+        {
+          type: "tool_call",
+          id: "call_A",
+          name: "get_weather",
+          args: { city: "Paris" },
+        },
+      ]);
+    }
+  });
+
+  it("sends empty-string id deltas to the latest call after an index is reused", () => {
+    const merged = stream([
+      [start("call_A", 0)],
+      [args(0, '{"city":"Paris"}', { id: "" })],
+      [start("call_B", 0)],
+      [args(0, '{"city":"Rome"}', { id: "" })],
+    ]);
+
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls?.map((c) => [c.id, c.args])).toEqual([
+      ["call_A", { city: "Paris" }],
+      ["call_B", { city: "Rome" }],
+    ]);
+  });
+
+  it("still merges interleaved parallel calls on distinct indexes", () => {
+    const merged = stream([
+      [start("call_A", 0), start("call_B", 1)],
+      [args(0, '{"city":'), args(1, '{"city":')],
+      [args(1, '"Rome"}')],
+      [args(0, '"Paris"}')],
+    ]);
+
+    expect(merged.tool_call_chunks).toHaveLength(2);
+    expect(merged.invalid_tool_calls).toEqual([]);
+    expect(merged.tool_calls?.map((c) => [c.id, c.args])).toEqual([
+      ["call_A", { city: "Paris" }],
+      ["call_B", { city: "Rome" }],
+    ]);
+  });
+
+  it("keeps content blocks that reuse an index apart and merges id-less deltas into the latest", () => {
+    const left = new AIMessageChunk({
+      content: [
+        { type: "tool_use", index: 0, id: "toolu_A", name: "f", input: "" },
+        { type: "tool_use", index: 0, id: "toolu_B", name: "f", input: "" },
+      ],
+    });
+    const right = new AIMessageChunk({
+      content: [{ type: "tool_use", index: 0, input: '{"x":1}' }],
+    });
+
+    expect(left.concat(right).content).toEqual([
+      { type: "tool_use", index: 0, id: "toolu_A", name: "f", input: "" },
+      {
+        type: "tool_use",
+        index: 0,
+        id: "toolu_B",
+        name: "f",
+        input: '{"x":1}',
+      },
+    ]);
+  });
+});
+
 test("Deserialisation and serialisation of messages with ID", async () => {
   const config = {
     importMap: { messages: { AIMessage } },
