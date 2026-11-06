@@ -451,7 +451,7 @@ describe("trimMessages can trim", () => {
         "This is a 4 token text. The full message is 10 tokens."
       ),
       new AIMessage({
-        content: [{ type: "text", text: "This is the FIRST 4 token block." }],
+        content: [{ type: "text", text: "This is the SECOND 4 token block." }],
         id: "second",
       }),
       new HumanMessage({
@@ -482,13 +482,49 @@ describe("trimMessages can trim", () => {
         "This is a 4 token text. The full message is 10 tokens."
       ),
       new AIMessage({
-        content: [{ type: "text", text: "This is the FIRST 4 token block." }],
+        content: [{ type: "text", text: "This is the SECOND 4 token block." }],
         id: "second",
       }),
       new HumanMessage({
         content: "This is a 4 token text. The full message is 10 tokens.",
         id: "third",
       }),
+    ]);
+  });
+
+  it("allowing partial messages keeps a single partial with the leading or trailing blocks", async () => {
+    // One token per content block, one for string content
+    const tokenCounter = (msgs: BaseMessage[]) =>
+      msgs.reduce(
+        (n, m) => n + (Array.isArray(m.content) ? m.content.length : 1),
+        0
+      );
+    const blocks = (...texts: string[]) =>
+      texts.map((text) => ({ type: "text" as const, text }));
+    const messages = [
+      new HumanMessage({ content: "question", id: "human" }),
+      new AIMessage({ content: blocks("b1", "b2", "b3", "b4"), id: "ai" }),
+    ];
+
+    const last = await trimMessages(messages, {
+      maxTokens: 3,
+      tokenCounter,
+      strategy: "last",
+      allowPartial: true,
+    });
+    expect(last).toEqual([
+      new AIMessage({ content: blocks("b2", "b3", "b4"), id: "ai" }),
+    ]);
+
+    const first = await trimMessages(messages, {
+      maxTokens: 3,
+      tokenCounter,
+      strategy: "first",
+      allowPartial: true,
+    });
+    expect(first).toEqual([
+      new HumanMessage({ content: "question", id: "human" }),
+      new AIMessage({ content: blocks("b1", "b2"), id: "ai" }),
     ]);
   });
 
