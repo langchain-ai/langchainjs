@@ -6,7 +6,8 @@
 
 Breaking changes:
 
+- GPT-5 through GPT-5.5 (`gpt-5`, `gpt-5-mini`, `gpt-5.1`, `gpt-5.4`, `gpt-5.5`, ...) now default to the Responses API instead of Chat Completions.
 - Unknown and custom model names (OpenAI-compatible servers, proxies, deployment aliases) now default to the Responses API. Pass `useResponsesApi: false` to keep Chat Completions.
 - An explicit `useResponsesApi: false` now always wins over model-based routing. Responses-only features (built-in/custom tools, Responses-only kwargs) still use the Responses API.
 
-GPT-3.5 through GPT-5.5, the o-series, chat-latest snapshots, audio and search models, their date snapshots, and `ft:` models built on them still default to Chat Completions.
+GPT-3.5 through GPT-4.5, the o-series, chat-latest snapshots, audio and search models, their date snapshots, and `ft:` models built on them still default to Chat Completions.

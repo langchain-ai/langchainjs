@@ -87,7 +87,10 @@ test("AzureChatOpenAI profile follows the Responses API setting", () => {
     azureOpenAIApiVersion: "2024-08-01-preview",
     azureOpenAIApiKey: "foo",
   };
-  const completions = new AzureChatOpenAI("gpt-5.5", fields);
+  const completions = new AzureChatOpenAI("gpt-5.5", {
+    ...fields,
+    useResponsesApi: false,
+  });
   const responses = new AzureChatOpenAI("gpt-5.5", {
     ...fields,
     useResponsesApi: true,

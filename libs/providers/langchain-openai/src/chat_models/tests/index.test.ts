@@ -1061,6 +1061,19 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-6.1-sol")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-6.1-terra")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-6-cyber")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-2025-08-07")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-mini")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5-nano")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.1-2025-11-13")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.2-2025-12-11")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.4-mini")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.4-nano")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.5")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.5-2026-04-23")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-99-turbo")).toBe(true);
       expect(_modelPrefersResponsesAPI("some-custom-model")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-daybreak-blue-latest")).toBe(true);
@@ -1130,23 +1143,10 @@ describe("ChatOpenAI", () => {
     });
 
     it("should default to Chat Completions for GPT-5 through 5.5 families", () => {
-      expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5-2025-08-07")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5-chat-latest")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5-mini")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5-nano")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.1-2025-11-13")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.1-chat-latest")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.2-2025-12-11")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.2-chat-latest")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.3-chat-latest")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.4-mini")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.4-nano")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.5")).toBe(false);
-      expect(_modelPrefersResponsesAPI("gpt-5.5-2026-04-23")).toBe(false);
     });
 
     it("should default to Chat Completions for chat-only audio and search models", () => {
@@ -1242,7 +1242,7 @@ describe("ChatOpenAI", () => {
 
     it("routes legacy snapshots and fine-tunes to Chat Completions by default", async () => {
       await expectRouteTo(
-        new ChatOpenAI({ model: "gpt-5.2-2025-12-11", apiKey: "test-key" }),
+        new ChatOpenAI({ model: "gpt-4.1-2025-04-14", apiKey: "test-key" }),
         "chat/completions"
       );
       await expectRouteTo(
@@ -1255,7 +1255,13 @@ describe("ChatOpenAI", () => {
     });
 
     it("routes unknown, future, and Responses-only models to Responses by default", async () => {
-      for (const model of ["gpt-5.6", "gpt-6-astra", "o3-pro", "gpt-5-codex"]) {
+      for (const model of [
+        "gpt-5.5",
+        "gpt-5.6",
+        "gpt-6-astra",
+        "o3-pro",
+        "gpt-5-codex",
+      ]) {
         await expectRouteTo(
           new ChatOpenAI({ model, apiKey: "test-key" }),
           "responses"
@@ -2372,7 +2378,11 @@ describe("profile.fileMimeTypes", () => {
   });
 
   test("ChatOpenAI omits file MIME types without the Responses API", () => {
-    const model = new ChatOpenAI({ model: "gpt-5.5", apiKey: "test" });
+    const model = new ChatOpenAI({
+      model: "gpt-5.5",
+      apiKey: "test",
+      useResponsesApi: false,
+    });
     const { fileMimeTypes: _fileMimeTypes, ...expectedProfile } =
       PROFILES["gpt-5.5"];
     expect(model.profile.fileMimeTypes).toBeUndefined();
@@ -2460,7 +2470,11 @@ describe("profile.midConversationTools", () => {
   });
 
   test("ChatOpenAI turns off mid-conversation tools without the Responses API", () => {
-    const model = new ChatOpenAI({ model: "gpt-5.5", apiKey: "test" });
+    const model = new ChatOpenAI({
+      model: "gpt-5.5",
+      apiKey: "test",
+      useResponsesApi: false,
+    });
     expect(model.profile.midConversationTools).toBe(false);
   });
 
