@@ -1,9 +1,138 @@
 import { expect, test, describe } from "vitest";
 import { z } from "zod";
-import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
+import { z as z4 } from "zod/v4";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import {
+  jsonSchemaToGeminiParameters,
+  schemaToGeminiParameters,
+} from "../utils/zod_to_gemini_parameters.js";
+import { convertToGeminiTools } from "../utils/common.js";
+
+describe("Gemini anyOf tool schemas", () => {
+  const schema = {
+    type: "object" as const,
+    properties: {
+      ids: {
+        anyOf: [
+          { type: "string" as const },
+          { type: "array" as const, items: { type: "string" as const } },
+        ],
+        description: "One ID or a list of IDs",
+      },
+    },
+    required: ["ids"],
+  };
+
+  test.each([
+    ["LangChain", schemaToGeminiParameters],
+    ["OpenAI", jsonSchemaToGeminiParameters],
+  ] as const)(
+    "preserves MCP anyOf parameters through the %s converter",
+    (_, convert) => {
+      expect(convert(schema)).toEqual(schema);
+    }
+  );
+
+  test.each([
+    ["Zod 3", z.object({ ids: z.union([z.string(), z.array(z.string())]) })],
+    [
+      "Zod 4",
+      z4.object({ ids: z4.union([z4.string(), z4.array(z4.string())]) }),
+    ],
+  ] as const)("preserves string or array unions from %s", (_, input) => {
+    const parameters = schemaToGeminiParameters(input);
+    expect(parameters.properties?.ids).toEqual({
+      anyOf: schema.properties.ids.anyOf,
+    });
+  });
+
+  test("preserves anyOf with more than two branches", () => {
+    const input = {
+      type: "object",
+      properties: {
+        value: {
+          anyOf: [{ type: "string" }, { type: "number" }, { type: "null" }],
+        },
+      },
+    };
+    expect(jsonSchemaToGeminiParameters(input)).toEqual(input);
+  });
+
+  test("normalizes nested anyOf branches without mutating the input", () => {
+    const input = {
+      type: "object",
+      properties: {
+        values: {
+          type: "array",
+          items: {
+            anyOf: [
+              {
+                type: "object",
+                properties: { value: { type: ["string", "null"] } },
+                additionalProperties: false,
+              },
+              { type: "number" },
+            ],
+          },
+        },
+      },
+      additionalProperties: false,
+    };
+    const original = structuredClone(input);
+    expect(jsonSchemaToGeminiParameters(input)).toEqual({
+      type: "object",
+      properties: {
+        values: {
+          type: "array",
+          items: {
+            anyOf: [
+              {
+                type: "object",
+                properties: { value: { type: "string", nullable: true } },
+              },
+              { type: "number" },
+            ],
+          },
+        },
+      },
+    });
+    expect(input).toEqual(original);
+  });
+
+  test("converts an MCP-style structured tool", () => {
+    const tool = new DynamicStructuredTool({
+      name: "lookup_ids",
+      description: "Look up one or more IDs",
+      schema,
+      func: async () => "result",
+    });
+    expect(convertToGeminiTools([tool])).toEqual([
+      {
+        functionDeclarations: [
+          {
+            name: tool.name,
+            description: tool.description,
+            parameters: schema,
+          },
+        ],
+      },
+    ]);
+  });
+
+  test("still rejects non-nullable oneOf schemas", () => {
+    expect(() =>
+      jsonSchemaToGeminiParameters({
+        type: "object",
+        properties: {
+          value: { oneOf: [{ type: "string" }, { type: "number" }] },
+        },
+      })
+    ).toThrow("oneOf");
+  });
+});
 
 describe("schemaToGeminiParameters - edge cases", () => {
-  test("should throw error for discriminatedUnion", () => {
+  test("should preserve discriminatedUnion and normalize its branches", () => {
     const zodSchema = z.object({
       expiration: z.discriminatedUnion("type", [
         z.object({
@@ -24,9 +153,17 @@ describe("schemaToGeminiParameters - edge cases", () => {
       ]),
     });
 
-    expect(() => schemaToGeminiParameters(zodSchema)).toThrow(
-      "zod_to_gemini_parameters: Gemini cannot handle union types"
-    );
+    expect(
+      schemaToGeminiParameters(zodSchema).properties?.expiration
+    ).toMatchObject({
+      anyOf: [
+        {
+          type: "object",
+          properties: { relativeSeconds: { type: "number", minimum: 0.01 } },
+        },
+        { type: "object", properties: { exactDate: { type: "string" } } },
+      ],
+    });
   });
 
   test("should handle positive() refinement", () => {
@@ -153,17 +290,14 @@ describe("schemaToGeminiParameters - edge cases", () => {
     expect(result.properties?.nullishField?.nullable).toBe(true);
   });
 
-  test("should provide helpful error message for discriminatedUnion", () => {
-    const zodSchema = z.object({
-      data: z.discriminatedUnion("kind", [
-        z.object({ kind: z.literal("a"), value: z.string() }),
-        z.object({ kind: z.literal("b"), value: z.number() }),
-      ]),
+  test("should continue to normalize nullable oneOf schemas", () => {
+    const result = jsonSchemaToGeminiParameters({
+      type: "object",
+      properties: {
+        data: { oneOf: [{ type: "string" }, { type: "null" }] },
+      },
     });
-
-    expect(() => schemaToGeminiParameters(zodSchema)).toThrow(
-      "Consider using a flat object structure with optional fields instead"
-    );
+    expect(result.properties?.data).toEqual({ type: "string", nullable: true });
   });
 
   test("should handle exclusiveMinimum conversion", () => {
