@@ -7,6 +7,7 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
+import { ns as baseNs, LangChainError } from "@langchain/core/errors";
 
 /**
  * Strict metadata filter type that supports various filtering operations.
@@ -71,6 +72,161 @@ type Metadata = Record<string, unknown>;
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
 
 /**
+ * Return shape of {@link PGVectorStore.buildFilterClauses}.
+ *
+ * Exported so that a subclass overriding the method can name the contract it
+ * has to satisfy, rather than restating the shape in its own signature.
+ */
+export interface FilterClausesResult {
+  /** SQL fragments to be combined with `AND`. */
+  whereClauses: string[];
+  /** Values bound to the `$n` placeholders referenced by `whereClauses`. */
+  parameters: unknown[];
+  /** Last parameter index used, so a caller can resume numbering. */
+  paramCount: number;
+}
+
+/**
+ * How each operator understood by {@link PGVectorStore.buildFilterClauses}
+ * decides whether it can be translated to SQL.
+ *
+ * Used to report filter entries that produce no clause: a value that fails
+ * `accepted` is ignored, and an operator missing from this table cannot be
+ * translated at all. Either way the query ends up running unfiltered, so both
+ * cases are reported to the caller.
+ */
+const FILTER_OPERATORS = {
+  in: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  notIn: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  arrayContains: {
+    accepted: (value: unknown): value is unknown[] => Array.isArray(value),
+  },
+  gt: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  gte: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  lt: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  lte: {
+    accepted: (value: unknown): value is number => typeof value === "number",
+  },
+  // `neq` is guarded by `hasOwnProperty` alone, so any value yields a clause.
+  neq: { accepted: () => true },
+};
+type FilterOperator = {
+  accepted: (value: unknown) => boolean;
+};
+
+/**
+ * Finds filter entries that {@link PGVectorStore.buildFilterClauses} cannot
+ * translate into a WHERE clause.
+ *
+ * These fall into two groups: an operator key the builder does not know, and a
+ * known operator whose value fails the builder's type guard. Both produce no
+ * clause, so the query would run unfiltered and return more rows than intended,
+ * which is a silent correctness problem.
+ *
+ * @param filter - The metadata filter object to inspect.
+ * @returns Human-readable descriptions of each rejected entry.
+ */
+function collectUntranslatedFilterEntries(filter: MetadataFilter): string[] {
+  const ignored: string[] = [];
+  for (const [key, value] of Object.entries(filter)) {
+    if (typeof value !== "object" || value === null) {
+      continue;
+    }
+    const operators = Object.keys(value as Record<string, unknown>);
+    if (operators.length === 0) {
+      ignored.push(`${key} (empty operator object)`);
+      continue;
+    }
+    for (const operator of operators) {
+      const definition = (FILTER_OPERATORS as Record<string, FilterOperator>)[
+        operator
+      ];
+      if (!definition) {
+        ignored.push(`${key}.${operator} (unsupported operator)`);
+      } else if (
+        !definition.accepted((value as Record<string, unknown>)[operator])
+      ) {
+        ignored.push(`${key}.${operator} (invalid value for this operator)`);
+      }
+    }
+  }
+  return ignored;
+}
+
+const ns = baseNs.sub("pgvector");
+
+/**
+ * Error thrown when a metadata filter contains an entry that cannot be
+ * translated to SQL and `throwOnInvalidFilter` is enabled.
+ *
+ * It extends the shared `LangChainError` base class, so callers can use
+ * `PGVectorFilterError.isInstance(error)` (or `LangChainError.isInstance`)
+ * instead of relying on `instanceof` across duplicate package copies.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await store.similaritySearch(query, 10, { score: { gte: "50" } });
+ * } catch (error) {
+ *   if (PGVectorFilterError.isInstance(error)) {
+ *     console.log(error.lc_error_code); // "INVALID_METADATA_FILTER"
+ *   }
+ * }
+ * ```
+ */
+export class PGVectorFilterError extends ns.brand(LangChainError) {
+  readonly name: string = "PGVectorFilterError";
+
+  readonly lc_error_code = "INVALID_METADATA_FILTER" as const;
+}
+
+/**
+ * Builds the error thrown for filter entries that cannot be translated to SQL.
+ *
+ * Dropping such an entry would widen the result set to everything, so the
+ * builder fails before querying. The error is named and coded so callers can
+ * distinguish a bad filter from a driver or connection failure.
+ *
+ * @param entries - Descriptions returned by {@link collectUntranslatedFilterEntries}.
+ * @returns A `PGVectorFilterError` carrying `lc_error_code` set to
+ *   `INVALID_METADATA_FILTER`.
+ */
+function untranslatedFilterError(entries: string[]): PGVectorFilterError {
+  return new PGVectorFilterError(
+    `[PGVectorStore] Cannot translate metadata filter entries to SQL: ${entries.join(
+      ", "
+    )}. Supported operators are: ${Object.keys(FILTER_OPERATORS).join(
+      ", "
+    )}. Fix the filter, or subclass PGVectorStore and override buildFilterClauses to add a custom operator.`
+  );
+}
+
+/**
+ * Builds the warning logged for filter entries that cannot be translated to
+ * SQL when `throwOnInvalidFilter` is not enabled.
+ *
+ * @param entries - Descriptions returned by {@link collectUntranslatedFilterEntries}.
+ * @returns The warning message.
+ */
+function untranslatedFilterWarning(entries: string[]): string {
+  return `[PGVectorStore] These filter entries produced no WHERE clause and were ignored: ${entries.join(
+    ", "
+  )}. Supported operators are: ${Object.keys(FILTER_OPERATORS).join(
+    ", "
+  )}. The query may return more rows than intended. Set throwOnInvalidFilter to true to reject invalid filters instead.`;
+}
+
+/**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
@@ -108,6 +264,16 @@ export interface PGVectorStoreArgs {
    * @default "distance"
    */
   scoreNormalization?: "distance" | "similarity";
+  /**
+   * Throw a `PGVectorFilterError` when a metadata filter entry cannot be
+   * translated to SQL.
+   *
+   * By default such entries are ignored with a warning, which is the historical
+   * behavior and may return more rows than the filter implies. Set this to
+   * `true` to reject the query before it runs.
+   * @default false
+   */
+  throwOnInvalidFilter?: boolean;
 }
 
 /**
@@ -319,6 +485,8 @@ export class PGVectorStore extends VectorStore {
 
   scoreNormalization: "distance" | "similarity" = "distance";
 
+  throwOnInvalidFilter = false;
+
   _vectorstoreType(): string {
     return "pgvector";
   }
@@ -431,6 +599,7 @@ export class PGVectorStore extends VectorStore {
     this.chunkSize = config.chunkSize ?? 500;
     this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
     this.scoreNormalization = config.scoreNormalization ?? "distance";
+    this.throwOnInvalidFilter = config.throwOnInvalidFilter ?? false;
 
     const langchainVerbose = getEnvironmentVariable("LANGCHAIN_VERBOSE");
 
@@ -714,11 +883,91 @@ export class PGVectorStore extends VectorStore {
   /**
    * Builds WHERE clause conditions and parameters for metadata filtering.
    *
+   * The method is `protected` so a subclass can add operators the core package
+   * does not ship — JSONB containment (`@>`), full-text search, geo predicates,
+   * and so on. An override has to follow three rules:
+   *
+   * 1. Continue parameter numbering from `paramOffset` and return the final
+   *    index as `paramCount`. The callers bind `$1` to the query embedding and
+   *    `$2` to `k`, so an override starts at `$3` or later and silently binding
+   *    the wrong number is the easiest way to break a query.
+   * 2. Remove any operator the override handles before delegating the rest to
+   *    `super.buildFilterClauses`, or the base implementation reports it as
+   *    untranslated: it warns by default, or throws an
+   *    `INVALID_METADATA_FILTER` error when `throwOnInvalidFilter` is `true`.
+   * 3. Bind keys and values as parameters. Never interpolate filter input into
+   *    the returned SQL.
+   *
+   * Note that {@link PGVectorStore.initialize} constructs a `PGVectorStore`
+   * directly. Calling it on a subclass therefore returns a base instance and
+   * drops the override; construct subclasses with `new` and initialize their
+   * tables explicitly.
+   *
    * @param filter - The metadata filter object.
    * @param paramOffset - Starting parameter index offset.
-   * @returns Object containing whereClauses array and parameters array.
+   * @returns The WHERE clauses, their bound parameters, and the last index used.
+   *
+   * @throws A `PGVectorFilterError` with `lc_error_code` set to
+   * `INVALID_METADATA_FILTER` when an entry cannot be translated to SQL and
+   * `throwOnInvalidFilter` is `true`.
+   *
+   * @example
+   * A subclass that adds JSONB containment:
+   * ```typescript
+   * import {
+   *   PGVectorStore,
+   *   type FilterClausesResult,
+   *   type MetadataFilter,
+   * } from "@langchain/pgvector";
+   *
+   * class JsonbContainsStore extends PGVectorStore {
+   *   protected override buildFilterClauses(
+   *     filter: MetadataFilter,
+   *     paramOffset = 0
+   *   ): FilterClausesResult {
+   *     const whereClauses: string[] = [];
+   *     const parameters: unknown[] = [];
+   *     let paramCount = paramOffset;
+   *     const remaining: MetadataFilter = {};
+   *
+   *     for (const [key, value] of Object.entries(filter)) {
+   *       if (
+   *         typeof value !== "object" ||
+   *         value === null ||
+   *         !("jsonbContains" in (value as Record<string, unknown>))
+   *       ) {
+   *         remaining[key] = value;
+   *         continue;
+   *       }
+   *
+   *       const { jsonbContains, ...other } = value as Record<string, unknown>;
+   *       parameters.push(key);
+   *       const keyPlaceholder = `$${++paramCount}`;
+   *       parameters.push(JSON.stringify(jsonbContains));
+   *       const valuePlaceholder = `$${++paramCount}`;
+   *       whereClauses.push(
+   *         `(${this.metadataColumnName} -> ${keyPlaceholder}) @> ${valuePlaceholder}::jsonb`
+   *       );
+   *
+   *       if (Object.keys(other).length > 0) {
+   *         remaining[key] = other as unknown as MetadataFilter[string];
+   *       }
+   *     }
+   *
+   *     const base = super.buildFilterClauses(remaining, paramCount);
+   *     return {
+   *       whereClauses: [...whereClauses, ...base.whereClauses],
+   *       parameters: [...parameters, ...base.parameters],
+   *       paramCount: base.paramCount,
+   *     };
+   *   }
+   * }
+   * ```
    */
-  private buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
+  protected buildFilterClauses(
+    filter: MetadataFilter,
+    paramOffset = 0
+  ): FilterClausesResult {
     const whereClauses: string[] = [];
     const parameters: unknown[] = [];
     let paramCount = paramOffset;
@@ -732,17 +981,28 @@ export class PGVectorStore extends VectorStore {
       if (typeof value === "object" && value !== null) {
         const _value = value as Record<string, unknown>;
 
-        if (Array.isArray(_value.in)) {
-          const placeholders = _value.in
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
-          );
+        if (FILTER_OPERATORS.in.accepted(_value.in)) {
+          // An empty list can never match. Emitting `IN ()` is a syntax error,
+          // so short-circuit to a clause that is always false instead.
+          if (_value.in.length === 0) {
+            whereClauses.push("FALSE");
+          } else {
+            const placeholders = _value.in
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
+            );
+          }
         }
 
-        if (Array.isArray(_value.notIn)) {
+        if (
+          FILTER_OPERATORS.notIn.accepted(_value.notIn) &&
+          _value.notIn.length > 0
+        ) {
+          // An empty exclusion list excludes nothing, so the clause is a
+          // no-op and is omitted rather than emitted as `NOT IN ()`.
           const placeholders = _value.notIn
             .map((item: unknown) => addParameter(item))
             .join(",");
@@ -752,7 +1012,7 @@ export class PGVectorStore extends VectorStore {
           );
         }
 
-        if (Array.isArray(_value.arrayContains)) {
+        if (FILTER_OPERATORS.arrayContains.accepted(_value.arrayContains)) {
           const keyPlaceholder = addParameter(key);
           const valuesPlaceholder = addParameter(_value.arrayContains);
           whereClauses.push(
@@ -794,6 +1054,17 @@ export class PGVectorStore extends VectorStore {
           `${this.metadataColumnName} ->> ${keyPlaceholder} = ${valuePlaceholder}`
         );
       }
+    }
+
+    const untranslated = collectUntranslatedFilterEntries(filter);
+    if (untranslated.length > 0) {
+      // Dropping an entry widens the result set to everything, which is a
+      // silent correctness bug for a vector store. Warn by default to keep the
+      // historical behavior; callers can opt into failing before the query.
+      if (this.throwOnInvalidFilter) {
+        throw untranslatedFilterError(untranslated);
+      }
+      console.warn(untranslatedFilterWarning(untranslated));
     }
 
     return { whereClauses, parameters, paramCount };
