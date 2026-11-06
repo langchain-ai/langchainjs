@@ -18,7 +18,7 @@ export namespace GenContent {
     threshold: "HARM_BLOCK_THRESHOLD_UNSPECIFIED" | "BLOCK_LOW_AND_ABOVE" | "BLOCK_MEDIUM_AND_ABOVE" | "BLOCK_ONLY_HIGH" | "BLOCK_NONE" | "OFF" | (string & {});
   }
 
-  export type HarmCategory = "HARM_CATEGORY_UNSPECIFIED" | "HARM_CATEGORY_DEROGATORY" | "HARM_CATEGORY_TOXICITY" | "HARM_CATEGORY_VIOLENCE" | "HARM_CATEGORY_SEXUAL" | "HARM_CATEGORY_MEDICAL" | "HARM_CATEGORY_DANGEROUS" | "HARM_CATEGORY_HARASSMENT" | "HARM_CATEGORY_HATE_SPEECH" | "HARM_CATEGORY_SEXUALLY_EXPLICIT" | "HARM_CATEGORY_DANGEROUS_CONTENT" | "HARM_CATEGORY_CIVIC_INTEGRITY" | (string & {});
+  export type HarmCategory = "HARM_CATEGORY_UNSPECIFIED" | "HARM_CATEGORY_DEROGATORY" | "HARM_CATEGORY_TOXICITY" | "HARM_CATEGORY_VIOLENCE" | "HARM_CATEGORY_SEXUAL" | "HARM_CATEGORY_MEDICAL" | "HARM_CATEGORY_DANGEROUS" | "HARM_CATEGORY_HARASSMENT" | "HARM_CATEGORY_HATE_SPEECH" | "HARM_CATEGORY_SEXUALLY_EXPLICIT" | "HARM_CATEGORY_DANGEROUS_CONTENT" | "HARM_CATEGORY_CIVIC_INTEGRITY" | "HARM_CATEGORY_JAILBREAK" | (string & {});
 
   /** Config for thinking features. */
   export interface ThinkingConfig {
@@ -35,8 +35,11 @@ export namespace GenContent {
 
     /**
      * Optional. Controls the maximum depth of the model's internal reasoning process before
-     * it produces a response. If not specified, the default is HIGH. Recommended
-     * for Gemini 3 or later models. Use with earlier models results in an error.
+     * it produces a response. The default value is model-dependent. Refer to the
+     * [Thinking levels
+     * guide](https://ai.google.dev/gemini-api/docs/thinking#thinking-levels) for
+     * more details. Recommended for Gemini 3 or later models. Use with earlier
+     * models results in an error.
      */
     thinkingLevel?: "THINKING_LEVEL_UNSPECIFIED" | "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | (string & {});
   }
@@ -72,6 +75,16 @@ export namespace GenContent {
   export interface VoiceConfig {
     /** The configuration for the prebuilt voice to use. */
     prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+
+    /**
+     * Optional. The speaker identifier for synthesis.
+     * Supported formats:
+     * 
+     * *   Speaker name for prebuilt voices (for example, `Orus` or `Kore`).
+     * *   Voice ID for stored voices (for example, `voice_xxx`).
+     * *   Voice replication key (for example, `voicekey_xxx`).
+     */
+    voice?: string;
   }
 
   /** The configuration for the multi-speaker setup. */
@@ -122,6 +135,12 @@ export namespace GenContent {
    * of the media if the `inline_data` field is filled with raw bytes.
    */
   export interface Part {
+    /**
+     * Optional. Audio (input or output) transcription.
+     * This is only set when this Part contains audio data.
+     */
+    audioTranscription?: AudioTranscription;
+
     /** Result of executing the `ExecutableCode`. */
     codeExecutionResult?: CodeExecutionResult;
 
@@ -149,8 +168,15 @@ export namespace GenContent {
     /** Inline media bytes. */
     inlineData?: Blob;
 
+    /**
+     * Optional. How the model processes this part's media for understanding.
+     * Only meaningful for video parts (`inline_data` or `file_data` with video
+     * mime). Non-video parts ignore this field.
+     */
+    mediaProcessing?: "MEDIA_PROCESSING_UNSPECIFIED" | "STATIC" | "AGENTIC" | (string & {});
+
     /** Optional. Media resolution for the input media. */
-    mediaResolution?: MediaResolution;
+    mediaResolution?: V1mainMediaResolution;
 
     /**
      * Custom metadata associated with the Part.
@@ -159,6 +185,12 @@ export namespace GenContent {
      * from which the Part originates or a way to multiplex multiple Part streams.
      */
     partMetadata?: Record<string, unknown>;
+
+    /**
+     * Optional. Metadata applied to text parts to customize how they should be spoken or
+     * synthesized, such as specifying speaker identity or speaking style.
+     */
+    speechMetadata?: SpeechMetadata;
 
     /** Inline text. */
     text?: string;
@@ -191,6 +223,17 @@ export namespace GenContent {
      * data is presented in inline_data or file_data.
      */
     videoMetadata?: VideoMetadata;
+  }
+
+  /** Speech metadata for `text` parts. */
+  export interface SpeechMetadata {
+    /** Optional. Optional speaker name for multi-speaker synthesis. */
+    speaker?: string;
+
+    /**
+     * Optional. Optional style instruction for the speech synthesis.
+     */
+    style?: string;
   }
 
   /**
@@ -321,8 +364,15 @@ export namespace GenContent {
      * be used within non-required properties. (Nullable properties are not
      * sufficient.) If `$ref` is set on a sub-schema, no other properties, except
      * for than those starting as a `$`, may be set.
+     * 
+     * Deprecated. Use `response_format` instead.
      */
     _responseJsonSchema?: unknown;
+
+    /**
+     * Optional. Config for audio transcription (speech recognition).
+     */
+    audioTranscriptionConfig?: AudioTranscriptionConfig;
 
     /**
      * Optional. Number of generated responses to return. If unset, this will default
@@ -330,6 +380,12 @@ export namespace GenContent {
      * models (Gemini 1.0 family)
      */
     candidateCount?: number;
+
+    /**
+     * Optional. If enabled, the model will detect emotions and adapt its responses
+     * accordingly.
+     */
+    enableAffectiveDialog?: boolean;
 
     /**
      * Optional. Enables enhanced civic answers. It may not be available for all models.
@@ -400,6 +456,12 @@ export namespace GenContent {
     presencePenalty?: number;
 
     /**
+     * Optional. Configuration for the response output format. Allows specifying output
+     * configuration per modality (text, audio, image) in a flat structure.
+     */
+    responseFormat?: ResponseFormatConfig;
+
+    /**
      * Optional. An internal detail. Use `responseJsonSchema` rather than this field.
      */
     responseJsonSchema?: unknown;
@@ -442,6 +504,8 @@ export namespace GenContent {
      * `application/json`: Schema for JSON response.
      * Refer to the [JSON text generation
      * guide](https://ai.google.dev/gemini-api/docs/json-mode) for more details.
+     * 
+     * Deprecated. Use `response_format` instead.
      */
     responseSchema?: GenContent.Tools.Schema;
 
@@ -469,6 +533,9 @@ export namespace GenContent {
      * attribute of the `Model` returned from the `getModel` function.
      * 
      * Values can range from [0.0, 2.0].
+     * 
+     * This field is no longer supported and is silently ignored on Gemini 3.6
+     * Flash and newer models.
      */
     temperature?: number;
 
@@ -490,6 +557,9 @@ export namespace GenContent {
      * the`Model.top_p` attribute returned from the `getModel` function. An empty
      * `top_k` attribute indicates that the model doesn't apply top-k sampling
      * and doesn't allow setting `top_k` on requests.
+     * 
+     * This field is no longer supported and is silently ignored on Gemini 3.6
+     * Flash and newer models.
      */
     topK?: number;
 
@@ -507,8 +577,14 @@ export namespace GenContent {
      * the`Model.top_p` attribute returned from the `getModel` function. An empty
      * `top_k` attribute indicates that the model doesn't apply top-k sampling
      * and doesn't allow setting `top_k` on requests.
+     * 
+     * This field is no longer supported and is silently ignored on Gemini 3.6
+     * Flash and newer models.
      */
     topP?: number;
+
+    /** Optional. Config for translation. */
+    translationConfig?: TranslationConfig;
   }
 
   export namespace Tools {
@@ -653,8 +729,17 @@ export namespace GenContent {
 
     /** Computer Use tool type. */
     export interface ComputerUse {
+      /** Optional. Disabled safety policies for computer use. */
+      disabledSafetyPolicies?: Array<"SAFETY_POLICY_UNSPECIFIED" | "FINANCIAL_TRANSACTIONS" | "SENSITIVE_DATA_MODIFICATION" | "COMMUNICATION_TOOL" | "ACCOUNT_CREATION" | "DATA_MODIFICATION" | "USER_CONSENT_MANAGEMENT" | "LEGAL_TERMS_AND_AGREEMENTS" | (string & {})>;
+
+      /**
+       * Optional. Whether enable the prompt injection detection check on computer-use
+       * request.
+       */
+      enablePromptInjectionDetection?: boolean;
+
       /** Required. The environment being operated. */
-      environment: "ENVIRONMENT_UNSPECIFIED" | "ENVIRONMENT_BROWSER" | (string & {});
+      environment: "ENVIRONMENT_UNSPECIFIED" | "ENVIRONMENT_BROWSER" | "ENVIRONMENT_MOBILE" | "ENVIRONMENT_DESKTOP" | (string & {});
 
       /**
        * Optional. By default, predefined functions are included in the final model
@@ -914,9 +999,35 @@ export namespace GenContent {
     contents: Array<Content>;
 
     /**
+     * Optional. An opaque continuation token used to resume generation from a
+     * previous `GenerateContent` or `StreamGenerateContent` response that stopped
+     * with `finish_reason` set to `CONTINUATION`. Note that `contents` is
+     * mandatory and must identically replicate the prompt and conversation
+     * history from the initial request when continuation token is provided in
+     * a request.
+     */
+    continuationToken?: string;
+
+    /**
      * Optional. Configuration options for model generation and outputs.
      */
     generationConfig?: GenerationConfig;
+
+    /**
+     * Optional. Labels with user-defined metadata for the request.
+     * 
+     * Optional. Labels must follow standard unified Cloud label requirements:
+     * - Label keys must start with a letter.
+     * - Label keys and values can be no longer than 63 characters (Unicode
+     *   codepoints) and can only contain lowercase letters, numeric characters,
+     *   underscores, and dashes.
+     * - International characters are allowed.
+     * 
+     * Usage:
+     * -  Safety identifiers from aggregators: Use the key `safety_identifier`
+     *    (e.g. `{"safety_identifier": "user_session_123"}`)
+     */
+    labels?: Record<string, unknown>;
 
     /**
      * Required. The name of the `Model` to use for generating the completion.
@@ -937,7 +1048,8 @@ export namespace GenContent {
      * `SafetyCategory` provided in the list, the API will use the default safety
      * setting for that category. Harm categories HARM_CATEGORY_HATE_SPEECH,
      * HARM_CATEGORY_SEXUALLY_EXPLICIT, HARM_CATEGORY_DANGEROUS_CONTENT,
-     * HARM_CATEGORY_HARASSMENT, HARM_CATEGORY_CIVIC_INTEGRITY are supported.
+     * HARM_CATEGORY_HARASSMENT, HARM_CATEGORY_CIVIC_INTEGRITY,
+     * HARM_CATEGORY_JAILBREAK are supported.
      * Refer to the [guide](https://ai.google.dev/gemini-api/docs/safety-settings)
      * for detailed information on available safety settings. Also refer to the
      * [Safety guidance](https://ai.google.dev/gemini-api/docs/safety-guidance) to
@@ -1076,6 +1188,17 @@ export namespace GenContent {
      * Example: `fileSearchStores/123`
      */
     fileSearchStore?: string;
+
+    /**
+     * Optional. The media blob resource name for multimodal file search results.
+     * Format: fileSearchStores/{file_search_store_id}/media/{blob_id}
+     */
+    mediaId?: string;
+
+    /**
+     * Optional. Page number of the retrieved context, if applicable.
+     */
+    pageNumber?: number;
 
     /** Optional. Text of the chunk. */
     text?: string;
@@ -1271,6 +1394,14 @@ export namespace GenContent {
     readonly content?: Content;
 
     /**
+     * An optional opaque continuation token returned when `finish_reason` is
+     * `CONTINUATION`.
+     * Clients can pass this token in a subsequent `GenerateContentRequest` to
+     * continue generation.
+     */
+    continuationToken?: string;
+
+    /**
      * Optional. Output only. Details the reason why the model stopped generating tokens.
      * This is populated only when `finish_reason` is set.
      */
@@ -1281,7 +1412,7 @@ export namespace GenContent {
      * 
      * If empty, the model has not stopped generating tokens.
      */
-    readonly finishReason?: "FINISH_REASON_UNSPECIFIED" | "STOP" | "MAX_TOKENS" | "SAFETY" | "RECITATION" | "LANGUAGE" | "OTHER" | "BLOCKLIST" | "PROHIBITED_CONTENT" | "SPII" | "MALFORMED_FUNCTION_CALL" | "IMAGE_SAFETY" | "IMAGE_PROHIBITED_CONTENT" | "IMAGE_OTHER" | "NO_IMAGE" | "IMAGE_RECITATION" | "UNEXPECTED_TOOL_CALL" | "TOO_MANY_TOOL_CALLS" | "MISSING_THOUGHT_SIGNATURE" | "MALFORMED_RESPONSE" | (string & {});
+    readonly finishReason?: "FINISH_REASON_UNSPECIFIED" | "STOP" | "MAX_TOKENS" | "SAFETY" | "RECITATION" | "LANGUAGE" | "OTHER" | "BLOCKLIST" | "PROHIBITED_CONTENT" | "SPII" | "MALFORMED_FUNCTION_CALL" | "IMAGE_SAFETY" | "IMAGE_PROHIBITED_CONTENT" | "IMAGE_OTHER" | "NO_IMAGE" | "IMAGE_RECITATION" | "UNEXPECTED_TOOL_CALL" | "TOO_MANY_TOOL_CALLS" | "MISSING_THOUGHT_SIGNATURE" | "MALFORMED_RESPONSE" | "ESCALATION" | "PUP_LIMITED_DISABLED" | "CONTINUATION" | (string & {});
 
     /**
      * Output only. Attribution information for sources that contributed to a grounded answer.
@@ -1364,6 +1495,9 @@ export namespace GenContent {
      */
     readonly promptTokensDetails?: Array<ModalityTokenCount>;
 
+    /** Output only. Service tier of the request. */
+    readonly serviceTier?: ServiceTier;
+
     /**
      * Output only. Number of tokens of thoughts for thinking models.
      */
@@ -1378,8 +1512,8 @@ export namespace GenContent {
     readonly toolUsePromptTokensDetails?: Array<ModalityTokenCount>;
 
     /**
-     * Total token count for the generation request (prompt + response
-     * candidates).
+     * Total token count for the generation request (prompt + tool-use prompt +
+     * thoughts + response candidates).
      */
     totalTokenCount?: number;
   }
@@ -1440,6 +1574,22 @@ export namespace GenContent {
     readonly usageMetadata?: UsageMetadata;
   }
 
+  /** Config for translation features. */
+  export interface TranslationConfig {
+    /**
+     * Optional. If true, the model will generate audio when the target language is spoken,
+     * essentially it will parrot the input. If false, we will not produce audio
+     * for the target language.
+     */
+    echoTargetLanguage?: boolean;
+
+    /**
+     * Required. The target language for translation. Supported values are BCP-47 language
+     * codes (e.g. "en", "es", "fr").
+     */
+    targetLanguageCode: string;
+  }
+
   /** A citation to a source for a portion of a specific response. */
   export interface CitationSource {
     /** Optional. End of the attributed segment, exclusive. */
@@ -1485,7 +1635,7 @@ export namespace GenContent {
 
   /** The configuration for the prebuilt speaker to use. */
   export interface PrebuiltVoiceConfig {
-    /** The name of the preset voice to use. */
+    /** Optional. The name of the preset voice to use. */
     voiceName?: string;
   }
 
@@ -1522,6 +1672,11 @@ export namespace GenContent {
      * to return the function output, e.g. "output", "result", etc.
      * In particular, if the function call failed to execute, the response can
      * have an "error" key to return error details to the model.
+     * 
+     * Multimedia can be included by using a subobject containing a single "$ref"
+     * key whose value is the `inline_data.display_name` of a
+     * `FunctionResponsePart` holding the multimedia.
+     * See https://ai.google.dev/gemini-api/docs/function-calling#multimodal.
      */
     response: Record<string, unknown>;
 
@@ -1545,6 +1700,15 @@ export namespace GenContent {
     willContinue?: boolean;
   }
 
+  /** Media resolution for tokenization. */
+  export interface V1mainMediaResolution {
+    /**
+     * The tokenization quality used for given media.
+     *  for Gemini API support .
+     */
+    level?: "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | "MEDIA_RESOLUTION_ULTRA_HIGH" | (string & {});
+  }
+
   export type ServiceTier = "unspecified" | "standard" | "flex" | "priority" | (string & {});
 
   /**
@@ -1554,7 +1718,7 @@ export namespace GenContent {
    * external systems to perform an action, or set of actions, outside of
    * knowledge and scope of the model.
    * 
-   * Next ID: 16
+   * Next ID: 17
    */
   export interface Tool {
     /**
@@ -1641,15 +1805,89 @@ export namespace GenContent {
     data?: string;
 
     /**
+     * Optional. Specifies the name used to refer to this blob to the model (e.g.
+     * "my_blob.png"). Used as the blob reference identifier when
+     * `verbalization_mode` is set to `REFERENCE_ONLY`.
+     */
+    displayName?: string;
+
+    /**
      * The IANA standard MIME type of the source data.
-     * Examples:
-     *   - image/png
-     *   - image/jpeg
-     * If an unsupported MIME type is provided, an error will be returned. For a
-     * complete list of supported types, see [Supported file
-     * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
+     * Examples of supported types:
+     * - Images: image/png, image/jpeg, image/jpg, image/webp, image/heic,
+     * image/heif, image/gif, image/avif
+     * - Audio: audio/*, video/audio/s16le, video/audio/wav
+     * - Video: video/*
+     * - Text: text/plain, text/html, text/css, text/javascript,
+     * text/x-typescript, text/csv, text/markdown, text/x-python, text/xml,
+     * text/rtf, video/text/timestamp
+     * - Applications: application/x-javascript, application/x-typescript,
+     * application/x-python-code, application/json, application/x-ipynb+json,
+     * application/rtf, application/pdf For additional context,
+     * see [Supported file
+     * formats](https://ai.google.dev/gemini-api/docs/file-input-methods#supported-content-types).
+     * //
      */
     mimeType?: string;
+  }
+
+  /** The audio transcription configuration. */
+  export interface AudioTranscriptionConfig {
+    /**
+     * Optional. A list of phrases used for speech adaptation, which biases the ASR model to
+     * improve recognition of these specific terms.
+     */
+    adaptationPhrases?: Array<string>;
+
+    /**
+     * Optional. A list of custom vocabulary phrases to bias the speech recognition model
+     * toward recognizing specific terms (product names, proper nouns, jargon).
+     */
+    customVocabulary?: Array<string>;
+
+    /** Optional. Configures speaker diarization. */
+    diarization?: boolean;
+
+    /** Optional. The model will detect the language automatically. */
+    languageAuto?: LanguageAuto;
+
+    /**
+     * Optional. BCP-47 language codes providing hints about the languages present in the
+     * audio. If omitted or empty, defaults to automatic language detection.
+     */
+    languageCodes?: Array<string>;
+
+    /** Optional. Specifies one or more languages in the audio. */
+    languageHints?: LanguageHints;
+
+    /**
+     * Optional. Configures transcription mode. Supported values: `VERBATIM`,
+     * `SMART`. If unspecified, defaults to `VERBATIM` transcription.
+     * In `SMART` mode, the model performs disfluency removal (eliminating
+     * filler words, repetitions, and false starts), light grammatical cleanup,
+     * automatic formatting (paragraphs, bullet points, numbered lists), and
+     * minor user edits (inline self-corrections).
+     * Timestamps and diarization are incompatible with mode `SMART`.
+     */
+    mode?: "MODE_UNSPECIFIED" | "VERBATIM" | "SMART" | (string & {});
+
+    /** Optional. Configures word-level timestamp generation. */
+    wordTimestamp?: boolean;
+  }
+
+  /**
+   * Configuration for the response output format. This is a flat object
+   * where each optional sub-field configures a specific output modality.
+   */
+  export interface ResponseFormatConfig {
+    /** Optional. Audio output format configuration. */
+    audio?: AudioResponseFormat;
+
+    /** Optional. Image output format configuration. */
+    image?: ImageResponseFormat;
+
+    /** Optional. Text output format configuration. */
+    text?: TextResponseFormat;
   }
 
   /**
@@ -1672,7 +1910,7 @@ export namespace GenContent {
      * Required. The type of tool that was called, matching the `tool_type` in the
      * corresponding `ToolCall`.
      */
-    toolType: ToolType;
+    toolType: V1mainToolType;
   }
 
   /** Google search entry point. */
@@ -1710,8 +1948,37 @@ export namespace GenContent {
     retirementTime?: string;
   }
 
+  /**
+   * The transcription of an audio part.
+   * For multi-speaker audio, each speaker segment is a separate Part with its
+   * own AudioTranscription carrying the speaker_label.
+   */
+  export interface AudioTranscription {
+    /**
+     * Optional. A label identifying the speaker of this audio segment (e.g. "spk_1",
+     * "spk_2"). Present when diarization is set.
+     */
+    speakerLabel?: string;
+
+    /** Required. The transcription text of this audio segment. */
+    text: string;
+
+    /**
+     * Optional. Detailed word-level transcriptions and timing details.
+     * Present when word_timestamp is set.
+     */
+    words?: Array<WordInfo>;
+  }
+
   /** URI based data. */
   export interface FileData {
+    /**
+     * Optional. Specifies the name used to refer to this file to the model (e.g.
+     * "my_file.pdf"). Used as the file reference identifier when
+     * `verbalization_mode` is set to `REFERENCE_ONLY`.
+     */
+    displayName?: string;
+
     /** Required. URI. */
     fileUri: string;
 
@@ -1739,8 +2006,11 @@ export namespace GenContent {
      */
     id?: string;
 
+    /** Optional. The name of the tool that was called. */
+    toolName?: string;
+
     /** Required. The type of tool that was called. */
-    toolType: ToolType;
+    toolType: V1mainToolType;
   }
 
   /**
@@ -1798,7 +2068,7 @@ export namespace GenContent {
   /**
    * A MCPServer is a server that can be called by the model to perform actions.
    * It is a server that implements the MCP protocol.
-   * Next ID: 5
+   * Next ID: 7
    */
   export interface McpServer {
     /** The name of the MCPServer. */
@@ -1806,6 +2076,36 @@ export namespace GenContent {
 
     /** A transport that can stream HTTP requests and responses. */
     streamableHttpTransport?: StreamableHttpTransport;
+  }
+
+  /** Configuration for audio output format. */
+  export interface AudioResponseFormat {
+    /**
+     * Optional. Bit rate in bits per second (bps). Only applicable for compressed formats
+     * (MP3, Opus).
+     */
+    bitRate?: number;
+
+    /** Optional. The delivery mode for the audio output. */
+    delivery?: "DELIVERY_UNSPECIFIED" | "INLINE" | "URI" | (string & {});
+
+    /** Optional. The MIME type of the audio output. */
+    mimeType?: "MIME_TYPE_UNSPECIFIED" | "AUDIO_MP3" | "AUDIO_OGG_OPUS" | "AUDIO_L16" | "AUDIO_WAV" | "AUDIO_ALAW" | "AUDIO_MULAW" | (string & {});
+
+    /** Optional. Sample rate in Hz. */
+    sampleRate?: number;
+  }
+
+  /** Configuration for text output format. */
+  export interface TextResponseFormat {
+    /** Optional. The MIME type of the text output. */
+    mimeType?: "MIME_TYPE_UNSPECIFIED" | "APPLICATION_JSON" | "TEXT_PLAIN" | (string & {});
+
+    /**
+     * Optional. The JSON schema that the output should conform to. Only applicable when
+     * mime_type is APPLICATION_JSON.
+     */
+    schema?: unknown;
   }
 
   /**
@@ -1823,6 +2123,22 @@ export namespace GenContent {
     /** Inline media bytes. */
     inlineData?: FunctionResponseBlob;
   }
+
+  /**
+   * Indicates the language of the audio should be automatically detected.
+   */
+  export interface LanguageAuto {
+  }
+
+  /**
+   * Provides hints to the model about possible languages present in the audio.
+   */
+  export interface LanguageHints {
+    /** Required. BCP-47 language codes. */
+    languageCodes: Array<string>;
+  }
+
+  export type V1mainToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
 
   export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED" | (string & {});
 
@@ -1846,6 +2162,37 @@ export namespace GenContent {
   export interface GroundingChunkStringList {
     /** The string values of the list. */
     values?: Array<string>;
+  }
+
+  /** Configuration for image output format. */
+  export interface ImageResponseFormat {
+    /** Optional. The aspect ratio for the image output. */
+    aspectRatio?: "ASPECT_RATIO_UNSPECIFIED" | "ASPECT_RATIO_ONE_BY_ONE" | "ASPECT_RATIO_TWO_BY_THREE" | "ASPECT_RATIO_THREE_BY_TWO" | "ASPECT_RATIO_THREE_BY_FOUR" | "ASPECT_RATIO_FOUR_BY_THREE" | "ASPECT_RATIO_FOUR_BY_FIVE" | "ASPECT_RATIO_FIVE_BY_FOUR" | "ASPECT_RATIO_NINE_BY_SIXTEEN" | "ASPECT_RATIO_SIXTEEN_BY_NINE" | "ASPECT_RATIO_TWENTY_ONE_BY_NINE" | "ASPECT_RATIO_ONE_BY_EIGHT" | "ASPECT_RATIO_EIGHT_BY_ONE" | "ASPECT_RATIO_ONE_BY_FOUR" | "ASPECT_RATIO_FOUR_BY_ONE" | (string & {});
+
+    /** Optional. The delivery mode for the image output. */
+    delivery?: "DELIVERY_UNSPECIFIED" | "INLINE" | "URI" | (string & {});
+
+    /** Optional. The size of the image output. */
+    imageSize?: "IMAGE_SIZE_UNSPECIFIED" | "IMAGE_SIZE_FIVE_TWELVE" | "IMAGE_SIZE_ONE_K" | "IMAGE_SIZE_TWO_K" | "IMAGE_SIZE_FOUR_K" | (string & {});
+
+    /** Optional. The MIME type of the image output. */
+    mimeType?: "MIME_TYPE_UNSPECIFIED" | "IMAGE_JPEG" | (string & {});
+  }
+
+  /** Information about a single recognized word. */
+  export interface WordInfo {
+    /**
+     * Optional. End offset in time of the word relative to the start of the audio.
+     */
+    endOffset?: string;
+
+    /**
+     * Optional. Start offset in time of the word relative to the start of the audio.
+     */
+    startOffset?: string;
+
+    /** Required. Transcript of the word. */
+    word: string;
   }
 
   /**
@@ -1934,12 +2281,4 @@ export namespace GenContent {
     /** The mode of the predictor to be used in dynamic retrieval. */
     mode?: "MODE_UNSPECIFIED" | "MODE_DYNAMIC" | (string & {});
   }
-
-  /**
-   * Optional. If specified, the media resolution specified will be used.
-   */
-  export type MediaResolution = "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | (string & {});
-
-  /** Required. The type of tool that was called. */
-  export type ToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
 }

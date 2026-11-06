@@ -36,6 +36,8 @@ export async function* convertGoogleGeminiStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason = "stop";
+  let geminiFinishReason: string | undefined;
+  let continuationToken: string | undefined;
   let groundingMetadata: Gemini.GroundingMetadata | undefined;
   let citationMetadata: Gemini.CitationMetadata | undefined;
 
@@ -79,7 +81,11 @@ export async function* convertGoogleGeminiStream(
 
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
+      geminiFinishReason = candidate.finishReason;
       finishReason = mapGeminiFinishReason(candidate.finishReason);
+    }
+    if (candidate?.continuationToken) {
+      continuationToken = candidate.continuationToken;
     }
     if (candidate?.groundingMetadata) {
       groundingMetadata = candidate.groundingMetadata;
@@ -208,6 +214,11 @@ export async function* convertGoogleGeminiStream(
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: {
       model_provider: "google",
+      // The raw reason distinguishes CONTINUATION from MAX_TOKENS, which can
+      // also carry a token but needs a higher maxOutputTokens to resume.
+      ...(continuationToken
+        ? { continuationToken, finishReason: geminiFinishReason }
+        : {}),
       ...(citationMetadata ? { citationMetadata } : {}),
       ...(groundingMetadata
         ? {
@@ -227,6 +238,7 @@ function mapGeminiFinishReason(reason: string): FinishReason {
     case "max_tokens":
     case "max-token":
     case "max_token":
+    case "continuation": // Long Decode: more output is available via the token
       return "length";
     case "safety":
     case "recitation":

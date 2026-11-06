@@ -4,6 +4,21 @@
 export const iife = <T>(fn: () => T): T => fn();
 
 /**
+ * Returns a signal that aborts when `signal` aborts or `timeout` ms elapse,
+ * whichever is first. A missing or `0` timeout leaves `signal` unchanged.
+ */
+export function withTimeoutSignal(
+  signal: AbortSignal | undefined,
+  timeout: number | undefined
+): AbortSignal | undefined {
+  if (!timeout) {
+    return signal;
+  }
+  const timeoutSignal = AbortSignal.timeout(timeout);
+  return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
+}
+
+/**
  * Type utility that recursively resolves object shape, removing type aliases,
  * intersections, and unions for easier type introspection and error output.
  * Makes sure to guard primitive types.
