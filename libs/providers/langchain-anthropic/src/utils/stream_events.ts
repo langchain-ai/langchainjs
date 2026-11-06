@@ -4,7 +4,6 @@
  * @module
  */
 
-import type Anthropic from "@anthropic-ai/sdk";
 import type {
   ChatModelStreamEvent,
   ContentBlockDelta,
@@ -15,6 +14,7 @@ import type { AnthropicMessageStreamEvent } from "../types.js";
 import {
   type AnthropicUsageCounts,
   _mergeCumulativeAnthropicUsage,
+  buildUsageMetadata,
 } from "./message_outputs.js";
 
 // ─── Public API ─────────────────────────────────────────────────
@@ -51,7 +51,7 @@ export async function* convertAnthropicStream(
         const { usage, id, model } = data.message;
         if (usage && shouldStreamUsage) {
           rawUsage = _mergeCumulativeAnthropicUsage(undefined, usage);
-          usageSnapshot = buildUsageSnapshot(rawUsage);
+          usageSnapshot = buildUsageMetadata(rawUsage);
         }
         yield {
           event: "message-start" as const,
@@ -80,7 +80,7 @@ export async function* convertAnthropicStream(
         if (shouldStreamUsage && data.usage) {
           // Delta usage is cumulative, so it replaces the snapshot.
           rawUsage = _mergeCumulativeAnthropicUsage(rawUsage, data.usage);
-          usageSnapshot = buildUsageSnapshot(rawUsage);
+          usageSnapshot = buildUsageMetadata(rawUsage);
           yield { event: "usage" as const, usage: usageSnapshot };
         }
         if (
@@ -182,25 +182,6 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
     default:
       return "stop";
   }
-}
-
-function buildUsageSnapshot(
-  usage: Anthropic.Messages.Usage | Record<string, number>
-): UsageMetadata {
-  const cacheCreation =
-    (usage as Record<string, number>).cache_creation_input_tokens ?? 0;
-  const cacheRead =
-    (usage as Record<string, number>).cache_read_input_tokens ?? 0;
-  const totalInput = usage.input_tokens + cacheCreation + cacheRead;
-  return {
-    input_tokens: totalInput,
-    output_tokens: usage.output_tokens,
-    total_tokens: totalInput + usage.output_tokens,
-    input_token_details: {
-      cache_creation: cacheCreation,
-      cache_read: cacheRead,
-    },
-  };
 }
 
 function mapBlockToContentBlock(

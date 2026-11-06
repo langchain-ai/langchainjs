@@ -29,7 +29,7 @@ test("Tool Search Tool - streaming content_block_start is captured", () => {
       index: 1,
       content_block: toolSearchResultBlock,
     } as unknown as Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
-    { streamUsage: true, coerceContentToString: false }
+    { streamUsage: true, coerceContentToString: false, usageState: {} }
   );
 
   expect(result).not.toBeNull();
@@ -96,7 +96,7 @@ test("Tool Search Tool - generic result block is captured in streaming", () => {
       index: 1,
       content_block: genericToolSearchResultBlock,
     } as unknown as Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
-    { streamUsage: true, coerceContentToString: false }
+    { streamUsage: true, coerceContentToString: false, usageState: {} }
   );
 
   expect(result).not.toBeNull();

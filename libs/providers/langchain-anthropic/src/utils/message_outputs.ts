@@ -25,6 +25,7 @@ export type AnthropicUsageCounts = {
 /** Usage reported so far for one streamed response. */
 export type AnthropicStreamUsageState = {
   reported?: AnthropicUsageCounts;
+  serverToolUse?: Record<string, number>;
 };
 
 const CUMULATIVE_USAGE_KEYS = [
@@ -45,7 +46,7 @@ const CUMULATIVE_USAGE_KEYS = [
  */
 export function _mergeCumulativeAnthropicUsage(
   previous: AnthropicUsageCounts | undefined,
-  next: object
+  next: Partial<Record<keyof AnthropicUsageCounts, number | null>>
 ): AnthropicUsageCounts {
   const merged: AnthropicUsageCounts = {
     input_tokens: 0,
@@ -55,8 +56,8 @@ export function _mergeCumulativeAnthropicUsage(
     ...previous,
   };
   for (const key of CUMULATIVE_USAGE_KEYS) {
-    const value = (next as Record<string, unknown>)[key];
-    if (typeof value === "number") {
+    const value = next[key];
+    if (value != null) {
       merged[key] = value;
     }
   }
@@ -69,11 +70,11 @@ export function _makeMessageChunkFromAnthropicEvent(
     streamUsage: boolean;
     coerceContentToString: boolean;
     /**
-     * Shared across the events of one response. When set, `message_delta`
-     * chunks carry the difference from the usage already reported, so
-     * concatenating the chunks gives Anthropic's final cumulative totals.
+     * Shared across the events of one response. `message_delta` chunks carry
+     * the difference from the usage already reported, so concatenating the
+     * chunks gives Anthropic's final cumulative totals.
      */
-    usageState?: AnthropicStreamUsageState;
+    usageState: AnthropicStreamUsageState;
   }
 ): {
   chunk: AIMessageChunk;
@@ -92,12 +93,13 @@ export function _makeMessageChunkFromAnthropicEvent(
     const { input_tokens, output_tokens, ...rest }: Record<string, any> =
       usage ?? {};
     const usageMetadata = buildUsageMetadata(usage);
-    if (fields.usageState) {
-      fields.usageState.reported = _mergeCumulativeAnthropicUsage(
-        undefined,
-        usage ?? {}
-      );
-    }
+    fields.usageState.reported = _mergeCumulativeAnthropicUsage(
+      undefined,
+      usage ?? {}
+    );
+    fields.usageState.serverToolUse = usage?.server_tool_use
+      ? { ...usage.server_tool_use }
+      : undefined;
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
@@ -113,33 +115,47 @@ export function _makeMessageChunkFromAnthropicEvent(
       }),
     };
   } else if (data.type === "message_delta") {
-    const usageMetadata: UsageMetadata = iife(() => {
-      const previous = fields.usageState?.reported;
-      if (!fields.usageState || !previous) {
-        return {
-          input_tokens: 0,
-          output_tokens: data.usage.output_tokens,
-          total_tokens: data.usage.output_tokens,
-        };
-      }
-      const current = _mergeCumulativeAnthropicUsage(previous, data.usage);
-      fields.usageState.reported = current;
-      return subtractUsageMetadata(
-        buildUsageMetadata(current),
-        buildUsageMetadata(previous)
-      );
-    });
+    const previous =
+      fields.usageState.reported ??
+      _mergeCumulativeAnthropicUsage(undefined, {});
+    const current = _mergeCumulativeAnthropicUsage(previous, data.usage);
+    fields.usageState.reported = current;
+    const usageDiff = Object.fromEntries(
+      CUMULATIVE_USAGE_KEYS.map((key) => [key, current[key] - previous[key]])
+    ) as AnthropicUsageCounts;
+    const usageMetadata = buildUsageMetadata(usageDiff);
     const responseMetadata = iife(() => {
       const output = {};
       if ("context_management" in data.delta) {
         output["context_management"] = data.delta.context_management;
       }
-      if (
-        "usage" in data &&
-        "cost" in data.usage &&
-        typeof data.usage.cost === "number"
-      ) {
-        output["usage"] = { cost: data.usage.cost };
+      // `response_metadata.usage` starts from `message_start` and is summed on
+      // concat, so this carries the difference from the cumulative delta.
+      const usage: Record<string, unknown> = {};
+      for (const key of [
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+      ] as const) {
+        if (usageDiff[key] !== 0) {
+          usage[key] = usageDiff[key];
+        }
+      }
+      const serverToolUse = data.usage.server_tool_use;
+      if (serverToolUse) {
+        const reported = fields.usageState.serverToolUse;
+        usage.server_tool_use = Object.fromEntries(
+          Object.entries(serverToolUse).map(([key, value]) => [
+            key,
+            value - (reported?.[key] ?? 0),
+          ])
+        );
+        fields.usageState.serverToolUse = { ...serverToolUse };
+      }
+      if ("cost" in data.usage && typeof data.usage.cost === "number") {
+        usage.cost = data.usage.cost;
+      }
+      if (Object.keys(usage).length > 0) {
+        output["usage"] = usage;
       }
       return output;
     });
@@ -387,7 +403,7 @@ export function anthropicResponseToChatMessages(
   }
 }
 
-function buildUsageMetadata(
+export function buildUsageMetadata(
   usage: Anthropic.Messages.Usage | Record<string, number>
 ): UsageMetadata {
   const cacheCreationInputTokens = usage.cache_creation_input_tokens ?? 0;
@@ -403,25 +419,6 @@ function buildUsageMetadata(
     input_token_details: {
       cache_creation: cacheCreationInputTokens,
       cache_read: cacheReadInputTokens,
-    },
-  };
-}
-
-function subtractUsageMetadata(
-  current: UsageMetadata,
-  previous: UsageMetadata
-): UsageMetadata {
-  return {
-    input_tokens: current.input_tokens - previous.input_tokens,
-    output_tokens: current.output_tokens - previous.output_tokens,
-    total_tokens: current.total_tokens - previous.total_tokens,
-    input_token_details: {
-      cache_creation:
-        (current.input_token_details?.cache_creation ?? 0) -
-        (previous.input_token_details?.cache_creation ?? 0),
-      cache_read:
-        (current.input_token_details?.cache_read ?? 0) -
-        (previous.input_token_details?.cache_read ?? 0),
     },
   };
 }
