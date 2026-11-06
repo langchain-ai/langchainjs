@@ -528,10 +528,18 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
         },
       };
     } else if (block.data) {
+      const data =
+        typeof block.data === "string"
+          ? block.data
+          : btoa(
+              Array.from(block.data, (byte) => String.fromCharCode(byte)).join(
+                ""
+              )
+            );
       return {
         type: "image_url",
         image_url: {
-          url: `data:${block.mimeType};base64,${block.data}`,
+          url: `data:${block.mimeType};base64,${data}`,
         },
       };
     }
@@ -835,6 +843,14 @@ export const convertMessagesToCompletionsMessageParams: Converter<
                   completionsApiContentBlockConverter
                 )
               );
+            }
+            if (role === "user" && m.type === "image") {
+              const image = convertStandardContentBlockToCompletionsContentPart(
+                m as ContentBlock.Multimodal.Image
+              );
+              if (image) {
+                return applyPromptCacheBreakpoint(m, image);
+              }
             }
             if (m.type === "text") {
               return liftExtrasPromptCacheBreakpoint(m);
