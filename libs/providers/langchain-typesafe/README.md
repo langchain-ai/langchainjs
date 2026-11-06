@@ -27,7 +27,7 @@ Set `TYPESAFE_API_KEY` in your environment, then:
 ```ts
 import { TypeSafeClassifier } from "@langchain/typesafe";
 
-const classifier = new TypeSafeClassifier({});
+const classifier = new TypeSafeClassifier();
 
 const result = await classifier.invoke({
   state: {
@@ -59,6 +59,8 @@ result.answers.frustration; // { type: "score", score: 1.3, legend: { 0: "calm",
 ```
 
 Pass `state` and `questions` on each invocation. Reuse the same classifier with different questions for later or concurrent calls. TypeScript infers each answer variant, the allowed choice labels, and the keys in `choices`, `nouls`, and `scores` from that call's questions.
+
+Constructor-bound `questions` and `invoke(state)` remain supported but are deprecated until the next minor version. Migrate to `invoke({ state, questions })`; per-call questions override constructor defaults.
 
 `result.model` is the versioned model that actually answered (e.g. `jev-1.13.0`), not the alias you sent — `jev-latest` in, `jev-1.13.0` out.
 

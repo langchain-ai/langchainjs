@@ -29,6 +29,8 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 export interface TypeSafeClassifierCallOptions extends RunnableConfig {}
 
 export interface TypeSafeClassifierFields extends AsyncCallerParams {
+  /** @deprecated Pass questions to `invoke({ state, questions })`; removed in the next minor version. */
+  questions?: Record<string, Question>;
   /** Model or alias. Defaults to `jev-latest`. */
   model?: string;
   /** Falls back to the `TYPESAFE_API_KEY` environment variable. */
@@ -59,7 +61,7 @@ export interface TypeSafeClassifierFields extends AsyncCallerParams {
  *
  * @example
  * ```ts
- * const classifier = new TypeSafeClassifier({});
+ * const classifier = new TypeSafeClassifier();
  * const result = await classifier.invoke({
  *   state: "My payouts have been failing.",
  *   questions: {
@@ -69,7 +71,7 @@ export interface TypeSafeClassifierFields extends AsyncCallerParams {
  * ```
  */
 export class TypeSafeClassifier extends Runnable<
-  ClassifierRequest,
+  ClassifierRequest | State,
   ClassifierResponse,
   TypeSafeClassifierCallOptions
 > {
@@ -84,6 +86,9 @@ export class TypeSafeClassifier extends Runnable<
   get lc_secrets(): Record<string, string> {
     return { apiKey: "TYPESAFE_API_KEY" };
   }
+
+  /** @deprecated Pass questions to `invoke({ state, questions })`; removed in the next minor version. */
+  readonly questions?: ValidatedQuestions;
 
   readonly model: string;
 
@@ -104,7 +109,7 @@ export class TypeSafeClassifier extends Runnable<
 
   protected fetchImpl: typeof fetch;
 
-  constructor(fields: TypeSafeClassifierFields) {
+  constructor(fields: TypeSafeClassifierFields = {}) {
     // `Serializable`'s own constructor stores whatever is passed here
     // verbatim as `this.lc_kwargs` — a normal, enumerable property. If
     // `apiKey` rode along, `util.inspect(classifier)` would print it via
@@ -133,6 +138,16 @@ export class TypeSafeClassifier extends Runnable<
     const model = (fields.model ?? DEFAULT_MODEL).trim();
     if (model.length === 0) {
       throw new TypeSafeError("TypeSafe model must not be empty.");
+    }
+
+    if (fields.questions !== undefined) {
+      try {
+        this.questions = parseQuestions(fields.questions);
+      } catch (error) {
+        throw new TypeSafeError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
     }
 
     if (fields.timeout !== undefined && fields.timeout <= 0) {
@@ -186,7 +201,23 @@ export class TypeSafeClassifier extends Runnable<
   async invoke<const Q extends Record<string, Question>>(
     request: ClassifierRequest<Q>,
     options?: Partial<TypeSafeClassifierCallOptions>
-  ): Promise<ClassifierResponse<Q>> {
+  ): Promise<ClassifierResponse<Q>>;
+  /** @deprecated Pass `{ state, questions }`; raw state input is removed in the next minor version. */
+  async invoke(
+    state: State,
+    options?: Partial<TypeSafeClassifierCallOptions>
+  ): Promise<ClassifierResponse>;
+  async invoke(
+    input: ClassifierRequest | State,
+    options?: Partial<TypeSafeClassifierCallOptions>
+  ): Promise<ClassifierResponse> {
+    const request =
+      typeof input === "object" &&
+      input !== null &&
+      Object.hasOwn(input, "state") &&
+      Object.hasOwn(input, "questions")
+        ? (input as ClassifierRequest)
+        : { state: input as State, questions: this.questions ?? {} };
     let questions: ValidatedQuestions;
     try {
       questions = parseQuestions(request.questions);
@@ -199,7 +230,7 @@ export class TypeSafeClassifier extends Runnable<
         this.classify(state, questions, options?.signal),
       request,
       options
-    ) as Promise<ClassifierResponse<Q>>;
+    );
   }
 
   /** Builds the request body. Question key order is significant. */

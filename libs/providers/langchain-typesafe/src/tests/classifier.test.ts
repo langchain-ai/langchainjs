@@ -83,7 +83,7 @@ afterEach(() => {
 
 describe("construction", () => {
   test("requires an API key", () => {
-    expect(() => new TypeSafeClassifier({})).toThrow(
+    expect(() => new TypeSafeClassifier()).toThrow(
       /TypeSafe API key is required/
     );
   });
@@ -91,7 +91,7 @@ describe("construction", () => {
   test("reads the API key and base URL from the environment", () => {
     process.env.TYPESAFE_API_KEY = "env-key";
     process.env.TYPESAFE_BASE_URL = "https://env.example.test";
-    const classifier = new TypeSafeClassifier({});
+    const classifier = new TypeSafeClassifier();
     expect(classifier.baseUrl).toBe("https://env.example.test");
   });
 
@@ -124,6 +124,77 @@ describe("construction", () => {
 });
 
 describe("invoke", () => {
+  test("preserves deprecated constructor questions and raw-state calls", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => okResponse());
+    const classifier = new TypeSafeClassifier({
+      apiKey: API_KEY,
+      questions: QUESTIONS,
+    });
+    expect(classifier.questions).toEqual(QUESTIONS);
+    const inputs = [
+      "hi",
+      new HumanMessage("hello"),
+      { message: "help" },
+      [new HumanMessage("conversation")],
+    ];
+    for (const state of inputs) {
+      await classifier.invoke(state);
+    }
+    const chunks = [];
+    for await (const chunk of await classifier.stream("stream"))
+      chunks.push(chunk);
+    expect(chunks).toHaveLength(1);
+    const bodies = fetchSpy.mock.calls.map(([, init]) =>
+      JSON.parse(init?.body as string)
+    );
+    expect(bodies.map((body) => body.state)).toEqual([
+      "hi",
+      "user: hello",
+      { message: "help" },
+      ["user: conversation"],
+      "stream",
+    ]);
+    for (const body of bodies) expect(body.questions).toEqual(QUESTIONS);
+  });
+
+  test("per-call questions override deprecated constructor defaults without replacing them", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => okResponse());
+    const classifier = new TypeSafeClassifier({
+      apiKey: API_KEY,
+      questions: QUESTIONS,
+    });
+    const questions = {
+      fresh: { type: "noul", instructions: "Fresh?" },
+    } as const;
+    await classifier.invoke({ state: "new request", questions });
+    await classifier.invoke("legacy request");
+    expect(
+      JSON.parse(fetchSpy.mock.calls[0][1]?.body as string).questions
+    ).toEqual(questions);
+    expect(
+      JSON.parse(fetchSpy.mock.calls[1][1]?.body as string).questions
+    ).toEqual(QUESTIONS);
+    const handleChainStart = vi.fn();
+    await expect(
+      classifier.invoke(
+        { state: "invalid", questions: {} },
+        { callbacks: [{ handleChainStart }] }
+      )
+    ).rejects.toThrow(/at least one question/i);
+    expect(handleChainStart).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test("validates deprecated constructor questions", () => {
+    expect(
+      () => new TypeSafeClassifier({ apiKey: API_KEY, questions: {} })
+    ).toThrow(/at least one question/i);
+  });
+
   test.each([
     {},
     { invalid: { type: "choice", criteria: {} } },

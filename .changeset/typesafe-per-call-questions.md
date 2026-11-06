@@ -1,5 +1,5 @@
 ---
-"@langchain/typesafe": minor
+"@langchain/typesafe": patch
 ---
 
-Breaking change: move classifier questions from the constructor to `invoke({ state, questions })`. Answer types are inferred per call, and questions are validated before callbacks and tracing begin. Export `ClassifierRequest` and `ClassifierResponse` types and derive middleware questions at invocation time.
+Add `invoke({ state, questions })` with per-call answer inference and validation before callbacks and tracing. Deprecate constructor-bound questions and raw-state invocation until the next minor version. Export `ClassifierRequest` and `ClassifierResponse` types, derive middleware questions at invocation time, and allow omitting constructor options.
