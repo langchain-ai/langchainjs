@@ -323,10 +323,15 @@ export function convertMessagesToInteractionsInput(
             pendingOutputSignature &&
             !emittedSignatures.has(pendingOutputSignature)
           ) {
-            steps.push({
-              type: "thought",
-              signature: pendingOutputSignature,
-            });
+            const lastStep = steps[steps.length - 1];
+            if (lastStep?.type === "thought" && !lastStep.signature) {
+              lastStep.signature = pendingOutputSignature;
+            } else {
+              steps.push({
+                type: "thought",
+                signature: pendingOutputSignature,
+              });
+            }
             emittedSignatures.add(pendingOutputSignature);
           }
           steps.push({
@@ -406,10 +411,15 @@ export function convertMessagesToInteractionsInput(
             )?.thoughtSignature;
 
           if (sig && !emittedSignatures.has(sig)) {
-            steps.push({
-              type: "thought",
-              signature: sig,
-            });
+            const lastStep = steps[steps.length - 1];
+            if (lastStep?.type === "thought" && !lastStep.signature) {
+              lastStep.signature = sig;
+            } else {
+              steps.push({
+                type: "thought",
+                signature: sig,
+              });
+            }
             emittedSignatures.add(sig);
           }
 
@@ -1065,6 +1075,13 @@ export function convertInteractionToAIMessage(
   const builtInToolSteps: Gemini.Interactions.Step[] = [];
 
   let pendingThoughtSignature: string | undefined;
+  // In the Interactions API, FunctionCallStep never carries its own `signature` field —
+  // its signature always lives on the preceding ThoughtStep (whether or not that
+  // ThoughtStep also includes `summary` text blocks, e.g. when `reasoningEffort: "high"`
+  // enables `thinking_summaries: "auto"`). We track `pendingFunctionCallSignature` so
+  // that any `function_call` step following a `thought` step receives `thoughtSignature`
+  // on its `Gemini.Part.FunctionCall` (and consequently on `AIMessage.tool_calls[i]`).
+  let pendingFunctionCallSignature: string | undefined;
 
   for (const step of steps) {
     switch (step.type) {
@@ -1087,8 +1104,10 @@ export function convertInteractionToAIMessage(
             });
           }
           pendingThoughtSignature = undefined;
+          pendingFunctionCallSignature = step.signature;
         } else if (step.signature) {
           pendingThoughtSignature = step.signature;
+          pendingFunctionCallSignature = step.signature;
         }
         break;
       }
@@ -1119,23 +1138,25 @@ export function convertInteractionToAIMessage(
           if (part) {
             geminiParts.push(part);
             pendingThoughtSignature = undefined;
+            pendingFunctionCallSignature = undefined;
           }
         }
         break;
       }
 
       case "function_call": {
+        const fcSignature =
+          pendingThoughtSignature ?? pendingFunctionCallSignature;
         geminiParts.push({
           functionCall: {
             id: step.id,
             name: step.name,
             args: step.arguments ?? {},
           },
-          ...(pendingThoughtSignature
-            ? { thoughtSignature: pendingThoughtSignature }
-            : {}),
+          ...(fcSignature ? { thoughtSignature: fcSignature } : {}),
         });
         pendingThoughtSignature = undefined;
+        pendingFunctionCallSignature = undefined;
         break;
       }
 

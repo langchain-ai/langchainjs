@@ -91,6 +91,7 @@ export async function* convertInteractionsStreamToChunks(
   let modelName: string | undefined = options.model;
   let latestUsage: Gemini.Interactions.Usage | undefined;
   let pendingThoughtSignature: string | undefined;
+  let pendingFunctionCallSignature: string | undefined;
   let hasEmittedStepDelta = false;
   let nextToolIndex = 0;
 
@@ -195,8 +196,9 @@ export async function* convertInteractionsStreamToChunks(
           const step = normalizeInteractionStep(rawStep);
           state.stepType = step.type;
           if (step.type === "function_call") {
-            const sig = pendingThoughtSignature;
+            const sig = pendingThoughtSignature ?? pendingFunctionCallSignature;
             pendingThoughtSignature = undefined;
+            pendingFunctionCallSignature = undefined;
             const hasInitialArgs =
               step.arguments && Object.keys(step.arguments).length > 0;
             state.functionCall = {
@@ -211,6 +213,7 @@ export async function* convertInteractionsStreamToChunks(
             };
           } else if (step.type === "thought" && step.signature) {
             state.thoughtSignature = step.signature;
+            pendingFunctionCallSignature = step.signature;
           }
         }
         break;
@@ -238,6 +241,7 @@ export async function* convertInteractionsStreamToChunks(
 
             const sig = pendingThoughtSignature;
             pendingThoughtSignature = undefined;
+            pendingFunctionCallSignature = undefined;
 
             const part: Gemini.Part = {
               text: delta.text,
@@ -311,6 +315,7 @@ export async function* convertInteractionsStreamToChunks(
 
           case "thought_signature": {
             if (delta.signature) {
+              pendingFunctionCallSignature = delta.signature;
               if (state.hasThoughtSummary) {
                 hasEmittedStepDelta = true;
                 const part: Gemini.Part = {
@@ -340,25 +345,28 @@ export async function* convertInteractionsStreamToChunks(
           case "arguments_delta":
           case "function_call": {
             hasEmittedStepDelta = true;
+            const fcSig =
+              pendingThoughtSignature ?? pendingFunctionCallSignature;
             if (!state.functionCall) {
-              const sig = pendingThoughtSignature;
               pendingThoughtSignature = undefined;
+              pendingFunctionCallSignature = undefined;
               state.functionCall = {
                 id:
                   delta.id ||
                   `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
                 name: delta.name || "",
                 argsText: "",
-                thoughtSignature: sig,
+                thoughtSignature: fcSig,
                 toolIndex: nextToolIndex++,
                 emittedToolCall: false,
               };
             } else {
               if (delta.id) state.functionCall.id = delta.id;
               if (delta.name) state.functionCall.name = delta.name;
-              if (pendingThoughtSignature && !state.functionCall.thoughtSignature) {
-                state.functionCall.thoughtSignature = pendingThoughtSignature;
+              if (fcSig && !state.functionCall.thoughtSignature) {
+                state.functionCall.thoughtSignature = fcSig;
                 pendingThoughtSignature = undefined;
+                pendingFunctionCallSignature = undefined;
               }
             }
 
@@ -383,6 +391,7 @@ export async function* convertInteractionsStreamToChunks(
             hasEmittedStepDelta = true;
             const sig = pendingThoughtSignature;
             pendingThoughtSignature = undefined;
+            pendingFunctionCallSignature = undefined;
             const part = convertInteractionsContentToGeminiPart(
               delta as Gemini.Interactions.Content,
               sig
@@ -552,8 +561,10 @@ export async function* convertInteractionsStreamToChunks(
                     });
                   }
                   pendingThoughtSignature = undefined;
+                  pendingFunctionCallSignature = step.signature;
                 } else if (step.signature) {
                   pendingThoughtSignature = step.signature;
+                  pendingFunctionCallSignature = step.signature;
                 }
               } else if (step.type === "model_output") {
                 const contents =
@@ -574,20 +585,22 @@ export async function* convertInteractionsStreamToChunks(
                   if (p) {
                     parts.push(p);
                     pendingThoughtSignature = undefined;
+                    pendingFunctionCallSignature = undefined;
                   }
                 }
               } else if (step.type === "function_call") {
+                const fcSig =
+                  pendingThoughtSignature ?? pendingFunctionCallSignature;
                 parts.push({
                   functionCall: {
                     id: step.id,
                     name: step.name,
                     args: step.arguments ?? {},
                   },
-                  ...(pendingThoughtSignature
-                    ? { thoughtSignature: pendingThoughtSignature }
-                    : {}),
+                  ...(fcSig ? { thoughtSignature: fcSig } : {}),
                 });
                 pendingThoughtSignature = undefined;
+                pendingFunctionCallSignature = undefined;
               } else if (
                 step.type === "google_search_call" ||
                 step.type === "google_search_result" ||
@@ -763,6 +776,7 @@ export async function* convertInteractionsStream(
   let usageSnapshot: UsageMetadata | undefined;
   const finishReason: FinishReason = "stop";
   let pendingThoughtSignature: string | undefined;
+  let pendingFunctionCallSignature: string | undefined;
   let nextToolIdx = 0;
 
   const stepStates = new Map<
@@ -868,6 +882,7 @@ export async function* convertInteractionsStream(
           acc.thoughtSignature = pendingThoughtSignature;
           pendingThoughtSignature = undefined;
         }
+        pendingFunctionCallSignature = undefined;
         yield {
           event: "content-block-delta" as const,
           index,
@@ -913,6 +928,7 @@ export async function* convertInteractionsStream(
         }
       } else if (delta.type === "thought_signature") {
         if (delta.signature) {
+          pendingFunctionCallSignature = delta.signature;
           if (state.hasThoughtSummary) {
             const existingIdx = blockKeyToIndex.get("reasoning");
             if (existingIdx !== undefined) {
@@ -972,9 +988,11 @@ export async function* convertInteractionsStream(
             ? (acc.args ?? "") + argsDelta
             : argsDelta;
 
-        if (pendingThoughtSignature) {
-          acc.thoughtSignature = pendingThoughtSignature;
+        const fcSig = pendingThoughtSignature ?? pendingFunctionCallSignature;
+        if (fcSig) {
+          acc.thoughtSignature = fcSig;
           pendingThoughtSignature = undefined;
+          pendingFunctionCallSignature = undefined;
         }
 
         yield {
