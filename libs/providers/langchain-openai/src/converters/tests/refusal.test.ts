@@ -4,7 +4,6 @@ import { z } from "zod/v4";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { ModelRefusalError } from "@langchain/core/errors";
 import {
-  convertCompletionsDeltaToBaseMessageChunk,
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
 } from "../completions.js";
@@ -25,15 +24,6 @@ describe("Chat Completions refusals", () => {
       type: "refusal",
       refusal: "No.",
     });
-  });
-
-  it("keeps a refusal from a stream delta", () => {
-    const chunk = convertCompletionsDeltaToBaseMessageChunk({
-      delta: { role: "assistant", refusal: "No." } as any,
-      rawResponse,
-    });
-
-    expect(chunk.additional_kwargs.refusal).toBe("No.");
   });
 
   it("sends a refusal block back without extras", () => {
@@ -63,19 +53,6 @@ describe("Chat Completions refusal replay", () => {
     }) as any[];
 
     expect(params[0].refusal).toBe("No.");
-  });
-
-  it("concatenates streamed refusal deltas", () => {
-    const chunks = ["I can", "not help."].map((refusal) =>
-      convertCompletionsDeltaToBaseMessageChunk({
-        delta: { role: "assistant", refusal } as any,
-        rawResponse,
-      })
-    );
-
-    expect(chunks[0].concat(chunks[1]).additional_kwargs.refusal).toBe(
-      "I cannot help."
-    );
   });
 
   it("drops refusal blocks from non-assistant messages", () => {

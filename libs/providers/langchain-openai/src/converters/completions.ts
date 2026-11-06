@@ -424,9 +424,6 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   if (delta.reasoning_content !== undefined) {
     additional_kwargs.reasoning_content = delta.reasoning_content;
   }
-  if (delta.refusal) {
-    additional_kwargs.refusal = delta.refusal;
-  }
 
   if (delta.audio) {
     additional_kwargs.audio = {
