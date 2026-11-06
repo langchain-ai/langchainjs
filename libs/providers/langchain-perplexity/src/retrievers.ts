@@ -4,6 +4,7 @@ import {
 } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { getPerplexityHeaders } from "./utils/headers.js";
 
 /**
  * Recency filters supported by the Perplexity Search API.
@@ -177,10 +178,7 @@ export class PerplexitySearchRetriever extends BaseRetriever {
 
     const response = await fetch(PERPLEXITY_SEARCH_URL, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: getPerplexityHeaders(this.apiKey),
       body: JSON.stringify(body),
     });
 
