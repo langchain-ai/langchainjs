@@ -1,5 +1,8 @@
 import { test, expect, describe } from "vitest";
-import { _makeMessageChunkFromAnthropicEvent } from "../message_outputs.js";
+import {
+  type AnthropicStreamUsageState,
+  _makeMessageChunkFromAnthropicEvent,
+} from "../message_outputs.js";
 
 const fields = { streamUsage: true, coerceContentToString: false };
 
@@ -163,6 +166,151 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
     expect(final.response_metadata).toEqual({
       model_provider: "anthropic",
       usage: { cost: 0.0123 },
+    });
+  });
+});
+
+describe("_makeMessageChunkFromAnthropicEvent cumulative usage", () => {
+  const messageStart = (usage: Record<string, number>) => ({
+    type: "message_start" as const,
+    message: {
+      id: "msg_01",
+      type: "message" as const,
+      role: "assistant" as const,
+      content: [],
+      model: "claude-sonnet-4-5",
+      stop_reason: null,
+      stop_sequence: null,
+      usage,
+    },
+  });
+  const messageDelta = (usage: Record<string, number | null>) => ({
+    type: "message_delta" as const,
+    delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+    usage,
+  });
+
+  function streamUsage(
+    events: (
+      | ReturnType<typeof messageStart>
+      | ReturnType<typeof messageDelta>
+    )[]
+  ) {
+    const usageState: AnthropicStreamUsageState = {};
+    return events
+      .map(
+        (event) =>
+          _makeMessageChunkFromAnthropicEvent(
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+            event as any,
+            { ...fields, usageState }
+          )!.chunk
+      )
+      .reduce((acc, chunk) => acc.concat(chunk)).usage_metadata;
+  }
+
+  test("uses the final input totals when server tools add model passes", () => {
+    const usage = streamUsage([
+      messageStart({
+        input_tokens: 2800,
+        output_tokens: 1,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      }),
+      messageDelta({
+        input_tokens: 26000,
+        output_tokens: 900,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      }),
+    ]);
+
+    expect(usage).toEqual({
+      input_tokens: 26000,
+      output_tokens: 900,
+      total_tokens: 26900,
+      input_token_details: { cache_creation: 0, cache_read: 0 },
+      output_token_details: {},
+    });
+  });
+
+  test("does not double count unchanged cache totals", () => {
+    const usage = streamUsage([
+      messageStart({
+        input_tokens: 100,
+        output_tokens: 1,
+        cache_creation_input_tokens: 500,
+        cache_read_input_tokens: 1000,
+      }),
+      messageDelta({
+        input_tokens: 100,
+        output_tokens: 42,
+        cache_creation_input_tokens: 500,
+        cache_read_input_tokens: 1000,
+      }),
+    ]);
+
+    expect(usage).toMatchObject({
+      input_tokens: 1600,
+      output_tokens: 42,
+      total_tokens: 1642,
+      input_token_details: { cache_creation: 500, cache_read: 1000 },
+    });
+  });
+
+  test("tracks cache totals that grow during the request", () => {
+    const usage = streamUsage([
+      messageStart({
+        input_tokens: 100,
+        output_tokens: 1,
+        cache_creation_input_tokens: 500,
+        cache_read_input_tokens: 1000,
+      }),
+      messageDelta({
+        input_tokens: 300,
+        output_tokens: 42,
+        cache_creation_input_tokens: 700,
+        cache_read_input_tokens: 3000,
+      }),
+    ]);
+
+    expect(usage).toMatchObject({
+      input_tokens: 4000,
+      output_tokens: 42,
+      total_tokens: 4042,
+      input_token_details: { cache_creation: 700, cache_read: 3000 },
+    });
+  });
+
+  test("keeps message_start values for fields the delta omits or nulls", () => {
+    const usage = streamUsage([
+      messageStart({
+        input_tokens: 100,
+        output_tokens: 1,
+        cache_read_input_tokens: 1000,
+      }),
+      messageDelta({ output_tokens: 42, cache_read_input_tokens: null }),
+    ]);
+
+    expect(usage).toMatchObject({
+      input_tokens: 1100,
+      output_tokens: 42,
+      total_tokens: 1142,
+      input_token_details: { cache_creation: 0, cache_read: 1000 },
+    });
+  });
+
+  test("multiple message_delta events are not summed", () => {
+    const usage = streamUsage([
+      messageStart({ input_tokens: 100, output_tokens: 1 }),
+      messageDelta({ input_tokens: 400, output_tokens: 20 }),
+      messageDelta({ input_tokens: 900, output_tokens: 42 }),
+    ]);
+
+    expect(usage).toMatchObject({
+      input_tokens: 900,
+      output_tokens: 42,
+      total_tokens: 942,
     });
   });
 });

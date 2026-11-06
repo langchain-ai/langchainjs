@@ -115,8 +115,8 @@ describe("convertAnthropicStream", () => {
     // Cost is not token accounting, so it must not leak into the usage snapshots.
     expect(messageFinish(events).usage).toEqual({
       input_tokens: 100,
-      output_tokens: 43,
-      total_tokens: 143,
+      output_tokens: 42,
+      total_tokens: 142,
       input_token_details: { cache_creation: 0, cache_read: 0 },
     });
     for (const event of events.filter((event) => event.usage)) {
@@ -147,6 +147,90 @@ describe("convertAnthropicStream", () => {
     );
 
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
-    expect(message.usage_metadata?.output_tokens).toBe(43);
+    expect(message.usage_metadata?.output_tokens).toBe(42);
+  });
+});
+
+describe("convertAnthropicStream cumulative usage", () => {
+  async function finalUsage(
+    startUsage: Record<string, number>,
+    deltaUsages: Record<string, number | null>[]
+  ) {
+    const source = (async function* () {
+      yield {
+        type: "message_start" as const,
+        message: {
+          id: "msg_01",
+          type: "message" as const,
+          role: "assistant" as const,
+          content: [],
+          model: "claude-sonnet-4-5",
+          stop_reason: null,
+          stop_sequence: null,
+          usage: startUsage,
+        },
+      };
+      for (const usage of deltaUsages) {
+        yield {
+          type: "message_delta" as const,
+          delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+          usage,
+        };
+      }
+      yield { type: "message_stop" as const };
+    })();
+    const events = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const event of convertAnthropicStream(source as any)) {
+      events.push(event);
+    }
+    return messageFinish(events).usage;
+  }
+
+  test("uses the final input totals when server tools add model passes", async () => {
+    const usage = await finalUsage(
+      { input_tokens: 2800, output_tokens: 1, cache_read_input_tokens: 200 },
+      [
+        {
+          input_tokens: 26000,
+          output_tokens: 900,
+          cache_read_input_tokens: 600,
+        },
+      ]
+    );
+
+    expect(usage).toEqual({
+      input_tokens: 26600,
+      output_tokens: 900,
+      total_tokens: 27500,
+      input_token_details: { cache_creation: 0, cache_read: 600 },
+    });
+  });
+
+  test("keeps message_start values for fields the delta omits or nulls", async () => {
+    const usage = await finalUsage(
+      { input_tokens: 100, output_tokens: 1, cache_read_input_tokens: 1000 },
+      [{ output_tokens: 42, cache_read_input_tokens: null }]
+    );
+
+    expect(usage).toEqual({
+      input_tokens: 1100,
+      output_tokens: 42,
+      total_tokens: 1142,
+      input_token_details: { cache_creation: 0, cache_read: 1000 },
+    });
+  });
+
+  test("multiple message_delta events are not summed", async () => {
+    const usage = await finalUsage({ input_tokens: 100, output_tokens: 1 }, [
+      { input_tokens: 400, output_tokens: 20 },
+      { input_tokens: 900, output_tokens: 42 },
+    ]);
+
+    expect(usage).toMatchObject({
+      input_tokens: 900,
+      output_tokens: 42,
+      total_tokens: 942,
+    });
   });
 });

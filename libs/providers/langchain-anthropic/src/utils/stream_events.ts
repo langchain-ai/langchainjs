@@ -12,6 +12,10 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
+import {
+  type AnthropicUsageCounts,
+  _mergeCumulativeAnthropicUsage,
+} from "./message_outputs.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -35,6 +39,7 @@ export async function* convertAnthropicStream(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Record<string, any>
   >();
+  let rawUsage: AnthropicUsageCounts | undefined;
   let usageSnapshot: UsageMetadata | undefined;
   let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
@@ -45,7 +50,8 @@ export async function* convertAnthropicStream(
       case "message_start": {
         const { usage, id, model } = data.message;
         if (usage && shouldStreamUsage) {
-          usageSnapshot = buildUsageSnapshot(usage);
+          rawUsage = _mergeCumulativeAnthropicUsage(undefined, usage);
+          usageSnapshot = buildUsageSnapshot(rawUsage);
         }
         yield {
           event: "message-start" as const,
@@ -72,23 +78,9 @@ export async function* convertAnthropicStream(
           responseMetadata = { usage: { cost: data.usage.cost } };
         }
         if (shouldStreamUsage && data.usage) {
-          if (!usageSnapshot) {
-            usageSnapshot = {
-              input_tokens: 0,
-              output_tokens: data.usage.output_tokens,
-              total_tokens: data.usage.output_tokens,
-            };
-          } else {
-            usageSnapshot = {
-              ...usageSnapshot,
-              output_tokens:
-                usageSnapshot.output_tokens + data.usage.output_tokens,
-              total_tokens:
-                usageSnapshot.input_tokens +
-                usageSnapshot.output_tokens +
-                data.usage.output_tokens,
-            };
-          }
+          // Delta usage is cumulative, so it replaces the snapshot.
+          rawUsage = _mergeCumulativeAnthropicUsage(rawUsage, data.usage);
+          usageSnapshot = buildUsageSnapshot(rawUsage);
           yield { event: "usage" as const, usage: usageSnapshot };
         }
         if (

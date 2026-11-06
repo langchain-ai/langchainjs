@@ -45,6 +45,7 @@ import {
   validateInvocationParamCompatibility,
 } from "./utils/params.js";
 import {
+  type AnthropicStreamUsageState,
   _makeMessageChunkFromAnthropicEvent,
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
@@ -1466,6 +1467,7 @@ export class ChatAnthropicMessages<
       signal: options.signal,
       maxRetries: options.maxRetries,
     });
+    const usageState: AnthropicStreamUsageState = {};
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -1476,6 +1478,7 @@ export class ChatAnthropicMessages<
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
+        usageState,
       });
       if (!result) continue;
 

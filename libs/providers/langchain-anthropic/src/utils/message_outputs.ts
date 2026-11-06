@@ -14,11 +14,66 @@ import { extractToolCalls } from "../output_parsers.js";
 import { _isAnthropicCompactionBlock } from "./content.js";
 import { iife } from "./index.js";
 
+/** Raw Anthropic token counts, as reported on `message_start` and `message_delta`. */
+export type AnthropicUsageCounts = {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens: number;
+  cache_read_input_tokens: number;
+};
+
+/** Usage reported so far for one streamed response. */
+export type AnthropicStreamUsageState = {
+  reported?: AnthropicUsageCounts;
+};
+
+const CUMULATIVE_USAGE_KEYS = [
+  "input_tokens",
+  "output_tokens",
+  "cache_creation_input_tokens",
+  "cache_read_input_tokens",
+] as const;
+
+/**
+ * Applies a streamed usage object on top of the usage reported so far.
+ *
+ * `message_delta` usage is cumulative for the whole request, and fields that
+ * are omitted or null are unchanged. Server tools (e.g. web search) run extra
+ * model passes inside one request, so input and cache counts can grow after
+ * `message_start`.
+ * ref: https://platform.claude.com/docs/en/build-with-claude/streaming#event-types
+ */
+export function _mergeCumulativeAnthropicUsage(
+  previous: AnthropicUsageCounts | undefined,
+  next: object
+): AnthropicUsageCounts {
+  const merged: AnthropicUsageCounts = {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_creation_input_tokens: 0,
+    cache_read_input_tokens: 0,
+    ...previous,
+  };
+  for (const key of CUMULATIVE_USAGE_KEYS) {
+    const value = (next as Record<string, unknown>)[key];
+    if (typeof value === "number") {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 export function _makeMessageChunkFromAnthropicEvent(
   data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
+    /**
+     * Shared across the events of one response. When set, `message_delta`
+     * chunks carry the difference from the usage already reported, so
+     * concatenating the chunks gives Anthropic's final cumulative totals.
+     */
+    usageState?: AnthropicStreamUsageState;
   }
 ): {
   chunk: AIMessageChunk;
@@ -37,6 +92,12 @@ export function _makeMessageChunkFromAnthropicEvent(
     const { input_tokens, output_tokens, ...rest }: Record<string, any> =
       usage ?? {};
     const usageMetadata = buildUsageMetadata(usage);
+    if (fields.usageState) {
+      fields.usageState.reported = _mergeCumulativeAnthropicUsage(
+        undefined,
+        usage ?? {}
+      );
+    }
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
@@ -52,11 +113,22 @@ export function _makeMessageChunkFromAnthropicEvent(
       }),
     };
   } else if (data.type === "message_delta") {
-    const usageMetadata: UsageMetadata = {
-      input_tokens: 0,
-      output_tokens: data.usage.output_tokens,
-      total_tokens: data.usage.output_tokens,
-    };
+    const usageMetadata: UsageMetadata = iife(() => {
+      const previous = fields.usageState?.reported;
+      if (!fields.usageState || !previous) {
+        return {
+          input_tokens: 0,
+          output_tokens: data.usage.output_tokens,
+          total_tokens: data.usage.output_tokens,
+        };
+      }
+      const current = _mergeCumulativeAnthropicUsage(previous, data.usage);
+      fields.usageState.reported = current;
+      return subtractUsageMetadata(
+        buildUsageMetadata(current),
+        buildUsageMetadata(previous)
+      );
+    });
     const responseMetadata = iife(() => {
       const output = {};
       if ("context_management" in data.delta) {
@@ -331,6 +403,25 @@ function buildUsageMetadata(
     input_token_details: {
       cache_creation: cacheCreationInputTokens,
       cache_read: cacheReadInputTokens,
+    },
+  };
+}
+
+function subtractUsageMetadata(
+  current: UsageMetadata,
+  previous: UsageMetadata
+): UsageMetadata {
+  return {
+    input_tokens: current.input_tokens - previous.input_tokens,
+    output_tokens: current.output_tokens - previous.output_tokens,
+    total_tokens: current.total_tokens - previous.total_tokens,
+    input_token_details: {
+      cache_creation:
+        (current.input_token_details?.cache_creation ?? 0) -
+        (previous.input_token_details?.cache_creation ?? 0),
+      cache_read:
+        (current.input_token_details?.cache_read ?? 0) -
+        (previous.input_token_details?.cache_read ?? 0),
     },
   };
 }
