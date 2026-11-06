@@ -5,7 +5,7 @@ import {
   type ContentBlock,
 } from "@langchain/core/messages";
 
-import { StructuredOutputParsingError } from "../errors.js";
+import { MiddlewareError, StructuredOutputParsingError } from "../errors.js";
 import { createMiddleware } from "../middleware.js";
 
 function throwIfRefused(message: BaseMessage | undefined): void {
@@ -30,11 +30,8 @@ function parsingError(
   error: unknown
 ): StructuredOutputParsingError | undefined {
   let current = error;
-  for (let depth = 0; depth < 32 && current != null; depth += 1) {
-    if (current instanceof StructuredOutputParsingError) return current;
-    current = (current as { cause?: unknown }).cause;
-  }
-  return undefined;
+  while (MiddlewareError.isInstance(current)) current = current.cause;
+  return current instanceof StructuredOutputParsingError ? current : undefined;
 }
 
 /**
