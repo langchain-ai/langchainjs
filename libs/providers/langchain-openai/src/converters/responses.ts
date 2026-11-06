@@ -1362,7 +1362,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           pushMessageContent([
             {
               type: "refusal",
-              refusal: String(block.refusal ?? ""),
+              refusal: block.refusal,
             } as unknown as ResponseInputMessageContentList[number],
           ]);
         }
@@ -1723,9 +1723,8 @@ export const convertMessagesToResponsesInput: Converter<
                 if (item.type === "refusal") {
                   return {
                     type: "refusal",
-                    refusal: String(
-                      (item as ContentBlock.Refusal).refusal ?? ""
-                    ),
+                    refusal:
+                      typeof item.refusal === "string" ? item.refusal : "",
                   };
                 }
 
