@@ -195,6 +195,17 @@ describe("modelRouterMiddleware", () => {
     ).toThrow(/at least one/i);
   });
 
+  test("rejects invalid instructions when the middleware is built", () => {
+    const build = () =>
+      modelRouterMiddleware({
+        choices: { fast: { model: fakeModel(), criteria: "x" } },
+        instructions: 42 as never,
+        classifierOptions: OPTS,
+      });
+    expect(build).toThrow(TypeSafeError);
+    expect(build).toThrow(/Invalid TypeSafe question/);
+  });
+
   test("a classifier failure propagates rather than defaulting, UNWRAPPED (unlike wrapToolCall)", async () => {
     const boom = (async () => {
       throw new Error("transport down");

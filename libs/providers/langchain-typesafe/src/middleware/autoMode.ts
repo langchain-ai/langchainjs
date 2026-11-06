@@ -4,7 +4,9 @@ import * as z from "zod/v4";
 
 import { TypeSafeClassifier } from "../classifier.js";
 import type { TypeSafeClassifierFields } from "../classifier.js";
+import { parseQuestions } from "../types.js";
 import type { NoulCriteria, QuestionContent } from "../types.js";
+import { TypeSafeError } from "../utils/errors.js";
 import type { StateValue } from "../utils/state.js";
 
 const RISK_QUESTION_ID = "is_risky";
@@ -37,7 +39,7 @@ const toolsSchema = z
  *
  * `instructions` and `criteria` are typed pass-throughs rather than their
  * own content schemas: they become a question, and `parseQuestions` checks
- * them at invocation time. Parsing them here as well would
+ * it when the middleware is built. Parsing them here as well would
  * rebuild them, and zod's `record` parser drops an own `__proto__` key.
  */
 const configSchema = z.object({
@@ -121,6 +123,23 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
 
   const classifier = new TypeSafeClassifier({ ...classifierOptions });
 
+  const riskQuestions = () => ({
+    [RISK_QUESTION_ID]: {
+      type: "noul" as const,
+      instructions,
+      criteria: criteria ?? undefined,
+    },
+  });
+  // Fail on bad `instructions`/`criteria` here, not on the agent's first
+  // watched tool call.
+  try {
+    parseQuestions(riskQuestions());
+  } catch (error) {
+    throw new TypeSafeError(
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+
   return createMiddleware({
     name: "TypeSafeAutoModeMiddleware",
 
@@ -138,13 +157,7 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
 
       const response = await classifier.invoke({
         state,
-        questions: {
-          [RISK_QUESTION_ID]: {
-            type: "noul",
-            instructions,
-            criteria: criteria ?? undefined,
-          },
-        },
+        questions: riskQuestions(),
       });
       const risk = response.nouls[RISK_QUESTION_ID].noul;
 

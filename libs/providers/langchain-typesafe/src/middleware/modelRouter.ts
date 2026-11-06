@@ -5,7 +5,9 @@ import * as z from "zod";
 
 import { TypeSafeClassifier } from "../classifier.js";
 import type { TypeSafeClassifierFields } from "../classifier.js";
+import { parseQuestions } from "../types.js";
 import type { ChoiceAnswer, JsonValue, QuestionContent } from "../types.js";
+import { TypeSafeError } from "../utils/errors.js";
 
 const QUESTION_ID = "model_route";
 
@@ -149,6 +151,27 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
   const choices = parseChoices(choicesInput);
   const classifier = new TypeSafeClassifier({ ...classifierOptions });
 
+  const routeQuestions = () => ({
+    [QUESTION_ID]: {
+      type: "choice" as const,
+      instructions,
+      criteria: Object.fromEntries(
+        Object.entries(choices).map(([route, choice]) => [
+          route,
+          choice.criteria,
+        ])
+      ),
+    },
+  });
+  // Fail on bad `instructions` here, not on the agent's first run.
+  try {
+    parseQuestions(routeQuestions());
+  } catch (error) {
+    throw new TypeSafeError(
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+
   const modelFor = createModelResolver(choices);
 
   return createMiddleware({
@@ -164,18 +187,7 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
       }
       const response = await classifier.invoke({
         state: latest,
-        questions: {
-          [QUESTION_ID]: {
-            type: "choice",
-            instructions,
-            criteria: Object.fromEntries(
-              Object.entries(choices).map(([route, choice]) => [
-                route,
-                choice.criteria,
-              ])
-            ),
-          },
-        },
+        questions: routeQuestions(),
       });
       const answer = response.choices[QUESTION_ID];
       if (answer === undefined) {
