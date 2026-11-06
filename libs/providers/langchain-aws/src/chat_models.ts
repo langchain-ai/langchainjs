@@ -1273,6 +1273,7 @@ export class ChatBedrockConverse
         );
         if (response.stream) {
           let reasoningTokens: number | undefined;
+          const redactedReasoning = new Map<number, Uint8Array[]>();
           for await (const chunk of withStreamIdleTimeout(
             response.stream,
             streamIdleTimeout,
@@ -1297,6 +1298,14 @@ export class ChatBedrockConverse
                 }
               );
             } else if (chunk.contentBlockDelta) {
+              const { contentBlockIndex, delta } = chunk.contentBlockDelta;
+              if (delta?.reasoningContent?.redactedContent) {
+                const fragments =
+                  redactedReasoning.get(contentBlockIndex) ?? [];
+                fragments.push(delta.reasoningContent.redactedContent);
+                redactedReasoning.set(contentBlockIndex, fragments);
+                continue;
+              }
               const textChatGeneration = handleConverseStreamContentBlockDelta(
                 chunk.contentBlockDelta
               );
@@ -1317,6 +1326,30 @@ export class ChatBedrockConverse
                 reasoningTokens,
               });
             } else {
+              if (chunk.contentBlockStop) {
+                const index = chunk.contentBlockStop.contentBlockIndex;
+                const fragments = redactedReasoning.get(index);
+                if (fragments) {
+                  const reasoningChunk = handleConverseStreamContentBlockDelta({
+                    contentBlockIndex: index,
+                    delta: {
+                      reasoningContent: {
+                        redactedContent: Buffer.concat(fragments),
+                      },
+                    },
+                  });
+                  redactedReasoning.delete(index);
+                  yield reasoningChunk;
+                  await runManager?.handleLLMNewToken(
+                    reasoningChunk.text,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    { chunk: reasoningChunk }
+                  );
+                }
+              }
               if (chunk.messageStop) {
                 reasoningTokens = getReasoningTokensFromAdditionalFields(
                   chunk.messageStop.additionalModelResponseFields
