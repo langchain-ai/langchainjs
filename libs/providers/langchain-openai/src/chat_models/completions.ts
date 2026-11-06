@@ -76,6 +76,24 @@ function addToolImageHint(
   return error;
 }
 
+const SCALAR_RESPONSE_METADATA_KEYS = [
+  "finish_reason",
+  "model_name",
+  "system_fingerprint",
+  "service_tier",
+] as const;
+
+function mergeScalarResponseMetadata(
+  target: Record<string, unknown>,
+  incoming: Record<string, unknown>
+): void {
+  for (const key of SCALAR_RESPONSE_METADATA_KEYS) {
+    if (incoming[key] != null) {
+      target[key] = incoming[key];
+    }
+  }
+}
+
 /**
  * OpenAI Completions API implementation.
  * @internal
@@ -233,6 +251,11 @@ export class ChatOpenAICompletions<
           finalChunks[index] = chunk;
         } else {
           finalChunks[index] = finalChunks[index].concat(chunk);
+          // Keep response identity fields from the latest chunk.
+          mergeScalarResponseMetadata(
+            finalChunks[index].message.response_metadata,
+            chunk.message.response_metadata
+          );
         }
       }
       const generations = Object.entries(finalChunks)
