@@ -234,7 +234,7 @@ pnpm --filter @langchain/core test
 
 If you add support for a new external API, please add a new integration test. Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/community/langchain-community/.env` file based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
+Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` file (or a `.env` file in the standalone provider package you are working on) based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
 
 We generally recommend only running integration tests with `pnpm --filter <package> test:single`, but if you want to run all integration tests:
 
