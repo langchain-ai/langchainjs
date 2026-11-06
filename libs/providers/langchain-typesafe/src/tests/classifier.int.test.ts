@@ -27,14 +27,15 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
   () => {
     test("classifies all three question types from a single invoke", async () => {
       const classifier = new TypeSafeClassifier({
-        questions: QUESTIONS,
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
       });
 
-      const result = await classifier.invoke(
-        "My payments keep failing and I've been waiting for hours. This is infuriating."
-      );
+      const result = await classifier.invoke({
+        state:
+          "My payments keep failing and I've been waiting for hours. This is infuriating.",
+        questions: QUESTIONS,
+      });
 
       // The live API returns the versioned model id, never the alias we sent.
       expect(result.model).toMatch(/^jev-/);
@@ -84,12 +85,6 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       // and break the moment anyone adjusts it. The RELATIONSHIP is the
       // invariant worth defending.
       const classifier = new TypeSafeClassifier({
-        questions: {
-          over_100: {
-            type: "noul",
-            instructions: "Was the refund issued for more than 100 dollars?",
-          },
-        },
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
       });
@@ -109,16 +104,28 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
         new ToolMessage({ content: "Refund issued.", tool_call_id: "call_1" }),
       ];
 
-      const withArgs = await classifier.invoke(conversation);
+      const questions = {
+        over_100: {
+          type: "noul",
+          instructions: "Was the refund issued for more than 100 dollars?",
+        },
+      } satisfies Record<string, Question>;
+      const withArgs = await classifier.invoke({
+        state: conversation,
+        questions,
+      });
       expect(withArgs.answers.over_100.type).toBe("noul");
       const withArgsProb = (withArgs.answers.over_100 as { noul: number }).noul;
 
       // Control: the same conversation with the arguments stripped out.
-      const withoutArgs = await classifier.invoke([
-        "user: I want my money back for the broken laptop stand.",
-        "assistant: [called issue_refund]",
-        "tool: Refund issued.",
-      ]);
+      const withoutArgs = await classifier.invoke({
+        state: [
+          "user: I want my money back for the broken laptop stand.",
+          "assistant: [called issue_refund]",
+          "tool: Refund issued.",
+        ],
+        questions,
+      });
       const withoutArgsProb = (withoutArgs.answers.over_100 as { noul: number })
         .noul;
 
@@ -133,7 +140,6 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       const realFetch = globalThis.fetch;
       const retryCounts: (string | null)[] = [];
       const classifier = new TypeSafeClassifier({
-        questions: QUESTIONS,
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
         maxRetries: 2,
@@ -151,9 +157,10 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
         },
       });
 
-      const result = await classifier.invoke(
-        "My payments keep failing and nobody has replied."
-      );
+      const result = await classifier.invoke({
+        state: "My payments keep failing and nobody has replied.",
+        questions: QUESTIONS,
+      });
 
       expect(result.model).toMatch(/^jev-/);
       // Omitted on the first attempt, present on the retry.
@@ -165,6 +172,12 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       // reference does not show. Pinned live so the wider type is not
       // narrowed back to `string` on the assumption it was speculative.
       const classifier = new TypeSafeClassifier({
+        apiKey: process.env.TYPESAFE_API_KEY,
+        baseUrl: process.env.TYPESAFE_BASE_URL,
+      });
+
+      const result = await classifier.invoke({
+        state: "THIS IS THE THIRD TIME you have charged me twice!!!",
         questions: {
           angry: {
             type: "noul",
@@ -178,13 +191,7 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
             instructions: ["is the customer angry?", "weigh the punctuation"],
           },
         },
-        apiKey: process.env.TYPESAFE_API_KEY,
-        baseUrl: process.env.TYPESAFE_BASE_URL,
       });
-
-      const result = await classifier.invoke(
-        "THIS IS THE THIRD TIME you have charged me twice!!!"
-      );
 
       expect(result.answers.angry.type).toBe("noul");
       expect(result.answers.listed.type).toBe("noul");

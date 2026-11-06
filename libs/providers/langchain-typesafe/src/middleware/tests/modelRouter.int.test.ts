@@ -42,7 +42,7 @@ async function route(text: string) {
 describe.skipIf(!process.env.TYPESAFE_API_KEY)(
   "modelRouterMiddleware against the live TypeSafe API",
   () => {
-    test.each(["fast", "powerful"])("routing picks %s", async (route) => {
+    test("routes separate requests through the same middleware", async () => {
       const fastModel = fakeModel().respond(new AIMessage("fast model"));
       const powerfulModel = fakeModel().respond(
         new AIMessage("powerful model")
@@ -68,15 +68,17 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
         tools: [],
         middleware: [mw],
       });
-      const result = await agent.invoke({
-        messages: [
-          new HumanMessage(
-            `ROUTE: ${route}. Follow the explicitly marked route.`
-          ),
-        ],
-      });
-      const last = result.messages[result.messages.length - 1];
-      expect(last.text).toBe(`${route} model`);
+      for (const route of ["fast", "powerful"]) {
+        const result = await agent.invoke({
+          messages: [
+            new HumanMessage(
+              `ROUTE: ${route}. Follow the explicitly marked route.`
+            ),
+          ],
+        });
+        const last = result.messages[result.messages.length - 1];
+        expect(last.text).toBe(`${route} model`);
+      }
     });
 
     test("a trivial task routes to the cheap model", async () => {

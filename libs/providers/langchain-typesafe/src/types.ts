@@ -1,4 +1,5 @@
 import * as z from "zod/v4";
+import type { State } from "./utils/state.js";
 
 const jsonValueSchema = z.json();
 
@@ -225,14 +226,46 @@ export type ParsedResponse = z.infer<typeof classificationResponseSchema> & {
   requestId?: string;
 };
 
-export type ClassificationResponse = ParsedResponse & {
-  /** Noul answers only, keyed by question id. Non-enumerable. */
-  readonly nouls: Record<string, NoulAnswer>;
-  /** Choice answers only, keyed by question id. Non-enumerable. */
-  readonly choices: Record<string, ChoiceAnswer>;
-  /** Score answers only, keyed by question id. Non-enumerable. */
-  readonly scores: Record<string, ScoreAnswer>;
+/** State and typed questions for one classification call. */
+export interface ClassifierRequest<
+  Q extends Record<string, Question> = Record<string, Question>,
+> {
+  state: State;
+  questions: Q;
+}
+
+type AnswerFor<Q extends Question> = Q extends Choice
+  ? Omit<ChoiceAnswer, "choice" | "probabilities"> & {
+      choice: keyof Q["criteria"] & string;
+      probabilities: Record<keyof Q["criteria"] & string, number>;
+    }
+  : Q extends Noul
+    ? NoulAnswer
+    : ScoreAnswer;
+
+type AnswersOfType<
+  Q extends Record<string, Question>,
+  T extends Question["type"],
+> = {
+  [
+    K in keyof Q as Extract<Q[K], { type: T }> extends never ? never : K
+  ]: AnswerFor<Extract<Q[K], { type: T }>>;
 };
+
+/** Typed answers to the questions supplied in one classification call. */
+export type ClassifierResponse<
+  Q extends Record<string, Question> = Record<string, Question>,
+> = Omit<ParsedResponse, "answers"> & {
+  answers: { [K in keyof Q]: AnswerFor<Q[K]> };
+  /** Noul answers only, keyed by question id. Non-enumerable. */
+  readonly nouls: AnswersOfType<Q, "noul">;
+  /** Choice answers only, keyed by question id. Non-enumerable. */
+  readonly choices: AnswersOfType<Q, "choice">;
+  /** Score answers only, keyed by question id. Non-enumerable. */
+  readonly scores: AnswersOfType<Q, "score">;
+};
+
+export type ClassificationResponse = ClassifierResponse;
 
 /**
  * Attaches the type-partitioned answer accessors to a parsed response.

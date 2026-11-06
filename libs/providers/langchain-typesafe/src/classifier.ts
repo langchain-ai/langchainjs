@@ -8,7 +8,8 @@ import { getEnvironmentVariable, isBrowser } from "@langchain/core/utils/env";
 import {
   parseQuestions,
   serializeQuestion,
-  type ClassificationResponse,
+  type ClassifierRequest,
+  type ClassifierResponse,
   type Question,
   type ValidatedQuestions,
 } from "./types.js";
@@ -28,8 +29,8 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 export interface TypeSafeClassifierCallOptions extends RunnableConfig {}
 
 export interface TypeSafeClassifierFields extends AsyncCallerParams {
-  /** The questions to ask. At least one is required. */
-  questions: Record<string, Question>;
+  /** @deprecated Pass questions to `invoke({ state, questions })`; removed in the next minor version. */
+  questions?: Record<string, Question>;
   /** Model or alias. Defaults to `jev-latest`. */
   model?: string;
   /** Falls back to the `TYPESAFE_API_KEY` environment variable. */
@@ -55,22 +56,23 @@ export interface TypeSafeClassifierFields extends AsyncCallerParams {
  * TypeSafe's System One models.
  *
  * Questions in one call are evaluated in parallel by the model, so
- * batching many questions into a single classifier is far cheaper than
+ * batching many questions into a single call is far cheaper than
  * making one call per question.
  *
  * @example
  * ```ts
- * const classifier = new TypeSafeClassifier({
+ * const classifier = new TypeSafeClassifier();
+ * const result = await classifier.invoke({
+ *   state: "My payouts have been failing.",
  *   questions: {
  *     urgent: { type: "noul", instructions: "Is this urgent?" },
  *   },
  * });
- * const result = await classifier.invoke("My payouts have been failing.");
  * ```
  */
 export class TypeSafeClassifier extends Runnable<
-  State,
-  ClassificationResponse,
+  ClassifierRequest | State,
+  ClassifierResponse,
   TypeSafeClassifierCallOptions
 > {
   static lc_name(): string {
@@ -85,7 +87,8 @@ export class TypeSafeClassifier extends Runnable<
     return { apiKey: "TYPESAFE_API_KEY" };
   }
 
-  readonly questions: ValidatedQuestions;
+  /** @deprecated Pass questions to `invoke({ state, questions })`; removed in the next minor version. */
+  readonly questions?: ValidatedQuestions;
 
   readonly model: string;
 
@@ -106,7 +109,7 @@ export class TypeSafeClassifier extends Runnable<
 
   protected fetchImpl: typeof fetch;
 
-  constructor(fields: TypeSafeClassifierFields) {
+  constructor(fields: TypeSafeClassifierFields = {}) {
     // `Serializable`'s own constructor stores whatever is passed here
     // verbatim as `this.lc_kwargs` — a normal, enumerable property. If
     // `apiKey` rode along, `util.inspect(classifier)` would print it via
@@ -137,16 +140,14 @@ export class TypeSafeClassifier extends Runnable<
       throw new TypeSafeError("TypeSafe model must not be empty.");
     }
 
-    // `parseQuestions` throws a plain `Error` (it predates this package's
-    // branded error subtree). Rethrown here as a `TypeSafeError` so the
-    // whole constructor surface stays catchable via
-    // `TypeSafeError.isInstance()`. The original message is preserved.
-    let questions: ValidatedQuestions;
-    try {
-      questions = parseQuestions(fields.questions);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new TypeSafeError(message);
+    if (fields.questions !== undefined) {
+      try {
+        this.questions = parseQuestions(fields.questions);
+      } catch (error) {
+        throw new TypeSafeError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
     }
 
     if (fields.timeout !== undefined && fields.timeout <= 0) {
@@ -167,7 +168,6 @@ export class TypeSafeClassifier extends Runnable<
       configurable: true,
     });
     this.model = model;
-    this.questions = questions;
     let baseUrl =
       fields.baseUrl ??
       getEnvironmentVariable("TYPESAFE_BASE_URL") ??
@@ -198,24 +198,51 @@ export class TypeSafeClassifier extends Runnable<
     });
   }
 
-  async invoke(
-    input: State,
+  async invoke<const Q extends Record<string, Question>>(
+    request: ClassifierRequest<Q>,
     options?: Partial<TypeSafeClassifierCallOptions>
-  ): Promise<ClassificationResponse> {
+  ): Promise<ClassifierResponse<Q>>;
+  /** @deprecated Pass `{ state, questions }`; raw state input is removed in the next minor version. */
+  async invoke(
+    state: State,
+    options?: Partial<TypeSafeClassifierCallOptions>
+  ): Promise<ClassifierResponse>;
+  async invoke(
+    input: ClassifierRequest | State,
+    options?: Partial<TypeSafeClassifierCallOptions>
+  ): Promise<ClassifierResponse> {
+    const request =
+      typeof input === "object" &&
+      input !== null &&
+      Object.hasOwn(input, "state") &&
+      Object.hasOwn(input, "questions")
+        ? (input as ClassifierRequest)
+        : { state: input as State, questions: this.questions ?? {} };
+    let questions: ValidatedQuestions;
+    try {
+      questions = parseQuestions(request.questions);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new TypeSafeError(message);
+    }
     return this._callWithConfig(
-      (state: State) => this.classify(state, options?.signal),
-      input,
+      ({ state }: ClassifierRequest) =>
+        this.classify(state, questions, options?.signal),
+      request,
       options
     );
   }
 
   /** Builds the request body. Question key order is significant. */
-  protected payload(state: State): string {
+  protected payload(
+    state: State,
+    validatedQuestions: ValidatedQuestions
+  ): string {
     // Null-prototype for the same reason as `serializeState`: an own
     // `__proto__` question id would otherwise hit the inherited setter and
     // drop that question from the request without any error.
     const questions: Record<string, unknown> = Object.create(null);
-    for (const [id, question] of Object.entries(this.questions)) {
+    for (const [id, question] of Object.entries(validatedQuestions)) {
       questions[id] = serializeQuestion(question);
     }
     return JSON.stringify({
@@ -227,11 +254,12 @@ export class TypeSafeClassifier extends Runnable<
 
   protected async classify(
     state: State,
+    questions: ValidatedQuestions,
     signal?: AbortSignal
-  ): Promise<ClassificationResponse> {
+  ): Promise<ClassifierResponse> {
     const url = `${this.baseUrl}${SYSTEMONE_PATH}`;
     const endpoint = sanitizeEndpoint("POST", url);
-    const body = this.payload(state);
+    const body = this.payload(state, questions);
 
     // AsyncCaller retries outside this closure, so the attempt number is
     // tracked here to populate the retry-count header the SDK sends.
