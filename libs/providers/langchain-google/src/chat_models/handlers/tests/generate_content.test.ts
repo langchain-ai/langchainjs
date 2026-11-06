@@ -391,6 +391,7 @@ describe("GenerateContentApiHandler", () => {
       ["SAFETY", true],
       ["PROHIBITED_CONTENT", true],
       ["BLOCK_REASON_UNSPECIFIED", false],
+      ["BLOCKED_REASON_UNSPECIFIED", false],
     ])(
       "marks a %s prompt block as a refusal: %s",
       async (blockReason, isRefusal) => {
@@ -413,6 +414,7 @@ describe("GenerateContentApiHandler", () => {
     test.each([
       ["SAFETY", true],
       ["BLOCK_REASON_UNSPECIFIED", false],
+      ["BLOCKED_REASON_UNSPECIFIED", false],
     ])(
       "marks a streamed %s prompt block as a refusal: %s",
       async (blockReason, isRefusal) => {
