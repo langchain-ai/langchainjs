@@ -145,6 +145,7 @@ export class AgentNode<
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
   #systemMessage: SystemMessage;
+  #structuredOutputRetryGoto: typeof AGENT_NODE_NAME | undefined;
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -156,6 +157,15 @@ export class AgentNode<
 
     this.#options = options;
     this.#systemMessage = options.systemMessage;
+    /**
+     * With afterModel hooks the model node has a static edge to them, so a
+     * structured output retry is routed back by the afterModel router instead.
+     */
+    this.#structuredOutputRetryGoto = options.middleware?.some(
+      (m) => m.afterModel
+    )
+      ? undefined
+      : AGENT_NODE_NAME;
   }
 
   /**
@@ -867,7 +877,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: AGENT_NODE_NAME,
+        goto: this.#structuredOutputRetryGoto,
       });
     }
 
@@ -885,7 +895,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: AGENT_NODE_NAME,
+        goto: this.#structuredOutputRetryGoto,
       });
     }
 
@@ -908,7 +918,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: AGENT_NODE_NAME,
+        goto: this.#structuredOutputRetryGoto,
       });
     }
 
@@ -925,7 +935,7 @@ export class AgentNode<
           }),
         ],
       },
-      goto: AGENT_NODE_NAME,
+      goto: this.#structuredOutputRetryGoto,
     });
   }
 
