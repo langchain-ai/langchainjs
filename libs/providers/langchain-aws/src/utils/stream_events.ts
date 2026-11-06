@@ -11,6 +11,7 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { getReasoningTokensFromAdditionalFields } from "./message_outputs.js";
 
 export interface ConvertBedrockConverseStreamOptions {
   streamUsage?: boolean;
@@ -31,6 +32,7 @@ export async function* convertBedrockConverseStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
+  let reasoningTokens: number | undefined;
 
   for await (const event of source) {
     if (!messageStarted) {
@@ -86,18 +88,14 @@ export async function* convertBedrockConverseStream(
           event: "content-block-delta" as const,
           index,
           delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
+            type: "tool-call-delta" as const,
+            args: delta.toolUse.input,
           },
         };
       } else if (delta.reasoningContent) {
         const text = delta.reasoningContent.text;
-        if (typeof text === "string") {
+        const signature = delta.reasoningContent.signature;
+        if (typeof text === "string" || typeof signature === "string") {
           if (!blockAccumulators.has(index)) {
             const initial = { type: "reasoning" as const, reasoning: "" };
             blockAccumulators.set(index, { ...initial });
@@ -108,12 +106,24 @@ export async function* convertBedrockConverseStream(
             };
           }
           const acc = blockAccumulators.get(index)!;
-          acc.reasoning = (acc.reasoning ?? "") + text;
-          yield {
-            event: "content-block-delta" as const,
-            index,
-            delta: { type: "reasoning-delta" as const, reasoning: text },
-          };
+          if (typeof text === "string") {
+            acc.reasoning = (acc.reasoning ?? "") + text;
+            yield {
+              event: "content-block-delta" as const,
+              index,
+              delta: { type: "reasoning-delta" as const, reasoning: text },
+            };
+          } else if (typeof signature === "string") {
+            acc.signature = (acc.signature ?? "") + signature;
+            yield {
+              event: "content-block-delta" as const,
+              index,
+              delta: {
+                type: "block-delta" as const,
+                fields: { type: "reasoning", signature: acc.signature },
+              },
+            };
+          }
         }
       }
     } else if (event.metadata?.usage && shouldStreamUsage) {
@@ -134,10 +144,23 @@ export async function* convertBedrockConverseStream(
             ? { cache_creation: u.cacheWriteInputTokens }
             : {}),
         },
+        ...(reasoningTokens !== undefined
+          ? { output_token_details: { reasoning: reasoningTokens } }
+          : {}),
       };
       yield { event: "usage" as const, usage: usageSnapshot };
     } else if (event.messageStop?.stopReason) {
       finishReason = mapStopReason(event.messageStop.stopReason);
+      reasoningTokens = getReasoningTokensFromAdditionalFields(
+        event.messageStop.additionalModelResponseFields
+      );
+      // Usage may already have arrived; message-finish carries the patched snapshot.
+      if (usageSnapshot && reasoningTokens !== undefined) {
+        usageSnapshot = {
+          ...usageSnapshot,
+          output_token_details: { reasoning: reasoningTokens },
+        };
+      }
     } else {
       yield {
         event: "provider" as const,

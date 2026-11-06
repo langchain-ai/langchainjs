@@ -35,9 +35,13 @@ import type {
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import {
+  applyPromptCacheBreakpoint,
+  assertAdditionalToolsPlacement,
   getRequiredFilenameFromMetadata,
   isReasoningModel,
+  liftExtrasPromptCacheBreakpoint,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 
 /**
@@ -643,6 +647,7 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   { message: BaseMessage; model?: string },
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam
 > = ({ message, model }) => {
+  assertAdditionalToolsPlacement(message, "chat/completions");
   let role = messageToOpenAIRole(message);
   if (role === "system" && isReasoningModel(model)) {
     role = "developer";
@@ -650,17 +655,21 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   if (role === "developer") {
     return {
       role: "developer",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "system") {
     return {
       role: "system",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "assistant") {
-    const textContent = message.contentBlocks.filter(
-      (block) => block.type === "text"
-    );
+    const textContent = message.contentBlocks
+      .filter((block) => block.type === "text")
+      .map(liftExtrasPromptCacheBreakpoint);
     const completionParam: OpenAIClient.Chat.Completions.ChatCompletionAssistantMessageParam =
       {
         role: "assistant",
@@ -691,7 +700,9 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
     return {
       role: "tool",
       tool_call_id: message.tool_call_id,
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "function") {
     return {
@@ -706,14 +717,14 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   function* iterateUserContent(blocks: ContentBlock.Standard[]) {
     for (const block of blocks) {
       if (block.type === "text") {
-        yield {
+        yield applyPromptCacheBreakpoint(block, {
           type: "text" as const,
           text: block.text,
-        };
+        });
       }
       const data = convertStandardContentBlockToCompletionsContentPart(block);
       if (data) {
-        yield data;
+        yield applyPromptCacheBreakpoint(block, data);
       }
     }
   }
@@ -805,6 +816,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     ) {
       return convertStandardContentMessageToCompletionsMessage({ message });
     }
+    assertAdditionalToolsPlacement(message, "chat/completions");
     let role = messageToOpenAIRole(message);
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
@@ -813,12 +825,19 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     const content =
       typeof message.content === "string"
         ? message.content
-        : message.content.flatMap((m) => {
+        : message.content.flatMap((block) => {
+            const m = unwrapNonStandard(block);
             if (isDataContentBlock(m)) {
-              return convertToProviderContentBlock(
+              return applyPromptCacheBreakpoint(
                 m,
-                completionsApiContentBlockConverter
+                convertToProviderContentBlock(
+                  m,
+                  completionsApiContentBlockConverter
+                )
               );
+            }
+            if (m.type === "text") {
+              return liftExtrasPromptCacheBreakpoint(m);
             }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's

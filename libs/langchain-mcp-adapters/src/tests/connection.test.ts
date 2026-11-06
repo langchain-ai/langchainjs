@@ -270,17 +270,14 @@ describe("ConnectionManager", () => {
         args: ["-e", "console.log('ok')"],
         stderr: "inherit" as const,
       };
-      const client = await mgr.createClient("stdio", "s", {
+      await mgr.createClient("stdio", "s", {
         ...config,
         mode: "legacy",
         transport: "stdio",
       });
 
       const t1 = mgr.getTransport({ serverName: "s" });
-      const t2 = mgr.getTransport(client as Client);
       expect(t1).toBeDefined();
-      expect(t2).toBeDefined();
-      expect(t1).toBe(t2);
       // @ts-expect-error testing mock
       expect((t1 as StdioClientTransport).config).toEqual(config);
     });

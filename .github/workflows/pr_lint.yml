@@ -88,6 +88,7 @@ jobs:
             infra
             examples
             deps
+            deps-dev
           requireScope: false
           disallowScopes: |
             release

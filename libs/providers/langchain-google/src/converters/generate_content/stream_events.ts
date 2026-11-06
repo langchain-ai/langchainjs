@@ -11,7 +11,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
-import type { Gemini } from "../chat_models/api-types.js";
+import type { Gemini } from "../../chat_models/types.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
 
@@ -59,7 +59,13 @@ export async function* convertGoogleGeminiStream(
       yield { event: "message-start" as const };
     }
 
-    const usageMetadata = response.usageMetadata ?? response.usage_metadata;
+    const usageMetadata =
+      response.usageMetadata ??
+      (
+        response as {
+          usage_metadata?: Gemini.GenContent.GenerateContentResponse["usageMetadata"];
+        }
+      ).usage_metadata;
     if (shouldStreamUsage && usageMetadata) {
       const input = usageMetadata.promptTokenCount ?? 0;
       const output = usageMetadata.candidatesTokenCount ?? 0;

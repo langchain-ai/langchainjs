@@ -171,11 +171,16 @@ describe("elicitation answers", () => {
 });
 
 /** Why each failing scenario is refused, and whether it reached the callback. */
-const legacyFailures: Record<string, { reason: string; asked: string[] }> = {
+const legacyFailures: Record<
+  string,
+  { reason: string; asked: string[]; notFrom?: string }
+> = {
   // The requested schema, not just the result envelope, rejects the answer.
+  // The adapter refuses it before the SDK 1 server's own re-check runs.
   invalid: {
     reason: "data/confirm must be boolean",
     asked: ["Approve legacy?"],
+    notFrom: "does not match requested schema",
   },
   throws: { reason: "Application rejected input", asked: ["Approve legacy?"] },
   // Refused before the question reaches an application that cannot answer it.
@@ -231,11 +236,12 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
         expect(await tool.invoke({})).toBe(scenario);
         expect(questions).toEqual(["Approve legacy?"]);
       } else {
-        const { reason, asked } = legacyFailures[scenario];
+        const { reason, asked, notFrom } = legacyFailures[scenario];
         const failure = await tool.invoke({}).catch((error: unknown) => error);
 
         expect(failure).toBeInstanceOf(Error);
         expect((failure as Error).message).toContain(reason);
+        if (notFrom) expect((failure as Error).message).not.toContain(notFrom);
         // Whether the application was consulted at all is part of the contract.
         expect(questions).toEqual(asked);
       }
@@ -245,7 +251,7 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
   }
 );
 
-it("answers legacy reverse requests using the same callback contract", async () => {
+it("preserves a prebuilt legacy client's elicitation handler", async () => {
   const { Client, InMemoryTransport } =
     await import("@modelcontextprotocol/client");
 
@@ -454,6 +460,26 @@ it.each([true, false])(
 );
 
 describe("elicitation and logging configuration", () => {
+  it("defaults modern elicitation on and preserves an explicit opt-out", () => {
+    const parsed = adapterConfigSchema.parse({
+      servers: {
+        defaultOn: { url: "http://localhost/default" },
+        explicitOn: { url: "http://localhost/enabled", elicitation: true },
+        optedOut: { url: "http://localhost/disabled", elicitation: false },
+        legacy: {
+          mode: "legacy",
+          url: "http://localhost/legacy",
+          automaticSSEFallback: false,
+        },
+      },
+    });
+
+    expect(parsed.servers.defaultOn.elicitation).toBe(true);
+    expect(parsed.servers.explicitOn.elicitation).toBe(true);
+    expect(parsed.servers.optedOut.elicitation).toBe(false);
+    expect(parsed.servers.legacy).not.toHaveProperty("elicitation");
+  });
+
   it("uses SDK logging levels", () => {
     expect(
       adapterConfigSchema.safeParse({

@@ -42,25 +42,28 @@ describe("adapter tool listing", () => {
 
     try {
       expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
-        "first",
-        "second",
+        "first_first",
+        "second_second",
       ]);
       const [selected] = await adapter.listTools("second");
       const toolsets = await adapter.listToolsets();
       expect(Object.keys(toolsets)).toEqual(["first", "second"]);
       expect(Object.values(toolsets).flat()).toEqual(await adapter.listTools());
       expect(await adapter.initializeConnections()).toEqual(toolsets);
+      expect(await adapter.getTools(["second"], { headers: {} })).toEqual([
+        selected,
+      ]);
       expect(await toolsets.second[0].invoke({})).toBe("second");
-      expect(selected.name).toBe("second");
+      expect(selected.name).toBe("second_second");
       expect(await selected.invoke({})).toBe("second");
       expect(
         (await adapter.listTools(["second"])).map((tool) => tool.name)
-      ).toEqual(["second"]);
+      ).toEqual(["second_second"]);
       expect(
         (await adapter.listTools(["first"], { headers: {} })).map(
           (tool) => tool.name
         )
-      ).toEqual(["first"]);
+      ).toEqual(["first_first"]);
     } finally {
       await adapter.close();
     }

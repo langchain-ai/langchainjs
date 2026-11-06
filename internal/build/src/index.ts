@@ -60,7 +60,7 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     fixedExtension: false,
     dts: {
       parallel: true,
-      tsgo: true,
+      generator: "tsgo",
       build: true,
     },
     sourcemap: true,
