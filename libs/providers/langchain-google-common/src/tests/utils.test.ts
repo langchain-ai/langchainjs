@@ -18,6 +18,9 @@ import { getGeminiAPI } from "../utils/gemini.js";
 import { getAnthropicAPI } from "../utils/anthropic.js";
 import {
   AnthropicRequest,
+  AnthropicStreamContentBlockDeltaEvent,
+  AnthropicStreamContentBlockStartEvent,
+  AnthropicStreamContentBlockStopEvent,
   GeminiPartFileData,
   GeminiPartInlineData,
   GeminiPartText,
@@ -47,7 +50,11 @@ describe("anthropic formatting", () => {
     ];
 
     for (const [index, call] of calls.entries()) {
-      const events = [
+      const events: (
+        | AnthropicStreamContentBlockStartEvent
+        | AnthropicStreamContentBlockDeltaEvent
+        | AnthropicStreamContentBlockStopEvent
+      )[] = [
         {
           type: "content_block_start",
           index,
@@ -58,11 +65,13 @@ describe("anthropic formatting", () => {
             input: {},
           },
         },
-        ...['{"city":', JSON.stringify(call.city), "}"].map((partial_json) => ({
-          type: "content_block_delta",
-          index,
-          delta: { type: "input_json_delta", partial_json },
-        })),
+        ...['{"city":', JSON.stringify(call.city), "}"].map(
+          (partial_json): AnthropicStreamContentBlockDeltaEvent => ({
+            type: "content_block_delta",
+            index,
+            delta: { type: "input_json_delta", partial_json },
+          })
+        ),
         { type: "content_block_stop", index },
       ];
       for (const data of events) {
