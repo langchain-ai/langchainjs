@@ -620,7 +620,7 @@ describe("toolRetryMiddleware", () => {
   });
 
   describe("Exception filtering", () => {
-    it("should only retry specific exception types (array)", async () => {
+    it("should retry matching exception types (array) and then use onFailure", async () => {
       const timeoutTool = tool(
         async ({ input }: { input: string }) => {
           throw new TimeoutError(`Timeout: ${input}`);
@@ -634,33 +634,9 @@ describe("toolRetryMiddleware", () => {
         }
       );
 
-      const networkTool = tool(
-        async ({ input }: { input: string }) => {
-          throw new NetworkError(`Network: ${input}`);
-        },
-        {
-          name: "network_tool",
-          description: "Tool that raises NetworkError",
-          schema: z.object({
-            input: z.string(),
-          }),
-        }
-      );
-
       const model = new FakeToolCallingModel({
         toolCalls: [
-          [
-            {
-              name: "timeout_tool",
-              args: { input: "test1" },
-              id: "1",
-            },
-            {
-              name: "network_tool",
-              args: { input: "test2" },
-              id: "2",
-            },
-          ],
+          [{ name: "timeout_tool", args: { input: "test1" }, id: "1" }],
           [],
         ],
       });
@@ -676,35 +652,73 @@ describe("toolRetryMiddleware", () => {
 
       const agent = createAgent({
         model,
-        tools: [timeoutTool, networkTool],
+        tools: [timeoutTool],
         middleware: [retry] as const,
         checkpointer: new MemorySaver(),
       });
 
       const result = await agent.invoke(
-        { messages: [new HumanMessage("Use both tools")] },
+        { messages: [new HumanMessage("Use the timeout tool")] },
         { configurable: { thread_id: "test" } }
       );
 
       const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      expect(toolMessages).toHaveLength(2);
+      expect(toolMessages).toHaveLength(1);
 
       // timeout_tool should have retried (3 attempts)
-      const timeoutMsg = toolMessages.find((m) => m.name === "timeout_tool");
-      expect(timeoutMsg).toBeDefined();
-      expect(timeoutMsg!.status).toBe("error");
-      expect(timeoutMsg!.content).toContain("3 attempts");
-      expect(timeoutMsg!.content).toContain("TimeoutError");
-
-      // network_tool should fail immediately (1 attempt only)
-      const networkMsg = toolMessages.find((m) => m.name === "network_tool");
-      expect(networkMsg).toBeDefined();
-      expect(networkMsg!.status).toBe("error");
-      expect(networkMsg!.content).toContain("1 attempt");
-      expect(networkMsg!.content).toContain("NetworkError");
+      expect(toolMessages[0].status).toBe("error");
+      expect(toolMessages[0].content).toContain("3 attempts");
+      expect(toolMessages[0].content).toContain("TimeoutError");
     });
 
-    it("should only retry specific exception types (function)", async () => {
+    it("should propagate exceptions not matching retryOn (array) even with onFailure continue", async () => {
+      const networkTool = tool(
+        async ({ input }: { input: string }) => {
+          throw new NetworkError(`Network: ${input}`);
+        },
+        {
+          name: "network_tool",
+          description: "Tool that raises NetworkError",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "network_tool", args: { input: "test2" }, id: "2" }],
+          [],
+        ],
+      });
+
+      const onFailure = vi.fn(() => "must not handle non-retryable errors");
+      const retry = toolRetryMiddleware({
+        maxRetries: 2,
+        retryOn: [TimeoutError],
+        initialDelayMs: 10,
+        jitter: false,
+        onFailure,
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [networkTool],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      // NetworkError does not match retryOn, so it is re-thrown
+      await expect(
+        agent.invoke(
+          { messages: [new HumanMessage("Use the network tool")] },
+          { configurable: { thread_id: "test" } }
+        )
+      ).rejects.toThrow("Network: test2");
+      expect(onFailure).not.toHaveBeenCalled();
+    });
+
+    it("should retry matching exception types (function) and then use onFailure", async () => {
       const shouldRetry = (error: Error): boolean => {
         // Only retry on 5xx errors
         if (error.constructor === HTTPError) {
@@ -729,33 +743,9 @@ describe("toolRetryMiddleware", () => {
         }
       );
 
-      const http400Tool = tool(
-        async ({ input }) => {
-          throw new HTTPError(`Client error: ${input}`, 400);
-        },
-        {
-          name: "http_400_tool",
-          description: "Tool that raises 400 error",
-          schema: z.object({
-            input: z.string(),
-          }),
-        }
-      );
-
       const model = new FakeToolCallingModel({
         toolCalls: [
-          [
-            {
-              name: "http_500_tool",
-              args: { input: "test1" },
-              id: "1",
-            },
-            {
-              name: "http_400_tool",
-              args: { input: "test2" },
-              id: "2",
-            },
-          ],
+          [{ name: "http_500_tool", args: { input: "test1" }, id: "1" }],
           [],
         ],
       });
@@ -770,32 +760,83 @@ describe("toolRetryMiddleware", () => {
 
       const agent = createAgent({
         model,
-        tools: [http500Tool, http400Tool],
+        tools: [http500Tool],
         middleware: [retry] as const,
         checkpointer: new MemorySaver(),
       });
 
       const result = await agent.invoke(
-        { messages: [new HumanMessage("Use both tools")] },
+        { messages: [new HumanMessage("Use the 500 tool")] },
         { configurable: { thread_id: "test" } }
       );
 
       const toolMessages = result.messages.filter(ToolMessage.isInstance);
-      expect(toolMessages).toHaveLength(2);
+      expect(toolMessages).toHaveLength(1);
 
       // http_500_tool should have retried (3 attempts)
-      const msg500 = toolMessages.find((m) => m.name === "http_500_tool");
-      expect(msg500).toBeDefined();
-      expect(msg500!.status).toBe("error");
-      expect(msg500!.content).toContain("3 attempts");
-      expect(msg500!.content).toContain("HTTPError");
+      expect(toolMessages[0].status).toBe("error");
+      expect(toolMessages[0].content).toContain("3 attempts");
+      expect(toolMessages[0].content).toContain("HTTPError");
+    });
 
-      // http_400_tool should fail immediately (1 attempt only)
-      const msg400 = toolMessages.find((m) => m.name === "http_400_tool");
-      expect(msg400).toBeDefined();
-      expect(msg400!.status).toBe("error");
-      expect(msg400!.content).toContain("1 attempt");
-      expect(msg400!.content).toContain("HTTPError");
+    it("should propagate exceptions not matching retryOn (function) even with onFailure continue", async () => {
+      const shouldRetry = vi.fn((error: Error): boolean => {
+        // Only retry on 5xx errors
+        if (error.constructor === HTTPError) {
+          return (
+            500 <= (error as HTTPError).statusCode &&
+            (error as HTTPError).statusCode < 600
+          );
+        }
+        return false;
+      });
+
+      let calls = 0;
+      const http400Tool = tool(
+        async ({ input }) => {
+          calls += 1;
+          throw new HTTPError(`Client error: ${input}`, 400);
+        },
+        {
+          name: "http_400_tool",
+          description: "Tool that raises 400 error",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "http_400_tool", args: { input: "test2" }, id: "2" }],
+          [],
+        ],
+      });
+
+      const retry = toolRetryMiddleware({
+        maxRetries: 2,
+        retryOn: shouldRetry,
+        initialDelayMs: 10,
+        jitter: false,
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [http400Tool],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      await expect(
+        agent.invoke(
+          { messages: [new HumanMessage("Use the 400 tool")] },
+          { configurable: { thread_id: "test" } }
+        )
+      ).rejects.toThrow("Client error: test2");
+      // Not retried: a single attempt
+      expect(calls).toBe(1);
+      expect(shouldRetry).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -1,3 +1,4 @@
+import { isGraphBubbleUp } from "@langchain/langgraph";
 import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import { initChatModel } from "../../chat_models/universal.js";
 import { createMiddleware } from "../middleware.js";
@@ -50,6 +51,13 @@ export function modelFallbackMiddleware(
         return await handler(request);
       } catch (error) {
         /**
+         * LangGraph control-flow signals (e.g. interrupts) are not model
+         * failures, so propagate them without trying any fallback
+         */
+        if (isGraphBubbleUp(error)) {
+          throw error;
+        }
+        /**
          * If primary model fails, try fallback models in sequence
          */
         for (let i = 0; i < fallbackModels.length; i++) {
@@ -65,6 +73,9 @@ export function modelFallbackMiddleware(
               model,
             });
           } catch (fallbackError) {
+            if (isGraphBubbleUp(fallbackError)) {
+              throw fallbackError;
+            }
             /**
              * If this is the last fallback, throw the error
              */
