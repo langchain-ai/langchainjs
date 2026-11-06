@@ -113,7 +113,8 @@ export function _constructAzureFields(
 
 export function _getAzureClientOptions(
   this: BaseChatOpenAI<ChatOpenAICallOptions> & Partial<AzureOpenAIChatInput>,
-  options: OpenAICoreRequestOptions | undefined
+  options: OpenAICoreRequestOptions | undefined,
+  api?: "responses"
 ): OpenAICoreRequestOptions {
   if (!this.client) {
     const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -126,7 +127,7 @@ export function _getAzureClientOptions(
       azureOpenAIEndpoint: this.azureOpenAIEndpoint,
     };
 
-    const endpoint = getEndpoint(openAIEndpointConfig);
+    const endpoint = getEndpoint(openAIEndpointConfig, api);
 
     const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
     const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
