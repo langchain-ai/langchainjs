@@ -475,10 +475,6 @@ export class InteractionsApiHandler extends GoogleChatApiHandler<
         ? { stop_sequences: fields.stopSequences }
         : {}),
       ...(fields.seed !== undefined ? { seed: fields.seed } : {}),
-      ...(fields.responseLogprobs !== undefined
-        ? { response_logprobs: fields.responseLogprobs }
-        : {}),
-      ...(fields.logprobs !== undefined ? { logprobs: fields.logprobs } : {}),
       ...thinking,
       ...(speechConfig ? { speech_config: speechConfig } : {}),
       ...(toolChoice ? { tool_choice: toolChoice } : {}),

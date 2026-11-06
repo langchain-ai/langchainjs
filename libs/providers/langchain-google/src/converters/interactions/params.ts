@@ -2,9 +2,9 @@ import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { isSerializableSchema } from "@langchain/core/utils/standard_schema";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
-  type BaseChatGoogleParams,
   type ChatGoogleFields,
   type GooglePlatformType,
+  type InteractionsFields,
   settableServiceTier,
   type Gemini,
 } from "../../chat_models/types.js";
@@ -15,18 +15,16 @@ import {
 } from "../generate_content/params.js";
 import { convertReasoningTokensToReasoningEffort } from "../shared/params.js";
 
-type CombinableInteractionsFields = Omit<BaseChatGoogleParams, "model">;
-
 /**
  * Merges constructor parameters and per-call options for the Interactions API,
  * giving precedence to `b` over `a` for each field.
  */
 export function combineInteractionsFields(
-  a: CombinableInteractionsFields,
-  b: CombinableInteractionsFields,
-  ...rest: CombinableInteractionsFields[]
-): CombinableInteractionsFields {
-  const combined: CombinableInteractionsFields = {
+  a: InteractionsFields,
+  b: InteractionsFields,
+  ...rest: InteractionsFields[]
+): InteractionsFields {
+  const combined: InteractionsFields = {
     temperature: b.temperature ?? a.temperature,
     topP: b.topP ?? a.topP,
     topK: b.topK ?? a.topK,
@@ -35,15 +33,11 @@ export function combineInteractionsFields(
     frequencyPenalty: b.frequencyPenalty ?? a.frequencyPenalty,
     stopSequences: b.stopSequences ?? a.stopSequences,
     seed: b.seed ?? a.seed,
-    responseLogprobs: b.responseLogprobs ?? a.responseLogprobs,
-    logprobs: b.logprobs ?? a.logprobs,
     safetySettings: b.safetySettings ?? a.safetySettings,
     responseSchema: b.responseSchema ?? a.responseSchema,
     responseMimeType: b.responseMimeType ?? a.responseMimeType,
     tools: b.tools ?? a.tools,
     responseModalities: b.responseModalities ?? a.responseModalities,
-    enableEnhancedCivicAnswers:
-      b.enableEnhancedCivicAnswers ?? a.enableEnhancedCivicAnswers,
     thinkingConfig: b.thinkingConfig ?? a.thinkingConfig,
     speechConfig: b.speechConfig ?? a.speechConfig,
     imageConfig: b.imageConfig ?? a.imageConfig,

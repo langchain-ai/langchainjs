@@ -143,9 +143,7 @@ export interface BaseChatGoogleFields {
    * string value in the Gemini API.
    */
   mediaResolution?: Gemini.Shared.MediaResolution;
-}
 
-export interface GenerateContentSpecificFields {
   /**
    * The schema that the generated response should match.
    * Can be a Zod schema or a JSON Schema object.
@@ -170,28 +168,9 @@ export interface GenerateContentSpecificFields {
   responseModalities?: Prettify<GenContentNamespace.GenerativeLanguageModality>[];
 
   /**
-   * If true, returns the log probabilities of the tokens that were chosen by
-   * the model at each step. By default, this parameter is set to false.
-   */
-  responseLogprobs?: boolean;
-
-  /**
-   * Returns the log probabilities of the top candidate tokens at each generation
-   * step. The model's chosen token might not be the same as the top candidate
-   * token at each step. Specify the number of candidates to return by using an
-   * integer value in the range of 1-20.
-   */
-  logprobs?: number;
-
-  /**
    * Configuration for the model's thinking process
    */
   thinkingConfig?: Prettify<GenContentNamespace.ThinkingConfig>;
-
-  /**
-   * If true, enables enhanced civic answers feature.
-   */
-  enableEnhancedCivicAnswers?: boolean;
 
   /**
    * Speech generation configuration.
@@ -215,6 +194,27 @@ export interface GenerateContentSpecificFields {
    * Other values are treated as the standard service tier.
    */
   serviceTier?: GenContentNamespace.ServiceTier;
+}
+
+export interface GenerateContentSpecificFields {
+  /**
+   * If true, returns the log probabilities of the tokens that were chosen by
+   * the model at each step. By default, this parameter is set to false.
+   */
+  responseLogprobs?: boolean;
+
+  /**
+   * Returns the log probabilities of the top candidate tokens at each generation
+   * step. The model's chosen token might not be the same as the top candidate
+   * token at each step. Specify the number of candidates to return by using an
+   * integer value in the range of 1-20.
+   */
+  logprobs?: number;
+
+  /**
+   * If true, enables enhanced civic answers feature.
+   */
+  enableEnhancedCivicAnswers?: boolean;
 }
 
 export interface InteractionsSpecificFields {
@@ -261,10 +261,7 @@ export interface GenerateContentFields
   extends BaseChatGoogleFields, GenerateContentSpecificFields {}
 
 export interface InteractionsFields
-  extends
-    BaseChatGoogleFields,
-    GenerateContentSpecificFields,
-    InteractionsSpecificFields {}
+  extends BaseChatGoogleFields, InteractionsSpecificFields {}
 
 export interface ChatGoogleFields
   extends
@@ -313,10 +310,7 @@ export interface GenerateContentApiHandlerParams
   extends GoogleChatApiHandlerParams, GenerateContentSpecificFields {}
 
 export interface InteractionsApiHandlerParams
-  extends
-    GoogleChatApiHandlerParams,
-    GenerateContentSpecificFields,
-    InteractionsSpecificFields {}
+  extends GoogleChatApiHandlerParams, InteractionsSpecificFields {}
 
 export type GoogleChatApiHandlerFactory = (
   params: GoogleChatApiHandlerParams
