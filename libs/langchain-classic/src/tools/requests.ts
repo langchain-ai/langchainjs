@@ -1,4 +1,5 @@
 import { Tool } from "@langchain/core/tools";
+import { createSafeFetch } from "@langchain/core/utils/ssrf";
 
 export interface Headers {
   [key: string]: string;
@@ -11,6 +12,20 @@ export interface Headers {
 export interface RequestTool {
   headers: Headers;
   maxOutputLength: number;
+}
+
+/** Options for {@link RequestsGetTool} and {@link RequestsPostTool}. */
+export interface RequestsToolOptions {
+  maxOutputLength?: number;
+
+  /**
+   * Fetch used to send requests. Defaults to `createSafeFetch`, which
+   * refuses private network addresses and checks every redirect.
+   */
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+
+  /** Hosts the default fetch may reach even if they resolve to private addresses. */
+  allowedHosts?: string[];
 }
 
 /**
@@ -27,18 +42,21 @@ export class RequestsGetTool extends Tool implements RequestTool {
 
   maxOutputLength = 2000;
 
+  protected fetchImpl: (url: string, init?: RequestInit) => Promise<Response>;
+
   constructor(
     public headers: Headers = {},
-    { maxOutputLength }: { maxOutputLength?: number } = {}
+    { maxOutputLength, fetch, allowedHosts }: RequestsToolOptions = {}
   ) {
     super(...arguments);
 
     this.maxOutputLength = maxOutputLength ?? this.maxOutputLength;
+    this.fetchImpl = fetch ?? createSafeFetch({ allowedHosts });
   }
 
   /** @ignore */
   async _call(input: string) {
-    const res = await fetch(input, {
+    const res = await this.fetchImpl(input, {
       headers: this.headers,
     });
     const text = await res.text();
@@ -64,20 +82,23 @@ export class RequestsPostTool extends Tool implements RequestTool {
 
   maxOutputLength = Infinity;
 
+  protected fetchImpl: (url: string, init?: RequestInit) => Promise<Response>;
+
   constructor(
     public headers: Headers = {},
-    { maxOutputLength }: { maxOutputLength?: number } = {}
+    { maxOutputLength, fetch, allowedHosts }: RequestsToolOptions = {}
   ) {
     super(...arguments);
 
     this.maxOutputLength = maxOutputLength ?? this.maxOutputLength;
+    this.fetchImpl = fetch ?? createSafeFetch({ allowedHosts });
   }
 
   /** @ignore */
   async _call(input: string) {
     try {
       const { url, data } = JSON.parse(input);
-      const res = await fetch(url, {
+      const res = await this.fetchImpl(url, {
         method: "POST",
         headers: this.headers,
         body: JSON.stringify(data),

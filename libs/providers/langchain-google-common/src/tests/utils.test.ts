@@ -1,5 +1,5 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
@@ -500,6 +500,29 @@ describe("media core", () => {
     expect(exampleBlob?.metadata).toBeDefined();
     expect(exampleBlob?.metadata?.ok).toBeTruthy();
     expect(exampleBlob?.metadata?.status).toEqual(200);
+  });
+
+  test("SimpleWebBlobStore uses the fetch it is given", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response("hello", { headers: { "content-type": "text/plain" } })
+    );
+    const webStore = new SimpleWebBlobStore({ fetch: fetchMock });
+    const [blob] = await webStore.mget(["https://example.com/a.txt"]);
+    expect(fetchMock).toHaveBeenCalledWith("https://example.com/a.txt", {
+      method: "GET",
+    });
+    expect(await blob?.asString()).toEqual("hello");
+  });
+
+  test("SimpleWebBlobStore refuses private network addresses by default", async () => {
+    const webStore = new SimpleWebBlobStore();
+    await expect(webStore.fetch("http://127.0.0.1/")).rejects.toThrow(
+      /localhost/
+    );
+    await expect(
+      webStore.fetch("http://169.254.169.254/latest/meta-data/")
+    ).rejects.toThrow(/metadata/);
   });
 
   describe("BackedBlobStore", () => {

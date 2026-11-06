@@ -1,6 +1,7 @@
 import { v1, v4 } from "@langchain/core/utils/uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
 import { BaseStore } from "@langchain/core/stores";
 import { Serializable } from "@langchain/core/load/serializable";
+import { createSafeFetch } from "@langchain/core/utils/ssrf";
 
 export type MediaBlobData = {
   value: string; // In Base64 encoding
@@ -494,7 +495,26 @@ export class ReadThroughBlobStore extends BlobStore {
   }
 }
 
+export interface SimpleWebBlobStoreOptions extends BlobStoreOptions {
+  /**
+   * Fetch used to download URLs. Defaults to `createSafeFetch`, which
+   * refuses private network addresses and checks every redirect.
+   */
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+
+  /** Hosts the default fetch may reach even if they resolve to private addresses. */
+  allowedHosts?: string[];
+}
+
 export class SimpleWebBlobStore extends BlobStore {
+  protected fetchImpl: (url: string, init?: RequestInit) => Promise<Response>;
+
+  constructor(opts?: SimpleWebBlobStoreOptions) {
+    super(opts);
+    this.fetchImpl =
+      opts?.fetch ?? createSafeFetch({ allowedHosts: opts?.allowedHosts });
+  }
+
   _notImplementedException() {
     throw new Error("Not implemented for SimpleWebBlobStore");
   }
@@ -517,7 +537,7 @@ export class SimpleWebBlobStore extends BlobStore {
     const fetchOptions = {
       method: "GET",
     };
-    const res = await fetch(url, fetchOptions);
+    const res = await this.fetchImpl(url, fetchOptions);
     metadata.status = res.status;
 
     const headers: Record<string, string> = {};
@@ -537,7 +557,7 @@ export class SimpleWebBlobStore extends BlobStore {
   }
 
   async mget(keys: string[]): Promise<(MediaBlob | undefined)[]> {
-    const blobMap = keys.map(this._fetch);
+    const blobMap = keys.map((key) => this._fetch(key));
     return await Promise.all(blobMap);
   }
 

@@ -2,6 +2,7 @@ import type { BaseLanguageModelInterface } from "@langchain/core/language_models
 import { ChainValues } from "@langchain/core/utils/types";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BasePromptTemplate } from "@langchain/core/prompts";
+import { createSafeFetch } from "@langchain/core/utils/ssrf";
 import { BaseChain, ChainInputs } from "../base.js";
 import { SerializedAPIChain } from "../serde.js";
 import { LLMChain } from "../llm_chain.js";
@@ -22,6 +23,13 @@ export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   headers?: Record<string, string>;
   /** Key to use for output, defaults to `output` */
   outputKey?: string;
+  /**
+   * Fetch used to call the API. Defaults to `createSafeFetch`, which
+   * refuses private network addresses and checks every redirect.
+   */
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  /** Hosts the default fetch may reach even if they resolve to private addresses. */
+  allowedHosts?: string[];
 }
 
 /**
@@ -50,6 +58,8 @@ export class APIChain extends BaseChain implements APIChainInput {
 
   outputKey = "output";
 
+  fetch: (url: string, init?: RequestInit) => Promise<Response>;
+
   get inputKeys() {
     return [this.inputKey];
   }
@@ -66,6 +76,8 @@ export class APIChain extends BaseChain implements APIChainInput {
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.headers = fields.headers ?? this.headers;
+    this.fetch =
+      fields.fetch ?? createSafeFetch({ allowedHosts: fields.allowedHosts });
   }
 
   /** @ignore */
@@ -80,7 +92,7 @@ export class APIChain extends BaseChain implements APIChainInput {
       runManager?.getChild("request")
     );
 
-    const res = await fetch(api_url, { headers: this.headers });
+    const res = await this.fetch(api_url, { headers: this.headers });
     const api_response = await res.text();
 
     const answer = await this.apiAnswerChain.predict(

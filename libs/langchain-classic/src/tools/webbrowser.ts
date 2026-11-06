@@ -9,6 +9,7 @@ import {
 } from "@langchain/core/callbacks/manager";
 
 import { Tool, ToolParams } from "@langchain/core/tools";
+import { createSafeFetch } from "@langchain/core/utils/ssrf";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
@@ -79,7 +80,14 @@ export const getText = (
   return text.trim().replace(/\n+/g, " ");
 };
 
-const getHtml = async (baseUrl: string, h: Headers, config: RequestConfig) => {
+type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
+
+const getHtml = async (
+  baseUrl: string,
+  h: Headers,
+  config: RequestConfig,
+  fetchImpl: FetchFn
+) => {
   const domain = new URL(baseUrl).hostname;
 
   const headers = { ...h };
@@ -96,7 +104,7 @@ const getHtml = async (baseUrl: string, h: Headers, config: RequestConfig) => {
       ...config,
     };
 
-    htmlResponse = await fetch(baseUrl, fetchOptions);
+    htmlResponse = await fetchImpl(baseUrl, fetchOptions);
 
     if (!htmlResponse.ok) {
       throw new Error(`http response ${htmlResponse.status}`);
@@ -179,6 +187,15 @@ export interface WebBrowserArgs extends ToolParams {
   callbackManager?: CallbackManager;
 
   textSplitter?: TextSplitter;
+
+  /**
+   * Fetch used to load pages. Defaults to `createSafeFetch`, which
+   * refuses private network addresses and checks every redirect.
+   */
+  fetch?: FetchFn;
+
+  /** Hosts the default fetch may reach even if they resolve to private addresses. */
+  allowedHosts?: string[];
 }
 
 /**
@@ -214,12 +231,16 @@ export class WebBrowser extends Tool {
 
   private textSplitter: TextSplitter;
 
+  private fetchImpl: FetchFn;
+
   constructor({
     model,
     headers,
     embeddings,
     requestConfig,
     textSplitter,
+    fetch,
+    allowedHosts,
   }: WebBrowserArgs) {
     super(...arguments);
 
@@ -236,6 +257,7 @@ export class WebBrowser extends Tool {
         chunkSize: 2000,
         chunkOverlap: 200,
       });
+    this.fetchImpl = fetch ?? createSafeFetch({ allowedHosts });
   }
 
   /** @ignore */
@@ -245,7 +267,12 @@ export class WebBrowser extends Tool {
 
     let text;
     try {
-      const html = await getHtml(baseUrl, this.headers, this.requestConfig);
+      const html = await getHtml(
+        baseUrl,
+        this.headers,
+        this.requestConfig,
+        this.fetchImpl
+      );
       text = getText(html, baseUrl, doSummary);
     } catch (e) {
       if (e) {
