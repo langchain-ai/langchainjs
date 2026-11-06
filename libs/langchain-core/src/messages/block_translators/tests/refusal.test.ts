@@ -201,6 +201,21 @@ describe("Gemini refusals", () => {
     ]);
   });
 
+  it("reads a streamed chunk's finish reason from additional_kwargs", () => {
+    const chunk = new AIMessageChunk({
+      content: "Partial",
+      response_metadata: { model_provider: provider },
+      additional_kwargs: { finishReason: "SAFETY", finishMessage: "Blocked." },
+    });
+    expect(refusals(chunk)).toEqual([
+      {
+        type: "refusal",
+        refusal: "Blocked.",
+        extras: { finishReason: "SAFETY" },
+      },
+    ]);
+  });
+
   it.each(["STOP", "MAX_TOKENS", "RECITATION"])(
     "does not treat finishReason %s as a refusal",
     (finishReason) => {

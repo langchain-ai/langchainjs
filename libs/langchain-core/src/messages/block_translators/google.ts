@@ -19,17 +19,21 @@ function refusalFromMetadata(
   message: AIMessage
 ): ContentBlock.Refusal | undefined {
   const metadata = message.response_metadata;
-  // `invoke` sets `finish_reason`; streaming sets `finishReason`.
-  const finishReason = metadata.finishReason ?? metadata.finish_reason;
+  const kwargs = message.additional_kwargs;
+  // `invoke` sets `finish_reason`, stream events set `finishReason`, and
+  // streamed chunks keep both fields only in `additional_kwargs`.
+  const finishReason =
+    metadata.finishReason ?? metadata.finish_reason ?? kwargs.finishReason;
   if (
     !_isString(finishReason) ||
     !GEMINI_REFUSAL_FINISH_REASONS.has(finishReason)
   ) {
     return undefined;
   }
+  const finishMessage = metadata.finishMessage ?? kwargs.finishMessage;
   return {
     type: "refusal",
-    refusal: _isString(metadata.finishMessage) ? metadata.finishMessage : "",
+    refusal: _isString(finishMessage) ? finishMessage : "",
     extras: { finishReason },
   };
 }
