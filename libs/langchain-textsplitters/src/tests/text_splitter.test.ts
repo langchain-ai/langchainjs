@@ -536,3 +536,73 @@ test("Test lines loc on iterative text splitter.", async () => {
 
   expect(docs).toEqual(expectedDocs);
 });
+
+describe("Splitting on an empty separator", () => {
+  const hasLoneSurrogate = (text: string) => /\p{Surrogate}/u.test(text);
+
+  test("RecursiveCharacterTextSplitter does not cut astral characters in half.", async () => {
+    const text = "😀".repeat(6);
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 5,
+      chunkOverlap: 0,
+    });
+    const output = await splitter.splitText(text);
+    expect(output).toEqual(["😀😀", "😀😀", "😀😀"]);
+    expect(output.some(hasLoneSurrogate)).toBe(false);
+    expect(output.join("")).toBe(text);
+  });
+
+  test("CharacterTextSplitter with an empty separator does not cut astral characters in half.", async () => {
+    const text = "a😀b😀c😀d";
+    const splitter = new CharacterTextSplitter({
+      separator: "",
+      chunkSize: 4,
+      chunkOverlap: 0,
+    });
+    const output = await splitter.splitText(text);
+    expect(output).toEqual(["a😀b", "😀c", "😀d"]);
+    expect(output.some(hasLoneSurrogate)).toBe(false);
+    expect(output.join("")).toBe(text);
+  });
+
+  test("Overlapping chunks stay well formed.", async () => {
+    const text = "😀𝒳".repeat(8);
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 7,
+      chunkOverlap: 2,
+    });
+    const output = await splitter.splitText(text);
+    expect(output.length).toBeGreaterThan(1);
+    expect(output.some(hasLoneSurrogate)).toBe(false);
+  });
+
+  test("A custom lengthFunction measures whole characters.", async () => {
+    const text = "😀".repeat(6);
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 3,
+      chunkOverlap: 0,
+      lengthFunction: (chunk) => Array.from(chunk).length,
+    });
+    const output = await splitter.splitText(text);
+    expect(output).toEqual(["😀😀😀", "😀😀😀"]);
+  });
+
+  test("Text without astral characters is split as before.", async () => {
+    const splitter = new CharacterTextSplitter({
+      separator: "",
+      chunkSize: 4,
+      chunkOverlap: 1,
+    });
+    expect(await splitter.splitText("abcdefghij")).toEqual([
+      "abcd",
+      "defg",
+      "ghij",
+    ]);
+    expect(await splitter.splitText("héllo wörld")).toEqual([
+      "héll",
+      "lo w",
+      "wörl",
+      "ld",
+    ]);
+  });
+});
