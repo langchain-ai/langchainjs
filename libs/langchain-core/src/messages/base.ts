@@ -149,7 +149,7 @@ export function mergeContent(
       return [
         ...firstContent,
         {
-          type: "file",
+          type: "text",
           source_type: "text",
           text: secondContent,
         },
