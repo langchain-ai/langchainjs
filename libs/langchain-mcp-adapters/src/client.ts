@@ -161,6 +161,9 @@ export class MCPAdapter {
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
+        resetTimeoutOnProgress:
+          serverConfig.resetTimeoutOnProgress ??
+          parsedServerConfig.resetTimeoutOnProgress,
         onProgress: serverConfig.onProgress,
         /**
          * make sure to place global hooks (e.g. parsedServerConfig) first before
