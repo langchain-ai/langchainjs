@@ -1119,3 +1119,181 @@ describe("gemini empty text content handling", () => {
     expect(textPart.text).toBe("I am doing well");
   });
 });
+
+describe("gemini functionResponse names for tool results", () => {
+  const parallelCalls = [
+    { id: "call_a", name: "get_weather", args: { city: "Paris" } },
+    { id: "call_b", name: "get_time", args: { tz: "CET" } },
+  ];
+
+  async function functionResponses(
+    messages: (AIMessage | HumanMessage | ToolMessage)[]
+  ): Promise<{ name: string; content: unknown }[]> {
+    const api = getGeminiAPI();
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+    return (formatted.contents ?? [])
+      .flatMap((content) => content.parts)
+      .flatMap((part) =>
+        "functionResponse" in part
+          ? [
+              {
+                name: part.functionResponse.name,
+                content: (part.functionResponse.response as any).content,
+              },
+            ]
+          : []
+      );
+  }
+
+  test("parallel results without a name are labelled by their tool_call_id", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather and time in Paris?"),
+      new AIMessage({ content: "", tool_calls: parallelCalls }),
+      new ToolMessage({ tool_call_id: "call_a", content: "18C" }),
+      new ToolMessage({ tool_call_id: "call_b", content: "10:00" }),
+    ]);
+
+    expect(responses).toEqual([
+      { name: "get_weather", content: "18C" },
+      { name: "get_time", content: "10:00" },
+    ]);
+  });
+
+  test("parallel results keep the name set on each ToolMessage", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather and time in Paris?"),
+      new AIMessage({ content: "", tool_calls: parallelCalls }),
+      new ToolMessage({
+        tool_call_id: "call_a",
+        name: "get_weather",
+        content: "18C",
+      }),
+      new ToolMessage({
+        tool_call_id: "call_b",
+        name: "get_time",
+        content: "10:00",
+      }),
+    ]);
+
+    expect(responses).toEqual([
+      { name: "get_weather", content: "18C" },
+      { name: "get_time", content: "10:00" },
+    ]);
+  });
+
+  test("results returned in a different order than the calls are matched by tool_call_id", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather and time in Paris?"),
+      new AIMessage({ content: "", tool_calls: parallelCalls }),
+      new ToolMessage({
+        tool_call_id: "call_b",
+        name: "get_time",
+        content: "10:00",
+      }),
+      new ToolMessage({
+        tool_call_id: "call_a",
+        name: "get_weather",
+        content: "18C",
+      }),
+    ]);
+
+    expect(responses).toEqual([
+      { name: "get_time", content: "10:00" },
+      { name: "get_weather", content: "18C" },
+    ]);
+  });
+
+  test("results returned in a different order are matched when the ToolMessages have no name", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather and time in Paris?"),
+      new AIMessage({ content: "", tool_calls: parallelCalls }),
+      new ToolMessage({ tool_call_id: "call_b", content: "10:00" }),
+      new ToolMessage({ tool_call_id: "call_a", content: "18C" }),
+    ]);
+
+    expect(responses).toEqual([
+      { name: "get_time", content: "10:00" },
+      { name: "get_weather", content: "18C" },
+    ]);
+  });
+
+  test("the name on the ToolMessage takes precedence over the tool call name", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather?"),
+      new AIMessage({ content: "", tool_calls: [parallelCalls[0]] }),
+      new ToolMessage({
+        tool_call_id: "call_a",
+        name: "weather_lookup",
+        content: "18C",
+      }),
+    ]);
+
+    expect(responses).toEqual([{ name: "weather_lookup", content: "18C" }]);
+  });
+
+  test("a single tool call is labelled the same with or without a ToolMessage name", async () => {
+    const withoutName = await functionResponses([
+      new HumanMessage("weather?"),
+      new AIMessage({ content: "", tool_calls: [parallelCalls[0]] }),
+      new ToolMessage({ tool_call_id: "call_a", content: "18C" }),
+    ]);
+    const withName = await functionResponses([
+      new HumanMessage("weather?"),
+      new AIMessage({ content: "", tool_calls: [parallelCalls[0]] }),
+      new ToolMessage({
+        tool_call_id: "call_a",
+        name: "get_weather",
+        content: "18C",
+      }),
+    ]);
+
+    expect(withoutName).toEqual([{ name: "get_weather", content: "18C" }]);
+    expect(withName).toEqual([{ name: "get_weather", content: "18C" }]);
+  });
+
+  test("the nearest preceding AIMessage is used to look up the tool_call_id", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [{ id: "call_1", name: "get_weather", args: {} }],
+      }),
+      new ToolMessage({ tool_call_id: "call_1", content: "18C" }),
+      new HumanMessage("and the time?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "get_time", args: {} },
+          { id: "call_2", name: "get_date", args: {} },
+        ],
+      }),
+      new ToolMessage({ tool_call_id: "call_2", content: "2026-01-01" }),
+      new ToolMessage({ tool_call_id: "call_1", content: "10:00" }),
+    ]);
+
+    expect(responses).toEqual([
+      { name: "get_weather", content: "18C" },
+      { name: "get_date", content: "2026-01-01" },
+      { name: "get_time", content: "10:00" },
+    ]);
+  });
+
+  test("a tool_call_id that matches no tool call keeps the previous behavior", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather?"),
+      new AIMessage({ content: "", tool_calls: [parallelCalls[0]] }),
+      new ToolMessage({ tool_call_id: "unknown_id", content: "18C" }),
+    ]);
+
+    expect(responses).toEqual([{ name: "get_weather", content: "18C" }]);
+  });
+
+  test("falls back to the tool_call_id when there is no name and no AIMessage", async () => {
+    const responses = await functionResponses([
+      new HumanMessage("weather?"),
+      new ToolMessage({ tool_call_id: "call_a", content: "18C" }),
+    ]);
+
+    expect(responses).toEqual([{ name: "call_a", content: "18C" }]);
+  });
+});
