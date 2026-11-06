@@ -29,6 +29,7 @@ import {
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
+import { findRefusal } from "./utils/refusal.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
@@ -1901,7 +1902,10 @@ export class ChatAnthropicMessages<
         } as Partial<CallOptions>);
 
         const raiseIfNoToolCalls = (message: AIMessageChunk) => {
-          if (!message.tool_calls || message.tool_calls.length === 0) {
+          if (
+            (!message.tool_calls || message.tool_calls.length === 0) &&
+            !findRefusal(message)
+          ) {
             throw new Error(thinkingAdmonition);
           }
           return message;

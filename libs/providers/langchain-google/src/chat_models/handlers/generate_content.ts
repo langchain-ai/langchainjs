@@ -28,11 +28,8 @@ import {
   usageMetadataToTokenUsage,
 } from "../../utils/metadata.js";
 import { iife } from "../../utils/misc.js";
-import {
-  PromptBlockedError,
-  NoCandidatesError,
-  RequestError,
-} from "../../utils/errors.js";
+import { promptBlockedError } from "../../utils/refusal.js";
+import { NoCandidatesError, RequestError } from "../../utils/errors.js";
 import {
   convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
@@ -167,7 +164,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
-      throw PromptBlockedError.fromPromptFeedback(data.promptFeedback);
+      throw promptBlockedError(data.promptFeedback);
     }
 
     // Check if we have candidates
@@ -310,6 +307,10 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                   })
                 );
                 return;
+              }
+
+              if (chunk.promptFeedback?.blockReason) {
+                throw promptBlockedError(chunk.promptFeedback);
               }
 
               // Extract text delta from the chunk

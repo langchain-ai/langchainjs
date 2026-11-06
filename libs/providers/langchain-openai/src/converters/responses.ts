@@ -1356,6 +1356,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           [withBreakpoint(block, makeTextPart(block.text))],
           phase
         );
+      } else if (block.type === "refusal") {
+        // Only assistant messages accept refusal parts.
+        if (messageRole === "assistant") {
+          pushMessageContent([
+            {
+              type: "refusal",
+              refusal: block.refusal,
+            } as unknown as ResponseInputMessageContentList[number],
+          ]);
+        }
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1669,7 +1679,15 @@ export const convertMessagesToResponsesInput: Converter<
 
         // ai content
         let { content } = lcMsg;
-        if (additional_kwargs?.refusal) {
+        const hasRefusalPart =
+          Array.isArray(content) &&
+          content.some(
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              item.type === "refusal"
+          );
+        if (additional_kwargs?.refusal && !hasRefusalPart) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
           }
@@ -1702,7 +1720,15 @@ export const convertMessagesToResponsesInput: Converter<
                   };
                 }
 
-                if (item.type === "output_text" || item.type === "refusal") {
+                if (item.type === "refusal") {
+                  return {
+                    type: "refusal",
+                    refusal:
+                      typeof item.refusal === "string" ? item.refusal : "",
+                  };
+                }
+
+                if (item.type === "output_text") {
                   return item;
                 }
 

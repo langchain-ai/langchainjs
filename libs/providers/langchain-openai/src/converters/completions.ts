@@ -301,6 +301,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       if (providerReasoningContent !== undefined) {
         additional_kwargs.reasoning_content = providerReasoningContent;
       }
+      if (message.refusal) {
+        additional_kwargs.refusal = message.refusal;
+      }
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
@@ -675,6 +678,12 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
         role: "assistant",
         content: textContent,
       };
+    const refusal = message.contentBlocks.find(
+      (block): block is ContentBlock.Refusal => block.type === "refusal"
+    );
+    if (refusal?.refusal) {
+      completionParam.refusal = refusal.refusal;
+    }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
@@ -694,6 +703,13 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       completionParam.tool_calls != null
     ) {
       completionParam.content = null;
+    } else if (
+      Array.isArray(completionParam.content) &&
+      completionParam.content.length === 0 &&
+      completionParam.refusal != null
+    ) {
+      // Content is required without tool calls; the refusal carries the payload.
+      completionParam.content = "";
     }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
@@ -839,6 +855,15 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             if (m.type === "text") {
               return liftExtrasPromptCacheBreakpoint(m);
             }
+            if (m.type === "refusal") {
+              // Only assistant messages accept refusal parts.
+              return role === "assistant"
+                ? {
+                    type: "refusal",
+                    refusal: typeof m.refusal === "string" ? m.refusal : "",
+                  }
+                : [];
+            }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
             //    `functionCall`) are already carried in message.tool_calls,
@@ -871,6 +896,14 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     };
     if (message.name != null) {
       completionParam.name = message.name;
+    }
+    const keptRefusal = message.additional_kwargs.refusal;
+    if (
+      role === "assistant" &&
+      typeof keptRefusal === "string" &&
+      !(Array.isArray(content) && content.some((m) => m.type === "refusal"))
+    ) {
+      completionParam.refusal = keptRefusal;
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
