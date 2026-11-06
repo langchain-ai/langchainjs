@@ -252,3 +252,59 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });
+
+describe("stream usage metadata", () => {
+  test("stream() surfaces x_groq usage as usage_metadata", async () => {
+    const base = {
+      id: "chatcmpl-1",
+      object: "chat.completion.chunk",
+      created: 1,
+      model: "llama-3.1-8b-instant",
+    };
+    const chunks = [
+      {
+        ...base,
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hello" },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        ...base,
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+        x_groq: {
+          id: "req_1",
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 2,
+            total_tokens: 12,
+          },
+        },
+      },
+    ];
+    const model = new ChatGroq({
+      apiKey: "foo",
+      model: "llama-3.1-8b-instant",
+    });
+    vi.spyOn(model, "completionWithRetry").mockResolvedValue(
+      (async function* () {
+        yield* chunks;
+      })() as never
+    );
+
+    let aggregate: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Hi")) {
+      aggregate = aggregate ? aggregate.concat(chunk) : chunk;
+    }
+
+    expect(aggregate?.content).toBe("Hello");
+    expect(aggregate?.usage_metadata).toMatchObject({
+      input_tokens: 10,
+      output_tokens: 2,
+      total_tokens: 12,
+    });
+  });
+});
