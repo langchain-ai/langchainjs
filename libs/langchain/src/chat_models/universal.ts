@@ -342,6 +342,13 @@ interface ConfigurableModelFields extends BaseChatModelParams {
   profile?: ModelProfile;
 }
 
+const LANGGRAPH_RUN_KEYS = [
+  "thread_id",
+  "checkpoint_ns",
+  "checkpoint_id",
+  "checkpoint_map",
+];
+
 /**
  * Internal class used to create chat models.
  *
@@ -512,6 +519,15 @@ export class ConfigurableModel<
       modelParams = Object.fromEntries(
         Object.entries(modelParams).filter(([key]) =>
           this._configurableFields.includes(key)
+        )
+      );
+    } else {
+      // LangGraph run keys are not model params: kept, they would reach the
+      // model constructor and add a cache entry for every run.
+      modelParams = Object.fromEntries(
+        Object.entries(modelParams).filter(
+          ([key]) =>
+            !key.startsWith("__pregel_") && !LANGGRAPH_RUN_KEYS.includes(key)
         )
       );
     }
@@ -786,18 +802,7 @@ export class ConfigurableModel<
 
   /** @internal */
   _getCacheKey(config?: RunnableConfig): string {
-    let toStringify = config ?? {};
-    if (toStringify.configurable) {
-      const { configurable } = toStringify;
-      const filtered: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(configurable)) {
-        if (!k.startsWith("__pregel_")) {
-          filtered[k] = v;
-        }
-      }
-      toStringify = { ...toStringify, configurable: filtered };
-    }
-    return JSON.stringify(toStringify);
+    return JSON.stringify(this._modelParams(config));
   }
 }
 
