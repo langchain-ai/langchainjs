@@ -1,4 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { tavilyHttpError } from "./http-utils.js";
 
 const TAVILY_BASE_URL = "https://api.tavily.com";
 
@@ -21,7 +22,7 @@ export type TavilySearchParamsBase = {
    *
    * @default "basic"
    */
-  search_depth?: "basic" | "advanced";
+  search_depth?: "basic" | "advanced" | "fast" | "ultra-fast";
 
   /**
    * The number of {@link TavilySearchResult.content} chunks to retrieve from each source.
@@ -34,7 +35,7 @@ export type TavilySearchParamsBase = {
   /**
    * The maximum number of search results to return.
    *
-   * @default 5
+   * Omitted by this wrapper unless configured; the API applies its default.
    */
   max_results?: number;
   /**
@@ -758,6 +759,8 @@ export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Name": "langchain-js",
+      "X-Client-Source": "api",
     };
 
     // Convert camelCase to snake_case for API compatibility
@@ -766,14 +769,11 @@ export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/search`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
+      body: JSON.stringify(apiParams),
     });
 
     if (!response.ok) {
-      console.log(response);
-      const errorData = await response.json();
-      const errorMessage = errorData.detail?.error || "Unknown error";
-      throw new Error(`Error ${response.status}: ${errorMessage}`);
+      throw await tavilyHttpError(response, this.tavilyApiKey);
     }
 
     return response.json();
@@ -795,6 +795,8 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Name": "langchain-js",
+      "X-Client-Source": "api",
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -802,13 +804,11 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/extract`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
+      body: JSON.stringify(apiParams),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.detail?.error || "Unknown error";
-      throw new Error(`Error ${response.status}: ${errorMessage}`);
+      throw await tavilyHttpError(response, this.tavilyApiKey);
     }
 
     return response.json();
@@ -828,6 +828,8 @@ export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Name": "langchain-js",
+      "X-Client-Source": "api",
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -835,13 +837,11 @@ export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/crawl`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
+      body: JSON.stringify(apiParams),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.detail?.error || "Unknown error";
-      throw new Error(`Error ${response.status}: ${errorMessage}`);
+      throw await tavilyHttpError(response, this.tavilyApiKey);
     }
 
     return response.json();
@@ -861,6 +861,8 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Name": "langchain-js",
+      "X-Client-Source": "api",
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -868,13 +870,11 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/map`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
+      body: JSON.stringify(apiParams),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.detail?.error || "Unknown error";
-      throw new Error(`Error ${response.status}: ${errorMessage}`);
+      throw await tavilyHttpError(response, this.tavilyApiKey);
     }
 
     return response.json();
@@ -898,6 +898,8 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Name": "langchain-js",
+      "X-Client-Source": "api",
     };
 
     const apiParams = this.convertCamelToSnakeCase(params);
@@ -906,13 +908,11 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
       const response = await fetch(`${this.apiBaseUrl}/research`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
+        body: JSON.stringify(apiParams),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.detail?.error || "Unknown error";
-        throw new Error(`Error ${response.status}: ${errorMessage}`);
+        throw await tavilyHttpError(response, this.tavilyApiKey);
       }
 
       // Return async generator for streaming
@@ -942,12 +942,10 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
       const response = await fetch(`${this.apiBaseUrl}/research`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
+        body: JSON.stringify(apiParams),
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.detail?.error || "Unknown error";
-        throw new Error(`Error ${response.status}: ${errorMessage}`);
+        throw await tavilyHttpError(response, this.tavilyApiKey);
       }
 
       return response.json();
@@ -963,6 +961,8 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
     const headers = {
       Authorization: `Bearer ${this.tavilyApiKey}`,
       "Content-Type": "application/json",
+      "X-Client-Name": "langchain-js",
+      "X-Client-Source": "api",
     };
 
     const response = await fetch(`${this.apiBaseUrl}/research/${requestId}`, {
@@ -971,9 +971,7 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.detail?.error || "Unknown error";
-      throw new Error(`Error ${response.status}: ${errorMessage}`);
+      throw await tavilyHttpError(response, this.tavilyApiKey);
     }
 
     return response.json();
