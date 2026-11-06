@@ -408,28 +408,53 @@ export class AsyncCaller {
     callable: T,
     args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
-    return this.queue.add(
-      () =>
-        pRetry(
-          () =>
-            callable(...args).catch((error) => {
-              // oxlint-disable-next-line no-instanceof/no-instanceof
-              if (error instanceof Error) {
-                throw error;
-              } else {
-                throw new Error(error);
-              }
-            }),
-          {
-            onFailedAttempt: ({ error }) => this.onFailedAttempt?.(error),
-            retries,
-            randomize: true,
-            // If needed we can change some of the defaults here,
-            // but they're quite sensible.
-          }
-        ),
-      { throwOnTimeout: true }
+    return this.runWhenSlotFree(() =>
+      pRetry(
+        () =>
+          callable(...args).catch((error) => {
+            // oxlint-disable-next-line no-instanceof/no-instanceof
+            if (error instanceof Error) {
+              throw error;
+            } else {
+              throw new Error(error);
+            }
+          }),
+        {
+          onFailedAttempt: ({ error }) => this.onFailedAttempt?.(error),
+          retries,
+          randomize: true,
+          // If needed we can change some of the defaults here,
+          // but they're quite sensible.
+        }
+      )
     );
+  }
+
+  /**
+   * Runs `task` once the queue has a free slot, from this async function
+   * rather than from inside the queue. p-queue starts a waiting task from the
+   * task that just finished, so a queued task would otherwise run in that
+   * earlier caller's async context, and code that reads `AsyncLocalStorage`
+   * (OpenTelemetry, request-scoped loggers or auth) would see its values.
+   */
+  private async runWhenSlotFree<R>(task: () => Promise<R>): Promise<R> {
+    let releaseSlot!: () => void;
+    await new Promise<void>((slotAcquired, slotFailed) => {
+      this.queue
+        .add(
+          () =>
+            new Promise<void>((release) => {
+              releaseSlot = release;
+              slotAcquired();
+            })
+        )
+        .catch(slotFailed);
+    });
+    try {
+      return await task();
+    } finally {
+      releaseSlot();
+    }
   }
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
