@@ -118,3 +118,39 @@ test("Can convert tool to OpenAI Tool format", async () => {
     },
   });
 });
+
+test("Can convert StructuredToolParams with anyOf JSON schema (no root type)", async () => {
+  const schema = {
+    anyOf: [
+      {
+        type: "object",
+        properties: {
+          action: { type: "string", const: "create" },
+          id: { type: "string" },
+        },
+        required: ["action", "id"],
+      },
+      {
+        type: "object",
+        properties: {
+          action: { type: "string", const: "delete" },
+          id: { type: "string" },
+        },
+        required: ["action", "id"],
+      },
+    ],
+  };
+  const result = convertToOpenAITool({
+    name: "write_thing",
+    description: "Write a thing",
+    schema,
+  });
+  expect(result).toEqual({
+    type: "function",
+    function: {
+      name: "write_thing",
+      description: "Write a thing",
+      parameters: schema,
+    },
+  });
+});

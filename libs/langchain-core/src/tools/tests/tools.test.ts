@@ -526,6 +526,69 @@ describe("isStructuredToolParams", () => {
     };
     expect(isStructuredToolParams(nonStructuredToolParams)).toBe(false);
   });
+  test("returns true for a json schema with anyOf root (no type)", () => {
+    const jsonToolParams: StructuredToolParams = {
+      name: "write_thing",
+      description: "Write a thing",
+      schema: {
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              action: { type: "string", const: "create" },
+              id: { type: "string" },
+            },
+            required: ["action", "id"],
+          },
+          {
+            type: "object",
+            properties: {
+              action: { type: "string", const: "delete" },
+              id: { type: "string" },
+            },
+            required: ["action", "id"],
+          },
+        ],
+      },
+    };
+    expect(isStructuredToolParams(jsonToolParams)).toBe(true);
+  });
+  test("returns true for a json schema with oneOf root (no type)", () => {
+    expect(
+      isStructuredToolParams({
+        name: "test",
+        schema: {
+          oneOf: [{ type: "string" }, { type: "number" }],
+        },
+      })
+    ).toBe(true);
+  });
+  test("returns true for a json schema with allOf root (no type)", () => {
+    expect(
+      isStructuredToolParams({
+        name: "test",
+        schema: {
+          allOf: [
+            { type: "object", properties: { a: { type: "string" } } },
+            { type: "object", properties: { b: { type: "number" } } },
+          ],
+        },
+      })
+    ).toBe(true);
+  });
+  test("returns true for a json schema with $ref root (no type)", () => {
+    expect(
+      isStructuredToolParams({
+        name: "test",
+        schema: {
+          $ref: "#/$defs/Thing",
+          $defs: {
+            Thing: { type: "object", properties: { id: { type: "string" } } },
+          },
+        },
+      })
+    ).toBe(true);
+  });
 });
 
 describe("DynamicTool", () => {
