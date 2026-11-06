@@ -805,6 +805,57 @@ describe("ChatOpenAI", () => {
     expect(tools[0]).toEqual({ type: "tool_search" });
   });
 
+  // https://github.com/langchain-ai/langchainjs/issues/12136
+  test("bindTools keeps JSON-schema tools whose root is anyOf (no type) on Responses API", async () => {
+    const union = z.union([
+      z.object({ action: z.literal("create"), id: z.string() }),
+      z.object({ action: z.literal("delete"), id: z.string() }),
+    ]);
+    const jsonSchema = toJsonSchema(union);
+    expect(jsonSchema).not.toHaveProperty("type");
+    expect(jsonSchema).toHaveProperty("anyOf");
+
+    const captureToolNames = async (
+      schema: typeof union | ReturnType<typeof toJsonSchema>
+    ) => {
+      const fetch = vi.fn(async (_url: unknown, init?: RequestInit) => {
+        return new Response(
+          JSON.stringify({
+            id: "r",
+            object: "response",
+            output: [],
+            status: "completed",
+          }),
+          { headers: { "content-type": "application/json" } }
+        );
+      });
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        apiKey: "test",
+        useResponsesApi: true,
+        maxRetries: 0,
+        configuration: { fetch },
+      });
+      await model
+        .bindTools([
+          {
+            name: "write_thing",
+            description: "Write a thing",
+            schema,
+          },
+        ])
+        .invoke("hi");
+      expect(fetch).toHaveBeenCalled();
+      const body = JSON.parse(String(fetch.mock.calls[0][1]?.body));
+      return (body.tools ?? []).map((t: { name?: string }) => t.name);
+    };
+
+    await expect(captureToolNames(union)).resolves.toEqual(["write_thing"]);
+    await expect(captureToolNames(jsonSchema)).resolves.toEqual([
+      "write_thing",
+    ]);
+  });
+
   // https://github.com/langchain-ai/langchainjs/issues/8586
   test("multiple bindTools calls will not override each other", async () => {
     const model = new ChatOpenAI({
