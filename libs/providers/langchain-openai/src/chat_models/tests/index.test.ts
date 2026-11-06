@@ -1056,6 +1056,11 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5.6-pro")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-6-astra")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-6-sol")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-6-luna")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-6.1-sol")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-6.1-terra")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-6-cyber")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-99-turbo")).toBe(true);
       expect(_modelPrefersResponsesAPI("some-custom-model")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-daybreak-blue-latest")).toBe(true);
