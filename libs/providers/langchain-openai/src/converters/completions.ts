@@ -683,10 +683,10 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
         content: textContent,
       };
     const refusal = message.contentBlocks.find(
-      (block) => block.type === "refusal"
+      (block): block is ContentBlock.Refusal => block.type === "refusal"
     );
     if (refusal?.refusal) {
-      completionParam.refusal = String(refusal.refusal);
+      completionParam.refusal = refusal.refusal;
     }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
@@ -862,7 +862,10 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             if (m.type === "refusal") {
               // Only assistant messages accept refusal parts.
               return role === "assistant"
-                ? { type: "refusal", refusal: String(m.refusal ?? "") }
+                ? {
+                    type: "refusal",
+                    refusal: typeof m.refusal === "string" ? m.refusal : "",
+                  }
                 : [];
             }
             // Drop content blocks the Chat Completions API rejects as input:
