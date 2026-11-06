@@ -67,7 +67,7 @@ type OpenAIAnnotation =
  *
  * This function maps them to LangChain's Citation format or preserves them as non-standard blocks.
  */
-function convertOpenAIAnnotationToLangChain(
+export function convertOpenAIAnnotationToLangChain(
   annotation: OpenAIAnnotation
 ): ContentBlock.Citation | ContentBlock.NonStandard {
   if (annotation.type === "url_citation") {
