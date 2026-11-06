@@ -846,6 +846,73 @@ describe("streaming", () => {
 
     expect(stream.streamDone).toEqual(true);
   });
+
+  function failingSource(parts: string[]): {
+    source: ReadableStream<Uint8Array>;
+    fail: (error: unknown) => void;
+  } {
+    let fail: (error: unknown) => void = () => undefined;
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        parts.forEach((part) => controller.enqueue(toUint8Array(part)));
+        fail = (error) => controller.error(error);
+      },
+    });
+    return { source, fail: (error) => fail(error) };
+  }
+
+  test("ReadableJsonStream rejects the pending chunk when the source fails mid-response", async () => {
+    const aborted = new DOMException(
+      "This operation was aborted",
+      "AbortError"
+    );
+    const { source, fail } = failingSource(['[{"i": 1}, {"i": 2']);
+    const stream = new ReadableJsonStream(source);
+
+    expect(await stream.nextChunk()).toEqual({ i: 1 });
+    const pending = stream.nextChunk();
+    fail(aborted);
+
+    await expect(pending).rejects.toBe(aborted);
+    expect(stream.streamDone).toEqual(false);
+    await expect(stream.nextChunk()).rejects.toBe(aborted);
+  });
+
+  test("ReadableJsonStream returns chunks parsed before the failure, then rejects", async () => {
+    const aborted = new DOMException(
+      "This operation was aborted",
+      "AbortError"
+    );
+    const { source, fail } = failingSource(['[{"i": 1}, {"i": 2}']);
+    const stream = new ReadableJsonStream(source);
+    // Let the enqueued data reach the parser before failing the source.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fail(aborted);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(await stream.nextChunk()).toEqual({ i: 1 });
+    expect(await stream.nextChunk()).toEqual({ i: 2 });
+    await expect(stream.nextChunk()).rejects.toBe(aborted);
+  });
+
+  test("ReadableSseJsonStream rejects the pending chunk when the source fails mid-response", async () => {
+    const aborted = new DOMException(
+      "This operation was aborted",
+      "AbortError"
+    );
+    const { source, fail } = failingSource([
+      'data: {"type": "ping"}\n\n',
+      'data: {"type": "po',
+    ]);
+    const stream = new ReadableSseJsonStream(source);
+
+    expect((await stream.nextChunk()).type).toEqual("ping");
+    const pending = stream.nextChunk();
+    fail(aborted);
+
+    await expect(pending).rejects.toBe(aborted);
+    expect(stream.streamDone).toEqual(false);
+  });
 });
 
 describe("gemini tool config formatting", () => {
