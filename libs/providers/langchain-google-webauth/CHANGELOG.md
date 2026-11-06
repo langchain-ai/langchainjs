@@ -1,5 +1,12 @@
 # @langchain/google-webauth
 
+## 2.3.5
+
+### Patch Changes
+
+- Updated dependencies [[`a903bf5`](https://github.com/langchain-ai/langchainjs/commit/a903bf5e37b6ec9108424f7062c14fa5a31e2a36)]:
+  - @langchain/google-common@2.3.5
+
 ## 2.3.4
 
 ### Patch Changes
