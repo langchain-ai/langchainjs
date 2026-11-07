@@ -1178,12 +1178,6 @@ export function humanInTheLoopMiddleware(
 
         const revisedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
         const artificialToolMessages: ToolMessage[] = [];
-        const hasRejectedToolCalls = decisions.some(
-          (decision) => decision.type === "reject"
-        );
-        const hasRespondedToolCalls = decisions.some(
-          (decision) => decision.type === "respond"
-        );
 
         /**
          * Process each decision using helper method
@@ -1199,17 +1193,7 @@ export function humanInTheLoopMiddleware(
             interruptConfig
           );
 
-          if (
-            revisedToolCall &&
-            /**
-             * If any decision is a rejected, we are going back to the model
-             * with only the tool calls that were rejected as we don't know
-             * the results of the approved/updated tool calls at this point.
-             */
-            (!hasRejectedToolCalls ||
-              decision.type === "reject" ||
-              decision.type === "respond")
-          ) {
+          if (revisedToolCall) {
             revisedToolCalls.push(revisedToolCall);
           }
           if (toolMessage) {
@@ -1218,23 +1202,27 @@ export function humanInTheLoopMiddleware(
         }
 
         /**
-         * Update the AI message to only include approved tool calls
+         * Keep every tool call on the AI message: a dropped call would never
+         * receive a ToolMessage, which provider APIs reject.
          */
         if (AIMessage.isInstance(lastMessage)) {
           lastMessage.tool_calls = revisedToolCalls;
         }
 
+        /**
+         * Only go back to the model when nothing is left for the tool node to
+         * execute, i.e. every remaining tool call already has an artificial
+         * ToolMessage (rejected or responded).
+         */
         const hasPendingToolCalls = revisedToolCalls.some(
           (toolCall) =>
             !artificialToolMessages.some(
               (message) => message.tool_call_id === toolCall.id
             )
         );
-        const jumpTo: JumpToTarget | undefined =
-          hasRejectedToolCalls ||
-          (hasRespondedToolCalls && !hasPendingToolCalls)
-            ? "model"
-            : undefined;
+        const jumpTo: JumpToTarget | undefined = hasPendingToolCalls
+          ? undefined
+          : "model";
         return {
           messages: [lastMessage, ...artificialToolMessages],
           jumpTo,

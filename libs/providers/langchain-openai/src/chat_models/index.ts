@@ -13,7 +13,7 @@ import {
   isOpenAICustomTool,
 } from "../utils/tools.js";
 import { _modelPrefersResponsesAPI } from "../utils/misc.js";
-import { withoutFileMimeTypesUnlessSupported } from "../utils/file_mime_types.js";
+import { profileForApi } from "../utils/profile.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../utils/output.js";
 import {
   ChatOpenAICompletions,
@@ -695,10 +695,7 @@ export class ChatOpenAI<
 
   // Per-call Responses triggers (e.g. built-in tools) can't be known here.
   override get profile(): ModelProfile {
-    return withoutFileMimeTypesUnlessSupported(
-      super.profile,
-      this._useResponsesApi(undefined)
-    );
+    return profileForApi(super.profile, this._useResponsesApi(undefined));
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {

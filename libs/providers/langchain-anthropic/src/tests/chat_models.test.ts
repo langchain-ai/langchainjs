@@ -2922,3 +2922,34 @@ describe("withStructuredOutput - StandardSchema", () => {
     });
   });
 });
+
+describe("profile mid-conversation support", () => {
+  test.each([
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "claude-haiku-5-5",
+    "claude-mythos-5",
+  ])("%s supports mid-conversation system messages and tools", (model) => {
+    const chatModel = new ChatAnthropic({ model, apiKey: "test" });
+    expect(chatModel.profile.midConversationSystemMessages).toBe(true);
+    expect(chatModel.profile.midConversationTools).toBe(true);
+  });
+
+  test("claude-sonnet-5 supports system messages but not tools", () => {
+    const chatModel = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "test",
+    });
+    expect(chatModel.profile.midConversationSystemMessages).toBe(true);
+    expect(chatModel.profile.midConversationTools).toBe(false);
+  });
+
+  test("older models leave the capability unset", () => {
+    const chatModel = new ChatAnthropic({
+      model: "claude-sonnet-4-6",
+      apiKey: "test",
+    });
+    expect(chatModel.profile.midConversationSystemMessages).toBeUndefined();
+    expect(chatModel.profile.midConversationTools).toBeUndefined();
+  });
+});

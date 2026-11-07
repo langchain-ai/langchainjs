@@ -1,5 +1,21 @@
 # @langchain/google-common
 
+## 2.3.5
+
+### Patch Changes
+
+- [#12123](https://github.com/langchain-ai/langchainjs/pull/12123) [`a903bf5`](https://github.com/langchain-ai/langchainjs/commit/a903bf5e37b6ec9108424f7062c14fa5a31e2a36) Thanks [@hntrl](https://github.com/hntrl)! - Preserve streamed Claude tool-call arguments on replay and system prompt cache-control blocks on Vertex AI.
+
+## 2.3.4
+
+No changes in this release.
+
+## 2.3.3
+
+### Patch Changes
+
+- [#11988](https://github.com/langchain-ai/langchainjs/pull/11988) [`2a37b67`](https://github.com/langchain-ai/langchainjs/commit/2a37b672115a99136d645c3f96633d00421312d6) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Backport LangSmith gateway routing to `ChatVertexAI` in the Node and web packages through `@langchain/google-common`, including streaming, custom gateway URLs, and explicit regional project configuration. Honor custom endpoints in Vertex Express requests.
+
 ## 2.3.2
 
 ## 2.3.1
