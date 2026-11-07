@@ -536,3 +536,17 @@ test("Test lines loc on iterative text splitter.", async () => {
 
   expect(docs).toEqual(expectedDocs);
 });
+
+test("Test lines loc when chunk text repeats inside the previous chunk.", async () => {
+  const text = "Name | Price\n\nPrice";
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 12,
+    chunkOverlap: 0,
+  });
+  const docs = await splitter.createDocuments([text]);
+
+  expect(docs.map((d) => [d.pageContent, d.metadata.loc.lines])).toEqual([
+    ["Name | Price", { from: 1, to: 1 }],
+    ["Price", { from: 3, to: 3 }],
+  ]);
+});

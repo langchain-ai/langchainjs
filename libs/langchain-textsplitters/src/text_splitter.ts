@@ -99,7 +99,22 @@ export abstract class TextSplitter
         let pageContent = chunkHeader;
 
         // we need to count the \n that are in the text before getting removed by the splitting
-        const indexChunk = text.indexOf(chunk, indexPrevChunk + 1);
+        // Start searching after the non-overlapping prefix of the previous
+        // chunk so a chunk whose text also appears inside the previous chunk
+        // (repeated headers, labels, table cells) anchors to its actual
+        // position. Fall back to the old search start if not found there.
+        let indexChunk = text.indexOf(
+          chunk,
+          prevChunk === null
+            ? indexPrevChunk + 1
+            : Math.max(
+                indexPrevChunk + 1,
+                indexPrevChunk + prevChunk.length - this.chunkOverlap
+              )
+        );
+        if (indexChunk === -1) {
+          indexChunk = text.indexOf(chunk, indexPrevChunk + 1);
+        }
         if (prevChunk === null) {
           const newLinesBeforeFirstChunk = this.numberOfNewLines(
             text,
