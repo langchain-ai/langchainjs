@@ -93,14 +93,20 @@ export abstract class TextSplitter
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
       let lineCounterIndex = 1;
-      let prevChunk = null;
+      let hasPrevChunk = false;
       let indexPrevChunk = -1;
+      let indexEndPrevChunk = 0;
       for (const chunk of await this.splitText(text)) {
         let pageContent = chunkHeader;
 
         // we need to count the \n that are in the text before getting removed by the splitting
-        const indexChunk = text.indexOf(chunk, indexPrevChunk + 1);
-        if (prevChunk === null) {
+        const { start: indexChunk, end: indexEndChunk } = this.locateChunk(
+          text,
+          chunk,
+          indexPrevChunk + 1,
+          indexEndPrevChunk
+        );
+        if (!hasPrevChunk) {
           const newLinesBeforeFirstChunk = this.numberOfNewLines(
             text,
             0,
@@ -108,7 +114,6 @@ export abstract class TextSplitter
           );
           lineCounterIndex += newLinesBeforeFirstChunk;
         } else {
-          const indexEndPrevChunk = indexPrevChunk + prevChunk.length;
           if (indexEndPrevChunk < indexChunk) {
             const numberOfIntermediateNewLines = this.numberOfNewLines(
               text,
@@ -128,7 +133,13 @@ export abstract class TextSplitter
             pageContent += chunkOverlapHeader;
           }
         }
-        const newLinesCount = this.numberOfNewLines(chunk);
+        // count the \n in the span of the text that the chunk covers: when the
+        // splitter collapsed runs of separators this is more than in the chunk
+        const newLinesCount = this.numberOfNewLines(
+          text,
+          indexChunk,
+          indexEndChunk
+        );
 
         const loc =
           _metadatas[i].loc && typeof _metadatas[i].loc === "object"
@@ -151,11 +162,53 @@ export abstract class TextSplitter
           })
         );
         lineCounterIndex += newLinesCount;
-        prevChunk = chunk;
+        hasPrevChunk = true;
         indexPrevChunk = indexChunk;
+        indexEndPrevChunk = indexEndChunk;
       }
     }
     return documents;
+  }
+
+  /**
+   * Find the span of `text` that `chunk` was built from, searching from index
+   * `from` onwards.
+   *
+   * Usually the chunk is a verbatim substring of the text. But splitters drop
+   * empty splits, so when a run of separators is merged back the chunk can
+   * have fewer separators than the text (e.g. "a\n\n\n\nb" split on "\n\n"
+   * is merged as "a\n\nb"). In that case the chunk is looked up again,
+   * letting every run of whitespace in it match a longer run in the text.
+   *
+   * If the chunk still can't be found it is assumed to start at
+   * `fallbackStart`, so that the line numbers stay roughly right instead of
+   * being computed from an index of -1.
+   */
+  private locateChunk(
+    text: string,
+    chunk: string,
+    from: number,
+    fallbackStart: number
+  ): { start: number; end: number } {
+    const exactStart = text.indexOf(chunk, from);
+    if (exactStart !== -1) {
+      return { start: exactStart, end: exactStart + chunk.length };
+    }
+    const pattern = chunk.replace(
+      /(\s)\1*|\S+/g,
+      (run: string, whitespace?: string) =>
+        whitespace === undefined
+          ? run.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&")
+          : `\\u${whitespace.charCodeAt(0).toString(16).padStart(4, "0")}{${run.length},}`
+    );
+    const regex = new RegExp(pattern, "g");
+    regex.lastIndex = from;
+    const match = regex.exec(text);
+    if (match !== null) {
+      return { start: match.index, end: match.index + match[0].length };
+    }
+    const start = Math.min(fallbackStart, text.length);
+    return { start, end: Math.min(start + chunk.length, text.length) };
   }
 
   private numberOfNewLines(text: string, start?: number, end?: number) {
