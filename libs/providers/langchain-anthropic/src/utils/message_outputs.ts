@@ -33,41 +33,26 @@ export function _makeMessageChunkFromAnthropicEvent(
         filteredAdditionalKwargs[key] = value;
       }
     }
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    const { input_tokens, output_tokens, ...rest }: Record<string, any> =
-      usage ?? {};
-    const usageMetadata = buildUsageMetadata(usage);
+    // Usage is reported on `message_delta`, which is cumulative for the whole
+    // request, so none is emitted here.
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
         additional_kwargs: filteredAdditionalKwargs,
-        usage_metadata: fields.streamUsage ? usageMetadata : undefined,
-        response_metadata: {
-          ...response_metadata,
-          usage: {
-            ...rest,
-          },
-        },
+        response_metadata,
         id: data.message.id,
       }),
     };
   } else if (data.type === "message_delta") {
-    const usageMetadata: UsageMetadata = {
-      input_tokens: 0,
-      output_tokens: data.usage.output_tokens,
-      total_tokens: data.usage.output_tokens,
-    };
+    const { input_tokens, output_tokens, ...usage } = data.usage;
+    const usageMetadata = buildUsageMetadata(data.usage);
     const responseMetadata = iife(() => {
       const output = {};
       if ("context_management" in data.delta) {
         output["context_management"] = data.delta.context_management;
       }
-      if (
-        "usage" in data &&
-        "cost" in data.usage &&
-        typeof data.usage.cost === "number"
-      ) {
-        output["usage"] = { cost: data.usage.cost };
+      if (Object.keys(usage).length > 0) {
+        output["usage"] = usage;
       }
       return output;
     });
@@ -315,15 +300,19 @@ export function anthropicResponseToChatMessages(
   }
 }
 
-function buildUsageMetadata(
-  usage: Anthropic.Messages.Usage | Record<string, number>
+export function buildUsageMetadata(
+  usage:
+    | Anthropic.Messages.Usage
+    | Anthropic.Messages.MessageDeltaUsage
+    | Anthropic.Beta.Messages.BetaMessageDeltaUsage
+    | Record<string, number>
 ): UsageMetadata {
   const cacheCreationInputTokens = usage.cache_creation_input_tokens ?? 0;
   const cacheReadInputTokens = usage.cache_read_input_tokens ?? 0;
   // Total input tokens in a Claude API request is the summation of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens`.
   // ref: https://platform.claude.com/docs/en/api/messages
   const totalInputTokens =
-    usage.input_tokens + cacheCreationInputTokens + cacheReadInputTokens;
+    (usage.input_tokens ?? 0) + cacheCreationInputTokens + cacheReadInputTokens;
   return {
     input_tokens: totalInputTokens,
     output_tokens: usage.output_tokens,

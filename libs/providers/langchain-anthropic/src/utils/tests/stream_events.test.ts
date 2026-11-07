@@ -38,6 +38,7 @@ function rawEvents({ cost }: StreamOverrides = {}) {
       type: "message_delta" as const,
       delta: { stop_reason: "end_turn" as const, stop_sequence: null },
       usage: {
+        input_tokens: 100,
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
       },
@@ -115,8 +116,8 @@ describe("convertAnthropicStream", () => {
     // Cost is not token accounting, so it must not leak into the usage snapshots.
     expect(messageFinish(events).usage).toEqual({
       input_tokens: 100,
-      output_tokens: 43,
-      total_tokens: 143,
+      output_tokens: 42,
+      total_tokens: 142,
       input_token_details: { cache_creation: 0, cache_read: 0 },
     });
     for (const event of events.filter((event) => event.usage)) {
@@ -147,6 +148,6 @@ describe("convertAnthropicStream", () => {
     );
 
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
-    expect(message.usage_metadata?.output_tokens).toBe(43);
+    expect(message.usage_metadata?.output_tokens).toBe(42);
   });
 });

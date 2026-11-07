@@ -4,7 +4,6 @@
  * @module
  */
 
-import type Anthropic from "@anthropic-ai/sdk";
 import type {
   ChatModelStreamEvent,
   ContentBlockDelta,
@@ -12,6 +11,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
+import { buildUsageMetadata } from "./message_outputs.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -45,7 +45,7 @@ export async function* convertAnthropicStream(
       case "message_start": {
         const { usage, id, model } = data.message;
         if (usage && shouldStreamUsage) {
-          usageSnapshot = buildUsageSnapshot(usage);
+          usageSnapshot = buildUsageMetadata(usage);
         }
         yield {
           event: "message-start" as const,
@@ -72,23 +72,9 @@ export async function* convertAnthropicStream(
           responseMetadata = { usage: { cost: data.usage.cost } };
         }
         if (shouldStreamUsage && data.usage) {
-          if (!usageSnapshot) {
-            usageSnapshot = {
-              input_tokens: 0,
-              output_tokens: data.usage.output_tokens,
-              total_tokens: data.usage.output_tokens,
-            };
-          } else {
-            usageSnapshot = {
-              ...usageSnapshot,
-              output_tokens:
-                usageSnapshot.output_tokens + data.usage.output_tokens,
-              total_tokens:
-                usageSnapshot.input_tokens +
-                usageSnapshot.output_tokens +
-                data.usage.output_tokens,
-            };
-          }
+          // Delta usage is cumulative for the whole request, so it replaces
+          // the snapshot.
+          usageSnapshot = buildUsageMetadata(data.usage);
           yield { event: "usage" as const, usage: usageSnapshot };
         }
         if (
@@ -190,25 +176,6 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
     default:
       return "stop";
   }
-}
-
-function buildUsageSnapshot(
-  usage: Anthropic.Messages.Usage | Record<string, number>
-): UsageMetadata {
-  const cacheCreation =
-    (usage as Record<string, number>).cache_creation_input_tokens ?? 0;
-  const cacheRead =
-    (usage as Record<string, number>).cache_read_input_tokens ?? 0;
-  const totalInput = usage.input_tokens + cacheCreation + cacheRead;
-  return {
-    input_tokens: totalInput,
-    output_tokens: usage.output_tokens,
-    total_tokens: totalInput + usage.output_tokens,
-    input_token_details: {
-      cache_creation: cacheCreation,
-      cache_read: cacheRead,
-    },
-  };
 }
 
 function mapBlockToContentBlock(
