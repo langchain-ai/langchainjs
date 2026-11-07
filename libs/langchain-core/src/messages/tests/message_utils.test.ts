@@ -697,6 +697,30 @@ test("getBufferString includes tool_calls for AI messages", () => {
   expect(bufferWithoutTools).toBe("AI: The weather is sunny!");
 });
 
+test("getBufferString abbreviates long tool-call IDs without changing messages", () => {
+  const longId = `call_${"thought_signature".repeat(100)}`;
+  const boundaryId = "b".repeat(64);
+  const toolCalls = [
+    { name: "search", args: { query: "weather" }, id: longId },
+    { name: "search", args: {}, id: boundaryId },
+  ];
+  const aiMessage = new AIMessage({
+    content: "calling",
+    tool_calls: toolCalls,
+  });
+  const result = new ToolMessage({ content: "result", tool_call_id: longId });
+
+  const rendered = getBufferString([aiMessage, result]);
+
+  expect(rendered).toContain(`${longId.slice(0, 64)}...`);
+  expect(rendered).not.toContain(longId);
+  expect(rendered).toContain(boundaryId);
+  expect(rendered).toContain("Tool: result");
+  expect(aiMessage.tool_calls?.[0].id).toBe(longId);
+  expect(toolCalls[0].id).toBe(longId);
+  expect(result.tool_call_id).toBe(longId);
+});
+
 test("getBufferString uses text property to avoid metadata inflation", () => {
   // Create messages with metadata that would inflate str() representation
   const messages = [

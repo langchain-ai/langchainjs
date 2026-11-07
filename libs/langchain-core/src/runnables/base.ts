@@ -46,6 +46,7 @@ import {
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
+import { TRACE_POLICY_KEY, type TracePolicy } from "../tracers/trace_policy.js";
 import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
@@ -1909,6 +1910,12 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
   last: Runnable<any, RunOutput>;
   name?: string;
   omitSequenceTags?: boolean;
+  /**
+   * Shapes what `LangChainTracer` sends to LangSmith for this sequence's own
+   * run. It does not change execution, child runs, `streamEvents`, or any
+   * other callback handler. Not serialized, and not kept by `pipe()`.
+   */
+  tracePolicy?: TracePolicy;
 };
 
 /**
@@ -1941,17 +1948,28 @@ export class RunnableSequence<
 
   omitSequenceTags = false;
 
+  private _tracePolicy?: TracePolicy;
+
   lc_serializable = true;
 
   lc_namespace = ["langchain_core", "runnables"];
 
   constructor(fields: RunnableSequenceFields<RunInput, RunOutput>) {
-    super(fields);
+    const { tracePolicy, ...serializableFields } = fields;
+    super(serializableFields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
     this.name = fields.name;
     this.omitSequenceTags = fields.omitSequenceTags ?? this.omitSequenceTags;
+    this._tracePolicy = tracePolicy;
+  }
+
+  /** `extra` for this sequence's run, carrying its trace policy. */
+  private get _runExtra(): Record<string, unknown> | undefined {
+    return this._tracePolicy
+      ? { [TRACE_POLICY_KEY]: this._tracePolicy }
+      : undefined;
   }
 
   get steps() {
@@ -1968,7 +1986,9 @@ export class RunnableSequence<
       undefined,
       undefined,
       undefined,
-      config?.runName
+      config?.runName,
+      undefined,
+      this._runExtra
     );
     delete config.runId;
     let nextStepInput = input;
@@ -2043,7 +2063,9 @@ export class RunnableSequence<
           undefined,
           undefined,
           undefined,
-          configList[i].runName
+          configList[i].runName,
+          undefined,
+          this._runExtra
         );
         delete configList[i].runId;
         return handleStartRes;
@@ -2073,8 +2095,8 @@ export class RunnableSequence<
       throw e;
     }
     await Promise.all(
-      runManagers.map((runManager) =>
-        runManager?.handleChainEnd(_coerceToDict(nextStepInputs, "output"))
+      runManagers.map((runManager, i) =>
+        runManager?.handleChainEnd(_coerceToDict(nextStepInputs[i], "output"))
       )
     );
     return nextStepInputs;
@@ -2098,7 +2120,9 @@ export class RunnableSequence<
       undefined,
       undefined,
       undefined,
-      otherOptions?.runName
+      otherOptions?.runName,
+      undefined,
+      this._runExtra
     );
     const steps = [this.first, ...this.middle, this.last];
     let concatSupported = true;

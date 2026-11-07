@@ -138,6 +138,10 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     );
   }
 
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
+
   override get _printableFields(): Record<string, unknown> {
     return {
       ...super._printableFields,
@@ -202,6 +206,14 @@ export class ToolMessageChunk<
       id: this.id ?? chunk.id,
       status: _mergeStatus(this.status, chunk.status),
     });
+  }
+
+  static isInstance(obj: unknown): obj is ToolMessageChunk {
+    return super.isInstance(obj) && obj.type === "tool";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 
   override get _printableFields(): Record<string, unknown> {

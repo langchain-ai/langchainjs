@@ -8,7 +8,7 @@
  */
 
 import type { createClient, RediSearchSchema } from "redis";
-import { SchemaFieldTypes, VectorAlgorithms } from "redis";
+import { SCHEMA_FIELD_TYPE, SCHEMA_VECTOR_FIELD_ALGORITHM } from "redis";
 import type { Document } from "@langchain/core/documents";
 
 /**
@@ -28,8 +28,8 @@ export const DEFAULT_TAG_SEPARATOR = ",";
  * ```typescript
  * // Old format (deprecated)
  * const customSchema: Record<string, CustomSchemaField> = {
- *   userId: { type: SchemaFieldTypes.TAG, required: true },
- *   price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true }
+ *   userId: { type: SCHEMA_FIELD_TYPE.TAG, required: true },
+ *   price: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true }
  * };
  *
  * // New format (recommended)
@@ -40,7 +40,7 @@ export const DEFAULT_TAG_SEPARATOR = ",";
  * ```
  */
 export interface CustomSchemaField {
-  type: SchemaFieldTypes;
+  type: SCHEMA_FIELD_TYPE;
   required?: boolean;
   SORTABLE?: boolean | "UNF";
   NOINDEX?: boolean;
@@ -58,7 +58,7 @@ export interface CustomSchemaField {
  * @see https://redis.io/docs/latest/develop/ai/search-and-query/vectors/#search-with-vectors
  */
 export type CreateSchemaVectorField<
-  T extends VectorAlgorithms,
+  T extends SCHEMA_VECTOR_FIELD_ALGORITHM,
   A extends Record<string, unknown>,
 > = {
   /** The vector indexing algorithm to use */
@@ -78,14 +78,14 @@ export type CreateSchemaVectorField<
  * @example
  * ```typescript
  * const flatIndex: CreateSchemaFlatVectorField = {
- *   ALGORITHM: VectorAlgorithms.FLAT,
+ *   ALGORITHM: SCHEMA_VECTOR_FIELD_ALGORITHM.FLAT,
  *   DISTANCE_METRIC: "COSINE",
  *   BLOCK_SIZE: 1000
  * };
  * ```
  */
 export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.FLAT,
+  SCHEMA_VECTOR_FIELD_ALGORITHM.FLAT,
   {
     /** Block size for the flat index */
     BLOCK_SIZE?: number;
@@ -101,7 +101,7 @@ export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
  * @example
  * ```typescript
  * const hnswIndex: CreateSchemaHNSWVectorField = {
- *   ALGORITHM: VectorAlgorithms.HNSW,
+ *   ALGORITHM: SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
  *   DISTANCE_METRIC: "COSINE",
  *   M: 16,
  *   EF_CONSTRUCTION: 200,
@@ -110,7 +110,7 @@ export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
  * ```
  */
 export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.HNSW,
+  SCHEMA_VECTOR_FIELD_ALGORITHM.HNSW,
   {
     /** Number of outgoing edges per node (default: 16) */
     M?: number;
@@ -212,8 +212,8 @@ export interface MetadataFieldSchema {
  * @example
  * ```typescript
  * const schema: RediSearchSchema = {
- *   content_vector: { type: SchemaFieldTypes.VECTOR, ... },
- *   content: SchemaFieldTypes.TEXT
+ *   content_vector: { type: SCHEMA_FIELD_TYPE.VECTOR, ... },
+ *   content: SCHEMA_FIELD_TYPE.TEXT
  * };
  *
  * const metadataSchema: MetadataFieldSchema[] = [
@@ -237,7 +237,7 @@ export function buildMetadataSchema(
       case "tag": {
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const tagOptions: any = {
-          type: SchemaFieldTypes.TAG,
+          type: SCHEMA_FIELD_TYPE.TAG,
           SEPARATOR: fieldSchema.options?.separator || DEFAULT_TAG_SEPARATOR,
         };
         if (fieldSchema.options?.caseSensitive) {
@@ -252,7 +252,7 @@ export function buildMetadataSchema(
       case "text": {
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const textOptions: any = {
-          type: SchemaFieldTypes.TEXT,
+          type: SCHEMA_FIELD_TYPE.TEXT,
         };
         if (fieldSchema.options?.weight !== undefined) {
           textOptions.WEIGHT = fieldSchema.options.weight;
@@ -272,7 +272,7 @@ export function buildMetadataSchema(
       case "numeric": {
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const numericOptions: any = {
-          type: SchemaFieldTypes.NUMERIC,
+          type: SCHEMA_FIELD_TYPE.NUMERIC,
         };
         if (fieldSchema.options?.sortable) {
           numericOptions.SORTABLE = true;
@@ -286,7 +286,7 @@ export function buildMetadataSchema(
       case "geo": {
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const geoOptions: any = {
-          type: SchemaFieldTypes.GEO,
+          type: SCHEMA_FIELD_TYPE.GEO,
         };
         if (fieldSchema.options?.noindex) {
           geoOptions.NOINDEX = true;
@@ -297,7 +297,7 @@ export function buildMetadataSchema(
       default:
         // Default to text for unknown types
         updatedSchema[fieldSchema.name] = {
-          type: SchemaFieldTypes.TEXT,
+          type: SCHEMA_FIELD_TYPE.TEXT,
         };
     }
   }
@@ -671,8 +671,8 @@ function isNumberOrDate(value: unknown): boolean {
  * @example
  * ```typescript
  * const legacySchema = {
- *   userId: { type: SchemaFieldTypes.TAG, SEPARATOR: "|" },
- *   price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true }
+ *   userId: { type: SCHEMA_FIELD_TYPE.TAG, SEPARATOR: "|" },
+ *   price: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true }
  * };
  *
  * const newSchema = convertLegacySchema(legacySchema);
@@ -696,19 +696,19 @@ export function convertLegacySchema(
   const convertedSchema: MetadataFieldSchema[] = [];
 
   for (const [fieldName, fieldConfig] of Object.entries(legacySchema)) {
-    // Map SchemaFieldTypes to simplified type strings
+    // Map SCHEMA_FIELD_TYPE to simplified type strings
     let type: "tag" | "text" | "numeric" | "geo";
     switch (fieldConfig.type) {
-      case SchemaFieldTypes.TAG:
+      case SCHEMA_FIELD_TYPE.TAG:
         type = "tag";
         break;
-      case SchemaFieldTypes.TEXT:
+      case SCHEMA_FIELD_TYPE.TEXT:
         type = "text";
         break;
-      case SchemaFieldTypes.NUMERIC:
+      case SCHEMA_FIELD_TYPE.NUMERIC:
         type = "numeric";
         break;
-      case SchemaFieldTypes.GEO:
+      case SCHEMA_FIELD_TYPE.GEO:
         type = "geo";
         break;
       default:

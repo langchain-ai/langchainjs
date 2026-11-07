@@ -15,6 +15,11 @@ import {
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
   ServiceTierType,
+  AccessDeniedException,
+  ModelNotReadyException,
+  ServiceUnavailableException,
+  ThrottlingException,
+  ValidationException,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
@@ -22,6 +27,173 @@ import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { load } from "@langchain/core/load";
+
+describe("Bedrock retry safeguards", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+  };
+
+  test("disables SDK retries by default", async () => {
+    const model = new ChatBedrockConverse(baseConstructorArgs);
+
+    await expect(model.client.config.maxAttempts()).resolves.toBe(1);
+  });
+
+  test.each([4, async () => 5])(
+    "preserves explicit SDK maxAttempts %s",
+    async (maxAttempts) => {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        clientOptions: { maxAttempts },
+      });
+
+      await expect(model.client.config.maxAttempts()).resolves.toBe(
+        typeof maxAttempts === "number" ? maxAttempts : 5
+      );
+    }
+  );
+
+  test("leaves an injected client's retry configuration unchanged", async () => {
+    const client = new BedrockRuntimeClient({
+      ...baseConstructorArgs,
+      maxAttempts: 4,
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client,
+      clientOptions: { maxAttempts: 2 },
+    });
+
+    expect(model.client).toBe(client);
+    await expect(client.config.maxAttempts()).resolves.toBe(4);
+  });
+
+  const errorCases = [
+    {
+      name: "400 ValidationException",
+      createError: () =>
+        new ValidationException({
+          message: "Invalid request",
+          $metadata: { httpStatusCode: 400 },
+        }),
+      sends: 1,
+    },
+    {
+      name: "403 AccessDeniedException",
+      createError: () =>
+        new AccessDeniedException({
+          message: "Access denied",
+          $metadata: { httpStatusCode: 403 },
+        }),
+      sends: 1,
+    },
+    {
+      name: "content-filter error without HTTP status",
+      createError: () => new Error("Blocked by the content filtering policy"),
+      sends: 1,
+    },
+    {
+      name: "ThrottlingException",
+      createError: () =>
+        new ThrottlingException({
+          message: "Too many requests",
+          $metadata: { httpStatusCode: 429 },
+        }),
+      sends: 3,
+    },
+    {
+      name: "ModelNotReadyException",
+      createError: () =>
+        new ModelNotReadyException({
+          message: "Model not ready",
+          $metadata: { httpStatusCode: 429 },
+        }),
+      sends: 3,
+    },
+    {
+      name: "503 ServiceUnavailableException",
+      createError: () =>
+        new ServiceUnavailableException({
+          message: "Service unavailable",
+          $metadata: { httpStatusCode: 503 },
+        }),
+      sends: 3,
+    },
+    {
+      name: "plain object 400 error",
+      createError: () => ({
+        message: "Invalid request",
+        $metadata: { httpStatusCode: 400 },
+      }),
+      sends: 1,
+    },
+    {
+      name: "plain object content-filter error",
+      createError: () => ({
+        Message: "Blocked by the content filtering policy",
+      }),
+      sends: 1,
+    },
+    {
+      name: "unknown metadata-only 429",
+      createError: () => ({
+        message: "Too many requests",
+        $metadata: { httpStatusCode: 429 },
+      }),
+      sends: 1,
+    },
+  ];
+
+  describe.each(["invoke", "legacy stream", "event stream"])(
+    "%s",
+    (operation) => {
+      test.each(errorCases)(
+        "$name makes $sends send(s) with maxRetries: 2",
+        async ({ createError, sends }) => {
+          vi.useFakeTimers();
+          try {
+            const error = createError();
+            const mockSend = vi.fn().mockRejectedValue(error);
+            const model = new ChatBedrockConverse({
+              ...baseConstructorArgs,
+              client: { send: mockSend } as unknown as BedrockRuntimeClient,
+              maxRetries: 2,
+            });
+            const result = (async () => {
+              if (operation === "invoke") {
+                return model.invoke([new HumanMessage("Hello")]);
+              }
+              const stream =
+                operation === "legacy stream"
+                  ? model._streamResponseChunks([new HumanMessage("Hello")], {})
+                  : model._streamChatModelEvents(
+                      [new HumanMessage("Hello")],
+                      {}
+                    );
+              for await (const _chunk of stream) {
+                continue;
+              }
+            })();
+            const assertion = expect(result).rejects.toMatchObject({
+              message: "message" in error ? error.message : error.Message,
+            });
+            await vi.runAllTimersAsync();
+            await assertion;
+
+            expect(mockSend).toHaveBeenCalledTimes(sends);
+          } finally {
+            vi.useRealTimers();
+          }
+        }
+      );
+    }
+  );
+});
 
 describe("convertToConverseMessages", () => {
   const testCases: {
@@ -714,7 +886,7 @@ describe("convertToConverseMessages", () => {
 });
 
 describe("reasoning content replay", () => {
-  it("omits signature-only standard reasoning and preserves tool use", () => {
+  it("replays signature-only standard reasoning and preserves tool use", () => {
     const result = convertToConverseMessages([
       new AIMessage({
         content: [
@@ -744,6 +916,14 @@ describe("reasoning content replay", () => {
         role: "assistant",
         content: [
           {
+            reasoningContent: {
+              reasoningText: {
+                text: "",
+                signature: "opaque-signature",
+              },
+            },
+          },
+          {
             toolUse: {
               toolUseId: "tool-call-1",
               name: "get_weather",
@@ -763,6 +943,185 @@ describe("reasoning content replay", () => {
           },
         ],
       },
+    ]);
+  });
+
+  it("replays signature-only legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              text: "",
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy provider-native reasoning that has a signature but no text field", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("omits unsigned empty standard reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
+    ]);
+  });
+
+  it("omits unsigned empty legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning_content", reasoningText: { text: "" } },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
+    ]);
+  });
+
+  it("drops whitespace after signed empty reasoning instead of merging it in", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "", signature: "opaque-signature" },
+          { type: "text", text: "\n\n" },
+        ],
+        tool_calls: [{ id: "tool-call-1", name: "get_weather", args: {} }],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: { text: "", signature: "opaque-signature" },
+        },
+      },
+      { toolUse: { toolUseId: "tool-call-1", name: "get_weather", input: {} } },
+    ]);
+  });
+
+  it("still merges whitespace into the previous text block", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "text", text: "Checking." },
+          { type: "text", text: "\n\n" },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "Checking.\n\n" },
+    ]);
+  });
+
+  it("joins split standard reasoning so the signature covers its text", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Let me " },
+          { type: "reasoning", reasoning: "think.", signature: "sig" },
+          { type: "text", text: "Answer" },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: { text: "Let me think.", signature: "sig" },
+        },
+      },
+      { text: "Answer" },
+    ]);
+  });
+
+  it("keeps separately signed reasoning blocks apart", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "First.", signature: "sig-1" },
+          { type: "reasoning", reasoning: "Second.", signature: "sig-2" },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: { text: "First.", signature: "sig-1" },
+        },
+      },
+      {
+        reasoningContent: {
+          reasoningText: { text: "Second.", signature: "sig-2" },
+        },
+      },
+    ]);
+  });
+
+  it("treats an empty signature as unsigned", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "", signature: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
     ]);
   });
 
@@ -930,6 +1289,87 @@ describe("reasoning content replay", () => {
       },
     ]);
   });
+
+  it("replays signature-only standard reasoning from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "",
+            signature: "opaque-signature",
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy Bedrock reasoning with a signature but no text field from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              type: "reasoning_content",
+              reasoningText: {
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("omits unsigned empty standard reasoning from v1 messages", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "The answer is 4." },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      { text: "The answer is 4." },
+    ]);
+  });
 });
 
 test("Streaming supports empty string chunks", async () => {
@@ -1016,11 +1456,70 @@ test("Streaming throws when Bedrock stream stalls between chunks", async () => {
     })();
 
     const expectation = expect(consume).rejects.toThrow(
-      "Bedrock Converse stream timed out after 50 ms without receiving a chunk."
+      "Bedrock Converse timed out after 50 ms while waiting for the next chunk."
     );
 
     await vi.advanceTimersByTimeAsync(50);
     await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
+    expect(aborted).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming throws when Bedrock never responds to the initial request", async () => {
+  vi.useFakeTimers();
+  try {
+    let aborted = false;
+    const mockSend = vi
+      .fn()
+      .mockImplementation(
+        (_command: unknown, options?: { abortSignal?: AbortSignal }) => {
+          options?.abortSignal?.addEventListener("abort", () => {
+            aborted = true;
+          });
+          return new Promise<never>(() => {});
+        }
+      );
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        expect(chunk).toBeDefined();
+      }
+    })();
+
+    const expectation = expect(consume).rejects.toThrow(
+      "Bedrock Converse timed out after 50 ms while waiting for the initial response."
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+    await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
     expect(aborted).toBe(true);
   } finally {
     vi.useRealTimers();
@@ -1356,6 +1855,7 @@ describe("audio content block conversion", () => {
 describe("applicationInferenceProfile parameter", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
+    maxRetries: 0,
     credentials: {
       secretAccessKey: "test-secret-key",
       accessKeyId: "test-access-key",
@@ -2297,5 +2797,96 @@ describe("document content block conversion", () => {
     expect(name1).toBeDefined();
     expect(name2).toBeDefined();
     expect(name1).not.toBe(name2);
+  });
+});
+
+describe("additionalModelResponseFieldPaths / Anthropic thinking tokens", () => {
+  const nativeUsage = {
+    usage: {
+      output_tokens: 565,
+      output_tokens_details: { thinking_tokens: 562 },
+    },
+  };
+  const usage = { inputTokens: 20, outputTokens: 565, totalTokens: 585 };
+
+  function createModel() {
+    return new ChatBedrockConverse({
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      region: "us-east-1",
+      credentials: { accessKeyId: "fake", secretAccessKey: "fake" },
+      additionalModelResponseFieldPaths: ["/usage"],
+    });
+  }
+
+  test("forwards additionalModelResponseFieldPaths, call option first", () => {
+    const model = createModel();
+    expect(
+      model.invocationParams({}).additionalModelResponseFieldPaths
+    ).toEqual(["/usage"]);
+    expect(
+      model.invocationParams({
+        additionalModelResponseFieldPaths: ["/stop_sequence"],
+      }).additionalModelResponseFieldPaths
+    ).toEqual(["/stop_sequence"]);
+    expect(
+      new ChatBedrockConverse({
+        model: "anthropic.claude-3-haiku-20240307-v1:0",
+        region: "us-east-1",
+        credentials: { accessKeyId: "fake", secretAccessKey: "fake" },
+      }).invocationParams({}).additionalModelResponseFieldPaths
+    ).toBeUndefined();
+  });
+
+  test("invoke maps thinking tokens to output_token_details.reasoning", async () => {
+    const model = createModel();
+    const send = vi.spyOn(model.client, "send").mockResolvedValue({
+      output: { message: { role: "assistant", content: [{ text: "42" }] } },
+      stopReason: "end_turn",
+      usage,
+      additionalModelResponseFields: nativeUsage,
+    } as never);
+
+    const result = await model.invoke("Hello");
+
+    expect(
+      (send.mock.calls[0][0] as { input: Record<string, unknown> }).input
+        .additionalModelResponseFieldPaths
+    ).toEqual(["/usage"]);
+    expect(result.usage_metadata).toEqual({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
+  });
+
+  test("stream maps thinking tokens to output_token_details.reasoning", async () => {
+    const model = createModel();
+    vi.spyOn(model.client, "send").mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: { contentBlockIndex: 0, delta: { text: "42" } },
+        };
+        yield {
+          messageStop: {
+            stopReason: "end_turn",
+            additionalModelResponseFields: nativeUsage,
+          },
+        };
+        yield { metadata: { usage } };
+      })(),
+    } as never);
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Hello")) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+
+    expect(full?.usage_metadata).toMatchObject({
+      input_tokens: 20,
+      output_tokens: 565,
+      total_tokens: 585,
+      output_token_details: { reasoning: 562 },
+    });
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/fireworks",
-  "version": "0.2.6",
+  "version": "0.2.22",
   "description": "Fireworks integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -28,18 +28,18 @@
     "@langchain/openai": "workspace:*"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
+    "@vitest/coverage-v8": "^5.0.5",
+    "dotenv": "^18.0.9",
+    "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8"
+    "vitest": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"

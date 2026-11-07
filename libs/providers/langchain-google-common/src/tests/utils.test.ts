@@ -8,6 +8,7 @@ import {
   AIMessage,
   AIMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
@@ -16,6 +17,10 @@ import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import { getGeminiAPI } from "../utils/gemini.js";
 import { getAnthropicAPI } from "../utils/anthropic.js";
 import {
+  AnthropicRequest,
+  AnthropicStreamContentBlockDeltaEvent,
+  AnthropicStreamContentBlockStartEvent,
+  AnthropicStreamContentBlockStopEvent,
   GeminiPartFileData,
   GeminiPartInlineData,
   GeminiPartText,
@@ -36,6 +41,136 @@ import {
 } from "../utils/stream.js";
 
 describe("anthropic formatting", () => {
+  test("round-trips streamed tool calls with complete arguments matched by id", async () => {
+    const anthropic = getAnthropicAPI();
+    let accumulated = new AIMessageChunk({ content: [] });
+    const calls = [
+      { id: "toolu_sf", city: "SF" },
+      { id: "toolu_paris", city: "Paris" },
+    ];
+
+    for (const [index, call] of calls.entries()) {
+      const events: (
+        | AnthropicStreamContentBlockStartEvent
+        | AnthropicStreamContentBlockDeltaEvent
+        | AnthropicStreamContentBlockStopEvent
+      )[] = [
+        {
+          type: "content_block_start",
+          index,
+          content_block: {
+            type: "tool_use",
+            id: call.id,
+            name: "lookup_weather",
+            input: {},
+          },
+        },
+        ...['{"city":', JSON.stringify(call.city), "}"].map(
+          (partial_json): AnthropicStreamContentBlockDeltaEvent => ({
+            type: "content_block_delta",
+            index,
+            delta: { type: "input_json_delta", partial_json },
+          })
+        ),
+        { type: "content_block_stop", index },
+      ];
+      for (const data of events) {
+        const chunk = anthropic.responseToChatGeneration({ data });
+        if (chunk) {
+          accumulated = accumulated.concat(chunk.message as AIMessageChunk);
+        }
+      }
+    }
+
+    expect(accumulated.tool_calls?.map((call) => call.args)).toEqual([
+      { city: "SF" },
+      { city: "Paris" },
+    ]);
+    accumulated.tool_calls?.reverse();
+    const request = (await anthropic.formatData(
+      [
+        new HumanMessage("Check the weather."),
+        accumulated,
+        ...calls.map(
+          (call) => new ToolMessage({ tool_call_id: call.id, content: "Sunny" })
+        ),
+      ],
+      { maxOutputTokens: 256 }
+    )) as AnthropicRequest;
+
+    expect(request.messages[1]).toEqual({
+      role: "assistant",
+      content: calls.map((call) => ({
+        type: "tool_use",
+        id: call.id,
+        name: "lookup_weather",
+        input: { city: call.city },
+      })),
+    });
+    expect(request.messages.slice(2)).toEqual(
+      calls.map((call) => ({
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: call.id,
+            content: [{ type: "text", text: "Sunny" }],
+          },
+        ],
+      }))
+    );
+  });
+
+  test.each([
+    { cache_control: { type: "ephemeral" } },
+    {
+      source_type: "text",
+      metadata: { cache_control: { type: "ephemeral" } },
+    },
+  ])("preserves system cache control: %j", async (cacheFields) => {
+    const request = (await getAnthropicAPI().formatData(
+      [
+        new SystemMessage("First instruction"),
+        new SystemMessage({
+          content: [
+            { type: "text", text: "Cached instruction", ...cacheFields },
+            { type: "text", text: "Uncached instruction" },
+          ],
+        }),
+        new HumanMessage("Hi"),
+      ],
+      { maxOutputTokens: 256 }
+    )) as AnthropicRequest;
+
+    expect(request.system).toEqual([
+      { type: "text", text: "First instruction" },
+      {
+        type: "text",
+        text: "Cached instruction",
+        cache_control: { type: "ephemeral" },
+      },
+      { type: "text", text: "Uncached instruction" },
+    ]);
+    expect(request.messages).toEqual([
+      { role: "user", content: [{ type: "text", text: "Hi" }] },
+    ]);
+  });
+
+  test("keeps uncached system formatting unchanged", async () => {
+    const request = (await getAnthropicAPI().formatData(
+      [
+        new SystemMessage("First instruction"),
+        new SystemMessage({
+          content: [{ type: "text", text: "Second instruction" }],
+        }),
+        new HumanMessage("Hi"),
+      ],
+      { maxOutputTokens: 256 }
+    )) as AnthropicRequest;
+
+    expect(request.system).toBe("\nFirst instruction\n\nSecond instruction");
+  });
+
   test("keeps existing tool_use content and does not duplicate when tool_calls are also present", async () => {
     const anthropic = getAnthropicAPI();
     const input = [
@@ -845,6 +980,33 @@ describe("streaming", () => {
     expect(chunk).toBeNull();
 
     expect(stream.streamDone).toEqual(true);
+  });
+});
+
+describe("gemini tool config formatting", () => {
+  test.each([
+    ["auto", "AUTO"],
+    ["any", "ANY"],
+    ["none", "NONE"],
+  ] as const)("serializes %s mode as %s", async (toolChoice, expectedMode) => {
+    const api = getGeminiAPI();
+    const request = (await api.formatData([new HumanMessage("Use tools.")], {
+      tool_choice: toolChoice,
+    })) as GeminiRequest;
+
+    expect(request.toolConfig?.functionCallingConfig?.mode).toBe(expectedMode);
+  });
+
+  test("serializes a forced function name as ANY", async () => {
+    const api = getGeminiAPI();
+    const request = (await api.formatData([new HumanMessage("Use tools.")], {
+      tool_choice: "lookup_weather",
+    })) as GeminiRequest;
+
+    expect(request.toolConfig?.functionCallingConfig).toEqual({
+      mode: "ANY",
+      allowedFunctionNames: ["lookup_weather"],
+    });
   });
 });
 

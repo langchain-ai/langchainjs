@@ -1,11 +1,12 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { WebApiClient } from "../clients/index.js";
 import {
+  applyGeminiGatewayParams,
   BaseChatGoogle,
   BaseChatGoogleCallOptions,
   BaseChatGoogleParams,
-  getGoogleChatModelParams,
 } from "./base.js";
+import { getGoogleChatModelParams } from "../converters/shared/params.js";
 
 /**
  * Configuration parameters for the ChatGoogle model.
@@ -46,7 +47,11 @@ export class ChatGoogle extends BaseChatGoogle<ChatGoogleCallOptions> {
     modelOrParams: string | ChatGoogleParams,
     paramsArg?: Omit<ChatGoogleParams, "model">
   ) {
-    const params = getGoogleChatModelParams(modelOrParams, paramsArg);
+    let params = getGoogleChatModelParams(modelOrParams, paramsArg);
+    // Route through the LangSmith gateway (Gemini Developer API path) when
+    // configured, before falling back to the provider API-key env var so the
+    // gateway key can take precedence.
+    params = applyGeminiGatewayParams(params);
     params.apiKey = params?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     const apiClient = params?.apiClient ?? new WebApiClient(params);
     super({ ...params, apiClient });
@@ -54,3 +59,21 @@ export class ChatGoogle extends BaseChatGoogle<ChatGoogleCallOptions> {
     this.apiKey = params.apiKey;
   }
 }
+
+export {
+  BaseChatGoogle,
+  type BaseChatGoogleParams,
+  type BaseChatGoogleCallOptions,
+} from "./base.js";
+export * from "./handlers/index.js";
+export type {
+  GoogleChatApiHandlerParams,
+  GenerateContentApiHandlerParams,
+  GoogleChatApiHandlerFactory,
+  GoogleChatApiHandlerConfig,
+  GenerateContentInvocationParams,
+  BaseChatGoogleFields,
+  GenerateContentSpecificFields,
+  GenerateContentFields,
+  ChatGoogleFields,
+} from "./types.js";

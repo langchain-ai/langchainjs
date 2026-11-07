@@ -19,6 +19,8 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import type { LLMResult } from "@langchain/core/outputs";
 import { concat } from "@langchain/core/utils/stream";
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
@@ -1739,6 +1741,19 @@ describe("Opus 5", () => {
   }, 60000);
 });
 
+describe("Sonnet 5", () => {
+  test("invokes with adaptive thinking enabled by default", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      maxTokens: 1024,
+      outputConfig: { effort: "low" },
+    });
+
+    const result = await model.invoke("Reply with the word 'ready'.");
+    expect(result.content).toBeDefined();
+  }, 60000);
+});
+
 describe("Opus 4.6", () => {
   const opus46Model = "claude-opus-4-6";
 
@@ -1939,5 +1954,62 @@ describe("Opus 4.6", () => {
       expect(typeof compactionBlock.content).toBe("string");
       expect(compactionBlock.content.length).toBeGreaterThan(0);
     }, 120000);
+  });
+});
+
+describe("llmOutput.tokenUsage matches usage_metadata on streaming paths (#11424 regression)", () => {
+  test(".stream()", async () => {
+    let callbackResult: LLMResult | undefined;
+    const model = new ChatAnthropic({
+      model: modelName,
+      callbacks: [
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    let res: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Say OK.")) {
+      res = res ? concat(res, chunk) : chunk;
+    }
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: res?.usage_metadata?.input_tokens,
+      completionTokens: res?.usage_metadata?.output_tokens,
+      totalTokens: res?.usage_metadata?.total_tokens,
+    });
+  });
+
+  test("invoke() with a streaming-preferring callback", async () => {
+    class PreferStreamingCallbackHandler extends BaseCallbackHandler {
+      name = "prefer-streaming";
+
+      lc_prefer_streaming = true;
+
+      handleLLMNewToken() {}
+    }
+
+    let callbackResult: LLMResult | undefined;
+    const model = new ChatAnthropic({ model: modelName });
+
+    const res: AIMessage = await model.invoke("Say OK.", {
+      callbacks: [
+        new PreferStreamingCallbackHandler(),
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: res.usage_metadata?.input_tokens,
+      completionTokens: res.usage_metadata?.output_tokens,
+      totalTokens: res.usage_metadata?.total_tokens,
+    });
   });
 });

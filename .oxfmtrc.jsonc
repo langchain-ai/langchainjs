@@ -17,7 +17,8 @@
   "insertFinalNewline": true,
   "sortPackageJson": false,
   "ignorePatterns": [
-    "libs/providers/langchain-google/src/chat_models/api-types.ts",
+    "libs/providers/langchain-google/src/chat_models/api_types/**",
+    "libs/providers/langchain-google/typegen.jsonc",
     "libs/langchain/src/load/import_type.ts",
     "libs/langchain/src/load/import_map.ts",
     "libs/langchain/src/load/dynamic_import_map.ts",

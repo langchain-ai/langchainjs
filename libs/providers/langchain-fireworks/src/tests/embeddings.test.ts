@@ -89,3 +89,63 @@ describe("FireworksEmbeddings", () => {
     );
   });
 });
+
+describe("FireworksEmbeddings retryability", () => {
+  test("does not retry a deterministic 413", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 413,
+      json: async () => ({ error: "payload too large" }),
+    } as Response);
+
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 5,
+    });
+
+    await expect(embeddings.embedQuery("hello world")).rejects.toThrow(
+      "Error 413: payload too large"
+    );
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not retry a bad API key", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: "unauthorized" }),
+    } as Response);
+
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "bad-key",
+      maxRetries: 5,
+    });
+
+    await expect(embeddings.embedQuery("hello world")).rejects.toThrow(
+      "Error 401: unauthorized"
+    );
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test("still retries a transient 503", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: "unavailable" }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [{ embedding: [0.5] }] }),
+      } as Response);
+
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 3,
+    });
+
+    await expect(embeddings.embedQuery("hello world")).resolves.toEqual([0.5]);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+});

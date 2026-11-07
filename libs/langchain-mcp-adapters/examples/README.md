@@ -1,49 +1,78 @@
-# LangChainJS-MCP-Adapters Examples
+# MCP adapter examples
 
-This directory contains examples demonstrating how to use the `@langchain/mcp-adapters` library with various MCP servers
+Run these examples from a LangChain.js checkout with workspace dependencies installed.
+The local server/client examples need no model credentials.
 
-## Running the Examples
+## Run an example
 
 ```bash
-# type check examples
-pnpm lint:examples
+# From the repository root, type-check all examples.
+pnpm --filter @langchain/mcp-adapters build:examples
 
-# Run specific example
-cd examples && npx -y tsx firecrawl_custom_config_example.ts
+# Run the local modern server.
+cd libs/langchain-mcp-adapters/examples
+pnpm exec tsx modern_server.ts
 ```
 
-## Example Descriptions
+The commands below run from this directory. When copying a client example into
+your application, replace `../src/index.js` with `@langchain/mcp-adapters` and
+install the packages it imports directly. Server examples also import the official
+MCP server packages and Zod.
+
+## Modern and mixed servers (no model credentials)
+
+From this directory, run `pnpm exec tsx modern_server.ts`, then in another terminal
+run `pnpm exec tsx modern_client.ts`. The client prints `Hello MCP` and closes its
+connection. The server uses modern MCP with a fresh server instance per request.
+
+To try mixed modes, also run `pnpm exec tsx calculator_server_shttp_sse.ts` and then
+`pnpm exec tsx modern_client.ts --mixed`. The client invokes modern `echo` and legacy
+`add`, printing `Hello MCP` and `5`. Neither server needs a `mode`; the SDK detects
+their protocols. Stop servers with Ctrl-C.
+
+## Legacy elicitation
+
+Start `calculator_server_shttp_sse.ts`, then run
+`pnpm exec tsx legacy_elicitation.ts accept` (or `decline` / `cancel`). The client
+answers one form request and one URL request using a per-server callback. The
+URL and answers are scripted demo data; no external authorization occurs.
+
+## Standard tool content
+
+For content conversion, start `modern_server.ts` and run
+`pnpm exec tsx content.ts`. The hook prints standard text/image blocks separately
+from the `mcp_structured_content` and `mcp_meta` artifacts. The metadata does not
+appear in model-facing text. `hooks.ts` demonstrates argument/result changes
+with the legacy filesystem server.
+
+## Legacy and agent examples
+
+The calculator server uses legacy sessions, even though it imports SDK 2.
+Clients can negotiate automatically, or set `mode: "legacy"` to skip probing.
 
 ### Filesystem LangGraph Example (`filesystem_langgraph_example.ts`)
 
-Demonstrates using the Filesystem MCP server with LangGraph to create a structured workflow for complex file operations. The example creates a graph-based agent that can perform various file operations like creating multiple files, reading files, creating directory structures, and organizing files.
+Build a LangGraph agent that reads and writes files through the filesystem server.
 
 ### Firecrawl - Custom Configuration (`firecrawl_custom_config_example.ts`)
 
-Shows how to initialize the Firecrawl MCP server with a custom configuration. The example sets up a connection to Firecrawl using SSE transport, loads tools from the server, and creates a React agent to perform web scraping tasks and find news about artificial intelligence.
+Connect to a legacy Firecrawl SSE endpoint and pass its scraping tools to `createAgent`.
 
 ### Firecrawl - Multiple Servers (`firecrawl_multiple_servers_example.ts`)
 
-Demonstrates how to use multiple MCP servers simultaneously by configuring both Firecrawl for web scraping and a Math server for calculations. The example creates a React agent that can use tools from both servers to answer queries involving both math calculations and web content retrieval.
-
-### LangGraph - Complex Config (`langgraph_complex_config_example.ts`)
-
-Illustrates using different configuration files to set up connections to MCP servers, with a focus on the Math server. This example shows how to parse JSON configuration files, connect to a Math server directly, and create a LangGraph workflow that can perform mathematical operations using MCP tools.
+Give one agent tools from Firecrawl and a math server.
 
 ### LangGraph - Simple Config (`langgraph_example.ts`)
 
-Shows a straightforward integration of LangGraph with MCP tools, creating a flexible agent workflow. The example demonstrates how to set up a graph-based structure with separate nodes for LLM reasoning and tool execution, with conditional routing between nodes based on whether tool calls are needed.
+Build a graph with separate model and tool nodes, routing between them when the model requests a tool call.
 
 ### Launching a Containerized MCP Server (`mcp_over_docker_example.ts`)
 
-Shows how to run an MCP server inside a Docker container. This example configures a connection to a containerized Filesystem MCP server with appropriate volume mounting, demonstrating how to use Docker to isolate and run MCP servers while still allowing file operations.
+Run the filesystem server in Docker with a mounted working directory.
 
-## Requirements
+## Agent example requirements
 
-Ensure you have the correct environment variables set in your `.env` file:
-
-```
-OPENAI_API_KEY=your_openai_api_key
-FIRECRAWL_API_KEY=your_firecrawl_api_key
-OPENAI_MODEL_NAME=gpt-4o  # or your preferred model
-```
+The OpenAI agent examples require `OPENAI_API_KEY`. Firecrawl examples also
+require `FIRECRAWL_API_KEY` and an available Firecrawl server; the SSE example
+accepts `FIRECRAWL_SERVER_URL`. Set `OPENAI_MODEL_NAME` to choose a model.
+The Docker example requires a running Docker daemon.

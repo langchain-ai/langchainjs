@@ -3,6 +3,7 @@ import type {
   InteropZodObject,
   InteropZodType,
 } from "@langchain/core/utils/types";
+import type { JSONSchema } from "@langchain/core/utils/json_schema";
 import type {
   START,
   END,
@@ -259,9 +260,9 @@ type ExtractToolDefinition<T> =
 export type ToolsToMessageToolSet<
   T extends readonly (ClientTool | ServerTool)[],
 > = {
-  [K in T[number] as K extends { name: infer N extends string }
-    ? N
-    : never]: ExtractToolDefinition<K>;
+  [
+    K in T[number] as K extends { name: infer N extends string } ? N : never
+  ]: ExtractToolDefinition<K>;
 };
 
 /**
@@ -464,6 +465,11 @@ export interface Interrupt<TValue = unknown> {
    * The requests for human input.
    */
   value: TValue;
+  /**
+   * JSON schema for the expected resume value, when the interrupt sets one (for
+   * example, a `humanInTheLoopMiddleware` tool approval in `"per_call"` mode).
+   */
+  response_schema?: JSONSchema;
 }
 
 export interface BuiltInState<

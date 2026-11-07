@@ -36,6 +36,7 @@ export async function* convertAnthropicStream(
     Record<string, any>
   >();
   let usageSnapshot: UsageMetadata | undefined;
+  let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
 
   for await (const data of source) {
@@ -62,6 +63,14 @@ export async function* convertAnthropicStream(
 
       case "message_delta": {
         stopReason = data.delta.stop_reason;
+        // Some gateway providers add additional usage values to the final usage object
+        if (
+          "usage" in data &&
+          "cost" in data.usage &&
+          typeof data.usage.cost === "number"
+        ) {
+          responseMetadata = { usage: { cost: data.usage.cost } };
+        }
         if (shouldStreamUsage && data.usage) {
           if (!usageSnapshot) {
             usageSnapshot = {
@@ -102,6 +111,7 @@ export async function* convertAnthropicStream(
           reason: mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
+          responseMetadata,
         };
         break;
       }
@@ -127,11 +137,13 @@ export async function* convertAnthropicStream(
         const { contentDelta, accumulated } = applyAnthropicDelta(acc, delta);
         blockAccumulators.set(index, accumulated);
 
-        yield {
-          event: "content-block-delta" as const,
-          index,
-          delta: contentDelta,
-        };
+        if (contentDelta) {
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: contentDelta,
+          };
+        }
         break;
       }
 
@@ -239,7 +251,8 @@ function mapBlockToContentBlock(
 
 /**
  * Map an Anthropic content_block_delta to a content block delta
- * and update the accumulated state.
+ * and update the accumulated state. `contentDelta` is undefined when
+ * there's nothing new to send.
  */
 function applyAnthropicDelta(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,7 +260,7 @@ function applyAnthropicDelta(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   delta: any
 ): {
-  contentDelta: ContentBlockDelta;
+  contentDelta: ContentBlockDelta | undefined;
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   accumulated: Record<string, any>;
 } {
@@ -274,13 +287,33 @@ function applyAnthropicDelta(
       };
 
     case "input_json_delta": {
-      const newArgs = (accumulated.args ?? "") + delta.partial_json;
+      // `tool-call-delta` is for tool calls only. Other blocks that stream
+      // JSON input, such as `mcp_tool_use`, keep sending `block-delta`.
+      if (
+        accumulated.type !== "tool_call_chunk" &&
+        accumulated.type !== "server_tool_call_chunk"
+      ) {
+        const newArgs = (accumulated.args ?? "") + delta.partial_json;
+        return {
+          contentDelta: {
+            type: "block-delta" as const,
+            fields: { type: accumulated.type, args: newArgs },
+          },
+          accumulated: { ...accumulated, args: newArgs },
+        };
+      }
+      if (!delta.partial_json) {
+        return { contentDelta: undefined, accumulated };
+      }
       return {
         contentDelta: {
-          type: "block-delta" as const,
-          fields: { type: accumulated.type, args: newArgs },
+          type: "tool-call-delta" as const,
+          args: delta.partial_json,
         },
-        accumulated: { ...accumulated, args: newArgs },
+        accumulated: {
+          ...accumulated,
+          args: (accumulated.args ?? "") + delta.partial_json,
+        },
       };
     }
 
