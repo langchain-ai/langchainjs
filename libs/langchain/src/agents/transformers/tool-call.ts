@@ -142,6 +142,7 @@ export function createToolCallTransformer(
         resolveOutput = res;
         rejectOutput = rej;
       });
+      output.catch(() => {});
       const status = new Promise<ToolCallStatus>((res) => {
         resolveStatus = res;
       });
