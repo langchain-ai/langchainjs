@@ -1,4 +1,4 @@
-import { test, expect, beforeAll } from "vitest";
+import { test, expect, beforeAll, vi } from "vitest";
 
 import { PineconeEmbeddings } from "../embeddings.js";
 
@@ -44,4 +44,18 @@ test("confirm instance sets custom model and params when provided", () => {
     inputType: "passage",
     customParam: "value",
   });
+});
+
+test("embedQuery does not change the inputType used by later embedDocuments calls", async () => {
+  const model = new PineconeEmbeddings();
+  const embed = vi.fn().mockResolvedValue({ data: [{ values: [0.1, 0.2] }] });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (model as any).client = { inference: { embed } };
+
+  await model.embedQuery("what is a query?");
+  await model.embedDocuments(["a document"]);
+
+  expect(embed.mock.calls[0][2]).toEqual({ inputType: "query" });
+  expect(embed.mock.calls[1][2]).toEqual({ inputType: "passage" });
+  expect(model.params).toEqual({ inputType: "passage" });
 });
