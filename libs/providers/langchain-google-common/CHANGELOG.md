@@ -1,5 +1,11 @@
 # @langchain/google-common
 
+## 2.3.5
+
+### Patch Changes
+
+- [#12123](https://github.com/langchain-ai/langchainjs/pull/12123) [`a903bf5`](https://github.com/langchain-ai/langchainjs/commit/a903bf5e37b6ec9108424f7062c14fa5a31e2a36) Thanks [@hntrl](https://github.com/hntrl)! - Preserve streamed Claude tool-call arguments on replay and system prompt cache-control blocks on Vertex AI.
+
 ## 2.3.4
 
 No changes in this release.

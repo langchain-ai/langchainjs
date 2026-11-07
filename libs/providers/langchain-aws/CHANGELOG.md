@@ -1,5 +1,23 @@
 # @langchain/aws
 
+## 1.5.2
+
+### Patch Changes
+
+- [#12100](https://github.com/langchain-ai/langchainjs/pull/12100) [`dc74e55`](https://github.com/langchain-ai/langchainjs/commit/dc74e55a6473962dafcc266e18b9f978fd9495cb) Thanks [@hntrl](https://github.com/hntrl)! - Replay signed Bedrock reasoning blocks whose text is empty or missing instead of dropping them, so models that omit the thinking summary (e.g. Claude Sonnet 5, which defaults to `display: "omitted"`) no longer fail with an HTTP 400 on the turn after a tool call. A missing `text` is sent as `""`, and an empty signature counts as unsigned. Whitespace-only text after reasoning is no longer merged into the reasoning block, and a standard reasoning block split into parts is joined before replay.
+
+- [#12052](https://github.com/langchain-ai/langchainjs/pull/12052) [`8635df6`](https://github.com/langchain-ai/langchainjs/commit/8635df6a875e8409b141e41a2507f4680460938b) Thanks [@hntrl](https://github.com/hntrl)! - Fix ChatBedrockConverse retry classification for AWS HTTP errors and content-filter failures while keeping ThrottlingException and ModelNotReadyException retryable. Internally created Bedrock clients now default to `maxAttempts: 1` so SDK retries do not stack with LangChain retries; explicit `clientOptions.maxAttempts` values and injected clients remain unchanged.
+
+- [#11905](https://github.com/langchain-ai/langchainjs/pull/11905) [`e81c689`](https://github.com/langchain-ai/langchainjs/commit/e81c689cce85aa439bdd390b1f674009b23d25d5) Thanks [@mbarinov](https://github.com/mbarinov)! - Preserve reasoning signatures in native Bedrock Converse stream events so streamed messages can be replayed in subsequent requests.
+
+- [#11368](https://github.com/langchain-ai/langchainjs/pull/11368) [`55c4edc`](https://github.com/langchain-ai/langchainjs/commit/55c4edc580f9d8674759977fc6aa7db83daa237d) Thanks [@LizunovSergey](https://github.com/LizunovSergey)! - fix(aws): preserve Bedrock text block indices when streaming
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11463](https://github.com/langchain-ai/langchainjs/pull/11463) [`52d2ba8`](https://github.com/langchain-ai/langchainjs/commit/52d2ba8ea50149f2314df63b79582f8508034a3b) Thanks [@syedsohailhussain1](https://github.com/syedsohailhussain1)! - fix(aws): use this.caller in ChatBedrockConverse to support maxRetries, timeout, and onFailedAttempt
+
 ## 1.5.0
 
 ### Minor Changes

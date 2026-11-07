@@ -30,9 +30,9 @@
     "typegen:fetch": "curl -o src/openapi/generate-content-openapi.json 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta'"
   },
   "dependencies": {
-    "eventsource-parser": "^4.1.1",
-    "google-auth-library": "^11.1.0",
-    "jose": "^6.2.12"
+    "eventsource-parser": "^4.1.3",
+    "google-auth-library": "^11.3.2",
+    "jose": "^6.2.14"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -41,11 +41,11 @@
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "dpdm": "^4.3.0",
     "sparktype": "^0.1.3",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2",
+    "vitest": "^5.0.5",
     "zod": "^3.25.76 || ^4",
     "zod-to-json-schema": "^3.25.2"
   },

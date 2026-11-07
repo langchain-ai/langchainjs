@@ -1,5 +1,47 @@
 # @langchain/core
 
+## 1.3.5
+
+### Patch Changes
+
+- [#10961](https://github.com/langchain-ai/langchainjs/pull/10961) [`674b755`](https://github.com/langchain-ai/langchainjs/commit/674b755e17008b3875228feb63eeaec13c21c52a) Thanks [@hntrl](https://github.com/hntrl)! - fix(prompts): enforce maximum prompt template nesting depth
+
+  Add recursion depth guards for mustache template parsing and dict prompt template traversal to prevent stack-exhaustion DoS from deeply nested attacker-controlled templates.
+
+- [#12108](https://github.com/langchain-ai/langchainjs/pull/12108) [`fb61799`](https://github.com/langchain-ai/langchainjs/commit/fb6179926d70c76cc81a238aed4f2ad8c9531d4b) Thanks [@casparb](https://github.com/casparb)! - fix(core): end the `tool()` run when its signal is already aborted
+
+## 1.3.4
+
+### Patch Changes
+
+- [#12104](https://github.com/langchain-ai/langchainjs/pull/12104) [`e006308`](https://github.com/langchain-ai/langchainjs/commit/e006308a58a746da8ca10b8ca483611d869e9a19) Thanks [@hntrl](https://github.com/hntrl)! - Export `omitPayload` from `@langchain/core/tracers/tracer_langchain`, a `TracePolicy` processor that records an empty payload while keeping the run.
+
+- [#12102](https://github.com/langchain-ai/langchainjs/pull/12102) [`6d157ae`](https://github.com/langchain-ai/langchainjs/commit/6d157ae5c0816851ea30f5d14fe68184da44c69e) Thanks [@hntrl](https://github.com/hntrl)! - `LangChainTracer` now still sends and ends a run when its trace policy's `processInputs` or `processOutputs` throws, with that payload dropped and the error set, instead of skipping the run or leaving it pending in LangSmith.
+
+## 1.3.3
+
+### Patch Changes
+
+- [#11567](https://github.com/langchain-ai/langchainjs/pull/11567) [`d92aba6`](https://github.com/langchain-ai/langchainjs/commit/d92aba67d3ffef8e1e0fa62cdb97cbd6e7022582) Thanks [@hntrl](https://github.com/hntrl)! - Add `tracePolicy` to `RunnableSequence`. Its `processInputs`/`processOutputs` shape only what `LangChainTracer` sends to LangSmith for the sequence's own run. Batched sequence runs now each record their own output.
+
+## 1.3.2
+
+### Patch Changes
+
+- [#12051](https://github.com/langchain-ai/langchainjs/pull/12051) [`71fd01a`](https://github.com/langchain-ai/langchainjs/commit/71fd01ab6edb530a3d52cebcfc191674c10138d2) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add `addNotificationMetadata`, `getNotificationMetadata` and the `NotificationMetadata` type for marking messages the agent harness adds.
+
+## 1.3.1
+
+### Patch Changes
+
+- [#12026](https://github.com/langchain-ai/langchainjs/pull/12026) [`178af31`](https://github.com/langchain-ai/langchainjs/commit/178af31ee41b7e36fa2971af61ade6a5460b6d2e) Thanks [@eliornl](https://github.com/eliornl)! - fix(core): deliver callbacks once to a handler registered twice by merged configs
+
+  Merging two runnable configs that both carry the same callback handler, as happens when an agent's `streamEvents()` runs inside a LangGraph node with tracing on, registered that handler twice, so it received every callback twice: every streamed chunk arrived twice. The configured callback manager now keeps each handler once, in order, including a handler passed as a plain object of methods that merged configs wrapped twice.
+
+- [#12042](https://github.com/langchain-ai/langchainjs/pull/12042) [`50343ba`](https://github.com/langchain-ai/langchainjs/commit/50343ba94c2388b3d3a7d4d6cd0977fa60a90294) Thanks [@sera-wi](https://github.com/sera-wi)! - fix(core): include node `metadata` in `Graph.toJSON()` output when set, matching Python
+
+- [#12048](https://github.com/langchain-ai/langchainjs/pull/12048) [`304d190`](https://github.com/langchain-ai/langchainjs/commit/304d190a30343ecb8ae5f06081a2b5a6d93d9968) Thanks [@sera-wi](https://github.com/sera-wi)! - fix(core): escape `drawMermaid` node metadata labels and leave out object values, so metadata with brackets or objects no longer breaks Mermaid parsing
+
 ## 1.3.0
 
 ### Minor Changes

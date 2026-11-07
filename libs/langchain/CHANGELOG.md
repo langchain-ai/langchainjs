@@ -1,5 +1,23 @@
 # langchain
 
+## 1.6.2
+
+### Patch Changes
+
+- [#11596](https://github.com/langchain-ai/langchainjs/pull/11596) [`db829f1`](https://github.com/langchain-ai/langchainjs/commit/db829f1cf96241215006acbaaa6c9138d6b24b09) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `tracePolicy` to `createMiddleware`, applied to the middleware's lifecycle hook runs. It only changes what `LangChainTracer` sends to LangSmith (use `omitPayload` from `@langchain/core/tracers/tracer_langchain`). Requires `@langchain/langgraph` >= 1.6.1.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11437](https://github.com/langchain-ai/langchainjs/pull/11437) [`272d651`](https://github.com/langchain-ai/langchainjs/commit/272d65140496b12c4895d6585c84d2640cd48383) Thanks [@zhdanovartur](https://github.com/zhdanovartur)! - fix(langchain): humanInTheLoopMiddleware — execute approved, edited and auto-approved tool calls when other calls in the same interrupt are rejected, instead of dropping them without a ToolMessage (caused "400 No tool output found for function call" on subsequent model requests)
+
+## 1.6.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
 ## 1.5.20
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @langchain/openai
 
+## 1.8.1
+
+### Patch Changes
+
+- [#11467](https://github.com/langchain-ai/langchainjs/pull/11467) [`0c268f5`](https://github.com/langchain-ai/langchainjs/commit/0c268f53cadcddf6884162ed608333224c05868d) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Use the resolved model snapshot in streamed Responses API metadata.
+
+- [#11755](https://github.com/langchain-ai/langchainjs/pull/11755) [`8103487`](https://github.com/langchain-ai/langchainjs/commit/8103487c55784c5befd84c1bc803546f720f806e) Thanks [@SiKreuz](https://github.com/SiKreuz)! - Set `response_metadata.model_name` on messages streamed from the Responses API through the chat model event stream, matching the Chat Completions stream and the non-streaming Responses path.
+
+## 1.8.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
 ## 1.7.1
 
 ### Patch Changes

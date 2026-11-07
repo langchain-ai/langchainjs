@@ -25,7 +25,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
-    "ollama": "^0.6.3"
+    "ollama": "^0.6.4"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -36,12 +36,12 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^5.0.2",
-    "dotenv": "^17.4.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
     "zod": "^3.25.76",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"
