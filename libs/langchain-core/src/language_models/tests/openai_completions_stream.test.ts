@@ -276,4 +276,57 @@ describe("convertOpenAICompletionsStream", () => {
       },
     ]);
   });
+
+  test("skips a leading empty chunk and keeps the real provider id", async () => {
+    // Azure OpenAI sends a content-filter chunk first: no id, no choices.
+    const events = await collectEvents([
+      { id: "", model: "", choices: [] },
+      {
+        id: "chatcmpl-abc",
+        model: "gpt-4o",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hi" },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "chatcmpl-abc",
+        model: "gpt-4o",
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      },
+    ]);
+
+    const start = events.find((e) => e.event === "message-start");
+    expect(start).toEqual({ event: "message-start", id: "chatcmpl-abc" });
+  });
+
+  test("omits an empty chunk id so downstream can fall back to run-<runId>", async () => {
+    const events = await collectEvents([
+      {
+        id: "",
+        model: "azure-deployment",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hello" },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        id: "",
+        model: "azure-deployment",
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      },
+    ]);
+
+    const start = events.find((e) => e.event === "message-start");
+    expect(start).toBeDefined();
+    // `id` must be nullish (not "") or BaseChatModel's `id == null` fallback is skipped
+    expect((start as { id?: string }).id ?? null).toBeNull();
+    expect(events.map((e) => e.event)).toContain("message-finish");
+  });
 });
