@@ -168,7 +168,9 @@ export function concat<
     const chunk = { ...first } as Record<string, any>;
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     for (const [key, value] of Object.entries(second as Record<string, any>)) {
-      if (key in chunk && !Array.isArray(chunk[key])) {
+      if (key in chunk && Array.isArray(chunk[key]) && Array.isArray(value)) {
+        chunk[key] = (chunk[key] as unknown[]).concat(value);
+      } else if (key in chunk && !Array.isArray(chunk[key])) {
         chunk[key] = concat(chunk[key], value);
       } else {
         chunk[key] = value;
