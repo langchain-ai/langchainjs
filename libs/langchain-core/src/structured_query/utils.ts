@@ -48,11 +48,11 @@ export function isInt(value: unknown): boolean {
  */
 export function isFloat(value: unknown): boolean {
   if (typeof value === "number") {
-    return value % 1 !== 0;
+    return Number.isFinite(value) && value % 1 !== 0;
   } else if (typeof value === "string") {
     const numberValue = parseFloat(value);
     return (
-      !Number.isNaN(numberValue) &&
+      Number.isFinite(numberValue) &&
       numberValue % 1 !== 0 &&
       numberValue.toString() === value
     );
@@ -68,7 +68,8 @@ export function isFloat(value: unknown): boolean {
 export function isString(value: unknown): boolean {
   return (
     typeof value === "string" &&
-    (Number.isNaN(parseFloat(value)) || parseFloat(value).toString() !== value)
+    (!Number.isFinite(parseFloat(value)) ||
+      parseFloat(value).toString() !== value)
   );
 }
 
