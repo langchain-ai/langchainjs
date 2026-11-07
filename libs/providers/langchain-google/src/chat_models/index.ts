@@ -69,11 +69,15 @@ export * from "./handlers/index.js";
 export type {
   GoogleChatApiHandlerParams,
   GenerateContentApiHandlerParams,
+  InteractionsApiHandlerParams,
   GoogleChatApiHandlerFactory,
   GoogleChatApiHandlerConfig,
   GenerateContentInvocationParams,
+  InteractionsInvocationParams,
   BaseChatGoogleFields,
   GenerateContentSpecificFields,
   GenerateContentFields,
+  InteractionsSpecificFields,
+  InteractionsFields,
   ChatGoogleFields,
 } from "./types.js";

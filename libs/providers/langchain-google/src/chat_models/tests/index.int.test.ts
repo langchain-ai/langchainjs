@@ -37,6 +37,7 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
 import { convertMessagesToGeminiContents } from "../../converters/generate_content/messages.js";
+import { convertMessagesToInteractionsInput } from "../../converters/interactions/messages.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -252,6 +253,7 @@ const expansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
       useApiKey: true,
+      only: true,
     },
   },
   {
@@ -266,6 +268,16 @@ const expansionInfo: Partial<ModelInfo>[] = [
       skip: true,
     },
   },
+  {
+    // Interactions API on AI Studio API
+    testConfig: {
+      useApiKey: true,
+      only: true,
+    },
+    defaultGoogleParams: {
+      apiHandler: "interactions",
+    },
+  }
 ];
 
 function expandAllModelInfo(): ModelInfo[] {
@@ -444,6 +456,7 @@ describe.each(coreModelInfo)(
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
+    let isInteractions = defaultGoogleParams?.apiHandler === "interactions";
 
     let warnSpy: MockInstance<any>;
 
@@ -470,6 +483,7 @@ describe.each(coreModelInfo)(
         ...(defaultGoogleParams ?? {}),
         ...(fields ?? {}),
       };
+      isInteractions = params.apiHandler === "interactions";
       if (useNode) {
         return new ChatGoogleNode(params);
       } else {
@@ -835,28 +849,53 @@ describe.each(coreModelInfo)(
       const res = await llm.invoke(messages);
       expect(res).toBeDefined();
 
-      const sentContents = recorder.request?.body?.contents as
-        | Gemini.Content[]
-        | undefined;
-      expect(sentContents).toBeDefined();
-      const toolResponseContent = sentContents!.find((c) =>
-        c.parts?.some((p) => "functionResponse" in p)
-      );
-      expect(toolResponseContent).toBeDefined();
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        expect(sentInput).toBeDefined();
+        const functionResultStep = sentInput!.find(
+          (s): s is Gemini.Interactions.FunctionResultStep =>
+            s.type === "function_result"
+        );
+        expect(functionResultStep).toBeDefined();
+        expect(Array.isArray(functionResultStep!.result)).toBe(true);
+        const resultItems =
+          functionResultStep!.result as Gemini.Interactions.Content[];
 
-      const functionResponsePart = toolResponseContent!.parts!.find(
-        (p) => "functionResponse" in p && p.functionResponse
-      ) as Gemini.Part.FunctionResponse;
-      const resultStr = JSON.stringify(
-        functionResponsePart.functionResponse!.response
-      );
-      expect(resultStr).not.toContain(data64);
+        const textItems = resultItems.filter((item) => item.type === "text");
+        expect(JSON.stringify(textItems)).not.toContain(data64);
 
-      const inlineDataPart = toolResponseContent!.parts!.find(
-        (p) => "inlineData" in p && p.inlineData
-      ) as Gemini.Part.InlineData;
-      expect(inlineDataPart).toBeDefined();
-      expect(inlineDataPart.inlineData!.data).toBe(data64);
+        const imageItem = resultItems.find(
+          (item): item is Gemini.Interactions.ImageContent =>
+            item.type === "image"
+        );
+        expect(imageItem).toBeDefined();
+        expect(imageItem!.data).toBe(data64);
+      } else {
+        const sentContents = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents).toBeDefined();
+        const toolResponseContent = sentContents!.find((c) =>
+          c.parts?.some((p) => "functionResponse" in p)
+        );
+        expect(toolResponseContent).toBeDefined();
+
+        const functionResponsePart = toolResponseContent!.parts!.find(
+          (p) => "functionResponse" in p && p.functionResponse
+        ) as Gemini.Part.FunctionResponse;
+        const resultStr = JSON.stringify(
+          functionResponsePart.functionResponse!.response
+        );
+        expect(resultStr).not.toContain(data64);
+
+        const inlineDataPart = toolResponseContent!.parts!.find(
+          (p) => "inlineData" in p && p.inlineData
+        ) as Gemini.Part.InlineData;
+        expect(inlineDataPart).toBeDefined();
+        expect(inlineDataPart.inlineData!.data).toBe(data64);
+      }
     });
 
     test("function reply with non-string content is sent as JSON, not double-stringified (#10439)", async () => {
@@ -905,21 +944,39 @@ describe.each(coreModelInfo)(
       const res = await llm.invoke(messages);
       expect(res).toBeDefined();
 
-      const sentContents = recorder.request?.body?.contents as
-        | Gemini.Content[]
-        | undefined;
-      expect(sentContents).toBeDefined();
-      const toolResponseContent = sentContents!.find((c) =>
-        c.parts?.some((p) => "functionResponse" in p)
-      );
-      expect(toolResponseContent).toBeDefined();
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        expect(sentInput).toBeDefined();
+        const functionResultStep = sentInput!.find(
+          (s): s is Gemini.Interactions.FunctionResultStep =>
+            s.type === "function_result"
+        );
+        expect(functionResultStep).toBeDefined();
 
-      const functionResponsePart = toolResponseContent!.parts!.find(
-        (p) => "functionResponse" in p && p.functionResponse
-      ) as Gemini.Part.FunctionResponse;
-      const result = functionResponsePart.functionResponse!.response!.result;
-      expect(typeof result).not.toBe("string");
-      expect(result).toEqual(toolResult);
+        const result = (
+          functionResultStep!.result as Record<string, unknown> | undefined
+        )?.result;
+        expect(typeof result).not.toBe("string");
+        expect(result).toEqual(toolResult);
+      } else {
+        const sentContents = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents).toBeDefined();
+        const toolResponseContent = sentContents!.find((c) =>
+          c.parts?.some((p) => "functionResponse" in p)
+        );
+        expect(toolResponseContent).toBeDefined();
+
+        const functionResponsePart = toolResponseContent!.parts!.find(
+          (p) => "functionResponse" in p && p.functionResponse
+        ) as Gemini.Part.FunctionResponse;
+        const result = functionResponsePart.functionResponse!.response!.result;
+        expect(typeof result).not.toBe("string");
+        expect(result).toEqual(toolResult);
+      }
     });
 
     test("function - force tool", async () => {
@@ -1003,9 +1060,15 @@ describe.each(coreModelInfo)(
           new HumanMessage('Call get_weather with location set to "New York".'),
         ]);
 
-        expect(recorder.request?.body?.toolConfig).toEqual({
-          functionCallingConfig: { mode: "VALIDATED" },
-        });
+        if (isInteractions) {
+          expect(recorder.request?.body?.generation_config?.tool_choice).toEqual(
+            "validated"
+          );
+        } else {
+          expect(recorder.request?.body?.toolConfig).toEqual({
+            functionCallingConfig: { mode: "VALIDATED" },
+          });
+        }
         expect(result.tool_calls).toHaveLength(1);
         expect(result.tool_calls?.[0]).toMatchObject({
           name: "get_weather",
@@ -1026,9 +1089,15 @@ describe.each(coreModelInfo)(
           ),
         ]);
 
-        expect(recorder.request?.body?.toolConfig).toEqual({
-          functionCallingConfig: { mode: "VALIDATED" },
-        });
+        if (isInteractions) {
+          expect(recorder.request?.body?.generation_config?.tool_choice).toEqual(
+            "validated"
+          );
+        } else {
+          expect(recorder.request?.body?.toolConfig).toEqual({
+            functionCallingConfig: { mode: "VALIDATED" },
+          });
+        }
         expect(result.tool_calls ?? []).toHaveLength(0);
         expect(result.text).toMatch(/hello/i);
       });
@@ -1250,12 +1319,17 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
-        "responseMimeType"
-      );
-      expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
-        "responseJsonSchema"
-      );
+      if (isInteractions) {
+        expect(recorder.request?.body).not.toHaveProperty("response_mime_type");
+        expect(recorder.request?.body).not.toHaveProperty("response_format");
+      } else {
+        expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
+          "responseMimeType"
+        );
+        expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
+          "responseJsonSchema"
+        );
+      }
     });
 
     test("withStructuredOutput - zod jsonSchema", async () => {
@@ -1269,12 +1343,17 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty(
-        "responseMimeType"
-      );
-      expect(recorder.request?.body?.generationConfig).toHaveProperty(
-        "responseJsonSchema"
-      );
+      if (isInteractions) {
+        expect(recorder.request?.body).toHaveProperty("response_mime_type");
+        expect(recorder.request?.body).toHaveProperty("response_format");
+      } else {
+        expect(recorder.request?.body?.generationConfig).toHaveProperty(
+          "responseMimeType"
+        );
+        expect(recorder.request?.body?.generationConfig).toHaveProperty(
+          "responseJsonSchema"
+        );
+      }
     });
 
     test("withStructuredOutput - zod includeRaw", async () => {
@@ -1305,12 +1384,19 @@ describe.each(coreModelInfo)(
       const resultJson = JSON.parse(result.content as string);
       expect(resultJson).toHaveProperty("rating");
       expect(resultJson).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty(
-        "responseJsonSchema"
-      );
-      expect(
-        recorder.request?.body?.generationConfig?.responseMimeType
-      ).toEqual("application/json");
+      if (isInteractions) {
+        expect(recorder.request?.body).toHaveProperty("response_format");
+        expect(recorder.request?.body?.response_mime_type).toEqual(
+          "application/json"
+        );
+      } else {
+        expect(recorder.request?.body?.generationConfig).toHaveProperty(
+          "responseJsonSchema"
+        );
+        expect(
+          recorder.request?.body?.generationConfig?.responseMimeType
+        ).toEqual("application/json");
+      }
     });
 
     test("function calling with a z.record() schema", async () => {
@@ -1481,9 +1567,25 @@ describe.each(coreModelInfo)(
       const lowDetailResult = await model.invoke([message], {
         mediaResolution: "MEDIA_RESOLUTION_LOW",
       });
-      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
-        "MEDIA_RESOLUTION_LOW"
-      );
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        const userStep = sentInput?.find(
+          (s): s is Gemini.Interactions.UserInputStep => s.type === "user_input"
+        );
+        const contentItems = Array.isArray(userStep?.content)
+          ? userStep.content
+          : [];
+        const imageBlock = contentItems.find(
+          (c): c is Gemini.Interactions.ImageContent => c.type === "image"
+        );
+        expect(imageBlock?.resolution).toEqual("low");
+      } else {
+        expect(
+          recorder.request?.body?.generationConfig?.mediaResolution
+        ).toEqual("MEDIA_RESOLUTION_LOW");
+      }
       const lowImageTokens =
         lowDetailResult.usage_metadata?.input_token_details?.image ?? 0;
       expect(lowImageTokens).toBeGreaterThan(0);
@@ -1491,9 +1593,25 @@ describe.each(coreModelInfo)(
       const highDetailResult = await model.invoke([message], {
         detail: "high",
       });
-      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
-        "MEDIA_RESOLUTION_HIGH"
-      );
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        const userStep = sentInput?.find(
+          (s): s is Gemini.Interactions.UserInputStep => s.type === "user_input"
+        );
+        const contentItems = Array.isArray(userStep?.content)
+          ? userStep.content
+          : [];
+        const imageBlock = contentItems.find(
+          (c): c is Gemini.Interactions.ImageContent => c.type === "image"
+        );
+        expect(imageBlock?.resolution).toEqual("high");
+      } else {
+        expect(
+          recorder.request?.body?.generationConfig?.mediaResolution
+        ).toEqual("MEDIA_RESOLUTION_HIGH");
+      }
       const highImageTokens =
         highDetailResult.usage_metadata?.input_token_details?.image ?? 0;
       expect(highImageTokens).toBeGreaterThan(0);
@@ -1788,6 +1906,7 @@ describe.each(thinkingModelInfo)(
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
+    let isInteractions = defaultGoogleParams?.apiHandler === "interactions";
 
     let warnSpy: MockInstance<any>;
 
@@ -1814,6 +1933,7 @@ describe.each(thinkingModelInfo)(
         ...(defaultGoogleParams ?? {}),
         ...(fields ?? {}),
       };
+      isInteractions = params.apiHandler === "interactions";
       if (useNode) {
         return new ChatGoogleNode(params);
       } else {
@@ -1899,18 +2019,37 @@ describe.each(thinkingModelInfo)(
       const expectedSignature = toolCallBlock?.thoughtSignature;
       expect(expectedSignature).toBeDefined();
 
-      const contents = convertMessagesToGeminiContents([
-        new HumanMessage("What is the weather in New York?"),
-        firstResult,
-        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
-      ]);
-      const modelTurn = contents.find((c) => c.role === "model");
-      const sentFunctionCallPart = modelTurn?.parts?.find(
-        (p): p is Gemini.Part.FunctionCall => "functionCall" in p
-      );
+      if (isInteractions) {
+        const steps = convertMessagesToInteractionsInput([
+          new HumanMessage("What is the weather in New York?"),
+          firstResult,
+          new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+        ]);
+        const sentFunctionCallStep = steps.find(
+          (s): s is Gemini.Interactions.FunctionCallStep =>
+            s.type === "function_call"
+        );
+        expect(sentFunctionCallStep).toBeDefined();
+        const sentThoughtStep = steps.find(
+          (s): s is Gemini.Interactions.ThoughtStep =>
+            s.type === "thought" && s.signature === expectedSignature
+        );
+        expect(sentThoughtStep).toBeDefined();
+        expect(sentThoughtStep?.signature).toBe(expectedSignature);
+      } else {
+        const contents = convertMessagesToGeminiContents([
+          new HumanMessage("What is the weather in New York?"),
+          firstResult,
+          new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+        ]);
+        const modelTurn = contents.find((c) => c.role === "model");
+        const sentFunctionCallPart = modelTurn?.parts?.find(
+          (p): p is Gemini.Part.FunctionCall => "functionCall" in p
+        );
 
-      expect(sentFunctionCallPart).toBeDefined();
-      expect(sentFunctionCallPart?.thoughtSignature).toBe(expectedSignature);
+        expect(sentFunctionCallPart).toBeDefined();
+        expect(sentFunctionCallPart?.thoughtSignature).toBe(expectedSignature);
+      }
     });
 
     test("thinking - invoke", async () => {
@@ -1989,29 +2128,46 @@ describe.each(thinkingModelInfo)(
         new HumanMessage("Now explain it to a 5 year old."),
       ]);
 
-      const sentContents = recorder.request?.body?.contents ?? [];
-      const modelTurn = sentContents.find(
-        (c: { role?: string }) => c.role === "model"
-      );
-      expect(modelTurn).toBeDefined();
+      if (isInteractions) {
+        const sentInput = (recorder.request?.body?.input ??
+          []) as Gemini.Interactions.Step[];
+        const sentThoughtSteps = sentInput.filter(
+          (s): s is Gemini.Interactions.ThoughtStep => s.type === "thought"
+        );
+        expect(sentThoughtSteps.length).toBeGreaterThan(0);
 
-      const sentThoughtParts = (modelTurn?.parts ?? []).filter(
-        (p: { thought?: boolean }) => p.thought === true
-      );
-      expect(sentThoughtParts.length).toBeGreaterThan(0);
+        const sentSignatures = sentThoughtSteps
+          .map((s) => s.signature)
+          .filter((sig): sig is string => typeof sig === "string");
+        expect(sentSignatures.length).toBeGreaterThan(0);
+        expect(
+          sentSignatures.some((sig) => firstSignatures.includes(sig))
+        ).toBe(true);
+      } else {
+        const sentContents = recorder.request?.body?.contents ?? [];
+        const modelTurn = sentContents.find(
+          (c: { role?: string }) => c.role === "model"
+        );
+        expect(modelTurn).toBeDefined();
 
-      const sentSignatures = (modelTurn?.parts ?? [])
-        .filter((p: { thoughtSignature?: string }) => "thoughtSignature" in p)
-        .map((p: { thoughtSignature?: string }) => p.thoughtSignature);
-      expect(sentSignatures.length).toBeGreaterThan(0);
-      // At least one signature from the first response must round-trip
-      // verbatim — Gemini validates these, so a regenerated/blank value
-      // would defeat the point of preserving the field at all.
-      expect(
-        sentSignatures.some((sig: string | undefined) =>
-          firstSignatures.includes(sig)
-        )
-      ).toBe(true);
+        const sentThoughtParts = (modelTurn?.parts ?? []).filter(
+          (p: { thought?: boolean }) => p.thought === true
+        );
+        expect(sentThoughtParts.length).toBeGreaterThan(0);
+
+        const sentSignatures = (modelTurn?.parts ?? [])
+          .filter((p: { thoughtSignature?: string }) => "thoughtSignature" in p)
+          .map((p: { thoughtSignature?: string }) => p.thoughtSignature);
+        expect(sentSignatures.length).toBeGreaterThan(0);
+        // At least one signature from the first response must round-trip
+        // verbatim — Gemini validates these, so a regenerated/blank value
+        // would defeat the point of preserving the field at all.
+        expect(
+          sentSignatures.some((sig: string | undefined) =>
+            firstSignatures.includes(sig)
+          )
+        ).toBe(true);
+      }
     });
 
     test("functionCall thoughtSignature survives a multi-turn round trip after a real tool call (root cause: tool_calls-rebuild path)", async () => {
@@ -2042,17 +2198,34 @@ describe.each(thinkingModelInfo)(
         new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
       ]);
 
-      const sentContents = recorder.request?.body?.contents ?? [];
-      const modelTurn = sentContents.find(
-        (c: { role?: string }) => c.role === "model"
-      );
-      expect(modelTurn).toBeDefined();
+      if (isInteractions) {
+        const sentInput = (recorder.request?.body?.input ??
+          []) as Gemini.Interactions.Step[];
+        const sentFunctionCallStep = sentInput.find(
+          (s): s is Gemini.Interactions.FunctionCallStep =>
+            s.type === "function_call"
+        );
+        expect(sentFunctionCallStep).toBeDefined();
 
-      const sentFunctionCallPart = (modelTurn?.parts ?? []).find(
-        (p: { functionCall?: unknown }) => "functionCall" in p
-      ) as { thoughtSignature?: string } | undefined;
-      expect(sentFunctionCallPart).toBeDefined();
-      expect(sentFunctionCallPart?.thoughtSignature).toBe(toolCallSignature);
+        const sentThoughtStep = sentInput.find(
+          (s): s is Gemini.Interactions.ThoughtStep =>
+            s.type === "thought" && s.signature === toolCallSignature
+        );
+        expect(sentThoughtStep).toBeDefined();
+        expect(sentThoughtStep?.signature).toBe(toolCallSignature);
+      } else {
+        const sentContents = recorder.request?.body?.contents ?? [];
+        const modelTurn = sentContents.find(
+          (c: { role?: string }) => c.role === "model"
+        );
+        expect(modelTurn).toBeDefined();
+
+        const sentFunctionCallPart = (modelTurn?.parts ?? []).find(
+          (p: { functionCall?: unknown }) => "functionCall" in p
+        ) as { thoughtSignature?: string } | undefined;
+        expect(sentFunctionCallPart).toBeDefined();
+        expect(sentFunctionCallPart?.thoughtSignature).toBe(toolCallSignature);
+      }
     });
   }
 );
