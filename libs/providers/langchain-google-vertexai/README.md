@@ -52,11 +52,9 @@ console.log(response.content);
 ```
 
 Gateway requests use the `/vertex` route and do not require Google credentials
-when using Vertex Express. To preserve project and regional routing, pass
-`authOptions: { projectId: "your-project" }` and a `location`; project discovery
-still uses `google-auth-library`, but requests authenticate with the selected API
-key. An explicit `apiKey` takes precedence over the gateway key. An explicit
-`endpoint` opts out of automatic gateway routing and gateway-key selection.
+when using Vertex Express. Passing your own credentials (`authOptions` or
+`apiKey`) or an explicit `endpoint` opts out of gateway routing and sends
+requests straight to Vertex AI.
 
 ## Tool Schema Limitations
 
