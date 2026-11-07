@@ -154,11 +154,22 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
+  let mergedAdditionalKwargs: Record<string, unknown> | undefined;
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
 
     const msg = chunk.message;
+
+    // Carry provider-specific payloads (e.g. OpenAI Responses API reasoning
+    // items) through to the assembled message instead of dropping them.
+    const additional = getAdditionalKwargs(msg);
+    if (Object.keys(additional).length > 0) {
+      mergedAdditionalKwargs = mergeAdditionalKwargs(
+        mergedAdditionalKwargs,
+        additional
+      );
+    }
 
     // Message start
     let usageHandledInStart = false;
@@ -410,7 +421,42 @@ export async function* convertChunksToEvents(
     event: "message-finish" as const,
     reason: "stop" as const,
     ...(lastUsage ? { usage: lastUsage } : {}),
+    ...(mergedAdditionalKwargs
+      ? { additionalKwargs: mergedAdditionalKwargs }
+      : {}),
   };
+}
+
+/**
+ * Shallow-merge two `additional_kwargs` records, one level deep for plain
+ * object values (mirrors how `AIMessageChunk.concat` merges them).
+ * @internal
+ */
+function mergeAdditionalKwargs(
+  base: Record<string, unknown> | undefined,
+  extra: Record<string, unknown>
+): Record<string, unknown> {
+  if (base == null) return { ...extra };
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(extra)) {
+    const existing = merged[key];
+    if (
+      existing != null &&
+      value != null &&
+      typeof existing === "object" &&
+      typeof value === "object" &&
+      !Array.isArray(existing) &&
+      !Array.isArray(value)
+    ) {
+      merged[key] = {
+        ...(existing as Record<string, unknown>),
+        ...(value as Record<string, unknown>),
+      };
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
 }
 
 /**
