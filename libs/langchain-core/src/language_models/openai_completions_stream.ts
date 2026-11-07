@@ -140,10 +140,18 @@ export async function* convertOpenAICompletionsStream(
       data = mapChunk(data);
     }
     if (!messageStarted) {
+      // Some providers (e.g. Azure OpenAI) send a leading content-filter chunk
+      // with an empty id and no choices, then the real id on the next chunk.
+      // Deferring until we see an id or a choice keeps the real provider id
+      // instead of emitting an empty one, which would bypass the downstream
+      // `run-<runId>` fallback and merge every AIMessage into a single id.
+      if (!data.id && !data.choices?.length) {
+        continue;
+      }
       messageStarted = true;
       yield {
         event: "message-start" as const,
-        id: data.id,
+        id: data.id || undefined,
       };
     }
 
