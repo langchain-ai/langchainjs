@@ -2662,7 +2662,6 @@ export class RunnableLambda<
     return new Promise<RunOutput>((resolve, reject) => {
       const childConfig = patchConfig(config, {
         callbacks: runManager?.getChild(),
-        recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
       // oxlint-disable-next-line no-void
       void AsyncLocalStorageProviderSingleton.runWithConfig(
@@ -2765,7 +2764,6 @@ export class RunnableLambda<
     }
     const childConfig = patchConfig(config, {
       callbacks: runManager?.getChild(),
-      recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
     });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
@@ -2790,7 +2788,10 @@ export class RunnableLambda<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
-      const stream = await output.stream(finalChunk as RunInput, childConfig);
+      const stream = await output.stream(finalChunk as RunInput, {
+        ...childConfig,
+        recursionLimit: (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+      });
       for await (const chunk of stream) {
         yield chunk;
       }
