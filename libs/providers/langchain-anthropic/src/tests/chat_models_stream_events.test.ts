@@ -88,6 +88,60 @@ function textOnlyEvents() {
   ];
 }
 
+function compactionPlusTextEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_04CMP",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 160000, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "compaction" as const,
+        content: null,
+        encrypted_content: null,
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: {
+        type: "compaction_delta" as const,
+        content: "<summary>Earlier work.</summary>",
+        encrypted_content: "opaque-state",
+      },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "content_block_start" as const,
+      index: 1,
+      content_block: { type: "text" as const, text: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 1,
+      delta: { type: "text_delta" as const, text: "Continuing." },
+    },
+    { type: "content_block_stop" as const, index: 1 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+      usage: { output_tokens: 3 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
 function thinkingPlusTextEvents() {
   return [
     {
@@ -707,6 +761,29 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         (e) => e.event === "provider" && (e as { name: string }).name === "ping"
       );
       expect(pingEvent).toBeDefined();
+    });
+  });
+
+  describe("compaction streaming", () => {
+    test("the compaction delta fills the block's own fields, so it can be sent back as is", async () => {
+      const model = new MockStreamChatAnthropic(compactionPlusTextEvents());
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as ChatAnthropicCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const finished = events.find(
+        (e) => e.event === "content-block-finish" && e.index === 0
+      ) as { content: { type: string; value: Record<string, unknown> } };
+      expect(finished.content.type).toBe("non_standard");
+      expect(finished.content.value).toEqual({
+        type: "compaction",
+        content: "<summary>Earlier work.</summary>",
+        encrypted_content: "opaque-state",
+      });
     });
   });
 
