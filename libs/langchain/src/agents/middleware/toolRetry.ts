@@ -6,7 +6,12 @@ import { ToolMessage } from "@langchain/core/messages";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { isGraphBubbleUp } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
-import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
+import {
+  sleep,
+  calculateRetryDelay,
+  getRetryAfterMs,
+  rethrowToolErrorAsFatal,
+} from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
 
@@ -253,7 +258,7 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
     attemptsMade: number
   ): ToolMessage => {
     if (onFailure === "error") {
-      throw error;
+      rethrowToolErrorAsFatal(error);
     }
 
     let content: string;

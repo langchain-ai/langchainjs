@@ -189,9 +189,11 @@ describe("toolErrorMiddleware", () => {
       middleware: [toolErrorMiddleware({ tools: ["other_tool"], onError })],
     });
 
-    await expect(
-      agent.invoke({ messages: [new HumanMessage("Use the failing tool")] })
-    ).rejects.toThrow("secret detail: x");
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Use the failing tool")],
+    });
+    const toolMessages = result.messages.filter(ToolMessage.isInstance);
+    expect(toolMessages[0].status).toBe("error");
     expect(onError).not.toHaveBeenCalled();
   });
 
