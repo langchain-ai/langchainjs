@@ -74,51 +74,53 @@ describe("web ChatVertexAI LangSmith gateway", () => {
     }
   );
 
-  test("preserves regional routing without using web OAuth", async () => {
-    const handleCustomEvent = vi.fn();
+  test("explicit authOptions go straight to Vertex", async () => {
     const model = new ChatVertexAI({
       model: "gemini-2.5-flash",
       authOptions: {
         credentials: JSON.stringify({ project_id: "test-project" }),
+        accessToken: "user-token",
       },
       location: "europe-west4",
+    });
+    await model.invoke("Hi");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe(
+      "https://europe-west4-aiplatform.googleapis.com/v1/projects/test-project/locations/europe-west4/publishers/google/models/gemini-2.5-flash:generateContent"
+    );
+    const headers = new Headers(options?.headers);
+    expect(headers.get("authorization")).toBe("Bearer user-token");
+    expect(headers.has("x-goog-api-key")).toBe(false);
+  });
+
+  test("uses the LangSmith key fallback", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", undefined);
+    vi.stubEnv("LANGSMITH_API_KEY", "langsmith-key");
+    vi.stubEnv("GOOGLE_API_KEY", "provider-key");
+    const handleCustomEvent = vi.fn();
+    const model = new ChatVertexAI({
+      model: "gemini-2.5-flash",
       callbacks: [{ handleCustomEvent }],
     });
     await model.invoke("Hi");
-    expectRequest(
-      `${root}/v1/projects/test-project/locations/europe-west4/publishers/google/models/gemini-2.5-flash:generateContent`
-    );
-    expect(handleCustomEvent).toHaveBeenCalled();
+    expectRequest(`${root}/${resource}:generateContent`, "langsmith-key");
     expect(JSON.stringify(handleCustomEvent.mock.calls)).not.toContain(
-      "gateway-key"
+      "langsmith-key"
     );
   });
 
-  test.each([undefined, "explicit-key"])(
-    "uses the LangSmith fallback unless a key is explicit: %s",
-    async (apiKey) => {
-      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", undefined);
-      vi.stubEnv("LANGSMITH_API_KEY", "langsmith-key");
-      vi.stubEnv("GOOGLE_API_KEY", "provider-key");
-      const handleCustomEvent = vi.fn();
-      const model = new ChatVertexAI({
-        model: "gemini-2.5-flash",
-        apiKey,
-        callbacks: [{ handleCustomEvent }],
-      });
-      await model.invoke("Hi");
-      expectRequest(
-        `${root}/${resource}:generateContent`,
-        apiKey ?? "langsmith-key"
-      );
-      expect(JSON.stringify(handleCustomEvent.mock.calls)).not.toContain(
-        "langsmith-key"
-      );
-      expect(JSON.stringify(handleCustomEvent.mock.calls)).not.toContain(
-        "explicit-key"
-      );
-    }
-  );
+  test("an explicit apiKey goes straight to Vertex", async () => {
+    const model = new ChatVertexAI({
+      model: "gemini-2.5-flash",
+      apiKey: "explicit-key",
+    });
+    await model.invoke("Hi");
+    expectRequest(
+      `https://aiplatform.googleapis.com/${resource}:generateContent`,
+      "explicit-key"
+    );
+  });
 
   test("preserves a custom HTTP gateway root", async () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "http://localhost:8080/custom/");
