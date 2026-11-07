@@ -11,7 +11,9 @@ class ChatAnthropicStandardUnitTests extends ChatModelUnitTests<
       Cls: ChatAnthropic,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      constructorArgs: {},
+      // The default model rejects non-default sampling params, so drop the
+      // `temperature: 0` the standard tests pass by default.
+      constructorArgs: { temperature: undefined },
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
     // which we call after instantiating the model will work.
