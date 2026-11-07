@@ -550,3 +550,20 @@ test("Test lines loc when chunk text repeats inside the previous chunk.", async 
     ["Price", { from: 3, to: 3 }],
   ]);
 });
+
+test("Test lines loc when chunk text repeats inside the previous chunk with a custom lengthFunction.", async () => {
+  const text = "Name | Price\n\nPrice";
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 24,
+    chunkOverlap: 2,
+    // custom measure where 1 char = 2 units: chunkOverlap units do not map
+    // to char offsets, which must not break the anchoring
+    lengthFunction: async (text) => text.length * 2,
+  });
+  const docs = await splitter.createDocuments([text]);
+
+  expect(docs.map((d) => [d.pageContent, d.metadata.loc.lines])).toEqual([
+    ["Name | Price", { from: 1, to: 1 }],
+    ["Price", { from: 3, to: 3 }],
+  ]);
+});
