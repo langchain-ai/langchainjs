@@ -335,7 +335,7 @@ describe("Google Mock", () => {
       await llm.invoke("What is 1+1?");
 
       expect(apiClient.request.url).toBe(
-        `https://aiplatform.${location}.rep.googleapis.com/v1/projects/unknown-project-id/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
+        `https://aiplatform.${location}.rep.googleapis.com/v1beta1/projects/unknown-project-id/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
       );
     }
   );

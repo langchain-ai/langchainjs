@@ -2,15 +2,15 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "gemini": {
-      "path": "src/openapi/generate-content-openapi.json",
-    },
+      "path": "src/openapi/generate-content-openapi.json"
+    }
   },
   "outputs": [
     {
       "path": "./src/chat_models/api_types/generate_content.ts",
       "format": "typescript",
       "options": {
-        "widenEnums": true,
+        "widenEnums": true
       },
       "contents": [
         {
@@ -26,6 +26,7 @@
             "gemini:SpeakerVoiceConfig",
             "gemini:ImageConfig",
             "gemini:Part",
+            "gemini:SpeechMetadata",
             "gemini:VideoMetadata",
             "gemini:CodeExecutionResult",
             "gemini:ExecutableCode",
@@ -51,8 +52,8 @@
                 "gemini:SearchTypes",
                 "gemini:Type",
                 "gemini:WebSearch",
-                "gemini:ImageSearch",
-              ],
+                "gemini:ImageSearch"
+              ]
             },
             // in/out types
             "gemini:GenerateContentRequest",
@@ -116,10 +117,10 @@
             "gemini:StreamableHttpTransport",
             "gemini:FunctionResponseBlob",
             "gemini:ReviewSnippet",
-            "gemini:DynamicRetrievalConfig",
-          ],
-        },
-      ],
-    },
-  ],
+            "gemini:DynamicRetrievalConfig"
+          ]
+        }
+      ]
+    }
+  ]
 }
