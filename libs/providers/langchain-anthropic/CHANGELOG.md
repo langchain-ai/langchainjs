@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.6.1
+
+### Patch Changes
+
+- [#12117](https://github.com/langchain-ai/langchainjs/pull/12117) [`1d57fca`](https://github.com/langchain-ai/langchainjs/commit/1d57fca1aa7bc89911fe5ead28afe4430fb0fb58) Thanks [@Siretu](https://github.com/Siretu)! - fix(anthropic): keep streamed `server_tool_use` input when replaying messages
+
 ## 1.6.0
 
 ### Minor Changes

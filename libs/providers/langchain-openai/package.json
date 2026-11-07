@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "OpenAI integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
