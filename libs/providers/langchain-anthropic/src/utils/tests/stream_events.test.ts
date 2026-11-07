@@ -38,6 +38,7 @@ function rawEvents({ cost }: StreamOverrides = {}) {
       type: "message_delta" as const,
       delta: { stop_reason: "end_turn" as const, stop_sequence: null },
       usage: {
+        input_tokens: 100,
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
       },
@@ -115,8 +116,8 @@ describe("convertAnthropicStream", () => {
     // Cost is not token accounting, so it must not leak into the usage snapshots.
     expect(messageFinish(events).usage).toEqual({
       input_tokens: 100,
-      output_tokens: 43,
-      total_tokens: 143,
+      output_tokens: 42,
+      total_tokens: 142,
       input_token_details: { cache_creation: 0, cache_read: 0 },
     });
     for (const event of events.filter((event) => event.usage)) {
@@ -147,6 +148,38 @@ describe("convertAnthropicStream", () => {
     );
 
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
-    expect(message.usage_metadata?.output_tokens).toBe(43);
+    expect(message.usage_metadata?.output_tokens).toBe(42);
+  });
+
+  test("message-finish keeps message_start fields the delta leaves out", async () => {
+    const source = (async function* () {
+      for (const event of rawEvents()) {
+        if (event.type === "message_start") {
+          yield {
+            ...event,
+            message: {
+              ...event.message,
+              usage: { ...event.message.usage, cache_read_input_tokens: 500 },
+            },
+          };
+        } else if (event.type === "message_delta") {
+          yield { ...event, usage: { output_tokens: 42 } };
+        } else {
+          yield event;
+        }
+      }
+    })();
+    const events = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const event of convertAnthropicStream(source as any)) {
+      events.push(event);
+    }
+
+    expect(messageFinish(events).usage).toEqual({
+      input_tokens: 600,
+      output_tokens: 42,
+      total_tokens: 642,
+      input_token_details: { cache_creation: 0, cache_read: 500 },
+    });
   });
 });

@@ -1467,15 +1467,20 @@ export class ChatAnthropicMessages<
       maxRetries: options.maxRetries,
     });
 
+    let startUsage: object | undefined;
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         return;
       }
+      if (data.type === "message_start") {
+        startUsage = data.message.usage;
+      }
       const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
+        startUsage,
       });
       if (!result) continue;
 
