@@ -186,6 +186,7 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
     case "tool_use":
       return "tool_use";
     case "max_tokens":
+    case "model_context_window_exceeded":
       return "length";
     default:
       return "stop";
