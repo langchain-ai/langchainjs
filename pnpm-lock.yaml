@@ -86,6 +86,9 @@ importers:
       '@changesets/cli':
         specifier: ^3.0.3
         version: 3.0.3
+      '@changesets/parse':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@langchain/build':
         specifier: workspace:*
         version: link:internal/build
