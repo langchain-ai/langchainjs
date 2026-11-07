@@ -14,11 +14,31 @@ import { extractToolCalls } from "../output_parsers.js";
 import { _isAnthropicCompactionBlock } from "./content.js";
 import { iife } from "./index.js";
 
+/**
+ * `message_delta` usage is cumulative for the request, but some providers
+ * (e.g. Bedrock) leave out or null fields that `message_start` reported, so
+ * those keep their `message_start` values.
+ */
+export function _mergeStreamUsage<T extends object>(
+  startUsage: object | undefined,
+  deltaUsage: T
+): T {
+  const merged: Record<string, unknown> = { ...startUsage };
+  for (const [key, value] of Object.entries(deltaUsage)) {
+    if (value != null) {
+      merged[key] = value;
+    }
+  }
+  return merged as T;
+}
+
 export function _makeMessageChunkFromAnthropicEvent(
   data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
+    /** Usage from this response's `message_start`. */
+    startUsage?: object;
   }
 ): {
   chunk: AIMessageChunk;
@@ -44,8 +64,9 @@ export function _makeMessageChunkFromAnthropicEvent(
       }),
     };
   } else if (data.type === "message_delta") {
-    const { input_tokens, output_tokens, ...usage } = data.usage;
-    const usageMetadata = buildUsageMetadata(data.usage);
+    const deltaUsage = _mergeStreamUsage(fields.startUsage, data.usage);
+    const { input_tokens, output_tokens, ...usage } = deltaUsage;
+    const usageMetadata = buildUsageMetadata(deltaUsage);
     const responseMetadata = iife(() => {
       const output = {};
       if ("context_management" in data.delta) {

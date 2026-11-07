@@ -198,4 +198,56 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
       server_tool_use: { web_search_requests: 2 },
     });
   });
+
+  test.each([
+    {
+      case: "only output_tokens",
+      delta: { output_tokens: 42 },
+      expected: { input_tokens: 1600, cache_creation: 500, cache_read: 1000 },
+    },
+    {
+      case: "input_tokens but no cache fields",
+      delta: { input_tokens: 300, output_tokens: 42 },
+      expected: { input_tokens: 1800, cache_creation: 500, cache_read: 1000 },
+    },
+    {
+      case: "null cache fields",
+      delta: {
+        input_tokens: 300,
+        output_tokens: 42,
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+      },
+      expected: { input_tokens: 1800, cache_creation: 500, cache_read: 1000 },
+    },
+  ])(
+    "message_delta with $case keeps the message_start values",
+    ({ delta, expected }) => {
+      const startUsage = {
+        input_tokens: 100,
+        output_tokens: 1,
+        cache_creation_input_tokens: 500,
+        cache_read_input_tokens: 1000,
+      };
+      const result = _makeMessageChunkFromAnthropicEvent(
+        {
+          type: "message_delta" as const,
+          delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+          usage: delta,
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        { ...fields, startUsage }
+      );
+
+      expect(result!.chunk.usage_metadata).toEqual({
+        input_tokens: expected.input_tokens,
+        output_tokens: 42,
+        total_tokens: expected.input_tokens + 42,
+        input_token_details: {
+          cache_creation: expected.cache_creation,
+          cache_read: expected.cache_read,
+        },
+      });
+    }
+  );
 });

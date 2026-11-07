@@ -150,4 +150,36 @@ describe("convertAnthropicStream", () => {
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
     expect(message.usage_metadata?.output_tokens).toBe(42);
   });
+
+  test("message-finish keeps message_start fields the delta leaves out", async () => {
+    const source = (async function* () {
+      for (const event of rawEvents()) {
+        if (event.type === "message_start") {
+          yield {
+            ...event,
+            message: {
+              ...event.message,
+              usage: { ...event.message.usage, cache_read_input_tokens: 500 },
+            },
+          };
+        } else if (event.type === "message_delta") {
+          yield { ...event, usage: { output_tokens: 42 } };
+        } else {
+          yield event;
+        }
+      }
+    })();
+    const events = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const event of convertAnthropicStream(source as any)) {
+      events.push(event);
+    }
+
+    expect(messageFinish(events).usage).toEqual({
+      input_tokens: 600,
+      output_tokens: 42,
+      total_tokens: 642,
+      input_token_details: { cache_creation: 0, cache_read: 500 },
+    });
+  });
 });

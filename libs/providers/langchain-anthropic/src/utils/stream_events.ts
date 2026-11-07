@@ -11,7 +11,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
-import { buildUsageMetadata } from "./message_outputs.js";
+import { _mergeStreamUsage, buildUsageMetadata } from "./message_outputs.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -35,6 +35,7 @@ export async function* convertAnthropicStream(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Record<string, any>
   >();
+  let startUsage: object | undefined;
   let usageSnapshot: UsageMetadata | undefined;
   let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
@@ -44,6 +45,7 @@ export async function* convertAnthropicStream(
       // ── Message lifecycle ──────────────────────────────────
       case "message_start": {
         const { usage, id, model } = data.message;
+        startUsage = usage;
         if (usage && shouldStreamUsage) {
           usageSnapshot = buildUsageMetadata(usage);
         }
@@ -74,7 +76,9 @@ export async function* convertAnthropicStream(
         if (shouldStreamUsage && data.usage) {
           // Delta usage is cumulative for the whole request, so it replaces
           // the snapshot.
-          usageSnapshot = buildUsageMetadata(data.usage);
+          usageSnapshot = buildUsageMetadata(
+            _mergeStreamUsage(startUsage, data.usage)
+          );
           yield { event: "usage" as const, usage: usageSnapshot };
         }
         if (
