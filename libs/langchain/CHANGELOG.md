@@ -1,5 +1,13 @@
 # langchain
 
+## 1.6.3
+
+### Patch Changes
+
+- [#11778](https://github.com/langchain-ai/langchainjs/pull/11778) [`a6d1e1b`](https://github.com/langchain-ai/langchainjs/commit/a6d1e1b9e43c36f0e1ef262b568760afedd4641d) Thanks [@yoarajota](https://github.com/yoarajota)! - `modelRetryMiddleware` now retries errors that are subclasses of a class listed in `retryOn`. Previously the array form matched only the exact constructor, so `retryOn: [APIError]` never retried a `RateLimitError`. This matches `toolRetryMiddleware`.
+
+- [#11330](https://github.com/langchain-ai/langchainjs/pull/11330) [`642469d`](https://github.com/langchain-ai/langchainjs/commit/642469d1f384b7b96e1e3e4259c9587e3b4acd07) Thanks [@HDPark95](https://github.com/HDPark95)! - fix(langchain): preserve model errors propagated through middleware
+
 ## 1.6.2
 
 ### Patch Changes

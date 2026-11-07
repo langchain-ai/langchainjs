@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.8.2
+
+### Patch Changes
+
+- [#11846](https://github.com/langchain-ai/langchainjs/pull/11846) [`a7c960f`](https://github.com/langchain-ai/langchainjs/commit/a7c960fd1a1fa3d32717965311168667980e77a3) Thanks [@devauntea](https://github.com/devauntea)! - Base64-encode binary `Uint8Array` data in image, audio and file content blocks sent through the Chat Completions API, instead of sending comma-separated decimal bytes.
+
 ## 1.8.1
 
 ### Patch Changes
