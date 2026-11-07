@@ -48,6 +48,9 @@ export function matrixFunc(
 
 export function normalize(M: number[][], similarity = false): number[][] {
   const max = matrixMaxVal(M);
+  if (max === 0 || !Number.isFinite(max)) {
+    return M.map((row) => row.map(() => 0));
+  }
   return M.map((row) =>
     row.map((val) => (similarity ? 1 - val / max : val / max))
   );
@@ -174,6 +177,6 @@ function argMax(array: number[]): MaxInfo {
 function matrixMaxVal(arrays: number[][]): number {
   return arrays.reduce(
     (acc, array) => Math.max(acc, argMax(array).maxValue),
-    0
+    -Infinity
   );
 }
