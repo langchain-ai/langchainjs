@@ -79,6 +79,17 @@ export class InteractionsApiHandler extends GoogleChatApiHandler<
     return "/interactions";
   }
 
+  protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
+    const projectId = await this.params.apiClient.getProjectId();
+    return this.formatUrl(
+      [
+        `projects/${projectId}`,
+        `locations/${this.params.location}`,
+      ],
+      urlMethod
+    );
+  }
+
   override getHeaders(
     options?: BaseChatGoogleCallOptions
   ): Record<string, string> {
