@@ -2,7 +2,11 @@ import { test, expect, expectTypeOf, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeListChatModel,
+  FakeStreamingChatModel,
+} from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
@@ -721,4 +725,73 @@ test("Test ChatModel .invoke() with a streaming-preferring callback builds llmOu
     completionTokens: 12,
     totalTokens: 22,
   });
+});
+
+test("ends the callback run when the consumer stops streaming early", async () => {
+  const model = new FakeStreamingChatModel({
+    sleep: 0,
+    chunks: [
+      new AIMessageChunk({ content: "foo" }),
+      new AIMessageChunk({ content: "bar" }),
+    ],
+  });
+  const events: string[] = [];
+  const handler = {
+    handleLLMStart: () => {
+      events.push("start");
+    },
+    handleLLMEnd: () => {
+      events.push("end");
+    },
+    handleLLMError: () => {
+      events.push("error");
+    },
+  };
+
+  const stream = await model.stream([new HumanMessage("hello")], {
+    callbacks: [handler],
+  });
+  let received = 0;
+  for await (const chunk of stream) {
+    received += chunk ? 1 : 0;
+    break;
+  }
+  await awaitAllCallbacks();
+
+  expect(received).toBe(1);
+  expect(events).toEqual(["start", "error"]);
+});
+
+test("ends the callback run normally when a stream is fully consumed", async () => {
+  const model = new FakeStreamingChatModel({
+    sleep: 0,
+    chunks: [
+      new AIMessageChunk({ content: "foo" }),
+      new AIMessageChunk({ content: "bar" }),
+    ],
+  });
+  const events: string[] = [];
+  const handler = {
+    handleLLMStart: () => {
+      events.push("start");
+    },
+    handleLLMEnd: () => {
+      events.push("end");
+    },
+    handleLLMError: () => {
+      events.push("error");
+    },
+  };
+
+  const stream = await model.stream([new HumanMessage("hello")], {
+    callbacks: [handler],
+  });
+  let received = 0;
+  for await (const chunk of stream) {
+    received += chunk ? 1 : 0;
+  }
+  await awaitAllCallbacks();
+
+  expect(received).toBe(2);
+  expect(events).toEqual(["start", "end"]);
 });
