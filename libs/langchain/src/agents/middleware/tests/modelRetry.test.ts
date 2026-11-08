@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { ContextOverflowError, stampRetryable } from "@langchain/core/errors";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
+import { Command, interrupt } from "@langchain/langgraph";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
 
@@ -899,5 +900,53 @@ describe("Retry-After handling", () => {
 
     expect(Date.now() - start).toBeLessThan(200);
     expect(model._generate).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("Graph control-flow propagation", () => {
+  it("should not retry or swallow an interrupt raised inside the model call", async () => {
+    const checkpointer = new MemorySaver();
+    const config = { configurable: { thread_id: "retry-interrupt-thread" } };
+    const model = new FakeToolCallingModel({ toolCalls: [[]] });
+
+    /**
+     * Inner middleware interrupts the model call (e.g. an approval gate).
+     * Interrupts are control flow, not failures: they must propagate.
+     */
+    const approval = createMiddleware({
+      name: "ApprovalMiddleware",
+      wrapModelCall: async (request, handler) => {
+        interrupt({ type: "model_approval" });
+        return handler(request);
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      checkpointer,
+      middleware: [
+        modelRetryMiddleware({
+          maxRetries: 2,
+          initialDelayMs: 0,
+          jitter: false,
+        }),
+        approval,
+      ],
+    });
+
+    const first: any = await agent.invoke(
+      { messages: [new HumanMessage("hi")] },
+      config
+    );
+    expect(first.__interrupt__).toBeDefined();
+
+    const resumed: any = await agent.invoke(
+      new Command({ resume: true }),
+      config
+    );
+    expect(resumed.messages.at(-1)?.content ?? "").not.toContain(
+      "Model call failed"
+    );
   });
 });
