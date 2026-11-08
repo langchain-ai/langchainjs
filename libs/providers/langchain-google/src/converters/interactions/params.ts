@@ -288,6 +288,93 @@ export function convertSafetySettingsToInteractions(
   return result.length > 0 ? result : undefined;
 }
 
+function convertImageFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.ImageResponseFormat {
+  const imageConfig = convertFieldsToInteractionsImageConfig(
+    fields.imageConfig
+  );
+  return {
+    type: "image",
+    ...(imageConfig ?? {}),
+    ...(fields.responseMimeType?.startsWith("image/")
+      ? {
+        mime_type:
+          fields.responseMimeType as Gemini.Interactions.ImageResponseFormat["mime_type"],
+      }
+      : {}),
+  };
+}
+
+function convertAudioFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.AudioResponseFormat {
+  return {
+    type: "audio",
+    ...(fields.responseMimeType?.startsWith("audio/")
+      ? {
+        mime_type:
+          fields.responseMimeType as Gemini.Interactions.AudioResponseFormat["mime_type"],
+      }
+      : {}),
+  };
+}
+
+function convertVideoFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.VideoResponseFormat {
+  return {
+    type: "video",
+    ...(fields.responseMimeType?.startsWith("video/")
+      ? {
+        mime_type:
+          fields.responseMimeType as Gemini.Interactions.VideoResponseFormat["mime_type"],
+      }
+      : {}),
+  };
+}
+
+function fieldsToJsonSchema(fields: ChatGoogleFields): Record<string, unknown> | undefined {
+  if (fields.responseSchema) {
+    if (isInteropZodSchema(fields.responseSchema) || isSerializableSchema(fields.responseSchema)) {
+      return toJsonSchema(fields.responseSchema) as Record<string, unknown>
+    } else {
+      return fields.responseSchema as Record<string, unknown>
+    }
+  } else {
+    return undefined;
+  }
+}
+
+function convertTextFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.TextResponseFormat {
+  const jsonSchema = fieldsToJsonSchema(fields);
+  const textMimeType =
+    fields.responseMimeType === "application/json" ||
+    fields.responseMimeType === "text/plain"
+      ? fields.responseMimeType
+      : jsonSchema
+        ? "application/json"
+        : undefined;
+  return{
+    type: "text",
+    ...(textMimeType ? { mime_type: textMimeType } : {}),
+    ...(jsonSchema ? { schema: jsonSchema } : {}),
+  };
+}
+
+function convertModalityFieldsToFormat(
+  modality: string,
+  fields: ChatGoogleFields
+): Gemini.Interactions.ResponseFormat | undefined {
+  const m = modality.toUpperCase();
+  switch (m) {
+    case 'IMAGE':
+      return convertImageFieldsToFormat(fields);
+    case 'AUDIO':
+      return convertAudioFieldsToFormat(fields);
+    case 'VIDEO':
+      return convertVideoFieldsToFormat(fields);
+    case 'TEXT':
+      return convertTextFieldsToFormat(fields);
+    default:
+      return undefined;
+  }
+}
+
 /**
  * Translates `responseFormat`, `responseSchema`, `responseModalities`, `responseMimeType`,
  * and `imageConfig` into the Interactions API `response_format` field.
@@ -314,64 +401,12 @@ export function convertFieldsToInteractionsResponseFormat(
     return fields.responseFormat;
   }
 
-  const jsonSchema = fields.responseSchema
-    ? isInteropZodSchema(fields.responseSchema) ||
-      isSerializableSchema(fields.responseSchema)
-      ? (toJsonSchema(fields.responseSchema) as Record<string, unknown>)
-      : (fields.responseSchema as Record<string, unknown>)
-    : undefined;
-
   if (fields.responseModalities && fields.responseModalities.length > 0) {
     const formats: Gemini.Interactions.ResponseFormat[] = [];
-    for (const rawModality of fields.responseModalities) {
-      const modality = rawModality.toUpperCase();
-      if (modality === "IMAGE") {
-        const imageConfig = convertFieldsToInteractionsImageConfig(
-          fields.imageConfig
-        );
-        formats.push({
-          type: "image",
-          ...(imageConfig ?? {}),
-          ...(fields.responseMimeType?.startsWith("image/")
-            ? {
-                mime_type:
-                  fields.responseMimeType as Gemini.Interactions.ImageResponseFormat["mime_type"],
-              }
-            : {}),
-        });
-      } else if (modality === "AUDIO") {
-        formats.push({
-          type: "audio",
-          ...(fields.responseMimeType?.startsWith("audio/")
-            ? {
-                mime_type:
-                  fields.responseMimeType as Gemini.Interactions.AudioResponseFormat["mime_type"],
-              }
-            : {}),
-        });
-      } else if (modality === "VIDEO") {
-        formats.push({
-          type: "video",
-          ...(fields.responseMimeType?.startsWith("video/")
-            ? {
-                mime_type:
-                  fields.responseMimeType as Gemini.Interactions.VideoResponseFormat["mime_type"],
-              }
-            : {}),
-        });
-      } else if (modality === "TEXT") {
-        const textMimeType =
-          fields.responseMimeType === "application/json" ||
-          fields.responseMimeType === "text/plain"
-            ? fields.responseMimeType
-            : jsonSchema
-              ? "application/json"
-              : undefined;
-        formats.push({
-          type: "text",
-          ...(textMimeType ? { mime_type: textMimeType } : {}),
-          ...(jsonSchema ? { schema: jsonSchema } : {}),
-        });
+    for (const modality of fields.responseModalities) {
+      const format = convertModalityFieldsToFormat(modality, fields);
+      if (format) {
+        formats.push(format);
       }
     }
 
@@ -383,6 +418,7 @@ export function convertFieldsToInteractionsResponseFormat(
     }
   }
 
+  const jsonSchema: Record<string, unknown> | undefined = fieldsToJsonSchema(fields);
   if (jsonSchema) {
     return jsonSchema;
   }
