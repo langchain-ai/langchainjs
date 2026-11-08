@@ -721,6 +721,75 @@ describe("ToolNode with Commands", () => {
     ]);
   });
 
+  it.each([
+    { format: "object", names: ["alice"] },
+    { format: "tuples", names: ["alice"] },
+    { format: "object", names: ["alice", "bob"] },
+    { format: "tuples", names: ["alice", "bob"] },
+    { format: "mixed", names: ["alice", "bob"] },
+    { format: "only second", names: ["alice", "bob"] },
+  ])(
+    "preserves $format parent updates for $names Send commands",
+    async ({ format, names }) => {
+      const State = Annotation.Root({
+        messages: Annotation<BaseMessage[]>({
+          reducer: messagesStateReducer,
+          default: () => [],
+        }),
+        events: Annotation<string[]>({
+          reducer: (left, right) => left.concat(right),
+          default: () => [],
+        }),
+      });
+      const handoffTools = names.map((name, index) =>
+        tool(
+          async () =>
+            new Command({
+              graph: Command.PARENT,
+              goto: [new Send("worker", { name })],
+              update:
+                format === "only second" && index === 0
+                  ? undefined
+                  : format === "object" || (format === "mixed" && index === 0)
+                    ? { events: [name] }
+                    : [["events", [name]]],
+            }),
+          {
+            name,
+            description: `Handoff to ${name}`,
+            schema: z.object({}),
+          }
+        )
+      );
+      const child = new StateGraph(State)
+        .addNode("tools", new ToolNode(handoffTools))
+        .addEdge("__start__", "tools")
+        .addEdge("tools", "__end__")
+        .compile();
+      const worker = vi.fn((_state: typeof State.State) => ({}));
+      const parent = new StateGraph(State)
+        .addNode("child", child, { ends: ["worker"] })
+        .addNode("worker", worker)
+        .addEdge("__start__", "child")
+        .addEdge("worker", "__end__")
+        .compile();
+
+      const result = await parent.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: names.map((name) => ({ id: name, name, args: {} })),
+          }),
+        ],
+      });
+
+      expect(result.events).toEqual(format === "only second" ? ["bob"] : names);
+      expect(worker.mock.calls.map(([input]) => input)).toEqual(
+        names.map((name) => ({ name }))
+      );
+    }
+  );
+
   it("should handle parent commands with Send", async () => {
     // Create tools that return Commands with Send
     const transferToAlice = tool(
