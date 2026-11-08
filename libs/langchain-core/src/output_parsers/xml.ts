@@ -113,6 +113,29 @@ const parseParsedResult = (input: ParsedResult): XMLResult => {
   }
 };
 
+/**
+ * Extract the raw XML from a string that may be wrapped in a ```xml fence.
+ *
+ * LLMs commonly wrap XML in a markdown fence, and when the output is streamed
+ * the parser sees partial results where that fence is incomplete: a leading
+ * "`", "```xm", or an opening fence with no closing fence yet. Treat
+ * end-of-input as a closing fence so those partial results stay parseable.
+ */
+function extractXMLString(cleanedString: string): string {
+  if (cleanedString.startsWith("`")) {
+    let text = cleanedString.replace(/^`+/, "");
+    text = text.replace(/^\s*xml[ \t]*\r?\n?/i, "");
+    // Still inside the fence prefix (e.g. "`", "``", "```xm"): no XML yet.
+    if (!text.includes("<")) {
+      return "";
+    }
+    return text.replace(/\s*`+\s*$/, "");
+  }
+
+  const match = /```(?:xml)?\s*([\s\S]*?)(?:```|$)/i.exec(cleanedString);
+  return match ? match[1] : cleanedString;
+}
+
 export function parseXMLMarkdown(s: string): XMLResult {
   const cleanedString = strip(s);
   const parser = sax.parser(true);
@@ -167,8 +190,10 @@ export function parseXMLMarkdown(s: string): XMLResult {
   };
 
   // Try to find XML string within triple backticks.
-  const match = /```(xml)?(.*)```/s.exec(cleanedString);
-  const xmlString = match ? match[2] : cleanedString;
+  // While streaming, the accumulated text can end up with a partial opening
+  // fence ("`", "```xm") or no closing fence at all, so strip whatever fence
+  // characters are present instead of requiring a complete pair.
+  const xmlString = extractXMLString(cleanedString);
   parser.write(xmlString).close();
 
   // Remove the XML declaration if present
