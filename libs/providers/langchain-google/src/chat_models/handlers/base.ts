@@ -78,7 +78,6 @@ export abstract class GoogleChatApiHandler<
       [
         `projects/${projectId}`,
         `locations/${this.params.location}`,
-        `publishers/${this.params.publisher}`,
       ],
       urlMethod
     );
