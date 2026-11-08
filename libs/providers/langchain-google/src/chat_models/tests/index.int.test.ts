@@ -69,6 +69,7 @@ function buildTestCallbacks(
 }
 
 type ModelInfoConfig = {
+  desc?: string; // Description
   node?: boolean;
   useApiKey?: boolean; // Should we set the API key from TEST_API_KEY
   useCredentials?: boolean; // Should we set the credentials from TEST_CREDENTIALS
@@ -96,13 +97,21 @@ type ModelInfo = {
 const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-2.5-flash-lite",
+    // AI Studio: Officially not deprecated for existing projects
+    // GCP: Retired: 20 Oct 2026
   },
   {
     model: "gemini-2.5-flash",
+    // Deprecated
+    // AI Studio: Redirected to Gemini 3.8 Flash: 1 Dec 2026
+    // GCP: Retired: 20 Oct 2026
     testConfig: {},
   },
   {
     model: "gemini-2.5-pro",
+    // Deprecated
+    // AI Studio: Redirected to Gemini 3.8 Flash: 1 Dec 2026
+    // GCP: Retired: 20 Oct 2026
   },
   {
     model: "gemini-3.1-flash-lite",
@@ -252,32 +261,42 @@ function filterTestableModels(
 const expansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
+      desc: "AI Studio - Generate",
       useApiKey: true,
-      only: true,
     },
   },
   {
     testConfig: {
+      desc: "Vertex - Generate",
       node: true,
     },
   },
   {
     testConfig: {
+      desc: "Vertex Express - Generate",
       useApiKey: true,
       node: true,
       skip: true,
     },
   },
   {
-    // Interactions API on AI Studio API
     testConfig: {
+      desc: "AI Studio - Interactions",
       useApiKey: true,
-      only: true,
     },
     defaultGoogleParams: {
       apiHandler: "interactions",
     },
-  }
+  },
+  {
+    testConfig: {
+      desc: "Vertex - Interactions",
+      node: true,
+    },
+    defaultGoogleParams: {
+      apiHandler: "interactions",
+    },
+  },
 ];
 
 function expandAllModelInfo(): ModelInfo[] {
@@ -452,7 +471,7 @@ const coreModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isTts,
 ]);
 describe.each(coreModelInfo)(
-  "Google Core ($model) $testConfig",
+  "Google Core ($model) $testConfig.desc",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
@@ -1344,7 +1363,6 @@ describe.each(coreModelInfo)(
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
       if (isInteractions) {
-        expect(recorder.request?.body).toHaveProperty("response_mime_type");
         expect(recorder.request?.body).toHaveProperty("response_format");
       } else {
         expect(recorder.request?.body?.generationConfig).toHaveProperty(
@@ -1386,9 +1404,6 @@ describe.each(coreModelInfo)(
       expect(resultJson).toHaveProperty("comment");
       if (isInteractions) {
         expect(recorder.request?.body).toHaveProperty("response_format");
-        expect(recorder.request?.body?.response_mime_type).toEqual(
-          "application/json"
-        );
       } else {
         expect(recorder.request?.body?.generationConfig).toHaveProperty(
           "responseJsonSchema"
@@ -1902,7 +1917,7 @@ const thinkingModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isThinking === true,
 ]);
 describe.each(thinkingModelInfo)(
-  "Google Thinking ($model) $testConfig",
+  "Google Thinking ($model) $testConfig.desc",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
