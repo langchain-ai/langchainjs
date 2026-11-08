@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, type BaseMessage } from "@langchain/core/messages";
+import type { ChatResult } from "@langchain/core/outputs";
+import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
@@ -225,4 +227,156 @@ describe("ModelCallLimitMiddleware", () => {
       });
     }
   );
+});
+
+describe("run limit state across runs", () => {
+  it("should start a new run with a fresh run count after a failed run", async () => {
+    const checkpointer = new MemorySaver();
+    const config = {
+      configurable: {
+        thread_id: "failed-run-thread",
+      },
+    };
+    const middleware = modelCallLimitMiddleware({
+      runLimit: 2,
+      exitBehavior: "end",
+    });
+
+    class FailAfterFirstCall extends FakeToolCallingChatModel {
+      async _generate(
+        messages: BaseMessage[],
+        options: this["ParsedCallOptions"],
+        runManager?: CallbackManagerForLLMRun
+      ): Promise<ChatResult> {
+        if (this.idx >= 1) {
+          throw new Error("model exploded");
+        }
+        return super._generate(messages, options, runManager);
+      }
+    }
+
+    /**
+     * First run: one model call (a tool call), then the model explodes, so
+     * the run fails before the afterAgent hook can reset the run count.
+     */
+    const failingModel = new FailAfterFirstCall({
+      responses: [toolCallMessage1],
+      sleep: 0,
+    });
+    const agent1 = createAgent({
+      model: failingModel,
+      tools,
+      checkpointer,
+      middleware: [middleware],
+    });
+    await expect(
+      agent1.invoke({ messages: ["Hello"] }, config)
+    ).rejects.toThrow("model exploded");
+
+    /**
+     * Second run on the same thread: a new run must start with a fresh
+     * run-level count, so a single model call is within the limit.
+     */
+    const workingModel = new FakeToolCallingChatModel({
+      // two model calls (tool call + final answer), exactly at the limit.
+      // Fresh message instances are required so the run 2 messages do not
+      // reuse run 1 ids (the messages channel dedupes by id).
+      responses: [
+        new AIMessage({
+          content: "foo",
+          tool_calls: [
+            { id: "call_2", name: "tool_1", args: { arg1: "arg1" } },
+          ],
+        }),
+        new AIMessage({ content: "baz" }),
+      ],
+      sleep: 0,
+    });
+    const agent2 = createAgent({
+      model: workingModel,
+      tools,
+      checkpointer,
+      middleware: [middleware],
+    });
+    const result = await agent2.invoke({ messages: ["Again"] }, config);
+    expect(result.messages.at(-1)?.content).toBe("baz");
+  });
+
+  it("should start a new run with a fresh run count after a run ended by the limit", async () => {
+    const checkpointer = new MemorySaver();
+    const config = {
+      configurable: {
+        thread_id: "limited-run-thread",
+      },
+    };
+    const middleware = modelCallLimitMiddleware({
+      runLimit: 2,
+      exitBehavior: "end",
+    });
+
+    /**
+     * First run: 3 model calls trip the run limit and jump to the end, so
+     * the afterAgent hook never gets to reset the run count.
+     */
+    const limitedModel = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "foo",
+          tool_calls: [
+            { id: "call_a", name: "tool_1", args: { arg1: "arg1" } },
+          ],
+        }),
+        new AIMessage({
+          content: "bar",
+          tool_calls: [
+            { id: "call_b", name: "tool_1", args: { arg1: "arg1" } },
+          ],
+        }),
+        new AIMessage({
+          content: "fuz",
+          tool_calls: [
+            { id: "call_c", name: "tool_1", args: { arg1: "arg1" } },
+          ],
+        }),
+      ],
+      sleep: 0,
+    });
+    const agent1 = createAgent({
+      model: limitedModel,
+      tools,
+      checkpointer,
+      middleware: [middleware],
+    });
+    const limitedResult = await agent1.invoke({ messages: ["Hello"] }, config);
+    expect(limitedResult.messages.at(-1)?.content).toContain(
+      "Model call limits exceeded"
+    );
+
+    /**
+     * Second run on the same thread: a new run must start with a fresh
+     * run-level count, so two model calls (exactly at the limit) pass.
+     * Fresh message instances are required so the run 2 messages do not
+     * reuse run 1 ids (the messages channel dedupes by id).
+     */
+    const workingModel = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "foo",
+          tool_calls: [
+            { id: "call_d", name: "tool_1", args: { arg1: "arg1" } },
+          ],
+        }),
+        new AIMessage({ content: "baz" }),
+      ],
+      sleep: 0,
+    });
+    const agent2 = createAgent({
+      model: workingModel,
+      tools,
+      checkpointer,
+      middleware: [middleware],
+    });
+    const result = await agent2.invoke({ messages: ["Again"] }, config);
+    expect(result.messages.at(-1)?.content).toBe("baz");
+  });
 });
