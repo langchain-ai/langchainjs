@@ -30,9 +30,7 @@ import {
 } from "../../converters/interactions/tools.js";
 import {
   combineInteractionsFields,
-  convertFieldsToInteractionsImageConfig,
   convertFieldsToInteractionsResponseFormat,
-  convertFieldsToInteractionsResponseModalities,
   convertFieldsToInteractionsServiceTier,
   convertFieldsToInteractionsSpeechConfig,
   convertFieldsToInteractionsThinking,
@@ -442,19 +440,10 @@ export class InteractionsApiHandler extends GoogleChatApiHandler<
       fields
     );
     const speechConfig = convertFieldsToInteractionsSpeechConfig(fields);
-    const imageConfig = convertFieldsToInteractionsImageConfig(
-      fields.imageConfig
-    );
     const responseFormat = convertFieldsToInteractionsResponseFormat(fields);
-    const responseModalities =
-      convertFieldsToInteractionsResponseModalities(fields);
     const safetySettings = convertSafetySettingsToInteractions(
       fields.safetySettings
     );
-
-    const responseMimeType =
-      fields.responseMimeType ??
-      (fields.responseSchema ? "application/json" : undefined);
 
     const generationConfig: Gemini.Interactions.GenerationConfig = {
       ...(fields.temperature !== undefined
@@ -478,14 +467,6 @@ export class InteractionsApiHandler extends GoogleChatApiHandler<
       ...thinking,
       ...(speechConfig ? { speech_config: speechConfig } : {}),
       ...(toolChoice ? { tool_choice: toolChoice } : {}),
-      ...(imageConfig
-        ? {
-            image_config: {
-              type: "image",
-              ...imageConfig,
-            },
-          }
-        : {}),
     };
 
     const hasGenerationConfig = Object.keys(generationConfig).length > 0;
@@ -499,10 +480,6 @@ export class InteractionsApiHandler extends GoogleChatApiHandler<
         : { model: this.params.model }),
       ...(tools && tools.length > 0 ? { tools } : {}),
       ...(responseFormat ? { response_format: responseFormat } : {}),
-      ...(responseMimeType ? { response_mime_type: responseMimeType } : {}),
-      ...(responseModalities
-        ? { response_modalities: responseModalities }
-        : {}),
       ...(safetySettings ? { safety_settings: safetySettings } : {}),
       ...(hasGenerationConfig ? { generation_config: generationConfig } : {}),
       ...convertFieldsToInteractionsServiceTier(this.params.platform, fields),
