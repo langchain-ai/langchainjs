@@ -340,16 +340,19 @@ function fieldsToJsonSchema(fields: ChatGoogleFields): Record<string, unknown> |
   }
 }
 
-function convertTextFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.TextResponseFormat {
+function convertTextFieldsToFormat(
+  fields: ChatGoogleFields
+): Gemini.Interactions.TextResponseFormat {
   const jsonSchema = fieldsToJsonSchema(fields);
   const textMimeType =
     fields.responseMimeType === "application/json" ||
-    fields.responseMimeType === "text/plain"
-      ? fields.responseMimeType
+    fields.responseMimeType === "text/plain" ||
+    fields.responseMimeType?.startsWith("text/")
+      ? (fields.responseMimeType as Gemini.Interactions.TextResponseFormat["mime_type"])
       : jsonSchema
         ? "application/json"
         : undefined;
-  return{
+  return {
     type: "text",
     ...(textMimeType ? { mime_type: textMimeType } : {}),
     ...(jsonSchema ? { schema: jsonSchema } : {}),
@@ -362,13 +365,13 @@ function convertModalityFieldsToFormat(
 ): Gemini.Interactions.ResponseFormat | undefined {
   const m = modality.toUpperCase();
   switch (m) {
-    case 'IMAGE':
+    case "IMAGE":
       return convertImageFieldsToFormat(fields);
-    case 'AUDIO':
+    case "AUDIO":
       return convertAudioFieldsToFormat(fields);
-    case 'VIDEO':
+    case "VIDEO":
       return convertVideoFieldsToFormat(fields);
-    case 'TEXT':
+    case "TEXT":
       return convertTextFieldsToFormat(fields);
     default:
       return undefined;
@@ -418,60 +421,33 @@ export function convertFieldsToInteractionsResponseFormat(
     }
   }
 
-  const jsonSchema: Record<string, unknown> | undefined = fieldsToJsonSchema(fields);
+  const jsonSchema: Record<string, unknown> | undefined =
+    fieldsToJsonSchema(fields);
   if (jsonSchema) {
     return jsonSchema;
   }
 
   if (fields.responseMimeType) {
     if (fields.responseMimeType.startsWith("image/")) {
-      const imageConfig = convertFieldsToInteractionsImageConfig(
-        fields.imageConfig
-      );
-      return {
-        type: "image",
-        ...(imageConfig ?? {}),
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.ImageResponseFormat["mime_type"],
-      };
+      return convertImageFieldsToFormat(fields);
     }
     if (fields.responseMimeType.startsWith("audio/")) {
-      return {
-        type: "audio",
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.AudioResponseFormat["mime_type"],
-      };
+      return convertAudioFieldsToFormat(fields);
     }
     if (fields.responseMimeType.startsWith("video/")) {
-      return {
-        type: "video",
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.VideoResponseFormat["mime_type"],
-      };
+      return convertVideoFieldsToFormat(fields);
     }
     if (
       fields.responseMimeType === "application/json" ||
       fields.responseMimeType === "text/plain" ||
       fields.responseMimeType.startsWith("text/")
     ) {
-      return {
-        type: "text",
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.TextResponseFormat["mime_type"],
-      };
+      return convertTextFieldsToFormat(fields);
     }
   }
 
-  if (fields.imageConfig) {
-    const imageConfig = convertFieldsToInteractionsImageConfig(
-      fields.imageConfig
-    );
-    if (imageConfig) {
-      return {
-        type: "image",
-        ...imageConfig,
-      };
-    }
+  if (convertFieldsToInteractionsImageConfig(fields.imageConfig)) {
+    return convertImageFieldsToFormat(fields);
   }
 
   return undefined;
