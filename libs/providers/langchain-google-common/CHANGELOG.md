@@ -1,5 +1,11 @@
 # @langchain/google-common
 
+## 2.3.6
+
+### Patch Changes
+
+- [#12141](https://github.com/langchain-ai/langchainjs/pull/12141) [`4585842`](https://github.com/langchain-ai/langchainjs/commit/4585842d7e7d04ca14dc8976569c7984ad97218d) Thanks [@hntrl](https://github.com/hntrl)! - Only route Google chat models through the LangSmith gateway when no credentials are passed. Explicit `apiKey`, `authOptions`, `credentials`, or `googleAuthOptions` now go straight to Google.
+
 ## 2.3.5
 
 ### Patch Changes
