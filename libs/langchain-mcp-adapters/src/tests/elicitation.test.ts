@@ -171,11 +171,16 @@ describe("elicitation answers", () => {
 });
 
 /** Why each failing scenario is refused, and whether it reached the callback. */
-const legacyFailures: Record<string, { reason: string; asked: string[] }> = {
+const legacyFailures: Record<
+  string,
+  { reason: string; asked: string[]; notFrom?: string }
+> = {
   // The requested schema, not just the result envelope, rejects the answer.
+  // The adapter refuses it before the SDK 1 server's own re-check runs.
   invalid: {
     reason: "data/confirm must be boolean",
     asked: ["Approve legacy?"],
+    notFrom: "does not match requested schema",
   },
   throws: { reason: "Application rejected input", asked: ["Approve legacy?"] },
   // Refused before the question reaches an application that cannot answer it.
@@ -231,11 +236,12 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
         expect(await tool.invoke({})).toBe(scenario);
         expect(questions).toEqual(["Approve legacy?"]);
       } else {
-        const { reason, asked } = legacyFailures[scenario];
+        const { reason, asked, notFrom } = legacyFailures[scenario];
         const failure = await tool.invoke({}).catch((error: unknown) => error);
 
         expect(failure).toBeInstanceOf(Error);
         expect((failure as Error).message).toContain(reason);
+        if (notFrom) expect((failure as Error).message).not.toContain(notFrom);
         // Whether the application was consulted at all is part of the contract.
         expect(questions).toEqual(asked);
       }

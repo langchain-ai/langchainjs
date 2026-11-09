@@ -1,133 +1,130 @@
 # LangChain.js MCP Adapters
 
-Use tools from [Model Context Protocol](https://modelcontextprotocol.io) servers
-in LangChain and LangGraph. `MCPAdapter` manages connections to one or more
-servers and returns executable LangChain tools.
+[![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Documentation**: To learn more about using MCP servers with LangChain, check
-out [the docs](https://docs.langchain.com/oss/javascript/langchain/mcp).
+Give your LangChain agents access to tools from [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
+servers. `@langchain/mcp-adapters` manages connections and converts MCP tools
+and results into LangChain formats, ready to use with `createAgent` or a custom
+LangGraph workflow.
+
+- **Connect your tools**: discover tools from multiple local or remote servers.
+- **Control tool execution**: authenticate connections, customize arguments and
+  results with hooks, and receive progress updates.
+- **Choose what the model sees**: use text and multimodal results as model input,
+  or keep outputs in artifacts for your application to process.
+- **Ask for user input**: pause an agent when a modern MCP server requests a form
+  response or a URL visit, then resume with the user's response.
+
+**[Read the MCP guide](https://docs.langchain.com/oss/javascript/langchain/mcp)**
+for concepts, configuration, and advanced usage.
 
 ## Install
+
+Requires Node.js 20.10 or later. Install the adapter and its LangChain peers:
 
 ```bash
 npm install @langchain/mcp-adapters @langchain/core @langchain/langgraph
 ```
 
-The adapter includes the official MCP SDK client. Install the SDK separately
-only when your application imports it directly.
+The adapter requires `@langchain/core ^1.2.6` and `@langchain/langgraph ^1.4.13`.
+It includes the MCP SDK client; install the SDK separately only if your application
+imports it directly.
 
-## Connect and invoke a tool
+## Quickstart: give an agent MCP tools
 
-Start the [local modern server example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/modern_server.ts),
-then invoke its `echo` tool without a model:
+This example connects an agent to the public [LangChain docs MCP server](https://docs.langchain.com/use-these-docs)
+so it can look up documentation. You do not need to run a server or configure
+authentication for this MCP endpoint.
+
+Install LangChain and the model integration used below:
+
+```bash
+npm install langchain @langchain/openai
+```
+
+Set `OPENAI_API_KEY` in your environment, then run:
 
 ```ts
+import { createAgent } from "langchain";
+import { ChatOpenAI } from "@langchain/openai";
 import { MCPAdapter } from "@langchain/mcp-adapters";
 
 const adapter = new MCPAdapter({
-  servers: { local: { url: "http://127.0.0.1:3001/mcp" } },
+  servers: {
+    docs: { url: "https://docs.langchain.com/mcp" },
+  },
 });
 
 try {
   const tools = await adapter.listTools();
-  const echo = tools.find((tool) => tool.name === "local__echo");
-  if (!echo) throw new Error("The server did not provide echo");
+  const agent = createAgent({
+    model: new ChatOpenAI({ model: "gpt-4.1-mini" }),
+    tools,
+  });
 
-  const result = await echo.invoke({ message: "Hello MCP" });
-  console.log(result);
+  const result = await agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content: "How do I add short-term memory to a LangChain agent?",
+      },
+    ],
+  });
+  console.log(result.messages.at(-1)?.content);
 } finally {
   await adapter.close();
 }
 ```
 
-For your own server, replace the URL, tool name and arguments. `listTools()`
-returns LangChain tools, which you can pass directly to `createAgent`'s `tools`
-option. See the [agent example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/langgraph_example.ts).
-Install `langchain` and configure your model credentials for agent usage. Keep
-the adapter open until the agent finishes using its tools.
+Keep the adapter open while your agent uses its tools, then call `close()` when
+finished. Connections open as needed. `listTools()` returns executable LangChain
+tools, which you can also invoke directly without a model or use in a custom
+LangGraph workflow.
 
-## Mix modern and legacy servers
+## Tools that request user input
 
-Omit `mode` to let the SDK negotiate with each server automatically:
+MCP tools can ask users to complete a form or visit a URL before continuing.
+For modern MCP servers, the adapter pauses the agent through a LangGraph
+interrupt so your application can collect a response and resume the run.
 
-```ts
-const adapter = new MCPAdapter({
-  servers: {
-    modern: { url: "https://example.com/mcp" },
-    legacy: {
-      command: "node",
-      args: ["./legacy-server.js"],
-    },
-  },
-});
-```
+Configure a checkpointer for these workflows. Tools that do not request input
+can run without one. See the [tools guide](https://docs.langchain.com/oss/javascript/langchain/mcp/tools)
+for handling requests and resuming execution.
 
-Tool names are prefixed with their server's name (`modern__echo`), even with a
-single server, so adding a server never renames the tools you already have. Set
-`prefixToolNameWithServerName: false` to keep raw names. `listTools()` throws an
-`MCPClientError` if two tools in the flattened result share a name. Set `mode: "legacy"`
-to skip probing and enable legacy options such as `onElicitation` and
-`onInitialized`. Set `mode: "modern"` to require MCP revision
-[`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
-without fallback. SDK 2 can serve either protocol.
+## Documentation and examples
 
-## Configuration and lifecycle
+| I want to…                                                           | Start here                                                                                                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Connect local or remote servers, manage connections, or select tools | [Connections](https://docs.langchain.com/oss/javascript/langchain/mcp/connections)                                                   |
+| Authenticate with tokens or OAuth                                    | [Authentication](https://docs.langchain.com/oss/javascript/langchain/mcp/auth)                                                       |
+| Customize tool calls, handle results, or collect user input          | [Tools](https://docs.langchain.com/oss/javascript/langchain/mcp/tools)                                                               |
+| Modify tool arguments and results                                    | [Hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)                 |
+| Work with multimodal content and artifacts                           | [Content example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/content.ts)             |
+| Receive server messages and tool progress                            | [Notifications example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/notifications.ts) |
+| Run a local example without model credentials                        | [Example setup and walkthroughs](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples)         |
 
-Construction validates options with Zod 4 and opens no connections. Discovery
-and invocation open connections as needed. Use `listTools("serverName")` to
-select tools and always await `close()` when finished.
+If you already manage an MCP SDK client, use `loadMcpTools()` to adapt its tools
+without handing connection management to `MCPAdapter`.
 
-`close()` cancels active discovery before it can open remaining servers, even
-when connection errors are ignored or handled asynchronously. The adapter can
-be reused afterwards; a later discovery opens fresh connections.
+## Upgrading from 1.x
 
-`adapter.config.servers` exposes an isolated configuration snapshot. Changing
-the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
-and auth provider instances retain their identity; the snapshot is runtime configuration,
-not a redacted diagnostic object.
+Use `MCPAdapter`, `{ servers: { ... } }`, and `listTools()` for new code.
+`MultiServerMCPClient`, `mcpServers`, and `getTools()` remain available as
+deprecated compatibility APIs.
 
-Put notification and progress callbacks on the server that should receive them.
-Global tool hooks, naming, output routing and load-error policies remain adapter
-options. Invalid mode/transport combinations fail before opening a connection.
+Version 2 also changes tool-name defaults, configuration, connection behavior,
+and tool results. Review the [migration guide](https://docs.langchain.com/oss/javascript/migrate/langchain-mcp-adapters)
+before upgrading, including any approval rules that refer to tool names.
 
-## Tool results and hooks
+## Acknowledgements
 
-Tool content uses standard LangChain blocks. Images and audio expose `data` and
-`mimeType`; artifact-routed blocks retain their MCP representation.
-`outputHandling` controls what reaches the model versus the tool artifact.
+Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www.knacklabs.ai) for the initial implementation!
 
-A server-reported error (`isError`) reaches the model as a `ToolMessage` with
-`status: "error"`, even under `wrapToolCall` middleware. The server's error
-text always reaches the model; its other content follows `outputHandling`.
-Invoked with plain arguments rather than a tool call, the tool throws a
-`ToolException` whose `result` is the MCP result.
+## Contributing
 
-Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
-[hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
-for argument and result hooks. `afterToolCall` sees successful results only.
+Contributions are welcome! See the [contributing guidelines](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md).
 
-## Authentication
+## License
 
-`authProvider` takes either SDK provider shape:
-
-- `{ token, onUnauthorized? }` (`AuthProvider`) for tokens your application
-  manages. `token()` runs before every request; `onUnauthorized()` runs once
-  on a 401 before the request is retried.
-- An `OAuthClientProvider` for OAuth. The SDK handles discovery, registration,
-  exchange and refresh; your application owns storage, redirects and the
-  callback. Implement `invalidateCredentials()` so a refresh the server
-  rejects restarts the login instead of failing. When a connection needs a
-  login, the thrown `MCPClientError` has an `UnauthorizedError` as its
-  `cause`.
-
-Once a provider has a token it replaces a configured `Authorization` header;
-until then the header is sent.
-
-## Examples
-
-- [Examples](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples): local servers, mixed modes, agents and hooks.
-
-`MultiServerMCPClient`, `getTools()` and `mcpServers` input remain deprecated
-compatibility APIs. Use `MCPAdapter`, `listTools()` and `servers` for new code.
-
-MIT licensed.
+MIT

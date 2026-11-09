@@ -283,9 +283,78 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
       });
     });
+
+    it("base64-encodes binary image data", () => {
+      const block = {
+        type: "image",
+        data: new Uint8Array([82, 73, 70, 70]),
+        mimeType: "image/png",
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "image_url",
+        image_url: { url: "data:image/png;base64,UklGRg==" },
+      });
+    });
+
+    it("base64-encodes binary audio data", () => {
+      const block = {
+        type: "audio",
+        data: new Uint8Array([82, 73, 70, 70]),
+        mimeType: "audio/wav",
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "input_audio",
+        input_audio: { data: "UklGRg==", format: "wav" },
+      });
+    });
+
+    it("base64-encodes binary file data", () => {
+      const block = {
+        type: "file",
+        data: new Uint8Array([82, 73, 70, 70]),
+        mimeType: "application/pdf",
+        metadata: { filename: "sample.pdf" },
+      } as any;
+
+      const result = convertStandardContentBlockToCompletionsContentPart(block);
+      expect(result).toEqual({
+        type: "file",
+        file: {
+          file_data: "data:application/pdf;base64,UklGRg==",
+          filename: "sample.pdf",
+        },
+      });
+    });
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it("base64-encodes binary data in HumanMessage contentBlocks", () => {
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "audio",
+            data: new Uint8Array([82, 73, 70, 70]),
+            mimeType: "audio/wav",
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "input_audio",
+          input_audio: { data: "UklGRg==", format: "wav" },
+        },
+      ]);
+    });
+
     it("preserves prompt cache breakpoints and drops other extras", () => {
       const message = new HumanMessage({
         content: [
@@ -832,5 +901,97 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         ],
       });
     });
+  });
+});
+
+describe("non_standard content on Chat Completions", () => {
+  it("forwards the provider payload of a wrapped block, not the wrapper", () => {
+    const audio = {
+      type: "input_audio",
+      input_audio: { data: "UklGRg==", format: "wav" },
+    };
+
+    const result = convertMessagesToCompletionsMessageParams({
+      messages: [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "Transcribe this." },
+            { type: "non_standard", value: audio },
+          ],
+        }),
+      ],
+      model: "gpt-4o-audio-preview",
+    });
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        content: [{ type: "text", text: "Transcribe this." }, audio],
+      },
+    ]);
+  });
+});
+
+describe("additional_tools on Chat Completions", () => {
+  const additionalTools = {
+    type: "additional_tools",
+    role: "developer",
+    tools: [{ type: "function", name: "get_customer", parameters: {} }],
+  };
+
+  it.each([
+    ["bare", () => new SystemMessage({ content: [additionalTools] })],
+    [
+      "wrapped",
+      () =>
+        new SystemMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "contentBlocks",
+      () =>
+        new SystemMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+  ])(
+    "rejects a %s block on a SystemMessage, naming the Responses API",
+    (_spelling, makeMessage) => {
+      expect(() =>
+        convertMessagesToCompletionsMessageParams({
+          messages: [makeMessage(), new HumanMessage("Hi")],
+          model: "gpt-4o",
+        })
+      ).toThrow(
+        "`additional_tools` requires the Responses API and cannot be sent via Chat Completions. Set `useResponsesApi: true`."
+      );
+    }
+  );
+
+  it("rejects the block on any other message, naming SystemMessage", () => {
+    expect(() =>
+      convertMessagesToCompletionsMessageParams({
+        messages: [
+          new HumanMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+          }),
+        ],
+        model: "gpt-4o",
+      })
+    ).toThrow("`additional_tools` must be carried on a `SystemMessage`");
+  });
+
+  it("does not reject the block on an assistant message", () => {
+    expect(() =>
+      convertMessagesToCompletionsMessageParams({
+        messages: [
+          new AIMessage({
+            content: [{ type: "non_standard", value: additionalTools }],
+          }),
+        ],
+        model: "gpt-4o",
+      })
+    ).not.toThrow();
   });
 });

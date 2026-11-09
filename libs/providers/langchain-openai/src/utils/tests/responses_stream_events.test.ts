@@ -264,6 +264,23 @@ describe("convertOpenAIResponsesStream", () => {
     expect(usage.usage.output_tokens).toBe(20);
   });
 
+  test("message-finish carries the served model as model_name", async () => {
+    const events = await collectEvents([
+      {
+        type: "response.created",
+        response: { id: "resp_m", model: "gpt-5.4-2026-03-05" },
+      } as RawEvent,
+      completedResponse({ id: "resp_m", model: "gpt-5.4-2026-03-05" }),
+    ]);
+
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      responseMetadata: {
+        model: "gpt-5.4-2026-03-05",
+        model_name: "gpt-5.4-2026-03-05",
+      },
+    });
+  });
+
   test("streamUsage false suppresses usage", async () => {
     const out: ChatModelStreamEvent[] = [];
     for await (const event of convertOpenAIResponsesStream(

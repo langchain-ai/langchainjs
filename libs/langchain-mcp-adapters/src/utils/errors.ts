@@ -3,10 +3,18 @@ import type { CallToolResult } from "@modelcontextprotocol/client";
 import { UnauthorizedError } from "@modelcontextprotocol/client";
 import { z } from "zod";
 
+const mcpNs = ns.sub("mcp");
+const MCPClientErrorBase: typeof LangChainError = mcpNs.brand(
+  LangChainError,
+  "client"
+);
+const ToolExceptionBase: typeof LangChainError = mcpNs.brand(
+  LangChainError,
+  "tool"
+);
+
 /** An operational failure while connecting to or using an MCP server. */
-export class MCPClientError extends ns
-  .sub("mcp")
-  .brand(LangChainError, "client") {
+export class MCPClientError extends MCPClientErrorBase {
   readonly name = "MCPClientError";
 
   constructor(
@@ -23,7 +31,7 @@ export class MCPClientError extends ns
 /**
  * Custom error class for tool exceptions
  */
-export class ToolException extends ns.sub("mcp").brand(LangChainError, "tool") {
+export class ToolException extends ToolExceptionBase {
   readonly name = "ToolException";
   readonly result?: CallToolResult;
 
@@ -65,9 +73,7 @@ const MAX_CAUSE_WALK_DEPTH = 3;
 /**
  * Whether `error`, or a cause up to {@link MAX_CAUSE_WALK_DEPTH} hops down
  * its `.cause` chain, means the server wants credentials: the SDK's
- * `UnauthorizedError` (provider flows, no HTTP status) or an HTTP 401. Two
- * hops handles the legacy HTTP→SSE fallback, which wraps its own
- * `MCPClientError` around the SSE 401.
+ * `UnauthorizedError` (provider flows, no HTTP status) or an HTTP 401.
  */
 export function isAuthenticationError(error: unknown): boolean {
   const matches = (value: unknown) =>

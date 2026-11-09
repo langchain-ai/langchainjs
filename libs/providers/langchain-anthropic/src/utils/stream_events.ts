@@ -4,7 +4,6 @@
  * @module
  */
 
-import type Anthropic from "@anthropic-ai/sdk";
 import type {
   ChatModelStreamEvent,
   ContentBlockDelta,
@@ -12,6 +11,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
+import { _mergeStreamUsage, buildUsageMetadata } from "./message_outputs.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -35,6 +35,7 @@ export async function* convertAnthropicStream(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Record<string, any>
   >();
+  let startUsage: object | undefined;
   let usageSnapshot: UsageMetadata | undefined;
   let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
@@ -44,8 +45,9 @@ export async function* convertAnthropicStream(
       // ── Message lifecycle ──────────────────────────────────
       case "message_start": {
         const { usage, id, model } = data.message;
+        startUsage = usage;
         if (usage && shouldStreamUsage) {
-          usageSnapshot = buildUsageSnapshot(usage);
+          usageSnapshot = buildUsageMetadata(usage);
         }
         yield {
           event: "message-start" as const,
@@ -72,23 +74,11 @@ export async function* convertAnthropicStream(
           responseMetadata = { usage: { cost: data.usage.cost } };
         }
         if (shouldStreamUsage && data.usage) {
-          if (!usageSnapshot) {
-            usageSnapshot = {
-              input_tokens: 0,
-              output_tokens: data.usage.output_tokens,
-              total_tokens: data.usage.output_tokens,
-            };
-          } else {
-            usageSnapshot = {
-              ...usageSnapshot,
-              output_tokens:
-                usageSnapshot.output_tokens + data.usage.output_tokens,
-              total_tokens:
-                usageSnapshot.input_tokens +
-                usageSnapshot.output_tokens +
-                data.usage.output_tokens,
-            };
-          }
+          // Delta usage is cumulative for the whole request, so it replaces
+          // the snapshot.
+          usageSnapshot = buildUsageMetadata(
+            _mergeStreamUsage(startUsage, data.usage)
+          );
           yield { event: "usage" as const, usage: usageSnapshot };
         }
         if (
@@ -137,11 +127,13 @@ export async function* convertAnthropicStream(
         const { contentDelta, accumulated } = applyAnthropicDelta(acc, delta);
         blockAccumulators.set(index, accumulated);
 
-        yield {
-          event: "content-block-delta" as const,
-          index,
-          delta: contentDelta,
-        };
+        if (contentDelta) {
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: contentDelta,
+          };
+        }
         break;
       }
 
@@ -190,25 +182,6 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
   }
 }
 
-function buildUsageSnapshot(
-  usage: Anthropic.Messages.Usage | Record<string, number>
-): UsageMetadata {
-  const cacheCreation =
-    (usage as Record<string, number>).cache_creation_input_tokens ?? 0;
-  const cacheRead =
-    (usage as Record<string, number>).cache_read_input_tokens ?? 0;
-  const totalInput = usage.input_tokens + cacheCreation + cacheRead;
-  return {
-    input_tokens: totalInput,
-    output_tokens: usage.output_tokens,
-    total_tokens: totalInput + usage.output_tokens,
-    input_token_details: {
-      cache_creation: cacheCreation,
-      cache_read: cacheRead,
-    },
-  };
-}
-
 function mapBlockToContentBlock(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   block: any,
@@ -249,7 +222,8 @@ function mapBlockToContentBlock(
 
 /**
  * Map an Anthropic content_block_delta to a content block delta
- * and update the accumulated state.
+ * and update the accumulated state. `contentDelta` is undefined when
+ * there's nothing new to send.
  */
 function applyAnthropicDelta(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -257,7 +231,7 @@ function applyAnthropicDelta(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   delta: any
 ): {
-  contentDelta: ContentBlockDelta;
+  contentDelta: ContentBlockDelta | undefined;
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   accumulated: Record<string, any>;
 } {
@@ -284,13 +258,33 @@ function applyAnthropicDelta(
       };
 
     case "input_json_delta": {
-      const newArgs = (accumulated.args ?? "") + delta.partial_json;
+      // `tool-call-delta` is for tool calls only. Other blocks that stream
+      // JSON input, such as `mcp_tool_use`, keep sending `block-delta`.
+      if (
+        accumulated.type !== "tool_call_chunk" &&
+        accumulated.type !== "server_tool_call_chunk"
+      ) {
+        const newArgs = (accumulated.args ?? "") + delta.partial_json;
+        return {
+          contentDelta: {
+            type: "block-delta" as const,
+            fields: { type: accumulated.type, args: newArgs },
+          },
+          accumulated: { ...accumulated, args: newArgs },
+        };
+      }
+      if (!delta.partial_json) {
+        return { contentDelta: undefined, accumulated };
+      }
       return {
         contentDelta: {
-          type: "block-delta" as const,
-          fields: { type: accumulated.type, args: newArgs },
+          type: "tool-call-delta" as const,
+          args: delta.partial_json,
         },
-        accumulated: { ...accumulated, args: newArgs },
+        accumulated: {
+          ...accumulated,
+          args: (accumulated.args ?? "") + delta.partial_json,
+        },
       };
     }
 

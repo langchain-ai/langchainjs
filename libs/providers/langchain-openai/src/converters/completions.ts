@@ -36,10 +36,12 @@ import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import {
   applyPromptCacheBreakpoint,
+  assertAdditionalToolsPlacement,
   getRequiredFilenameFromMetadata,
   isReasoningModel,
   liftExtrasPromptCacheBreakpoint,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 
 /**
@@ -482,6 +484,10 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   }
 };
 
+// Standard data blocks accept either a base64 string or raw bytes.
+const toBase64 = (data: string | Uint8Array): string =>
+  typeof data === "string" ? data : Buffer.from(data).toString("base64");
+
 /**
  * Converts a standard LangChain content block to an OpenAI Completions API content part.
  *
@@ -529,7 +535,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "image_url",
         image_url: {
-          url: `data:${block.mimeType};base64,${block.data}`,
+          url: `data:${block.mimeType};base64,${toBase64(block.data)}`,
         },
       };
     }
@@ -546,7 +552,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "input_audio",
         input_audio: {
-          data: block.data.toString(),
+          data: toBase64(block.data),
           format,
         },
       };
@@ -559,7 +565,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "file",
         file: {
-          file_data: `data:${block.mimeType};base64,${block.data}`,
+          file_data: `data:${block.mimeType};base64,${toBase64(block.data)}`,
           filename: filename,
         },
       };
@@ -645,6 +651,7 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   { message: BaseMessage; model?: string },
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam
 > = ({ message, model }) => {
+  assertAdditionalToolsPlacement(message, "chat/completions");
   let role = messageToOpenAIRole(message);
   if (role === "system" && isReasoningModel(model)) {
     role = "developer";
@@ -813,6 +820,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     ) {
       return convertStandardContentMessageToCompletionsMessage({ message });
     }
+    assertAdditionalToolsPlacement(message, "chat/completions");
     let role = messageToOpenAIRole(message);
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
@@ -821,7 +829,8 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     const content =
       typeof message.content === "string"
         ? message.content
-        : message.content.flatMap((m) => {
+        : message.content.flatMap((block) => {
+            const m = unwrapNonStandard(block);
             if (isDataContentBlock(m)) {
               return applyPromptCacheBreakpoint(
                 m,

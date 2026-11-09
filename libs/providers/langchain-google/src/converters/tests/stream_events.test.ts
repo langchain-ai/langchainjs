@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertGoogleGeminiStream } from "../stream_events.js";
+import { convertGoogleGeminiStream } from "../generate_content/stream_events.js";
 
 async function collectEvents(
   chunks: Record<string, unknown>[]
@@ -206,7 +206,11 @@ describe("convertGoogleGeminiStream", () => {
 
     const deltaIds = events
       .filter((e) => e.event === "content-block-delta")
-      .map((e) => (e as { delta: { fields: { id: string } } }).delta.fields.id);
+      .map(
+        (e) =>
+          (e as unknown as { delta: { fields: { id: string } } }).delta.fields
+            .id
+      );
     const startId = (
       events.find((e) => e.event === "content-block-start") as {
         content: { id: string };

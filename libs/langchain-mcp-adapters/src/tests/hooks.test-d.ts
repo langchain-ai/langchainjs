@@ -1,10 +1,14 @@
 import {
   MCPAdapter,
+  createMCPElicitationResume,
+  type ConnectionErrorHandler,
   type MCPAdapterConfig,
+  type MCPElicitationContext,
+  type MCPElicitationHandler,
+  type MCPElicitationResume,
   type HTTPConnection,
   type ResolvedConnection,
   type StdioConnection,
-  type ResolvedStdioConnection,
   type ResolvedMCPAdapterConfig,
   type SSEConnection,
   type StreamableHTTPConnection,
@@ -25,6 +29,7 @@ import type {
   MCPResourceTemplate,
   MCPResourceContent,
   CallToolResultContentType,
+  ResolvedStdioConnection,
 } from "../types.js";
 
 test("check tool hooks types", () => {
@@ -174,6 +179,16 @@ test("elicitation uses SDK answers and adapter-owned source context", () => {
       },
     },
   });
+});
+
+// Downstream declaration builds must name these from the root (TS2742).
+test("types in public signatures stay exported", () => {
+  type Resume = ReturnType<typeof createMCPElicitationResume>;
+  expectTypeOf<MCPElicitationResume>().toEqualTypeOf<Resume>();
+  expectTypeOf<ConnectionErrorHandler>().toBeFunction();
+  expectTypeOf<MCPElicitationContext>().toEqualTypeOf<
+    Parameters<MCPElicitationHandler>[1]
+  >();
 });
 
 test("public transport types distinguish SSE from Streamable HTTP", () => {

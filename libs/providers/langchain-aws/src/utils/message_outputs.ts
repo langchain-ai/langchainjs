@@ -6,6 +6,19 @@ import type { DocumentType as __DocumentType } from "@smithy/types";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { MessageContentReasoningBlockRedacted } from "../types.js";
 
+type AnthropicNativeUsage = {
+  usage?: { output_tokens_details?: { thinking_tokens?: unknown } };
+};
+
+export function getReasoningTokensFromAdditionalFields(
+  additionalModelResponseFields: __DocumentType | undefined
+): number | undefined {
+  const thinkingTokens = (
+    additionalModelResponseFields as AnthropicNativeUsage | undefined
+  )?.usage?.output_tokens_details?.thinking_tokens;
+  return typeof thinkingTokens === "number" ? thinkingTokens : undefined;
+}
+
 export function convertConverseMessageToLangChainMessage(
   message: Bedrock.Message,
   responseMetadata: Omit<Bedrock.ConverseResponse, "output">
@@ -46,6 +59,9 @@ export function convertConverseMessageToLangChainMessage(
       cacheReadInputTokens +
       cacheWriteInputTokens;
     const output_tokens = responseMetadata.usage.outputTokens ?? 0;
+    const reasoningTokens = getReasoningTokensFromAdditionalFields(
+      responseMetadata.additionalModelResponseFields
+    );
     tokenUsage = {
       input_tokens,
       output_tokens,
@@ -54,6 +70,9 @@ export function convertConverseMessageToLangChainMessage(
       input_token_details: Object.keys(inputTokenDetails).length
         ? inputTokenDetails
         : undefined,
+      ...(reasoningTokens !== undefined && {
+        output_token_details: { reasoning: reasoningTokens },
+      }),
     };
   }
 
@@ -133,10 +152,20 @@ export function handleConverseStreamContentBlockDelta(
     throw new Error("No delta found in content block.");
   }
   if (typeof contentBlockDelta.delta.text === "string") {
+    const index = contentBlockDelta.contentBlockIndex;
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
-        content: contentBlockDelta.delta.text,
+        content:
+          index === undefined || index === 0
+            ? contentBlockDelta.delta.text
+            : [
+                {
+                  type: "text",
+                  text: contentBlockDelta.delta.text,
+                  index,
+                },
+              ],
       }),
     });
   } else if (contentBlockDelta.delta.toolUse) {
@@ -204,6 +233,7 @@ export function handleConverseStreamMetadata(
   metadata: Bedrock.ConverseStreamMetadataEvent,
   extra: {
     streamUsage: boolean;
+    reasoningTokens?: number;
   }
 ): ChatGenerationChunk {
   const cacheReadInputTokens = metadata.usage?.cacheReadInputTokens ?? 0;
@@ -228,6 +258,9 @@ export function handleConverseStreamMetadata(
     input_token_details: Object.keys(inputTokenDetails).length
       ? inputTokenDetails
       : undefined,
+    ...(extra.reasoningTokens !== undefined && {
+      output_token_details: { reasoning: extra.reasoningTokens },
+    }),
   };
   return new ChatGenerationChunk({
     text: "",

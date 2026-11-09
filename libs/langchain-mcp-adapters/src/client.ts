@@ -9,7 +9,6 @@ import {
   ProtocolError,
   ProtocolErrorCode,
   SSEClientTransport,
-  StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import type {
   AuthProvider,
@@ -95,11 +94,6 @@ export class MCPAdapter {
   >();
 
   /**
-   * Configured MCP servers
-   */
-  #mcpServers?: Record<string, ResolvedConnection>;
-
-  /**
    * Cached map of server names to load tools options
    */
   #loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
@@ -179,7 +173,6 @@ export class MCPAdapter {
     }
 
     this.#config = parsedServerConfig;
-    this.#mcpServers = parsedServerConfig.servers;
     this.#clientConnections = new ConnectionManager((options) => {
       const client = this.#clientConnections.get(options);
 
@@ -218,10 +211,6 @@ export class MCPAdapter {
   async #discoverToolsets(
     customTransportOptions?: ToolDiscoveryOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
-    if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
-      throw new MCPClientError("No connections to initialize");
-    }
-
     // A discovery that arrives mid-close waits for teardown and then runs
     // against the fresh epoch, which matches the documented reuse contract
     // better than failing a caller for a close it never saw.
@@ -230,65 +219,63 @@ export class MCPAdapter {
     }
 
     const { signal } = this.#epoch;
-    const catalog: Record<string, DynamicStructuredTool[]> = {};
+    const { servers } = this.#config;
 
-    for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
-      // A completed close may already have installed a fresh epoch. This
-      // discovery must not acquire connections owned by that later epoch.
-      if (signal.aborted) break;
-
-      const key = this.#clientConnections.identity(
-        this.#transportOptions(serverName, customTransportOptions)
-      );
-
-      if (this.#failedServers.has(key)) {
-        continue;
-      }
-
-      try {
-        await this._initializeConnection(
-          serverName,
-          connection,
-          customTransportOptions
-        );
-
-        if (signal.aborted) break;
-
-        const client = this.#clientConnections.get(
+    // Previously failed servers stay skipped (see #failedServers); the rest
+    // are independent, so connect and list them concurrently.
+    const targets = Object.entries(servers)
+      .map(([serverName, connection]) => ({
+        serverName,
+        connection,
+        key: this.#clientConnections.identity(
           this.#transportOptions(serverName, customTransportOptions)
-        );
+        ),
+      }))
+      .filter(({ key }) => !this.#failedServers.has(key));
 
-        if (client) {
-          catalog[serverName] = await this._loadToolsForServer(
+    const toolsets = await Promise.all(
+      targets.map(async ({ serverName, connection, key }) => {
+        try {
+          await this._initializeConnection(
+            serverName,
+            connection,
+            customTransportOptions
+          );
+          const client = this.#clientConnections.get(
+            this.#transportOptions(serverName, customTransportOptions)
+          );
+          // A close during the handshake owns teardown; don't list after it.
+          if (!client || signal.aborted) return undefined;
+          const tools = await this._loadToolsForServer(
             serverName,
             client,
             customTransportOptions?.cacheMode,
             signal
           );
+          return [serverName, tools] as const;
+        } catch (error) {
+          if (signal.aborted) return undefined;
+
+          if (this.#onConnectionError === "throw") {
+            throw error;
+          }
+
+          if (typeof this.#onConnectionError === "function") {
+            await this.#onConnectionError({ serverName, error });
+          }
+
+          // An async error handler may outlive close(). Do not write failures
+          // into the reused adapter after it returns.
+          if (signal.aborted) return undefined;
+
+          // A login can complete later (finishAuth, a refreshed token), so an
+          // auth failure must not block the server for this adapter's lifetime.
+          if (!isAuthenticationError(error)) this.#failedServers.add(key);
+          return undefined;
         }
-      } catch (error) {
-        if (signal.aborted) break;
+      })
+    );
 
-        if (this.#onConnectionError === "throw") {
-          throw error;
-        }
-
-        if (typeof this.#onConnectionError === "function") {
-          await this.#onConnectionError({ serverName, error });
-        }
-
-        // An async error handler may outlive close(). Do not write failures
-        // into the reused adapter or continue discovery after it returns.
-        if (signal.aborted) break;
-
-        // A login can complete later (finishAuth, a refreshed token), so an
-        // auth failure must not block the server for this adapter's lifetime.
-        if (!isAuthenticationError(error)) this.#failedServers.add(key);
-      }
-    }
-
-    // This also covers a close while discovering the final server, where
-    // there is no next iteration to check before returning the catalog.
     if (signal.aborted) {
       throw new MCPClientError(
         "MCP connections closed during discovery",
@@ -297,7 +284,8 @@ export class MCPAdapter {
       );
     }
 
-    return catalog;
+    // Promise.all keeps input order, so the catalog stays in config order.
+    return Object.fromEntries(toolsets.filter((entry) => entry !== undefined));
   }
 
   #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
@@ -680,10 +668,7 @@ export class MCPAdapter {
       }
 
       await this._initializeStdioConnection(serverName, connection);
-    } else if (
-      connection.transport === "http" ||
-      connection.transport === "sse"
-    ) {
+    } else {
       /**
        * Users may want to use different connection options for tool calls or tool discovery.
        */
@@ -714,12 +699,6 @@ export class MCPAdapter {
           updatedConnection
         );
       }
-    } else {
-      // This should never happen due to the validation in the constructor
-      throw new MCPClientError(
-        `Unsupported transport type for server "${serverName}"`,
-        serverName
-      );
     }
   }
 
@@ -767,7 +746,7 @@ export class MCPAdapter {
     const originalOnClose = transport.onclose;
     const handleClose = async () => {
       if (originalOnClose) {
-        await originalOnClose();
+        originalOnClose();
       }
 
       // Only attempt restart if we haven't cleaned up
@@ -865,13 +844,13 @@ export class MCPAdapter {
                       `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
                     ),
                     serverName,
-                    { cause: secondSSEError }
+                    { cause: sseAttemptCause(secondSSEError) }
                   );
                 }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
                   serverName,
-                  { cause: secondSSEError }
+                  { cause: sseAttemptCause(secondSSEError) }
                 );
               }
             } else {
@@ -885,13 +864,13 @@ export class MCPAdapter {
                     `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
                   ),
                   serverName,
-                  { cause: firstSSEError }
+                  { cause: sseAttemptCause(firstSSEError) }
                 );
               }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
                 serverName,
-                { cause: firstSSEError }
+                { cause: sseAttemptCause(firstSSEError) }
               );
             }
           }
@@ -977,14 +956,14 @@ export class MCPAdapter {
    */
   private _setupSSEReconnect(
     serverName: string,
-    transport: SSEClientTransport | StreamableHTTPClientTransport,
+    transport: SSEClientTransport,
     connection: ResolvedSSEConnection,
     reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
     const handleClose = async () => {
       if (originalOnClose) {
-        await originalOnClose();
+        originalOnClose();
       }
 
       // Only attempt reconnect if we haven't cleaned up
@@ -1108,7 +1087,7 @@ export class MCPAdapter {
    */
   private async _attemptReconnect(
     serverName: string,
-    connection: ResolvedConnection,
+    connection: ResolvedStdioConnection | ResolvedSSEConnection,
     maxAttempts = 3,
     delayMs = 1000
   ): Promise<void> {
@@ -1125,10 +1104,7 @@ export class MCPAdapter {
       await this.#cleanupServerResources({ serverName });
     }
 
-    while (
-      !connected &&
-      (maxAttempts === undefined || attempts < maxAttempts)
-    ) {
+    while (!connected && attempts < maxAttempts) {
       attempts += 1;
 
       try {
@@ -1145,18 +1121,8 @@ export class MCPAdapter {
         // Initialize just this connection based on its type
         if (connection.transport === "stdio") {
           await this._initializeStdioConnection(serverName, connection);
-        } else if (
-          connection.transport === "http" ||
-          connection.transport === "sse"
-        ) {
-          if (connection.transport === "sse") {
-            await this._initializeSSEConnection(serverName, connection);
-          } else {
-            await this._initializeStreamableHTTPConnection(
-              serverName,
-              connection
-            );
-          }
+        } else {
+          await this._initializeSSEConnection(serverName, connection);
         }
 
         // Check if connected
@@ -1219,10 +1185,21 @@ export class MCPAdapter {
 export { MCPAdapter as MultiServerMCPClient };
 
 /**
+ * The SDK error behind an SSE attempt's `MCPClientError`, so an HTTP→SSE
+ * fallback's error carries it as `cause`, one level down like a direct HTTP
+ * or SSE connection's, instead of a second `MCPClientError`.
+ */
+function sseAttemptCause(error: unknown): unknown {
+  return MCPClientError.isInstance(error) && error.cause !== undefined
+    ? error.cause
+    : error;
+}
+
+/**
  * `listTools()` flattens catalogs into one list, so a repeated tool name -
  * from two servers or twice in one server's own list - would let `ToolNode`
  * route every call for that name to whichever tool appears first. Tool
- * names are unprefixed by default.
+ * names are prefixed with their server name by default.
  */
 function assertNoToolNameCollisions(
   catalog: Record<string, DynamicStructuredTool[]>,
