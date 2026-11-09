@@ -31,24 +31,24 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "cohere-ai": "^8.1.0"
+    "cohere-ai": "^8.3.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@cfworker/json-schema": "^4.1.1",
+    "@cfworker/json-schema": "^4.1.4",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^5.0.2",
-    "dotenv": "^17.4.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "eslint": "^9.39.5",
-    "prettier": "^3.9.9",
+    "prettier": "^3.9.10",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2",
+    "vitest": "^5.0.5",
     "zod": "^3.25.76"
   },
   "publishConfig": {

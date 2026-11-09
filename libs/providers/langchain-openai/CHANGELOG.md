@@ -1,5 +1,19 @@
 # @langchain/openai
 
+## 1.8.2
+
+### Patch Changes
+
+- [#11846](https://github.com/langchain-ai/langchainjs/pull/11846) [`a7c960f`](https://github.com/langchain-ai/langchainjs/commit/a7c960fd1a1fa3d32717965311168667980e77a3) Thanks [@devauntea](https://github.com/devauntea)! - Base64-encode binary `Uint8Array` data in image, audio and file content blocks sent through the Chat Completions API, instead of sending comma-separated decimal bytes.
+
+## 1.8.1
+
+### Patch Changes
+
+- [#11467](https://github.com/langchain-ai/langchainjs/pull/11467) [`0c268f5`](https://github.com/langchain-ai/langchainjs/commit/0c268f53cadcddf6884162ed608333224c05868d) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Use the resolved model snapshot in streamed Responses API metadata.
+
+- [#11755](https://github.com/langchain-ai/langchainjs/pull/11755) [`8103487`](https://github.com/langchain-ai/langchainjs/commit/8103487c55784c5befd84c1bc803546f720f806e) Thanks [@SiKreuz](https://github.com/SiKreuz)! - Set `response_metadata.model_name` on messages streamed from the Responses API through the chat model event stream, matching the Chat Completions stream and the non-streaming Responses path.
+
 ## 1.8.0
 
 ### Minor Changes

@@ -38,10 +38,10 @@
     "@langchain/openai": "^1.5.13",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "langchain": "workspace:^",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"

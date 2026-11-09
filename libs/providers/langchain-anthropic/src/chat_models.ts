@@ -40,6 +40,7 @@ import {
   _getToolChangeKind,
 } from "./utils/message_inputs.js";
 import {
+  hasAlwaysOnThinking,
   getSamplingParams,
   getTaskBudgetBetas,
   validateInvocationParamCompatibility,
@@ -279,7 +280,6 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
-    ("name" in tool || "mcp_server_name" in tool) &&
     typeof tool.type === "string" &&
     builtInToolPrefixes.some(
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
@@ -1459,6 +1459,7 @@ export class ChatAnthropicMessages<
       !_toolsInParams(payload) &&
       !_documentsInParams(payload) &&
       !_thinkingInParams(payload) &&
+      !hasAlwaysOnThinking(this.model) &&
       !_compactionInParams(payload);
 
     const stream = await this.createStreamWithRetry(payload, {
@@ -1467,15 +1468,20 @@ export class ChatAnthropicMessages<
       maxRetries: options.maxRetries,
     });
 
+    let startUsage: object | undefined;
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         return;
       }
+      if (data.type === "message_start") {
+        startUsage = data.message.usage;
+      }
       const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
+        startUsage,
       });
       if (!result) continue;
 
@@ -1879,7 +1885,8 @@ export class ChatAnthropicMessages<
 
       if (
         this.thinking?.type === "enabled" ||
-        this.thinking?.type === "adaptive"
+        this.thinking?.type === "adaptive" ||
+        hasAlwaysOnThinking(this.model)
       ) {
         const thinkingAdmonition =
           "Anthropic structured output relies on forced tool calling, " +

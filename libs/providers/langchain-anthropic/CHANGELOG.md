@@ -1,5 +1,19 @@
 # @langchain/anthropic
 
+## 1.6.2
+
+### Patch Changes
+
+- [#12145](https://github.com/langchain-ai/langchainjs/pull/12145) [`e662f7c`](https://github.com/langchain-ai/langchainjs/commit/e662f7c00cedc68fb2036f2782a63401937e752c) Thanks [@hntrl](https://github.com/hntrl)! - Report streamed usage from the cumulative `message_delta` usage, as `langchain-anthropic` does, so input and cache tokens from server tool passes (e.g. web search) are counted and output tokens aren't double counted.
+
+- [#12173](https://github.com/langchain-ai/langchainjs/pull/12173) [`203cf6e`](https://github.com/langchain-ai/langchainjs/commit/203cf6e40fde3ffa135528cbfa30b4fdffe30850) Thanks [@hntrl](https://github.com/hntrl)! - Support Claude Fable 5.2 and Mythos 5.2 profiles, always-on adaptive thinking, and the nameless computer toolset. Upgrade the Anthropic SDK and avoid forced tool choice for always-on thinking models.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#12117](https://github.com/langchain-ai/langchainjs/pull/12117) [`1d57fca`](https://github.com/langchain-ai/langchainjs/commit/1d57fca1aa7bc89911fe5ead28afe4430fb0fb58) Thanks [@Siretu](https://github.com/Siretu)! - fix(anthropic): keep streamed `server_tool_use` input when replaying messages
+
 ## 1.6.0
 
 ### Minor Changes

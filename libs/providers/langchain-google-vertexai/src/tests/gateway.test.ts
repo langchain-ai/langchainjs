@@ -71,17 +71,16 @@ describe("ChatVertexAI LangSmith gateway", () => {
   );
 
   test.each([
-    ["explicit-key", "gateway-key", "langsmith-key", "explicit-key"],
-    [undefined, "gateway-key", "langsmith-key", "gateway-key"],
-    [undefined, "", "langsmith-key", "langsmith-key"],
-    [undefined, undefined, undefined, "provider-key"],
+    ["gateway-key", "langsmith-key", "gateway-key"],
+    ["", "langsmith-key", "langsmith-key"],
+    [undefined, undefined, "provider-key"],
   ])(
     "resolves key precedence (%s, %s, %s)",
-    async (apiKey, gatewayKey, langsmithKey, expectedKey) => {
+    async (gatewayKey, langsmithKey, expectedKey) => {
       vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", gatewayKey);
       vi.stubEnv("LANGSMITH_API_KEY", langsmithKey);
       vi.stubEnv("GOOGLE_API_KEY", "provider-key");
-      const model = new ChatVertexAI({ model: "gemini-2.5-flash", apiKey });
+      const model = new ChatVertexAI({ model: "gemini-2.5-flash" });
       await model.invoke("Hi");
       expectRequest(`${gatewayRoot}/${resource}:generateContent`, expectedKey);
     }
@@ -100,26 +99,17 @@ describe("ChatVertexAI LangSmith gateway", () => {
     );
   });
 
-  test.each([gatewayRoot, "http://localhost:8080/custom/vertex"])(
-    "preserves explicit regional configuration: %s",
-    async (root) => {
-      vi.stubEnv("LANGSMITH_GATEWAY", root.replace(/\/vertex$/, ""));
-      const fields = {
-        model: "gemini-2.5-flash",
-        authOptions: { projectId: "test-project" },
-        location: "europe-west4",
-        apiVersion: "v1beta1",
-      };
-      const model = new ChatVertexAI(fields);
-      await model.invoke("Hi");
-      expectRequest(
-        `${root}/v1beta1/projects/test-project/locations/europe-west4/publishers/google/models/gemini-2.5-flash:generateContent`,
-        "gateway-key"
-      );
-      expect(fields).not.toHaveProperty("endpoint");
-      expect(fields).not.toHaveProperty("apiKey");
-    }
-  );
+  test("an explicit apiKey goes straight to Vertex", async () => {
+    const model = new ChatVertexAI({
+      model: "gemini-2.5-flash",
+      apiKey: "explicit-key",
+    });
+    await model.invoke("Hi");
+    expectRequest(
+      `https://aiplatform.googleapis.com/${resource}:generateContent`,
+      "explicit-key"
+    );
+  });
 
   test.each([
     ["my.proxy.example.com", "https://my.proxy.example.com"],
@@ -150,9 +140,10 @@ describe("ChatVertexAI LangSmith gateway", () => {
 
   test.each([
     ["false", undefined, "https://europe-west4-aiplatform.googleapis.com"],
+    ["true", undefined, "https://europe-west4-aiplatform.googleapis.com"],
     ["true", "my.proxy.example.com", "https://my.proxy.example.com"],
   ])(
-    "preserves Google auth when routing is disabled or overridden: %s, %s",
+    "explicit authOptions keep Google auth (gateway: %s, endpoint: %s)",
     async (gateway, endpoint, root) => {
       vi.stubEnv("LANGSMITH_GATEWAY", gateway);
       const model = new InspectableChatVertexAI({
@@ -169,46 +160,33 @@ describe("ChatVertexAI LangSmith gateway", () => {
     }
   );
 
-  test.each([false, true])(
-    "streams through the gateway (regional: %s)",
-    async (regional) => {
-      const model = new ChatVertexAI({
-        model: "gemini-2.5-flash",
-        ...(regional ? { authOptions: { projectId: "test-project" } } : {}),
-      });
-      const chunks = [];
-      for await (const chunk of await model.stream("Hi")) {
-        chunks.push(chunk.content);
-      }
-      expect(chunks.join("")).toBe("Hello");
-      const path = regional
-        ? "v1/projects/test-project/locations/us-central1/publishers/google/models/gemini-2.5-flash"
-        : resource;
-      expectRequest(
-        `${gatewayRoot}/${path}:streamGenerateContent`,
-        "gateway-key"
-      );
+  test("streams through the gateway", async () => {
+    const model = new ChatVertexAI({ model: "gemini-2.5-flash" });
+    const chunks = [];
+    for await (const chunk of await model.stream("Hi")) {
+      chunks.push(chunk.content);
     }
-  );
+    expect(chunks.join("")).toBe("Hello");
+    expectRequest(
+      `${gatewayRoot}/${resource}:streamGenerateContent`,
+      "gateway-key"
+    );
+  });
 
-  test.each([false, true])(
-    "does not expose gateway credentials in custom events (regional: %s)",
-    async (regional) => {
-      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", undefined);
-      vi.stubEnv("LANGSMITH_API_KEY", "private-langsmith-key");
-      const handleCustomEvent = vi.fn();
-      const model = new ChatVertexAI({
-        model: "gemini-2.5-flash",
-        callbacks: [{ handleCustomEvent }],
-        ...(regional ? { authOptions: { projectId: "test-project" } } : {}),
-      });
-      await model.invoke("Hi");
-      expect(handleCustomEvent).toHaveBeenCalled();
-      const events = JSON.stringify(handleCustomEvent.mock.calls);
-      expect(events).toContain("google-request-ChatConnection");
-      expect(events).not.toContain("private-langsmith-key");
-    }
-  );
+  test("does not expose gateway credentials in custom events", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", undefined);
+    vi.stubEnv("LANGSMITH_API_KEY", "private-langsmith-key");
+    const handleCustomEvent = vi.fn();
+    const model = new ChatVertexAI({
+      model: "gemini-2.5-flash",
+      callbacks: [{ handleCustomEvent }],
+    });
+    await model.invoke("Hi");
+    expect(handleCustomEvent).toHaveBeenCalled();
+    const events = JSON.stringify(handleCustomEvent.mock.calls);
+    expect(events).toContain("google-request-ChatConnection");
+    expect(events).not.toContain("private-langsmith-key");
+  });
 
   test("streaming invocation uses the gateway", async () => {
     const model = new ChatVertexAI({
