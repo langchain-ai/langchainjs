@@ -293,6 +293,25 @@ export function convertToV1FromAnthropicMessage(
       typeof message.content === "string"
         ? [{ type: "text", text: message.content }]
         : message.content;
+    const getStreamedInputJson = (index: unknown): string | undefined => {
+      const input = content
+        .filter(
+          (contentBlock) =>
+            "index" in contentBlock &&
+            contentBlock.index === index &&
+            _isContentBlock(contentBlock, "input_json_delta") &&
+            _isString(contentBlock.input)
+        )
+        .map((contentBlock) => contentBlock.input)
+        .join("");
+      return input.length ? input : undefined;
+    };
+    const parseJsonObjectOrRaw = (
+      input: string
+    ): Record<string, unknown> | string => {
+      const parsed = safeParseJson<Record<string, unknown>>(input);
+      return _isObject(parsed) && !_isArray(parsed) ? parsed : input;
+    };
     for (const block of content) {
       // TextBlock
       if (_isContentBlock(block, "text") && _isString(block.text)) {
@@ -379,26 +398,30 @@ export function convertToV1FromAnthropicMessage(
       ) {
         const { name, id } = block;
         if (name === "web_search") {
-          const query = iife(() => {
+          const args = iife(() => {
+            const streamedInput = getStreamedInputJson(block.index);
+            if (streamedInput !== undefined) {
+              return parseJsonObjectOrRaw(streamedInput);
+            }
             if (typeof block.input === "string") {
-              return block.input;
+              return parseJsonObjectOrRaw(block.input);
             } else if (_isObject(block.input) && _isString(block.input.query)) {
-              return block.input.query;
+              return { query: block.input.query };
             } else if (_isString(block.partial_json)) {
               const json = safeParseJson<{ query?: string }>(
                 block.partial_json
               );
               if (json?.query) {
-                return json.query;
+                return { query: json.query };
               }
             }
-            return "";
+            return { query: "" };
           });
           yield {
             id,
             type: "server_tool_call",
             name: "web_search",
-            args: { query },
+            args,
           };
           continue;
         } else if (block.name === "code_execution") {
