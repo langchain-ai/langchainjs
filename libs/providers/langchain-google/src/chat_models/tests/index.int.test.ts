@@ -466,13 +466,100 @@ const readPages = tool(async ({ fileId }) => `page text for ${fileId}`, {
   schema: z.object({ fileId: z.string() }),
 });
 
+const activeWarnSpies = new Set<(...args: any[]) => void>();
+let sharedConsoleWarnSpy: MockInstance<any> | undefined;
+
+function acquireWarnSpy(): MockInstance<any> {
+  const localSpy = vi.fn();
+  activeWarnSpies.add(localSpy);
+  if (!sharedConsoleWarnSpy) {
+    const originalWarn = global.console.warn.bind(global.console);
+    sharedConsoleWarnSpy = vi
+      .spyOn(global.console, "warn")
+      .mockImplementation((...args: any[]) => {
+        for (const spy of activeWarnSpies) {
+          spy(...args);
+        }
+        originalWarn(...args);
+      });
+  }
+  return localSpy;
+}
+
+function releaseWarnSpy(spy?: MockInstance<any>): void {
+  if (spy) {
+    activeWarnSpies.delete(spy as unknown as (...args: any[]) => void);
+  }
+  if (activeWarnSpies.size === 0 && sharedConsoleWarnSpy) {
+    sharedConsoleWarnSpy.mockRestore();
+    sharedConsoleWarnSpy = undefined;
+  }
+}
+
+type SequentialTestCallable = {
+  (
+    name: string,
+    fn: () => Promise<void> | void,
+    timeout?: number
+  ): ReturnType<typeof test>;
+  (
+    name: string,
+    options: Record<string, any>,
+    fn: () => Promise<void> | void
+  ): ReturnType<typeof test>;
+};
+
+function wrapSequentialCallable(target: any): SequentialTestCallable {
+  return (
+    name: string,
+    fnOrOptions: (() => Promise<void> | void) | Record<string, any>,
+    timeoutOrFn?: number | (() => Promise<void> | void)
+  ) => {
+    if (typeof fnOrOptions === "function") {
+      const options =
+        typeof timeoutOrFn === "number"
+          ? { concurrent: false, timeout: timeoutOrFn }
+          : { concurrent: false };
+      return target(name, options, fnOrOptions);
+    }
+    return target(
+      name,
+      { concurrent: false, ...fnOrOptions },
+      timeoutOrFn as () => Promise<void> | void
+    );
+  };
+}
+
+const sequentialTest = Object.assign(wrapSequentialCallable(test), {
+  only: wrapSequentialCallable(test.only),
+  skip: wrapSequentialCallable(test.skip),
+  runIf: (condition: boolean) =>
+    wrapSequentialCallable(test.runIf(condition)),
+  skipIf: (condition: boolean) =>
+    wrapSequentialCallable(test.skipIf(condition)),
+  each:
+    <T>(cases: ReadonlyArray<T>) =>
+    (
+      name: string,
+      fn: (arg: T) => Promise<void> | void,
+      timeout?: number
+    ) => {
+      const options =
+        typeof timeout === "number"
+          ? { concurrent: false, timeout }
+          : { concurrent: false };
+      return test.each(cases)(name, options, fn as any);
+    },
+});
+
 const coreModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage,
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isTts,
 ]);
-describe.each(coreModelInfo)(
+describe.concurrent.each(coreModelInfo)(
   "Google Core ($model) $testConfig.desc",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    const test = sequentialTest;
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
     let isInteractions = defaultGoogleParams?.apiHandler === "interactions";
@@ -511,7 +598,7 @@ describe.each(coreModelInfo)(
     }
 
     beforeEach(async () => {
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -519,7 +606,7 @@ describe.each(coreModelInfo)(
     });
 
     afterEach(() => {
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     test("invoke", async () => {
@@ -1070,7 +1157,10 @@ describe.each(coreModelInfo)(
 
     const toolChoices: ToolChoice[] = ["validated", { mode: "VALIDATED" }];
 
-    describe.each(toolChoices)("VALIDATED tool choice: %o", (toolChoice) => {
+    describe.each(toolChoices)(
+      "VALIDATED tool choice: %o",
+      { concurrent: false },
+      (toolChoice) => {
       test("accepts a function call with schema-conforming arguments", async () => {
         const llm = newChatGoogle().bindTools([weatherTool], {
           tool_choice: toolChoice,
@@ -1916,9 +2006,10 @@ describe.each(coreModelInfo)(
 const thinkingModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isThinking === true,
 ]);
-describe.each(thinkingModelInfo)(
+describe.concurrent.each(thinkingModelInfo)(
   "Google Thinking ($model) $testConfig.desc",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    const test = sequentialTest;
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
     let isInteractions = defaultGoogleParams?.apiHandler === "interactions";
@@ -1957,7 +2048,7 @@ describe.each(thinkingModelInfo)(
     }
 
     beforeEach(async () => {
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1965,7 +2056,7 @@ describe.each(thinkingModelInfo)(
     });
 
     afterEach(() => {
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     test.each([{ maxReasoningTokens: 0 }, { reasoningEffort: "minimal" }])(
@@ -2291,7 +2382,7 @@ describe.each(imageModelInfo)(
 
     beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -2300,7 +2391,7 @@ describe.each(imageModelInfo)(
 
     afterEach(() => {
       testSeq++;
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -2438,7 +2529,7 @@ describe.each(ttsModelInfo)(
 
     beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -2447,7 +2538,7 @@ describe.each(ttsModelInfo)(
 
     afterEach(() => {
       testSeq++;
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -2610,7 +2701,7 @@ describe.each(audioModelInfo)(
 
     beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -2619,7 +2710,7 @@ describe.each(audioModelInfo)(
 
     afterEach(() => {
       testSeq++;
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
