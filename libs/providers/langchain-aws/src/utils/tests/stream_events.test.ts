@@ -163,7 +163,7 @@ describe("convertBedrockConverseStream", () => {
   });
 
   test("maps thinking tokens from messageStop into usage", async () => {
-    const messageStop = {
+    const messageStop: Bedrock.ConverseStreamOutput = {
       messageStop: {
         stopReason: "end_turn",
         additionalModelResponseFields: {
@@ -174,9 +174,10 @@ describe("convertBedrockConverseStream", () => {
         },
       },
     };
-    const metadata = {
+    const metadata: Bedrock.ConverseStreamOutput = {
       metadata: {
         usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        metrics: { latencyMs: 0 },
       },
     };
 
