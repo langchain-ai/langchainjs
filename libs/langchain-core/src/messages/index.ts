@@ -9,6 +9,7 @@ export * from "./transformers.js";
 export * from "./metadata.js";
 export * from "./message.js";
 export * from "./modifier.js";
+export * from "./notification.js";
 export * from "./tool.js";
 
 // This is an old export for backwards compatibility with existing multimodal content blocks

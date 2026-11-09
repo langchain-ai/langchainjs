@@ -1,5 +1,37 @@
 # @langchain/aws
 
+## 1.5.2
+
+### Patch Changes
+
+- [#12100](https://github.com/langchain-ai/langchainjs/pull/12100) [`dc74e55`](https://github.com/langchain-ai/langchainjs/commit/dc74e55a6473962dafcc266e18b9f978fd9495cb) Thanks [@hntrl](https://github.com/hntrl)! - Replay signed Bedrock reasoning blocks whose text is empty or missing instead of dropping them, so models that omit the thinking summary (e.g. Claude Sonnet 5, which defaults to `display: "omitted"`) no longer fail with an HTTP 400 on the turn after a tool call. A missing `text` is sent as `""`, and an empty signature counts as unsigned. Whitespace-only text after reasoning is no longer merged into the reasoning block, and a standard reasoning block split into parts is joined before replay.
+
+- [#12052](https://github.com/langchain-ai/langchainjs/pull/12052) [`8635df6`](https://github.com/langchain-ai/langchainjs/commit/8635df6a875e8409b141e41a2507f4680460938b) Thanks [@hntrl](https://github.com/hntrl)! - Fix ChatBedrockConverse retry classification for AWS HTTP errors and content-filter failures while keeping ThrottlingException and ModelNotReadyException retryable. Internally created Bedrock clients now default to `maxAttempts: 1` so SDK retries do not stack with LangChain retries; explicit `clientOptions.maxAttempts` values and injected clients remain unchanged.
+
+- [#11905](https://github.com/langchain-ai/langchainjs/pull/11905) [`e81c689`](https://github.com/langchain-ai/langchainjs/commit/e81c689cce85aa439bdd390b1f674009b23d25d5) Thanks [@mbarinov](https://github.com/mbarinov)! - Preserve reasoning signatures in native Bedrock Converse stream events so streamed messages can be replayed in subsequent requests.
+
+- [#11368](https://github.com/langchain-ai/langchainjs/pull/11368) [`55c4edc`](https://github.com/langchain-ai/langchainjs/commit/55c4edc580f9d8674759977fc6aa7db83daa237d) Thanks [@LizunovSergey](https://github.com/LizunovSergey)! - fix(aws): preserve Bedrock text block indices when streaming
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11463](https://github.com/langchain-ai/langchainjs/pull/11463) [`52d2ba8`](https://github.com/langchain-ai/langchainjs/commit/52d2ba8ea50149f2314df63b79582f8508034a3b) Thanks [@syedsohailhussain1](https://github.com/syedsohailhussain1)! - fix(aws): use this.caller in ChatBedrockConverse to support maxRetries, timeout, and onFailedAttempt
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
 ## 1.4.7
 
 ### Patch Changes
