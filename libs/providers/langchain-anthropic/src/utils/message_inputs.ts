@@ -717,7 +717,9 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     return content;
   };
 
-  const isToolResultMessage = (msg: (typeof messages)[0]) => {
+  const isToolResultMessage = (
+    msg: (typeof messages)[0]
+  ): msg is Extract<(typeof messages)[0], { role: "user" }> => {
     if (msg.role !== "user") return false;
 
     if (typeof msg.content === "string") {
