@@ -2615,7 +2615,7 @@ describe("Fable 5 and Mythos 5", () => {
 
     if (
       modelName.startsWith("claude-fable-") ||
-      modelName === "claude-mythos-5-2"
+      modelName.startsWith("claude-mythos-5-2")
     ) {
       expect(() => model.invocationParams({})).toThrow(
         `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`

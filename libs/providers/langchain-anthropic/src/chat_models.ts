@@ -280,9 +280,6 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
-    ("name" in tool ||
-      "mcp_server_name" in tool ||
-      tool.type === "computer_toolset_20260801") &&
     typeof tool.type === "string" &&
     builtInToolPrefixes.some(
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
