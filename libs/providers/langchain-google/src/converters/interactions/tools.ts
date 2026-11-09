@@ -95,8 +95,9 @@ function convertGenerateContentToolToInteractionsTools(
   if ("googleSearch" in tool && tool.googleSearch) {
     const gs = tool.googleSearch as Gemini.Tools.GoogleSearch &
       Record<string, unknown>;
-    const searchTypes: Array<"web_search" | "image_search" | "enterprise_web_search"> =
-      [];
+    const searchTypes: Array<
+      "web_search" | "image_search" | "enterprise_web_search"
+    > = [];
     if (gs.searchTypes?.webSearch) {
       searchTypes.push("web_search");
     }

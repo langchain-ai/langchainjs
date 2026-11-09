@@ -112,9 +112,7 @@ function mapPartResolutionToInteractions(
   defaultResolution?: Gemini.Interactions.MediaResolution
 ): Gemini.Interactions.MediaResolution | undefined {
   const rawLevel =
-    typeof partResolution === "string"
-      ? partResolution
-      : partResolution?.level;
+    typeof partResolution === "string" ? partResolution : partResolution?.level;
   if (rawLevel) {
     const lower = rawLevel.toLowerCase();
     if (lower === "media_resolution_low" || lower === "low") return "low";
@@ -385,8 +383,7 @@ export function convertMessagesToInteractionsInput(
             result: part.codeExecutionResult.output ?? "",
             is_error:
               part.codeExecutionResult.outcome !== "OUTCOME_OK" &&
-              part.codeExecutionResult.outcome !==
-                "OUTCOME_UNSPECIFIED" &&
+              part.codeExecutionResult.outcome !== "OUTCOME_UNSPECIFIED" &&
               Boolean(part.codeExecutionResult.outcome),
             ...(part.thoughtSignature
               ? { signature: part.thoughtSignature }
@@ -399,16 +396,11 @@ export function convertMessagesToInteractionsInput(
           // because `id` is required on FunctionCallStep in the Interactions API.
           const originalToolCall = message.tool_calls?.[callIndex];
           const id =
-            part.functionCall.id ||
-            originalToolCall?.id ||
-            `call_${callIndex}`;
+            part.functionCall.id || originalToolCall?.id || `call_${callIndex}`;
           const sig =
             part.thoughtSignature ||
-            (
-              originalToolCall as
-                | { thoughtSignature?: string }
-                | undefined
-            )?.thoughtSignature;
+            (originalToolCall as { thoughtSignature?: string } | undefined)
+              ?.thoughtSignature;
 
           if (sig && !emittedSignatures.has(sig)) {
             const lastStep = steps[steps.length - 1];
@@ -911,7 +903,9 @@ export function synthesizeMetadataFromInteractions(options: {
               ? { endIndex: annotation.end_index }
               : {}),
           },
-          ...(chunkIdx !== undefined ? { groundingChunkIndices: [chunkIdx] } : {}),
+          ...(chunkIdx !== undefined
+            ? { groundingChunkIndices: [chunkIdx] }
+            : {}),
         });
       } else if (annotation.type === "place_citation") {
         citationSources.push({
@@ -954,7 +948,9 @@ export function synthesizeMetadataFromInteractions(options: {
               ? { endIndex: annotation.end_index }
               : {}),
           },
-          ...(chunkIdx !== undefined ? { groundingChunkIndices: [chunkIdx] } : {}),
+          ...(chunkIdx !== undefined
+            ? { groundingChunkIndices: [chunkIdx] }
+            : {}),
         });
       } else if (annotation.type === "file_citation") {
         citationSources.push({
@@ -1228,7 +1224,9 @@ export function convertInteractionToAIMessage(
   let originalTextContentBlock: ContentBlock | undefined;
 
   const hasContentPayload = (p: ContentBlock) =>
-    p.type !== "text" || (typeof p.text === "string" && p.text.length > 0) || !!p.thought;
+    p.type !== "text" ||
+    (typeof p.text === "string" && p.text.length > 0) ||
+    !!p.thought;
   const contentBearingParts = blockContent.filter(hasContentPayload);
 
   if (blockContent.length === 1 && blockContent[0].type === "text") {
@@ -1241,7 +1239,9 @@ export function convertInteractionToAIMessage(
   ) {
     // Collapse when there is one text part and any other parts are metadata-only (e.g. thoughtSignature)
     const textPart = contentBearingParts[0];
-    const sigSource = blockContent.find((p) => p !== textPart && p.thoughtSignature);
+    const sigSource = blockContent.find(
+      (p) => p !== textPart && p.thoughtSignature
+    );
     originalTextContentBlock = sigSource
       ? { ...textPart, thoughtSignature: sigSource.thoughtSignature }
       : textPart;

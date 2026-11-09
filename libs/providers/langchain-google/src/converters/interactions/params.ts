@@ -288,7 +288,9 @@ export function convertSafetySettingsToInteractions(
   return result.length > 0 ? result : undefined;
 }
 
-function convertImageFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.ImageResponseFormat {
+function convertImageFieldsToFormat(
+  fields: ChatGoogleFields
+): Gemini.Interactions.ImageResponseFormat {
   const imageConfig = convertFieldsToInteractionsImageConfig(
     fields.imageConfig
   );
@@ -297,43 +299,52 @@ function convertImageFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactio
     ...(imageConfig ?? {}),
     ...(fields.responseMimeType?.startsWith("image/")
       ? {
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.ImageResponseFormat["mime_type"],
-      }
+          mime_type:
+            fields.responseMimeType as Gemini.Interactions.ImageResponseFormat["mime_type"],
+        }
       : {}),
   };
 }
 
-function convertAudioFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.AudioResponseFormat {
+function convertAudioFieldsToFormat(
+  fields: ChatGoogleFields
+): Gemini.Interactions.AudioResponseFormat {
   return {
     type: "audio",
     ...(fields.responseMimeType?.startsWith("audio/")
       ? {
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.AudioResponseFormat["mime_type"],
-      }
+          mime_type:
+            fields.responseMimeType as Gemini.Interactions.AudioResponseFormat["mime_type"],
+        }
       : {}),
   };
 }
 
-function convertVideoFieldsToFormat(fields: ChatGoogleFields): Gemini.Interactions.VideoResponseFormat {
+function convertVideoFieldsToFormat(
+  fields: ChatGoogleFields
+): Gemini.Interactions.VideoResponseFormat {
   return {
     type: "video",
     ...(fields.responseMimeType?.startsWith("video/")
       ? {
-        mime_type:
-          fields.responseMimeType as Gemini.Interactions.VideoResponseFormat["mime_type"],
-      }
+          mime_type:
+            fields.responseMimeType as Gemini.Interactions.VideoResponseFormat["mime_type"],
+        }
       : {}),
   };
 }
 
-function fieldsToJsonSchema(fields: ChatGoogleFields): Record<string, unknown> | undefined {
+function fieldsToJsonSchema(
+  fields: ChatGoogleFields
+): Record<string, unknown> | undefined {
   if (fields.responseSchema) {
-    if (isInteropZodSchema(fields.responseSchema) || isSerializableSchema(fields.responseSchema)) {
-      return toJsonSchema(fields.responseSchema) as Record<string, unknown>
+    if (
+      isInteropZodSchema(fields.responseSchema) ||
+      isSerializableSchema(fields.responseSchema)
+    ) {
+      return toJsonSchema(fields.responseSchema) as Record<string, unknown>;
     } else {
-      return fields.responseSchema as Record<string, unknown>
+      return fields.responseSchema as Record<string, unknown>;
     }
   } else {
     return undefined;

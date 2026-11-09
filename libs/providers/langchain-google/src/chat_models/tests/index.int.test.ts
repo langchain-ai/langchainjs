@@ -533,17 +533,12 @@ function wrapSequentialCallable(target: any): SequentialTestCallable {
 const sequentialTest = Object.assign(wrapSequentialCallable(test), {
   only: wrapSequentialCallable(test.only),
   skip: wrapSequentialCallable(test.skip),
-  runIf: (condition: boolean) =>
-    wrapSequentialCallable(test.runIf(condition)),
+  runIf: (condition: boolean) => wrapSequentialCallable(test.runIf(condition)),
   skipIf: (condition: boolean) =>
     wrapSequentialCallable(test.skipIf(condition)),
   each:
     <T>(cases: ReadonlyArray<T>) =>
-    (
-      name: string,
-      fn: (arg: T) => Promise<void> | void,
-      timeout?: number
-    ) => {
+    (name: string, fn: (arg: T) => Promise<void> | void, timeout?: number) => {
       const options =
         typeof timeout === "number"
           ? { concurrent: false, timeout }
@@ -966,8 +961,8 @@ describe.concurrent.each(coreModelInfo)(
         );
         expect(functionResultStep).toBeDefined();
         expect(Array.isArray(functionResultStep!.result)).toBe(true);
-        const resultItems =
-          functionResultStep!.result as Gemini.Interactions.Content[];
+        const resultItems = functionResultStep!
+          .result as Gemini.Interactions.Content[];
 
         const textItems = resultItems.filter((item) => item.type === "text");
         expect(JSON.stringify(textItems)).not.toContain(data64);
@@ -1161,56 +1156,59 @@ describe.concurrent.each(coreModelInfo)(
       "VALIDATED tool choice: %o",
       { concurrent: false },
       (toolChoice) => {
-      test("accepts a function call with schema-conforming arguments", async () => {
-        const llm = newChatGoogle().bindTools([weatherTool], {
-          tool_choice: toolChoice,
-        });
-        const result = await llm.invoke([
-          new HumanMessage('Call get_weather with location set to "New York".'),
-        ]);
-
-        if (isInteractions) {
-          expect(recorder.request?.body?.generation_config?.tool_choice).toEqual(
-            "validated"
-          );
-        } else {
-          expect(recorder.request?.body?.toolConfig).toEqual({
-            functionCallingConfig: { mode: "VALIDATED" },
+        test("accepts a function call with schema-conforming arguments", async () => {
+          const llm = newChatGoogle().bindTools([weatherTool], {
+            tool_choice: toolChoice,
           });
-        }
-        expect(result.tool_calls).toHaveLength(1);
-        expect(result.tool_calls?.[0]).toMatchObject({
-          name: "get_weather",
-          args: { location: "New York" },
-        });
-        expect(
-          weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
-        ).toBe(true);
-      });
+          const result = await llm.invoke([
+            new HumanMessage(
+              'Call get_weather with location set to "New York".'
+            ),
+          ]);
 
-      test("also permits a text response without forcing a function", async () => {
-        const llm = newChatGoogle().bindTools([weatherTool], {
-          tool_choice: toolChoice,
-        });
-        const result = await llm.invoke([
-          new HumanMessage(
-            "Do not use any tools. Reply with the single word Hello."
-          ),
-        ]);
-
-        if (isInteractions) {
-          expect(recorder.request?.body?.generation_config?.tool_choice).toEqual(
-            "validated"
-          );
-        } else {
-          expect(recorder.request?.body?.toolConfig).toEqual({
-            functionCallingConfig: { mode: "VALIDATED" },
+          if (isInteractions) {
+            expect(
+              recorder.request?.body?.generation_config?.tool_choice
+            ).toEqual("validated");
+          } else {
+            expect(recorder.request?.body?.toolConfig).toEqual({
+              functionCallingConfig: { mode: "VALIDATED" },
+            });
+          }
+          expect(result.tool_calls).toHaveLength(1);
+          expect(result.tool_calls?.[0]).toMatchObject({
+            name: "get_weather",
+            args: { location: "New York" },
           });
-        }
-        expect(result.tool_calls ?? []).toHaveLength(0);
-        expect(result.text).toMatch(/hello/i);
-      });
-    });
+          expect(
+            weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
+          ).toBe(true);
+        });
+
+        test("also permits a text response without forcing a function", async () => {
+          const llm = newChatGoogle().bindTools([weatherTool], {
+            tool_choice: toolChoice,
+          });
+          const result = await llm.invoke([
+            new HumanMessage(
+              "Do not use any tools. Reply with the single word Hello."
+            ),
+          ]);
+
+          if (isInteractions) {
+            expect(
+              recorder.request?.body?.generation_config?.tool_choice
+            ).toEqual("validated");
+          } else {
+            expect(recorder.request?.body?.toolConfig).toEqual({
+              functionCallingConfig: { mode: "VALIDATED" },
+            });
+          }
+          expect(result.tool_calls ?? []).toHaveLength(0);
+          expect(result.text).toMatch(/hello/i);
+        });
+      }
+    );
 
     test("Supports GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported

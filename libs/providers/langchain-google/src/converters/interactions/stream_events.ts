@@ -202,8 +202,7 @@ export async function* convertInteractionsStreamToChunks(
             const hasInitialArgs =
               step.arguments && Object.keys(step.arguments).length > 0;
             state.functionCall = {
-              id:
-                step.id || `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
+              id: step.id || `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
               name: step.name || "",
               argsText: hasInitialArgs ? JSON.stringify(step.arguments) : "",
               argsObject: hasInitialArgs ? step.arguments : undefined,
@@ -351,9 +350,7 @@ export async function* convertInteractionsStreamToChunks(
               pendingThoughtSignature = undefined;
               pendingFunctionCallSignature = undefined;
               state.functionCall = {
-                id:
-                  delta.id ||
-                  `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
+                id: delta.id || `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
                 name: delta.name || "",
                 argsText: "",
                 thoughtSignature: fcSig,
@@ -485,9 +482,7 @@ export async function* convertInteractionsStreamToChunks(
           case "processing_result":
           case "retrieval_call":
           case "retrieval_result": {
-            builtInToolSteps.push(
-              delta as unknown as Gemini.Interactions.Step
-            );
+            builtInToolSteps.push(delta as unknown as Gemini.Interactions.Step);
             break;
           }
 
@@ -821,7 +816,10 @@ export async function* convertInteractionsStream(
     const startEv = ensureMessageStarted();
     if (startEv) yield startEv;
 
-    if (event.event_type === "step.start" || event.event_type === "content.start") {
+    if (
+      event.event_type === "step.start" ||
+      event.event_type === "content.start"
+    ) {
       const rawStep = event.step ?? event.content;
       if (rawStep) {
         const step = normalizeInteractionStep(rawStep);
@@ -838,7 +836,10 @@ export async function* convertInteractionsStream(
       continue;
     }
 
-    if (event.event_type === "step.delta" || event.event_type === "content.delta") {
+    if (
+      event.event_type === "step.delta" ||
+      event.event_type === "content.delta"
+    ) {
       if (shouldStreamUsage && event.metadata?.total_usage) {
         usageSnapshot = convertInteractionsUsageToUsageMetadata(
           event.metadata.total_usage

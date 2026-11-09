@@ -650,7 +650,10 @@ export declare namespace Gemini {
 
     // Narrowed from InteractionsNamespace.UrlCitation because
     // interactions-openapi.json uses `"const": "url_citation"`, which sparktype outputs as `unknown`.
-    export type UrlCitation = Omit<InteractionsNamespace.UrlCitation, "type"> & {
+    export type UrlCitation = Omit<
+      InteractionsNamespace.UrlCitation,
+      "type"
+    > & {
       type: "url_citation";
     };
 
@@ -707,7 +710,10 @@ export declare namespace Gemini {
 
     // Narrowed from InteractionsNamespace.ImageContent because
     // interactions-openapi.json uses `"const": "image"`, which sparktype outputs as `unknown`.
-    export type ImageContent = Omit<InteractionsNamespace.ImageContent, "type"> & {
+    export type ImageContent = Omit<
+      InteractionsNamespace.ImageContent,
+      "type"
+    > & {
       type: "image";
     };
 
@@ -976,7 +982,10 @@ export declare namespace Gemini {
 
     // Narrowed from InteractionsNamespace.Tools.Function because
     // interactions-openapi.json uses `"const": "function"`, which sparktype outputs as `unknown`.
-    export type Function = Omit<InteractionsNamespace.Tools.Function, "type"> & {
+    export type Function = Omit<
+      InteractionsNamespace.Tools.Function,
+      "type"
+    > & {
       type: "function";
     };
 
