@@ -1036,6 +1036,9 @@ importers:
       p-queue:
         specifier: ^6.6.2
         version: 6.6.2
+      retry-delay:
+        specifier: ^0.1.1
+        version: 0.1.1
       zod:
         specifier: '>=4.6.6 <5'
         version: 4.6.7
@@ -10184,6 +10187,10 @@ packages:
     engines: {node: '>=10.7.0'}
     peerDependencies:
       axios: '>=0.30.3'
+
+  retry-delay@0.1.1:
+    resolution: {integrity: sha512-3OK9r7wpscUswAgMHUiRa24pzxVQPR48Hov174MRfByGRYX9clBo8Fe1867GIJNdy+ugGYN01Mi4du8Z2aHjYg==}
+    engines: {node: '>=18'}
 
   retry-request@8.0.4:
     resolution: {integrity: sha512-pI6/7eabUYkZxamkOq0g0uMxKLLGnjzhefY+vL8bVXag5rto4OU2YBTPytWLuHH7aEKD6fn7kJycQfid0Mwnkw==}
@@ -19946,6 +19953,8 @@ snapshots:
   retry-axios@2.6.0(axios@1.21.0):
     dependencies:
       axios: 1.21.0(debug@4.4.3)
+
+  retry-delay@0.1.1: {}
 
   retry-request@8.0.4:
     dependencies:

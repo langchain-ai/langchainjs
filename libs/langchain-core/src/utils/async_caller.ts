@@ -1,4 +1,5 @@
 import PQueueMod from "p-queue";
+import { parseRetryAfter, retryDelay } from "retry-delay";
 
 import { getRetryable, stampRetryable } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
@@ -187,23 +188,13 @@ export function parseRetryAfterMs(
     return undefined;
   }
 
-  const trimmed = headerValue.trim();
-  if (!trimmed) {
-    return undefined;
+  const delayMs = parseRetryAfter(headerValue);
+  if (delayMs !== undefined) {
+    return delayMs;
   }
 
-  const seconds = Number(trimmed);
-  if (!Number.isNaN(seconds) && seconds >= 0) {
-    return seconds * 1000;
-  }
-
-  const date = Date.parse(trimmed);
-  if (!Number.isNaN(date)) {
-    const delayMs = date - Date.now();
-    return delayMs > 0 ? delayMs : 0;
-  }
-
-  return undefined;
+  // A valid HTTP-date that has already passed: retry now.
+  return parseRetryAfter(headerValue, 0) !== undefined ? 0 : undefined;
 }
 
 export function classifyRateLimitError(
@@ -228,6 +219,7 @@ export function classifyRateLimitError(
   }
 
   const retryAfterMs =
+    retryDelay(error) ??
     parseRetryAfterMs(_getRetryAfterHeader(error)) ??
     parseRetryAfterFromMessageMs(message);
 

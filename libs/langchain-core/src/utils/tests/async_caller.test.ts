@@ -305,6 +305,25 @@ describe("parseRetryAfterMs", () => {
   test("returns undefined for unparseable value", () => {
     expect(parseRetryAfterMs("not-a-number-or-date")).toBeUndefined();
   });
+
+  test("reads asctime dates as GMT, not local time", () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 10, 5, 12, 0, 0) });
+    try {
+      expect(parseRetryAfterMs("Thu Nov  5 12:01:00 2026")).toBe(60_000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("rejects values that Number() accepts but Retry-After does not", () => {
+    expect(parseRetryAfterMs("1e3")).toBeUndefined();
+    expect(parseRetryAfterMs("0x1E")).toBeUndefined();
+    expect(parseRetryAfterMs("Infinity")).toBeUndefined();
+  });
+
+  test("rejects loose date text", () => {
+    expect(parseRetryAfterMs("Nov 5")).toBeUndefined();
+  });
 });
 
 describe("classifyRateLimitError", () => {
@@ -357,6 +376,66 @@ describe("classifyRateLimitError", () => {
       action: "wait",
       retryAfterMs: 4000,
       reason: "retry_after_hint",
+    });
+  });
+
+  test("reads OpenAI's retry-after-ms", () => {
+    const error = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers: new Headers({ "retry-after-ms": "850" }),
+    });
+
+    expect(classifyRateLimitError(error)).toEqual({
+      action: "wait",
+      retryAfterMs: 850,
+      reason: "retry_after_hint",
+    });
+  });
+
+  test("reads the reset header of an exhausted Anthropic limit", () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 10, 5, 12, 0, 0) });
+    try {
+      const error = Object.assign(new Error("Too Many Requests"), {
+        status: 429,
+        headers: new Headers({
+          "anthropic-ratelimit-requests-remaining": "40",
+          "anthropic-ratelimit-requests-reset": "2026-11-05T12:00:01Z",
+          "anthropic-ratelimit-input-tokens-remaining": "0",
+          "anthropic-ratelimit-input-tokens-reset": "2026-11-05T12:00:42Z",
+        }),
+      });
+
+      expect(classifyRateLimitError(error)).toEqual({
+        action: "wait",
+        retryAfterMs: 42_000,
+        reason: "retry_after_hint",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("reads retry-after from a plain headers object in any case", () => {
+    const error = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers: { "RETRY-AFTER": "3" },
+    });
+
+    expect(classifyRateLimitError(error)).toMatchObject({
+      action: "wait",
+      retryAfterMs: 3000,
+    });
+  });
+
+  test("does not wait forever on Retry-After: Infinity", () => {
+    const error = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers: { "retry-after": "Infinity" },
+    });
+
+    expect(classifyRateLimitError(error)).toEqual({
+      action: "capacity",
+      reason: "headerless_429",
     });
   });
 

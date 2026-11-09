@@ -30,6 +30,7 @@
     "langsmith": ">=0.11.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
+    "retry-delay": "^0.1.1",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
