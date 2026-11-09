@@ -16,6 +16,49 @@ class TraceableChatOpenAIResponses extends ChatOpenAIResponses {
   }
 }
 
+describe("forced function tool choice", () => {
+  const tools = [
+    {
+      type: "function" as const,
+      function: {
+        name: "lookup",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+  ];
+
+  it.each([
+    ["Responses", { type: "function" as const, name: "lookup" }],
+    [
+      "Chat Completions",
+      { type: "function" as const, function: { name: "lookup" } },
+    ],
+    ["bare tool name", "lookup"],
+  ])("serializes the %s format", (_format, tool_choice) => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    expect(model.invocationParams({ tools, tool_choice }).tool_choice).toEqual({
+      type: "function",
+      name: "lookup",
+    });
+  });
+
+  it("preserves built-in tool choices", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const tool_choice = { type: "web_search_preview" as const };
+
+    expect(model.invocationParams({ tools, tool_choice }).tool_choice).toBe(
+      tool_choice
+    );
+  });
+
+  it("leaves an absent tool choice undefined", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    expect(model.invocationParams({ tools }).tool_choice).toBeUndefined();
+  });
+});
+
 describe("MCP credential tracing", () => {
   it("redacts MCP credentials without changing request params", () => {
     const model = new TraceableChatOpenAIResponses({ model: "gpt-4o" });
