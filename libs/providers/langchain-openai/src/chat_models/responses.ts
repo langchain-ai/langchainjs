@@ -125,7 +125,13 @@ export class ChatOpenAIResponses<
             const formatted = formatToOpenAIToolChoice(options?.tool_choice);
             if (typeof formatted === "object" && "type" in formatted) {
               if (formatted.type === "function") {
-                return { type: "function", name: formatted.function.name };
+                return {
+                  type: "function",
+                  name:
+                    "name" in formatted && typeof formatted.name === "string"
+                      ? formatted.name
+                      : formatted.function.name,
+                };
               } else if (formatted.type === "allowed_tools") {
                 return {
                   type: "allowed_tools",
