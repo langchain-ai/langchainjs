@@ -43,6 +43,19 @@ async function readErrorResponseBody(response: Response): Promise<unknown> {
   });
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * Reads `body[key]` if the error body is an object and that field is a
+ * string. The body may be any parsed JSON value, a text string, or null.
+ */
+function readStringField(body: unknown, key: string): string | undefined {
+  const value = isRecord(body) ? body[key] : undefined;
+  return typeof value === "string" ? value : undefined;
+}
+
 /**
  * Base error class for all Google provider errors.
  *
@@ -337,7 +350,7 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     const errorBody = await readErrorResponseBody(response);
 
     const message =
-      errorBody?.error_description ??
+      readStringField(errorBody, "error_description") ??
       `Authentication failed with status code ${response.status}`;
 
     const headers = iife(() => {
@@ -526,10 +539,11 @@ export class RequestError extends ns.brand(GoogleError, "request") {
   static async fromResponse(response: Response): Promise<RequestError> {
     const errorBody = await readErrorResponseBody(response);
 
+    const error = isRecord(errorBody) ? errorBody.error : undefined;
     const message =
-      errorBody?.error?.message ??
-      errorBody?.message ??
-      errorBody?.error ??
+      readStringField(error, "message") ??
+      readStringField(errorBody, "message") ??
+      readStringField(errorBody, "error") ??
       `Request failed with status code ${response.status}`;
 
     const headers = iife(() => {

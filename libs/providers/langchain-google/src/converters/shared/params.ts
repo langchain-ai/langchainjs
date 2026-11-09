@@ -146,7 +146,7 @@ export function convertReasoningTokensToReasoningEffort(
  * should be used for calling Gemini/PaLM endpoints, based on the options provided in
  * {@link BaseChatGoogleParams} (such as model constructors or call options).
  */
-export function convertParamsToPlatformType(params: {
+export function convertParamsToPlatformType(params?: {
   platformType?: GooglePlatformType;
   vertexai?: boolean;
 }): GooglePlatformType | undefined {
