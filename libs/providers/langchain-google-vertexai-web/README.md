@@ -50,11 +50,9 @@ console.log(response.content);
 ```
 
 Vertex Express requests do not require Google web credentials when a gateway API
-key is configured. To preserve project and regional routing, pass service-account
-credentials in `authOptions.credentials` and a `location`. The project ID comes
-from those credentials, but requests use the selected API key rather than Google
-OAuth. An explicit `apiKey` takes precedence over the gateway key. An explicit
-`endpoint` opts out of automatic gateway routing and gateway-key selection.
+key is configured. Passing your own credentials (`authOptions` or `apiKey`) or an
+explicit `endpoint` opts out of gateway routing and sends requests straight to
+Vertex AI.
 
 Keep gateway API keys in trusted server or edge runtimes, not public browser
 bundles.
