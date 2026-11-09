@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
-import { ChatCohere } from "../chat_models.js";
+import { ChatCohere, type ChatCohereCallOptions } from "../chat_models.js";
 
 function cohereTextStream() {
   return [
@@ -80,6 +80,40 @@ describe("ChatCohere.streamEvents", () => {
     await expect(
       mockCohere(cohereUsageStream()).streamEvents("Hello")
     ).toHaveStreamUsage({
+      input_tokens: 4,
+      output_tokens: 2,
+      total_tokens: 6,
+    });
+  });
+
+  test("per-call streamUsage false wins over instance default true", async () => {
+    const model = mockCohere(cohereUsageStream());
+    const chunks = [];
+    for await (const chunk of model._streamResponseChunks([], {
+      streamUsage: false,
+    } as ChatCohereCallOptions)) {
+      chunks.push(chunk);
+    }
+    expect(
+      chunks.some(
+        (chunk) => chunk.message.usage_metadata !== undefined
+      )
+    ).toBe(false);
+  });
+
+  test("per-call streamUsage true wins over instance false", async () => {
+    const model = mockCohere(cohereUsageStream());
+    model.streamUsage = false;
+    const chunks = [];
+    for await (const chunk of model._streamResponseChunks([], {
+      streamUsage: true,
+    } as ChatCohereCallOptions)) {
+      chunks.push(chunk);
+    }
+    const usageChunk = chunks.find(
+      (chunk) => chunk.message.usage_metadata !== undefined
+    );
+    expect(usageChunk?.message.usage_metadata).toEqual({
       input_tokens: 4,
       output_tokens: 2,
       total_tokens: 6,
