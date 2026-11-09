@@ -1,5 +1,21 @@
 # @langchain/google
 
+## 0.2.13
+
+### Patch Changes
+
+- [`9ec213b`](https://github.com/langchain-ai/langchainjs/commit/9ec213b8aba71c3d2870f478b8a18c647957fb7a) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds **experimental** support for the Google Interactions API on AI Studio and
+  Google Cloud (Vertex).
+
+  - Add `InteractionsApiHandler` (`apiHandler: "interactions"`) supporting `.invoke()`, `.stream()`, and `.streamEvents()` across AI Studio (`gai`) and Vertex AI (`gcp`)
+  - Add Interactions API converters for messages, tools, parameters, and streaming SSE events
+  - Generate Interactions API TypeScript types from the OpenAPI specification (`src/chat_models/api_types/interactions.ts`)
+  - Export `GoogleChatApiHandler`, `GenerateContentApiHandler`, `InteractionsApiHandler`, and Interactions converters
+  - Supports backwards compatibility with the current API.
+  - Parameters for the Integrations API are exposed, but no specific feature changes are included.
+
+- [#12141](https://github.com/langchain-ai/langchainjs/pull/12141) [`4585842`](https://github.com/langchain-ai/langchainjs/commit/4585842d7e7d04ca14dc8976569c7984ad97218d) Thanks [@hntrl](https://github.com/hntrl)! - Only route Google chat models through the LangSmith gateway when no credentials are passed. Explicit `apiKey`, `authOptions`, `credentials`, or `googleAuthOptions` now go straight to Google.
+
 ## 0.2.12
 
 ### Patch Changes

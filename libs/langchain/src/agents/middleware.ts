@@ -6,6 +6,7 @@ import type {
   StateDefinitionInit,
   StreamTransformer,
 } from "@langchain/langgraph";
+import type { TracePolicy } from "@langchain/core/tracers/tracer_langchain";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import {
@@ -114,6 +115,12 @@ export function createMiddleware<
    * Merged with `createAgent({ streamTransformers })` when the agent compiles.
    */
   streamTransformers?: TStreamTransformers;
+  /**
+   * Shapes what `LangChainTracer` sends to LangSmith for this middleware's
+   * lifecycle hook runs. Execution, streaming, and other callbacks still see
+   * the raw values.
+   */
+  tracePolicy?: TracePolicy;
   /**
    * Wraps tool execution with custom logic. This allows you to:
    * - Modify tool call parameters before execution
@@ -272,6 +279,7 @@ export function createMiddleware<
     afterAgent: config.afterAgent,
     tools: config.tools,
     streamTransformers: config.streamTransformers,
+    tracePolicy: config.tracePolicy,
   };
 
   return middleware;

@@ -1,5 +1,25 @@
 # langchain
 
+## 1.6.3
+
+### Patch Changes
+
+- [#11778](https://github.com/langchain-ai/langchainjs/pull/11778) [`a6d1e1b`](https://github.com/langchain-ai/langchainjs/commit/a6d1e1b9e43c36f0e1ef262b568760afedd4641d) Thanks [@yoarajota](https://github.com/yoarajota)! - `modelRetryMiddleware` now retries errors that are subclasses of a class listed in `retryOn`. Previously the array form matched only the exact constructor, so `retryOn: [APIError]` never retried a `RateLimitError`. This matches `toolRetryMiddleware`.
+
+- [#11330](https://github.com/langchain-ai/langchainjs/pull/11330) [`642469d`](https://github.com/langchain-ai/langchainjs/commit/642469d1f384b7b96e1e3e4259c9587e3b4acd07) Thanks [@HDPark95](https://github.com/HDPark95)! - fix(langchain): preserve model errors propagated through middleware
+
+## 1.6.2
+
+### Patch Changes
+
+- [#11596](https://github.com/langchain-ai/langchainjs/pull/11596) [`db829f1`](https://github.com/langchain-ai/langchainjs/commit/db829f1cf96241215006acbaaa6c9138d6b24b09) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `tracePolicy` to `createMiddleware`, applied to the middleware's lifecycle hook runs. It only changes what `LangChainTracer` sends to LangSmith (use `omitPayload` from `@langchain/core/tracers/tracer_langchain`). Requires `@langchain/langgraph` >= 1.6.1.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11437](https://github.com/langchain-ai/langchainjs/pull/11437) [`272d651`](https://github.com/langchain-ai/langchainjs/commit/272d65140496b12c4895d6585c84d2640cd48383) Thanks [@zhdanovartur](https://github.com/zhdanovartur)! - fix(langchain): humanInTheLoopMiddleware — execute approved, edited and auto-approved tool calls when other calls in the same interrupt are rejected, instead of dropping them without a ToolMessage (caused "400 No tool output found for function call" on subsequent model requests)
+
 ## 1.6.0
 
 ### Minor Changes
