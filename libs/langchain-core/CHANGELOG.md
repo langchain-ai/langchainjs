@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.3.6
+
+### Patch Changes
+
+- [#12140](https://github.com/langchain-ai/langchainjs/pull/12140) [`f054550`](https://github.com/langchain-ai/langchainjs/commit/f054550c61df603c0daf6757a9f3f2076fc06be4) Thanks [@hntrl](https://github.com/hntrl)! - Stop `streamEvents` v2 from hanging or leaking an unhandled rejection when aborted, and from throwing its own `AbortError` when the consumer breaks early.
+
 ## 1.3.5
 
 ### Patch Changes
