@@ -645,6 +645,34 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(finish.usage.output_tokens).toBe(3);
     });
 
+    test("call option streamUsage: false overrides the instance default", async () => {
+      const model = new MockStreamChatAnthropic(textOnlyEvents());
+      expect(model.streamUsage).toBe(true);
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: false,
+      } as ChatAnthropicCallOptions)) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event === "usage").length).toBe(0);
+    });
+
+    test("call option streamUsage: true overrides an instance streamUsage of false", async () => {
+      const model = new MockStreamChatAnthropic(textOnlyEvents());
+      model.streamUsage = false;
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: true,
+      } as ChatAnthropicCallOptions)) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event === "usage").length).toBeGreaterThan(
+        0
+      );
+    });
+
     test("no usage events when streamUsage is false", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       // Override streamUsage on the model
