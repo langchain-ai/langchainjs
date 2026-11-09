@@ -60,6 +60,17 @@ const response = await model.invoke({
 });
 ```
 
+### Claude Fable 5.2 and Mythos 5.2
+
+Use `model: "claude-fable-5-2"` or `model: "claude-mythos-5-2"`. Both profiles support a 1M-token context, 128k output tokens, native structured output, and mid-conversation system and tool changes.
+
+- Thinking is always adaptive. Omit `thinking` or use `{ type: "adaptive" }`; disabled and budgeted thinking are unsupported
+- Omit sampling settings. Set `outputConfig: { effort: "high" }` to control effort; supported levels are `low`, `medium`, `high` (default), `xhigh`, and `max`
+- Use `.withStructuredOutput(schema, { method: "jsonSchema" })`. Forced tool choice is unsupported; function-calling structured output cannot guarantee a tool call
+- Preserve signed thinking, including empty blocks, and keep the conversation prefix unchanged. Pass `{ type: "computer_toolset_20260801" }` to `bindTools` for computer use
+
+Mythos requires verified organization access. Retention, CMEK restrictions on native structured output, and compatible advisor pairings are enforced by Anthropic; see the [migration guide](https://platform.claude.com/docs/en/models/fable-5-2/migration-guide).
+
 ### Streaming
 
 ```typescript

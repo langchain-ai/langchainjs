@@ -2580,7 +2580,9 @@ describe("Fable 5 and Mythos 5", () => {
   const modelNames = [
     "claude-fable-5",
     "claude-fable-5-1",
+    "claude-fable-5-2",
     "claude-mythos-5",
+    "claude-mythos-5-2",
   ] as const;
   test.each(modelNames)("default max_tokens for %s is 16384", (modelName) => {
     const model = new ChatAnthropic({
@@ -2611,7 +2613,10 @@ describe("Fable 5 and Mythos 5", () => {
       thinking: { type: "disabled" },
     });
 
-    if (modelName.startsWith("claude-fable-")) {
+    if (
+      modelName.startsWith("claude-fable-") ||
+      modelName === "claude-mythos-5-2"
+    ) {
       expect(() => model.invocationParams({})).toThrow(
         `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
       );
@@ -2953,3 +2958,38 @@ describe("profile mid-conversation support", () => {
     expect(chatModel.profile.midConversationTools).toBeUndefined();
   });
 });
+
+test.each(["claude-fable-5-2", "claude-mythos-5-2"])(
+  "%s supports native output, profiles, and the computer toolset",
+  (model) => {
+    const llm = new ChatAnthropic({ model, apiKey: "testing" });
+    expect(llm.profile).toMatchObject({
+      maxInputTokens: 1000000,
+      maxOutputTokens: 128000,
+      structuredOutput: true,
+      midConversationSystemMessages: true,
+      midConversationTools: true,
+    });
+    const bind = vi.spyOn(llm, "withConfig");
+    llm.withStructuredOutput(z.object({ answer: z.string() }));
+    expect(bind.mock.calls[0][0]).not.toHaveProperty("tool_choice");
+    bind.mockClear();
+    llm.withStructuredOutput(
+      {
+        type: "object",
+        properties: { answer: { const: "yes" } },
+        required: ["answer"],
+      },
+      { method: "jsonSchema" }
+    );
+    expect(bind.mock.calls[0][0]).toMatchObject({
+      outputConfig: {
+        format: { schema: { properties: { answer: { const: "yes" } } } },
+      },
+    });
+    bind.mockClear();
+    const toolset = { type: "computer_toolset_20260801" };
+    llm.bindTools([toolset]);
+    expect(bind.mock.calls[0][0]).toMatchObject({ tools: [toolset] });
+  }
+);

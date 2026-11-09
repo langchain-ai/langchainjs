@@ -24,8 +24,8 @@ class MockStreamChatAnthropic extends ChatAnthropic {
 
   capturedRequest: (AnthropicStreamingMessageCreateParams & Kwargs) | undefined;
 
-  constructor(mockEvents: unknown[]) {
-    super({ apiKey: "fake-key", model: "claude-sonnet-4-20250514" });
+  constructor(mockEvents: unknown[], model = "claude-sonnet-4-20250514") {
+    super({ apiKey: "fake-key", model });
     this.mockEvents = mockEvents;
   }
 
@@ -979,3 +979,47 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     });
   });
 });
+
+test.each(["claude-fable-5-2", "claude-mythos-5-2"])(
+  "%s preserves implicit signed and redacted thinking",
+  async (model) => {
+    const events = [
+      ...textOnlyEvents().slice(0, 1),
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: { type: "thinking", thinking: "", signature: "signed" },
+      },
+      { type: "content_block_stop", index: 0 },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: { type: "redacted_thinking", data: "encrypted" },
+      },
+      { type: "content_block_stop", index: 1 },
+      ...textOnlyEvents().slice(-2),
+    ];
+    const llm = new MockStreamChatAnthropic(events, model);
+    const chunks = [];
+    for await (const chunk of await llm.stream("Hello", {
+      outputVersion: "v0",
+    })) {
+      chunks.push(chunk);
+    }
+    const result = chunks.reduce((a, b) => a.concat(b));
+    expect(result.content).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "thinking",
+          thinking: "",
+          signature: "signed",
+        }),
+        expect.objectContaining({
+          type: "redacted_thinking",
+          data: "encrypted",
+        }),
+      ])
+    );
+    expect(llm.capturedRequest?.thinking).toBeUndefined();
+  }
+);
