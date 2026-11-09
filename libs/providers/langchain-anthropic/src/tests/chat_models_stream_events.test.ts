@@ -334,7 +334,12 @@ function cacheUsageEvents() {
     {
       type: "message_delta" as const,
       delta: { stop_reason: "end_turn" as const, stop_sequence: null },
-      usage: { output_tokens: 3 },
+      usage: {
+        input_tokens: 100,
+        output_tokens: 3,
+        cache_creation_input_tokens: 500,
+        cache_read_input_tokens: 200,
+      },
     },
     { type: "message_stop" as const },
   ];
