@@ -440,7 +440,9 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         },
       } as any);
 
-      const aggregated = created!.message.concat(finished!.message);
+      const aggregated = (created!.message as AIMessageChunk).concat(
+        finished!.message as AIMessageChunk
+      );
 
       expect(aggregated.response_metadata.model).toBe("gpt-5.4-2026-03-05");
       expect(aggregated.response_metadata.model_name).toBe(
