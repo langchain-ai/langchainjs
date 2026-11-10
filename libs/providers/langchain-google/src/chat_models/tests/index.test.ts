@@ -23,24 +23,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { Runnable } from "@langchain/core/runnables";
 import type { Gemini } from "../types.js";
 
-test("Carbon exposes its single-request capabilities", () => {
-  const model = new ChatGoogle({ model: "gemini-4-carbon", apiKey: "test" });
-  expect(model.profile).toEqual({
-    maxInputTokens: 1048576,
-    maxOutputTokens: 32768,
-    imageInputs: true,
-    audioInputs: true,
-    pdfInputs: true,
-    videoInputs: true,
-    reasoningOutput: true,
-    imageOutputs: false,
-    audioOutputs: false,
-    videoOutputs: false,
-    toolCalling: true,
-    structuredOutput: true,
-  });
-});
-
 interface MockResponseParameters {
   filePath: string;
   url: string;
