@@ -154,9 +154,9 @@ describe("parseQuestions", () => {
   test("a cyclic criteria fails with a named error, not a stack overflow", () => {
     // A YAML anchor (`&a { self: *a }`) materializes a genuine cycle, and
     // this function's whole contract is turning parsed-config input into a
-    // clean named error. zod walks recursively, so without a guard this is
-    // a bare RangeError. The marker pins that the offending key never
-    // reaches the message.
+    // clean named error. Without a guard, zod before 4.5 throws a bare
+    // RangeError and zod 4.5 and later accept the cycle. The marker pins
+    // that the offending key never reaches the message.
     const MARKER = "MARKER_CYCLIC_CRITERIA_KEY";
     const cyclic: Record<string, unknown> = { billing: "Payment issues" };
     cyclic[MARKER] = cyclic;

@@ -160,9 +160,9 @@ describe("serializeState", () => {
   });
 
   test("throws a clean, content-free error for a self-referential object", () => {
-    // Without cycle detection this recurses until the stack overflows,
-    // non-deterministically surfacing either a RangeError or an
-    // unrelated-looking TypeError from deep inside BaseMessage.isInstance.
+    // Without cycle detection, zod before 4.5 recurses until the stack
+    // overflows, and zod 4.5 and later return a cyclic payload whose
+    // `JSON.stringify` error names the key that closes the cycle.
     // LangGraph state is developer-assembled and can legitimately contain
     // cycles, so this must fail the same clean way every time — and,
     // unlike the historical `messages.ts` leak this guards against

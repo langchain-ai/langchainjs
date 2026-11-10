@@ -2,6 +2,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import * as z from "zod/v4";
 
 import type { JsonValue } from "../types.js";
+import { isCyclic } from "./cycles.js";
 import { renderMessage } from "./messages.js";
 
 /** A value legal anywhere below the root. `Date` becomes an ISO string. */
@@ -47,7 +48,7 @@ const messageSchema = z
       return renderMessage(message);
     } catch (error) {
       // Marked so the catch in `serializeState` can tell a real failure
-      // (an unsupported message type) from a stack exhausted by a cycle.
+      // (an unsupported message type) from a stack exhausted by depth.
       if (error !== null && typeof error === "object") {
         Object.defineProperty(error, RENDER_FAILURE, { value: true });
       }
@@ -134,9 +135,11 @@ function describeFailure(state: unknown, path: PropertyKey[]): string {
  *   nested value cannot be expressed as JSON, or if `state` is cyclic.
  */
 export function serializeState(state: State): JsonValue {
-  let result: z.ZodSafeParseResult<JsonValue>;
+  let result: z.ZodSafeParseResult<JsonValue> | undefined;
   try {
-    result = rootSchema.safeParse(state);
+    if (!isCyclic(state)) {
+      result = rootSchema.safeParse(state);
+    }
   } catch (error) {
     if (
       error !== null &&
@@ -145,9 +148,11 @@ export function serializeState(state: State): JsonValue {
     ) {
       throw error;
     }
-    // Anything else escaping `safeParse` is a stack exhausted by a cycle.
+    // Anything else is a stack exhausted by nesting too deep to walk.
     // Do NOT match on the error type: the limit lands mid-expression (a
     // TypeError from inside `isInstance`) as often as on a RangeError.
+  }
+  if (result === undefined) {
     throw new TypeError(CIRCULAR_ERROR);
   }
   if (result.success) {
