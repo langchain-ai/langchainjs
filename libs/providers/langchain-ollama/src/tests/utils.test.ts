@@ -41,8 +41,11 @@ test("convertToOllamaMessages preserves tool_calls when AIMessage content is a s
   );
   expect(toolCallMsg).toBeDefined();
   expect(toolCallMsg!.content).toBe("I'll look that up for you.");
-  expect(toolCallMsg!.tool_calls![0].id).toBe("call_123");
-  expect(toolCallMsg!.tool_calls![0].type).toBe("function");
+  // Ollama's `ToolCall` type declares only `function`; the converter also sends `id` and `type`.
+  expect(toolCallMsg!.tool_calls![0]).toMatchObject({
+    id: "call_123",
+    type: "function",
+  });
   expect(toolCallMsg!.tool_calls![0].function.name).toBe("get_weather");
   expect(toolCallMsg!.tool_calls![0].function.arguments).toEqual({
     location: "San Francisco",
