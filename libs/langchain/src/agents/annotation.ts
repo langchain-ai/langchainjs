@@ -8,6 +8,7 @@ import {
 } from "@langchain/langgraph";
 import { schemaMetaRegistry } from "@langchain/langgraph/zod";
 
+import type { JumpToTarget } from "./constants.js";
 import type { AnyAgentMiddleware } from "./middleware/types.js";
 import {
   type InteropZodObject,
@@ -15,11 +16,6 @@ import {
   getInteropZodObjectShape,
   isInteropZodObject,
 } from "@langchain/core/utils/types";
-
-/**
- * Type for jumpTo navigation targets
- */
-type JumpToTarget = "model_request" | "tools" | "end" | undefined;
 
 export function createAgentState<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
@@ -33,8 +29,11 @@ export function createAgentState<
    * Collect fields from state schemas
    */
   const stateFields: Record<string, any> = {
-    // jumpTo is used for internal navigation control
-    jumpTo: new UntrackedValue<JumpToTarget>(),
+    /**
+     * Internal navigation control: holds the user facing label a hook returned,
+     * which `resolveJump` maps to a graph node when routing.
+     */
+    jumpTo: new UntrackedValue<JumpToTarget | undefined>(),
   };
 
   // Separate shapes for input/output without reducer metadata (to avoid channel conflicts)
