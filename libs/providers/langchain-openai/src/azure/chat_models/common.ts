@@ -1,4 +1,7 @@
-import { AzureOpenAI as AzureOpenAIClient, type ClientOptions } from "openai";
+import {
+  AzureOpenAI as AzureOpenAIClient,
+  type AzureClientOptions,
+} from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { Serialized } from "@langchain/core/load/serializable";
 import { ChatOpenAICallOptions } from "../../chat_models/index.js";
@@ -8,6 +11,7 @@ import {
   getHeadersWithUserAgent,
 } from "../../utils/azure.js";
 import { AzureOpenAIChatInput, OpenAICoreRequestOptions } from "../../types.js";
+import { assertAzureClientOptions } from "../../utils/misc.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAIFields,
@@ -129,7 +133,8 @@ export function _getAzureClientOptions(
     const endpoint = getEndpoint(openAIEndpointConfig);
 
     const { apiKey: existingApiKey, ...clientConfigRest } = this.clientConfig;
-    const params: Omit<ClientOptions, "apiKey"> & { apiKey?: string } = {
+    assertAzureClientOptions(clientConfigRest);
+    const params: Omit<AzureClientOptions, "apiKey"> & { apiKey?: string } = {
       ...clientConfigRest,
       baseURL: endpoint,
       timeout: this.timeout,

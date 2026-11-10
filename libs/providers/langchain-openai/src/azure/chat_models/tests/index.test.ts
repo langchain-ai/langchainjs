@@ -119,3 +119,16 @@ test("AzureChatOpenAI profile makes no claim about mid-conversation tools", () =
   const completions = new AzureChatOpenAICompletions("gpt-5.5", fields);
   expect(completions.profile.midConversationTools).toBe(false);
 });
+
+test("AzureChatOpenAI rejects client options AzureOpenAI does not support", async () => {
+  const chat = new AzureChatOpenAI({
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiDeploymentName: "gpt-4o",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+    configuration: { dataResidency: "us" },
+  });
+  await expect(chat.invoke("Hello")).rejects.toThrow(
+    "Azure OpenAI does not support these client options: dataResidency"
+  );
+});
