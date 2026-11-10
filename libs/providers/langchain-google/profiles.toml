@@ -3,17 +3,3 @@ output = "src/chat_models/profiles.ts"
 
 [overrides."gemini-4-argon"]
 maxOutputTokens = 65536
-
-[overrides."gemini-4-carbon"]
-maxInputTokens = 1048576
-maxOutputTokens = 32768
-imageInputs = true
-audioInputs = true
-pdfInputs = true
-videoInputs = true
-reasoningOutput = true
-imageOutputs = false
-audioOutputs = false
-videoOutputs = false
-toolCalling = true
-structuredOutput = true
