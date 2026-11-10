@@ -1,18 +1,27 @@
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
-import { afterEach, expect, jest, test } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
   BaseMessageChunk,
   BaseMessageLike,
+  ContentBlock,
   HumanMessage,
   HumanMessageChunk,
   MessageContentComplex,
   SystemMessage,
   ToolMessage,
   MessageContentImageUrl,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -22,6 +31,7 @@ import {
 } from "@langchain/google-common/experimental/utils/media_core";
 import {
   GeminiTool,
+  GeminiUrlContextMetadata,
   GooglePlatformType,
   GoogleRequestLogger,
   GoogleRequestRecorder,
@@ -39,13 +49,36 @@ import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
 import MockedFunction = jest.MockedFunction;
 
-function propSum(o: Record<string, number>): number {
+function propSum(o: Record<string, number> | undefined): number {
   if (typeof o !== "object") {
     return 0;
   }
   return Object.keys(o)
     .map((key) => o[key])
     .reduce((acc, val) => acc + val);
+}
+
+// response_metadata values are typed unknown, so narrow the ones we inspect.
+function isUsageMetadata(value: unknown): value is UsageMetadata {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "input_tokens" in value &&
+    typeof value.input_tokens === "number" &&
+    "output_tokens" in value &&
+    typeof value.output_tokens === "number"
+  );
+}
+
+function isUrlContextMetadata(
+  value: unknown
+): value is GeminiUrlContextMetadata {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "urlMetadata" in value &&
+    Array.isArray(value.urlMetadata)
+  );
 }
 
 const weatherToolSchema = z.object({
@@ -137,7 +170,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       new AIMessage("T"),
       new HumanMessage("Flip the coin again"),
     ];
-    const res = await model.predictMessages(messages);
+    const res = await model.invoke(messages);
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -202,7 +235,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   test.skip("Few shotting with tool calls", async () => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
-    const res = await chat.invoke("What is the weather in SF");
+    await chat.invoke("What is the weather in SF");
 
     const res2 = await chat.invoke([
       new HumanMessage("What is the weather in SF?"),
@@ -280,7 +313,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       },
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -318,7 +351,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const data64 = data.toString("base64");
     const dataUri = `data:${dataType};base64,${data64}`;
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -359,7 +392,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const data64 = data.toString("base64");
     const dataUri = `data:${dataType};base64,${data64}`;
 
-    const message1: MessageContentComplex[] = [
+    const message1: ContentBlock[] = [
       {
         type: "text",
         text: "Describe this video in detail.",
@@ -379,7 +412,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const response1 = recorder.response;
     expect(response1).toBeDefined();
 
-    const message2: MessageContentComplex[] = [
+    const message2: ContentBlock[] = [
       {
         type: "text",
         text: "Does the camera pan from left to right or right to left?",
@@ -585,6 +618,9 @@ describe.each(testGeminiModelNames)(
       expect(meta).not.toHaveProperty("groundingSupport");
       expect(meta).toHaveProperty("usage_metadata");
       const usage = meta.usage_metadata;
+      if (!isUsageMetadata(usage)) {
+        throw new Error("usage_metadata is not UsageMetadata");
+      }
 
       // Although LangChainJS doesn't require that the details sum to the
       // available tokens, this should be the case for how we're doing Gemini.
@@ -619,7 +655,7 @@ describe.each(testGeminiModelNames)(
         new AIMessage("T"),
         new HumanMessage("Flip the coin again"),
       ];
-      const res = await model.predictMessages(messages);
+      const res = await model.invoke(messages);
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 
@@ -693,7 +729,7 @@ describe.each(testGeminiModelNames)(
       ];
       */
       const tools = [weatherTool];
-      const model = newChatGoogle().bind({
+      const model = newChatGoogle().withConfig({
         tools,
         temperature: 0.1,
       });
@@ -722,11 +758,13 @@ describe.each(testGeminiModelNames)(
 
     test("function conversation", async () => {
       const tools = [weatherTool];
-      const model = newChatGoogle().bind({
+      const model = newChatGoogle().withConfig({
         tools,
         temperature: 0.1,
       });
-      const history = [new HumanMessage("What is the weather in New York?")];
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
       const result1 = await model.invoke(history);
       history.push(result1);
 
@@ -770,14 +808,7 @@ describe.each(testGeminiModelNames)(
         new HumanMessage("Run a test on the cobalt project."),
         new AIMessage({
           tool_calls: [
-            {
-              id: "test",
-              type: "function",
-              function: {
-                name: "test",
-                arguments: '{"testName":"cobalt"}',
-              },
-            },
+            { id: "test", name: "test", args: { testName: "cobalt" } },
           ],
         }),
         new ToolMessage(JSON.stringify(toolResult), "test"),
@@ -1102,6 +1133,9 @@ describe.each(testGeminiModelNames)(
       expect(meta).not.toHaveProperty("groundingSupport");
       expect(meta).toHaveProperty("usage_metadata");
       const usage = meta.usage_metadata;
+      if (!isUsageMetadata(usage)) {
+        throw new Error("usage_metadata is not UsageMetadata");
+      }
 
       // Although LangChainJS doesn't require that the details sum to the
       // available tokens, this should be the case for how we're doing Gemini.
@@ -1168,7 +1202,9 @@ describe.each(testGeminiModelNames)(
       expect(meta).toHaveProperty("groundingSupport");
       const context = meta.url_context_metadata;
       expect(context).toHaveProperty("urlMetadata");
-      expect(Array.isArray(context.urlMetadata)).toEqual(true);
+      if (!isUrlContextMetadata(context)) {
+        throw new Error("url_context_metadata.urlMetadata is not an array");
+      }
       expect(context.urlMetadata[0].retrievedUrl).toEqual(url);
       expect(context.urlMetadata[0].urlRetrievalStatus).toEqual(
         "URL_RETRIEVAL_STATUS_SUCCESS"
@@ -1210,7 +1246,7 @@ describe.each(testGeminiModelNames)(
       const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
-      const message: MessageContentComplex[] = [
+      const message: ContentBlock[] = [
         {
           type: "text",
           text: "What is in this image?",
@@ -1252,7 +1288,7 @@ describe.each(testGeminiModelNames)(
       const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
-      const message1: MessageContentComplex[] = [
+      const message1: ContentBlock[] = [
         {
           type: "text",
           text: "Describe this video in detail.",
@@ -1289,7 +1325,7 @@ describe.each(testGeminiModelNames)(
       ).toBeGreaterThan(0);
 
       // Now run it again, but this time sample two frames / second
-      const message2: MessageContentComplex[] = [
+      const message2: ContentBlock[] = [
         {
           type: "text",
           text: "Describe this video in detail.",
@@ -1325,7 +1361,7 @@ describe.each(testGeminiModelNames)(
       const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
-      const message1: MessageContentComplex[] = [
+      const message1: ContentBlock[] = [
         {
           type: "text",
           text: "Describe this video in detail.",
@@ -1345,7 +1381,7 @@ describe.each(testGeminiModelNames)(
       const response1 = recorder.response;
       expect(response1).toBeDefined();
 
-      const message2: MessageContentComplex[] = [
+      const message2: ContentBlock[] = [
         {
           type: "text",
           text: "Does the camera pan from left to right or right to left?",
