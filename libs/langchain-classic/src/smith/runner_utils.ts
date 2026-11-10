@@ -520,6 +520,29 @@ const loadExamples = async ({
   };
 };
 
+/**
+ * Runs one evaluator on a run and logs the result as feedback, as
+ * `Client.evaluateRun` did before langsmith 0.4 removed it.
+ */
+const evaluateRun = async ({
+  client,
+  run,
+  evaluator,
+  example,
+}: {
+  client: Client;
+  run: Run;
+  evaluator: RunEvaluator;
+  example: Example;
+}): Promise<Feedback> => {
+  const evaluationResult = await evaluator.evaluateRun(run, example);
+  const [, feedbacks] = await client._logEvaluationFeedback(
+    evaluationResult,
+    run
+  );
+  return feedbacks[0];
+};
+
 const applyEvaluators = async ({
   evaluation,
   runs,
@@ -560,10 +583,7 @@ const applyEvaluators = async ({
       caller.call(async () => {
         const evaluatorResults = await Promise.allSettled(
           evaluators.map((evaluator) =>
-            client.evaluateRun(run, evaluator, {
-              referenceExample: examples[i],
-              loadChildRuns: false,
-            })
+            evaluateRun({ client, run, evaluator, example: examples[i] })
           )
         );
         progress.increment();
