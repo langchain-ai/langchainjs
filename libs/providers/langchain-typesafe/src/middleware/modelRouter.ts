@@ -15,6 +15,11 @@ import {
 
 const QUESTION_ID = "model_route";
 
+const DEPRECATION_MESSAGE =
+  "`modelRouterMiddleware` from `@langchain/typesafe/middleware` is deprecated since @langchain/typesafe 0.1.0 and will be removed in 0.2.0. Use `modelRouterMiddleware` from `langchain` with `classifier: new TypeSafeClassifier()` instead.";
+
+let warnedDeprecated = false;
+
 /** A model available to the router, with the criterion for selecting it. */
 export interface ModelChoice {
   /** A model instance, or a string accepted by `initChatModel`. */
@@ -151,9 +156,14 @@ export function latestHumanMessage(
  * unresolvable model, say — is wrapped in `MiddlewareError`
  * (`agents/nodes/AgentNode.ts:701`) and must be read via `err.cause`.
  *
- * @experimental
+ * @deprecated Since 0.1.0; removed in 0.2.0. Use `modelRouterMiddleware` from
+ * `langchain` with `classifier: new TypeSafeClassifier()` instead.
  */
 export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
+  if (!warnedDeprecated) {
+    warnedDeprecated = true;
+    console.warn(DEPRECATION_MESSAGE);
+  }
   const { choices: choicesInput, instructions, classifierOptions } = config;
   const choices = parseChoices(choicesInput);
   const routes = Object.keys(choices);

@@ -137,24 +137,19 @@ Errors carry `status`, `requestId`, `body` and `headers` as properties, but neve
 
 Retries are handled by LangChain's `AsyncCaller`; configure them with `maxRetries` and `maxConcurrency` on the constructor.
 
-## `@langchain/typesafe/middleware`
+## Agent middleware
 
-Two `createMiddleware`-based factories for use with LangChain agents.
+LangChain's `modelRouterMiddleware` and `autoModeMiddleware` accept any decision model as their `classifier`. Pass a `TypeSafeClassifier` to use TypeSafe.
 
-`langchain` is an **optional** peer dependency — the base package does not
-need it, so install it alongside if you use this entrypoint:
-
-```bash
-npm install @langchain/typesafe langchain
-```
+> **Deprecated:** `@langchain/typesafe/middleware` is deprecated since 0.1.0 and will be removed in 0.2.0. Import the middleware from `langchain` and pass `classifier: new TypeSafeClassifier()` instead.
 
 ### `modelRouterMiddleware`
 
-Classifies the latest human message ONCE per agent run with a TypeSafe `Choice`, then routes every model call in that run to the selected model:
+Classifies the latest human message once per agent run with a `Choice` question, then routes every model call in that run to the selected model:
 
 ```ts
-import { modelRouterMiddleware } from "@langchain/typesafe/middleware";
-import { createAgent } from "langchain";
+import { createAgent, modelRouterMiddleware } from "langchain";
+import { TypeSafeClassifier } from "@langchain/typesafe";
 
 const agent = createAgent({
   model: "openai:gpt-5-mini",
@@ -171,6 +166,7 @@ const agent = createAgent({
         },
       },
       instructions: "Choose the least costly model suited to the task.",
+      classifier: new TypeSafeClassifier(),
     }),
   ],
 });
@@ -178,24 +174,27 @@ const agent = createAgent({
 
 ### `autoModeMiddleware`
 
-Blocks a tool call before it runs when a TypeSafe `Noul` scores it above a risk threshold. It blocks rather than asking, and composes with `humanInTheLoopMiddleware` rather than replacing it:
+Classifies calls to explicitly configured tools and blocks risky calls before they run. It blocks rather than asking, and composes with `humanInTheLoopMiddleware` rather than replacing it:
 
 ```ts
-import { autoModeMiddleware } from "@langchain/typesafe/middleware";
-import { createAgent } from "langchain";
+import { autoModeMiddleware, createAgent } from "langchain";
+import { TypeSafeClassifier } from "@langchain/typesafe";
 
 const agent = createAgent({
   model: "openai:gpt-5",
   tools: [runSqlTool, sendEmailTool],
   middleware: [
     autoModeMiddleware({
-      tools: ["run_sql", "send_email"],
+      tools: [runSqlTool, sendEmailTool],
+      criteria: {
+        true: "The call writes, deletes, publishes, or changes access.",
+        false: "The call only reads public or user-provided data.",
+      },
+      classifier: new TypeSafeClassifier(),
     }),
   ],
 });
 ```
-
-Both middlewares build their own `TypeSafeClassifier` internally; pass `classifierOptions` to configure transport and model settings.
 
 ## Development
 

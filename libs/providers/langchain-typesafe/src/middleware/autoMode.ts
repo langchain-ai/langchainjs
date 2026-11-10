@@ -36,6 +36,11 @@ const toolsSchema = z
   .array(toolEntrySchema)
   .nonempty("autoModeMiddleware requires at least one entry in `tools`.");
 
+const DEPRECATION_MESSAGE =
+  "`autoModeMiddleware` from `@langchain/typesafe/middleware` is deprecated since @langchain/typesafe 0.1.0 and will be removed in 0.2.0. Use `autoModeMiddleware` from `langchain` with `classifier: new TypeSafeClassifier()` instead.";
+
+let warnedDeprecated = false;
+
 /**
  * The whole config in one schema, so construction is a single parse with a
  * single error path and every default in one place.
@@ -112,9 +117,14 @@ export function renderBlockedMessage(
  * This is the part an LLM guardrail cannot do: an LLM's "80% sure" is not
  * calibrated, so it cannot be a threshold. A System One probability can.
  *
- * @experimental
+ * @deprecated Since 0.1.0; removed in 0.2.0. Use `autoModeMiddleware` from
+ * `langchain` with `classifier: new TypeSafeClassifier()` instead.
  */
 export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
+  if (!warnedDeprecated) {
+    warnedDeprecated = true;
+    console.warn(DEPRECATION_MESSAGE);
+  }
   const parsed = configSchema.safeParse(config);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0].message);
