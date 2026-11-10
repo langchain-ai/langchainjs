@@ -117,15 +117,22 @@ const questionSchema = z.discriminatedUnion("type", [
  * Optional descriptions for the two outcomes of a `Noul` question.
  *
  * Criteria clarify what should count as yes and no when the instructions alone
- * leave room for interpretation. The keys are literally `true` and `false`.
+ * leave room for interpretation. Both values accept any JSON value, so callers
+ * can provide a short description or structured examples. The keys are
+ * literally `true` and `false`.
  */
 export type NoulCriteria = z.infer<typeof noulCriteriaSchema>;
 
 /**
  * Ask a binary question and receive the probability that its answer is yes.
  *
- * A value near `1` indicates strong support for yes, near `0` strong support
- * for no, and near `0.5` uncertainty. Noul answers have no separate confidence.
+ * Use `Noul` when the probability itself is useful to application code, such as
+ * deciding whether a message reports a bug or requests a refund. A value near
+ * `1` indicates strong support for yes, near `0` strong support for no, and
+ * near `0.5` uncertainty. Noul answers have no separate confidence.
+ *
+ * Write the complete judgment in `instructions`, even when the question ID
+ * seems self-explanatory. Optional `criteria` define the yes and no outcomes.
  *
  * @example
  * ```ts
@@ -146,9 +153,14 @@ export type Noul = z.infer<typeof noulSchema>;
 /**
  * Select one label from a fixed set of alternatives.
  *
+ * Use `Choice` for categorical decisions with no inherent ordering, such as
+ * routing a support request, detecting a document type, or selecting an
+ * intent. The answer includes the selected label, a probability for every
+ * supplied label, and a confidence value.
+ *
  * `criteria` maps each label to its description, which may be text, JSON, or
- * `null`. Include an `other` label when the alternatives may not cover every
- * input.
+ * `null`. Include an `other` or `none_of_the_above` label when the alternatives
+ * may not cover every input.
  *
  * @example
  * ```ts
@@ -161,11 +173,18 @@ export type Noul = z.infer<typeof noulSchema>;
  *       criteria: {
  *         billing: "Payment, invoice, or subscription issues.",
  *         technical: "Product bugs or integration failures.",
+ *         sales: "Pricing or purchasing questions.",
  *       },
  *     },
  *   },
  * });
- * const { choice, confidence } = response.choices.department;
+ * const department = response.choices.department;
+ *
+ * if (department.confidence >= 0.7) {
+ *   routeTo(department.choice);
+ * } else {
+ *   routeToHumanTriage();
+ * }
  * ```
  */
 export type Choice = z.infer<typeof choiceSchema>;
@@ -173,8 +192,11 @@ export type Choice = z.infer<typeof choiceSchema>;
 /**
  * Evaluate state against an ordered rubric.
  *
- * `criteria` lists two or more levels, low to high, numbered from zero. The
- * returned score is an expected value and may fall between levels.
+ * Use `Score` when the answer lies on a spectrum whose levels can be described,
+ * such as severity, urgency, or customer frustration. `criteria` lists two or
+ * more levels, numbered from zero in their supplied order. The returned score
+ * is an expected value and may fall between integer levels; the full
+ * probability distribution remains available for custom decision logic.
  *
  * @example
  * ```ts
@@ -184,11 +206,19 @@ export type Choice = z.infer<typeof choiceSchema>;
  *     frustration: {
  *       type: "score",
  *       instructions: "How frustrated does the customer appear?",
- *       criteria: ["Calm.", "Concerned but civil.", "Very angry."],
+ *       criteria: [
+ *         "Calm and neutral.",
+ *         "Concerned but civil.",
+ *         "Very angry or using strong language.",
+ *       ],
  *     },
  *   },
  * });
- * response.scores.frustration.score; // May be fractional, e.g. 1.35.
+ * const frustration = response.scores.frustration;
+ *
+ * frustration.score; // May be fractional, for example 1.35.
+ * frustration.legend; // The original zero-based rubric.
+ * frustration.probabilities; // Probability for each rubric level.
  * ```
  */
 export type Score = z.infer<typeof scoreSchema>;
@@ -201,14 +231,19 @@ export type Score = z.infer<typeof scoreSchema>;
  */
 export type Box = z.infer<typeof boxSchema>;
 
-/** A question accepted by decision models, discriminated by `type`. */
+/** A discriminated union of question types accepted by decision models. */
 export type Question = z.infer<typeof questionSchema>;
 
-/** Complete input for one decision model invocation. */
+/**
+ * Complete input for one decision model invocation.
+ *
+ * Keeping the state and questions in the runnable input ensures both values
+ * participate in composition, batching, and tracing.
+ */
 export interface ClassifierRequest {
   /** Text, structured JSON, or LangChain messages to classify. */
   state: State;
-  /** Non-empty map of answer IDs to typed questions. */
+  /** Non-empty map of answer IDs to typed classification questions. */
   questions: Record<string, Question>;
 }
 
@@ -262,26 +297,46 @@ export type NoulAnswer = z.infer<typeof noulAnswerSchema>;
 /**
  * Selected `Choice` label with its probability distribution and confidence.
  *
- * `probabilities` is keyed by label. Each provider documents how it derives
- * `confidence`.
+ * `choice` is one of the labels supplied in `Choice.criteria`. `probabilities`
+ * keeps the complete distribution, keyed by label, so applications can use a
+ * confidence measure or risk policy different from the provider's.
+ * `confidence` is the certainty from `0` to `1` in the selected label. Each
+ * provider documents how it derives it; choose thresholds according to the
+ * consequences of an incorrect automated decision.
  */
 export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;
 
 /**
  * Expected `Score` value with its rubric, distribution, and confidence.
  *
- * `legend` and `probabilities` are keyed by zero-based level. They are typed
- * `Record<string, ...>` because JSON keys are strings; `legend[0]` still works.
+ * `score` is the expected position on the rubric and may be fractional, because
+ * it summarizes the distribution rather than selecting one level. `legend`
+ * holds the original rubric descriptions and `probabilities` the distribution,
+ * both keyed by zero-based level. `confidence`, from `0` to `1`, is derived
+ * from the level distribution.
+ *
+ * `legend` and `probabilities` are typed `Record<string, ...>` because JSON
+ * keys are strings; `legend[0]` still works.
  */
 export type ScoreAnswer = z.infer<typeof scoreAnswerSchema>;
 
-/** Edges of a box as fractions of the image height and width, from `0` to `1`. */
+/**
+ * Edges of a box as fractions of the image height and width, from `0` to `1`.
+ *
+ * `top` and `bottom` are measured from the top of the image, `left` and
+ * `right` from the left.
+ */
 export type BoxCoordinates = z.infer<typeof boxCoordinatesSchema>;
 
-/** Location of what a `Box` question describes. */
+/**
+ * Location of what a `Box` question describes.
+ *
+ * `confidence` is the certainty from `0` to `1`, or `undefined` when the
+ * provider does not report it.
+ */
 export type BoxAnswer = z.infer<typeof boxAnswerSchema>;
 
-/** An answer returned by decision models, discriminated by `type`. */
+/** A discriminated union of answers returned by decision models. */
 export type Answer = z.infer<typeof answerSchema>;
 
 const usageSchema = z
@@ -317,14 +372,14 @@ const responseSchema = z.object({
 export interface ClassifierResponseFields {
   /** Model that answered the request. */
   model: string;
-  /** All answers keyed by their question IDs. */
+  /** All answers keyed by their original question IDs. */
   answers: Record<string, unknown>;
   /**
    * Token usage, or omitted when not reported. A missing count is treated as
    * `0`, and `total_tokens` defaults to their sum.
    */
   usage_metadata?: Partial<UsageMetadata> | null;
-  /** Provider request ID, useful when diagnosing a request with support. */
+  /** Provider request ID, useful when diagnosing a request with provider support. */
   requestId?: string | null;
 }
 
@@ -332,25 +387,29 @@ export interface ClassifierResponseFields {
  * Typed answers and metadata returned from one classification request.
  *
  * Read every answer from `answers`, or use `nouls`, `choices`, `scores`, and
- * `boxes` for views filtered by answer type. The views are non-enumerable so
- * they are not duplicated into traces or `JSON.stringify` output.
+ * `boxes` for views filtered by answer type. Each map preserves the question
+ * IDs supplied in `ClassifierRequest.questions`. The views are non-enumerable
+ * so they are not duplicated into traces or `JSON.stringify` output.
  */
 export interface ClassifierResponse {
   /** Model that answered the request. */
   model: string;
-  /** All answers keyed by their question IDs. */
+  /** All answers keyed by their original question IDs. */
   answers: Record<string, Answer>;
-  /** Token usage reported for the request, if any. */
+  /**
+   * Token usage reported for the request, if any. A missing count is treated
+   * as `0`, and `total_tokens` defaults to their sum.
+   */
   usage_metadata?: UsageMetadata;
-  /** Provider request ID, useful when diagnosing a request with support. */
+  /** Provider request ID, useful when diagnosing a request with provider support. */
   requestId?: string;
-  /** Binary answers keyed by question ID. */
+  /** Binary answers keyed by their original question IDs. */
   readonly nouls: Record<string, NoulAnswer>;
-  /** Categorical answers keyed by question ID. */
+  /** Categorical answers keyed by their original question IDs. */
   readonly choices: Record<string, ChoiceAnswer>;
-  /** Ordinal answers keyed by question ID. */
+  /** Ordinal answers keyed by their original question IDs. */
   readonly scores: Record<string, ScoreAnswer>;
-  /** Localization answers keyed by question ID. */
+  /** Localization answers keyed by their original question IDs. */
   readonly boxes: Record<string, BoxAnswer>;
 }
 

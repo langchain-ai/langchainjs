@@ -64,6 +64,7 @@ export abstract class BaseDecisionModel extends Runnable<
   ClassifierRequest,
   ClassifierResponse
 > {
+  /** Provider model name used to answer questions. */
   readonly model: string;
 
   constructor(fields: BaseDecisionModelFields) {
