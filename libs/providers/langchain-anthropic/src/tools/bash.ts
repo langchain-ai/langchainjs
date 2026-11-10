@@ -48,12 +48,12 @@ export interface Bash20250124Options {
  *
  * const bash = tools.bash_20250124({
  *   execute: async (args) => {
- *     if (args.restart) {
+ *     if ("restart" in args) {
  *       // Reset session state
  *       return "Bash session restarted";
  *     }
  *     try {
- *       const output = execSync(args.command!, {
+ *       const output = execSync(args.command, {
  *         encoding: "utf-8",
  *         timeout: 30000,
  *       });

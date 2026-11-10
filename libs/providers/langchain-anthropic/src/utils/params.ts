@@ -144,11 +144,10 @@ export function validateInvocationParamCompatibility(
 
 export function getSamplingParams(
   fields: InvocationCompatibilityFields
-): Pick<AnthropicInvocationParams, "temperature" | "top_k" | "top_p"> {
+): Partial<Pick<AnthropicInvocationParams, "temperature" | "top_k" | "top_p">> {
   const { model, thinking, topK, topP, temperature } = fields;
-  const output: Pick<
-    AnthropicInvocationParams,
-    "temperature" | "top_k" | "top_p"
+  const output: Partial<
+    Pick<AnthropicInvocationParams, "temperature" | "top_k" | "top_p">
   > = {};
 
   if (isThinkingEnabled(thinking) || isAdaptiveOnlyModel(model)) {
