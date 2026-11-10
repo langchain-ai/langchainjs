@@ -8,6 +8,7 @@ import {
   BindToolsInput,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
+import { ChatModelStream } from "@langchain/core/language_models/stream";
 import {
   BaseMessage,
   type AIMessageChunk,
@@ -580,25 +581,44 @@ export class ConfigurableModel<
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<Uint8Array>;
 
+  /**
+   * Without a `version`, returns a {@link ChatModelStream} of content-block
+   * events from the configured model, as `BaseChatModel.streamEvents` does.
+   */
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+    options?: Partial<CallOptions>
+  ): ChatModelStream;
+
+  streamEvents(
+    input: RunInput,
+    options?: Partial<CallOptions> & {
+      version?: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent | Uint8Array> {
+  ): ChatModelStream | IterableReadableStream<StreamEvent | Uint8Array> {
     const outerThis = this;
-    async function* wrappedGenerator() {
+    if (options?.version === "v1" || options?.version === "v2") {
+      const tracingOptions = { ...options, version: options.version };
+      async function* wrappedGenerator() {
+        const model = await outerThis._model(tracingOptions);
+        const config = ensureConfig(tracingOptions);
+        const eventStream = model.streamEvents(input, config, streamOptions);
+
+        for await (const chunk of eventStream) {
+          yield chunk;
+        }
+      }
+      return IterableReadableStream.fromAsyncGenerator(wrappedGenerator());
+    }
+
+    async function* deferredEvents() {
       const model = await outerThis._model(options);
       const config = ensureConfig(options);
-      const eventStream = model.streamEvents(input, config, streamOptions);
-
-      for await (const chunk of eventStream) {
-        yield chunk;
-      }
+      yield* model.streamEvents(input, config);
     }
-    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator());
+    return new ChatModelStream(deferredEvents());
   }
 }
 
