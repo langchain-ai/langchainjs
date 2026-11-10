@@ -43,6 +43,45 @@ describe("forced function tool choice", () => {
     });
   });
 
+  it("preserves a nested name when the top-level name is not a string", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const tool_choice = {
+      type: "function" as const,
+      name: 123,
+      function: { name: "lookup" },
+    };
+
+    expect(model.invocationParams({ tools, tool_choice }).tool_choice).toEqual({
+      type: "function",
+      name: "lookup",
+    });
+  });
+
+  it.each([
+    ["missing name", { type: "function" }],
+    ["non-string name", { type: "function", name: 123 }],
+    ["null name", { type: "function", name: null }],
+    ["empty name", { type: "function", name: "" }],
+    [
+      "empty native name with a nested name",
+      { type: "function", name: "", function: { name: "lookup" } },
+    ],
+    ["null nested function", { type: "function", function: null }],
+    ["missing nested name", { type: "function", function: {} }],
+    ["empty nested name", { type: "function", function: { name: "" } }],
+  ])("rejects a function choice with %s", (_description, tool_choice) => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    expect(() =>
+      model.invocationParams({
+        tools,
+        tool_choice: tool_choice as unknown as NonNullable<
+          Parameters<ChatOpenAIResponses["invocationParams"]>[0]
+        >["tool_choice"],
+      })
+    ).toThrow("Invalid tool_choice: function name must be a non-empty string.");
+  });
+
   it("preserves built-in tool choices", () => {
     const model = new ChatOpenAIResponses({ model: "gpt-4o" });
     const tool_choice = { type: "web_search_preview" as const };
