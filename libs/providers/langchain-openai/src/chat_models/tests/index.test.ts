@@ -4,7 +4,12 @@ import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
-import { ChatOpenAI } from "../index.js";
+import {
+  ChatOpenAI,
+  type ChatOpenAICallOptions,
+  type ChatOpenAIFields,
+  type OpenAIChatInput,
+} from "../index.js";
 import type { BaseChatOpenAIFields } from "../base.js";
 import { ChatOpenAICompletions } from "../completions.js";
 import { ChatOpenAIResponses } from "../responses.js";
@@ -1090,6 +1095,70 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
       expect(_modelPrefersResponsesAPI("o3")).toBe(false);
       expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
+    });
+  });
+
+  describe("service_tier routing", () => {
+    // Mock the transport to see which API a request reaches and what it sends.
+    async function sentRequest(
+      fields: ChatOpenAIFields,
+      options?: { service_tier?: OpenAIChatInput["service_tier"] }
+    ) {
+      const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(
+        async () =>
+          new Response(
+            JSON.stringify({
+              error: {
+                message: "Mock response",
+                type: "invalid_request_error",
+              },
+            }),
+            { status: 400, headers: { "content-type": "application/json" } }
+          )
+      );
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        maxRetries: 0,
+        configuration: { fetch },
+        ...fields,
+      });
+      // Call options list only the Chat Completions tiers.
+      await expect(
+        model.invoke("Hi", options as ChatOpenAICallOptions)
+      ).rejects.toThrow("Mock response");
+      const [url, init] = fetch.mock.calls[0];
+      return { url: String(url), body: JSON.parse(init?.body as string) };
+    }
+
+    it("sends a constructor ultrafast tier through the Responses API", async () => {
+      const { url, body } = await sentRequest({ service_tier: "ultrafast" });
+      expect(url).toMatch(/\/responses$/);
+      expect(body.service_tier).toBe("ultrafast");
+    });
+
+    it("sends a per-call ultrafast tier through the Responses API", async () => {
+      const { url, body } = await sentRequest(
+        {},
+        { service_tier: "ultrafast" }
+      );
+      expect(url).toMatch(/\/responses$/);
+      expect(body.service_tier).toBe("ultrafast");
+    });
+
+    it("keeps a per-call Chat Completions tier on Chat Completions", async () => {
+      const { url, body } = await sentRequest({}, { service_tier: "flex" });
+      expect(url).toMatch(/\/chat\/completions$/);
+      expect(body.service_tier).toBe("flex");
+    });
+
+    it("lets a per-call tier replace an ultrafast default", async () => {
+      const { url, body } = await sentRequest(
+        { service_tier: "ultrafast" },
+        { service_tier: "flex" }
+      );
+      expect(url).toMatch(/\/chat\/completions$/);
+      expect(body.service_tier).toBe("flex");
     });
   });
 

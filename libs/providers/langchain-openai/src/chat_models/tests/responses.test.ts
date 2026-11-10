@@ -133,6 +133,22 @@ describe("service_tier configuration", () => {
     const params = model.invocationParams({});
     expect(params.service_tier).toBe("auto");
   });
+
+  it("lets a per-call service_tier override the constructor's", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "auto",
+    });
+
+    expect(model.invocationParams({ service_tier: "flex" }).service_tier).toBe(
+      "flex"
+    );
+    expect(
+      new ChatOpenAIResponses({ model: "gpt-4o" }).invocationParams({
+        service_tier: "priority",
+      }).service_tier
+    ).toBe("priority");
+  });
 });
 
 describe("streaming errors", () => {
