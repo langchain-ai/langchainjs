@@ -1,9 +1,24 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import type { OpenRouter } from "../../api-types.js";
+import type { StreamingChunkData } from "../../converters/messages.js";
 import { convertOpenRouterStream } from "../stream_events.js";
 
+function streamChunk(
+  delta: OpenRouter.ChatStreamingMessageChunk,
+  finish_reason: OpenRouter.ChatCompletionFinishReason | null = null
+): StreamingChunkData {
+  return {
+    id: "gen-1",
+    object: "chat.completion.chunk",
+    created: 0,
+    model: "openai/gpt-4o-mini",
+    choices: [{ index: 0, delta, finish_reason }],
+  };
+}
+
 async function collectEvents(
-  chunks: Record<string, unknown>[]
+  chunks: StreamingChunkData[]
 ): Promise<ChatModelStreamEvent[]> {
   const out: ChatModelStreamEvent[] = [];
   async function* source() {
@@ -18,32 +33,11 @@ async function collectEvents(
 }
 
 describe("convertOpenRouterStream", () => {
-  test("maps reasoning field to reasoning_content", async () => {
+  test("streams the reasoning field as a reasoning block", async () => {
     const events = await collectEvents([
-      {
-        id: "gen-1",
-        choices: [
-          {
-            index: 0,
-            delta: { role: "assistant", reasoning: "thinking..." },
-            finish_reason: null,
-          },
-        ],
-      },
-      {
-        id: "gen-1",
-        choices: [
-          {
-            index: 0,
-            delta: { content: "Answer" },
-            finish_reason: null,
-          },
-        ],
-      },
-      {
-        id: "gen-1",
-        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
-      },
+      streamChunk({ role: "assistant", reasoning: "thinking..." }),
+      streamChunk({ content: "Answer" }),
+      streamChunk({}, "stop"),
     ]);
 
     expect(

@@ -8,6 +8,10 @@ import {
   vi,
   test,
 } from "vitest";
+import type {
+  HandleLLMNewTokenCallbackFields,
+  NewTokenIndices,
+} from "@langchain/core/callbacks/base";
 import { AIMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
@@ -422,7 +426,7 @@ describe("stream callbacks", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
 
     const tokens: string[] = [];
-    let receivedFields: Record<string, unknown> | undefined;
+    let receivedFields: HandleLLMNewTokenCallbackFields | undefined;
 
     try {
       const res = await model.stream("Hello", {
@@ -430,11 +434,11 @@ describe("stream callbacks", () => {
           {
             handleLLMNewToken: (
               token: string,
-              _idx?: number,
-              _runId?: string,
+              _idx: NewTokenIndices,
+              _runId: string,
               _parentRunId?: string,
               _tags?: string[],
-              fields?: Record<string, unknown>
+              fields?: HandleLLMNewTokenCallbackFields
             ) => {
               tokens.push(token);
               receivedFields = fields;
