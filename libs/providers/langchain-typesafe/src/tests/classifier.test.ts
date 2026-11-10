@@ -698,6 +698,30 @@ describe("images", () => {
     ]);
   });
 
+  test("encodes Uint8Array image data in state", async () => {
+    const { classifier, bodies } = capture();
+
+    await classifier.invoke(
+      request({
+        photo: {
+          type: "image",
+          data: new Uint8Array([137, 80, 78, 71]),
+          mimeType: "image/png",
+        },
+      } as unknown as State)
+    );
+
+    const [body] = bodies;
+    expect(body.state.photo).toMatch(REFERENCE);
+    expect(body.assets).toEqual({
+      [body.state.photo as string]: {
+        type: "image",
+        format: "png",
+        data_base64: "iVBORw==",
+      },
+    });
+  });
+
   test("leaves image-typed objects without image data as JSON", async () => {
     const { classifier, bodies } = capture();
 

@@ -220,9 +220,7 @@ export class TypeSafeClassifier extends BaseDecisionModel {
         serializeQuestion(question) as JsonValue
       );
     }
-    const wireState = images.replace(
-      serializeState(state as SerializableState, images)
-    );
+    const wireState = serializeState(state as SerializableState, images);
     return JSON.stringify({
       state: wireState,
       model: this.model,
