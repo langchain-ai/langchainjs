@@ -36,32 +36,4 @@ describe("ModelRefusalError", () => {
     });
     expect(error.message).toBe("Model refused to produce the requested output");
   });
-
-  it("marks a provider error as a refusal without changing its class", () => {
-    class ProviderBlockedError extends Error {}
-    const rawMessage = new AIMessage("");
-    const error = ModelRefusalError.markAsRefusal(
-      new ProviderBlockedError("Prompt blocked"),
-      rawMessage
-    );
-    expect(error).toBeInstanceOf(ProviderBlockedError);
-    expect(ModelRefusalError.isInstance(error)).toBe(true);
-    expect(error instanceof ModelRefusalError).toBe(true);
-    expect(error.rawMessage).toBe(rawMessage);
-    expect(getRetryable(error)).toBe(false);
-  });
-
-  it("returns a frozen error unchanged", () => {
-    const error = Object.freeze(new Error("x"));
-    expect(ModelRefusalError.markAsRefusal(error)).toBe(error);
-    expect(ModelRefusalError.isInstance(error)).toBe(false);
-  });
-
-  it("uses the same brand as ModelRefusalError instances", () => {
-    const brands = Object.getOwnPropertySymbols(new ModelRefusalError());
-    const marked = Object.getOwnPropertySymbols(
-      ModelRefusalError.markAsRefusal(new Error("x"))
-    );
-    expect(brands).toEqual(expect.arrayContaining(marked));
-  });
 });

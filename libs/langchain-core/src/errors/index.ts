@@ -234,9 +234,6 @@ export class ContextOverflowError extends ns.brand(
 }
 
 const DEFAULT_REFUSAL_MESSAGE = "Model refused to produce the requested output";
-// Must match the symbol `ns.brand(LangChainError, "model-refusal")` checks,
-// so `markAsRefusal` can brand errors of other classes.
-const MODEL_REFUSAL_BRAND = Symbol.for("langchain.error.model-refusal");
 
 /**
  * Error class representing a model refusal.
@@ -302,37 +299,5 @@ export class ModelRefusalError extends ns.brand(
       message += `: ${refusal.refusal}`;
     }
     return new ModelRefusalError(message, { rawMessage });
-  }
-
-  /**
-   * Marks an existing error as a model refusal.
-   *
-   * Use this when a provider raises its own error for a refusal, such as a
-   * blocked prompt. The error keeps its class, and
-   * `ModelRefusalError.isInstance(error)` also returns `true`. It does not
-   * make the error a `LangChainError`. A frozen error is returned unchanged.
-   *
-   * @param error - The provider error to mark.
-   * @param rawMessage - The refused model response, if available.
-   * @returns The same error, marked as a refusal.
-   */
-  static markAsRefusal<T extends Error>(
-    error: T,
-    rawMessage?: BaseMessage
-  ): T & { rawMessage?: BaseMessage } {
-    try {
-      Object.defineProperty(error, MODEL_REFUSAL_BRAND, {
-        value: true,
-        configurable: true,
-      });
-      if (rawMessage) {
-        Object.assign(error, { rawMessage });
-      }
-    } catch {
-      // Frozen or sealed error object; leave it unmarked rather than throwing.
-      return error;
-    }
-    stampRetryable(error, false);
-    return error;
   }
 }
