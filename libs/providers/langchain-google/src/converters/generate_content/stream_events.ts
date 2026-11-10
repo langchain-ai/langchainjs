@@ -12,7 +12,7 @@ import type {
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../../chat_models/types.js";
-import { promptBlockedError } from "../../utils/refusal.js";
+import { promptBlockedError } from "../../utils/errors.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
 

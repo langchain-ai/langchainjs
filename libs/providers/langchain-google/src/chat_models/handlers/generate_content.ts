@@ -28,8 +28,11 @@ import {
   usageMetadataToTokenUsage,
 } from "../../utils/metadata.js";
 import { iife } from "../../utils/misc.js";
-import { promptBlockedError } from "../../utils/refusal.js";
-import { NoCandidatesError, RequestError } from "../../utils/errors.js";
+import {
+  NoCandidatesError,
+  promptBlockedError,
+  RequestError,
+} from "../../utils/errors.js";
 import {
   convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
