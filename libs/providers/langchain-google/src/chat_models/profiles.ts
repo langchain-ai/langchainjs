@@ -381,5 +381,19 @@ const PROFILES: Record<string, ModelProfile> = {
     toolCalling: true,
     structuredOutput: false,
   },
+  "gemini-4-carbon": {
+    maxInputTokens: 1048576,
+    imageInputs: true,
+    audioInputs: true,
+    pdfInputs: true,
+    videoInputs: true,
+    maxOutputTokens: 32768,
+    reasoningOutput: true,
+    imageOutputs: false,
+    audioOutputs: false,
+    videoOutputs: false,
+    toolCalling: true,
+    structuredOutput: true,
+  },
 };
 export default PROFILES;

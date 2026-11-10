@@ -28,6 +28,23 @@ to interface with Google's models.
 For detailed configuration and use, including how to get credentials, see the
 [LangChain.js documentation](https://docs.langchain.com/oss/javascript/integrations/chat/google).
 
+### Gemini 4 Carbon
+
+Use `model: "gemini-4-carbon"` with `ChatGoogle`. Set `reasoningEffort` to
+`"low"`, `"medium"`, or `"high"`; omitting it uses the model's `"medium"` default.
+Carbon ignores `temperature`, `topP`, and `topK`, and does not support explicit
+context caching.
+
+The Carbon profile uses a conservative `maxOutputTokens` of 32,768 for the default
+non-streaming GenerateContent REST handler. Streaming supports up to 65,536 tokens
+per request. The 1,048,576-token context window is shared by input, thinking, and
+output, not an independent output allowance. This package does not automatically
+continue long-decode requests. Increasing `maxOutputTokens` alone does not enable
+long decode, and non-streaming REST requests above 32,768 tokens without a
+continuation token can fail. See Google's
+[long-decode guide](https://aistudio.google.com/docs/long-decode?generate-content=true)
+for the API limits.
+
 ## Tools
 
 `ChatGoogle` supports standard LangChain tool calling as
