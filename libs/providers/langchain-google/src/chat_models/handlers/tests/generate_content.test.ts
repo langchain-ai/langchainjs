@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { ApiClient } from "../../../clients/index.js";
@@ -472,6 +473,8 @@ describe("GenerateContentApiHandler", () => {
             message: new AIMessageChunk({ content: "custom stream chunk" }),
           });
         }
+
+        async *streamChatModelEvents(): AsyncGenerator<ChatModelStreamEvent> {}
 
         invocationParams(): GenerateContentInvocationParams {
           return {};
