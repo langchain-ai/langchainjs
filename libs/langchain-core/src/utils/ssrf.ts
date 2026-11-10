@@ -294,13 +294,23 @@ export function validateSafeUrl(
       throw new Error("URL missing hostname.");
     }
 
+    // A single trailing dot is the DNS root label: "localhost." and
+    // "metadata.google.internal." name the same hosts as their dotless forms,
+    // and the parser keeps the dot for domain names. Compare without it so an
+    // absolute FQDN cannot walk past the checks below. (An IPv4 literal keeps
+    // no dot either way; the URL parser already drops it.)
+    const host = hostname.endsWith(".") ? hostname.slice(0, -1) : hostname;
+    if (!host) {
+      throw new Error("URL missing hostname.");
+    }
+
     // Check if it's a cloud metadata endpoint (always blocked)
-    if (isCloudMetadata(hostname)) {
+    if (isCloudMetadata(host)) {
       throw new Error(`URL points to cloud metadata endpoint: ${hostname}`);
     }
 
     // Check if it's localhost (blocked unless allowPrivate is true)
-    if (isLocalhost(hostname)) {
+    if (isLocalhost(host)) {
       if (!allowPrivate) {
         throw new Error(`URL points to localhost: ${hostname}`);
       }
@@ -322,11 +332,11 @@ export function validateSafeUrl(
     }
 
     // If hostname is already an IP, validate it directly
-    if (isIP(hostname)) {
-      const ip = hostname;
+    if (isIP(host)) {
+      const ip = host;
 
       // Check if it's localhost first (before private IP check)
-      if (isLocalhost(hostname, ip)) {
+      if (isLocalhost(host, ip)) {
         if (!allowPrivate) {
           throw new Error(`URL points to localhost: ${hostname}`);
         }
@@ -334,7 +344,7 @@ export function validateSafeUrl(
       }
 
       // Cloud metadata is always blocked
-      if (isCloudMetadata(hostname, ip)) {
+      if (isCloudMetadata(host, ip)) {
         throw new Error(
           `URL resolves to cloud metadata IP: ${ip} (${hostname})`
         );
