@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* oxlint-disable import-x/no-extraneous-dependencies */
-import Commander from "commander";
+import { Command } from "commander";
 import Conf from "conf";
 import fs from "fs";
 import path from "path";
@@ -29,7 +29,7 @@ const onPromptState = (state: any) => {
   }
 };
 
-const program = new Commander.Command(packageJson.name)
+const program = new Command(packageJson.name)
   .version((packageJson as any).version)
   .arguments("<project-directory>")
   .usage(`${green("<project-directory>")} [options]`)
@@ -43,12 +43,6 @@ const packageManager: string = "pnpm";
 
 async function run(): Promise<void> {
   const conf = new Conf({ projectName: "create-langchain-integration" });
-
-  if (program.resetPreferences) {
-    conf.clear();
-    console.log(`Preferences reset successfully`);
-    return;
-  }
 
   if (typeof projectPath === "string") {
     projectPath = projectPath.trim();
