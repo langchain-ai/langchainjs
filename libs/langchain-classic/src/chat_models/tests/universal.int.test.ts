@@ -9,7 +9,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
-import { createAgent } from "../../agents/index.js";
+import { AgentExecutor, createReactAgent } from "../../agents/index.js";
 import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
@@ -353,21 +353,49 @@ test("ConfigurableModel works with agent after withStructuredOutput is called", 
   });
 
   // The original model should still work with the agent
-  const agent = await createAgent({
+  const prompt = PromptTemplate.fromTemplate(
+    `Answer the following questions as best you can. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}`
+  );
+
+  const agent = await createReactAgent({
     llm: model,
+    prompt,
+    tools: [],
+  });
+
+  const agentExecutor = new AgentExecutor({
+    agent,
     tools: [searchTool],
   });
 
-  const result = await agent.invoke({
-    messages: "Search for items please",
+  const result = await agentExecutor.invoke({
+    input: "Search for items please",
   });
 
   expect(result).toBeDefined();
-  expect(result.messages).toBeDefined();
-  expect(result.messages.length).toBeGreaterThan(0);
-  // The result should contain actual messages, not throw an error
-  const lastMessage = result.messages[result.messages.length - 1];
-  expect(lastMessage.content).toBeDefined();
+  expect(result.input).toBeDefined();
+  expect(result.output).toBeDefined();
+  // The result should contain actual output, not throw an error
+  expect(typeof result.output).toBe("string");
+  expect(result.output.length).toBeGreaterThan(0);
 });
 
 describe("Works with all model providers", () => {
@@ -599,18 +627,23 @@ test("Is compatible with agents", async () => {
 
   const prompt = await pull<PromptTemplate>("hwchase17/react");
 
-  const agent = await createAgent({
+  const agent = await createReactAgent({
     llm: gpt4,
     tools: [weatherTool],
     prompt,
   });
 
-  const result = await agent.invoke({
-    messages:
+  const agentExecutor = new AgentExecutor({
+    agent,
+    tools: [weatherTool],
+  });
+
+  const result = await agentExecutor.invoke({
+    input:
       "What's the weather in San Francisco right now? Ensure you use the 'GetWeather' tool to answer.",
   });
-  expect(result).toHaveProperty("messages");
-  expect(result.messages[0].content).not.toBe("");
+  expect(result).toHaveProperty("output");
+  expect(result.output).not.toBe("");
 });
 
 describe("Can call base runnable methods", () => {
