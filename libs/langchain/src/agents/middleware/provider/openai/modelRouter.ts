@@ -3,18 +3,12 @@ import { HumanMessage } from "@langchain/core/messages";
 import { createMiddleware } from "../../../middleware.js";
 import { initChatModel } from "../../../../chat_models/universal.js";
 import type { AgentLanguageModelLike } from "../../../model.js";
+import type { ModelChoice } from "../../modelRouter.js";
 import { decider, type OpenAIDecisionsLike } from "./decisions.js";
-
-export interface ModelChoice {
-  /** A chat model, or a model string accepted by `initChatModel`. */
-  model: string | AgentLanguageModelLike;
-  /** When to pick this model. */
-  criteria: string;
-}
 
 export interface OpenAIModelRouterMiddlewareOptions {
   /** Named models and the criterion for choosing each. */
-  choices: Record<string, ModelChoice>;
+  choices: Record<string, ModelChoice & { criteria: string }>;
   /** The routing question, e.g. "Choose the least costly model for the task." */
   instructions: string;
   /** An `OpenAIDecisions` instance from `@langchain/openai`. */

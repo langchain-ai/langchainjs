@@ -78,6 +78,15 @@ export {
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
 export {
+  autoModeMiddleware,
+  type AutoModeMiddlewareConfig,
+} from "./autoMode.js";
+export {
+  modelRouterMiddleware,
+  type ModelRouterMiddlewareConfig,
+  type ModelChoice,
+} from "./modelRouter.js";
+export {
   providerToolSearchMiddleware,
   type ProviderToolSearchMiddlewareConfig,
 } from "./providerToolSearch.js";
@@ -111,6 +120,5 @@ export {
 export {
   openAIModelRouterMiddleware,
   type OpenAIModelRouterMiddlewareOptions,
-  type ModelChoice,
 } from "./provider/openai/modelRouter.js";
 export { type OpenAIDecisionsLike } from "./provider/openai/decisions.js";
