@@ -109,6 +109,7 @@ describe("convertOpenRouterResponseToBaseMessage metadata", () => {
       choices: [choice],
       created: 0,
       model: "anthropic/claude-4-sonnet",
+      provider: "Anthropic",
       object: "chat.completion",
     };
 
@@ -119,6 +120,28 @@ describe("convertOpenRouterResponseToBaseMessage metadata", () => {
     expect(meta.model_provider).toBe("openrouter");
     expect(meta.model_name).toBe("anthropic/claude-4-sonnet");
     expect(meta.finish_reason).toBe("stop");
+    expect(meta.provider).toBe("Anthropic");
+  });
+
+  it("omits provider from response_metadata when absent", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: { role: "assistant", content: "hello" },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-124",
+      choices: [choice],
+      created: 0,
+      model: "anthropic/claude-4-sonnet",
+      object: "chat.completion",
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+
+    const meta = msg.response_metadata as Record<string, unknown>;
+    expect(meta.model_provider).toBe("openrouter");
+    expect("provider" in meta).toBe(false);
   });
 });
 
