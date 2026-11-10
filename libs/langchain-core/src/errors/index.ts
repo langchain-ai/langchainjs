@@ -1,6 +1,8 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { AIMessageChunk } from "../messages/ai.js";
+import type { BaseMessage } from "../messages/base.js";
+import type { ContentBlock } from "../messages/content/index.js";
 import { ns as baseNs } from "../utils/namespace.js";
 
 export type { BrandedClass } from "../utils/namespace.js";
@@ -249,4 +251,73 @@ export class ContextOverflowError extends ns.brand(
  */
 export class ExpectedCancellation extends Error {
   readonly name: string = "ExpectedCancellation";
+}
+
+const DEFAULT_REFUSAL_MESSAGE = "Model refused to produce the requested output";
+
+/**
+ * Error class representing a model refusal.
+ *
+ * Providers report a refusal, such as a safety-policy refusal, as a successful
+ * response rather than an error. LangChain raises this error where a refusal
+ * cannot be treated as an answer, for example when structured output has
+ * nothing to parse, or when an agent uses refusal middleware.
+ *
+ * The {@link ModelRefusalError} extends the {@link LangChainError} base class with
+ * the marker `"model-refusal"`. Retrying the same request is unlikely to succeed,
+ * so the error is marked as not retryable.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.withStructuredOutput(schema).invoke(input);
+ * } catch (err) {
+ *   if (ModelRefusalError.isInstance(err)) {
+ *     console.warn("Model refused:", err.message, err.rawMessage);
+ *   } else {
+ *     throw err;
+ *   }
+ * }
+ * ```
+ */
+export class ModelRefusalError extends ns.brand(
+  LangChainError,
+  "model-refusal"
+) {
+  readonly name = "ModelRefusalError";
+
+  /**
+   * The refused model response, if available.
+   */
+  rawMessage?: BaseMessage;
+
+  constructor(message?: string, fields?: { rawMessage?: BaseMessage }) {
+    super(message ?? DEFAULT_REFUSAL_MESSAGE);
+    this.rawMessage = fields?.rawMessage;
+    stampRetryable(this, false);
+  }
+
+  /**
+   * Creates a {@link ModelRefusalError} from a refusal content block.
+   *
+   * The message includes the provider's refusal `category`, when present, and
+   * the refusal text.
+   *
+   * @param refusal - The refusal content block from the model response.
+   * @param rawMessage - The refused model response.
+   */
+  static fromRefusal(
+    refusal: ContentBlock.Refusal,
+    rawMessage?: BaseMessage
+  ): ModelRefusalError {
+    let message = DEFAULT_REFUSAL_MESSAGE;
+    const category = refusal.extras?.category;
+    if (category) {
+      message += ` (category='${String(category)}')`;
+    }
+    if (refusal.refusal) {
+      message += `: ${refusal.refusal}`;
+    }
+    return new ModelRefusalError(message, { rawMessage });
+  }
 }
