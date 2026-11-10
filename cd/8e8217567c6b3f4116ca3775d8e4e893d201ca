@@ -1,0 +1,66 @@
+libs/langchain-core/src/errors/index.ts
+  s_f91e4eaec06732::t_83664385164043 255
+  s_0fd4918b1f23e9::t_ac3b9ed7a7f0f5 4-5,256-323
+.changeset/model-refusal-middleware.md
+  s_f91e4eaec06732::t_a19d66b0e23414 1-7
+.changeset/refusal-content-block.md
+  s_f91e4eaec06732::t_d3a4950c614687 1-7
+libs/langchain-core/src/errors/tests/refusal.test.ts
+  s_f91e4eaec06732::t_945fc4a625e1ae 1-39
+libs/langchain-core/src/messages/block_translators/anthropic.ts
+  s_f91e4eaec06732::t_95f96ecf57697b 291,511-516,526-533,538-548
+libs/langchain-core/src/messages/block_translators/google.ts
+  s_f91e4eaec06732::t_4d5651ab74b9ba 6-40,163-166
+libs/langchain-core/src/messages/block_translators/openai.ts
+  s_f91e4eaec06732::t_d3f0ac7ed7ad86 13-22,82-83,146-147,571-588
+libs/langchain-core/src/messages/block_translators/tests/refusal.test.ts
+  s_f91e4eaec06732::t_ebbcff112d2cc2 1-242
+libs/langchain-core/src/messages/content/index.ts
+  s_f91e4eaec06732::t_5213c51d2e23c6 22,115-137,166
+libs/langchain-core/src/output_parsers/json.ts
+  s_f91e4eaec06732::t_d4b96ebb658453 6-7,53-63
+libs/langchain-core/src/output_parsers/openai_tools/json_output_tools_parsers.ts
+  s_f91e4eaec06732::t_dc6426202b0472 4,151,351
+libs/langchain-core/src/output_parsers/refusal.ts
+  s_f91e4eaec06732::t_e983dffb268928 1-31
+libs/langchain-core/src/output_parsers/standard_schema.ts
+  s_f91e4eaec06732::t_f473cb4e1d54a0 5-7,33-43
+libs/langchain-core/src/output_parsers/structured.ts
+  s_f91e4eaec06732::t_78893549a5981f 8-10,105-115
+libs/langchain-core/src/output_parsers/tests/refusal.test.ts
+  s_f91e4eaec06732::t_a8e8d01af8873f 1-86
+libs/langchain/src/agents/errors.ts
+  s_f91e4eaec06732::t_f4c3c5d4d49383 2,4,42-47,55,123,127-128,136-140
+libs/langchain/src/agents/middleware/index.ts
+  s_f91e4eaec06732::t_2415d8197b8202 63
+libs/langchain/src/agents/middleware/modelRefusal.ts
+  s_f91e4eaec06732::t_782a0d6775558e 1-89
+libs/langchain/src/agents/middleware/tests/modelRefusal.test.ts
+  s_f91e4eaec06732::t_5369760847e729 1-149
+libs/langchain/src/agents/nodes/AgentNode.ts
+  s_f91e4eaec06732::t_a17484f8fcda4f 436-440
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cd8e8217567c6b3f4116ca3775d8e4e893d201ca",
+  "prompts": {},
+  "sessions": {
+    "s_0fd4918b1f23e9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a9342cb-2ca8-4cf7-9bcf-f850f8461e0c",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Kiewan Villatel <kiewan@langchain.dev>"
+    },
+    "s_f91e4eaec06732": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a834b05-af9e-40a6-ab46-8d3c718cb59c",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Kiewan Villatel <kiewan@langchain.dev>"
+    }
+  }
+}
