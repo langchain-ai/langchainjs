@@ -68,6 +68,7 @@ import {
   GoogleAIModelRequestParams,
   GoogleAIToolType,
   GeminiSearchToolAttributes,
+  GoogleThinkingLevel,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -1822,7 +1823,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
       // Map reasoningLevel to thinkingLevel if provided
       if (typeof parameters.reasoningLevel !== "undefined") {
-        const levelMap: Record<string, string> = {
+        const levelMap: Record<string, GoogleThinkingLevel> = {
           minimal: "MINIMAL",
           low: "LOW",
           medium: "MEDIUM",
