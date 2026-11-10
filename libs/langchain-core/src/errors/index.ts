@@ -230,3 +230,23 @@ export class ContextOverflowError extends ns.brand(
     return error;
   }
 }
+
+/**
+ * Abort reason for a run that is stopped on purpose, such as a user pressing
+ * stop or a newer run superseding this one.
+ *
+ * Pass it to `AbortController.abort()`. `LangChainTracer` then traces the run
+ * with status `cancelled` instead of a plain error. Aborts without it, and
+ * timeouts, stay errors.
+ *
+ * Detection goes by `name`, so a copy of this class from another package, or
+ * another copy of `@langchain/core`, is recognized too.
+ *
+ * @example
+ * ```typescript
+ * controller.abort(new ExpectedCancellation("user stopped the run"));
+ * ```
+ */
+export class ExpectedCancellation extends Error {
+  readonly name: string = "ExpectedCancellation";
+}

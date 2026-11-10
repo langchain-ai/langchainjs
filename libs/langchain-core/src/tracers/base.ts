@@ -17,6 +17,45 @@ import { getRuntimeEnvironment } from "../utils/env.js";
 
 export type RunType = string;
 
+/** Explicit terminal status a tracer sends besides success and error. */
+export type RunEndStatus = "cancelled" | "interrupted";
+
+// Control-flow errors from LangGraph's `GraphBubbleUp` family. Matched by name
+// to avoid a dependency on LangGraph. `GraphDrained` is left out on purpose:
+// shutdown drains stay errors.
+const INTERRUPT_ERROR_NAMES = new Set([
+  "GraphInterrupt",
+  "NodeInterrupt",
+  "ParentCommand",
+  "GraphDelegate",
+]);
+const EXPECTED_CANCELLATION_NAME = "ExpectedCancellation";
+const MAX_CAUSE_DEPTH = 5;
+
+/**
+ * The explicit status a run should be traced with for this error, if any.
+ *
+ * A deliberate cancel (an `ExpectedCancellation`, usually as the abort
+ * reason) gives `"cancelled"`, and a LangGraph interrupt gives
+ * `"interrupted"`. Anything else, including an unmarked `AbortError` or a
+ * timeout, gives `undefined` and stays an error.
+ */
+export function getRunEndStatusFromError(
+  error: unknown
+): RunEndStatus | undefined {
+  let current = error;
+  for (let i = 0; i < MAX_CAUSE_DEPTH; i += 1) {
+    if (typeof current !== "object" || current === null) return undefined;
+    const { name, cause } = current as { name?: unknown; cause?: unknown };
+    if (typeof name === "string") {
+      if (INTERRUPT_ERROR_NAMES.has(name)) return "interrupted";
+      if (name === EXPECTED_CANCELLATION_NAME) return "cancelled";
+    }
+    current = cause;
+  }
+  return undefined;
+}
+
 // TODO: Remove this type and just use the base LangSmith Run type.
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -34,6 +73,11 @@ export interface Run extends BaseRun {
   }>;
   trace_id?: string;
   dotted_order?: string;
+  /**
+   * Explicit terminal status sent alongside `error` for deliberate cancels and
+   * interrupts. Needs a `langsmith` client that forwards it; older ones ignore it.
+   */
+  status?: RunEndStatus;
   /** @internal */
   _serialized_start_time?: string;
 }
@@ -123,6 +167,20 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
 
     return `${error}`;
+  }
+
+  /**
+   * Records the error and its explicit status together, so the status never
+   * outlives the error text it was derived from.
+   */
+  protected setRunError(run: Run, error: unknown) {
+    run.error = this.stringifyError(error);
+    const status = getRunEndStatusFromError(error);
+    if (status !== undefined) {
+      run.status = status;
+    } else {
+      delete run.status;
+    }
   }
 
   protected abstract persistRun(run: Run): Promise<void>;
@@ -389,7 +447,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -505,7 +563,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -611,7 +669,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No tool run to end");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -739,7 +797,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No retriever run to end");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
