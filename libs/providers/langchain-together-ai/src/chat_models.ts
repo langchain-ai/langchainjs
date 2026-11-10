@@ -4,6 +4,7 @@ import type {
 } from "@langchain/core/language_models/chat_models";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
+  type BaseChatOpenAIFields,
   type ChatOpenAICallOptions,
   ChatOpenAICompletions,
   type OpenAIChatInput,
@@ -32,6 +33,8 @@ export interface ChatTogetherAICallOptions extends Omit<
 export interface ChatTogetherAIInput
   extends
     Omit<OpenAIChatInput, "openAIApiKey" | TogetherAIUnsupportedArgs>,
+    // `configuration` moved from OpenAIChatInput to BaseChatOpenAIFields.
+    Pick<BaseChatOpenAIFields, "configuration">,
     BaseChatModelParams {
   /**
    * The Together AI API key to use for requests.
@@ -86,7 +89,7 @@ export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOpti
     };
   }
 
-  get lc_aliases(): { [key: string]: string } | undefined {
+  get lc_aliases(): Record<string, string> {
     return {
       togetherAIApiKey: "together_ai_api_key",
       apiKey: "together_ai_api_key",
@@ -161,6 +164,11 @@ export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOpti
     delete request.presence_penalty;
     delete request.logit_bias;
     delete request.functions;
+
+    // Narrow the union so each call matches one of super's overloads.
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
 
     return super.completionWithRetry(request, options);
   }
