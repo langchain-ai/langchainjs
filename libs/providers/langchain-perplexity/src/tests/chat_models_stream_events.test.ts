@@ -13,7 +13,10 @@ function mockPerplexity(chunks: ReturnType<typeof openAITextOnlyChunks>) {
     model: "sonar",
     streaming: true,
   });
-  vi.spyOn(model.client.chat.completions, "create").mockResolvedValue(
+  // `client` is private on ChatPerplexity, unlike the public `client` on
+  // ChatBedrockConverse, ChatCohere and ChatOllama. Element access is the
+  // supported way to reach it without widening the class's public surface.
+  vi.spyOn(model["client"].chat.completions, "create").mockResolvedValue(
     asAsyncIterable(chunks) as never
   );
   return model;
