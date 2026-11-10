@@ -1,7 +1,9 @@
 import { BaseMessage } from "@langchain/core/messages";
 import * as z from "zod/v4";
 
-import type { JsonValue } from "../types.js";
+import type { JsonValue } from "@langchain/core/decisions";
+
+import type { ImageAssets } from "./assets.js";
 import { renderMessage } from "./messages.js";
 
 /** A value legal anywhere below the root. `Date` becomes an ISO string. */
@@ -40,11 +42,15 @@ const CIRCULAR_ERROR = "Circular reference detected in TypeSafe state.";
  */
 const RENDER_FAILURE = Symbol("typesafe.state.renderFailure");
 
+// Set only for the duration of the synchronous `safeParse` in
+// `serializeState`, so the module-level schema can collect message images.
+let activeImages: ImageAssets | undefined;
+
 const messageSchema = z
   .custom<BaseMessage>((value) => BaseMessage.isInstance(value))
   .transform((message) => {
     try {
-      return renderMessage(message);
+      return renderMessage(message, activeImages);
     } catch (error) {
       // Marked so the catch in `serializeState` can tell a real failure
       // (an unsupported message type) from a stack exhausted by a cycle.
@@ -133,8 +139,9 @@ function describeFailure(state: unknown, path: PropertyKey[]): string {
  * @throws TypeError if the root is a scalar, `null` or `undefined`, if a
  *   nested value cannot be expressed as JSON, or if `state` is cyclic.
  */
-export function serializeState(state: State): JsonValue {
+export function serializeState(state: State, images?: ImageAssets): JsonValue {
   let result: z.ZodSafeParseResult<JsonValue>;
+  activeImages = images;
   try {
     result = rootSchema.safeParse(state);
   } catch (error) {
@@ -149,6 +156,8 @@ export function serializeState(state: State): JsonValue {
     // Do NOT match on the error type: the limit lands mid-expression (a
     // TypeError from inside `isInstance`) as often as on a RangeError.
     throw new TypeError(CIRCULAR_ERROR);
+  } finally {
+    activeImages = undefined;
   }
   if (result.success) {
     return result.data;

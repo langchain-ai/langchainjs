@@ -4,7 +4,12 @@ import * as z from "zod/v4";
 
 import { TypeSafeClassifier } from "../classifier.js";
 import type { TypeSafeClassifierFields } from "../classifier.js";
-import type { NoulCriteria, QuestionContent } from "../types.js";
+import {
+  validateQuestions,
+  type Content,
+  type NoulCriteria,
+  type State,
+} from "../types.js";
 import type { StateValue } from "../utils/state.js";
 
 const RISK_QUESTION_ID = "is_risky";
@@ -36,27 +41,24 @@ const toolsSchema = z
  * single error path and every default in one place.
  *
  * `instructions` and `criteria` are typed pass-throughs rather than their
- * own content schemas: they become a question, and `parseQuestions` checks
- * them when the classifier is built. Parsing them here as well would
- * rebuild them, and zod's `record` parser drops an own `__proto__` key.
+ * own content schemas: they become a question, which the classifier
+ * validates on each call.
  */
 const configSchema = z.object({
   tools: toolsSchema,
-  instructions: z.custom<QuestionContent>().default(DEFAULT_INSTRUCTIONS),
+  instructions: z.custom<Content>().default(DEFAULT_INSTRUCTIONS),
   criteria: z.custom<NoulCriteria | null>().default({
     true: DEFAULT_TRUE_CRITERIA,
     false: DEFAULT_FALSE_CRITERIA,
   }),
   blockedMessage: z.string().default(DEFAULT_BLOCKED_MESSAGE),
-  classifierOptions: z
-    .custom<Omit<TypeSafeClassifierFields, "questions">>()
-    .optional(),
+  classifierOptions: z.custom<TypeSafeClassifierFields>().optional(),
 });
 
 export interface AutoModeMiddlewareConfig {
   /** Tools to check. Non-empty; anything not listed is never classified. */
   tools: (string | { name: string })[];
-  instructions?: QuestionContent;
+  instructions?: Content;
   /**
    * Descriptions for the two outcomes. Pass `null` to classify on
    * `instructions` alone.
@@ -65,11 +67,10 @@ export interface AutoModeMiddlewareConfig {
   /** Supports `{tool_name}` and `{probability}`. */
   blockedMessage?: string;
   /**
-   * Transport and model settings forwarded to the classifier this middleware
-   * builds — everything except `questions`, which is construction-time only.
-   * Same rationale as `modelRouterMiddleware`. Pass `fetch` for unit tests.
+   * Transport and model settings for the classifier this middleware builds.
+   * Pass `fetch` here to make unit tests network-free.
    */
-  classifierOptions?: Omit<TypeSafeClassifierFields, "questions">;
+  classifierOptions?: TypeSafeClassifierFields;
 }
 
 /** The classifier state for one tool call: transcript tail plus the call. */
@@ -125,14 +126,12 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
     tools.map((tool) => (typeof tool === "string" ? tool : tool.name))
   );
 
-  const classifier = new TypeSafeClassifier({
-    ...classifierOptions,
-    questions: {
-      [RISK_QUESTION_ID]: {
-        type: "noul",
-        instructions,
-        criteria: criteria ?? undefined,
-      },
+  const classifier = new TypeSafeClassifier(classifierOptions);
+  const questions = validateQuestions({
+    [RISK_QUESTION_ID]: {
+      type: "noul",
+      instructions,
+      criteria: criteria ?? undefined,
     },
   });
 
@@ -151,7 +150,10 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
         request.tool?.description
       );
 
-      const response = await classifier.invoke(state);
+      const response = await classifier.invoke(
+        { state: state as State, questions },
+        { signal: request.runtime.signal }
+      );
       const risk = response.nouls[RISK_QUESTION_ID].noul;
 
       if (risk >= DEFAULT_THRESHOLD) {

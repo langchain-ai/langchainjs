@@ -1,8 +1,9 @@
 import {
-  classificationResponseSchema,
-  withAnswerAccessors,
-  type ClassificationResponse,
-} from "../types.js";
+  parseClassifierResponse,
+  type ClassifierResponse,
+} from "@langchain/core/decisions";
+import * as z from "zod/v4";
+
 import {
   apiErrorFromResponse,
   TypeSafeAPIResponseValidationError,
@@ -58,8 +59,28 @@ async function readBody(response: Response): Promise<unknown> {
   }
 }
 
+const wireResponseSchema = z.object({
+  model: z.string(),
+  answers: z.record(z.string(), z.unknown()),
+  usage: z.looseObject({}).nullish(),
+});
+
+const CORE_ERROR_PREFIX = "Invalid decision model response: ";
+
+// Core reports `<path>: <message>`; the path is the part before the first
+// ": ", and `usage_metadata` is `usage` on the wire.
+function fieldPathFromCoreError(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  const detail = message.startsWith(CORE_ERROR_PREFIX)
+    ? message.slice(CORE_ERROR_PREFIX.length)
+    : "";
+  const separator = detail.indexOf(": ");
+  const path = separator > 0 ? detail.slice(0, separator) : "";
+  return path.replace(/^usage_metadata\b/, "usage") || "response";
+}
+
 /**
- * Turns a `POST /v1/systemone` response into a `ClassificationResponse`.
+ * Turns a `POST /v1/systemone` response into a `ClassifierResponse`.
  *
  * @throws a mapped `TypeSafeAPIError` subclass for any non-2xx response.
  * @throws `TypeSafeAPIResponseValidationError` if a 2xx body does not
@@ -68,7 +89,7 @@ async function readBody(response: Response): Promise<unknown> {
 export async function parseResponse(
   response: Response,
   endpoint: string
-): Promise<ClassificationResponse> {
+): Promise<ClassifierResponse> {
   const body = await readBody(response);
 
   if (!response.ok) {
@@ -80,30 +101,27 @@ export async function parseResponse(
     );
   }
 
-  const result = classificationResponseSchema.safeParse(body);
-  if (!result.success) {
-    // `answers` is a caller-keyed record (question ids), but those are
-    // LOW risk per this project's risk tiering — identifiers a developer
-    // wrote in their own source, not per-request end-user content — so the
-    // path is safe to surface verbatim. The HIGH-risk response body itself
-    // stays hidden separately, as a non-enumerable property on the error.
-    const [firstIssue] = result.error.issues;
-    const fieldPath = firstIssue.path.join(".") || "response";
-    throw new TypeSafeAPIResponseValidationError(
+  const invalid = (fieldPath: string) =>
+    new TypeSafeAPIResponseValidationError(
       response.status,
       body,
       response.headers,
       fieldPath,
       endpoint
     );
-  }
 
-  const requestId = response.headers.get("x-typesafe-request-id") ?? undefined;
-  const base =
-    requestId === undefined ? result.data : { ...result.data, requestId };
-  // Accessors attach AFTER the spread: a spread drops non-enumerable props.
-  // `base` is the transform's plain shape, which lacks the accessors that
-  // make it satisfy `ClassificationResponse` — `withAnswerAccessors`
-  // attaches them and returns the now-complete object.
-  return withAnswerAccessors(base as ClassificationResponse);
+  const wire = wireResponseSchema.safeParse(body);
+  if (!wire.success) {
+    throw invalid(wire.error.issues[0].path.join(".") || "response");
+  }
+  try {
+    return parseClassifierResponse({
+      model: wire.data.model,
+      answers: wire.data.answers,
+      usage_metadata: wire.data.usage,
+      requestId: response.headers.get("x-typesafe-request-id"),
+    });
+  } catch (error) {
+    throw invalid(fieldPathFromCoreError(error));
+  }
 }

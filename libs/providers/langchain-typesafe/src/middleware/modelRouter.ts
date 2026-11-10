@@ -3,9 +3,15 @@ import { HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { createMiddleware, initChatModel } from "langchain";
 import * as z from "zod";
 
+import type { JsonValue } from "@langchain/core/decisions";
+
 import { TypeSafeClassifier } from "../classifier.js";
 import type { TypeSafeClassifierFields } from "../classifier.js";
-import type { ChoiceAnswer, JsonValue, QuestionContent } from "../types.js";
+import {
+  validateQuestions,
+  type ChoiceAnswer,
+  type Content,
+} from "../types.js";
 
 const QUESTION_ID = "model_route";
 
@@ -21,21 +27,12 @@ export interface ModelRouterMiddlewareConfig {
   /** Named choices. Must be non-empty; the criteria ARE the Choice criteria. */
   choices: Record<string, ModelChoice>;
   /** Extra guidance for the selection, e.g. "Choose the least costly model." */
-  instructions: QuestionContent;
+  instructions: Content;
   /**
-   * Transport and model settings forwarded to the classifier this middleware
-   * builds — everything `TypeSafeClassifier` accepts EXCEPT `questions`.
-   *
-   * The question is the middleware's own business and cannot be supplied by
-   * the caller: `TypeSafeClassifier.questions` is `readonly` and fixed at
-   * construction, and `TypeSafeClassifierCallOptions` has no `questions`
-   * field, so there is no way to bind one per call. Accepting a whole
-   * classifier instance would therefore force the caller to author the very
-   * criteria that `choices` already describes.
-   *
+   * Transport and model settings for the classifier this middleware builds.
    * Pass `fetch` here to make unit tests network-free.
    */
-  classifierOptions?: Omit<TypeSafeClassifierFields, "questions">;
+  classifierOptions?: TypeSafeClassifierFields;
 }
 
 const stateSchema = z.object({
@@ -161,16 +158,12 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
   const choices = parseChoices(choicesInput);
   const routes = Object.keys(choices);
 
-  const classifier = new TypeSafeClassifier({
-    ...classifierOptions,
-    questions: {
-      [QUESTION_ID]: {
-        type: "choice",
-        instructions,
-        criteria: Object.fromEntries(
-          routes.map((r) => [r, choices[r].criteria])
-        ),
-      },
+  const classifier = new TypeSafeClassifier(classifierOptions);
+  const questions = validateQuestions({
+    [QUESTION_ID]: {
+      type: "choice",
+      instructions,
+      criteria: Object.fromEntries(routes.map((r) => [r, choices[r].criteria])),
     },
   });
 
@@ -180,14 +173,17 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
     name: "TypeSafeModelRouterMiddleware",
     stateSchema,
 
-    async beforeAgent(state) {
+    async beforeAgent(state, runtime) {
       const latest = latestHumanMessage(state.messages ?? []);
       if (latest === undefined) {
         throw new Error(
           "modelRouterMiddleware: state contains no human message to route on."
         );
       }
-      const response = await classifier.invoke(latest);
+      const response = await classifier.invoke(
+        { state: latest, questions },
+        { signal: runtime.signal }
+      );
       const answer = response.choices[QUESTION_ID];
       if (answer === undefined) {
         throw new Error(
