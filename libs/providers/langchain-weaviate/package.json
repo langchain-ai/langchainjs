@@ -26,6 +26,7 @@
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit --composite false --incremental false",
     "test:watch": "vitest --watch",
     "test:int": "vitest --mode int",
     "format": "prettier --write \"src\"",
@@ -38,6 +39,7 @@
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
+    "@langchain/classic": "workspace:^",
     "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
