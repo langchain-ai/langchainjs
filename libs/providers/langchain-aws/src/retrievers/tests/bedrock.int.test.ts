@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { AmazonKnowledgeBaseRetriever } from "../bedrock.js";
 
 test.skip("AmazonKnowledgeBaseRetriever", async () => {

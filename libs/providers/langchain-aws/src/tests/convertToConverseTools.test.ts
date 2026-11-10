@@ -55,13 +55,13 @@ describe("convertToConverseTools", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0]).toHaveProperty("toolSpec");
-    expect(result[0].toolSpec.name).toBe("calculate");
-    expect(result[0].toolSpec.description).toBe(
+    expect(result[0].toolSpec?.name).toBe("calculate");
+    expect(result[0].toolSpec?.description).toBe(
       "Calculate the result of an operation"
     );
     expect(result[1]).toHaveProperty("toolSpec");
-    expect(result[1].toolSpec.name).toBe("extract-1");
-    expect(result[1].toolSpec.description).toBe(
+    expect(result[1].toolSpec?.name).toBe("extract-1");
+    expect(result[1].toolSpec?.description).toBe(
       "Tool for extracting structured output from the model's response."
     );
   });
@@ -82,10 +82,10 @@ describe("convertToConverseTools", () => {
     const result = convertToConverseTools([tool1, tool2]);
 
     expect(result).toHaveLength(2);
-    expect(result[0].toolSpec.name).toBe("tool1");
-    expect(result[0].toolSpec.description).toBe("First tool");
-    expect(result[1].toolSpec.name).toBe("tool2");
-    expect(result[1].toolSpec.description).toBe("Second tool");
+    expect(result[0].toolSpec?.name).toBe("tool1");
+    expect(result[0].toolSpec?.description).toBe("First tool");
+    expect(result[1].toolSpec?.name).toBe("tool2");
+    expect(result[1].toolSpec?.description).toBe("Second tool");
   });
 
   it("should handle all OpenAI format tools", () => {
@@ -120,10 +120,10 @@ describe("convertToConverseTools", () => {
     const result = convertToConverseTools([openAITool1, openAITool2]);
 
     expect(result).toHaveLength(2);
-    expect(result[0].toolSpec.name).toBe("extract-1");
-    expect(result[0].toolSpec.description).toBe("First extract tool");
-    expect(result[1].toolSpec.name).toBe("extract-2");
-    expect(result[1].toolSpec.description).toBe("Second extract tool");
+    expect(result[0].toolSpec?.name).toBe("extract-1");
+    expect(result[0].toolSpec?.description).toBe("First extract tool");
+    expect(result[1].toolSpec?.name).toBe("extract-2");
+    expect(result[1].toolSpec?.description).toBe("Second extract tool");
   });
 
   it("should handle Bedrock tools", () => {
@@ -213,10 +213,10 @@ describe("convertToConverseTools", () => {
     const result = convertToConverseTools(mixedTools);
 
     expect(result).toHaveLength(4);
-    expect(result[0].toolSpec.name).toBe("langchain-1");
-    expect(result[1].toolSpec.name).toBe("openai-1");
-    expect(result[2].toolSpec.name).toBe("langchain-2");
-    expect(result[3].toolSpec.name).toBe("openai-2");
+    expect(result[0].toolSpec?.name).toBe("langchain-1");
+    expect(result[1].toolSpec?.name).toBe("openai-1");
+    expect(result[2].toolSpec?.name).toBe("langchain-2");
+    expect(result[3].toolSpec?.name).toBe("openai-2");
   });
 });
 
