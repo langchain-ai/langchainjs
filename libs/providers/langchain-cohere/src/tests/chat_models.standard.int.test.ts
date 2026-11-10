@@ -1,15 +1,10 @@
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
-import {
-  ChatCohere,
-  ChatCohereCallOptions,
-  ChatCohereInput,
-} from "../chat_models.js";
+import { ChatCohere, ChatCohereCallOptions } from "../chat_models.js";
 
 class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatCohereCallOptions,
-  AIMessageChunk,
-  ChatCohereInput
+  AIMessageChunk
 > {
   constructor() {
     if (!process.env.COHERE_API_KEY) {
