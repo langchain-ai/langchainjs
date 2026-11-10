@@ -120,6 +120,7 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/aws": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
+    "@langchain/cohere": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/deepseek": "workspace:*",
     "@langchain/fireworks": "workspace:*",
