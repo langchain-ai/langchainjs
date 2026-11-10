@@ -1,5 +1,7 @@
 import * as z from "zod/v4";
 
+import { isCyclic } from "./utils/cycles.js";
+
 const jsonValueSchema = z.json();
 
 const questionContentSchema = z.union([
@@ -333,16 +335,20 @@ export function parseQuestions(
 ): ValidatedQuestions {
   for (const id of Object.keys(questions)) {
     const question = questions[id];
-    let shape: ReturnType<typeof questionSchema.safeParse>;
+    let shape: ReturnType<typeof questionSchema.safeParse> | undefined;
     try {
-      shape = questionSchema.safeParse(question);
+      if (!isCyclic(question)) {
+        shape = questionSchema.safeParse(question);
+      }
     } catch {
-      // zod walks the value recursively, so a cycle or a pathological depth
-      // overflows the stack rather than producing an issue. A YAML anchor
-      // (`&a { self: *a }`) materializes a real cycle, and this function
-      // exists precisely to turn that class of input into a named error —
-      // so a bare RangeError here would break its own contract. Names the
-      // question id only: no value, no content.
+      // zod walks the value recursively, so a pathological depth overflows
+      // the stack rather than producing an issue.
+    }
+    if (shape === undefined) {
+      // A YAML anchor (`&a { self: *a }`) materializes a real cycle, and
+      // this function exists precisely to turn that class of input into a
+      // named error, so a bare RangeError here would break its own
+      // contract. Names the question id only: no value, no content.
       throw new Error(
         `Invalid TypeSafe question "${id}": criteria or instructions are ` +
           `too deeply nested, or contain a circular reference.`
