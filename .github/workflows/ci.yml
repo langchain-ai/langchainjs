@@ -11,7 +11,6 @@ on:
       - "environment_tests/**"
       - ".github/**"
       - "!.github/workflows/ci.yml"
-      - "!.github/workflows/scripts/check-typecheck-scripts.sh"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 permissions:
@@ -62,7 +61,17 @@ jobs:
         # `pnpm typecheck` runs each package's own `typecheck` script, so every
         # workspace package with a tsconfig must declare one.
       - name: Check every package declares a typecheck script
-        run: .github/workflows/scripts/check-typecheck-scripts.sh
+        run: |
+          failed=0
+          while IFS= read -r dir; do
+            [ -f "$dir/tsconfig.json" ] || continue
+            if ! jq -e '.scripts.typecheck' "$dir/package.json" > /dev/null; then
+              name=$(jq -r .name "$dir/package.json")
+              echo "::error file=${dir#"$PWD"/}/package.json::${name} has a tsconfig.json but no \"typecheck\" script"
+              failed=1
+            fi
+          done < <(pnpm ls -r --depth -1 --json | jq -r '.[].path')
+          exit "$failed"
         # `--continue` (in the root script) reports every failing package.
       - name: Check types
         run: pnpm run typecheck
