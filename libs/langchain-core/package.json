@@ -172,6 +172,17 @@
         "default": "./dist/context.js"
       }
     },
+    "./decisions": {
+      "input": "./src/decisions/index.ts",
+      "require": {
+        "types": "./dist/decisions/index.d.cts",
+        "default": "./dist/decisions/index.cjs"
+      },
+      "import": {
+        "types": "./dist/decisions/index.d.ts",
+        "default": "./dist/decisions/index.js"
+      }
+    },
     "./document_loaders/base": {
       "input": "./src/document_loaders/base.ts",
       "require": {
@@ -885,6 +896,10 @@
     "example_selectors.cjs",
     "example_selectors.d.ts",
     "example_selectors.js",
+    "decisions.d.cts",
+    "decisions.cjs",
+    "decisions.d.ts",
+    "decisions.js",
     "context.d.cts",
     "context.cjs",
     "context.d.ts",
