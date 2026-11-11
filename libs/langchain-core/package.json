@@ -30,7 +30,7 @@
     "langsmith": ">=0.11.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
@@ -39,7 +39,7 @@
     "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "ml-matrix": "^6.15.1",
-    "rimraf": "^6.1.3",
+    "rimraf": "^6.1.4",
     "typescript": "~7.0.2",
     "vitest": "^5.0.5",
     "web-streams-polyfill": "^4.3.0"

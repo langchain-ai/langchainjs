@@ -22,7 +22,7 @@
     "test:int": "vitest run --mode int"
   },
   "dependencies": {
-    "zod": "^4"
+    "zod": "^4.6.6"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
