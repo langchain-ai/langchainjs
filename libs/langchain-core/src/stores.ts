@@ -56,7 +56,7 @@ export abstract class BaseStore<K, V> extends Serializable {
 export class InMemoryStore<T = any> extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage"];
 
-  protected store: Record<string, T> = {};
+  protected store: Record<string, T> = Object.create(null);
 
   /**
    * Retrieves the values associated with the given keys from the store.
