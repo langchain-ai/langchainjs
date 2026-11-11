@@ -1,4 +1,5 @@
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { test, expect } from "vitest";
 import {
   convertToOpenAIFunction,
@@ -117,4 +118,26 @@ test("Can convert tool to OpenAI Tool format", async () => {
       },
     },
   });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/12137
+test("convertToOpenAITool strips redundant Zod format patterns from parameters", () => {
+  const result = convertToOpenAITool({
+    name: "read_thing",
+    description: "Read a thing",
+    schema: z4.object({
+      id: z4.uuid(),
+      mail: z4.email(),
+      code: z4.string().regex(/^ABC-\d+$/),
+    }),
+  });
+  const props = (
+    result.function.parameters as {
+      properties: Record<string, { format?: string; pattern?: string }>;
+    }
+  ).properties;
+  expect(props.id).toEqual({ type: "string", format: "uuid" });
+  expect(props.mail).toEqual({ type: "string", format: "email" });
+  expect(props.code.pattern).toBe("^ABC-\\d+$");
+  expect(props.code.format).toBeUndefined();
 });
