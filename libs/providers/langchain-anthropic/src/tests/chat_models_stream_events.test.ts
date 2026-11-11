@@ -6,6 +6,7 @@ import {
   ChatAnthropic,
   type ChatAnthropicCallOptions,
 } from "../chat_models.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type {
   AnthropicMessageStreamEvent,
@@ -199,6 +200,61 @@ function toolCallEvents() {
       type: "message_delta" as const,
       delta: { stop_reason: "tool_use" as const, stop_sequence: null },
       usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function thinkingPlusToolEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_04JKL",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 50, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: { type: "thinking" as const, thinking: "", signature: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "thinking_delta" as const, thinking: "Let me reason..." },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "signature_delta" as const, signature: "SIG" },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "content_block_start" as const,
+      index: 1,
+      content_block: {
+        type: "tool_use" as const,
+        id: "toolu_1",
+        name: "step",
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 1,
+      delta: { type: "input_json_delta" as const, partial_json: "{}" },
+    },
+    { type: "content_block_stop" as const, index: 1 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "tool_use" as const, stop_sequence: null },
+      usage: { output_tokens: 8 },
     },
     { type: "message_stop" as const },
   ];
@@ -785,6 +841,34 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const usage = await stream.usage;
       expect(usage?.input_tokens).toBe(800);
       expect(usage?.output_tokens).toBe(3);
+    });
+
+    test("v3 ChatModelStream keeps thinking blocks when the assembled message is replayed", async () => {
+      const model = new MockStreamChatAnthropic(thinkingPlusToolEvents());
+      const message = await new ChatModelStream(
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
+      );
+
+      expect(message.response_metadata.model_provider).toBe("anthropic");
+
+      const payload = _convertMessagesToAnthropicPayload([
+        new HumanMessage("go"),
+        message,
+      ]);
+      const assistant = payload.messages.find((m) => m.role === "assistant");
+      expect(assistant?.content).toEqual([
+        {
+          type: "thinking",
+          thinking: "Let me reason...",
+          signature: "SIG",
+        },
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: "step",
+          input: {},
+        },
+      ]);
     });
 
     test("await stream returns AIMessage directly", async () => {

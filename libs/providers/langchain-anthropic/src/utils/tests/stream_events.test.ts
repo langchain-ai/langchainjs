@@ -74,13 +74,16 @@ describe("convertAnthropicStream", () => {
 
     expect(messageFinish(events).responseMetadata).toEqual({
       usage: { cost: 0.0123 },
+      model_provider: "anthropic",
     });
   });
 
-  test("adds no response metadata when no cost is present", async () => {
+  test("stamps model_provider when no cost is present", async () => {
     const events = await convert();
 
-    expect(messageFinish(events).responseMetadata).toEqual({});
+    expect(messageFinish(events).responseMetadata).toEqual({
+      model_provider: "anthropic",
+    });
   });
 
   test.each([
@@ -89,7 +92,9 @@ describe("convertAnthropicStream", () => {
   ])("ignores $case", async ({ cost }) => {
     const events = await convert({ cost });
 
-    expect(messageFinish(events).responseMetadata).toEqual({});
+    expect(messageFinish(events).responseMetadata).toEqual({
+      model_provider: "anthropic",
+    });
   });
 
   test("leaves the rest of the message-finish event untouched", async () => {
@@ -106,6 +111,7 @@ describe("convertAnthropicStream", () => {
 
     expect(messageFinish(events).responseMetadata).toEqual({
       usage: { cost: 0.0123 },
+      model_provider: "anthropic",
     });
     expect(messageFinish(events).usage).toBeUndefined();
   });
@@ -135,6 +141,7 @@ describe("convertAnthropicStream", () => {
     );
 
     expect(message.response_metadata).not.toHaveProperty("usage");
+    expect(message.response_metadata.model_provider).toBe("anthropic");
   });
 
   test("the cost reaches the assembled message", async () => {
