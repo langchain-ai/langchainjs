@@ -583,6 +583,57 @@ function makeSerializableSchema() {
   };
 }
 
+describe("_generate response handling", () => {
+  it("throws OpenRouterError when a 200 response has no choices key", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      maxRetries: 0,
+    });
+
+    // Some upstream providers answer 200 with an error-shaped body that omits
+    // `choices` entirely. Before the optional chaining, `data.choices[0]` threw
+    // a bare TypeError here and the guard below it was never reached.
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: { message: "Upstream provider failed", code: 502 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    try {
+      await expect(model.invoke("Hello")).rejects.toThrow(
+        "No choices returned in response."
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it("throws OpenRouterError when a 200 response has an empty choices array", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      maxRetries: 0,
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "chatcmpl-1", choices: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    );
+
+    try {
+      await expect(model.invoke("Hello")).rejects.toThrow(
+        "No choices returned in response."
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+});
+
 describe("withStructuredOutput with SerializableSchema", () => {
   test("functionCalling with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
