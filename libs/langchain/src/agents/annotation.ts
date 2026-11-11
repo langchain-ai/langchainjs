@@ -60,6 +60,14 @@ export function createAgentState<
             // For input, use inputSchema if available, otherwise use the value schema
             inputFields[key] = field.inputSchema || field.valueSchema;
             outputFields[key] = field.valueSchema;
+          } else if (UntrackedValue.isInstance(field)) {
+            // Untracked channels would conflict with the state channel when
+            // re-registered for input/output; expose their plain value schema
+            // instead (a LastValue duplicate is tolerated by the graph).
+            if (field.schema) {
+              inputFields[key] = field.schema;
+              outputFields[key] = field.schema;
+            }
           } else {
             // For non-ReducedValue fields, use the field as-is
             inputFields[key] = field;

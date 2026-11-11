@@ -1,6 +1,7 @@
 import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
+import { StateSchema, UntrackedValue } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 
@@ -30,9 +31,15 @@ export type ModelCallLimitMiddlewareConfig = Partial<
 /**
  * Middleware state schema to track the number of model calls made at the thread and run level.
  */
-const stateSchema = z.object({
+const stateSchema = new StateSchema({
   threadModelCallCount: z.number().default(0),
-  runModelCallCount: z.number().default(0),
+  /**
+   * Run-level state must not be checkpointed: it is scoped to a single run.
+   * A persisted count would leak into the next run when the current one ends
+   * without the `afterAgent` reset (run failure, `jumpTo: "end"`), falsely
+   * tripping the limit on subsequent runs of the same thread.
+   */
+  runModelCallCount: new UntrackedValue(z.number().default(0)),
 });
 
 /**
