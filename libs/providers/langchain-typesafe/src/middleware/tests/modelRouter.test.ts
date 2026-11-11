@@ -380,3 +380,28 @@ describe("modelRouterMiddleware validation and cancellation", () => {
     expect(aborted).toBe(true);
   });
 });
+
+describe("modelRouterMiddleware deprecation", () => {
+  test("warns once, pointing to the langchain middleware", async () => {
+    vi.resetModules();
+    const fresh = await import("../modelRouter.js");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    fresh.modelRouterMiddleware({
+      choices: { fast: { model: fakeModel(), criteria: "Simple tasks." } },
+      instructions: "Choose a route.",
+      classifierOptions: OPTS,
+    });
+    fresh.modelRouterMiddleware({
+      choices: { fast: { model: fakeModel(), criteria: "Simple tasks." } },
+      instructions: "Choose a route.",
+      classifierOptions: OPTS,
+    });
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(
+      "Use `modelRouterMiddleware` from `langchain` with `classifier: new TypeSafeClassifier()` instead."
+    );
+    warn.mockRestore();
+  });
+});

@@ -411,3 +411,26 @@ describe("autoModeMiddleware validation and cancellation", () => {
     expect(aborted).toBe(true);
   });
 });
+
+describe("autoModeMiddleware deprecation", () => {
+  test("warns once, pointing to the langchain middleware", async () => {
+    vi.resetModules();
+    const fresh = await import("../autoMode.js");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    fresh.autoModeMiddleware({
+      tools: ["run_sql"],
+      classifierOptions: opts(stubFetch(0.1)),
+    });
+    fresh.autoModeMiddleware({
+      tools: ["run_sql"],
+      classifierOptions: opts(stubFetch(0.1)),
+    });
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(
+      "Use `autoModeMiddleware` from `langchain` with `classifier: new TypeSafeClassifier()` instead."
+    );
+    warn.mockRestore();
+  });
+});
