@@ -14,7 +14,13 @@ const contentSchema = z.union([
   z.array(jsonValueSchema),
 ]);
 
-/** Text, a JSON object, or a JSON array used in question instructions. */
+/**
+ * Text, a JSON object, or a JSON array used in question instructions.
+ *
+ * As in `State`, LangChain standard media blocks may appear anywhere in
+ * instructions and criteria. Providers send them as media, or throw an error
+ * if their API does not accept that media in questions.
+ */
 export type Content = z.infer<typeof contentSchema>;
 
 /** A value allowed below the root of `State`. */
@@ -240,11 +246,13 @@ export type Question = z.infer<typeof questionSchema>;
  * Keeping the state and questions in the runnable input ensures both values
  * participate in composition, batching, and tracing.
  */
-export interface ClassifierRequest {
+export interface ClassifierRequest<
+  Q extends Record<string, Question> = Record<string, Question>,
+> {
   /** Text, structured JSON, or LangChain messages to classify. */
   state: State;
   /** Non-empty map of answer IDs to typed classification questions. */
-  questions: Record<string, Question>;
+  questions: Q;
 }
 
 const probabilitySchema = z.number().min(0).max(1);
@@ -304,7 +312,12 @@ export type NoulAnswer = z.infer<typeof noulAnswerSchema>;
  * provider documents how it derives it; choose thresholds according to the
  * consequences of an incorrect automated decision.
  */
-export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;
+export type ChoiceAnswer<K extends string = string> = {
+  type: "choice";
+  choice: K;
+  probabilities: Record<K, number>;
+  confidence: number;
+};
 
 /**
  * Expected `Score` value with its rubric, distribution, and confidence.
@@ -337,7 +350,37 @@ export type BoxCoordinates = z.infer<typeof boxCoordinatesSchema>;
 export type BoxAnswer = z.infer<typeof boxAnswerSchema>;
 
 /** A discriminated union of answers returned by decision models. */
-export type Answer = z.infer<typeof answerSchema>;
+export type Answer = NoulAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer;
+
+/**
+ * The answer type a question produces. A `Choice` answer's `choice` is typed
+ * as one of the question's labels.
+ */
+export type AnswerFor<T extends Question> = T extends { type: "noul" }
+  ? NoulAnswer
+  : T extends { type: "choice"; criteria: infer C }
+    ? ChoiceAnswer<Extract<keyof C, string>>
+    : T extends { type: "score" }
+      ? ScoreAnswer
+      : T extends { type: "box" }
+        ? BoxAnswer
+        : never;
+
+/** Answers keyed by question ID, typed from the questions that were asked. */
+export type Answers<Q extends Record<string, Question>> = {
+  -readonly [K in keyof Q]: AnswerFor<Q[K]>;
+};
+
+type AnswersOfType<
+  Q extends Record<string, Question>,
+  T extends Question["type"],
+> = string extends keyof Q
+  ? Record<string, AnswerFor<Extract<Question, { type: T }>>>
+  : {
+      -readonly [
+        K in keyof Q as Q[K] extends { type: T } ? K : never
+      ]: AnswerFor<Q[K]>;
+    };
 
 const usageSchema = z
   .looseObject({
@@ -390,12 +433,18 @@ export interface ClassifierResponseFields {
  * `boxes` for views filtered by answer type. Each map preserves the question
  * IDs supplied in `ClassifierRequest.questions`. The views are non-enumerable
  * so they are not duplicated into traces or `JSON.stringify` output.
+ *
+ * `Q` is the questions map that was asked. When it is known, answers and views
+ * are typed per question ID, and a `Choice` answer's `choice` is one of its
+ * labels.
  */
-export interface ClassifierResponse {
+export interface ClassifierResponse<
+  Q extends Record<string, Question> = Record<string, Question>,
+> {
   /** Model that answered the request. */
   model: string;
   /** All answers keyed by their original question IDs. */
-  answers: Record<string, Answer>;
+  answers: Answers<Q>;
   /**
    * Token usage reported for the request, if any. A missing count is treated
    * as `0`, and `total_tokens` defaults to their sum.
@@ -404,13 +453,13 @@ export interface ClassifierResponse {
   /** Provider request ID, useful when diagnosing a request with provider support. */
   requestId?: string;
   /** Binary answers keyed by their original question IDs. */
-  readonly nouls: Record<string, NoulAnswer>;
+  readonly nouls: AnswersOfType<Q, "noul">;
   /** Categorical answers keyed by their original question IDs. */
-  readonly choices: Record<string, ChoiceAnswer>;
+  readonly choices: AnswersOfType<Q, "choice">;
   /** Ordinal answers keyed by their original question IDs. */
-  readonly scores: Record<string, ScoreAnswer>;
+  readonly scores: AnswersOfType<Q, "score">;
   /** Localization answers keyed by their original question IDs. */
-  readonly boxes: Record<string, BoxAnswer>;
+  readonly boxes: AnswersOfType<Q, "box">;
 }
 
 function withAnswerViews(
