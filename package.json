@@ -78,7 +78,7 @@
       "postcss-selector-parser": ">=7.1.6 <8",
       "ajv@8": ">=8.18.0",
       "yauzl": ">=3.2.1",
-      "fast-xml-parser": ">=5.5.7",
+      "fast-xml-parser": ">=5.12.0 <6",
       "@grpc/grpc-js": ">=1.14.5",
       "@google-cloud/firestore@9": ">=9.4.1 <10",
       "thrift": ">=0.23.0 <0.24",
