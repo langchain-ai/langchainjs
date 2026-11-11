@@ -1,5 +1,55 @@
 # langchain
 
+## 1.6.4
+
+### Patch Changes
+
+- [#12121](https://github.com/langchain-ai/langchainjs/pull/12121) [`fbd2c1b`](https://github.com/langchain-ai/langchainjs/commit/fbd2c1b6603e256e96a6a2c2899745e6abfe4e57) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(langchain): add `modelRefusalMiddleware`
+
+  `modelRefusalMiddleware()` throws `ModelRefusalError` when the model refuses, instead of ending the run as if it succeeded. Middleware now passes `ModelRefusalError` through unwrapped instead of as a `MiddlewareError`.
+
+## 1.6.3
+
+### Patch Changes
+
+- [#11778](https://github.com/langchain-ai/langchainjs/pull/11778) [`a6d1e1b`](https://github.com/langchain-ai/langchainjs/commit/a6d1e1b9e43c36f0e1ef262b568760afedd4641d) Thanks [@yoarajota](https://github.com/yoarajota)! - `modelRetryMiddleware` now retries errors that are subclasses of a class listed in `retryOn`. Previously the array form matched only the exact constructor, so `retryOn: [APIError]` never retried a `RateLimitError`. This matches `toolRetryMiddleware`.
+
+- [#11330](https://github.com/langchain-ai/langchainjs/pull/11330) [`642469d`](https://github.com/langchain-ai/langchainjs/commit/642469d1f384b7b96e1e3e4259c9587e3b4acd07) Thanks [@HDPark95](https://github.com/HDPark95)! - fix(langchain): preserve model errors propagated through middleware
+
+## 1.6.2
+
+### Patch Changes
+
+- [#11596](https://github.com/langchain-ai/langchainjs/pull/11596) [`db829f1`](https://github.com/langchain-ai/langchainjs/commit/db829f1cf96241215006acbaaa6c9138d6b24b09) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `tracePolicy` to `createMiddleware`, applied to the middleware's lifecycle hook runs. It only changes what `LangChainTracer` sends to LangSmith (use `omitPayload` from `@langchain/core/tracers/tracer_langchain`). Requires `@langchain/langgraph` >= 1.6.1.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#11437](https://github.com/langchain-ai/langchainjs/pull/11437) [`272d651`](https://github.com/langchain-ai/langchainjs/commit/272d65140496b12c4895d6585c84d2640cd48383) Thanks [@zhdanovartur](https://github.com/zhdanovartur)! - fix(langchain): humanInTheLoopMiddleware — execute approved, edited and auto-approved tool calls when other calls in the same interrupt are rejected, instead of dropping them without a ToolMessage (caused "400 No tool output found for function call" on subsequent model requests)
+
+## 1.6.0
+
+### Minor Changes
+
+- [#11930](https://github.com/langchain-ai/langchainjs/pull/11930) [`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977) Thanks [@hntrl](https://github.com/hntrl)! - Add a beta `OpenAIDecisions` runnable with typed predicate, choice and score questions, plus model-routing and tool-risk agent middleware.
+
+## 1.5.20
+
+### Patch Changes
+
+- [#12043](https://github.com/langchain-ai/langchainjs/pull/12043) [`81577b3`](https://github.com/langchain-ai/langchainjs/commit/81577b3e84c3f38581e76e8335faa89511e99d74) Thanks [@eliornl](https://github.com/eliornl)! - fix(langchain): re-throw a drained tool from the agent's `ToolNode`
+
+  A tool that throws `GraphDrained`, for example one whose inner graph run is drained with `RunControl.requestDrain()`, now stops the agent run with that error, as an interrupt already did, instead of coming back as an error `ToolMessage` that lets the agent go on as if the tool had failed.
+
+## 1.5.19
+
+### Patch Changes
+
+- [#11990](https://github.com/langchain-ai/langchainjs/pull/11990) [`0c5e7bc`](https://github.com/langchain-ai/langchainjs/commit/0c5e7bc688f651c6acc78b2d8b6ad48f6b161165) Thanks [@hntrl](https://github.com/hntrl)! - Avoid copying full agent state into every parallel tool task. Restore tool and middleware state from graph channels for compact tasks while continuing to support full-state tasks saved in older checkpoints.
+
+- [#11989](https://github.com/langchain-ai/langchainjs/pull/11989) [`f096a32`](https://github.com/langchain-ai/langchainjs/commit/f096a32187d194b9f334cf7ec62e05c0050a1cfd) Thanks [@hntrl](https://github.com/hntrl)! - Align the default todo-list system prompt and tool description with Python, including guidance to deliver the substantive final answer after the last `write_todos` result.
+
 ## 1.5.18
 
 ### Patch Changes

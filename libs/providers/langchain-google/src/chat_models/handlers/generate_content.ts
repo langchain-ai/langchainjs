@@ -29,8 +29,8 @@ import {
 } from "../../utils/metadata.js";
 import { iife, withTimeoutSignal } from "../../utils/misc.js";
 import {
-  PromptBlockedError,
   NoCandidatesError,
+  promptBlockedError,
   RequestError,
 } from "../../utils/errors.js";
 import {
@@ -164,7 +164,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
-      throw PromptBlockedError.fromPromptFeedback(data.promptFeedback);
+      throw promptBlockedError(data.promptFeedback);
     }
 
     // Check if we have candidates
@@ -311,6 +311,10 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                   })
                 );
                 return;
+              }
+
+              if (chunk.promptFeedback?.blockReason) {
+                throw promptBlockedError(chunk.promptFeedback);
               }
 
               // Extract text delta from the chunk

@@ -62,7 +62,8 @@ for (;;) {
   const result = await model.invoke(messages, { continuationToken });
   text += result.text;
   continuationToken = result.response_metadata.continuationToken as
-    string | undefined;
+    | string
+    | undefined;
   if (result.response_metadata.finishReason !== "CONTINUATION") break;
 }
 ```

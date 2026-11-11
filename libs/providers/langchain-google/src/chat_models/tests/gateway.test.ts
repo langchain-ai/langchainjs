@@ -73,17 +73,20 @@ describe("applyGeminiGatewayParams", () => {
     expect(params.apiKey).toBe("ls-key");
   });
 
-  test("an explicit apiKey still wins over the gateway key", () => {
+  test.each([
+    { apiKey: "user-key" },
+    { credentials: { project_id: "test-project" } },
+    { googleAuthOptions: { projectId: "test-project" } },
+  ])("explicit credentials suppress gateway routing: %o", (credentials) => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
     const params = applyGeminiGatewayParams({
       model: "gemini-2.5-flash",
-      apiKey: "user-key",
+      ...credentials,
     });
 
-    expect(params.endpoint).toBe("gateway.smith.langchain.com/gemini");
-    expect(params.apiKey).toBe("user-key");
+    expect(params).toEqual({ model: "gemini-2.5-flash", ...credentials });
   });
 
   test("an explicit endpoint suppresses gateway routing", () => {
@@ -112,22 +115,6 @@ describe("applyGeminiGatewayParams", () => {
     expect(params.endpoint).toBe("gateway.smith.langchain.com/vertex");
     expect(params.apiKey).toBe("gateway-key");
     expect(params.platformType).toBe("gcp");
-  });
-
-  test("routes service-account configuration through the Vertex path", () => {
-    vi.stubEnv("LANGSMITH_GATEWAY", "true");
-    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
-
-    const googleAuthOptions = { projectId: "test-project" };
-    const params = applyGeminiGatewayParams({
-      model: "gemini-2.5-flash",
-      googleAuthOptions,
-    });
-
-    expect(params.endpoint).toBe("gateway.smith.langchain.com/vertex");
-    expect(params.apiKey).toBe("gateway-key");
-    expect(params.platformType).toBe("gcp");
-    expect(params.googleAuthOptions).toBe(googleAuthOptions);
   });
 
   test("a non-https custom gateway keeps its scheme", () => {
@@ -184,13 +171,14 @@ describe("ChatGoogle gateway routing (end to end)", () => {
     );
   });
 
-  test("node wrapper preserves regional Vertex routing", async () => {
+  test("node wrapper sends explicit googleAuthOptions straight to Vertex", async () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
     const apiClient = new RecordingApiClient();
     const model = new ChatGoogleNode({
       model: "gemini-2.5-flash",
+      vertexai: true,
       location: "europe-west4",
       googleAuthOptions: {},
       apiClient,
@@ -198,7 +186,7 @@ describe("ChatGoogle gateway routing (end to end)", () => {
     await model.invoke("hi");
 
     expect(apiClient.request?.url).toBe(
-      "https://gateway.smith.langchain.com/vertex/v1/projects/test-project/locations/europe-west4/publishers/google/models/gemini-2.5-flash:generateContent"
+      "https://europe-west4-aiplatform.googleapis.com/v1/projects/test-project/locations/europe-west4/publishers/google/models/gemini-2.5-flash:generateContent"
     );
   });
 

@@ -259,26 +259,22 @@ export async function* convertOpenAICompletionsStream(
           };
         }
 
+        // Accumulate the full call for content-block-finish, and emit only
+        // this chunk's args. A late id or name reaches consumers on finish.
         const acc = blockAccumulators.get(index)!;
         if (rawToolCall.id != null) acc.id = rawToolCall.id;
         if (rawToolCall.function?.name != null) {
           acc.name = rawToolCall.function.name;
         }
-        const argDelta = rawToolCall.function?.arguments ?? "";
-        acc.args = (acc.args ?? "") + argDelta;
-        yield {
-          event: "content-block-delta" as const,
-          index,
-          delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
-          },
-        };
+        const argDelta = rawToolCall.function?.arguments;
+        if (argDelta) {
+          acc.args = (acc.args ?? "") + argDelta;
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: { type: "tool-call-delta" as const, args: argDelta },
+          };
+        }
       }
     }
 

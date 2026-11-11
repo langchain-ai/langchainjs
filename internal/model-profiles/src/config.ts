@@ -29,6 +29,8 @@ const MODEL_PROFILE_FIELDS = new Set([
   "videoOutputs",
   "toolCalling",
   "toolChoice",
+  "midConversationSystemMessages",
+  "midConversationTools",
   "structuredOutput",
 ]);
 

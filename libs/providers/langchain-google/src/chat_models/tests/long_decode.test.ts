@@ -504,6 +504,7 @@ describe("Long Decode: stream events", () => {
     expect(finish).toMatchObject({ reason: "stop" });
     expect(finish).toHaveProperty("responseMetadata", {
       model_provider: "google",
+      finishReason: "STOP",
     });
   });
 });

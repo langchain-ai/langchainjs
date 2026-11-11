@@ -12,6 +12,7 @@ import type {
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../../chat_models/types.js";
+import { promptBlockedError } from "../../utils/errors.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
 
@@ -36,7 +37,8 @@ export async function* convertGoogleGeminiStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason = "stop";
-  let geminiFinishReason: string | undefined;
+  // Kept so the finished message gets the same refusal block as `invoke`.
+  let providerFinishReason: string | undefined;
   let continuationToken: string | undefined;
   let groundingMetadata: Gemini.GroundingMetadata | undefined;
   let citationMetadata: Gemini.CitationMetadata | undefined;
@@ -79,10 +81,14 @@ export async function* convertGoogleGeminiStream(
       yield { event: "usage" as const, usage: usageSnapshot };
     }
 
+    if (response.promptFeedback?.blockReason) {
+      throw promptBlockedError(response.promptFeedback);
+    }
+
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
-      geminiFinishReason = candidate.finishReason;
       finishReason = mapGeminiFinishReason(candidate.finishReason);
+      providerFinishReason = candidate.finishReason;
     }
     if (candidate?.continuationToken) {
       continuationToken = candidate.continuationToken;
@@ -216,9 +222,8 @@ export async function* convertGoogleGeminiStream(
       model_provider: "google",
       // The raw reason distinguishes CONTINUATION from MAX_TOKENS, which can
       // also carry a token but needs a higher maxOutputTokens to resume.
-      ...(continuationToken
-        ? { continuationToken, finishReason: geminiFinishReason }
-        : {}),
+      ...(providerFinishReason ? { finishReason: providerFinishReason } : {}),
+      ...(continuationToken ? { continuationToken } : {}),
       ...(citationMetadata ? { citationMetadata } : {}),
       ...(groundingMetadata
         ? {

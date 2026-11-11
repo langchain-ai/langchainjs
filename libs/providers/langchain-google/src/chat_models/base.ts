@@ -26,6 +26,7 @@ import type {
   BaseChatGoogleCallOptions,
   GooglePlatformType,
   GenerateContentApiHandlerParams,
+  InteractionsApiHandlerParams,
 } from "./types.js";
 import { ConfigurationError, MalformedOutputError } from "../utils/errors.js";
 import { usageMetadataToTokenUsage } from "../utils/metadata.js";
@@ -40,6 +41,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   GoogleChatApiHandler,
   GenerateContentApiHandler,
+  InteractionsApiHandler,
 } from "./handlers/index.js";
 import { convertParamsToPlatformType } from "../converters/shared/params.js";
 
@@ -66,11 +68,11 @@ function hasVertexCredentials(params: {
  * Resolves LangSmith gateway routing for Google chat model params.
  *
  * The LangSmith gateway exposes direct paths for the Gemini Developer API and
- * Vertex AI. An explicit `endpoint` suppresses gateway routing.
+ * Vertex AI. An explicit `endpoint` or explicit credentials (`apiKey`,
+ * `credentials`, `googleAuthOptions`) suppress gateway routing.
  *
  * When `LANGSMITH_GATEWAY` is set, this rewrites `endpoint` to the gateway
- * host and lets the gateway key take precedence over the provider key (which
- * then rides as the `x-goog-api-key` header via the ApiClient). The default
+ * host and uses the gateway key as the API key. The default
  * `https` gateway host is written scheme-less (the URL builders prepend
  * `https://`); a non-`https` custom gateway keeps its scheme so it is not
  * forced to TLS.
@@ -96,7 +98,12 @@ export function applyGeminiGatewayParams<TParams extends object>(
     credentials?: unknown;
     googleAuthOptions?: unknown;
   };
-  if (typeof p.endpoint !== "undefined") {
+  if (
+    typeof p.endpoint !== "undefined" ||
+    typeof p.apiKey !== "undefined" ||
+    typeof p.credentials !== "undefined" ||
+    typeof p.googleAuthOptions !== "undefined"
+  ) {
     return { ...params };
   }
   const platform =
@@ -108,7 +115,6 @@ export function applyGeminiGatewayParams<TParams extends object>(
     return { ...params };
   }
 
-  // A provider key still wins over the gateway key.
   const gatewayUrl = new URL(gatewayConfig.baseURL);
   const path = gatewayUrl.pathname.replace(/\/+$/, "");
   // The URL builders compose `https://${endpoint}/${apiVersion}/...`. For the
@@ -123,7 +129,7 @@ export function applyGeminiGatewayParams<TParams extends object>(
       : `${gatewayUrl.protocol}//${gatewayUrl.host}${path}`;
   return {
     ...params,
-    apiKey: p.apiKey ?? gatewayConfig.apiKey,
+    apiKey: gatewayConfig.apiKey,
     endpoint,
     platformType: platform,
   };
@@ -267,10 +273,13 @@ export abstract class BaseChatGoogle<
 
   protected _apiHandler?: GoogleChatApiHandler;
 
-  protected _handlerParams?: GenerateContentApiHandlerParams;
+  protected _handlerParams?: GenerateContentApiHandlerParams &
+    InteractionsApiHandlerParams;
 
-  protected syncHandlerParams(): GenerateContentApiHandlerParams {
-    const nextParams: GenerateContentApiHandlerParams = {
+  protected syncHandlerParams(): GenerateContentApiHandlerParams &
+    InteractionsApiHandlerParams {
+    const nextParams: GenerateContentApiHandlerParams &
+      InteractionsApiHandlerParams = {
       ...this.params,
       model: this.model,
       platform: this.platform,
@@ -302,6 +311,8 @@ export abstract class BaseChatGoogle<
         this._apiHandler = handlerConfig(handlerParams);
       } else if (handlerConfig === "generateContent") {
         this._apiHandler = new GenerateContentApiHandler(handlerParams);
+      } else if (handlerConfig === "interactions") {
+        this._apiHandler = new InteractionsApiHandler(handlerParams);
       } else {
         throw new ConfigurationError(`Unknown apiHandler: ${handlerConfig}`);
       }

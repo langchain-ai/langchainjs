@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google",
-  "version": "0.2.11",
+  "version": "0.2.14",
   "description": "Google integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -27,12 +27,14 @@
     "typegen:sparktype": "sparktype generate",
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
     "typegen:check": "sparktype check",
-    "typegen:fetch": "curl -o - 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta' | jq -S . > src/openapi/generate-content-openapi.json"
+    "typegen:fetch": "pnpm run typegen:fetch:genContent && pnpm run typegen:fetch:interactions",
+    "typegen:fetch:genContent": "curl -o - 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta' | jq -S . > src/openapi/generate-content-openapi.json",
+    "typegen:fetch:interactions": "curl -o - 'https://ai.google.dev/static/api/interactions.openapi.json' | jq -S . > src/openapi/interactions-openapi.json"
   },
   "dependencies": {
-    "eventsource-parser": "^4.1.1",
-    "google-auth-library": "^11.1.0",
-    "jose": "^6.2.12"
+    "eventsource-parser": "^4.1.3",
+    "google-auth-library": "^11.3.2",
+    "jose": "^6.2.14"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -41,11 +43,11 @@
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "dpdm": "^4.3.0",
     "sparktype": "^0.1.3",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2",
+    "vitest": "^5.0.5",
     "zod": "^3.25.76 || ^4",
     "zod-to-json-schema": "^3.25.2"
   },

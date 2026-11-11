@@ -18,7 +18,7 @@ import {
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { wrapOpenAIClientError } from "../utils/client.js";
-import { withoutFileMimeTypesUnlessSupported } from "../utils/file_mime_types.js";
+import { profileForApi } from "../utils/profile.js";
 import {
   OpenAIToolChoice,
   formatToOpenAIToolChoice,
@@ -94,7 +94,7 @@ export class ChatOpenAICompletions<
   }
 
   override get profile(): ModelProfile {
-    return withoutFileMimeTypesUnlessSupported(super.profile, false);
+    return profileForApi(super.profile, false);
   }
 
   /** @internal */

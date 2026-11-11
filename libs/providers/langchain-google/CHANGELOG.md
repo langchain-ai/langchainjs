@@ -1,5 +1,42 @@
 # @langchain/google
 
+## 0.2.14
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): surface model refusals as `ModelRefusalError`
+
+  Blocked prompts throw `PromptRefusedError`, which matches `ModelRefusalError.isInstance`, including when streaming. A streamed safety stop keeps the text already streamed and ends with a refusal block, and refusal blocks are dropped when history is sent back.
+
+## 0.2.13
+
+### Patch Changes
+
+- [`9ec213b`](https://github.com/langchain-ai/langchainjs/commit/9ec213b8aba71c3d2870f478b8a18c647957fb7a) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds **experimental** support for the Google Interactions API on AI Studio and
+  Google Cloud (Vertex).
+
+  - Add `InteractionsApiHandler` (`apiHandler: "interactions"`) supporting `.invoke()`, `.stream()`, and `.streamEvents()` across AI Studio (`gai`) and Vertex AI (`gcp`)
+  - Add Interactions API converters for messages, tools, parameters, and streaming SSE events
+  - Generate Interactions API TypeScript types from the OpenAPI specification (`src/chat_models/api_types/interactions.ts`)
+  - Export `GoogleChatApiHandler`, `GenerateContentApiHandler`, `InteractionsApiHandler`, and Interactions converters
+  - Supports backwards compatibility with the current API.
+  - Parameters for the Integrations API are exposed, but no specific feature changes are included.
+
+- [#12141](https://github.com/langchain-ai/langchainjs/pull/12141) [`4585842`](https://github.com/langchain-ai/langchainjs/commit/4585842d7e7d04ca14dc8976569c7984ad97218d) Thanks [@hntrl](https://github.com/hntrl)! - Only route Google chat models through the LangSmith gateway when no credentials are passed. Explicit `apiKey`, `authOptions`, `credentials`, or `googleAuthOptions` now go straight to Google.
+
+## 0.2.12
+
+### Patch Changes
+
+- [#11968](https://github.com/langchain-ai/langchainjs/pull/11968) [`84eca2b`](https://github.com/langchain-ai/langchainjs/commit/84eca2b11c0900a67775dca258ebec04f8e852a2) Thanks [@afirstenberg](https://github.com/afirstenberg)! - refactoring in preparation for Interactions API
+
+  - Protocol-specific operations are now done through `GoogleChatApiHandler`
+    subclass
+  - Converters for generate_content and shared converters
+  - Types moved into protocol-specific generated file
+  - Includes support Gemini 4 Argon parity (thinking config, model profile,
+    usage-only streaming)
+
 ## 0.2.11
 
 ### Patch Changes

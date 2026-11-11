@@ -574,6 +574,23 @@ describe("tool()", () => {
       foo: "test",
     });
   });
+
+  it("ends its run when the signal is already aborted", async () => {
+    const collector = new RunCollectorCallbackHandler();
+    const controller = new AbortController();
+    controller.abort();
+    const echo = tool(() => "done", {
+      name: "echo",
+      schema: z.object({}),
+    });
+
+    await expect(
+      echo.invoke({}, { callbacks: [collector], signal: controller.signal })
+    ).rejects.toThrow();
+    await awaitAllCallbacks();
+
+    expect(collector.tracedRuns[0].error).toBeDefined();
+  });
 });
 
 describe("Generator tools (async function*)", () => {

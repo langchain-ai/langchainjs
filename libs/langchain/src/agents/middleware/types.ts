@@ -21,6 +21,7 @@ import type {
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { Command, StreamTransformer } from "@langchain/langgraph";
+import type { TracePolicy } from "@langchain/core/tracers/tracer_langchain";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type { JumpToTarget } from "../constants.js";
@@ -468,6 +469,25 @@ export interface AgentMiddleware<
    * is compiled.
    */
   streamTransformers?: TStreamTransformers;
+
+  /**
+   * Shapes what `LangChainTracer` sends to LangSmith for this middleware's
+   * lifecycle hook runs. Execution, streaming, and other callbacks still see
+   * the raw values.
+   *
+   * @example
+   * ```ts
+   * import { createMiddleware } from "langchain";
+   * import { omitPayload } from "@langchain/core/tracers/tracer_langchain";
+   *
+   * const middleware = createMiddleware({
+   *   name: "PrivateMiddleware",
+   *   tracePolicy: { processInputs: omitPayload },
+   *   beforeModel: () => undefined,
+   * });
+   * ```
+   */
+  tracePolicy?: TracePolicy;
 
   /**
    * Wraps tool execution with custom logic. This allows you to:
