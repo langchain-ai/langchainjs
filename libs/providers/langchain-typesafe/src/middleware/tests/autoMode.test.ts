@@ -358,3 +358,56 @@ describe("renderBlockedMessage", () => {
     expect(out).toBe(`${weirdName} blocked, ${weirdName} again (0.99).`);
   });
 });
+
+describe("autoModeMiddleware validation and cancellation", () => {
+  test("rejects invalid instructions when the middleware is created", () => {
+    expect(() =>
+      autoModeMiddleware({
+        tools: ["run_sql"],
+        instructions: 42 as never,
+        classifierOptions: opts(stubFetch(0.1)),
+      })
+    ).toThrow(TypeSafeError);
+  });
+
+  test("passes the run's abort signal to the classifier request", async () => {
+    const controller = new AbortController();
+    let aborted: boolean | undefined;
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      controller.abort();
+      aborted = init?.signal?.aborted;
+      return new Response(
+        JSON.stringify({
+          model: "jev-1.13.0",
+          answers: { is_risky: { type: "noul", noul: 0.1 } },
+        }),
+        { status: 200 }
+      );
+    });
+    const mw = autoModeMiddleware({
+      tools: ["run_sql"],
+      classifierOptions: {
+        apiKey: "test-key",
+        fetch: fetchMock as unknown as typeof fetch,
+      },
+    });
+    const model = fakeModel()
+      .respondWithTools([
+        { name: "run_sql", args: { query: "SELECT 1" }, id: "call_1" },
+      ])
+      .respond(new AIMessage("Done."));
+    const agent = createAgent({
+      model,
+      tools: [makeRunSqlTool()],
+      middleware: [mw],
+    });
+
+    await expect(
+      agent.invoke(
+        { messages: [new HumanMessage("Run it.")] },
+        { signal: controller.signal }
+      )
+    ).rejects.toThrow();
+    expect(aborted).toBe(true);
+  });
+});
