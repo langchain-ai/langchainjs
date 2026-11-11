@@ -1,8 +1,11 @@
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { expect, describe, it, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 
-import { createAgent } from "../../index.js";
+import { Command, interrupt, MemorySaver } from "@langchain/langgraph";
+
+import { createAgent, createMiddleware } from "../../index.js";
 import { modelFallbackMiddleware } from "../modelFallback.js";
 
 function createMockModel(name = "ChatAnthropic", model = "anthropic") {
@@ -93,5 +96,54 @@ describe("modelFallbackMiddleware", () => {
     await expect(
       agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
     ).rejects.toThrow("Model error");
+  });
+});
+
+describe("Graph control-flow propagation", () => {
+  it("should not call fallback models when the model call interrupts", async () => {
+    const checkpointer = new MemorySaver();
+    const config = { configurable: { thread_id: "fallback-interrupt-thread" } };
+    const primary = createMockModel();
+    const fallback = createMockModel("ChatOpenAI", "openai");
+
+    /**
+     * Inner middleware interrupts the model call (e.g. an approval gate).
+     * Interrupts are control flow, not failures: they must propagate
+     * without triggering fallbacks.
+     */
+    const approval = createMiddleware({
+      name: "ApprovalMiddleware",
+      wrapModelCall: async (request, handler) => {
+        /**
+         * Gate only the primary model, so the observable failure mode is
+         * the fallback model answering in place of the interrupted call.
+         */
+        if (request.model === (primary as unknown)) {
+          interrupt({ type: "model_approval" });
+        }
+        return handler(request);
+      },
+    });
+
+    const agent = createAgent({
+      model: primary,
+      tools: [],
+      checkpointer,
+      middleware: [modelFallbackMiddleware(fallback), approval],
+    });
+
+    const first: any = await agent.invoke(
+      { messages: [new HumanMessage("hi")] },
+      config
+    );
+    expect(first.__interrupt__).toBeDefined();
+    expect(fallback.invoke).not.toHaveBeenCalled();
+
+    const resumed: any = await agent.invoke(
+      new Command({ resume: true }),
+      config
+    );
+    expect(resumed.messages.at(-1)?.content).toBe("Response from model");
+    expect(fallback.invoke).not.toHaveBeenCalled();
   });
 });
