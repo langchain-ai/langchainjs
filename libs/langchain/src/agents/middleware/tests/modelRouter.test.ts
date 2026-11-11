@@ -163,7 +163,7 @@ describe("modelRouterMiddleware", () => {
 
     await expect(
       agent.invoke({ messages: [new HumanMessage("Do the task")] })
-    ).rejects.toThrow('unknown route "other"');
+    ).rejects.toThrow("not one of its labels");
   });
 
   it("rejects empty choices", () => {
