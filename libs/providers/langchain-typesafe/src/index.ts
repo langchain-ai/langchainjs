@@ -5,6 +5,8 @@ export type {
 } from "./classifier.js";
 export type {
   Answer,
+  AnswerFor,
+  AnswersFor,
   Choice,
   ChoiceAnswer,
   ClassificationResponse,
@@ -12,10 +14,14 @@ export type {
   Noul,
   NoulAnswer,
   NoulCriteria,
+  ParsedResponse,
   Question,
   QuestionContent,
+  QuestionInput,
+  QuestionsInput,
   Score,
   ScoreAnswer,
+  ScoreInput,
   Usage,
   ValidatedQuestions,
 } from "./types.js";
