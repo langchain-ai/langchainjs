@@ -254,19 +254,25 @@ describe("invoke", () => {
     // answer set that silently omits it.
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(okResponse());
+      .mockResolvedValue(
+        new Response(
+          '{"model": "typesafe-1", "answers": {"__proto__": {"type": "noul", "noul": 0.5}}}',
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      );
     const questions = JSON.parse(
       '{"__proto__": {"type": "noul", "instructions": "is it urgent?"}}'
     ) as Record<string, Question>;
     expect(Object.keys(questions)).toEqual(["__proto__"]);
 
     const classifier = new TypeSafeClassifier({ apiKey: API_KEY });
-    await classifier.invoke({ state: "hi", questions });
+    const response = await classifier.invoke({ state: "hi", questions });
 
     const body = JSON.parse(
       (fetchSpy.mock.calls[0][1] as RequestInit).body as string
     );
     expect(Object.keys(body.questions)).toEqual(["__proto__"]);
+    expect(Object.keys(response.answers)).toEqual(["__proto__"]);
   });
 
   test("a __proto__ state key is dropped, as zod deliberately does", async () => {
@@ -654,7 +660,7 @@ describe("images", () => {
         content: [{ type: "text", text: "Hi" }, jpeg],
       }),
       questions: {
-        match: {
+        urgent: {
           type: "noul",
           instructions: { reference: jpeg, task: "Same item?" },
         },
@@ -665,7 +671,7 @@ describe("images", () => {
     const [, messageReference] = /^user: Hi\n(<image:[0-9a-f]{32}>)$/.exec(
       body.state as unknown as string
     )!;
-    const questionReference = body.questions.match.instructions.reference;
+    const questionReference = body.questions.urgent.instructions.reference;
     expect(questionReference).toMatch(REFERENCE);
     expect(messageReference).not.toBe(questionReference);
     expect(Object.keys(body.assets ?? {}).sort()).toEqual(

@@ -61,7 +61,12 @@ async function readBody(response: Response): Promise<unknown> {
 
 const wireResponseSchema = z.object({
   model: z.string(),
-  answers: z.record(z.string(), z.unknown()),
+  // Not `z.record`: it drops an answer keyed `__proto__`.
+  answers: z.custom<Record<string, unknown>>(
+    (value) =>
+      typeof value === "object" && value !== null && !Array.isArray(value),
+    "Expected an object."
+  ),
   usage: z.looseObject({}).nullish(),
 });
 
