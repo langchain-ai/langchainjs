@@ -14,7 +14,13 @@ const contentSchema = z.union([
   z.array(jsonValueSchema),
 ]);
 
-/** Text, a JSON object, or a JSON array used in question instructions. */
+/**
+ * Text, a JSON object, or a JSON array used in question instructions.
+ *
+ * As in `State`, LangChain standard media blocks may appear anywhere in
+ * instructions and criteria. Providers send them as media, or throw an error
+ * if their API does not accept that media in questions.
+ */
 export type Content = z.infer<typeof contentSchema>;
 
 /** A value allowed below the root of `State`. */
