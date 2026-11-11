@@ -3,6 +3,7 @@ import * as z from "zod/v4";
 
 import type { JsonValue } from "../types.js";
 import { renderMessage } from "./messages.js";
+import { hasCircularReference } from "./cycles.js";
 
 /** A value legal anywhere below the root. `Date` becomes an ISO string. */
 export type StateValue =
@@ -137,6 +138,9 @@ export function serializeState(state: State): JsonValue {
   let result: z.ZodSafeParseResult<JsonValue>;
   try {
     result = rootSchema.safeParse(state);
+    if (result.success && hasCircularReference(result.data)) {
+      throw new TypeError(CIRCULAR_ERROR);
+    }
   } catch (error) {
     if (
       error !== null &&
@@ -145,9 +149,6 @@ export function serializeState(state: State): JsonValue {
     ) {
       throw error;
     }
-    // Anything else escaping `safeParse` is a stack exhausted by a cycle.
-    // Do NOT match on the error type: the limit lands mid-expression (a
-    // TypeError from inside `isInstance`) as often as on a RangeError.
     throw new TypeError(CIRCULAR_ERROR);
   }
   if (result.success) {
