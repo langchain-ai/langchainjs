@@ -924,6 +924,21 @@ describe("streaming", () => {
     expect(stream.streamDone).toEqual(true);
   });
 
+  test("ReadableJsonStream rejects when the body fails part-way", async () => {
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const source = new ReadableStream<Uint8Array>({
+      start(c) {
+        controller = c;
+        controller.enqueue(toUint8Array('[{"i": 1},{"i'));
+      },
+    });
+    const stream = new ReadableJsonStream(source);
+    expect(await stream.nextChunk()).toEqual({ i: 1 });
+
+    controller.error(new Error("Premature close"));
+    await expect(stream.nextChunk()).rejects.toThrow("Premature close");
+  });
+
   const eventData: string[] = [
     "event: ping\n",
     'data: {"type": "ping"}\n',
