@@ -2327,8 +2327,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain-core
       '@langchain/openai':
-        specifier: ^1.5.13
-        version: 1.5.13(@aws-sdk/credential-provider-node@3.972.92)(@langchain/core@libs+langchain-core)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(google-auth-library@11.3.2)(undici@8.12.3)(ws@8.22.1(bufferutil@4.1.0))
+        specifier: workspace:*
+        version: link:../langchain-openai
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -3978,12 +3978,6 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
       zod: '>=4.6.6 <5'
-
-  '@langchain/openai@1.5.13':
-    resolution: {integrity: sha512-SA1QWNgM/p8xhdwU82CJ7OofhHEExpAaIwJ7j9ELIyVW795Mn0jDRQO/5yChawLcPhuLkeL+jMesi0FnXbImSg==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      '@langchain/core': workspace:^
 
   '@langchain/protocol@0.0.19':
     resolution: {integrity: sha512-9hKcRrH7cBX6gfutdfXPoft1OCchHe4FEpALoDJMl5Qu+n/YG5ynZmyu8+8cxORlPwHBoKTxggvXz+76M1yX1Q==}
@@ -13453,20 +13447,6 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
-
-  '@langchain/openai@1.5.13(@aws-sdk/credential-provider-node@3.972.92)(@langchain/core@libs+langchain-core)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(google-auth-library@11.3.2)(undici@8.12.3)(ws@8.22.1(bufferutil@4.1.0))':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      js-tiktoken: 1.0.21
-      openai: 7.48.0(@aws-sdk/credential-provider-node@3.972.92)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.5)(google-auth-library@11.3.2)(undici@8.12.3)(ws@8.22.1(bufferutil@4.1.0))(zod@4.6.7)
-      zod: 4.6.7
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-provider-node'
-      - '@smithy/hash-node'
-      - '@smithy/signature-v4'
-      - google-auth-library
-      - undici
-      - ws
 
   '@langchain/protocol@0.0.19': {}
 
