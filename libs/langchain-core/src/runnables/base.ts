@@ -2316,10 +2316,12 @@ export class RunnableMap<
 
   constructor(fields: { steps: RunnableMapLike<RunInput, RunOutput> }) {
     super(fields);
-    this.steps = {};
-    for (const [key, value] of Object.entries(fields.steps)) {
-      this.steps[key] = _coerceToRunnable(value);
-    }
+    this.steps = Object.fromEntries(
+      Object.entries(fields.steps).map(([key, value]) => [
+        key,
+        _coerceToRunnable(value),
+      ])
+    );
   }
 
   static from<
@@ -2355,12 +2357,18 @@ export class RunnableMap<
     try {
       const promises = Object.entries(this.steps).map(
         async ([key, runnable]) => {
-          output[key] = await runnable.invoke(
+          const value = await runnable.invoke(
             input,
             patchConfig(config, {
               callbacks: runManager?.getChild(`map:key:${key}`),
             })
           );
+          Object.defineProperty(output, key, {
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
         }
       );
       await raceWithSignal(Promise.all(promises), config.signal);
