@@ -4,7 +4,9 @@ import * as z from "zod/v4";
 
 import { TypeSafeClassifier } from "../classifier.js";
 import type { TypeSafeClassifierFields } from "../classifier.js";
+import { parseQuestions } from "../types.js";
 import type { NoulCriteria, QuestionContent } from "../types.js";
+import { TypeSafeError } from "../utils/errors.js";
 import type { StateValue } from "../utils/state.js";
 
 const RISK_QUESTION_ID = "is_risky";
@@ -37,7 +39,7 @@ const toolsSchema = z
  *
  * `instructions` and `criteria` are typed pass-throughs rather than their
  * own content schemas: they become a question, and `parseQuestions` checks
- * them when the classifier is built. Parsing them here as well would
+ * it when the middleware is built. Parsing them here as well would
  * rebuild them, and zod's `record` parser drops an own `__proto__` key.
  */
 const configSchema = z.object({
@@ -48,9 +50,7 @@ const configSchema = z.object({
     false: DEFAULT_FALSE_CRITERIA,
   }),
   blockedMessage: z.string().default(DEFAULT_BLOCKED_MESSAGE),
-  classifierOptions: z
-    .custom<Omit<TypeSafeClassifierFields, "questions">>()
-    .optional(),
+  classifierOptions: z.custom<TypeSafeClassifierFields>().optional(),
 });
 
 export interface AutoModeMiddlewareConfig {
@@ -64,12 +64,8 @@ export interface AutoModeMiddlewareConfig {
   criteria?: NoulCriteria | null;
   /** Supports `{tool_name}` and `{probability}`. */
   blockedMessage?: string;
-  /**
-   * Transport and model settings forwarded to the classifier this middleware
-   * builds — everything except `questions`, which is construction-time only.
-   * Same rationale as `modelRouterMiddleware`. Pass `fetch` for unit tests.
-   */
-  classifierOptions?: Omit<TypeSafeClassifierFields, "questions">;
+  /** Transport and model settings; questions are derived per call. */
+  classifierOptions?: TypeSafeClassifierFields;
 }
 
 /** The classifier state for one tool call: transcript tail plus the call. */
@@ -125,16 +121,24 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
     tools.map((tool) => (typeof tool === "string" ? tool : tool.name))
   );
 
-  const classifier = new TypeSafeClassifier({
-    ...classifierOptions,
-    questions: {
-      [RISK_QUESTION_ID]: {
-        type: "noul",
-        instructions,
-        criteria: criteria ?? undefined,
-      },
+  const classifier = new TypeSafeClassifier({ ...classifierOptions });
+
+  const riskQuestions = () => ({
+    [RISK_QUESTION_ID]: {
+      type: "noul" as const,
+      instructions,
+      criteria: criteria ?? undefined,
     },
   });
+  // Fail on bad `instructions`/`criteria` here, not on the agent's first
+  // watched tool call.
+  try {
+    parseQuestions(riskQuestions());
+  } catch (error) {
+    throw new TypeSafeError(
+      error instanceof Error ? error.message : String(error)
+    );
+  }
 
   return createMiddleware({
     name: "TypeSafeAutoModeMiddleware",
@@ -151,7 +155,10 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
         request.tool?.description
       );
 
-      const response = await classifier.invoke(state);
+      const response = await classifier.invoke({
+        state,
+        questions: riskQuestions(),
+      });
       const risk = response.nouls[RISK_QUESTION_ID].noul;
 
       if (risk >= DEFAULT_THRESHOLD) {

@@ -125,17 +125,20 @@ describe("modelRouterMiddleware", () => {
 
   test("sends the choices as the Choice criteria under the model_route id", async () => {
     const fetchMock = stubFetch({ model_route: choiceAnswer("fast") });
-    const mw = modelRouterMiddleware({
-      choices: {
-        fast: {
-          model: fakeModel().respond(new AIMessage("ok")),
-          criteria: "Simple, well-scoped tasks.",
-        },
-        powerful: {
-          model: fakeModel(),
-          criteria: "Complex tasks requiring deeper reasoning.",
-        },
+    const choices = {
+      fast: {
+        model: fakeModel()
+          .respond(new AIMessage("ok"))
+          .respond(new AIMessage("ok again")),
+        criteria: "Simple, well-scoped tasks.",
       },
+      powerful: {
+        model: fakeModel(),
+        criteria: "Complex tasks requiring deeper reasoning.",
+      },
+    };
+    const mw = modelRouterMiddleware({
+      choices,
       instructions: "Choose the least costly model suited to the task.",
       classifierOptions: {
         ...OPTS,
@@ -155,6 +158,11 @@ describe("modelRouterMiddleware", () => {
     expect(questions.model_route.criteria).toEqual({
       fast: "Simple, well-scoped tasks.",
       powerful: "Complex tasks requiring deeper reasoning.",
+    });
+    choices.fast.criteria = "Updated selection criteria.";
+    await agent.invoke({ messages: [new HumanMessage("another request")] });
+    expect(sentBody(fetchMock, 1).questions).toMatchObject({
+      model_route: { criteria: { fast: "Updated selection criteria." } },
     });
   });
 
@@ -185,6 +193,17 @@ describe("modelRouterMiddleware", () => {
         classifierOptions: OPTS,
       })
     ).toThrow(/at least one/i);
+  });
+
+  test("rejects invalid instructions when the middleware is built", () => {
+    const build = () =>
+      modelRouterMiddleware({
+        choices: { fast: { model: fakeModel(), criteria: "x" } },
+        instructions: 42 as never,
+        classifierOptions: OPTS,
+      });
+    expect(build).toThrow(TypeSafeError);
+    expect(build).toThrow(/Invalid TypeSafe question/);
   });
 
   test("a classifier failure propagates rather than defaulting, UNWRAPPED (unlike wrapToolCall)", async () => {

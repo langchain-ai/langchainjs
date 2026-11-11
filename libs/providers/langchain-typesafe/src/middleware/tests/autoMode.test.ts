@@ -281,6 +281,20 @@ describe("autoModeMiddleware", () => {
     );
   });
 
+  test("rejects invalid question content when the middleware is built", () => {
+    const fetchMock = stubFetch(0.01);
+    const build = () =>
+      autoModeMiddleware({
+        tools: ["run_sql"],
+        instructions: 42 as never,
+        criteria: null,
+        classifierOptions: opts(fetchMock),
+      });
+    expect(build).toThrow(TypeSafeError);
+    expect(build).toThrow(/Invalid TypeSafe question/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   test("null classifies on instructions alone", async () => {
     const fetchMock = stubFetch(0.01);
     const runSql = makeRunSqlTool();
