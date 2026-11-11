@@ -13,6 +13,38 @@ import {
   type State,
 } from "./types.js";
 
+// Throws unless every question has an answer of its type, so the response
+// matches its typed answers. Names question IDs only, never answer values.
+function assertAnswered(
+  questions: Record<string, Question>,
+  response: ClassifierResponse
+): void {
+  for (const [id, question] of Object.entries(questions)) {
+    const answer = Object.hasOwn(response.answers, id)
+      ? response.answers[id]
+      : undefined;
+    if (answer === undefined) {
+      throw new Error(
+        `Decision model returned no answer for question "${id}".`
+      );
+    }
+    if (answer.type !== question.type) {
+      throw new Error(
+        `Decision model returned a ${answer.type} answer for ${question.type} question "${id}".`
+      );
+    }
+    if (
+      answer.type === "choice" &&
+      question.type === "choice" &&
+      !Object.hasOwn(question.criteria, answer.choice)
+    ) {
+      throw new Error(
+        `Decision model returned a choice for question "${id}" that is not one of its labels.`
+      );
+    }
+  }
+}
+
 /** Fields shared by every decision model. */
 export interface BaseDecisionModelFields {
   /** Provider model name used to answer questions. */
@@ -98,26 +130,32 @@ export abstract class BaseDecisionModel extends Runnable<
    *
    * @param input State and questions to evaluate.
    * @param options Callbacks, tags, metadata, and other runnable config.
-   * @returns Typed answers keyed by answer ID, with request metadata.
-   * @throws Error if a question is invalid or `questions` is empty.
+   * @returns Answers keyed by answer ID and typed from `questions`, with
+   *   request metadata.
+   * @throws Error if a question is invalid, `questions` is empty, or the
+   *   provider leaves a question unanswered or answers it with the wrong type
+   *   or an unknown `Choice` label.
    */
-  async invoke(
-    input: ClassifierRequest,
+  async invoke<const Q extends Record<string, Question>>(
+    input: ClassifierRequest<Q>,
     options?: Partial<RunnableConfig>
-  ): Promise<ClassifierResponse> {
+  ): Promise<ClassifierResponse<Q>> {
     const config = ensureConfig(options);
-    return this._callWithConfig(
+    const response = await this._callWithConfig(
       async (
         request: ClassifierRequest,
         runConfig?: Partial<RunnableConfig & { runType: string }>,
         runManager?: CallbackManagerForChainRun
       ) => {
         const { runType: _runType, ...childConfig } = runConfig ?? {};
-        return this._classify(
+        const questions = parseQuestions(request.questions);
+        const answered = await this._classify(
           request.state,
-          parseQuestions(request.questions),
+          questions,
           patchConfig(childConfig, { callbacks: runManager?.getChild() })
         );
+        assertAnswered(questions, answered);
+        return answered;
       },
       input,
       {
@@ -131,5 +169,6 @@ export abstract class BaseDecisionModel extends Runnable<
         },
       }
     );
+    return response as ClassifierResponse<Q>;
   }
 }

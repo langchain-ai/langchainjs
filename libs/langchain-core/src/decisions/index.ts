@@ -3,6 +3,8 @@ export {
   parseClassifierResponse,
   parseQuestions,
   type Answer,
+  type AnswerFor,
+  type Answers,
   type Box,
   type BoxAnswer,
   type BoxCoordinates,
