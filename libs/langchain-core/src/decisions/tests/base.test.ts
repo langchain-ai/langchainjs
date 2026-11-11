@@ -95,7 +95,26 @@ class RunRecorder extends BaseCallbackHandler {
   }
 }
 
+class FixedAnswersDecisionModel extends FakeDecisionModel {
+  constructor(private readonly answers: Record<string, unknown>) {
+    super({ model: "fake-model" });
+  }
+
+  async _classify() {
+    return parseClassifierResponse({
+      model: "fake-model",
+      answers: this.answers,
+    });
+  }
+}
+
 const URGENT: Question = { type: "noul", instructions: "Is this urgent?" };
+
+const DEPT: Question = {
+  type: "choice",
+  instructions: "Which team?",
+  criteria: { billing: "Payments.", technical: "Bugs." },
+};
 
 const request = (): ClassifierRequest => ({
   state: "hello",
@@ -187,5 +206,53 @@ describe("BaseDecisionModel", () => {
       outer: 1,
       ls_provider: "fake",
     });
+  });
+
+  test("invoke accepts a response answering every question", async () => {
+    const response = await new FakeDecisionModel({
+      model: "fake-model",
+    }).invoke({ state: "hello", questions: { urgent: URGENT, dept: DEPT } });
+
+    expect(response.choices.dept.choice).toBe("billing");
+  });
+
+  test("invoke rejects a response missing an answer", async () => {
+    const model = new FixedAnswersDecisionModel({});
+
+    await expect(model.invoke(request())).rejects.toThrow(
+      'Decision model returned no answer for question "urgent".'
+    );
+  });
+
+  test("invoke rejects an answer of the wrong type", async () => {
+    const model = new FixedAnswersDecisionModel({
+      urgent: {
+        type: "choice",
+        choice: "billing",
+        probabilities: { billing: 1 },
+        confidence: 1,
+      },
+    });
+
+    await expect(model.invoke(request())).rejects.toThrow(
+      'Decision model returned a choice answer for noul question "urgent".'
+    );
+  });
+
+  test("invoke rejects a choice outside the question's labels", async () => {
+    const model = new FixedAnswersDecisionModel({
+      dept: {
+        type: "choice",
+        choice: "sales",
+        probabilities: { sales: 1 },
+        confidence: 1,
+      },
+    });
+
+    await expect(
+      model.invoke({ state: "hello", questions: { dept: DEPT } })
+    ).rejects.toThrow(
+      'Decision model returned a choice for question "dept" that is not one of its labels.'
+    );
   });
 });
