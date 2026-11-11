@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { getRetryable } from "@langchain/core/errors";
+import { getRetryable, ModelRefusalError } from "@langchain/core/errors";
 import {
   AuthError,
   ConfigurationError,
@@ -8,6 +8,7 @@ import {
   MalformedOutputError,
   NoCandidatesError,
   PromptBlockedError,
+  PromptRefusedError,
   RequestError,
   ToolCallNotFoundError,
 } from "../errors.js";
@@ -158,5 +159,25 @@ describe("retryability classification", () => {
     expect(RequestError.isInstance(error)).toBe(true);
     expect(error).toBeInstanceOf(Error);
     expect(Object.keys(error)).not.toContain("isRetryable");
+  });
+});
+
+describe("PromptRefusedError", () => {
+  test("is a non-retryable PromptBlockedError and a ModelRefusalError", () => {
+    const error = new PromptRefusedError({ blockReason: "SAFETY" });
+    expect(PromptBlockedError.isInstance(error)).toBe(true);
+    expect(ModelRefusalError.isInstance(error)).toBe(true);
+    expect(error.blockReason).toBe("SAFETY");
+    expect(getRetryable(error)).toBe(false);
+    expect(
+      ModelRefusalError.isInstance(
+        new PromptBlockedError({ blockReason: "OTHER" })
+      )
+    ).toBe(false);
+    expect(PromptRefusedError.isInstance(new ModelRefusalError())).toBe(false);
+    expect(new ModelRefusalError() instanceof PromptRefusedError).toBe(false);
+    expect(
+      PromptRefusedError.fromPromptFeedback({ blockReason: "SAFETY" })
+    ).toBeInstanceOf(PromptRefusedError);
   });
 });

@@ -247,6 +247,25 @@ describe("invoke", () => {
     );
   });
 
+  test("rejects a circular question before sending", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const instructions: Record<string, unknown> = {};
+    instructions.self = instructions;
+    const classifier = new TypeSafeClassifier({ apiKey: API_KEY });
+
+    await expect(
+      classifier.invoke({
+        state: "hi",
+        questions: {
+          urgent: { type: "noul", instructions: instructions as never },
+        },
+      })
+    ).rejects.toThrow(
+      'Invalid TypeSafe question "urgent": criteria or instructions contain a circular reference.'
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   test("a __proto__ question id is still sent, not swallowed by the prototype setter", async () => {
     // Assigning `__proto__` onto an ordinary `{}` invokes the inherited
     // setter rather than creating a property, so the question would vanish

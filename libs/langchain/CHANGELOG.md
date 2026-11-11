@@ -1,5 +1,13 @@
 # langchain
 
+## 1.6.4
+
+### Patch Changes
+
+- [#12121](https://github.com/langchain-ai/langchainjs/pull/12121) [`fbd2c1b`](https://github.com/langchain-ai/langchainjs/commit/fbd2c1b6603e256e96a6a2c2899745e6abfe4e57) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(langchain): add `modelRefusalMiddleware`
+
+  `modelRefusalMiddleware()` throws `ModelRefusalError` when the model refuses, instead of ending the run as if it succeeded. Middleware now passes `ModelRefusalError` through unwrapped instead of as a `MiddlewareError`.
+
 ## 1.6.3
 
 ### Patch Changes

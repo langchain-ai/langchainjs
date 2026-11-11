@@ -14,6 +14,7 @@ import { getEnvironmentVariable, isBrowser } from "@langchain/core/utils/env";
 
 import { serializeQuestion } from "./types.js";
 import { ImageAssets } from "./utils/assets.js";
+import { hasCircularReference } from "./utils/cycles.js";
 import { buildHeaders, parseResponse, SYSTEMONE_PATH } from "./utils/client.js";
 import {
   sanitizeEndpoint,
@@ -216,6 +217,11 @@ export class TypeSafeClassifier extends BaseDecisionModel {
     // by the inherited setter.
     const wireQuestions: Record<string, unknown> = Object.create(null);
     for (const [id, question] of Object.entries(questions)) {
+      if (hasCircularReference(question)) {
+        throw new TypeSafeError(
+          `Invalid TypeSafe question "${id}": criteria or instructions contain a circular reference.`
+        );
+      }
       wireQuestions[id] = images.replace(
         serializeQuestion(question) as JsonValue
       );

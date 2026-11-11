@@ -60,6 +60,7 @@ export {
   type ModelCallLimitMiddlewareConfig,
 } from "./modelCallLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
+export { modelRefusalMiddleware } from "./modelRefusal.js";
 export {
   modelRetryMiddleware,
   type ModelRetryMiddlewareConfig,
