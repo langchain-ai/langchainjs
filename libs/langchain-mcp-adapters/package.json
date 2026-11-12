@@ -37,7 +37,7 @@
   },
   "peerDependencies": {
     "@langchain/core": "^1.2.6",
-    "@langchain/langgraph": "^1.4.18"
+    "@langchain/langgraph": "^1.7.2"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/langgraph": "^1.4.18",
+    "@langchain/langgraph": "^1.7.2",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@modelcontextprotocol/node": "^2.1.2",
