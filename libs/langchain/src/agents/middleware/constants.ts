@@ -15,6 +15,8 @@ export const RetrySchema = z.object({
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
    * Default is to retry unless the error is marked non-retryable.
+   * Errors that do not match propagate immediately and are not handled by
+   * `onFailure`.
    */
   retryOn: z
     .union([
