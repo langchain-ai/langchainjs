@@ -2941,6 +2941,47 @@ describe("middleware", () => {
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
     });
 
+    it("should apply a short-circuit Command passed through by outer middleware once", async () => {
+      /**
+       * Test that when an inner middleware returns a Command without calling
+       * handler and the outer middleware passes it through, the Command's
+       * update is applied once rather than once per middleware layer.
+       */
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Hello")],
+      });
+
+      const innerMiddleware = createMiddleware({
+        name: "InnerMiddleware",
+        stateSchema: new StateSchema({
+          note: z4.string().optional(),
+        }),
+        wrapModelCall: async (request, handler) => {
+          if (!request.state.note) {
+            return new Command({ update: { note: "recorded" } });
+          }
+          return handler(request);
+        },
+      });
+
+      const outerMiddleware = createMiddleware({
+        name: "OuterMiddleware",
+        wrapModelCall: (request, handler) => handler(request),
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [outerMiddleware, innerMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hi" }],
+      });
+
+      expect(result.note).toBe("recorded");
+    });
+
     it("should pass modified AIMessage to outer middleware when inner middleware modifies and returns Command", async () => {
       /**
        * Three middleware in chain: inner modifies the AIMessage content,
