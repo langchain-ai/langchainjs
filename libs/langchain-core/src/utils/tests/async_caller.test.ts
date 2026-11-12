@@ -73,6 +73,17 @@ describe("AsyncCaller", () => {
     expect(callable.mock.calls).toHaveLength(2);
   });
 
+  test("callWithOptions does not run a callable when the signal is already aborted", async () => {
+    const caller = new AsyncCaller({ maxRetries: 0 });
+    const callable = vi.fn(async () => "called");
+    const reason = new Error("Request cancelled before dispatch");
+
+    await expect(
+      caller.callWithOptions({ signal: AbortSignal.abort(reason) }, callable)
+    ).rejects.toBe(reason);
+    expect(callable).not.toHaveBeenCalled();
+  });
+
   test("defaultFailedAttemptHandler treats AbortError as non-retryable", async () => {
     const caller = new AsyncCaller({ maxRetries: 2 });
 
