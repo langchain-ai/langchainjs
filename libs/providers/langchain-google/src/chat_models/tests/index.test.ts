@@ -1131,11 +1131,27 @@ describe("Google Mock", () => {
     },
   ];
 
+  const testReasoning4Effort: TestReasoning[] = [
+    {
+      model: "gemini-4-carbon",
+      reasoningEffort: "xhigh",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-4-hydrogen",
+      reasoningEffort: "xhigh",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "XHIGH",
+    }
+  ]
+
   const testReasoning: TestReasoning[] = [
     ...testReasoning25Tokens,
     ...testReasoning3Tokens,
     ...testReasoning25Effort,
     ...testReasoning3Effort,
+    ...testReasoning4Effort,
   ];
 
   describe.each(testReasoning)(

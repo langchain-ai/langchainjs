@@ -68,6 +68,8 @@ export function convertReasoningEffortToReasoningTokens(
     case "high":
       // Defined as 24k or 32k (model-dependent) by https://ai.google.dev/gemini-api/docs/openai#thinking
       return maxTokens;
+    case "xhigh":
+      return maxTokens;
     default:
       return undefined;
   }

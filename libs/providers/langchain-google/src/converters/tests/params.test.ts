@@ -170,6 +170,22 @@ describe("convertFieldsToThinkingConfig", () => {
       convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
     ).toMatchObject({ thinkingLevel: "MINIMAL" });
   });
+
+  test("passes through future/unrecognized thinking levels on level-based models", () => {
+    expect(
+      convertFieldsToThinkingConfig("gemini-4-future", {
+        reasoningEffort: "hyper",
+      })
+    ).toEqual({
+      includeThoughts: true,
+      thinkingLevel: "HYPER",
+    });
+    expect(
+      convertFieldsToThinkingConfig("gemini-2.5-flash", {
+        reasoningEffort: "hyper",
+      })
+    ).toBeUndefined();
+  });
 });
 
 describe("convertFieldsToSpeechConfig", () => {

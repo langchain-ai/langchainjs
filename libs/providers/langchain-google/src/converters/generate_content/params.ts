@@ -16,7 +16,7 @@ import {
   convertReasoningTokensToReasoningEffort,
   getModelVersion,
   getModelSpecialty,
-  getModelFamily,
+  getModelFamily, getModelLevel,
 } from "../shared/params.js";
 
 // Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".
@@ -32,6 +32,25 @@ function supportsMinimalThinkingLevel(model: string): boolean {
   return MINIMAL_THINKING_LEVEL_MODELS.some((prefix) =>
     model.startsWith(prefix)
   );
+}
+
+function supportsXHighThinkingLevel(model: string): boolean {
+
+  // xhigh is not supported on pre-Gemini-4
+  const version = Number(getModelVersion(model));
+  if (version < 4) {
+    return false;
+  }
+
+  // xhigh is not supported on Gemini 4 Argon or Carbon
+  const level = getModelLevel(model)
+  switch (level) {
+    case "argon":
+    case "carbon":
+      return false;
+    default:
+      return true;
+  }
 }
 
 /**
@@ -96,6 +115,10 @@ export function convertFieldsToThinkingConfig(
     // Gemini 3 Pro has only low and high.
     thinkingLevel = "HIGH";
   }
+  if (!supportsXHighThinkingLevel(model) && thinkingLevel === "XHIGH") {
+    // If they don't support XHIGH, then treat this like HIGH
+    thinkingLevel = "HIGH";
+  }
 
   // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
   // or we haven't explicitly tried to set a thinking budget/level, then bail out.
@@ -103,11 +126,11 @@ export function convertFieldsToThinkingConfig(
   const modelSpecialty = getModelSpecialty(model);
   const thoughtsNotSupported =
     modelVersion === "2.5" && modelSpecialty === "image";
-  if (
-    thoughtsNotSupported ||
-    typeof thinkingBudget === "undefined" ||
-    typeof thinkingLevel === "undefined"
-  ) {
+  const usesThinkingBudget = model.startsWith("gemini-2.5");
+  const missingThinkingValue = usesThinkingBudget
+    ? typeof thinkingBudget === "undefined"
+    : typeof thinkingLevel === "undefined";
+  if (thoughtsNotSupported || missingThinkingValue) {
     return undefined;
   }
 
@@ -118,7 +141,7 @@ export function convertFieldsToThinkingConfig(
 
   // Explicitly setting the budget/level is only valid (currently) for text models.
   if (modelSpecialty === "") {
-    if (model.startsWith("gemini-2.5")) {
+    if (usesThinkingBudget) {
       thinkingConfig.thinkingBudget = thinkingBudget;
     } else {
       thinkingConfig.thinkingLevel = thinkingLevel as Gemini.ThinkingLevel;
