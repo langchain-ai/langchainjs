@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
+import { setTimeout } from "node:timers/promises";
 import type { Plugin } from "rolldown";
 import { isSafeProjectPath, toPosixPath } from "../utils.ts";
 
@@ -199,7 +200,23 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
               `${JSON.stringify(packageJson, null, 2)}\n`,
               { flag: "wx" }
             );
-            await fs.rename(temporaryPath, packageJsonPath);
+            for (let attempt = 0; ; attempt += 1) {
+              try {
+                await fs.rename(temporaryPath, packageJsonPath);
+                break;
+              } catch (error) {
+                if (
+                  process.platform !== "win32" ||
+                  attempt >= 5 ||
+                  !["EPERM", "EACCES", "EBUSY"].includes(
+                    (error as NodeJS.ErrnoException).code ?? ""
+                  )
+                ) {
+                  throw error;
+                }
+                await setTimeout(50 * (attempt + 1));
+              }
+            }
           } finally {
             await fs.rm(temporaryPath, { force: true });
           }
