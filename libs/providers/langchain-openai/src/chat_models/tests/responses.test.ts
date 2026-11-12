@@ -248,3 +248,43 @@ describe("tool search support", () => {
     expect(tools[1]).toHaveProperty("name", "get_weather");
   });
 });
+
+describe("tool_choice", () => {
+  const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+  const tools = [
+    {
+      type: "function" as const,
+      function: {
+        name: "lookup",
+        description: "testing",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+  ];
+
+  // "none" | "auto" | "required" are valid Responses tool_choice values and
+  // must reach the request unchanged. They were previously dropped, so a
+  // caller forcing a tool call silently got the provider default instead.
+  it.each(["none", "auto", "required"] as const)(
+    "forwards the %s option unchanged",
+    (tool_choice) => {
+      const params = model.invocationParams({ tools, tool_choice });
+      expect(params.tool_choice).toBe(tool_choice);
+    }
+  );
+
+  it("maps 'any' onto the API's 'required'", () => {
+    const params = model.invocationParams({ tools, tool_choice: "any" });
+    expect(params.tool_choice).toBe("required");
+  });
+
+  it("converts a named tool to the Responses function shape", () => {
+    const params = model.invocationParams({ tools, tool_choice: "lookup" });
+    expect(params.tool_choice).toEqual({ type: "function", name: "lookup" });
+  });
+
+  it("omits tool_choice when none is given", () => {
+    const params = model.invocationParams({ tools });
+    expect(params.tool_choice).toBeUndefined();
+  });
+});
