@@ -374,6 +374,23 @@ test("Separator length is considered correctly for chunk size", async () => {
   expect(output).toEqual(expectedOutput);
 });
 
+test("Separators between retained splits count toward chunkOverlap", async () => {
+  const splitter = new CharacterTextSplitter({
+    separator: " ",
+    chunkSize: 10,
+    chunkOverlap: 4,
+  });
+
+  // Matches Python's CharacterTextSplitter: each overlap ("d e", "g h") is at
+  // most 4 characters. Leaving the separators out kept "b c d e" (7 characters)
+  // and doubled the number of chunks.
+  expect(await splitter.splitText("a b c d e f g h i j")).toEqual([
+    "a b c d e",
+    "d e f g h",
+    "g h i j",
+  ]);
+});
+
 test("Token text splitter", async () => {
   const text = "foo bar baz a a";
   const splitter = new TokenTextSplitter({
