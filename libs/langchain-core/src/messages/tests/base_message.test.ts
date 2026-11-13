@@ -16,6 +16,7 @@ import {
   _mergeDicts,
   DEFAULT_MERGE_IGNORE_KEYS,
   mergeContent,
+  mergeMessageRuns,
 } from "../index.js";
 import type { MessageContent } from "../base.js";
 import { load } from "../../load/index.js";
@@ -211,6 +212,46 @@ test("mergeContent merges single block object with string second content", () =>
   expect(result).toEqual([
     { type: "text", text: "Hello" },
     { type: "text", text: " world" },
+  ]);
+});
+
+test("mergeContent appends a string after data content blocks as text", () => {
+  const image = {
+    type: "image",
+    source_type: "url",
+    url: "https://example.com/cat.png",
+  };
+  const result = mergeContent(
+    [image] as unknown as MessageContent,
+    "What is in this image?"
+  );
+  expect(result).toEqual([
+    image,
+    { type: "text", source_type: "text", text: "What is in this image?" },
+  ]);
+  // Same text block as when the string comes first
+  expect(
+    mergeContent("What is in this image?", [image] as unknown as MessageContent)
+  ).toEqual([
+    { type: "text", source_type: "text", text: "What is in this image?" },
+    image,
+  ]);
+});
+
+test("mergeMessageRuns keeps a text message after a data block as text", () => {
+  const image = {
+    type: "image",
+    source_type: "base64",
+    mime_type: "image/png",
+    data: "iVBORw0KGgo=",
+  };
+  const [merged] = mergeMessageRuns([
+    new HumanMessage({ content: [image] as unknown as MessageContent }),
+    new HumanMessage("Describe this image."),
+  ]);
+  expect(merged.content).toEqual([
+    image,
+    { type: "text", source_type: "text", text: "Describe this image." },
   ]);
 });
 
