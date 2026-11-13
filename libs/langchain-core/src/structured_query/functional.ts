@@ -166,6 +166,10 @@ export class FunctionalTranslator extends BaseTranslator {
     const { operator, args } = operation;
     if (this.allowedOperators.includes(operator)) {
       const operatorFunction = this.getOperatorFunction(operator);
+      // Seed the reduction with the identity element of the operator
+      // (`true` for `and`, `false` for `or`). Seeding `or` with `true`
+      // would make every `or` filter match every document.
+      const initialValue = operator !== Operators.or;
       return (document: Document) => {
         if (!args) {
           return true;
@@ -178,7 +182,7 @@ export class FunctionalTranslator extends BaseTranslator {
           } else {
             throw new Error("Filter is not a function");
           }
-        }, true);
+        }, initialValue);
       };
     } else {
       throw new Error("Operator not allowed");
