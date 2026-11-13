@@ -1,6 +1,9 @@
 import { expect, it } from "vitest";
 import * as fs from "node:fs/promises";
-import { strictParsePartialJson as parsePartialJson } from "../json.js";
+import {
+  parseJsonMarkdown,
+  strictParsePartialJson as parsePartialJson,
+} from "../json.js";
 
 function* generateSegments(rawJson: string) {
   for (let i = 1; i < rawJson.length; i += 1) {
@@ -300,4 +303,13 @@ it("kitchen sink of partial json parsing", async () => {
   for (const [item, i] of generateSegments(rawJson)) {
     expectPartialJson(item).toEqual(segments[i]);
   }
+});
+
+it("parseJsonMarkdown strips stray backticks around unfenced JSON", () => {
+  // Models sometimes wrap a short JSON answer in inline code. Python's
+  // parse_json_markdown strips backticks along with whitespace before parsing.
+  expect(parseJsonMarkdown('`{"a": 1}`')).toEqual({ a: 1 });
+  expect(parseJsonMarkdown('``{"a": 1}``')).toEqual({ a: 1 });
+  expect(parseJsonMarkdown('{"a": 1}`')).toEqual({ a: 1 });
+  expect(parseJsonMarkdown(" `[1, 2]` \n")).toEqual([1, 2]);
 });
