@@ -29,6 +29,7 @@ export async function* convertBedrockConverseStream(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Record<string, any>
   >();
+  const redactedReasoning = new Map<number, Uint8Array[]>();
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
@@ -95,7 +96,23 @@ export async function* convertBedrockConverseStream(
       } else if (delta.reasoningContent) {
         const text = delta.reasoningContent.text;
         const signature = delta.reasoningContent.signature;
-        if (typeof text === "string" || typeof signature === "string") {
+        const redactedContent = delta.reasoningContent.redactedContent;
+        if (redactedContent) {
+          if (!redactedReasoning.has(index)) {
+            redactedReasoning.set(index, []);
+            const initial = {
+              type: "non_standard" as const,
+              value: { type: "reasoning_content", redactedContent: "" },
+            };
+            blockAccumulators.set(index, initial);
+            yield {
+              event: "content-block-start",
+              index,
+              content: initial,
+            };
+          }
+          redactedReasoning.get(index)!.push(redactedContent);
+        } else if (typeof text === "string" || typeof signature === "string") {
           if (!blockAccumulators.has(index)) {
             const initial = { type: "reasoning" as const, reasoning: "" };
             blockAccumulators.set(index, { ...initial });
@@ -172,6 +189,10 @@ export async function* convertBedrockConverseStream(
   }
 
   for (const [index, acc] of blockAccumulators) {
+    const fragments = redactedReasoning.get(index);
+    if (fragments) {
+      acc.value.redactedContent = Buffer.concat(fragments).toString("base64");
+    }
     yield {
       event: "content-block-finish" as const,
       index,
