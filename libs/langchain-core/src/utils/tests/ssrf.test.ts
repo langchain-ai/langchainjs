@@ -346,3 +346,39 @@ describe("Real-world URLs", () => {
     expect(result).toBe(true);
   });
 });
+
+describe("IPv6 literals in a URL", () => {
+  // `new URL(url).hostname` keeps an IPv6 literal in brackets (`[::1]`), and every check above
+  // reads a bare address. A URL that writes a loopback or metadata address as a literal must not
+  // slip through as "a regular hostname".
+  test("rejects loopback, private and metadata addresses written as an IPv6 literal", () => {
+    for (const url of [
+      "https://[::1]/",
+      "https://[::ffff:127.0.0.1]/",
+      "https://[fc00::1]/",
+      "https://[fe80::1]/",
+      "https://[::ffff:169.254.169.254]/",
+    ]) {
+      expect(isSafeUrl(url), url).toBe(false);
+      expect(() => validateSafeUrl(url), url).toThrow();
+    }
+  });
+
+  test("rejects a metadata address written as an IPv6 literal even with allowPrivate", () => {
+    expect(() =>
+      validateSafeUrl("https://[::ffff:169.254.169.254]/", { allowPrivate: true })
+    ).toThrow();
+  });
+
+  test("allows a private IPv6 literal only with allowPrivate", () => {
+    expect(validateSafeUrl("https://[fc00::1]/", { allowPrivate: true })).toBe(
+      "https://[fc00::1]/"
+    );
+  });
+
+  test("keeps allowing a public IPv6 literal", () => {
+    expect(validateSafeUrl("https://[2001:4860:4860::8888]/")).toBe(
+      "https://[2001:4860:4860::8888]/"
+    );
+  });
+});
