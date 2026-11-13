@@ -20,6 +20,7 @@
     "build:examples": "tsc -p ./examples/tsconfig.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit --composite false --incremental false",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   },
