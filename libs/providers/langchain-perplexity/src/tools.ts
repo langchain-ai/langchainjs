@@ -134,6 +134,7 @@ export class PerplexitySearchResults extends Tool {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
+          "X-Pplx-Integration": `langchainjs/${__PKG_VERSION__}`,
         },
         body: JSON.stringify(body),
       });
