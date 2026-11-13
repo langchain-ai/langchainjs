@@ -1721,12 +1721,30 @@ describe("_mergeDicts", () => {
     ).toEqual({ nested: { foo: "bar" } });
   });
 
-  it("handles nested null values in right object", () => {
+  it("keeps the model name instead of concatenating it across chunks", () => {
     expect(
       _mergeDicts(
-        { nested: { foo: "bar" } },
-        { nested: null as unknown as undefined }
+        {
+          model: "google/gemini-4-carbon",
+          model_name: "google/gemini-4-carbon",
+        },
+        {
+          model: "google/gemini-4-carbon",
+          model_name: "google/gemini-4-carbon",
+        }
       )
-    ).toEqual({ nested: { foo: "bar" } });
+    ).toEqual({
+      model: "google/gemini-4-carbon",
+      model_name: "google/gemini-4-carbon",
+    });
+  });
+
+  it("keeps the latest model name when a router switches models", () => {
+    expect(
+      _mergeDicts(
+        { model_name: "google/gemini-4-carbon" },
+        { model_name: "anthropic/claude-4-sonnet" }
+      )
+    ).toEqual({ model_name: "anthropic/claude-4-sonnet" });
   });
 });

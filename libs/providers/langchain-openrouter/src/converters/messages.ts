@@ -131,8 +131,14 @@ export function convertOpenRouterDeltaToBaseMessageChunk(
     chunk.additional_kwargs.reasoning_details = delta.reasoning_details;
   }
 
+  // OpenRouter puts the model it actually served on every stream chunk, which
+  // is the only way to learn the choice behind `openrouter/auto`, a preset,
+  // or a `models` fallback list. Mirror the non-streaming converter's fields
+  // so `response_metadata.model_name` survives on a concatenated stream too.
   chunk.response_metadata = {
     ...chunk.response_metadata,
+    model: rawChunk.model,
+    model_name: rawChunk.model,
     model_provider: "openrouter",
   };
 

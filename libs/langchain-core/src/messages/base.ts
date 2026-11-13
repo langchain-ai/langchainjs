@@ -513,9 +513,18 @@ export function _mergeDicts(
         // Do not merge 'type' fields
         continue;
       } else if (
-        ["id", "name", "output_version", "model_provider"].includes(key)
+        [
+          "id",
+          "name",
+          "output_version",
+          "model_provider",
+          "model",
+          "model_name",
+        ].includes(key)
       ) {
-        // Keep the incoming value for these fields if its defined
+        // Keep the incoming value for these identity fields if it's defined.
+        // A stream repeats the served model on every chunk; concatenating
+        // those strings would turn a model name into a meaningless repetition.
         if (value) {
           merged[key] = value;
         }
