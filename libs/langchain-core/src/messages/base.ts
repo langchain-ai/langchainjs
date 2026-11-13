@@ -569,16 +569,25 @@ function getMergeableTypeBase(type: string): string {
   return type.endsWith("_delta") ? type.slice(0, -"_delta".length) : type;
 }
 
+// Anthropic streams tool arguments as `input_json_delta` blocks that continue
+// the preceding `tool_use` / `server_tool_use` block at the same index.
+const INPUT_JSON_DELTA_TARGETS = new Set(["tool_use", "server_tool_use"]);
+
 function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
   if (typeof left !== "object" || left === null) return false;
   if (typeof right !== "object" || right === null) return false;
   if (!("type" in left) || !("type" in right)) return false;
+  if (typeof left.type !== "string" || typeof right.type !== "string") {
+    return false;
+  }
+  if (
+    right.type === "input_json_delta" &&
+    INPUT_JSON_DELTA_TARGETS.has(left.type)
+  ) {
+    return false;
+  }
 
-  return (
-    typeof left.type === "string" &&
-    typeof right.type === "string" &&
-    getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type)
-  );
+  return getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type);
 }
 
 /**

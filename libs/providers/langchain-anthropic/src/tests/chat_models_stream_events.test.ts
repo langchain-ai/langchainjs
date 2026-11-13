@@ -1,11 +1,15 @@
 import { describe, test, expect } from "vitest";
+import { z } from "zod/v3";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import {
   ChatAnthropic,
   type ChatAnthropicCallOptions,
 } from "../chat_models.js";
+import { AnthropicToolsOutputParser } from "../output_parsers.js";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type {
   AnthropicMessageStreamEvent,
@@ -1028,3 +1032,233 @@ test.each(["claude-fable-5-2", "claude-mythos-5-2"])(
     expect(llm.capturedRequest?.thinking).toBeUndefined();
   }
 );
+
+function structuredOutputEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_07STR",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 50, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "tool_use" as const,
+        id: "toolu_07STR",
+        name: "ConversationTitle",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"title":' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: {
+        type: "input_json_delta" as const,
+        partial_json: '"Truck 42 location"}',
+      },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "tool_use" as const, stop_sequence: null },
+      usage: { output_tokens: 12 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+class PrefersStreamingHandler extends BaseCallbackHandler {
+  name = "prefers_streaming";
+
+  lc_prefer_streaming = true;
+}
+
+class PrefersChatModelStreamEventsHandler extends BaseCallbackHandler {
+  name = "prefers_chat_model_stream_events";
+
+  lc_prefer_chat_model_stream_events = true;
+}
+
+describe("withStructuredOutput over a streamed tool_use response", () => {
+  const schema = z.object({ title: z.string() });
+  const expected = { title: "Truck 42 location" };
+
+  const structuredModel = () =>
+    new MockStreamChatAnthropic(structuredOutputEvents()).withStructuredOutput(
+      schema,
+      { name: "ConversationTitle" }
+    );
+
+  test(".stream() yields the parsed object", async () => {
+    let last: unknown;
+    for await (const chunk of await structuredModel().stream("title?")) {
+      last = chunk;
+    }
+    expect(last).toEqual(expected);
+  });
+
+  test(".invoke() under a streaming callback handler returns the parsed object", async () => {
+    const result = await structuredModel().invoke("title?", {
+      callbacks: [new PrefersStreamingHandler()],
+    });
+    expect(result).toEqual(expected);
+  });
+
+  test(".invoke() under a chat model stream events handler returns the parsed object", async () => {
+    const result = await structuredModel().invoke("title?", {
+      callbacks: [new PrefersChatModelStreamEventsHandler()],
+    });
+    expect(result).toEqual(expected);
+  });
+
+  test(".stream() rejects tool input truncated by max_tokens", async () => {
+    const events = structuredOutputEvents();
+    events[2] = {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: {
+        type: "input_json_delta" as const,
+        partial_json: '{"title":"Truck',
+      },
+    };
+    events[3] = {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: " 4" },
+    };
+    events[5] = {
+      type: "message_delta" as const,
+      delta: { stop_reason: "max_tokens" as const, stop_sequence: null },
+      usage: { output_tokens: 12 },
+    };
+    const model = new MockStreamChatAnthropic(events).withStructuredOutput(
+      schema,
+      { name: "ConversationTitle" }
+    );
+
+    await expect(async () => {
+      for await (const _ of await model.stream("title?")) {
+        // drain
+      }
+    }).rejects.toThrow(OutputParserException);
+  });
+});
+
+describe("streamed server_tool_use input", () => {
+  test("merges input_json_delta into the server_tool_use block", async () => {
+    const llm = new MockStreamChatAnthropic(serverToolCallEvents()).bindTools([
+      { type: "web_search_20250305", name: "web_search" },
+    ]);
+    const chunks = [];
+    for await (const chunk of await llm.stream("Hello", {
+      outputVersion: "v0",
+    })) {
+      chunks.push(chunk);
+    }
+    const result = chunks.reduce((a, b) => a.concat(b));
+    const serverToolBlocks = (
+      result.content as Array<Record<string, unknown>>
+    ).filter((block) => block.index === 0);
+
+    expect(serverToolBlocks).toEqual([
+      expect.objectContaining({
+        type: "server_tool_use",
+        id: "srvtoolu_01ABC",
+        name: "web_search",
+        input: '{"query":"weather"}',
+      }),
+    ]);
+  });
+});
+
+describe("AnthropicToolsOutputParser", () => {
+  test("parses tool_calls when content uses standard tool_call blocks", async () => {
+    const parser = new AnthropicToolsOutputParser({
+      keyName: "ConversationTitle",
+      returnSingle: true,
+    });
+    const message = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "toolu_07STR",
+          name: "ConversationTitle",
+          args: { title: "Truck 42 location" },
+        },
+      ],
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "toolu_07STR",
+          name: "ConversationTitle",
+          args: { title: "Truck 42 location" },
+        },
+      ],
+    });
+    const result = await parser.parseResult([{ text: "", message }]);
+    expect(result).toEqual({ title: "Truck 42 location" });
+  });
+
+  const parser = () =>
+    new AnthropicToolsOutputParser({
+      keyName: "ConversationTitle",
+      returnSingle: true,
+    });
+
+  test("picks the first tool_use block when there are several", async () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: "ConversationTitle",
+          input: { title: "First" },
+        },
+        {
+          type: "tool_use",
+          id: "toolu_2",
+          name: "ConversationTitle",
+          input: { title: "Second" },
+        },
+      ],
+    });
+    const result = await parser().parseResult([{ text: "", message }]);
+    expect(result).toEqual({ title: "First" });
+  });
+
+  test("picks the first tool_call when content has no tool_use blocks", async () => {
+    const message = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "toolu_1",
+          name: "ConversationTitle",
+          args: { title: "First" },
+        },
+        {
+          type: "tool_call",
+          id: "toolu_2",
+          name: "ConversationTitle",
+          args: { title: "Second" },
+        },
+      ],
+    });
+    const result = await parser().parseResult([{ text: "", message }]);
+    expect(result).toEqual({ title: "First" });
+  });
+});

@@ -8,13 +8,14 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { ModelRefusalError } from "@langchain/core/errors";
-import { findRefusal } from "./utils/refusal.js";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
   interopSafeParseAsync,
   InteropZodType,
 } from "@langchain/core/utils/types";
 import { SerializableSchema } from "@langchain/core/utils/standard_schema";
+import { findRefusal } from "./utils/refusal.js";
 
 interface AnthropicToolsOutputParserParams<
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,11 +123,19 @@ export class AnthropicToolsOutputParser<
     }
     const tools = generations.flatMap((generation) => {
       const { message } = generation;
-      if (!Array.isArray(message.content)) {
-        return [];
+      // Prefer raw `tool_use` blocks so truncated JSON still fails strict
+      // parsing; `tool_calls` is a fallback for streams rebuilt as `tool_call`.
+      const contentTool = Array.isArray(message.content)
+        ? extractToolCalls(message.content)[0]
+        : undefined;
+      if (contentTool) return contentTool;
+      if (
+        (AIMessage.isInstance(message) || AIMessageChunk.isInstance(message)) &&
+        message.tool_calls?.length
+      ) {
+        return message.tool_calls[0];
       }
-      const tool = extractToolCalls(message.content)[0];
-      return tool;
+      return [];
     });
     if (tools[0] === undefined) {
       throw new Error(
