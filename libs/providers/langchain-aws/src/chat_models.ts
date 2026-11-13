@@ -17,6 +17,7 @@ import {
 import type {
   ToolConfiguration,
   GuardrailConfiguration,
+  OutputConfig,
   PerformanceConfiguration,
   ConverseRequest,
   ServiceTierType,
@@ -51,6 +52,7 @@ import {
   BedrockConverseToolChoice,
   convertToBedrockToolChoice,
   convertToConverseTools,
+  rejectsForcedToolChoice,
   supportedToolChoiceValuesForModel,
 } from "./utils/tools.js";
 import {
@@ -82,7 +84,15 @@ import {
   isSerializableSchema,
   SerializableSchema,
 } from "@langchain/core/utils/standard_schema";
-import { assembleStructuredOutputPipeline } from "@langchain/core/language_models/structured_output";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+} from "@langchain/core/language_models/structured_output";
+import {
+  convertToConverseOutputConfig,
+  throwIfOutputIncomplete,
+  toolsFromMessageHistory,
+} from "./utils/structured_output.js";
 
 /**
  * Inputs for ChatBedrockConverse.
@@ -254,7 +264,8 @@ export interface ChatBedrockConverseInput
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
-   * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
+   * model is used, ['auto'] if a 'claude-opus-5-5' or 'claude-sonnet-5-5' model is
+   * used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
@@ -303,6 +314,13 @@ export interface ChatBedrockConverseCallOptions
    * Key-value pairs that you can use to filter invocation logs.
    */
   requestMetadata?: ConverseRequest["requestMetadata"];
+
+  /**
+   * Output configuration for the response, such as a JSON schema for the model's
+   * text. `withStructuredOutput` sets it when called with `method: "jsonSchema"`.
+   * @link https://docs.aws.amazon.com/bedrock/latest/userguide/structured-output.html
+   */
+  outputConfig?: OutputConfig;
 
   /**
    * Prompt cache-control settings.
@@ -649,6 +667,20 @@ export interface ChatBedrockConverseCallOptions
  *   rating: 7
  * }
  * ```
+ *
+ * By default this forces a tool call. Claude Opus 5.5 and Claude Sonnet 5.5
+ * reject a forced tool, so on these models the default is `method: "jsonSchema"`,
+ * which any model with Bedrock structured outputs can use. The model then returns
+ * JSON as text and Bedrock holds it to the schema. Constraints Bedrock does not
+ * support, such as `minimum` or `maxLength`, are removed from the request. Zod and
+ * Standard Schema inputs still validate them locally:
+ *
+ * ```typescript
+ * const structuredLlm = llm.withStructuredOutput(Joke, {
+ *   name: "Joke",
+ *   method: "jsonSchema",
+ * });
+ * ```
  * </details>
  *
  * <br />
@@ -823,7 +855,8 @@ export class ChatBedrockConverse
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
-   * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
+   * model is used, ['auto'] if a 'claude-opus-5-5' or 'claude-sonnet-5-5' model is
+   * used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
 
@@ -1029,6 +1062,7 @@ export class ChatBedrockConverse
         ? candidateInferenceConfig
         : undefined,
       toolConfig,
+      outputConfig: options?.outputConfig,
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
@@ -1043,6 +1077,18 @@ export class ChatBedrockConverse
           }
         : undefined,
     };
+  }
+
+  private converseParams(
+    messages: BaseMessage[],
+    options: Partial<this["ParsedCallOptions"]>
+  ): Partial<ConverseCommandParams> {
+    const hasBoundTools = options.tools && options.tools.length > 0;
+    if (!options.outputConfig || hasBoundTools) {
+      return this.invocationParams(options);
+    }
+    const tools = toolsFromMessageHistory(messages);
+    return this.invocationParams({ ...options, tools });
   }
 
   async _generate(
@@ -1082,7 +1128,7 @@ export class ChatBedrockConverse
     try {
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
-      const params = this.invocationParams(options);
+      const params = this.converseParams(messages, options);
       applyCachePointsToConversePayload({
         cacheControl: options.cache_control,
         system: converseSystem,
@@ -1142,7 +1188,7 @@ export class ChatBedrockConverse
     try {
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
-      const params = this.invocationParams(options);
+      const params = this.converseParams(messages, options);
       applyCachePointsToConversePayload({
         cacheControl: options.cache_control,
         system: converseSystem,
@@ -1227,7 +1273,7 @@ export class ChatBedrockConverse
     try {
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
-      const params = this.invocationParams(options);
+      const params = this.converseParams(messages, options);
       applyCachePointsToConversePayload({
         cacheControl: options.cache_control,
         system: converseSystem,
@@ -1385,9 +1431,12 @@ export class ChatBedrockConverse
       > {
     const schema = outputSchema;
     const name = config?.name;
-    const description =
-      getSchemaDescription(schema) ?? "A function available to call.";
-    const method = config?.method;
+    const schemaDescription = getSchemaDescription(schema);
+    const description = schemaDescription ?? "A function available to call.";
+    const defaultMethod = rejectsForcedToolChoice(this.model)
+      ? "jsonSchema"
+      : "functionCalling";
+    const method = config?.method ?? defaultMethod;
     const includeRaw = config?.includeRaw;
 
     if (method === "jsonMode") {
@@ -1407,6 +1456,33 @@ export class ChatBedrockConverse
       isInteropZodSchema(schema) || isSerializableSchema(schema)
         ? toJsonSchema(schema)
         : schema;
+
+    if (method === "jsonSchema") {
+      const contentParser = createContentParser(schema);
+      const jsonOutputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+        (input: AIMessageChunk): Promise<RunOutput> => {
+          throwIfOutputIncomplete(input);
+          return contentParser.parse(input.text);
+        }
+      );
+      const llm = this.withConfig({
+        outputConfig: convertToConverseOutputConfig(
+          functionName,
+          asJsonSchema,
+          schemaDescription
+        ),
+        ls_structured_output_format: {
+          kwargs: { method: "json_schema" },
+          schema: asJsonSchema,
+        },
+      });
+      return assembleStructuredOutputPipeline(
+        llm,
+        jsonOutputParser,
+        includeRaw,
+        includeRaw ? "StructuredOutputRunnable" : "StructuredOutput"
+      );
+    }
 
     const tools: ToolDefinition[] = [
       {
