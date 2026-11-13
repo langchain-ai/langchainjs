@@ -182,15 +182,58 @@ function convertSystemMessageToOllama(message: SystemMessage): OllamaMessage[] {
 }
 
 function convertToolMessageToOllama(message: ToolMessage): OllamaMessage[] {
-  if (typeof message.content !== "string") {
-    throw new Error("Non string tool message content is not supported");
+  if (typeof message.content === "string") {
+    return [
+      {
+        role: "tool",
+        content: message.content,
+      },
+    ];
   }
+
+  const texts: string[] = [];
+  const images: string[] = [];
+  for (const block of message.content) {
+    if (block.type === "text" && typeof block.text === "string") {
+      texts.push(block.text);
+      continue;
+    }
+    const image = extractToolMessageImage(block);
+    if (image === undefined) {
+      throw new Error(
+        `Unsupported tool message content type: ${block.type}. Ollama tool messages support text blocks and images with base64 data or data URLs.`
+      );
+    }
+    images.push(image);
+  }
+
   return [
     {
       role: "tool",
-      content: message.content,
+      content: texts.join("\n"),
+      ...(images.length > 0 ? { images } : {}),
     },
   ];
+}
+
+function extractToolMessageImage(
+  block: Exclude<ToolMessage["content"], string>[number]
+): string | undefined {
+  if (block.type === "image") {
+    if (typeof block.data === "string") return block.data;
+    if (typeof block.url === "string") {
+      return extractBase64FromDataUrl(block.url) || undefined;
+    }
+  } else if (block.type === "image_url") {
+    const { image_url: imageUrl } = block as {
+      image_url?: string | { url?: string };
+    };
+    const url = typeof imageUrl === "string" ? imageUrl : imageUrl?.url;
+    if (typeof url === "string") {
+      return extractBase64FromDataUrl(url) || undefined;
+    }
+  }
+  return undefined;
 }
 
 export function convertToOllamaMessages(
