@@ -12,7 +12,7 @@ class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
       Cls: ChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      constructorArgs: {},
+      constructorArgs: { model: "gpt-4o-mini" },
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
     // which we call after instantiating the model will work.

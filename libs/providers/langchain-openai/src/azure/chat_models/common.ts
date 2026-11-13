@@ -28,6 +28,12 @@ export const AZURE_SECRETS = {
   azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
 };
 
+/**
+ * Azure routes requests by deployment, so configurations that only set a
+ * deployment keep the model name `ChatOpenAI` used to default to.
+ */
+export const AZURE_FALLBACK_MODEL = "gpt-3.5-turbo";
+
 export const AZURE_SERIALIZABLE_KEYS = [
   "azureOpenAIApiKey",
   "azureOpenAIApiVersion",

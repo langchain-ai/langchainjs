@@ -791,7 +791,12 @@ export class ChatOpenAI<
   override withConfig(
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const newModel = new ChatOpenAI<CallOptions>(this.fields);
+    // Pass the resolved model so subclasses that fill it in (Azure) still
+    // construct a valid copy.
+    const newModel = new ChatOpenAI<CallOptions>({
+      ...this.fields,
+      model: this.model,
+    });
     newModel.defaultOptions = { ...this.defaultOptions, ...config };
     return newModel;
   }

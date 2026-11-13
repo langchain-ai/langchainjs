@@ -85,6 +85,7 @@ test("ChatDeepSeek should separate <think> tags into reasoning_content", async (
   };
 
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: {
       fetch: mockFetch as any,
@@ -142,6 +143,7 @@ test("ChatDeepSeek should handle multiple think blocks and content before/after"
   const mockFetch = async () =>
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: { fetch: mockFetch as any },
   });
@@ -187,6 +189,7 @@ test("ChatDeepSeek should handle unclosed think tags (flush at end)", async () =
   const mockFetch = async () =>
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: { fetch: mockFetch as any },
   });
@@ -229,6 +232,7 @@ test("ChatDeepSeek should handle split tags across chunks", async () => {
   const mockFetch = async () =>
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: { fetch: mockFetch as any },
   });
@@ -271,6 +275,7 @@ test("ChatDeepSeek should handle empty think blocks", async () => {
   const mockFetch = async () =>
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: { fetch: mockFetch as any },
   });
@@ -319,6 +324,7 @@ test("ChatDeepSeek should handle nested think tags (treat inner as content)", as
   const mockFetch = async () =>
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: { fetch: mockFetch as any },
   });
@@ -366,6 +372,7 @@ test("ChatDeepSeek should handle malformed tags gracefully", async () => {
   const mockFetch = async () =>
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
+    model: "deepseek-chat",
     apiKey: "test",
     configuration: { fetch: mockFetch as any },
   });

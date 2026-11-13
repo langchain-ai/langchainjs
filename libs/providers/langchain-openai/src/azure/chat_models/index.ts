@@ -8,6 +8,7 @@ import {
   _constructAzureFields,
   _serializeAzureChat,
   AZURE_ALIASES,
+  AZURE_FALLBACK_MODEL,
   AZURE_SECRETS,
   AZURE_SERIALIZABLE_KEYS,
   AzureChatOpenAIFields,
@@ -458,6 +459,10 @@ export class AzureChatOpenAI<
     // Azure's, so make no claim either way.
     delete profile.midConversationTools;
     return profile;
+  }
+
+  protected override _fallbackModel(): string {
+    return AZURE_FALLBACK_MODEL;
   }
 
   get lc_aliases(): Record<string, string> {

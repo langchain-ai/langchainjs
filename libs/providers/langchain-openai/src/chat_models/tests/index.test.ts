@@ -255,6 +255,140 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  describe("model selection", () => {
+    const jsonResponse = (body: unknown) =>
+      new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+
+    const mockApiFetch = () =>
+      vi.fn(async (url: any, _init?: any) =>
+        String(url).endsWith("/responses")
+          ? jsonResponse({
+              id: "resp_0",
+              object: "response",
+              created_at: 0,
+              model: "mock",
+              status: "completed",
+              output: [
+                {
+                  id: "msg_0",
+                  type: "message",
+                  role: "assistant",
+                  status: "completed",
+                  content: [
+                    { type: "output_text", text: "hi", annotations: [] },
+                  ],
+                },
+              ],
+            })
+          : jsonResponse({
+              id: "chatcmpl-0",
+              object: "chat.completion",
+              created: 0,
+              model: "mock",
+              choices: [
+                {
+                  index: 0,
+                  message: { role: "assistant", content: "hi" },
+                  finish_reason: "stop",
+                  logprobs: null,
+                },
+              ],
+            })
+      );
+
+    const requestedModel = (fetch: ReturnType<typeof mockApiFetch>) => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const [, init] = fetch.mock.calls[0];
+      return JSON.parse(init.body).model;
+    };
+
+    it.each([
+      {
+        name: "ChatOpenAI",
+        make: (fields?: BaseChatOpenAIFields) => new ChatOpenAI(fields),
+      },
+      {
+        name: "ChatOpenAICompletions",
+        make: (fields?: BaseChatOpenAIFields) =>
+          new ChatOpenAICompletions(fields),
+      },
+      {
+        name: "ChatOpenAIResponses",
+        make: (fields?: BaseChatOpenAIFields) =>
+          new ChatOpenAIResponses(fields),
+      },
+    ])("$name requires a model instead of using a default", ({ make }) => {
+      const fetch = mockApiFetch();
+
+      expect(() =>
+        make({ apiKey: "test-key", configuration: { fetch } })
+      ).toThrow("ChatOpenAI requires a model.");
+      expect(() => make()).toThrow("ChatOpenAI requires a model.");
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        name: "model field",
+        make: (fields: BaseChatOpenAIFields) =>
+          new ChatOpenAI({ ...fields, model: "gpt-4o-mini" }),
+      },
+      {
+        name: "modelName alias",
+        make: (fields: BaseChatOpenAIFields) =>
+          new ChatOpenAI({ ...fields, modelName: "gpt-4o-mini" }),
+      },
+      {
+        name: "string constructor",
+        make: (fields: BaseChatOpenAIFields) =>
+          new ChatOpenAI("gpt-4o-mini", fields),
+      },
+    ])("sends an explicit model set via the $name", async ({ make }) => {
+      const fetch = mockApiFetch();
+      const model = make({
+        apiKey: "test-key",
+        maxRetries: 0,
+        configuration: { fetch },
+      });
+
+      expect(model.model).toBe("gpt-4o-mini");
+      await model.invoke("hello");
+      expect(requestedModel(fetch)).toBe("gpt-4o-mini");
+    });
+
+    it("prefers model over modelName when both are set", async () => {
+      const fetch = mockApiFetch();
+      const model = new ChatOpenAI({
+        model: "gpt-4.1-mini",
+        modelName: "gpt-4o-mini",
+        apiKey: "test-key",
+        maxRetries: 0,
+        configuration: { fetch },
+      });
+
+      await model.invoke("hello");
+      expect(requestedModel(fetch)).toBe("gpt-4.1-mini");
+    });
+
+    it("sends an explicit model to the Responses API", async () => {
+      const fetch = mockApiFetch();
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        useResponsesApi: true,
+        apiKey: "test-key",
+        maxRetries: 0,
+        configuration: { fetch },
+      });
+
+      await model.invoke("hello");
+      expect(String(fetch.mock.calls[0][0])).toMatch(/\/responses$/);
+      expect(requestedModel(fetch)).toBe("gpt-4o-mini");
+    });
+  });
+
   describe("strict tool calling", () => {
     const weatherTool = {
       type: "function" as const,
