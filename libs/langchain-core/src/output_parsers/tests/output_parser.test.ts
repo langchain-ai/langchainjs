@@ -32,6 +32,21 @@ const listTestCases: [new () => ListOutputParser, string, string[]][] = [
   [CommaSeparatedListOutputParser, "a,b,c", ["a", "b", "c"]],
   [CommaSeparatedListOutputParser, "a,b,c,", ["a", "b", "c", ""]],
   [CommaSeparatedListOutputParser, "a", ["a"]],
+  [
+    CommaSeparatedListOutputParser,
+    '"New York, NY", "Paris, France"',
+    ["New York, NY", "Paris, France"],
+  ],
+  [
+    CommaSeparatedListOutputParser,
+    'red, "dark ""navy"" blue", green',
+    ["red", 'dark "navy" blue', "green"],
+  ],
+  [
+    CommaSeparatedListOutputParser,
+    '27" monitor, 5" phone',
+    ['27" monitor', '5" phone'],
+  ],
   [NumberedListOutputParser, "1. a\n2. b\n3. c", ["a", "b", "c"]],
   [
     NumberedListOutputParser,
