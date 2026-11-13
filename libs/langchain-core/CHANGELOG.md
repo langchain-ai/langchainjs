@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.4.1
+
+### Patch Changes
+
+- [#12230](https://github.com/langchain-ai/langchainjs/pull/12230) [`84e85cc`](https://github.com/langchain-ai/langchainjs/commit/84e85cc8657a6922c9db34ff7a2a1a692e83a503) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Merge streamed `input_json_delta` blocks into the preceding `tool_use` / `server_tool_use` block at the same index
+
 ## 1.4.0
 
 ### Minor Changes
