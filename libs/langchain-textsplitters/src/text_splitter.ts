@@ -183,11 +183,14 @@ export abstract class TextSplitter
   async mergeSplits(splits: string[], separator: string): Promise<string[]> {
     const docs: string[] = [];
     const currentDoc: string[] = [];
+    const separatorLength = separator.length;
+    // Length of currentDoc joined with separator, separators included, so the
+    // overlap kept below is measured as it appears in the next chunk
     let total = 0;
     for (const d of splits) {
       const _len = await this.lengthFunction(d);
       if (
-        total + _len + currentDoc.length * separator.length >
+        total + _len + (currentDoc.length > 0 ? separatorLength : 0) >
         this.chunkSize
       ) {
         if (total > this.chunkSize) {
@@ -206,17 +209,19 @@ which is longer than the specified ${this.chunkSize}`
           // - or if we still have any chunks and the length is long
           while (
             total > this.chunkOverlap ||
-            (total + _len + currentDoc.length * separator.length >
+            (total + _len + (currentDoc.length > 0 ? separatorLength : 0) >
               this.chunkSize &&
               total > 0)
           ) {
-            total -= await this.lengthFunction(currentDoc[0]);
+            total -=
+              (await this.lengthFunction(currentDoc[0])) +
+              (currentDoc.length > 1 ? separatorLength : 0);
             currentDoc.shift();
           }
         }
       }
       currentDoc.push(d);
-      total += _len;
+      total += _len + (currentDoc.length > 1 ? separatorLength : 0);
     }
     const doc = this.joinDocs(currentDoc, separator);
     if (doc !== null) {
