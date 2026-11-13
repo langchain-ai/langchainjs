@@ -1143,8 +1143,8 @@ describe("Google Mock", () => {
       reasoningEffort: "xhigh",
       expectIncludeThoughts: true,
       expectThinkingLevel: "XHIGH",
-    }
-  ]
+    },
+  ];
 
   const testReasoning: TestReasoning[] = [
     ...testReasoning25Tokens,

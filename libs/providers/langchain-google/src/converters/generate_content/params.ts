@@ -16,7 +16,7 @@ import {
   convertReasoningTokensToReasoningEffort,
   getModelVersion,
   getModelSpecialty,
-  getModelFamily, getModelLevel,
+  getModelFamily,
 } from "../shared/params.js";
 
 // Gemini 3 models that accept thinkingLevel "MINIMAL"; the others reject it with a 400, so they get "LOW".
@@ -34,11 +34,9 @@ function supportsMinimalThinkingLevel(model: string): boolean {
   );
 }
 
-// Models that accept thinkingLevel "XHIGH"; the othes reject it
+// Models that accept thinkingLevel "XHIGH"; the others reject it.
 // TODO: Move this to model profile
-const XHIGH_THINKING_LEVEL_MODELS = [
-  "gemini-4-hydrogen",
-];
+const XHIGH_THINKING_LEVEL_MODELS = ["gemini-4-hydrogen"];
 
 function supportsXHighThinkingLevel(model: string): boolean {
   return XHIGH_THINKING_LEVEL_MODELS.includes(model);
