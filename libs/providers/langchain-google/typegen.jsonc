@@ -29,6 +29,7 @@
             "genContent:SpeakerVoiceConfig",
             "genContent:ImageConfig",
             "genContent:Part",
+            "genContent:SpeechMetadata",
             "genContent:VideoMetadata",
             "genContent:CodeExecutionResult",
             "genContent:ExecutableCode",

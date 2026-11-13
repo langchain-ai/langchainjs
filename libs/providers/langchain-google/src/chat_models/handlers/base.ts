@@ -11,6 +11,10 @@ import type {
   GooglePlatformType,
 } from "../types.js";
 
+const LONG_DECODE_MIN_OUTPUT_TOKENS = 64_000;
+// The longest the server runs a single Long Decode request.
+const LONG_DECODE_TIMEOUT_MS = 20 * 60 * 1000;
+
 /**
  * Base abstract handler for Google Chat wire protocols.
  *
@@ -29,6 +33,32 @@ export abstract class GoogleChatApiHandler<
 
   get platform(): GooglePlatformType {
     return this.params.platform;
+  }
+
+  /**
+   * The developer-set timeout; otherwise 20 minutes for Long Decode requests,
+   * or undefined to keep `fetch`'s default behavior.
+   */
+  get timeout(): number | undefined {
+    return this.timeoutFor();
+  }
+
+  /**
+   * As `timeout`, but a per-call `maxOutputTokens` overrides the
+   * constructor's when deciding whether the request is Long Decode.
+   */
+  protected timeoutFor(
+    options?: BaseChatGoogleCallOptions
+  ): number | undefined {
+    if (this.params.timeout !== undefined) {
+      return this.params.timeout;
+    }
+    const maxOutputTokens =
+      options?.maxOutputTokens ?? this.params.maxOutputTokens;
+    if ((maxOutputTokens ?? 0) > LONG_DECODE_MIN_OUTPUT_TOKENS) {
+      return LONG_DECODE_TIMEOUT_MS;
+    }
+    return undefined;
   }
 
   protected get endpointUrl(): string {
