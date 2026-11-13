@@ -1,5 +1,12 @@
 # @langchain/neo4j
 
+## 0.1.33
+
+### Patch Changes
+
+- Updated dependencies [[`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb)]:
+  - @langchain/classic@1.0.61
+
 ## 0.1.32
 
 ### Patch Changes

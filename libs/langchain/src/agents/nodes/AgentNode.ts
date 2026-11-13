@@ -720,7 +720,10 @@ export class AgentNode<
 
             if (AIMessage.isInstance(middlewareResponse)) {
               lastAiMessage = middlewareResponse;
-            } else if (isCommand(middlewareResponse)) {
+            } else if (
+              isCommand(middlewareResponse) &&
+              !collectedCommands.includes(middlewareResponse)
+            ) {
               collectedCommands.push(middlewareResponse);
             }
 

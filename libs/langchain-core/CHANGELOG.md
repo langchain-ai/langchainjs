@@ -1,5 +1,19 @@
 # @langchain/core
 
+## 1.4.0
+
+### Minor Changes
+
+- [#12178](https://github.com/langchain-ai/langchainjs/pull/12178) [`01e5f2d`](https://github.com/langchain-ai/langchainjs/commit/01e5f2dbbf30823045fc82c69bef7b2c032315f4) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add decision models
+
+  - Add `@langchain/core/decisions` with `BaseDecisionModel`, a `Runnable` that answers typed `Noul`, `Choice`, `Score`, and `Box` questions about text, messages, or JSON state
+  - Add question and answer types, `parseQuestions`, and `parseClassifierResponse` for providers
+  - Type `invoke` answers from the questions asked, including `Choice` labels, and reject provider responses that leave a question unanswered or answer it with the wrong type or label
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
 ## 1.3.7
 
 ### Patch Changes

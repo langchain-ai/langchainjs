@@ -1,5 +1,16 @@
 # langchain
 
+## 1.6.5
+
+### Patch Changes
+
+- [#12183](https://github.com/langchain-ai/langchainjs/pull/12183) [`e220aee`](https://github.com/langchain-ai/langchainjs/commit/e220aeed6fd91ec8a1b91b1e9f25b6d87c856d31) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(langchain): add model router and auto mode middleware
+
+  - Add `modelRouterMiddleware`, which picks the agent's model for each run from a decision model's `Choice` answer
+  - Add `autoModeMiddleware`, which blocks listed tool calls that a decision model judges risky
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
 ## 1.6.4
 
 ### Patch Changes

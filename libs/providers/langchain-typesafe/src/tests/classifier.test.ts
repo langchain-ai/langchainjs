@@ -1,5 +1,6 @@
 import { inspect } from "node:util";
 
+import { BaseDecisionModel } from "@langchain/core/decisions";
 import {
   HumanMessage,
   SystemMessage,
@@ -14,7 +15,7 @@ import {
   TypeSafeAuthenticationError,
   TypeSafeRateLimitError,
 } from "../utils/errors.js";
-import type { Question } from "../types.js";
+import type { ClassifierRequest, Question, State } from "../types.js";
 
 const API_KEY = "test-api-key";
 
@@ -53,6 +54,11 @@ const RESPONSE_BODY = {
   usage: { input_tokens: 42, output_tokens: 12 },
 };
 
+const request = (state: State): ClassifierRequest => ({
+  state,
+  questions: QUESTIONS,
+});
+
 const okResponse = () =>
   new Response(JSON.stringify(RESPONSE_BODY), {
     status: 200,
@@ -82,7 +88,7 @@ afterEach(() => {
 
 describe("construction", () => {
   test("requires an API key", () => {
-    expect(() => new TypeSafeClassifier({ questions: QUESTIONS })).toThrow(
+    expect(() => new TypeSafeClassifier()).toThrow(
       /TypeSafe API key is required/
     );
   });
@@ -90,28 +96,29 @@ describe("construction", () => {
   test("reads the API key and base URL from the environment", () => {
     process.env.TYPESAFE_API_KEY = "env-key";
     process.env.TYPESAFE_BASE_URL = "https://env.example.test";
-    const classifier = new TypeSafeClassifier({ questions: QUESTIONS });
+    const classifier = new TypeSafeClassifier();
     expect(classifier.baseUrl).toBe("https://env.example.test");
   });
 
   test("an explicit base URL beats the environment, and trailing slashes are stripped", () => {
     process.env.TYPESAFE_BASE_URL = "https://env.example.test";
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       baseUrl: "https://explicit.example.test///",
     });
     expect(classifier.baseUrl).toBe("https://explicit.example.test");
   });
 
-  test("rejects an empty questions map and a blank model", () => {
-    expect(
-      () => new TypeSafeClassifier({ questions: {}, apiKey: API_KEY })
-    ).toThrow(/at least one question/i);
+  test("rejects an empty questions map and a blank model", async () => {
+    await expect(
+      new TypeSafeClassifier({ apiKey: API_KEY }).invoke({
+        state: "hi",
+        questions: {},
+      })
+    ).rejects.toThrow(/at least one question/i);
     expect(
       () =>
         new TypeSafeClassifier({
-          questions: QUESTIONS,
           apiKey: API_KEY,
           model: "   ",
         })
@@ -120,7 +127,6 @@ describe("construction", () => {
 
   test("defaults model to jev-latest and timeout to 30000ms", () => {
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
     expect(classifier.model).toBe("jev-latest");
@@ -135,10 +141,9 @@ describe("invoke", () => {
       .mockResolvedValue(okResponse());
 
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
-    const result = await classifier.invoke({ message: "help" });
+    const result = await classifier.invoke(request({ message: "help" }));
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -170,7 +175,11 @@ describe("invoke", () => {
     expect(init.body as string).toContain('"technical":null');
 
     expect(result.requestId).toBe("req_test");
-    expect(result.usage).toEqual({ inputTokens: 42, outputTokens: 12 });
+    expect(result.usage_metadata).toEqual({
+      input_tokens: 42,
+      output_tokens: 12,
+      total_tokens: 54,
+    });
     const score = result.answers.frustration;
     if (score.type !== "score") throw new Error("expected score");
     expect(score.legend[1]).toBe("frustrated");
@@ -181,22 +190,23 @@ describe("invoke", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(okResponse());
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
 
-    await classifier.invoke(new HumanMessage("hello"));
+    await classifier.invoke(request(new HumanMessage("hello")));
     let body = JSON.parse(
       (fetchSpy.mock.calls[0][1] as RequestInit).body as string
     );
     expect(body.state).toBe("user: hello");
 
     fetchSpy.mockResolvedValue(okResponse());
-    await classifier.invoke([
-      new SystemMessage("sys"),
-      new HumanMessage("usr"),
-      new AIMessage("ai"),
-    ]);
+    await classifier.invoke(
+      request([
+        new SystemMessage("sys"),
+        new HumanMessage("usr"),
+        new AIMessage("ai"),
+      ])
+    );
     body = JSON.parse(
       (fetchSpy.mock.calls[1][1] as RequestInit).body as string
     );
@@ -227,15 +237,33 @@ describe("invoke", () => {
     });
 
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       timeout: 40,
       maxRetries: 0,
     });
 
-    await expect(classifier.invoke("hi")).rejects.toThrow(
+    await expect(classifier.invoke(request("hi"))).rejects.toThrow(
       TypeSafeAPITimeoutError
     );
+  });
+
+  test("rejects a circular question before sending", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const instructions: Record<string, unknown> = {};
+    instructions.self = instructions;
+    const classifier = new TypeSafeClassifier({ apiKey: API_KEY });
+
+    await expect(
+      classifier.invoke({
+        state: "hi",
+        questions: {
+          urgent: { type: "noul", instructions: instructions as never },
+        },
+      })
+    ).rejects.toThrow(
+      'Invalid TypeSafe question "urgent": criteria or instructions contain a circular reference.'
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   test("a __proto__ question id is still sent, not swallowed by the prototype setter", async () => {
@@ -245,19 +273,25 @@ describe("invoke", () => {
     // answer set that silently omits it.
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(okResponse());
+      .mockResolvedValue(
+        new Response(
+          '{"model": "typesafe-1", "answers": {"__proto__": {"type": "noul", "noul": 0.5}}}',
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      );
     const questions = JSON.parse(
       '{"__proto__": {"type": "noul", "instructions": "is it urgent?"}}'
     ) as Record<string, Question>;
     expect(Object.keys(questions)).toEqual(["__proto__"]);
 
-    const classifier = new TypeSafeClassifier({ questions, apiKey: API_KEY });
-    await classifier.invoke("hi");
+    const classifier = new TypeSafeClassifier({ apiKey: API_KEY });
+    const response = await classifier.invoke({ state: "hi", questions });
 
     const body = JSON.parse(
       (fetchSpy.mock.calls[0][1] as RequestInit).body as string
     );
     expect(Object.keys(body.questions)).toEqual(["__proto__"]);
+    expect(Object.keys(response.answers)).toEqual(["__proto__"]);
   });
 
   test("a __proto__ state key is dropped, as zod deliberately does", async () => {
@@ -275,12 +309,11 @@ describe("invoke", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(okResponse());
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
 
     await classifier.invoke(
-      JSON.parse('{"__proto__": "SENTINEL", "keep": "yes"}')
+      request(JSON.parse('{"__proto__": "SENTINEL", "keep": "yes"}'))
     );
 
     const body = JSON.parse(
@@ -293,11 +326,10 @@ describe("invoke", () => {
     const globalSpy = vi.spyOn(globalThis, "fetch");
     const injected = vi.fn(async () => okResponse());
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       fetch: injected as unknown as typeof fetch,
     });
-    await classifier.invoke("hi");
+    await classifier.invoke(request("hi"));
     expect(injected).toHaveBeenCalledTimes(1);
     expect(globalSpy).not.toHaveBeenCalled();
   });
@@ -331,12 +363,11 @@ describe("errors", () => {
       )
     );
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: 0,
     });
     const error = await classifier
-      .invoke("hi")
+      .invoke(request("hi"))
       .then(() => null)
       .catch((e: unknown) => e);
 
@@ -353,12 +384,11 @@ describe("errors", () => {
       new TypeError("sensitive transport detail")
     );
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: 0,
     });
     const error = await classifier
-      .invoke("hi")
+      .invoke(request("hi"))
       .then(() => null)
       .catch((e: unknown) => e);
 
@@ -390,11 +420,10 @@ describe("errors", () => {
       .mockResolvedValueOnce(okResponse());
 
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: 2,
     });
-    const result = await classifier.invoke("hi");
+    const result = await classifier.invoke(request("hi"));
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     expect(result.model).toBe("jev-1.13.0");
@@ -421,10 +450,9 @@ describe("errors", () => {
         })
     );
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
-    await expect(classifier.invoke("hi")).rejects.toThrow();
+    await expect(classifier.invoke(request("hi"))).rejects.toThrow();
     // 1 initial attempt + 2 retries.
     expect(fetchSpy).toHaveBeenCalledTimes(3);
 
@@ -433,11 +461,10 @@ describe("errors", () => {
     // options are merged in is load-bearing here.
     fetchSpy.mockClear();
     const passthrough = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: undefined,
     });
-    await expect(passthrough.invoke("hi")).rejects.toThrow();
+    await expect(passthrough.invoke(request("hi"))).rejects.toThrow();
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
@@ -455,11 +482,10 @@ describe("errors", () => {
       })
     );
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: 3,
     });
-    await expect(classifier.invoke("hi")).rejects.toThrow();
+    await expect(classifier.invoke(request("hi"))).rejects.toThrow();
     expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -471,11 +497,10 @@ describe("errors", () => {
       })
     );
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: 3,
     });
-    await expect(classifier.invoke("hi")).rejects.toThrow();
+    await expect(classifier.invoke(request("hi"))).rejects.toThrow();
     expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -490,12 +515,11 @@ describe("errors", () => {
       })
     );
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
       maxRetries: 0,
     });
     const error = await classifier
-      .invoke("hi")
+      .invoke(request("hi"))
       .then(() => null)
       .catch((e: unknown) => e);
     if (!TypeSafeRateLimitError.isInstance(error)) {
@@ -508,7 +532,6 @@ describe("errors", () => {
 describe("serialization and tracing", () => {
   test("serializes with a redacted api key", () => {
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: "super-secret",
     });
     const serialized = JSON.stringify(classifier.toJSON());
@@ -519,7 +542,6 @@ describe("serialization and tracing", () => {
 
   test("never prints the api key via util.inspect/console.log", () => {
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: "sk-SUPER-SECRET-12345",
     });
     expect(inspect(classifier)).not.toContain("sk-SUPER-SECRET-12345");
@@ -530,7 +552,6 @@ describe("serialization and tracing", () => {
 
   test("declares the expected namespace and name", () => {
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
     expect(classifier.lc_namespace).toEqual([
@@ -546,11 +567,10 @@ describe("serialization and tracing", () => {
     const starts: string[] = [];
     const ends: string[] = [];
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
 
-    await classifier.invoke("hi", {
+    await classifier.invoke(request("hi"), {
       callbacks: [
         {
           handleChainStart: async () => {
@@ -570,11 +590,10 @@ describe("serialization and tracing", () => {
   test("stream yields exactly one chunk", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(okResponse());
     const classifier = new TypeSafeClassifier({
-      questions: QUESTIONS,
       apiKey: API_KEY,
     });
     const chunks = [];
-    for await (const chunk of await classifier.stream("hi")) {
+    for await (const chunk of await classifier.stream(request("hi"))) {
       chunks.push(chunk);
     }
     expect(chunks).toHaveLength(1);
@@ -584,19 +603,294 @@ describe("serialization and tracing", () => {
 
 describe("browser guard", () => {
   test("allows browser use by default", () => {
-    expect(
-      () => new TypeSafeClassifier({ questions: QUESTIONS, apiKey: API_KEY })
-    ).not.toThrow();
+    expect(() => new TypeSafeClassifier({ apiKey: API_KEY })).not.toThrow();
   });
 
   test("dangerouslyAllowBrowser false is accepted outside a browser", () => {
     expect(
       () =>
         new TypeSafeClassifier({
-          questions: QUESTIONS,
           apiKey: API_KEY,
           dangerouslyAllowBrowser: false,
         })
     ).not.toThrow();
+  });
+});
+
+interface WireBody {
+  state: Record<string, unknown>;
+  questions: Record<string, { instructions: Record<string, unknown> }>;
+  assets?: Record<string, unknown>;
+}
+
+describe("images", () => {
+  const PNG_BASE64 = "iVBORw0KGgo=";
+  const REFERENCE = /^<image:[0-9a-f]{32}>$/;
+
+  const capture = () => {
+    const bodies: WireBody[] = [];
+    const fetch = vi.fn(async (_url: string, init: RequestInit) => {
+      bodies.push(JSON.parse(init.body as string));
+      return okResponse();
+    });
+    const classifier = new TypeSafeClassifier({
+      apiKey: API_KEY,
+      fetch: fetch as unknown as typeof globalThis.fetch,
+    });
+    return { classifier, bodies, fetch };
+  };
+
+  test.each([
+    { type: "image", data: PNG_BASE64, mimeType: "image/png" },
+    { type: "image", base64: PNG_BASE64, mime_type: "image/png" },
+    {
+      type: "image",
+      source_type: "base64",
+      data: PNG_BASE64,
+      mime_type: "image/png",
+    },
+    { type: "image", url: `data:image/png;base64,${PNG_BASE64}` },
+    {
+      type: "image_url",
+      image_url: { url: `data:image/png;base64,${PNG_BASE64}` },
+    },
+  ])("sends image block %j in state as an asset", async (image) => {
+    const { classifier, bodies } = capture();
+
+    await classifier.invoke(
+      request({ caption: "Product photo", photo: image as unknown as State })
+    );
+
+    const [body] = bodies;
+    const reference = body.state.photo as string;
+    expect(reference).toMatch(REFERENCE);
+    expect(body.state.caption).toBe("Product photo");
+    expect(body.assets).toEqual({
+      [reference]: { type: "image", format: "png", data_base64: PNG_BASE64 },
+    });
+  });
+
+  test("gives images in messages and questions their own assets", async () => {
+    const { classifier, bodies } = capture();
+    const jpeg = { type: "image", data: "/9j/", mimeType: "image/jpeg" };
+
+    await classifier.invoke({
+      state: new HumanMessage({
+        content: [{ type: "text", text: "Hi" }, jpeg],
+      }),
+      questions: {
+        urgent: {
+          type: "noul",
+          instructions: { reference: jpeg, task: "Same item?" },
+        },
+      },
+    });
+
+    const [body] = bodies;
+    const [, messageReference] = /^user: Hi\n(<image:[0-9a-f]{32}>)$/.exec(
+      body.state as unknown as string
+    )!;
+    const questionReference = body.questions.urgent.instructions.reference;
+    expect(questionReference).toMatch(REFERENCE);
+    expect(messageReference).not.toBe(questionReference);
+    expect(Object.keys(body.assets ?? {}).sort()).toEqual(
+      [messageReference, questionReference].sort()
+    );
+    for (const asset of Object.values(body.assets ?? {})) {
+      expect(asset).toMatchObject({ format: "jpeg" });
+    }
+  });
+
+  test("encodes Uint8Array image data in messages", async () => {
+    const { classifier, bodies } = capture();
+
+    await classifier.invoke(
+      request(
+        new HumanMessage({
+          content: [
+            {
+              type: "image",
+              data: new Uint8Array([137, 80, 78, 71]),
+              mimeType: "image/png",
+            },
+          ],
+        })
+      )
+    );
+
+    expect(Object.values(bodies[0].assets ?? {})).toEqual([
+      { type: "image", format: "png", data_base64: "iVBORw==" },
+    ]);
+  });
+
+  test("encodes Uint8Array image data in state", async () => {
+    const { classifier, bodies } = capture();
+
+    await classifier.invoke(
+      request({
+        photo: {
+          type: "image",
+          data: new Uint8Array([137, 80, 78, 71]),
+          mimeType: "image/png",
+        },
+      } as unknown as State)
+    );
+
+    const [body] = bodies;
+    expect(body.state.photo).toMatch(REFERENCE);
+    expect(body.assets).toEqual({
+      [body.state.photo as string]: {
+        type: "image",
+        format: "png",
+        data_base64: "iVBORw==",
+      },
+    });
+  });
+
+  test("leaves image-typed objects without image data as JSON", async () => {
+    const { classifier, bodies } = capture();
+
+    await classifier.invoke(
+      request({ asset: { type: "image", data: "a caption" } })
+    );
+
+    expect(bodies[0]).not.toHaveProperty("assets");
+    expect(bodies[0].state).toEqual({
+      asset: { type: "image", data: "a caption" },
+    });
+  });
+
+  test("omits assets when the request has no images", async () => {
+    const { classifier, bodies } = capture();
+
+    await classifier.invoke(
+      request({ photo: { type: "image", caption: "x" } })
+    );
+
+    expect(bodies[0]).not.toHaveProperty("assets");
+    expect(bodies[0].state).toEqual({
+      photo: { type: "image", caption: "x" },
+    });
+  });
+
+  test.each([
+    [{ type: "image", url: "https://example.com/a.png" }, "data:"],
+    [{ type: "image", fileId: "file-123" }, "base64 data"],
+    [{ type: "image", source_type: "base64", data: PNG_BASE64 }, "mimeType"],
+    [{ type: "image", data: PNG_BASE64, mimeType: "image/gif" }, "image/gif"],
+  ])(
+    "rejects unsupported image block %j before sending",
+    async (image, message) => {
+      const { classifier, fetch } = capture();
+
+      await expect(
+        classifier.invoke(request({ photo: image as unknown as State }))
+      ).rejects.toThrow(message);
+      expect(fetch).not.toHaveBeenCalled();
+    }
+  );
+});
+
+describe("box questions", () => {
+  test("sends a box question and parses its answer", async () => {
+    const bodies: WireBody[] = [];
+    const classifier = new TypeSafeClassifier({
+      apiKey: API_KEY,
+      fetch: (async (_url: string, init: RequestInit) => {
+        bodies.push(JSON.parse(init.body as string));
+        return new Response(
+          JSON.stringify({
+            model: "jev-latest",
+            answers: {
+              dog: {
+                type: "box",
+                box: { top: 0.1, bottom: 0.9, left: 0.2, right: 0.8 },
+                confidence: null,
+              },
+            },
+          }),
+          { status: 200 }
+        );
+      }) as unknown as typeof fetch,
+    });
+
+    const result = await classifier.invoke({
+      state: "photo",
+      questions: { dog: { type: "box", instructions: "The dog." } },
+    });
+
+    expect(bodies[0].questions).toEqual({
+      dog: { type: "box", instructions: "The dog." },
+    });
+    expect(result.boxes.dog).toEqual({
+      type: "box",
+      box: { top: 0.1, bottom: 0.9, left: 0.2, right: 0.8 },
+    });
+  });
+});
+
+describe("decision model", () => {
+  test("is a BaseDecisionModel traced as a typesafe llm run", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(okResponse());
+    const classifier = new TypeSafeClassifier({ apiKey: API_KEY });
+    let runType: string | undefined;
+    let metadata: Record<string, unknown> | undefined;
+
+    await classifier.invoke(request("hi"), {
+      callbacks: [
+        {
+          handleChainStart(
+            _chain: unknown,
+            _inputs: unknown,
+            _runId: string,
+            _parentRunId?: string,
+            _tags?: string[],
+            runMetadata?: Record<string, unknown>,
+            type?: string
+          ) {
+            runType = type;
+            metadata = runMetadata;
+          },
+        },
+      ],
+    });
+
+    expect(classifier).toBeInstanceOf(BaseDecisionModel);
+    expect(runType).toBe("llm");
+    expect(metadata).toMatchObject({
+      ls_provider: "typesafe",
+      ls_model_name: "jev-latest",
+    });
+  });
+
+  test("passes the abort signal to fetch", async () => {
+    const controller = new AbortController();
+    let aborted: boolean | undefined;
+    const classifier = new TypeSafeClassifier({
+      apiKey: API_KEY,
+      fetch: (async (_url: string, init: RequestInit) => {
+        controller.abort();
+        aborted = init.signal?.aborted;
+        return okResponse();
+      }) as unknown as typeof fetch,
+    });
+
+    await expect(
+      classifier.invoke(request("hi"), { signal: controller.signal })
+    ).rejects.toThrow();
+    expect(aborted).toBe(true);
+  });
+
+  test("validates questions before sending", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const classifier = new TypeSafeClassifier({ apiKey: API_KEY });
+
+    await expect(
+      classifier.invoke({
+        state: "hi",
+        questions: { urgent: { type: "noul" } as unknown as Question },
+      })
+    ).rejects.toThrow('Invalid question "urgent": instructions');
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

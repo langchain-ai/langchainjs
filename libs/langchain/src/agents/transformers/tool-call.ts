@@ -142,6 +142,9 @@ export function createToolCallTransformer(
         resolveOutput = res;
         rejectOutput = rej;
       });
+      // Consuming `output` is optional; mark it handled so a failed tool can't
+      // crash the process. Callers that await it still see the rejection.
+      output.catch(() => {});
       const status = new Promise<ToolCallStatus>((res) => {
         resolveStatus = res;
       });
