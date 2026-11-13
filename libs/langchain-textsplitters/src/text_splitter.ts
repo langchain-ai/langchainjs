@@ -328,7 +328,7 @@ export class RecursiveCharacterTextSplitter
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
-        if (!newSeparators) {
+        if (!newSeparators?.length) {
           finalChunks.push(s);
         } else {
           const otherInfo = await this._splitText(s, newSeparators);
