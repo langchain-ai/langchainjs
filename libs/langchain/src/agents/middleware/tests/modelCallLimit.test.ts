@@ -138,6 +138,11 @@ describe("ModelCallLimitMiddleware", () => {
           expect(result.messages.at(-1)?.content).toBe(
             "Model call limits exceeded: run level call limit reached with 2 model calls"
           );
+          /**
+           * the afterAgent hook should still run on the jumpTo "end" exit,
+           * resetting the run-level counter (#11207)
+           */
+          expect(result.runModelCallCount).toBe(0);
         }
       });
     }
@@ -221,6 +226,11 @@ describe("ModelCallLimitMiddleware", () => {
           expect(result.messages.at(-1)?.content).toBe(
             "Model call limits exceeded: thread level call limit reached with 3 model calls"
           );
+          /**
+           * the afterAgent hook should still run on the jumpTo "end" exit,
+           * resetting the run-level counter (#11207)
+           */
+          expect(result.runModelCallCount).toBe(0);
         }
       });
     }
