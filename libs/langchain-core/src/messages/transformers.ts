@@ -283,7 +283,10 @@ function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
         typeof lastChunk.content === "string" &&
         typeof currChunk.content === "string"
       ) {
-        mergedChunks.content = `${lastChunk.content}\n${currChunk.content}`;
+        mergedChunks.content =
+          lastChunk.content && currChunk.content
+            ? `${lastChunk.content}\n${currChunk.content}`
+            : lastChunk.content || currChunk.content;
       }
       merged.push(_chunkToMsg(mergedChunks));
     }

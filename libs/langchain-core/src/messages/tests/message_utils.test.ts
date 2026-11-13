@@ -126,6 +126,21 @@ describe("mergeMessageRuns", () => {
     ]);
   });
 
+  it("does not add a separator next to empty string content", () => {
+    // An AI message that only carries tool calls has content "". As in
+    // Python, the newline only goes between two non-empty strings.
+    const merged = mergeMessageRuns([
+      new AIMessage({
+        content: "",
+        tool_calls: [{ name: "search", args: { q: "x" }, id: "1" }],
+      }),
+      new AIMessage("found it"),
+      new HumanMessage("a"),
+      new HumanMessage(""),
+    ]);
+    expect(merged.map((m) => m.content)).toEqual(["found it", "a"]);
+  });
+
   it("returns a runnable if no messages are passed", () => {
     const mergedMessages = mergeMessageRuns();
     expect(mergedMessages).toBeDefined();
