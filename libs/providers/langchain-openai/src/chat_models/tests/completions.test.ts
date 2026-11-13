@@ -251,6 +251,119 @@ describe("ChatOpenAICompletions cache token usage_metadata", () => {
   });
 });
 
+describe("ChatOpenAICompletions streaming scalar response_metadata", () => {
+  it.each([
+    {
+      name: "duplicate finish chunks",
+      last: {
+        finish_reason: "stop",
+        model: "model-v1",
+        system_fingerprint: "fp_first",
+        service_tier: "default",
+      },
+      expected: {
+        finish_reason: "stop",
+        model_name: "model-v1",
+        system_fingerprint: "fp_first",
+        service_tier: "default",
+      },
+    },
+    {
+      name: "updated scalar values",
+      last: {
+        finish_reason: "length",
+        model: "model-v2",
+        system_fingerprint: "fp_last",
+        service_tier: "scale",
+      },
+      expected: {
+        finish_reason: "length",
+        model_name: "model-v2",
+        system_fingerprint: "fp_last",
+        service_tier: "scale",
+      },
+    },
+    {
+      name: "missing optional values in the final chunk",
+      last: {
+        finish_reason: "stop",
+        model: undefined,
+        system_fingerprint: null,
+        service_tier: null,
+      },
+      expected: {
+        finish_reason: "stop",
+        model_name: "model-v1",
+        system_fingerprint: "fp_first",
+        service_tier: "default",
+      },
+    },
+  ])("preserves response metadata for $name", async ({ last, expected }) => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      streaming: true,
+    });
+    const fakeStream = (async function* () {
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant" as const, content: "Hello" },
+            finish_reason: null,
+            logprobs: null,
+          },
+        ],
+        model: "model-v1",
+      };
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { content: "" },
+            finish_reason: "stop",
+            logprobs: null,
+          },
+        ],
+        model: "model-v1",
+        system_fingerprint: "fp_first",
+        service_tier: "default",
+      };
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { content: "" },
+            finish_reason: last.finish_reason,
+            logprobs: null,
+          },
+        ],
+        model: last.model,
+        system_fingerprint: last.system_fingerprint,
+        service_tier: last.service_tier,
+      };
+      yield {
+        choices: [],
+        model: "model-v1",
+        usage: { prompt_tokens: 3, completion_tokens: 2, total_tokens: 5 },
+      };
+    })();
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+    const result = await model._generate([new HumanMessage("test")], {});
+    const message = result.generations[0].message as AIMessageChunk;
+    expect(message.content).toBe("Hello");
+    expect(message.response_metadata).toMatchObject(expected);
+    expect(message.usage_metadata).toMatchObject({
+      input_tokens: 3,
+      output_tokens: 2,
+      total_tokens: 5,
+    });
+  });
+});
+
 describe("ChatOpenAICompletions reasoning_content compatibility", () => {
   it("should preserve reasoning_content on streamed assistant chunks", async () => {
     const model = new ChatOpenAICompletions({
