@@ -19,7 +19,7 @@ import type {
  *   - "none" / "minimal": lowest allowed (minTokens)
  *   - "low": 1k tokens
  *   - "medium": 8k tokens
- *   - "high": maximum allowed for the model (maxTokens)
+ *   - "high" / "xhigh": maximum allowed for the model (maxTokens)
  * - See reference:
  *   https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
  *   https://ai.google.dev/gemini-api/docs/openai#thinking
@@ -27,8 +27,8 @@ import type {
  * @param {string | undefined} modelName
  *   The Gemini model name (e.g., "gemini-2.5-flash"). Used to determine token range constraints.
  * @param {string | undefined} effort
- *   The reasoning effort level: one of "none", "minimal", "low", "medium", "high"
- *   (case-insensitive). If undefined, the function returns undefined.
+ *   The reasoning effort level: one of "none", "minimal", "low", "medium", "high",
+ *   "xhigh" (case-insensitive). If undefined, the function returns undefined.
  * @returns {number | undefined}
  *   The corresponding token count for the given effort and model. Returns undefined if
  *   the effort is not recognized or not provided.
