@@ -1,8 +1,38 @@
+/**
+ * Returns the index of the first "```" in `s` that is not inside a JSON string
+ * literal, or -1 if there is none.
+ */
+function indexOfFenceOutsideJsonString(s: string): number {
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < s.length; i += 1) {
+    const char = s[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+    } else if (char === '"') {
+      inString = true;
+    } else if (s.startsWith("```", i)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
   // oxlint-disable-next-line no-param-reassign
   s = s.trim();
 
-  const firstFenceIndex = s.indexOf("```");
+  // JSON string values can contain "```" (for example a Markdown code
+  // sample), so only fences outside of strings count when the text is JSON.
+  const firstFenceIndex = /^[[{]/.test(s)
+    ? indexOfFenceOutsideJsonString(s)
+    : s.indexOf("```");
   if (firstFenceIndex === -1) {
     return parser(s);
   }
@@ -17,7 +47,7 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
     contentAfterFence = contentAfterFence.substring(1);
   }
 
-  const closingFenceIndex = contentAfterFence.indexOf("```");
+  const closingFenceIndex = indexOfFenceOutsideJsonString(contentAfterFence);
   let finalContent = contentAfterFence;
   if (closingFenceIndex !== -1) {
     finalContent = contentAfterFence.substring(0, closingFenceIndex);
