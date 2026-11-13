@@ -58,7 +58,20 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        # Only packages that declare a `typecheck` script participate. A package
-        # joins once its own type errors reach zero.
+        # `pnpm typecheck` runs each package's own `typecheck` script, so every
+        # workspace package with a tsconfig must declare one.
+      - name: Check every package declares a typecheck script
+        run: |
+          failed=0
+          while IFS= read -r dir; do
+            [ -f "$dir/tsconfig.json" ] || continue
+            if ! jq -e '.scripts.typecheck' "$dir/package.json" > /dev/null; then
+              name=$(jq -r .name "$dir/package.json")
+              echo "::error file=${dir#"$PWD"/}/package.json::${name} has a tsconfig.json but no \"typecheck\" script"
+              failed=1
+            fi
+          done < <(pnpm ls -r --depth -1 --json | jq -r '.[].path')
+          exit "$failed"
+        # `--continue` (in the root script) reports every failing package.
       - name: Check types
         run: pnpm run typecheck
