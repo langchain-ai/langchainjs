@@ -311,6 +311,17 @@ describe("supportedToolChoiceValuesForModel", () => {
     ).toEqual(CLAUDE_TOOL_CHOICES);
   });
 
+  it("returns only auto for Claude Opus 5.5 and Sonnet 5.5 models", () => {
+    for (const model of [
+      "anthropic.claude-opus-5-5",
+      "us.anthropic.claude-opus-5-5",
+      "anthropic.claude-sonnet-5-5",
+      "eu.anthropic.claude-sonnet-5-5",
+    ]) {
+      expect(supportedToolChoiceValuesForModel(model)).toEqual(["auto"]);
+    }
+  });
+
   it("returns tool choice values for Claude Haiku 5 models", () => {
     expect(
       supportedToolChoiceValuesForModel("anthropic.claude-haiku-5")

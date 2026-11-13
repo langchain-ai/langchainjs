@@ -1,6 +1,13 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { z } from "zod/v3";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { ChatBedrockConverse } from "../chat_models.js";
+import { convertToConverseOutputConfig } from "../utils/structured_output.js";
 import type {
   ConverseCommandInput,
   ConverseStreamCommandInput,
@@ -626,6 +633,414 @@ describe("ChatBedrockConverse invocationParams", () => {
       // Initial attempt + 1 retry = 2 attempts total
       expect(attempts).toBe(2);
       expect(onFailedAttempt).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("withStructuredOutput with method jsonSchema", () => {
+    const Joke = z.object({
+      setup: z.string(),
+      rating: z.number().min(1).max(10),
+    });
+
+    const respondWith = (
+      content: Array<Record<string, unknown>>,
+      stopReason = "end_turn"
+    ) => {
+      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+        return {
+          output: { message: { role: "assistant", content } },
+          stopReason,
+          usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+        };
+      });
+    };
+
+    const streamWith = (texts: string[], stopReason = "end_turn") => {
+      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+        return {
+          stream: (async function* () {
+            for (const text of texts) {
+              yield {
+                contentBlockDelta: {
+                  contentBlockIndex: 0,
+                  delta: { text },
+                },
+              };
+            }
+            yield { messageStop: { stopReason } };
+          })(),
+        };
+      });
+    };
+
+    const lastRequest = () => {
+      return Reflect.get(ConverseCommand, "lastInput") as ConverseCommandInput;
+    };
+
+    const lastStreamRequest = () => {
+      return Reflect.get(
+        ConverseStreamCommand,
+        "lastInput"
+      ) as ConverseStreamCommandInput;
+    };
+
+    afterEach(() => {
+      BedrockRuntimeClient.mockSend = undefined;
+    });
+
+    test("sends the schema as outputConfig and parses the text", async () => {
+      respondWith([{ text: '{"setup":"Why?","rating":7}' }]);
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model: "us.anthropic.claude-sonnet-5-5",
+      });
+
+      const joke = await model
+        .withStructuredOutput(Joke, { name: "Joke", method: "jsonSchema" })
+        .invoke("Tell me a joke");
+
+      expect(joke).toEqual({ setup: "Why?", rating: 7 });
+      const request = lastRequest();
+      expect(request.toolConfig).toBeUndefined();
+      expect(request.outputConfig?.textFormat?.type).toBe("json_schema");
+      const structure = request.outputConfig?.textFormat?.structure;
+      if (!structure || !("jsonSchema" in structure) || !structure.jsonSchema) {
+        throw new Error("Expected a JSON schema structure");
+      }
+      expect(structure.jsonSchema.name).toBe("Joke");
+      const schema = JSON.parse(structure.jsonSchema.schema ?? "");
+      expect(schema.additionalProperties).toBe(false);
+      expect(schema.properties.rating).toEqual({ type: "number" });
+    });
+
+    test("reads the JSON from the text block beside a reasoning block", async () => {
+      respondWith([
+        { reasoningContent: { reasoningText: { text: "Thinking" } } },
+        { text: '{"setup":"Why?","rating":7}' },
+      ]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      const joke = await model
+        .withStructuredOutput(Joke, { method: "jsonSchema" })
+        .invoke("Tell me a joke");
+
+      expect(joke).toEqual({ setup: "Why?", rating: 7 });
+    });
+
+    test("parses JSON split across stream chunks", async () => {
+      streamWith(['{"setup":"Wh', 'y?","rat', 'ing":7}']);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      const stream = await model
+        .withStructuredOutput(Joke, { method: "jsonSchema" })
+        .stream("Tell me a joke");
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toEqual([{ setup: "Why?", rating: 7 }]);
+      expect(lastStreamRequest().outputConfig).toBeDefined();
+    });
+
+    test("validates the reply against constraints removed from the request", async () => {
+      respondWith([{ text: '{"setup":"Why?","rating":99}' }]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await expect(
+        model
+          .withStructuredOutput(Joke, { method: "jsonSchema" })
+          .invoke("Tell me a joke")
+      ).rejects.toThrow("Failed to parse");
+    });
+
+    test("includeRaw returns the message and a null parse on invalid JSON", async () => {
+      respondWith([{ text: "not json" }]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      const result = await model
+        .withStructuredOutput(Joke, { method: "jsonSchema", includeRaw: true })
+        .invoke("Tell me a joke");
+
+      expect(result.parsed).toBeNull();
+      expect(result.raw.text).toBe("not json");
+    });
+
+    test("includeRaw parses nothing from a refused response", async () => {
+      respondWith(
+        [{ text: '{"setup":"Why?","rating":7}' }],
+        "content_filtered"
+      );
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      const result = await model
+        .withStructuredOutput(Joke, { method: "jsonSchema", includeRaw: true })
+        .invoke("Tell me a joke");
+
+      expect(result.parsed).toBeNull();
+      expect(result.raw.response_metadata).toHaveProperty(
+        "stopReason",
+        "content_filtered"
+      );
+    });
+
+    test("stream events send outputConfig and the tools in the history", async () => {
+      streamWith(["{}"]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const outputConfig = convertToConverseOutputConfig("Joke", {
+        type: "object",
+      });
+
+      const events = [];
+      for await (const event of model._streamChatModelEvents(
+        [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { id: "1", name: "search", args: {}, type: "tool_call" },
+            ],
+          }),
+          new ToolMessage({ content: "Found", tool_call_id: "1" }),
+        ],
+        { outputConfig }
+      )) {
+        events.push(event);
+      }
+
+      expect(events.length).toBeGreaterThan(0);
+      const request = lastStreamRequest();
+      expect(request.outputConfig).toEqual(outputConfig);
+      expect(request.toolConfig?.tools?.[0].toolSpec?.name).toBe("search");
+    });
+
+    test("accepts a plain JSON schema", async () => {
+      respondWith([{ text: '{"setup":"Why?"}' }]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      const joke = await model
+        .withStructuredOutput(
+          { type: "object", properties: { setup: { type: "string" } } },
+          { method: "jsonSchema" }
+        )
+        .invoke("Tell me a joke");
+
+      expect(joke).toEqual({ setup: "Why?" });
+    });
+
+    test("declares the tools called earlier in the history", async () => {
+      respondWith([{ text: '{"setup":"Why?","rating":7}' }]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await model.withStructuredOutput(Joke, { method: "jsonSchema" }).invoke([
+        new HumanMessage("Find a joke"),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { id: "1", name: "search", args: {}, type: "tool_call" },
+          ],
+        }),
+        new ToolMessage({ content: "Found", tool_call_id: "1" }),
+      ]);
+
+      const toolConfig = lastRequest().toolConfig;
+      expect(toolConfig?.tools?.map((tool) => tool.toolSpec?.name)).toEqual([
+        "search",
+      ]);
+      expect(toolConfig?.toolChoice).toBeUndefined();
+    });
+
+    test("keeps tools bound by the caller next to outputConfig", async () => {
+      respondWith([{ text: "{}" }]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const outputConfig = convertToConverseOutputConfig("Joke", {
+        type: "object",
+      });
+      const tool = {
+        toolSpec: {
+          name: "bound",
+          inputSchema: { json: { type: "object" as const } },
+        },
+      };
+
+      await model.bindTools([tool], { outputConfig }).invoke([
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { id: "1", name: "search", args: {}, type: "tool_call" },
+          ],
+        }),
+        new ToolMessage({ content: "Found", tool_call_id: "1" }),
+      ]);
+
+      const names = lastRequest().toolConfig?.tools?.map((declared) => {
+        return declared.toolSpec?.name;
+      });
+      expect(names).toEqual(["bound"]);
+    });
+
+    test("does not add tools to a request without outputConfig", async () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await model.invoke([
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { id: "1", name: "search", args: {}, type: "tool_call" },
+          ],
+        }),
+        new ToolMessage({ content: "Found", tool_call_id: "1" }),
+      ]);
+
+      expect(lastRequest().toolConfig).toBeUndefined();
+    });
+
+    test("throws a refusal error when the response is filtered", async () => {
+      respondWith([], "content_filtered");
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await expect(
+        model
+          .withStructuredOutput(Joke, { method: "jsonSchema" })
+          .invoke("Tell me a joke")
+      ).rejects.toThrow("refused");
+    });
+
+    test("throws a refusal error when a stream is filtered", async () => {
+      streamWith([], "content_filtered");
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        streaming: true,
+      });
+
+      await expect(
+        model
+          .withStructuredOutput(Joke, { method: "jsonSchema" })
+          .invoke("Tell me a joke")
+      ).rejects.toThrow("refused");
+    });
+
+    test("throws a token limit error on truncated JSON", async () => {
+      respondWith([{ text: '{"setup":"Wh' }], "max_tokens");
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await expect(
+        model
+          .withStructuredOutput(Joke, { method: "jsonSchema" })
+          .invoke("Tell me a joke")
+      ).rejects.toThrow("token limit");
+    });
+
+    test("throws a token limit error on a truncated stream", async () => {
+      streamWith(['{"setup":"Wh'], "max_tokens");
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        streaming: true,
+      });
+
+      await expect(
+        model
+          .withStructuredOutput(Joke, { method: "jsonSchema" })
+          .invoke("Tell me a joke")
+      ).rejects.toThrow("token limit");
+    });
+
+    test("sends the schema description", async () => {
+      respondWith([{ text: '{"setup":"Why?","rating":7}' }]);
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await model
+        .withStructuredOutput(Joke.describe("A joke"), { method: "jsonSchema" })
+        .invoke("Tell me a joke");
+
+      const structure = lastRequest().outputConfig?.textFormat?.structure;
+      expect(structure).toHaveProperty("jsonSchema.description", "A joke");
+    });
+
+    test.each([
+      "us.anthropic.claude-opus-5-5",
+      "eu.anthropic.claude-sonnet-5-5",
+    ])("%s uses outputConfig by default", async (modelId) => {
+      respondWith([{ text: '{"setup":"Why?","rating":7}' }]);
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model: modelId,
+      });
+
+      const joke = await model.withStructuredOutput(Joke).invoke("Tell me");
+
+      expect(joke).toEqual({ setup: "Why?", rating: 7 });
+      expect(lastRequest().outputConfig).toBeDefined();
+      expect(lastRequest().toolConfig).toBeUndefined();
+    });
+
+    test.each([
+      "us.anthropic.claude-sonnet-5",
+      "us.anthropic.claude-haiku-5-5",
+    ])("%s still forces a tool by default", async (modelId) => {
+      respondWith([
+        {
+          toolUse: {
+            toolUseId: "1",
+            name: "extract",
+            input: { setup: "Why?", rating: 7 },
+          },
+        },
+      ]);
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model: modelId,
+      });
+
+      await model.withStructuredOutput(Joke).invoke("Tell me");
+
+      expect(lastRequest().outputConfig).toBeUndefined();
+      expect(lastRequest().toolConfig?.toolChoice).toEqual({
+        tool: { name: "extract" },
+      });
+    });
+
+    test("functionCalling stays available on Opus 5.5 without a forced tool", async () => {
+      respondWith([
+        {
+          toolUse: {
+            toolUseId: "1",
+            name: "extract",
+            input: { setup: "Why?", rating: 7 },
+          },
+        },
+      ]);
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model: "us.anthropic.claude-opus-5-5",
+      });
+
+      const joke = await model
+        .withStructuredOutput(Joke, { method: "functionCalling" })
+        .invoke("Tell me");
+
+      expect(joke).toEqual({ setup: "Why?", rating: 7 });
+      expect(lastRequest().outputConfig).toBeUndefined();
+      expect(lastRequest().toolConfig?.toolChoice).toBeUndefined();
+    });
+
+    test("tool_choice any fails before the request on Sonnet 5.5", async () => {
+      const send = vi.fn();
+      BedrockRuntimeClient.mockSend = send;
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model: "us.anthropic.claude-sonnet-5-5",
+      });
+      const tool = {
+        toolSpec: {
+          name: "search",
+          inputSchema: { json: { type: "object" as const } },
+        },
+      };
+
+      await expect(
+        model.bindTools([tool], { tool_choice: "any" }).invoke("Hello")
+      ).rejects.toThrow("does not currently support 'tool_choice'");
+      expect(send).not.toHaveBeenCalled();
     });
   });
 });
