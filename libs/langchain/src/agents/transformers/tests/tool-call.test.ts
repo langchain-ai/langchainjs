@@ -725,8 +725,6 @@ describe("streamEvents", () => {
 
   it("does not emit an unhandled rejection when a failing tool call's output is never consumed", async () => {
     const transformer = createToolCallTransformer([])();
-    // Deliberately do not iterate `projection.toolCalls`, mirroring a caller
-    // that only reads `run.messages` — nothing ever awaits `output`.
     transformer.init();
     const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
       ({
@@ -761,8 +759,6 @@ describe("streamEvents", () => {
 
       transformer.finalize?.();
 
-      // `unhandledRejection` fires once the microtask queue has drained, so
-      // yield a macrotask before asserting.
       await new Promise((resolve) => {
         setTimeout(resolve, 10);
       });
