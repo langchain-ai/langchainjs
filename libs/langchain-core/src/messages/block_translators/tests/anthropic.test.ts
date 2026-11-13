@@ -87,6 +87,41 @@ describe("anthropicTranslator", () => {
             stderr: "",
           },
         },
+        {
+          type: "server_tool_use",
+          id: "srvtoolu_ghi789",
+          name: "tool_search_tool_bm25",
+          input: {
+            query: "get the weather",
+            limit: 3,
+          },
+        },
+        {
+          type: "tool_search_tool_result",
+          tool_use_id: "srvtoolu_ghi789",
+          content: {
+            type: "tool_search_tool_search_result",
+            tool_references: [
+              { type: "tool_reference", tool_name: "get_weather" },
+            ],
+          },
+        },
+        {
+          type: "server_tool_use",
+          id: "srvtoolu_jkl012",
+          name: "tool_search_tool_regex",
+          input: {
+            pattern: "get_.*_data",
+          },
+        },
+        {
+          type: "tool_search_tool_result",
+          tool_use_id: "srvtoolu_jkl012",
+          content: {
+            type: "tool_search_tool_result_error",
+            error_code: "invalid_tool_input",
+          },
+        },
         // {
         //   type: "something_else",
         //   foo: "bar",
@@ -161,6 +196,40 @@ describe("anthropicTranslator", () => {
           type: "code_execution_result",
           stdout: "Mean: 5.5\nStandard deviation...",
           stderr: "",
+        },
+      },
+      {
+        type: "server_tool_call",
+        name: "tool_search_tool_bm25",
+        id: "srvtoolu_ghi789",
+        args: { query: "get the weather", limit: 3 },
+      },
+      {
+        type: "server_tool_call_result",
+        name: "tool_search",
+        toolCallId: "srvtoolu_ghi789",
+        status: "success",
+        output: {
+          type: "tool_search_tool_search_result",
+          tool_references: [
+            { type: "tool_reference", tool_name: "get_weather" },
+          ],
+        },
+      },
+      {
+        type: "server_tool_call",
+        name: "tool_search_tool_regex",
+        id: "srvtoolu_jkl012",
+        args: { pattern: "get_.*_data" },
+      },
+      {
+        type: "server_tool_call_result",
+        name: "tool_search",
+        toolCallId: "srvtoolu_jkl012",
+        status: "error",
+        output: {
+          type: "tool_search_tool_result_error",
+          error_code: "invalid_tool_input",
         },
       },
       // {
