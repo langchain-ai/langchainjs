@@ -1,5 +1,33 @@
 # @langchain/openai
 
+## 1.8.4
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.8.3
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(openai): surface model refusals as `ModelRefusalError`
+
+  Chat Completions keeps `refusal` from responses, refusals are sent back natively on assistant messages (including `v1` messages), and `withStructuredOutput` with `jsonSchema` throws `ModelRefusalError` on a refusal.
+
+## 1.8.2
+
+### Patch Changes
+
+- [#11846](https://github.com/langchain-ai/langchainjs/pull/11846) [`a7c960f`](https://github.com/langchain-ai/langchainjs/commit/a7c960fd1a1fa3d32717965311168667980e77a3) Thanks [@devauntea](https://github.com/devauntea)! - Base64-encode binary `Uint8Array` data in image, audio and file content blocks sent through the Chat Completions API, instead of sending comma-separated decimal bytes.
+
+## 1.8.1
+
+### Patch Changes
+
+- [#11467](https://github.com/langchain-ai/langchainjs/pull/11467) [`0c268f5`](https://github.com/langchain-ai/langchainjs/commit/0c268f53cadcddf6884162ed608333224c05868d) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Use the resolved model snapshot in streamed Responses API metadata.
+
+- [#11755](https://github.com/langchain-ai/langchainjs/pull/11755) [`8103487`](https://github.com/langchain-ai/langchainjs/commit/8103487c55784c5befd84c1bc803546f720f806e) Thanks [@SiKreuz](https://github.com/SiKreuz)! - Set `response_metadata.model_name` on messages streamed from the Responses API through the chat model event stream, matching the Chat Completions stream and the non-streaming Responses path.
+
 ## 1.8.0
 
 ### Minor Changes

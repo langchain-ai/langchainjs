@@ -1000,11 +1000,20 @@ export abstract class Runnable<
           // Just iterate so that the callback handler picks up events
           if (abortController.signal.aborted) break;
         }
+      } catch (e) {
+        // An aborted stream can leave tapped iterators suspended, so `finish()`
+        // would wait on them forever. Close now so the consumer sees the error.
+        eventStreamer.close();
+        throw e;
       } finally {
         await eventStreamer.finish();
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
+    // The consumer may stop reading without returning this generator, so the
+    // `finally` below never awaits the run. Observe it so a later abort can't
+    // surface as an unhandled rejection.
+    runnableStreamConsumePromise.catch(() => {});
     let firstEventSent = false;
     let firstEventRunId;
     try {
@@ -1032,7 +1041,10 @@ export abstract class Runnable<
       }
     } finally {
       abortController.abort();
-      await runnableStreamConsumePromise;
+      await runnableStreamConsumePromise.catch((e) => {
+        // The abort above rejects the run; only rethrow other errors.
+        if (e !== abortController.signal.reason) throw e;
+      });
     }
   }
 

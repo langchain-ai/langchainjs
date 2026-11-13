@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.3.5",
+  "version": "1.4.0",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -30,7 +30,7 @@
     "langsmith": ">=0.11.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
@@ -39,7 +39,7 @@
     "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "ml-matrix": "^6.15.1",
-    "rimraf": "^6.1.3",
+    "rimraf": "^6.1.4",
     "typescript": "~7.0.2",
     "vitest": "^5.0.5",
     "web-streams-polyfill": "^4.3.0"
@@ -170,6 +170,17 @@
       "import": {
         "types": "./dist/context.d.ts",
         "default": "./dist/context.js"
+      }
+    },
+    "./decisions": {
+      "input": "./src/decisions/index.ts",
+      "require": {
+        "types": "./dist/decisions/index.d.cts",
+        "default": "./dist/decisions/index.cjs"
+      },
+      "import": {
+        "types": "./dist/decisions/index.d.ts",
+        "default": "./dist/decisions/index.js"
       }
     },
     "./document_loaders/base": {
@@ -885,6 +896,10 @@
     "example_selectors.cjs",
     "example_selectors.d.ts",
     "example_selectors.js",
+    "decisions.d.cts",
+    "decisions.cjs",
+    "decisions.d.ts",
+    "decisions.js",
     "context.d.cts",
     "context.cjs",
     "context.d.ts",

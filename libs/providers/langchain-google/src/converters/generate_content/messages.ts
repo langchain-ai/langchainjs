@@ -850,6 +850,10 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
+      // Gemini has no input part for refusals.
+      if (typeof item === "object" && item?.type === "refusal") {
+        continue;
+      }
       const part = convertLegacyPartToGeminiPart(item);
       parts.push(part);
     }

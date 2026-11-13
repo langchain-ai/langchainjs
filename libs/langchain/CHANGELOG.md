@@ -1,5 +1,32 @@
 # langchain
 
+## 1.6.5
+
+### Patch Changes
+
+- [#12183](https://github.com/langchain-ai/langchainjs/pull/12183) [`e220aee`](https://github.com/langchain-ai/langchainjs/commit/e220aeed6fd91ec8a1b91b1e9f25b6d87c856d31) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(langchain): add model router and auto mode middleware
+
+  - Add `modelRouterMiddleware`, which picks the agent's model for each run from a decision model's `Choice` answer
+  - Add `autoModeMiddleware`, which blocks listed tool calls that a decision model judges risky
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.6.4
+
+### Patch Changes
+
+- [#12121](https://github.com/langchain-ai/langchainjs/pull/12121) [`fbd2c1b`](https://github.com/langchain-ai/langchainjs/commit/fbd2c1b6603e256e96a6a2c2899745e6abfe4e57) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(langchain): add `modelRefusalMiddleware`
+
+  `modelRefusalMiddleware()` throws `ModelRefusalError` when the model refuses, instead of ending the run as if it succeeded. Middleware now passes `ModelRefusalError` through unwrapped instead of as a `MiddlewareError`.
+
+## 1.6.3
+
+### Patch Changes
+
+- [#11778](https://github.com/langchain-ai/langchainjs/pull/11778) [`a6d1e1b`](https://github.com/langchain-ai/langchainjs/commit/a6d1e1b9e43c36f0e1ef262b568760afedd4641d) Thanks [@yoarajota](https://github.com/yoarajota)! - `modelRetryMiddleware` now retries errors that are subclasses of a class listed in `retryOn`. Previously the array form matched only the exact constructor, so `retryOn: [APIError]` never retried a `RateLimitError`. This matches `toolRetryMiddleware`.
+
+- [#11330](https://github.com/langchain-ai/langchainjs/pull/11330) [`642469d`](https://github.com/langchain-ai/langchainjs/commit/642469d1f384b7b96e1e3e4259c9587e3b4acd07) Thanks [@HDPark95](https://github.com/HDPark95)! - fix(langchain): preserve model errors propagated through middleware
+
 ## 1.6.2
 
 ### Patch Changes

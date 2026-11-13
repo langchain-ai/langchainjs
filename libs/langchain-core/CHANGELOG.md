@@ -1,5 +1,33 @@
 # @langchain/core
 
+## 1.4.0
+
+### Minor Changes
+
+- [#12178](https://github.com/langchain-ai/langchainjs/pull/12178) [`01e5f2d`](https://github.com/langchain-ai/langchainjs/commit/01e5f2dbbf30823045fc82c69bef7b2c032315f4) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add decision models
+
+  - Add `@langchain/core/decisions` with `BaseDecisionModel`, a `Runnable` that answers typed `Noul`, `Choice`, `Score`, and `Box` questions about text, messages, or JSON state
+  - Add question and answer types, `parseQuestions`, and `parseClassifierResponse` for providers
+  - Type `invoke` answers from the questions asked, including `Choice` labels, and reject provider responses that leave a question unanswered or answer it with the wrong type or label
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.3.7
+
+### Patch Changes
+
+- [#12120](https://github.com/langchain-ai/langchainjs/pull/12120) [`a4fb396`](https://github.com/langchain-ai/langchainjs/commit/a4fb396d7b323b9f3f8c7e45875376ec5fb88d72) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add a standard `refusal` content block and `ModelRefusalError`
+
+  Model refusals from OpenAI, Anthropic, and Gemini now appear as a `refusal` content block in `message.contentBlocks`. JSON, tool-call, and structured output parsers throw `ModelRefusalError` (from `@langchain/core/errors`) when the model refuses, instead of a generic parsing error.
+
+## 1.3.6
+
+### Patch Changes
+
+- [#12140](https://github.com/langchain-ai/langchainjs/pull/12140) [`f054550`](https://github.com/langchain-ai/langchainjs/commit/f054550c61df603c0daf6757a9f3f2076fc06be4) Thanks [@hntrl](https://github.com/hntrl)! - Stop `streamEvents` v2 from hanging or leaking an unhandled rejection when aborted, and from throwing its own `AbortError` when the consumer breaks early.
+
 ## 1.3.5
 
 ### Patch Changes

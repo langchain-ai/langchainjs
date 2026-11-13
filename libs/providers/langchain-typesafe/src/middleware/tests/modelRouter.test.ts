@@ -331,3 +331,77 @@ describe("latestHumanMessage", () => {
     expect(latestHumanMessage([new AIMessage("only ai")])).toBeUndefined();
   });
 });
+
+describe("modelRouterMiddleware validation and cancellation", () => {
+  test("rejects missing instructions when the middleware is created", () => {
+    expect(() =>
+      modelRouterMiddleware({
+        choices: { fast: { model: fakeModel(), criteria: "Simple tasks." } },
+        instructions: undefined as never,
+        classifierOptions: OPTS,
+      })
+    ).toThrow(TypeSafeError);
+  });
+
+  test("passes the run's abort signal to the classifier request", async () => {
+    const controller = new AbortController();
+    let aborted: boolean | undefined;
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      controller.abort();
+      aborted = init?.signal?.aborted;
+      return new Response(
+        JSON.stringify({
+          model: "jev-1.13.0",
+          answers: { model_route: choiceAnswer("fast") },
+        }),
+        { status: 200 }
+      );
+    });
+    const mw = modelRouterMiddleware({
+      choices: { fast: { model: fakeModel(), criteria: "Simple tasks." } },
+      instructions: "Choose a route.",
+      classifierOptions: {
+        ...OPTS,
+        fetch: fetchMock as unknown as typeof fetch,
+      },
+    });
+    const agent = createAgent({
+      model: fakeModel(),
+      tools: [],
+      middleware: [mw],
+    });
+
+    await expect(
+      agent.invoke(
+        { messages: [new HumanMessage("Do the task.")] },
+        { signal: controller.signal }
+      )
+    ).rejects.toThrow();
+    expect(aborted).toBe(true);
+  });
+});
+
+describe("modelRouterMiddleware deprecation", () => {
+  test("warns once, pointing to the langchain middleware", async () => {
+    vi.resetModules();
+    const fresh = await import("../modelRouter.js");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    fresh.modelRouterMiddleware({
+      choices: { fast: { model: fakeModel(), criteria: "Simple tasks." } },
+      instructions: "Choose a route.",
+      classifierOptions: OPTS,
+    });
+    fresh.modelRouterMiddleware({
+      choices: { fast: { model: fakeModel(), criteria: "Simple tasks." } },
+      instructions: "Choose a route.",
+      classifierOptions: OPTS,
+    });
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(
+      "Use `modelRouterMiddleware` from `langchain` with `classifier: new TypeSafeClassifier()` instead."
+    );
+    warn.mockRestore();
+  });
+});

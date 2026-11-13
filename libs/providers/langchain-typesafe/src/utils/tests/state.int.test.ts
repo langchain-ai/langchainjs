@@ -5,7 +5,7 @@ import {
 } from "@langchain/core/messages";
 import { describe, expect, test } from "vitest";
 
-import type { JsonValue } from "../../types.js";
+import type { JsonValue } from "@langchain/core/decisions";
 import { serializeState } from "../state.js";
 
 const BASE_URL = (

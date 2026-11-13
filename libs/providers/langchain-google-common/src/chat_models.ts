@@ -256,30 +256,25 @@ export abstract class ChatGoogleBase<AuthOptions>
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     const platform =
       fields?.platformType ?? (fields?.vertexai === true ? "gcp" : undefined);
+    // Explicit credentials or an explicit endpoint always go straight to Vertex.
     const gateway =
-      platform === "gcp" && fields?.endpoint === undefined
+      platform === "gcp" &&
+      fields?.endpoint === undefined &&
+      fields?.apiKey === undefined &&
+      fields?.authOptions === undefined
         ? resolveLangSmithGatewayConfig({ providerPath: "vertex" })
         : {};
     const connectionFields =
       gateway.baseURL === undefined
         ? fields
-        : {
-            ...fields,
-            endpoint: gateway.baseURL,
-            apiKey: fields?.apiKey ?? gateway.apiKey,
-          };
+        : { ...fields, endpoint: gateway.baseURL, apiKey: gateway.apiKey };
     let client = this.buildClient(connectionFields);
     if (gateway.baseURL !== undefined) {
       const gatewayClient = client;
-      const regional =
-        gatewayClient.clientType === "apiKey" &&
-        fields?.authOptions !== undefined;
       client = {
-        clientType: regional ? "gateway-regional" : gatewayClient.clientType,
+        clientType: gatewayClient.clientType,
         request: gatewayClient.request.bind(gatewayClient),
-        getProjectId: regional
-          ? () => this.buildAbstractedClient(fields).getProjectId()
-          : gatewayClient.getProjectId.bind(gatewayClient),
+        getProjectId: gatewayClient.getProjectId.bind(gatewayClient),
       };
     }
     this.buildConnection(connectionFields ?? {}, client);

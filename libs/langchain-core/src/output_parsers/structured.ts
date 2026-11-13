@@ -5,6 +5,9 @@ import {
   OutputParserException,
 } from "./base.js";
 import { BaseMessage } from "../messages/index.js";
+import type { Callbacks } from "../callbacks/manager.js";
+import type { ChatGeneration, Generation } from "../outputs.js";
+import { throwIfRefused } from "./refusal.js";
 import {
   type InteropZodType,
   type InferInteropZodOutput,
@@ -97,6 +100,17 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 ${JSON.stringify(toJsonSchema(this.schema))}
 \`\`\`
 `;
+  }
+
+  /**
+   * @throws {ModelRefusalError} If the model refused instead of answering.
+   */
+  override async parseResult(
+    generations: Generation[] | ChatGeneration[],
+    callbacks?: Callbacks
+  ): Promise<InferInteropZodOutput<T>> {
+    throwIfRefused(generations[0]);
+    return super.parseResult(generations, callbacks);
   }
 
   /**
