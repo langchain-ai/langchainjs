@@ -82,6 +82,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
   const updatedMsgs = [];
   for (const message of messages) {
     if (message._getType() === "tool") {
+      const isError = (message as ToolMessage).status === "error";
       if (typeof message.content === "string") {
         const previousMessage = updatedMsgs[updatedMsgs.length - 1];
         if (
@@ -95,6 +96,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
             type: "tool_result",
             content: message.content,
             tool_use_id: (message as ToolMessage).tool_call_id,
+            ...(isError ? { is_error: true } : {}),
           });
         } else {
           // If not, we create a new human message with the tool result.
@@ -105,6 +107,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
                   type: "tool_result",
                   content: message.content,
                   tool_use_id: (message as ToolMessage).tool_call_id,
+                  ...(isError ? { is_error: true } : {}),
                 },
               ],
             })
@@ -121,6 +124,7 @@ function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
                   ? { content: _formatContent(message) }
                   : {}),
                 tool_use_id: (message as ToolMessage).tool_call_id,
+                ...(isError ? { is_error: true } : {}),
               },
             ],
           })
