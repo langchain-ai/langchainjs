@@ -113,6 +113,13 @@ export const baseConfigSchema = z.object({
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout: z.number().min(1).optional(),
+
+  /**
+   * Reset the MCP SDK request timeout when a tool sends progress notifications.
+   * Requests progress even without an onProgress callback. Runnable timeouts
+   * and abort signals remain absolute limits. Defaults to false in the SDK.
+   */
+  resetTimeoutOnProgress: z.boolean().optional(),
 });
 
 /**
@@ -935,6 +942,7 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
     additionalToolNamePrefix: true,
     outputHandling: true,
     defaultToolTimeout: true,
+    resetTimeoutOnProgress: true,
     beforeToolCall: true,
     afterToolCall: true,
   })
