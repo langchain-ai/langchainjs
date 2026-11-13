@@ -34,23 +34,14 @@ function supportsMinimalThinkingLevel(model: string): boolean {
   );
 }
 
+// Models that accept thinkingLevel "XHIGH"; the othes reject it
+// TODO: Move this to model profile
+const XHIGH_THINKING_LEVEL_MODELS = [
+  "gemini-4-hydrogen",
+];
+
 function supportsXHighThinkingLevel(model: string): boolean {
-
-  // xhigh is not supported on pre-Gemini-4
-  const version = Number(getModelVersion(model));
-  if (version < 4) {
-    return false;
-  }
-
-  // xhigh is not supported on Gemini 4 Argon or Carbon
-  const level = getModelLevel(model)
-  switch (level) {
-    case "argon":
-    case "carbon":
-      return false;
-    default:
-      return true;
-  }
+  return XHIGH_THINKING_LEVEL_MODELS.includes(model);
 }
 
 /**
