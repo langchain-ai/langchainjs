@@ -29,14 +29,19 @@ import {
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
+import { findRefusal } from "./utils/refusal.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
   getTopLevelSchemaCompositionKeys,
   handleToolChoice,
 } from "./utils/tools.js";
-import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
+  _convertMessagesToAnthropicPayload,
+  _getToolChangeKind,
+} from "./utils/message_inputs.js";
+import {
+  hasAlwaysOnThinking,
   getSamplingParams,
   getTaskBudgetBetas,
   validateInvocationParamCompatibility,
@@ -276,7 +281,6 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     typeof tool === "object" &&
     tool !== null &&
     "type" in tool &&
-    ("name" in tool || "mcp_server_name" in tool) &&
     typeof tool.type === "string" &&
     builtInToolPrefixes.some(
       (prefix) => typeof tool.type === "string" && tool.type.startsWith(prefix)
@@ -292,6 +296,42 @@ function _combineBetas(
   return Array.from(
     new Set([...(a ?? []), ...(b ?? []), ...rest.flatMap((x) => Array.from(x))])
   );
+}
+
+const MID_CONVERSATION_TOOL_CHANGES_BETA: AnthropicBeta =
+  "mid-conversation-tool-changes-2026-07-01";
+
+// Required to define a tool by value in a `tool_addition` block. It also
+// covers tool changes by reference, in place of the tool changes beta.
+const INLINE_TOOLS_BETA: AnthropicBeta = "inline-tools-2026-09-15";
+
+/**
+ * Builds a request payload from invocation params and the messages to send.
+ *
+ * Betas in `params` are derived from call options alone. This adds the ones
+ * the message content itself requires, which can only be known once the
+ * messages are converted.
+ */
+function _buildMessagesRequest(
+  params: AnthropicInvocationParams,
+  messages: BaseMessage[]
+) {
+  const formattedMessages = _convertMessagesToAnthropicPayload(messages);
+  const toolChangeKind = _getToolChangeKind(formattedMessages);
+  const toolChangeBeta =
+    toolChangeKind === "inline"
+      ? INLINE_TOOLS_BETA
+      : toolChangeKind === "reference" &&
+          !params.betas?.includes(INLINE_TOOLS_BETA)
+        ? MID_CONVERSATION_TOOL_CHANGES_BETA
+        : undefined;
+  return {
+    ...params,
+    ...formattedMessages,
+    ...(toolChangeBeta
+      ? { betas: _combineBetas(params.betas, [toolChangeBeta]) }
+      : {}),
+  };
 }
 
 /**
@@ -1411,17 +1451,16 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
-      ...params,
-      ...formattedMessages,
+      ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
     const coerceContentToString =
       !_toolsInParams(payload) &&
       !_documentsInParams(payload) &&
       !_thinkingInParams(payload) &&
+      !hasAlwaysOnThinking(this.model) &&
       !_compactionInParams(payload);
 
     const stream = await this.createStreamWithRetry(payload, {
@@ -1430,15 +1469,20 @@ export class ChatAnthropicMessages<
       maxRetries: options.maxRetries,
     });
 
+    let startUsage: object | undefined;
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         return;
       }
+      if (data.type === "message_start") {
+        startUsage = data.message.usage;
+      }
       const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
       const result = _makeMessageChunkFromAnthropicEvent(data, {
         streamUsage: shouldStreamUsage,
         coerceContentToString,
+        startUsage,
       });
       if (!result) continue;
 
@@ -1489,11 +1533,9 @@ export class ChatAnthropicMessages<
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
     const params = this.invocationParams(options);
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
-      ...params,
-      ...formattedMessages,
+      ..._buildMessagesRequest(params, messages),
       stream: true,
     } as const;
 
@@ -1536,13 +1578,10 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
-    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
     const response = await this.completionWithRetry(
       {
-        ...params,
+        ..._buildMessagesRequest(params, messages),
         stream: false,
-        ...formattedMessages,
       },
       requestOptions
     );
@@ -1847,7 +1886,8 @@ export class ChatAnthropicMessages<
 
       if (
         this.thinking?.type === "enabled" ||
-        this.thinking?.type === "adaptive"
+        this.thinking?.type === "adaptive" ||
+        hasAlwaysOnThinking(this.model)
       ) {
         const thinkingAdmonition =
           "Anthropic structured output relies on forced tool calling, " +
@@ -1869,7 +1909,10 @@ export class ChatAnthropicMessages<
         } as Partial<CallOptions>);
 
         const raiseIfNoToolCalls = (message: AIMessageChunk) => {
-          if (!message.tool_calls || message.tool_calls.length === 0) {
+          if (
+            (!message.tool_calls || message.tool_calls.length === 0) &&
+            !findRefusal(message)
+          ) {
             throw new Error(thinkingAdmonition);
           }
           return message;

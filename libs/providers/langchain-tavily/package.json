@@ -1,6 +1,6 @@
 {
   "name": "@langchain/tavily",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Tavily integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -28,7 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.6.6"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -37,13 +37,13 @@
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.11",
-    "dotenv": "^17.4.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "eslint": "^9.39.5",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.10",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"

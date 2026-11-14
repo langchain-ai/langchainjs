@@ -18,6 +18,9 @@ import { concat } from "@langchain/core/utils/stream";
 import { tool } from "@langchain/core/tools";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "../index.js";
+import type { BaseChatOpenAIFields } from "../base.js";
+import { ChatOpenAICompletions } from "../completions.js";
+import { ChatOpenAIResponses } from "../responses.js";
 import { REASONING_OUTPUT_MESSAGES } from "../../tests/data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../../types.js";
 import { LONG_PROMPT } from "../../tests/data/long-prompt.js";
@@ -523,6 +526,57 @@ describe("OpenAI configuration_update", () => {
     );
     expect(textBlocks.length).toBeGreaterThan(0);
   }, 60000);
+});
+
+describe("OpenAI additional_tools", () => {
+  const additionalTools = {
+    type: "additional_tools",
+    role: "developer",
+    tools: [
+      {
+        type: "function",
+        name: "get_time",
+        description: "Get the current time.",
+        parameters: { type: "object", properties: {} },
+      },
+    ],
+  };
+
+  // The bare and wrapped spellings take the `content` branch of the converter;
+  // `contentBlocks` takes the `output_version: "v1"` branch.
+  it.each([
+    ["bare", () => new SystemMessage({ content: [additionalTools] })],
+    [
+      "wrapped",
+      () =>
+        new SystemMessage({
+          content: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+    [
+      "contentBlocks",
+      () =>
+        new SystemMessage({
+          contentBlocks: [{ type: "non_standard", value: additionalTools }],
+        }),
+    ],
+  ])(
+    "offers a tool from a %s additional_tools block",
+    async (_spelling, makeMessage) => {
+      const llm = new ChatOpenAI({
+        model: "gpt-6-astra",
+        useResponsesApi: true,
+      });
+
+      const response = await llm.invoke([
+        new HumanMessage("What time is it?"),
+        makeMessage(),
+      ]);
+
+      expect(response.tool_calls?.[0]?.name).toBe("get_time");
+    },
+    60000
+  );
 });
 
 test("Test stateful API", async () => {
@@ -1384,6 +1438,59 @@ describe("promptCacheKey", () => {
       response2.response_metadata.usage.prompt_tokens_details.cached_tokens
     ).toBeGreaterThan(0);
   });
+});
+
+describe("promptCacheRetention", () => {
+  const fields: BaseChatOpenAIFields = {
+    model: "gpt-4o-mini",
+    maxTokens: 16,
+    promptCacheRetention: "in-memory",
+  };
+
+  test.each([
+    { api: "responses", make: () => new ChatOpenAIResponses(fields) },
+    { api: "completions", make: () => new ChatOpenAICompletions(fields) },
+  ])("accepts the legacy in-memory spelling ($api)", async ({ make }) => {
+    const response = await make().invoke("Say hello.");
+    expect(response.text).toBeTruthy();
+  });
+});
+
+describe("promptCacheOptions", { retry: 3 }, () => {
+  const fields: BaseChatOpenAIFields = {
+    model: "gpt-5.6-sol",
+    maxTokens: 16,
+    promptCacheOptions: { mode: "explicit" },
+  };
+
+  test.each([
+    { api: "responses", make: () => new ChatOpenAIResponses(fields) },
+    { api: "completions", make: () => new ChatOpenAICompletions(fields) },
+  ])(
+    "reads an explicit breakpoint back from cache ($api)",
+    async ({ make }) => {
+      const model = make();
+      const messages = [
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: LONG_PROMPT,
+              prompt_cache_breakpoint: { mode: "explicit" },
+            },
+            { type: "text", text: "Say hello." },
+          ],
+        }),
+      ];
+
+      await model.invoke(messages);
+      const second = await model.invoke(messages);
+
+      expect(
+        second.usage_metadata?.input_token_details?.cache_read
+      ).toBeGreaterThan(0);
+    }
+  );
 });
 
 it("won't modify structured output content if outputVersion is set", async () => {

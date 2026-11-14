@@ -28,23 +28,23 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@qdrant/js-client-rest": "^1.19.0"
+    "@qdrant/js-client-rest": "^1.20.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.5.0",
+    "@faker-js/faker": "^10.6.0",
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.11",
-    "dotenv": "^17.4.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "dotenv": "^18.0.9",
     "dpdm": "^4.3.0",
     "eslint": "^9.39.5",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.10",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.5"
   },
   "publishConfig": {
     "access": "public"

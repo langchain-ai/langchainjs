@@ -1,6 +1,7 @@
 import type { ZodV3Like, ZodV4Like } from "../../utils/types/zod.js";
 import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { OutputParserException } from "../base.js";
+import { throwIfRefused } from "../refusal.js";
 import { parsePartialJson } from "../json.js";
 import { InvalidToolCall, ToolCall } from "../../messages/tool.js";
 import {
@@ -147,6 +148,7 @@ export class JsonOutputToolsParser<
   }
 
   async parseResult(generations: ChatGeneration[]): Promise<T> {
+    throwIfRefused(generations[0]);
     const result = await this.parsePartialResult(generations, false);
     return result;
   }
@@ -346,6 +348,7 @@ export class JsonOutputKeyToolsParser<
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async parseResult(generations: ChatGeneration[]): Promise<any> {
+    throwIfRefused(generations[0]);
     const results = await super.parsePartialResult(generations, false);
     const matchingResults = results.filter(
       (result: ParsedToolCall) => result.type === this.keyName

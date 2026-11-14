@@ -1,5 +1,69 @@
 # @langchain/anthropic
 
+## 1.6.5
+
+### Patch Changes
+
+- [#12230](https://github.com/langchain-ai/langchainjs/pull/12230) [`84e85cc`](https://github.com/langchain-ai/langchainjs/commit/84e85cc8657a6922c9db34ff7a2a1a692e83a503) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fall back to `tool_calls` in `AnthropicToolsOutputParser` so `withStructuredOutput` works when streamed content is normalized to `tool_call` blocks
+
+## 1.6.4
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.6.3
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(anthropic): surface model refusals as `ModelRefusalError`
+
+  A `refusal` stop reason maps to the `content_filter` finish reason in stream events, and `withStructuredOutput` throws `ModelRefusalError` on a refusal, including when thinking is enabled.
+
+## 1.6.2
+
+### Patch Changes
+
+- [#12145](https://github.com/langchain-ai/langchainjs/pull/12145) [`e662f7c`](https://github.com/langchain-ai/langchainjs/commit/e662f7c00cedc68fb2036f2782a63401937e752c) Thanks [@hntrl](https://github.com/hntrl)! - Report streamed usage from the cumulative `message_delta` usage, as `langchain-anthropic` does, so input and cache tokens from server tool passes (e.g. web search) are counted and output tokens aren't double counted.
+
+- [#12173](https://github.com/langchain-ai/langchainjs/pull/12173) [`203cf6e`](https://github.com/langchain-ai/langchainjs/commit/203cf6e40fde3ffa135528cbfa30b4fdffe30850) Thanks [@hntrl](https://github.com/hntrl)! - Support Claude Fable 5.2 and Mythos 5.2 profiles, always-on adaptive thinking, and the nameless computer toolset. Upgrade the Anthropic SDK and avoid forced tool choice for always-on thinking models.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#12117](https://github.com/langchain-ai/langchainjs/pull/12117) [`1d57fca`](https://github.com/langchain-ai/langchainjs/commit/1d57fca1aa7bc89911fe5ead28afe4430fb0fb58) Thanks [@Siretu](https://github.com/Siretu)! - fix(anthropic): keep streamed `server_tool_use` input when replaying messages
+
+## 1.6.0
+
+### Minor Changes
+
+- [#11986](https://github.com/langchain-ai/langchainjs/pull/11986) [`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat: stream tool-call args as `tool-call-delta` slices
+
+  Tool-call and server-tool-call args now stream as `tool-call-delta` events, which carry only the new slice of the args, instead of `block-delta` snapshots of the args so far. A large tool call now costs about the same bytes on the wire as the same length of text.
+
+  - This covers the compat bridge (any model that only implements `_streamResponseChunks`), the OpenAI-compatible converter (OpenAI Completions, Groq, Mistral, IBM, OpenRouter, Perplexity, DeepSeek, Fireworks, Together AI and xAI Completions), OpenAI and xAI Responses, Anthropic (client and server tool calls) and Bedrock Converse. Google and Ollama still send one complete snapshot per call.
+  - A tool call's `id`, `name` and `index` go on `content-block-start`, which carries no args. An `id` or `name` that arrives later reaches consumers on `content-block-finish`.
+  - If you read raw events and their `block-delta` `fields.args` mid-stream, or write agent stream transformers that do, read `tool-call-delta` instead. `await stream`, `.toolCalls` and the assembled message are unchanged.
+  - Upgrade your clients first. Older clients mishandle `tool-call-delta`. You need `@langchain/langgraph-sdk` 1.12.6 or later; `@langchain/react`, `@langchain/vue`, `@langchain/svelte` or `@langchain/angular` 1.2.6 or later; and `langchain-core` 1.6.13 or later for Python clients.
+  - To hold back, pin `@langchain/core` below 1.3.0. That also keeps you on `@langchain/openai`, `@langchain/anthropic`, `@langchain/aws` and `@langchain/xai` versions that send snapshots.
+
+## 1.5.13
+
+### Patch Changes
+
+- [#11922](https://github.com/langchain-ai/langchainjs/pull/11922) [`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): declare mid-conversation support in model profiles. Claude Opus 4.8, Opus 5, Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5 and 5.1, and Mythos 5 and 5.1 set `midConversationSystemMessages` and `midConversationTools`. Sonnet 5 sets system messages only.
+
+  Regenerating the profiles from models.dev also adds Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5, removes Claude Opus 4.1, and lowers Claude Sonnet 4.5's `maxInputTokens` to 200,000.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11707](https://github.com/langchain-ai/langchainjs/pull/11707) [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289) Thanks [@richardscarrott](https://github.com/richardscarrott)! - feat(anthropic): support mid-conversation tool changes. A `SystemMessage` can now carry Anthropic's `tool_addition` and `tool_removal` blocks, either bare in `content` or wrapped in a `non_standard` block, and they reach the provider verbatim. The required beta is added automatically: `mid-conversation-tool-changes-2026-07-01` for tools named by reference, or `inline-tools-2026-09-15` when a `tool_addition` defines a tool by value (`tool: { type: "tool_definition", definition }`).
+
+  System content is now narrowed to what Anthropic accepts there. `text`, `tool_addition` and `tool_removal` are sent; any other block is dropped instead of being forwarded for the provider to reject. A system message left with no content is omitted.
+
 ## 1.5.11
 
 ### Patch Changes

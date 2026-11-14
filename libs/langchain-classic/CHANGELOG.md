@@ -1,5 +1,99 @@
 # @langchain/classic
 
+## 1.0.61
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+- Updated dependencies [[`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb)]:
+  - @langchain/openai@1.8.4
+
+## 1.0.60
+
+### Patch Changes
+
+- Updated dependencies [[`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a)]:
+  - @langchain/openai@1.8.3
+
+## 1.0.59
+
+### Patch Changes
+
+- Updated dependencies [[`a7c960f`](https://github.com/langchain-ai/langchainjs/commit/a7c960fd1a1fa3d32717965311168667980e77a3)]:
+  - @langchain/openai@1.8.2
+
+## 1.0.58
+
+### Patch Changes
+
+- Updated dependencies [[`0c268f5`](https://github.com/langchain-ai/langchainjs/commit/0c268f53cadcddf6884162ed608333224c05868d), [`8103487`](https://github.com/langchain-ai/langchainjs/commit/8103487c55784c5befd84c1bc803546f720f806e)]:
+  - @langchain/openai@1.8.1
+
+## 1.0.57
+
+### Patch Changes
+
+- Updated dependencies [[`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977)]:
+  - @langchain/openai@1.8.0
+
+## 1.0.56
+
+### Patch Changes
+
+- Updated dependencies [[`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da)]:
+  - @langchain/openai@1.7.1
+
+## 1.0.55
+
+### Patch Changes
+
+- Updated dependencies [[`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da)]:
+  - @langchain/openai@1.7.0
+
+## 1.0.54
+
+### Patch Changes
+
+- Updated dependencies [[`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d)]:
+  - @langchain/openai@1.6.3
+
+## 1.0.53
+
+### Patch Changes
+
+- [#11956](https://github.com/langchain-ai/langchainjs/pull/11956) [`93d62b0`](https://github.com/langchain-ai/langchainjs/commit/93d62b008e13e10f28724a5ab09ab6eda584f1cb) Thanks [@hntrl](https://github.com/hntrl)! - Require langsmith >=0.11.0 to include the restored NullableHeaders type declarations.
+
+- [#11822](https://github.com/langchain-ai/langchainjs/pull/11822) [`d3e6fe6`](https://github.com/langchain-ai/langchainjs/commit/d3e6fe66a5f902fa615f076ca71d9541f1291166) Thanks [@dqbd](https://github.com/dqbd)! - Add explicit agent address support to `LangChainTracer`, inherit project and address destinations together, and delegate default destination resolution to the LangSmith SDK.
+
+## 1.0.52
+
+### Patch Changes
+
+- Updated dependencies [[`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289), [`4109812`](https://github.com/langchain-ai/langchainjs/commit/41098120e01596743a588c149230a3580729c289)]:
+  - @langchain/openai@1.6.2
+
+## 1.0.51
+
+### Patch Changes
+
+- Updated dependencies [[`bbed273`](https://github.com/langchain-ai/langchainjs/commit/bbed27359a9b355ff9fab478c6b2fe7bf2eb1a4a)]:
+  - @langchain/openai@1.6.1
+
+## 1.0.50
+
+### Patch Changes
+
+- Updated dependencies [[`663b9a2`](https://github.com/langchain-ai/langchainjs/commit/663b9a2076c5b274435c77524ad7730450b34f34), [`5d509ad`](https://github.com/langchain-ai/langchainjs/commit/5d509ad4b8a5ed9dd4b83020b4c103ac8a69859c), [`0fcb98b`](https://github.com/langchain-ai/langchainjs/commit/0fcb98b4306a771c940e78d6881d0be9f88507c1)]:
+  - @langchain/openai@1.6.0
+  - @langchain/textsplitters@1.0.2
+
+## 1.0.49
+
+### Patch Changes
+
+- Updated dependencies [[`fb13e5d`](https://github.com/langchain-ai/langchainjs/commit/fb13e5d9b3f4da853973c4ac0be199dada20f94d), [`a9ada85`](https://github.com/langchain-ai/langchainjs/commit/a9ada857f22c4b746801e7723ffaa4c4d59db771), [`8ea9a0b`](https://github.com/langchain-ai/langchainjs/commit/8ea9a0b02a04fa59a6386a3f54c72c96b65546be)]:
+  - @langchain/openai@1.5.14
+
 ## 1.0.48
 
 ### Patch Changes

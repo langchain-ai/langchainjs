@@ -16,13 +16,18 @@ import {
   type ChatResult,
 } from "@langchain/core/outputs";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { wrapOpenAIClientError } from "../utils/client.js";
+import { profileForApi } from "../utils/profile.js";
 import {
   OpenAIToolChoice,
   formatToOpenAIToolChoice,
   _convertToOpenAITool,
 } from "../utils/tools.js";
-import { isReasoningModel } from "../utils/misc.js";
+import {
+  isReasoningModel,
+  normalizePromptCacheRetention,
+} from "../utils/misc.js";
 import {
   BaseChatOpenAI,
   BaseChatOpenAICallOptions,
@@ -86,6 +91,10 @@ export class ChatOpenAICompletions<
     fieldsArg?: Omit<BaseChatOpenAIFields, "model">
   ) {
     super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
+  override get profile(): ModelProfile {
+    return profileForApi(super.profile, false);
   }
 
   /** @internal */
@@ -158,9 +167,19 @@ export class ChatOpenAICompletions<
         ? { modalities: this.modalities || options?.modalities }
         : {}),
       ...this.modelKwargs,
-      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
-      prompt_cache_retention:
-        options?.promptCacheRetention ?? this.promptCacheRetention,
+      prompt_cache_key:
+        options?.promptCacheKey ??
+        this.modelKwargs?.prompt_cache_key ??
+        this.promptCacheKey,
+      prompt_cache_retention: normalizePromptCacheRetention(
+        options?.promptCacheRetention ??
+          this.modelKwargs?.prompt_cache_retention ??
+          this.promptCacheRetention
+      ),
+      prompt_cache_options:
+        options?.promptCacheOptions ??
+        this.modelKwargs?.prompt_cache_options ??
+        this.promptCacheOptions,
       verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {

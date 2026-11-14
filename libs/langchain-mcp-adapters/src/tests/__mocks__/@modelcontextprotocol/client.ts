@@ -11,6 +11,8 @@ const actual = await vi.importActual<
 
 export const SdkHttpError = actual.SdkHttpError;
 
+export const UnauthorizedError = actual.UnauthorizedError;
+
 export const specTypeSchemas = actual.specTypeSchemas;
 
 export const isSpecType = actual.isSpecType;

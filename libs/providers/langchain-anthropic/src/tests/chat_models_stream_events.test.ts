@@ -1,11 +1,15 @@
 import { describe, test, expect } from "vitest";
+import { z } from "zod/v3";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import {
   ChatAnthropic,
   type ChatAnthropicCallOptions,
 } from "../chat_models.js";
+import { AnthropicToolsOutputParser } from "../output_parsers.js";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type {
   AnthropicMessageStreamEvent,
@@ -24,8 +28,8 @@ class MockStreamChatAnthropic extends ChatAnthropic {
 
   capturedRequest: (AnthropicStreamingMessageCreateParams & Kwargs) | undefined;
 
-  constructor(mockEvents: unknown[]) {
-    super({ apiKey: "fake-key", model: "claude-sonnet-4-20250514" });
+  constructor(mockEvents: unknown[], model = "claude-sonnet-4-20250514") {
+    super({ apiKey: "fake-key", model });
     this.mockEvents = mockEvents;
   }
 
@@ -182,6 +186,11 @@ function toolCallEvents() {
     {
       type: "content_block_delta" as const,
       index: 1,
+      delta: { type: "input_json_delta" as const, partial_json: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 1,
       delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
     },
     {
@@ -193,6 +202,102 @@ function toolCallEvents() {
     {
       type: "message_delta" as const,
       delta: { stop_reason: "tool_use" as const, stop_sequence: null },
+      usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function serverToolCallEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_05MNO",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 100, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "server_tool_use" as const,
+        id: "srvtoolu_01ABC",
+        name: "web_search",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: "" },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: ':"weather"}' },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+      usage: { output_tokens: 15 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+function mcpToolUseEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_06PQR",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 100, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "mcp_tool_use" as const,
+        id: "mcptoolu_01ABC",
+        name: "search",
+        server_name: "docs",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"query"' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: ':"weather"}' },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
       usage: { output_tokens: 15 },
     },
     { type: "message_stop" as const },
@@ -233,7 +338,12 @@ function cacheUsageEvents() {
     {
       type: "message_delta" as const,
       delta: { stop_reason: "end_turn" as const, stop_sequence: null },
-      usage: { output_tokens: 3 },
+      usage: {
+        input_tokens: 100,
+        output_tokens: 3,
+        cache_creation_input_tokens: 500,
+        cache_read_input_tokens: 200,
+      },
     },
     { type: "message_stop" as const },
   ];
@@ -444,49 +554,6 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
   });
 
   describe("tool call streaming", () => {
-    test("tool call args accumulate correctly", async () => {
-      const model = new MockStreamChatAnthropic(toolCallEvents());
-      const events: ChatModelStreamEvent[] = [];
-      for await (const event of model._streamChatModelEvents(
-        [],
-        {} as ChatAnthropicCallOptions
-      )) {
-        events.push(event);
-      }
-
-      // Start event for tool call
-      expect(
-        events.find((e) => e.event === "content-block-start" && e.index === 1)
-      ).toMatchObject({
-        content: {
-          type: "tool_call_chunk",
-          name: "web_search",
-          id: "toolu_01ABC",
-        },
-      });
-
-      // Deltas carry accumulated tool_call_chunk field snapshots
-      const toolDeltas = events.filter(
-        (e) =>
-          e.event === "content-block-delta" && "index" in e && e.index === 1
-      );
-      expect(toolDeltas.length).toBe(2);
-
-      const td1 = toolDeltas[0] as {
-        delta: { type: string; fields: { type: string; args?: string } };
-      };
-      expect(td1.delta.type).toBe("block-delta");
-      expect(td1.delta.fields.type).toBe("tool_call_chunk");
-      expect(td1.delta.fields.args).toBe('{"query"');
-
-      const td2 = toolDeltas[1] as {
-        delta: { type: string; fields: { type: string; args?: string } };
-      };
-      expect(td2.delta.type).toBe("block-delta");
-      expect(td2.delta.fields.type).toBe("tool_call_chunk");
-      expect(td2.delta.fields.args).toBe('{"query":"weather"}');
-    });
-
     test("tool call finish has parsed args", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const events: ChatModelStreamEvent[] = [];
@@ -796,5 +863,402 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         { name: "web_search", args: { query: "weather" } },
       ]);
     });
+
+    test("tool call args stream as slices", async () => {
+      const model = new MockStreamChatAnthropic(toolCallEvents());
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(
+        events.filter(
+          (e) =>
+            e.event.startsWith("content-block") && "index" in e && e.index === 1
+        )
+      ).toEqual([
+        {
+          event: "content-block-start",
+          index: 1,
+          content: {
+            type: "tool_call_chunk",
+            id: "toolu_01ABC",
+            name: "web_search",
+            args: "",
+            index: 1,
+          },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: '{"query"' },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: ':"weather"}' },
+        },
+        {
+          event: "content-block-finish",
+          index: 1,
+          content: {
+            type: "tool_call",
+            id: "toolu_01ABC",
+            name: "web_search",
+            args: { query: "weather" },
+          },
+        },
+      ]);
+      expect((await stream).tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "toolu_01ABC",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      ]);
+    });
+
+    test("server tool call args stream as slices", async () => {
+      const model = new MockStreamChatAnthropic(serverToolCallEvents());
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual(
+        [
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "server_tool_call_chunk",
+              id: "srvtoolu_01ABC",
+              name: "web_search",
+              args: "",
+              index: 0,
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: '{"query"' },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: ':"weather"}' },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "server_tool_call",
+              id: "srvtoolu_01ABC",
+              name: "web_search",
+              args: { query: "weather" },
+            },
+          },
+        ]
+      );
+      expect((await stream).content).toEqual([
+        {
+          type: "server_tool_call",
+          id: "srvtoolu_01ABC",
+          name: "web_search",
+          args: { query: "weather" },
+        },
+      ]);
+    });
+
+    test("sends no tool-call-delta for JSON input on a non-tool-call block", async () => {
+      const model = new MockStreamChatAnthropic(mcpToolUseEvents());
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model.streamEvents("Hello")) {
+        events.push(event);
+      }
+
+      expect(
+        events.flatMap((e) =>
+          e.event === "content-block-delta" ? [e.delta.type] : []
+        )
+      ).toEqual(["block-delta", "block-delta"]);
+    });
+  });
+});
+
+test.each(["claude-fable-5-2", "claude-mythos-5-2"])(
+  "%s preserves implicit signed and redacted thinking",
+  async (model) => {
+    const events = [
+      ...textOnlyEvents().slice(0, 1),
+      {
+        type: "content_block_start",
+        index: 0,
+        content_block: { type: "thinking", thinking: "", signature: "signed" },
+      },
+      { type: "content_block_stop", index: 0 },
+      {
+        type: "content_block_start",
+        index: 1,
+        content_block: { type: "redacted_thinking", data: "encrypted" },
+      },
+      { type: "content_block_stop", index: 1 },
+      ...textOnlyEvents().slice(-2),
+    ];
+    const llm = new MockStreamChatAnthropic(events, model);
+    const chunks = [];
+    for await (const chunk of await llm.stream("Hello", {
+      outputVersion: "v0",
+    })) {
+      chunks.push(chunk);
+    }
+    const result = chunks.reduce((a, b) => a.concat(b));
+    expect(result.content).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "thinking",
+          thinking: "",
+          signature: "signed",
+        }),
+        expect.objectContaining({
+          type: "redacted_thinking",
+          data: "encrypted",
+        }),
+      ])
+    );
+    expect(llm.capturedRequest?.thinking).toBeUndefined();
+  }
+);
+
+function structuredOutputEvents() {
+  return [
+    {
+      type: "message_start" as const,
+      message: {
+        id: "msg_07STR",
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 50, output_tokens: 0 },
+      },
+    },
+    {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: {
+        type: "tool_use" as const,
+        id: "toolu_07STR",
+        name: "ConversationTitle",
+        input: {},
+      },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: '{"title":' },
+    },
+    {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: {
+        type: "input_json_delta" as const,
+        partial_json: '"Truck 42 location"}',
+      },
+    },
+    { type: "content_block_stop" as const, index: 0 },
+    {
+      type: "message_delta" as const,
+      delta: { stop_reason: "tool_use" as const, stop_sequence: null },
+      usage: { output_tokens: 12 },
+    },
+    { type: "message_stop" as const },
+  ];
+}
+
+class PrefersStreamingHandler extends BaseCallbackHandler {
+  name = "prefers_streaming";
+
+  lc_prefer_streaming = true;
+}
+
+class PrefersChatModelStreamEventsHandler extends BaseCallbackHandler {
+  name = "prefers_chat_model_stream_events";
+
+  lc_prefer_chat_model_stream_events = true;
+}
+
+describe("withStructuredOutput over a streamed tool_use response", () => {
+  const schema = z.object({ title: z.string() });
+  const expected = { title: "Truck 42 location" };
+
+  const structuredModel = () =>
+    new MockStreamChatAnthropic(structuredOutputEvents()).withStructuredOutput(
+      schema,
+      { name: "ConversationTitle" }
+    );
+
+  test(".stream() yields the parsed object", async () => {
+    let last: unknown;
+    for await (const chunk of await structuredModel().stream("title?")) {
+      last = chunk;
+    }
+    expect(last).toEqual(expected);
+  });
+
+  test(".invoke() under a streaming callback handler returns the parsed object", async () => {
+    const result = await structuredModel().invoke("title?", {
+      callbacks: [new PrefersStreamingHandler()],
+    });
+    expect(result).toEqual(expected);
+  });
+
+  test(".invoke() under a chat model stream events handler returns the parsed object", async () => {
+    const result = await structuredModel().invoke("title?", {
+      callbacks: [new PrefersChatModelStreamEventsHandler()],
+    });
+    expect(result).toEqual(expected);
+  });
+
+  test(".stream() rejects tool input truncated by max_tokens", async () => {
+    const events = structuredOutputEvents();
+    events[2] = {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: {
+        type: "input_json_delta" as const,
+        partial_json: '{"title":"Truck',
+      },
+    };
+    events[3] = {
+      type: "content_block_delta" as const,
+      index: 0,
+      delta: { type: "input_json_delta" as const, partial_json: " 4" },
+    };
+    events[5] = {
+      type: "message_delta" as const,
+      delta: { stop_reason: "max_tokens" as const, stop_sequence: null },
+      usage: { output_tokens: 12 },
+    };
+    const model = new MockStreamChatAnthropic(events).withStructuredOutput(
+      schema,
+      { name: "ConversationTitle" }
+    );
+
+    await expect(async () => {
+      for await (const _ of await model.stream("title?")) {
+        // drain
+      }
+    }).rejects.toThrow(OutputParserException);
+  });
+});
+
+describe("streamed server_tool_use input", () => {
+  test("merges input_json_delta into the server_tool_use block", async () => {
+    const llm = new MockStreamChatAnthropic(serverToolCallEvents()).bindTools([
+      { type: "web_search_20250305", name: "web_search" },
+    ]);
+    const chunks = [];
+    for await (const chunk of await llm.stream("Hello", {
+      outputVersion: "v0",
+    })) {
+      chunks.push(chunk);
+    }
+    const result = chunks.reduce((a, b) => a.concat(b));
+    const serverToolBlocks = (
+      result.content as Array<Record<string, unknown>>
+    ).filter((block) => block.index === 0);
+
+    expect(serverToolBlocks).toEqual([
+      expect.objectContaining({
+        type: "server_tool_use",
+        id: "srvtoolu_01ABC",
+        name: "web_search",
+        input: '{"query":"weather"}',
+      }),
+    ]);
+  });
+});
+
+describe("AnthropicToolsOutputParser", () => {
+  test("parses tool_calls when content uses standard tool_call blocks", async () => {
+    const parser = new AnthropicToolsOutputParser({
+      keyName: "ConversationTitle",
+      returnSingle: true,
+    });
+    const message = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "toolu_07STR",
+          name: "ConversationTitle",
+          args: { title: "Truck 42 location" },
+        },
+      ],
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "toolu_07STR",
+          name: "ConversationTitle",
+          args: { title: "Truck 42 location" },
+        },
+      ],
+    });
+    const result = await parser.parseResult([{ text: "", message }]);
+    expect(result).toEqual({ title: "Truck 42 location" });
+  });
+
+  const parser = () =>
+    new AnthropicToolsOutputParser({
+      keyName: "ConversationTitle",
+      returnSingle: true,
+    });
+
+  test("picks the first tool_use block when there are several", async () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: "ConversationTitle",
+          input: { title: "First" },
+        },
+        {
+          type: "tool_use",
+          id: "toolu_2",
+          name: "ConversationTitle",
+          input: { title: "Second" },
+        },
+      ],
+    });
+    const result = await parser().parseResult([{ text: "", message }]);
+    expect(result).toEqual({ title: "First" });
+  });
+
+  test("picks the first tool_call when content has no tool_use blocks", async () => {
+    const message = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "toolu_1",
+          name: "ConversationTitle",
+          args: { title: "First" },
+        },
+        {
+          type: "tool_call",
+          id: "toolu_2",
+          name: "ConversationTitle",
+          args: { title: "Second" },
+        },
+      ],
+    });
+    const result = await parser().parseResult([{ text: "", message }]);
+    expect(result).toEqual({ title: "First" });
   });
 });

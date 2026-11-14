@@ -3,6 +3,41 @@ import { ContentBlock } from "../content/index.js";
 import type { StandardContentBlockTranslator } from "./index.js";
 import { iife, _isContentBlock, _isObject, _isString } from "./utils.js";
 
+const GEMINI_REFUSAL_FINISH_REASONS = new Set([
+  "SAFETY",
+  "PROHIBITED_CONTENT",
+  "BLOCKLIST",
+]);
+
+/**
+ * Builds a refusal block from a Gemini finish reason.
+ *
+ * A blocked prompt has no message: `@langchain/google` throws
+ * `PromptBlockedError` for it instead.
+ */
+function refusalFromMetadata(
+  message: AIMessage
+): ContentBlock.Refusal | undefined {
+  const metadata = message.response_metadata;
+  const kwargs = message.additional_kwargs;
+  // `invoke` sets `finish_reason`, stream events set `finishReason`, and
+  // streamed chunks keep both fields only in `additional_kwargs`.
+  const finishReason =
+    metadata.finishReason ?? metadata.finish_reason ?? kwargs.finishReason;
+  if (
+    !_isString(finishReason) ||
+    !GEMINI_REFUSAL_FINISH_REASONS.has(finishReason)
+  ) {
+    return undefined;
+  }
+  const finishMessage = metadata.finishMessage ?? kwargs.finishMessage;
+  return {
+    type: "refusal",
+    refusal: _isString(finishMessage) ? finishMessage : "",
+    extras: { finishReason },
+  };
+}
+
 function convertToV1FromChatGoogleMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
@@ -125,7 +160,10 @@ function convertToV1FromChatGoogleMessage(
       continue;
     }
   }
-  return Array.from(iterateContent());
+  const blocks = Array.from(iterateContent());
+  const refusal = refusalFromMetadata(message);
+  if (refusal) blocks.push(refusal);
+  return blocks;
 }
 
 export const ChatGoogleTranslator: StandardContentBlockTranslator = {

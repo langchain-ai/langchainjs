@@ -241,7 +241,7 @@ export class AgentNode<
     config: RunnableConfig
   ) {
     /**
-     * Check if we just executed a returnDirect tool
+     * Check if we just executed a returnDirect tool successfully
      * If so, we should generate structured response (if needed) and stop
      */
     const lastMessage = state.messages.at(-1);
@@ -249,6 +249,7 @@ export class AgentNode<
       lastMessage &&
       ToolMessage.isInstance(lastMessage) &&
       lastMessage.name &&
+      lastMessage.status !== "error" &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
       return [new Command({ update: { messages: [] } })];
@@ -432,9 +433,11 @@ export class AgentNode<
             typeof structuredResponseFormat.strategy.schema?.title === "string"
               ? structuredResponseFormat.strategy.schema.title
               : "providerStrategy";
-          throw new StructuredOutputParsingError(schemaTitle, [
-            "Model output did not satisfy the provided response schema.",
-          ]);
+          throw new StructuredOutputParsingError(
+            schemaTitle,
+            ["Model output did not satisfy the provided response schema."],
+            response
+          );
         }
 
         return response;
@@ -548,6 +551,14 @@ export class AgentNode<
           };
 
           /**
+           * Track the exact values thrown by the inner handler so an error this
+           * middleware merely propagated is not re-attributed to it as a
+           * MiddlewareError. Mirrors `wrapToolCall` in utils.ts, so the
+           * model-call and tool-call paths treat pass-through errors the same.
+           */
+          const downstreamErrors = new Set<unknown>();
+
+          /**
            * Create handler that validates tools and calls the inner handler
            */
           const handlerWithValidation = async (
@@ -652,7 +663,18 @@ export class AgentNode<
               };
             }
 
-            const innerHandlerResult = await innerHandler(normalizedReq);
+            let innerHandlerResult: InternalModelResponse<StructuredResponseFormat>;
+            try {
+              innerHandlerResult = await innerHandler(normalizedReq);
+            } catch (error) {
+              /**
+               * The error was raised below this middleware and only propagated
+               * through it. Record it so the outer catch re-throws it unchanged
+               * instead of wrapping it as a failure of this middleware.
+               */
+              downstreamErrors.add(error);
+              throw error;
+            }
 
             /**
              * Normalize Commands so middleware always sees AIMessage from handler().
@@ -698,12 +720,24 @@ export class AgentNode<
 
             if (AIMessage.isInstance(middlewareResponse)) {
               lastAiMessage = middlewareResponse;
-            } else if (isCommand(middlewareResponse)) {
+            } else if (
+              isCommand(middlewareResponse) &&
+              !collectedCommands.includes(middlewareResponse)
+            ) {
               collectedCommands.push(middlewareResponse);
             }
 
             return middlewareResponse;
           } catch (error) {
+            /**
+             * An error the inner handler raised and this middleware only
+             * re-threw keeps its identity, so `retryOn` and other consumers see
+             * it as thrown. Errors originating in the middleware are wrapped so
+             * MiddlewareError can still attribute the failure to it.
+             */
+            if (downstreamErrors.has(error)) {
+              throw error;
+            }
             throw MiddlewareError.wrap(error, currentMiddleware.name);
           }
         };

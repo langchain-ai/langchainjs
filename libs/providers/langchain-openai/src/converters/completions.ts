@@ -35,9 +35,13 @@ import type {
 import { OpenAI as OpenAIClient } from "openai";
 import { handleMultiModalOutput } from "../utils/output.js";
 import {
+  applyPromptCacheBreakpoint,
+  assertAdditionalToolsPlacement,
   getRequiredFilenameFromMetadata,
   isReasoningModel,
+  liftExtrasPromptCacheBreakpoint,
   messageToOpenAIRole,
+  unwrapNonStandard,
 } from "../utils/misc.js";
 
 /**
@@ -297,6 +301,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       if (providerReasoningContent !== undefined) {
         additional_kwargs.reasoning_content = providerReasoningContent;
       }
+      if (message.refusal) {
+        additional_kwargs.refusal = message.refusal;
+      }
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
@@ -480,6 +487,10 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   }
 };
 
+// Standard data blocks accept either a base64 string or raw bytes.
+const toBase64 = (data: string | Uint8Array): string =>
+  typeof data === "string" ? data : Buffer.from(data).toString("base64");
+
 /**
  * Converts a standard LangChain content block to an OpenAI Completions API content part.
  *
@@ -527,7 +538,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "image_url",
         image_url: {
-          url: `data:${block.mimeType};base64,${block.data}`,
+          url: `data:${block.mimeType};base64,${toBase64(block.data)}`,
         },
       };
     }
@@ -544,7 +555,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "input_audio",
         input_audio: {
-          data: block.data.toString(),
+          data: toBase64(block.data),
           format,
         },
       };
@@ -557,7 +568,7 @@ export const convertStandardContentBlockToCompletionsContentPart: Converter<
       return {
         type: "file",
         file: {
-          file_data: `data:${block.mimeType};base64,${block.data}`,
+          file_data: `data:${block.mimeType};base64,${toBase64(block.data)}`,
           filename: filename,
         },
       };
@@ -643,6 +654,7 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   { message: BaseMessage; model?: string },
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam
 > = ({ message, model }) => {
+  assertAdditionalToolsPlacement(message, "chat/completions");
   let role = messageToOpenAIRole(message);
   if (role === "system" && isReasoningModel(model)) {
     role = "developer";
@@ -650,22 +662,32 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   if (role === "developer") {
     return {
       role: "developer",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "system") {
     return {
       role: "system",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "assistant") {
-    const textContent = message.contentBlocks.filter(
-      (block) => block.type === "text"
-    );
+    const textContent = message.contentBlocks
+      .filter((block) => block.type === "text")
+      .map(liftExtrasPromptCacheBreakpoint);
     const completionParam: OpenAIClient.Chat.Completions.ChatCompletionAssistantMessageParam =
       {
         role: "assistant",
         content: textContent,
       };
+    const refusal = message.contentBlocks.find(
+      (block): block is ContentBlock.Refusal => block.type === "refusal"
+    );
+    if (refusal?.refusal) {
+      completionParam.refusal = refusal.refusal;
+    }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
@@ -685,13 +707,22 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       completionParam.tool_calls != null
     ) {
       completionParam.content = null;
+    } else if (
+      Array.isArray(completionParam.content) &&
+      completionParam.content.length === 0 &&
+      completionParam.refusal != null
+    ) {
+      // Content is required without tool calls; the refusal carries the payload.
+      completionParam.content = "";
     }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
       tool_call_id: message.tool_call_id,
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: message.contentBlocks
+        .filter((block) => block.type === "text")
+        .map(liftExtrasPromptCacheBreakpoint),
     };
   } else if (role === "function") {
     return {
@@ -706,14 +737,14 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
   function* iterateUserContent(blocks: ContentBlock.Standard[]) {
     for (const block of blocks) {
       if (block.type === "text") {
-        yield {
+        yield applyPromptCacheBreakpoint(block, {
           type: "text" as const,
           text: block.text,
-        };
+        });
       }
       const data = convertStandardContentBlockToCompletionsContentPart(block);
       if (data) {
-        yield data;
+        yield applyPromptCacheBreakpoint(block, data);
       }
     }
   }
@@ -805,6 +836,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     ) {
       return convertStandardContentMessageToCompletionsMessage({ message });
     }
+    assertAdditionalToolsPlacement(message, "chat/completions");
     let role = messageToOpenAIRole(message);
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
@@ -813,12 +845,28 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     const content =
       typeof message.content === "string"
         ? message.content
-        : message.content.flatMap((m) => {
+        : message.content.flatMap((block) => {
+            const m = unwrapNonStandard(block);
             if (isDataContentBlock(m)) {
-              return convertToProviderContentBlock(
+              return applyPromptCacheBreakpoint(
                 m,
-                completionsApiContentBlockConverter
+                convertToProviderContentBlock(
+                  m,
+                  completionsApiContentBlockConverter
+                )
               );
+            }
+            if (m.type === "text") {
+              return liftExtrasPromptCacheBreakpoint(m);
+            }
+            if (m.type === "refusal") {
+              // Only assistant messages accept refusal parts.
+              return role === "assistant"
+                ? {
+                    type: "refusal",
+                    refusal: typeof m.refusal === "string" ? m.refusal : "",
+                  }
+                : [];
             }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
@@ -852,6 +900,14 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     };
     if (message.name != null) {
       completionParam.name = message.name;
+    }
+    const keptRefusal = message.additional_kwargs.refusal;
+    if (
+      role === "assistant" &&
+      typeof keptRefusal === "string" &&
+      !(Array.isArray(content) && content.some((m) => m.type === "refusal"))
+    ) {
+      completionParam.refusal = keptRefusal;
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;

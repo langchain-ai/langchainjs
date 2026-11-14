@@ -1,7 +1,7 @@
 import {
   type Client,
+  type AgentAddress,
   type LangSmithTracingClientInterface,
-  getDefaultProjectName,
 } from "langsmith";
 import { RunTree, type RunTreeConfig } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
@@ -18,6 +18,9 @@ import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 import { ChatGeneration } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
 import { mergeUsageMetadata, UsageMetadata } from "../messages/metadata.js";
+import { TRACE_POLICY_KEY, type TracePolicy } from "./trace_policy.js";
+
+export { omitPayload, type TracePolicy } from "./trace_policy.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -42,6 +45,7 @@ export interface RunUpdate extends BaseRunUpdate {
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
+  address?: AgentAddress;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
   metadata?: Record<string, unknown>;
@@ -94,6 +98,8 @@ export class LangChainTracer
 
   projectName?: string;
 
+  address?: AgentAddress;
+
   exampleId?: string;
 
   client: LangSmithTracingClientInterface;
@@ -108,9 +114,18 @@ export class LangChainTracer
 
   constructor(protected fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client, replicas, metadata, tags } = fields;
+    const {
+      exampleId,
+      projectName,
+      address,
+      client,
+      replicas,
+      metadata,
+      tags,
+    } = fields;
 
-    this.projectName = projectName ?? getDefaultProjectName();
+    this.projectName = projectName;
+    this.address = address;
     this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
@@ -131,18 +146,56 @@ export class LangChainTracer
     _patchMissingTracingDefaults(this, run);
     if (!run.extra?.lc_defers_inputs) {
       const runTree = this.getRunTreeWithTracingConfig(run.id);
+      const policyError = runTree ? this._applyTracePolicy(runTree) : undefined;
       await runTree?.postRun();
+      if (policyError !== undefined) throw policyError;
     }
   }
 
   async onRunUpdate(run: Run): Promise<void> {
     _patchMissingTracingDefaults(this, run);
     const runTree = this.getRunTreeWithTracingConfig(run.id);
+    const policyError = runTree ? this._applyTracePolicy(runTree) : undefined;
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();
     } else {
       await runTree?.patchRun();
     }
+    if (policyError !== undefined) throw policyError;
+  }
+
+  /**
+   * Applies the run's trace policy to the copy that gets sent to LangSmith, and
+   * drops the policy from that copy's `extra`. If a processor throws, its
+   * payload is dropped and the error is set on the copy and returned, so the
+   * run is still sent (and not left pending) before the error is rethrown.
+   */
+  private _applyTracePolicy(runTree: RunTree): unknown {
+    const { [TRACE_POLICY_KEY]: policy, ...extra } = (runTree.extra ??
+      {}) as Record<PropertyKey, unknown>;
+    if (policy === undefined) return undefined;
+    const { processInputs, processOutputs } = policy as TracePolicy;
+    runTree.extra = extra;
+    let error: unknown;
+    if (processInputs && runTree.inputs !== undefined) {
+      try {
+        runTree.inputs = processInputs(runTree.inputs);
+      } catch (e) {
+        runTree.inputs = {};
+        error = e;
+      }
+    }
+    if (processOutputs && runTree.outputs !== undefined) {
+      try {
+        runTree.outputs = processOutputs(runTree.outputs);
+      } catch (e) {
+        runTree.outputs = undefined;
+        error ??= e;
+      }
+    }
+    // Keep the run's own error, if it failed; the policy error is still rethrown.
+    if (error !== undefined) runTree.error ??= this.stringifyError(error);
+    return error;
   }
 
   onLLMEnd(run: BaseTracerRun): void {
@@ -245,13 +298,17 @@ export class LangChainTracer
 
     this.client = runTree.client ?? this.client;
     this.replicas = runTree.replicas ?? this.replicas;
-    this.projectName = runTree.project_name ?? this.projectName;
+    if (runTree.project_name || runTree.address) {
+      this.projectName = runTree.project_name;
+      this.address = runTree.address;
+    }
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
     this.fields = {
       ...this.fields,
       client: this.client,
       replicas: this.replicas,
       projectName: this.projectName,
+      address: this.address,
       exampleId: this.exampleId,
     };
   }
@@ -260,14 +317,21 @@ export class LangChainTracer
     const runTree = this.runTreeMap.get(id);
     if (!runTree) return undefined;
 
-    return new RunTree({
+    const config: RunTreeConfig = {
       ...runTree,
       client: this.client as Client,
       project_name: this.projectName,
+      address: this.address,
       replicas: this.replicas,
       reference_example_id: this.exampleId,
       tracingEnabled: true,
-    });
+    };
+
+    // Older SDKs merge the config over their defaults, so an explicit undefined
+    // would erase the project instead of letting the SDK resolve it.
+    if (config.project_name == null) delete config.project_name;
+    if (config.address == null) delete config.address;
+    return new RunTree(config);
   }
 
   static getTraceableRunTree(): RunTree | undefined {

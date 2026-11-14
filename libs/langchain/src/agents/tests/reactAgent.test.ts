@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import {
   BaseMessage,
   AIMessage,
+  AIMessageChunk,
   HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -17,6 +18,9 @@ import { RunnableLambda } from "@langchain/core/runnables";
 import {
   Command,
   getCurrentTaskInput,
+  MessagesAnnotation,
+  START,
+  StateGraph,
   type BaseCheckpointSaver,
   type BaseStore,
 } from "@langchain/langgraph";
@@ -26,6 +30,7 @@ import type { LangSmithTracingClientInterface } from "langsmith";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type { Serialized } from "@langchain/core/load/serializable";
 import type { ChainValues } from "@langchain/core/utils/types";
+import { FakeStreamingChatModel } from "@langchain/core/utils/testing";
 
 import {
   providerStrategy,
@@ -406,6 +411,126 @@ describe("createAgent", () => {
     expect((result.messages[2] as ToolMessage).name).toBe("toolNormal");
     expect(AIMessage.isInstance(result.messages[3])).toBe(true);
     expect((result.messages[3] as AIMessage).tool_calls?.length).toBe(0);
+  });
+
+  it("passes a Command from another copy of langgraph to the graph unchanged", async () => {
+    class ForeignCommand {
+      readonly lg_name = "Command";
+
+      resume = "approved";
+    }
+    const agent = createAgent({
+      model: new FakeToolCallingModel(),
+      tools: [],
+      middleware: [createMiddleware({ name: "noop" })],
+      checkpointer: syncCheckpointer,
+    });
+    const graphInvoke = vi.spyOn(agent.graph, "invoke");
+    const command = new ForeignCommand();
+
+    await agent.invoke(command as unknown as Command, {
+      configurable: { thread_id: "foreign-command" },
+    });
+
+    expect(graphInvoke.mock.calls[0][0]).toBe(command);
+  });
+
+  describe("returnDirect tool errors", () => {
+    const renderCall = (id: string, ui: string) => [
+      { name: "render", args: { ui }, id },
+    ];
+
+    it("returns a tool that throws to the model instead of ending the run", async () => {
+      let attempts = 0;
+      const render = tool(
+        async (input: { ui: string }) => {
+          attempts += 1;
+          if (attempts === 1) throw new Error(`invalid_ui: ${input.ui}`);
+          return `rendered ${input.ui}`;
+        },
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.string() }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+      });
+      const agent = createAgent({ model, tools: [render] });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      // Two model calls: the failed call went back to the model, and the
+      // successful retry ended the run.
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+      const last = result.messages.at(-1) as ToolMessage;
+      expect(ToolMessage.isInstance(last)).toBe(true);
+      expect(last.content).toBe("rendered Table");
+    });
+
+    it("returns invalid tool arguments to the model instead of ending the run", async () => {
+      const render = tool(
+        async (input: { ui: "Table" | "Chart" }) => `rendered ${input.ui}`,
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.enum(["Table", "Chart"]) }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+      });
+      const agent = createAgent({ model, tools: [render] });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+      expect((result.messages.at(-1) as ToolMessage).content).toBe(
+        "rendered Table"
+      );
+    });
+
+    it("calls the model after a failed returnDirect tool when a response format is set", async () => {
+      const render = tool(
+        async (input: { ui: "Table" | "Chart" }) => `rendered ${input.ui}`,
+        {
+          name: "render",
+          description: "Render the UI.",
+          schema: z.object({ ui: z.enum(["Table", "Chart"]) }),
+          returnDirect: true,
+        }
+      );
+      const model = new FakeToolCallingModel({
+        toolCalls: [renderCall("1", "Tabel"), renderCall("2", "Table"), []],
+        structuredResponse: { rendered: true },
+      });
+      const agent = createAgent({
+        model,
+        tools: [render],
+        responseFormat: z.object({ rendered: z.boolean() }),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("show the invoice")],
+      });
+
+      // The model node must not short-circuit on the failed call: it runs
+      // again, and the successful retry then ends the run.
+      expect(result.messages.filter(AIMessage.isInstance)).toHaveLength(2);
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.map((m) => m.status)).toEqual(["error", "success"]);
+    });
   });
 
   it("should work with store integration", async () => {
@@ -1748,5 +1873,61 @@ describe("createAgent", () => {
       expect(postedRun).toBeDefined();
       expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
     });
+  });
+
+  describe("streamEvents inside a LangGraph node", () => {
+    it.each(["handler", "plain object"] as const)(
+      "delivers each token once to a %s passed in when the outer run is traced",
+      async (kind) => {
+        let handlerTokens = 0;
+        const handleLLMNewToken = (token: string) => {
+          if (token) handlerTokens += 1;
+        };
+        const counter =
+          kind === "handler"
+            ? BaseCallbackHandler.fromMethods({ handleLLMNewToken })
+            : { handleLLMNewToken };
+        const agent = createAgent({
+          model: new FakeStreamingChatModel({
+            chunks: ["Hello", "!", " How are you?"].map(
+              (content) => new AIMessageChunk({ content })
+            ),
+          }),
+          tools: [],
+        });
+        let streamedChunks = 0;
+        const graph = new StateGraph(MessagesAnnotation)
+          .addNode("run_agent", async () => {
+            const events = agent.streamEvents(
+              { messages: [new HumanMessage("hi")] },
+              { version: "v2", callbacks: [counter] }
+            );
+            for await (const event of events) {
+              if (
+                event.event === "on_chat_model_stream" &&
+                event.data.chunk.text
+              ) {
+                streamedChunks += 1;
+              }
+            }
+            return {};
+          })
+          .addEdge(START, "run_agent")
+          .compile();
+        const tracer = new LangChainTracer({
+          client: {
+            createRun: vi.fn().mockResolvedValue(undefined),
+            updateRun: vi.fn().mockResolvedValue(undefined),
+          } as LangSmithTracingClientInterface,
+        });
+
+        await graph.invoke({ messages: [] }, { callbacks: [tracer] });
+
+        expect({ handlerTokens, streamedChunks }).toEqual({
+          handlerTokens: 3,
+          streamedChunks: 3,
+        });
+      }
+    );
   });
 });

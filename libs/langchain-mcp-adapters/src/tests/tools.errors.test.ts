@@ -1,5 +1,6 @@
 import { LangChainError } from "@langchain/core/errors";
-import { Client } from "@modelcontextprotocol/client";
+import { ToolMessage } from "@langchain/core/messages";
+import { Client, type CallToolResult } from "@modelcontextprotocol/client";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { MCPClientError } from "../client.js";
@@ -115,6 +116,111 @@ describe("tool invocation errors", () => {
     });
     expect(call).not.toHaveBeenCalled();
   });
+
+  afterEach(() => vi.restoreAllMocks());
+});
+
+describe("server-reported tool errors", () => {
+  function erroringClient(content: CallToolResult["content"]) {
+    const client = new Client({ name: "error-test", version: "1" });
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [{ name: "echo", inputSchema: { type: "object" } }],
+    });
+    vi.spyOn(client, "callTool").mockResolvedValue({
+      isError: true,
+      content,
+      _meta: { reason: "policy" },
+    });
+
+    return client;
+  }
+
+  const toolCall = {
+    type: "tool_call",
+    id: "call-1",
+    name: "echo",
+    args: {},
+  } as const;
+
+  test("reach the model as a failed ToolMessage for a tool call", async () => {
+    const afterToolCall = vi.fn();
+    const [tool] = await loadMcpTools(
+      "test",
+      erroringClient([{ type: "text", text: "denied" }]),
+      { afterToolCall }
+    );
+
+    const output = await tool.invoke(toolCall);
+
+    expect(ToolMessage.isInstance(output)).toBe(true);
+    expect(output).toMatchObject({
+      status: "error",
+      content: "denied",
+      tool_call_id: "call-1",
+      name: "echo",
+    });
+    expect(output.artifact).toContainEqual({
+      type: "mcp_meta",
+      data: { reason: "policy" },
+    });
+    // Result hooks see successful results only.
+    expect(afterToolCall).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    {
+      name: "text with non-text",
+      content: [
+        { type: "text", text: "see chart" },
+        { type: "image", data: "aGk=", mimeType: "image/png" },
+      ],
+      expected: [
+        { type: "text", text: "see chart" },
+        { type: "image", data: "aGk=", mimeType: "image/png" },
+      ],
+    },
+    {
+      name: "non-text only",
+      content: [{ type: "image", data: "aGk=", mimeType: "image/png" }],
+      expected: [
+        {
+          type: "text",
+          text: "The MCP tool returned an error without text content.",
+        },
+        { type: "image", data: "aGk=", mimeType: "image/png" },
+      ],
+    },
+    {
+      name: "empty text with a resource",
+      content: [
+        { type: "text", text: "" },
+        { type: "resource", resource: { uri: "e:", text: "boom" } },
+      ],
+      expected: "The MCP tool returned an error without text content.",
+    },
+    {
+      name: "artifact-routed text",
+      content: [{ type: "text", text: "denied" }],
+      outputHandling: "artifact",
+      expected: "denied",
+    },
+  ] satisfies {
+    name: string;
+    content: CallToolResult["content"];
+    outputHandling?: "artifact";
+    expected: unknown;
+  }[])(
+    "shows the model $name error content",
+    async ({ content, outputHandling, expected }) => {
+      const [tool] = await loadMcpTools("test", erroringClient(content), {
+        outputHandling,
+      });
+
+      const output = await tool.invoke(toolCall);
+
+      expect(output).toMatchObject({ status: "error", content: expected });
+    }
+  );
 
   afterEach(() => vi.restoreAllMocks());
 });
