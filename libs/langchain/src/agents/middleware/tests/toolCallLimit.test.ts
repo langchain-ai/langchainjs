@@ -1172,26 +1172,16 @@ describe("toolCallLimitMiddleware", () => {
     });
 
     /**
-     * Test parallel tool calls with a limit of 1 in 'end' mode.
+     * Test parallel tool calls with a limit of 2 in 'end' mode.
      *
-     * When the model proposes 3 tool calls with a limit of 1:
-     * - The first call would be allowed (within limit)
-     * - The 2nd and 3rd calls exceed the limit and get blocked with error ToolMessages
+     * When the model proposes 3 tool calls with a limit of 2:
+     * - The first 2 calls would be allowed (within limit)
+     * - The 3rd call exceeds the limit and gets blocked with an error ToolMessage
      * - Execution stops immediately (jump_to: end) so NO tools actually execute
+     * - Both allowed calls get error ToolMessages explaining they were not executed
      * - An AI message explains why execution stopped
      */
     it("should handle parallel tool calls with limit in end mode", async () => {
-      const search = tool(
-        async ({ query }: { query: string }) => {
-          return `Results: ${query}`;
-        },
-        {
-          name: "search",
-          description: "Search for information",
-          schema: z.object({ query: z.string() }),
-        }
-      );
-
       // Model proposes 3 parallel search calls
       const model = new FakeToolCallingChatModel({
         responses: [
@@ -1203,30 +1193,32 @@ describe("toolCallLimitMiddleware", () => {
               { id: "3", name: "search", args: { query: "q3" } },
             ],
           }),
-          new AIMessage("Should not reach here"),
+          new AIMessage("Resumed conversation"),
         ],
       });
 
+      const invoke = vi.spyOn(model, "invoke");
       const limiter = toolCallLimitMiddleware({
-        threadLimit: 1,
+        threadLimit: 2,
         exitBehavior: "end",
       });
       const agent = createAgent({
         model,
-        tools: [search],
+        tools: [searchTool],
         middleware: [limiter],
         checkpointer: new MemorySaver(),
       });
 
+      const config = { configurable: { thread_id: "test" } };
       const result = await agent.invoke(
         { messages: [new HumanMessage("Test")] },
-        { configurable: { thread_id: "test" } }
+        config
       );
       const messages = result.messages;
 
       // Verify tool message counts
       // With "end" behavior, when we jump to end, NO tools execute (not even allowed ones)
-      // We only get error ToolMessages for the 2 blocked calls
+      // Every call gets an error ToolMessage, including the cancelled allowed calls
       const toolMessages = messages.filter((msg): msg is ToolMessage =>
         ToolMessage.isInstance(msg)
       );
@@ -1238,43 +1230,47 @@ describe("toolCallLimitMiddleware", () => {
       );
 
       expect(successfulToolMessages.length).toBe(0);
-      expect(errorToolMessages.length).toBe(2);
+      expect(errorToolMessages.length).toBe(3);
+      expect(toolMessages.map((msg) => msg.tool_call_id).sort()).toEqual([
+        "1",
+        "2",
+        "3",
+      ]);
+      expect(searchToolMock).not.toHaveBeenCalled();
+      expect(invoke).toHaveBeenCalledTimes(1);
+      expect(
+        errorToolMessages.find((msg) => msg.tool_call_id === "1")?.content
+      ).toContain("not executed");
 
-      // Verify error tool messages (sent to model - include "Do not" instruction)
-      for (const errorMsg of errorToolMessages) {
-        const content =
-          typeof errorMsg.content === "string"
-            ? errorMsg.content
-            : String(errorMsg.content);
-        expect(content).toContain("Tool call limit exceeded");
-        expect(content).toContain("Do not");
-      }
-
-      // Verify AI message explaining why execution stopped (displayed to user - includes thread/run details)
-      const aiLimitMessages = messages.filter(
-        (msg): msg is AIMessage =>
-          AIMessage.isInstance(msg) &&
-          (!msg.tool_calls || msg.tool_calls.length === 0) &&
-          (() => {
-            const content =
-              typeof msg.content === "string"
-                ? msg.content
-                : String(msg.content);
-            return content.toLowerCase().includes("limit");
-          })()
+      const blockedMessage = errorToolMessages.find(
+        (msg) => msg.tool_call_id === "3"
       );
-      expect(aiLimitMessages.length).toBeGreaterThanOrEqual(1);
+      expect(blockedMessage?.content).toContain("Tool call limit exceeded");
+      expect(blockedMessage?.content).toContain("Do not");
 
-      if (aiLimitMessages.length > 0) {
-        const aiMsgContent =
-          typeof aiLimitMessages[0].content === "string"
-            ? aiLimitMessages[0].content
-            : String(aiLimitMessages[0].content);
-        expect(
-          aiMsgContent.toLowerCase().includes("thread limit exceeded") ||
-            aiMsgContent.toLowerCase().includes("run limit exceeded")
-        ).toBe(true);
-      }
+      const finalMessage = messages.at(-1);
+      expect(finalMessage).toBeInstanceOf(AIMessage);
+      expect(finalMessage?.content).toContain(
+        "thread limit exceeded (3/2 calls)"
+      );
+
+      await agent.invoke({ messages: [new HumanMessage("Continue")] }, config);
+      expect(invoke).toHaveBeenCalledTimes(2);
+      const resumedMessages = invoke.mock.calls[1][0] as BaseMessage[];
+      expect(
+        resumedMessages
+          .filter(ToolMessage.isInstance)
+          .map((msg) => msg.tool_call_id)
+          .sort()
+      ).toEqual(["1", "2", "3"]);
+      expect(
+        resumedMessages
+          .filter(AIMessage.isInstance)
+          .flatMap((msg) => msg.tool_calls ?? [])
+          .map((call) => call.id)
+          .sort()
+      ).toEqual(["1", "2", "3"]);
+      expect(searchToolMock).not.toHaveBeenCalled();
     });
 
     /**
