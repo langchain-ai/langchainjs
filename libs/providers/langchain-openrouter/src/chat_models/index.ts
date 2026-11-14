@@ -554,6 +554,7 @@ export class ChatOpenRouter extends BaseChatModel<
 
     const reader = stream.getReader();
     let defaultRole: string | undefined;
+    let streamedModelName = false;
 
     try {
       while (true) {
@@ -570,6 +571,13 @@ export class ChatOpenRouter extends BaseChatModel<
           defaultRole
         );
         defaultRole = choice.delta.role ?? defaultRole;
+
+        // The served model is stamped once: _mergeDicts concatenates repeated
+        // string keys, so repeating it on every chunk would duplicate it.
+        if (!streamedModelName && data.model) {
+          chunk.response_metadata.model_name = data.model;
+          streamedModelName = true;
+        }
 
         if (
           data.usage &&

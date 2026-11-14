@@ -8,7 +8,7 @@ import {
   vi,
   test,
 } from "vitest";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
@@ -456,6 +456,78 @@ describe("stream callbacks", () => {
         chunk: expect.objectContaining({ text }),
       })
     );
+  });
+});
+
+describe("streamed response metadata", () => {
+  it("sets model_name once on the aggregated chunk", async () => {
+    const model = new ChatOpenRouter({
+      model: "openrouter/auto",
+      streamUsage: false,
+    });
+
+    const chunks = [
+      {
+        id: "chatcmpl-1",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hi" },
+            finish_reason: null,
+          },
+        ],
+        model: "google/gemini-4-carbon",
+      },
+      {
+        id: "chatcmpl-1",
+        choices: [
+          {
+            index: 0,
+            delta: { content: " there" },
+            finish_reason: "stop",
+          },
+        ],
+        model: "google/gemini-4-carbon",
+      },
+    ];
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const data of chunks) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(data)}\n\n`)
+          );
+        }
+        controller.close();
+      },
+    });
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(stream, { status: 200 }));
+
+    let aggregated: AIMessageChunk | undefined;
+    const chunksWithModelName: number[] = [];
+    try {
+      let index = 0;
+      for await (const chunk of await model.stream("Hello")) {
+        if (chunk.response_metadata.model_name !== undefined) {
+          chunksWithModelName.push(index);
+        }
+        aggregated = aggregated ? aggregated.concat(chunk) : chunk;
+        index += 1;
+      }
+    } finally {
+      fetchSpy.mockRestore();
+    }
+
+    // _mergeDicts concatenates repeated string keys, so the served model must
+    // be stamped on exactly one chunk or it comes out duplicated.
+    expect(chunksWithModelName).toHaveLength(1);
+    expect(aggregated?.response_metadata.model_name).toBe(
+      "google/gemini-4-carbon"
+    );
+    expect(aggregated?.response_metadata.model_provider).toBe("openrouter");
   });
 });
 
