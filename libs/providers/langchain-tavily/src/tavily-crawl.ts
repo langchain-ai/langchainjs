@@ -127,6 +127,11 @@ export type TavilyCrawlAPIRetrieverFields = ToolParams & {
    */
   includeUsage?: boolean;
 
+  /** Chunks per source (1–5); requires instructions. */
+  chunksPerSource?: number;
+  /** API processing timeout in seconds (10–150). */
+  timeout?: number;
+
   /**
    * The name of the tool.
    *
@@ -187,6 +192,19 @@ function generateSuggestions(params: Record<string, unknown>): string[] {
 }
 
 const inputSchema = z.object({
+  chunksPerSource: z
+    .number()
+    .int()
+    .min(1)
+    .max(5)
+    .optional()
+    .describe("Chunks per source (1–5); requires instructions."),
+  timeout: z
+    .number()
+    .min(10)
+    .max(150)
+    .optional()
+    .describe("API processing timeout in seconds (10–150)."),
   url: z.string().describe("URL to crawl"),
   instructions: z
     .string()
@@ -302,6 +320,11 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
   includeUsage?: boolean;
 
+  /** Chunks per source (1–5); requires instructions. */
+  chunksPerSource?: number;
+  /** API processing timeout in seconds (10–150). */
+  timeout?: number;
+
   private apiWrapper: TavilyCrawlAPIWrapper;
 
   constructor(params: TavilyCrawlAPIRetrieverFields = {}) {
@@ -344,6 +367,8 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
     this.categories = params.categories;
     this.includeFavicon = params.includeFavicon;
     this.includeUsage = params.includeUsage;
+    this.chunksPerSource = params.chunksPerSource;
+    this.timeout = params.timeout;
   }
 
   async _call(
@@ -404,7 +429,8 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
         categories: effectiveCategories,
         includeFavicon: effectiveIncludeFavicon,
         includeUsage: effectiveIncludeUsage,
-        chunksPerSource: 3,
+        chunksPerSource: this.chunksPerSource ?? input.chunksPerSource ?? 3,
+        timeout: this.timeout ?? input.timeout,
       });
 
       if (
