@@ -900,7 +900,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: AGENT_NODE_NAME,
+        goto: this.#retryGoto(),
       });
     }
 
@@ -918,7 +918,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: AGENT_NODE_NAME,
+        goto: this.#retryGoto(),
       });
     }
 
@@ -941,7 +941,7 @@ export class AgentNode<
             }),
           ],
         },
-        goto: AGENT_NODE_NAME,
+        goto: this.#retryGoto(),
       });
     }
 
@@ -958,8 +958,26 @@ export class AgentNode<
           }),
         ],
       },
-      goto: AGENT_NODE_NAME,
+      goto: this.#retryGoto(),
     });
+  }
+
+  /**
+   * Target node for a structured-output retry.
+   *
+   * When an `afterModel` middleware runs, `ReactAgent` wires a static edge from
+   * the model node to the after-model chain. Returning a `goto` from the model
+   * node in that case makes LangGraph follow both the static edge and the
+   * command, so the retry runs in parallel with the after-model nodes and the
+   * graph fails. With an after-model chain the (empty) goto lets the static
+   * edge apply; the after-model router sends the retry back to the model
+   * because the last message is the error `ToolMessage`.
+   */
+  #retryGoto(): typeof AGENT_NODE_NAME | undefined {
+    const hasAfterModel = (this.#options.middleware ?? []).some(
+      (m) => m.afterModel !== undefined
+    );
+    return hasAfterModel ? undefined : AGENT_NODE_NAME;
   }
 
   #areMoreStepsNeeded(
