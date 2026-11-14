@@ -293,8 +293,8 @@ Sha256.prototype.hash = function () {
       ((h >>> 25) | (h << 7));
     da = d & a;
     maj = da ^ (d & b) ^ ab;
-    ch = (g & h) ^ (~g & e);
-    t1 = f + s1 + ch + K[j + 1] + blocks[j + 1];
+    ch = (h & e) ^ (~h & f);
+    t1 = g + s1 + ch + K[j + 1] + blocks[j + 1];
     t2 = s0 + maj;
     g = (c + t1) << 0;
     c = (t1 + t2) << 0;
@@ -308,8 +308,8 @@ Sha256.prototype.hash = function () {
       ((g >>> 25) | (g << 7));
     cd = c & d;
     maj = cd ^ (c & a) ^ da;
-    ch = (f & g) ^ (~f & h);
-    t1 = e + s1 + ch + K[j + 2] + blocks[j + 2];
+    ch = (g & h) ^ (~g & e);
+    t1 = f + s1 + ch + K[j + 2] + blocks[j + 2];
     t2 = s0 + maj;
     f = (b + t1) << 0;
     b = (t1 + t2) << 0;
