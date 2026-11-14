@@ -486,7 +486,6 @@ export abstract class Runnable<
 
     const config = ensureConfig(options);
     const callbackManager_ = await getCallbackManagerForConfig(config);
-    const outerThis = this;
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -494,7 +493,7 @@ export abstract class Runnable<
             finalInput = chunk;
           } else {
             try {
-              finalInput = outerThis._concatOutputChunks(
+              finalInput = concat(
                 finalInput,
                 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 chunk as any
