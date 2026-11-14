@@ -223,15 +223,17 @@ function _convertJsonSchemaToCohereTool(jsonSchema: Record<string, any>) {
 
   // Iterate through all properties
   Object.keys(parameterDefinitionsProperties).forEach((propertyName) => {
-    // Create the property in the new object
-    parameterDefinitionsFinal[propertyName] =
-      parameterDefinitionsProperties[propertyName];
-    // Set the required property based on the 'required' array
+    // Copy the property before annotating it: the schema object arrives from
+    // the caller (for Zod tools `toJsonSchema` caches and returns the same
+    // object on every call), so writing `required` here would corrupt it for
+    // every other model that binds the same tool.
     if (parameterDefinitionsRequired === undefined) {
       parameterDefinitionsRequired = [];
     }
-    parameterDefinitionsFinal[propertyName].required =
-      parameterDefinitionsRequired.includes(propertyName);
+    parameterDefinitionsFinal[propertyName] = {
+      ...parameterDefinitionsProperties[propertyName],
+      required: parameterDefinitionsRequired.includes(propertyName),
+    };
   });
   return parameterDefinitionsFinal;
 }
