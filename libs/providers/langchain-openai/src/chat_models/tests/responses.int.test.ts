@@ -17,12 +17,13 @@ import {
 import { concat } from "@langchain/core/utils/stream";
 import { tool } from "@langchain/core/tools";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { ChatOpenAI } from "../index.js";
+import { ChatOpenAI, type ChatOpenAICallOptions } from "../index.js";
 import type { BaseChatOpenAIFields } from "../base.js";
 import { ChatOpenAICompletions } from "../completions.js";
 import { ChatOpenAIResponses } from "../responses.js";
 import { REASONING_OUTPUT_MESSAGES } from "../../tests/data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../../types.js";
+import { convertMessagesToResponsesInput } from "../../converters/responses.js";
 import { LONG_PROMPT } from "../../tests/data/long-prompt.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
@@ -1075,6 +1076,48 @@ describe("reasoning summaries", () => {
     ]);
     expect(followUp).toBeInstanceOf(AIMessage);
     expect(followUp.content).toBeTruthy();
+  });
+
+  test("streamEvents replays reasoning and web search without stored items", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.4-mini",
+      useResponsesApi: true,
+      zdrEnabled: true,
+      reasoning: { effort: "low", summary: "auto" },
+      maxRetries: 0,
+    });
+    const options: ChatOpenAICallOptions = {
+      tools: [{ type: "web_search" }],
+      include: [
+        "reasoning.encrypted_content",
+        "web_search_call.action.sources",
+      ],
+    };
+    const prompt = new HumanMessage(
+      "Search the web for the current population of Berlin and answer in one sentence."
+    );
+
+    const first = await model.streamEvents([prompt], options);
+
+    const messages = [
+      prompt,
+      first,
+      new HumanMessage("Now round that number to the nearest million."),
+    ];
+    const input = convertMessagesToResponsesInput({
+      messages,
+      zdrEnabled: true,
+      model: "gpt-5.4-mini",
+    });
+    expect(input.find((item) => item.type === "reasoning")).toMatchObject({
+      id: expect.stringMatching(/^rs_/),
+      encrypted_content: expect.any(String),
+    });
+    expect(input.map((item) => item.type)).toContain("web_search_call");
+
+    const second = await model.streamEvents(messages, options);
+    expect(second).toBeInstanceOf(AIMessage);
+    expect(second.text).toBeTruthy();
   });
 
   test.each(["stream", "invoke"])(
