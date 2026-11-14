@@ -144,6 +144,59 @@ describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
 
     const meta = chunk.response_metadata as Record<string, unknown>;
     expect(meta.model_provider).toBe("openrouter");
+    expect(meta.model).toBe("openai/gpt-4o");
+    expect(meta.model_name).toBe("openai/gpt-4o");
+  });
+
+  it("reports the model the router actually served", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "hi",
+    };
+    const rawChunk = {
+      id: "gen-auto",
+      choices: [{ delta, finish_reason: null, index: 0 }],
+      created: 0,
+      model: "google/gemini-4-carbon",
+      object: "chat.completion.chunk" as const,
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk,
+      "assistant"
+    );
+
+    const meta = chunk.response_metadata as Record<string, unknown>;
+    expect(meta.model).toBe("google/gemini-4-carbon");
+    expect(meta.model_name).toBe("google/gemini-4-carbon");
+    expect(meta.model_provider).toBe("openrouter");
+  });
+
+  it("keeps one model name when the streamed chunks are concatenated", () => {
+    const parts = ["Hello", " ", "world"].map(
+      (content) =>
+        convertOpenRouterDeltaToBaseMessageChunk(
+          { content },
+          {
+            id: "gen-auto",
+            choices: [{ delta: { content }, finish_reason: null, index: 0 }],
+            created: 0,
+            model: "google/gemini-4-carbon",
+            object: "chat.completion.chunk" as const,
+          },
+          "assistant"
+        ) as AIMessageChunk
+    );
+    const merged = parts.reduce((left, right) => left.concat(right));
+
+    expect(
+      (merged.response_metadata as Record<string, unknown>).model_name
+    ).toBe("google/gemini-4-carbon");
+    expect((merged.response_metadata as Record<string, unknown>).model).toBe(
+      "google/gemini-4-carbon"
+    );
+    expect(merged.content).toBe("Hello world");
   });
 });
 
