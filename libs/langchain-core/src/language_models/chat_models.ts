@@ -553,6 +553,9 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      // Tracks whether the callback run has been closed, so that a consumer
+      // exiting early (break/return()) can still end it in the finally below.
+      let runEnded = false;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -583,39 +586,57 @@ export abstract class BaseChatModel<
         }
         // Throw error if stream ended due to abort (provider returned early)
         callOptions.signal?.throwIfAborted();
+
+        // Built from the fully-accumulated chunk, not any single chunk's delta.
+        let llmOutput: LLMResult["llmOutput"];
+        if (
+          generationChunk &&
+          AIMessageChunk.isInstance(generationChunk.message) &&
+          generationChunk.message.usage_metadata !== undefined
+        ) {
+          llmOutput = {
+            tokenUsage: {
+              promptTokens: generationChunk.message.usage_metadata.input_tokens,
+              completionTokens:
+                generationChunk.message.usage_metadata.output_tokens,
+              totalTokens: generationChunk.message.usage_metadata.total_tokens,
+            },
+          };
+        }
+        await Promise.all(
+          (runManagers ?? []).map((runManager) =>
+            runManager?.handleLLMEnd({
+              // TODO: Remove cast after figuring out inheritance
+              generations: [[generationChunk as ChatGeneration]],
+              llmOutput,
+            })
+          )
+        );
+        runEnded = true;
       } catch (err) {
+        runEnded = true;
         await Promise.all(
           (runManagers ?? []).map((runManager) =>
             runManager?.handleLLMError(err)
           )
         );
         throw err;
+      } finally {
+        if (!runEnded) {
+          // The consumer stopped iterating before the stream finished (break or
+          // return()). Resuming a generator with return() skips both the catch
+          // and the handleLLMEnd call after the loop, so close the run here.
+          await Promise.all(
+            (runManagers ?? []).map((runManager) =>
+              runManager?.handleLLMError(
+                new ModelAbortError(
+                  "Model stream was cancelled before completion."
+                )
+              )
+            )
+          );
+        }
       }
-      // Built from the fully-accumulated chunk, not any single chunk's delta.
-      let llmOutput: LLMResult["llmOutput"];
-      if (
-        generationChunk &&
-        AIMessageChunk.isInstance(generationChunk.message) &&
-        generationChunk.message.usage_metadata !== undefined
-      ) {
-        llmOutput = {
-          tokenUsage: {
-            promptTokens: generationChunk.message.usage_metadata.input_tokens,
-            completionTokens:
-              generationChunk.message.usage_metadata.output_tokens,
-            totalTokens: generationChunk.message.usage_metadata.total_tokens,
-          },
-        };
-      }
-      await Promise.all(
-        (runManagers ?? []).map((runManager) =>
-          runManager?.handleLLMEnd({
-            // TODO: Remove cast after figuring out inheritance
-            generations: [[generationChunk as ChatGeneration]],
-            llmOutput,
-          })
-        )
-      );
     }
   }
 
