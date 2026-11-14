@@ -38,14 +38,17 @@ export abstract class ListOutputParser extends BaseTransformOutputParser<
         // if there is a regex, get all matches
         const matches = [...buffer.matchAll(this.re)];
         if (matches.length > 1) {
-          let doneIdx = 0;
+          // Match indices are absolute offsets into `buffer`, so what to drop
+          // is everything up to the end of the last match we yield, not the
+          // sum of every match's offset and length.
+          let consumed = 0;
           // if there are multiple matches, yield all but the last one
           for (const match of matches.slice(0, -1)) {
             yield [match[1]];
-            doneIdx += (match.index ?? 0) + match[0].length;
+            consumed = (match.index ?? 0) + match[0].length;
           }
           // keep the last match in the buffer
-          buffer = buffer.slice(doneIdx);
+          buffer = buffer.slice(consumed);
         }
       }
     }
