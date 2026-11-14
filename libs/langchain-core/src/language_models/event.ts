@@ -76,6 +76,13 @@ export interface MessageFinishEvent {
   usage?: Partial<UsageMetadata>;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */
   responseMetadata?: Record<string, unknown>;
+  /**
+   * Provider-specific message payload to carry through to the assembled
+   * message's `additional_kwargs` (e.g. OpenAI Responses API reasoning
+   * items). Mirrors {@link MessageFinishEvent.responseMetadata}, which maps
+   * to `response_metadata`.
+   */
+  additionalKwargs?: Record<string, unknown>;
 }
 
 // ─── Content Block Lifecycle ────────────────────────────────────
