@@ -37,14 +37,16 @@ export const isNode = () =>
 
 export const getEnv = () => {
   let env: string;
-  if (isBrowser()) {
+  // jsdom first: it installs a window with a document, so isBrowser() is true
+  // there and the jsdom branch below it could never be reached.
+  if (isJsDom()) {
+    env = "jsdom";
+  } else if (isBrowser()) {
     env = "browser";
   } else if (isNode()) {
     env = "node";
   } else if (isWebWorker()) {
     env = "webworker";
-  } else if (isJsDom()) {
-    env = "jsdom";
   } else if (isDeno()) {
     env = "deno";
   } else {
