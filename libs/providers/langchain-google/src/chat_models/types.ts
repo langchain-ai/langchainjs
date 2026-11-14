@@ -114,7 +114,9 @@ export interface BaseChatGoogleFields {
 
   /**
    * An alias for `maxReasoningTokens` under Gemini 2.5 or
-   * the primary thinking/reasoning setting for Gemini 3.
+   * the primary thinking/reasoning setting for Gemini 3 and later.
+   * `"xhigh"` is sent as-is only to models that support it;
+   * other models fall back to `"high"`.
    * If explicitly set, then the reasoning blocks will be returned.
    */
   reasoningEffort?: Gemini.Shared.ThinkingLevel;

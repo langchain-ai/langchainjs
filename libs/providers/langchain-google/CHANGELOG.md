@@ -1,5 +1,15 @@
 # @langchain/google
 
+## 0.2.15
+
+### Patch Changes
+
+- [#12219](https://github.com/langchain-ai/langchainjs/pull/12219) [`bef937b`](https://github.com/langchain-ai/langchainjs/commit/bef937baa28c114b0702498efedb8b6f83d9382e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - - Add `gemini-4-hydrogen` model profile.
+  - Support the `xhigh` (`XHIGH`) thinking level (clamping to `HIGH` on models
+    that do not support `XHIGH` and passing through future thinking levels on level-based models).
+
+- [#12189](https://github.com/langchain-ai/langchainjs/pull/12189) [`571a1b4`](https://github.com/langchain-ai/langchainjs/commit/571a1b4ff11c014d534af1ccdba3242bb9016747) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): add Gemini 4 Carbon model capability profile
+
 ## 0.2.14
 
 ### Patch Changes

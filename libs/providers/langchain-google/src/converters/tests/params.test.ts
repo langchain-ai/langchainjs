@@ -131,17 +131,34 @@ describe("convertFieldsToThinkingConfig", () => {
     });
   });
 
-  test.each(["gemini-4-argon", "gemini-10-pro", "gemini-3.8-flash"])(
-    "%s downgrades minimal thinking",
-    (model) => {
+  test.each([
+    "gemini-4-carbon",
+    "gemini-4-argon",
+    "gemini-10-pro",
+    "gemini-3.8-flash",
+  ])("%s downgrades minimal thinking", (model) => {
+    expect(
+      convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
+    ).toMatchObject({ thinkingLevel: "LOW", includeThoughts: false });
+    expect(
+      convertFieldsToThinkingConfig(model, { maxReasoningTokens: 0 })
+    ).toMatchObject({ thinkingLevel: "LOW", includeThoughts: false });
+  });
+
+  test.each(["low", "medium", "high"] as const)(
+    "Carbon forwards %s thinking effort",
+    (reasoningEffort) => {
       expect(
-        convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
-      ).toMatchObject({ thinkingLevel: "LOW", includeThoughts: false });
-      expect(
-        convertFieldsToThinkingConfig(model, { maxReasoningTokens: 0 })
-      ).toMatchObject({ thinkingLevel: "LOW", includeThoughts: false });
+        convertFieldsToThinkingConfig("gemini-4-carbon", { reasoningEffort })
+      ).toMatchObject({ thinkingLevel: reasoningEffort.toUpperCase() });
     }
   );
+
+  test("Carbon leaves the default thinking level to the API", () => {
+    expect(
+      convertFieldsToThinkingConfig("gemini-4-carbon", {})
+    ).toBeUndefined();
+  });
 
   test.each([
     "gemini-3-flash",
@@ -152,6 +169,22 @@ describe("convertFieldsToThinkingConfig", () => {
     expect(
       convertFieldsToThinkingConfig(model, { reasoningEffort: "minimal" })
     ).toMatchObject({ thinkingLevel: "MINIMAL" });
+  });
+
+  test("passes through future/unrecognized thinking levels on level-based models", () => {
+    expect(
+      convertFieldsToThinkingConfig("gemini-4-future", {
+        reasoningEffort: "hyper",
+      })
+    ).toEqual({
+      includeThoughts: true,
+      thinkingLevel: "HYPER",
+    });
+    expect(
+      convertFieldsToThinkingConfig("gemini-2.5-flash", {
+        reasoningEffort: "hyper",
+      })
+    ).toBeUndefined();
   });
 });
 

@@ -162,6 +162,18 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
+    model: "gemini-4-carbon",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-4-hydrogen",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
     model: "gemini-2.5-flash-image",
     testConfig: {
       isImage: true,
