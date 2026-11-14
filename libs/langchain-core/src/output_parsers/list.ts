@@ -178,7 +178,7 @@ export class NumberedListOutputParser extends ListOutputParser {
 
 export class MarkdownListOutputParser extends ListOutputParser {
   static lc_name() {
-    return "NumberedListOutputParser";
+    return "MarkdownListOutputParser";
   }
 
   lc_namespace = ["langchain_core", "output_parsers", "list"];
