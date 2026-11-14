@@ -71,7 +71,10 @@ export async function* convertAnthropicStream(
           "cost" in data.usage &&
           typeof data.usage.cost === "number"
         ) {
-          responseMetadata = { usage: { cost: data.usage.cost } };
+          responseMetadata = {
+            ...responseMetadata,
+            usage: { cost: data.usage.cost },
+          };
         }
         if (shouldStreamUsage && data.usage) {
           // Delta usage is cumulative for the whole request, so it replaces
@@ -85,6 +88,10 @@ export async function* convertAnthropicStream(
           "context_management" in data.delta &&
           data.delta.context_management
         ) {
+          responseMetadata = {
+            ...responseMetadata,
+            context_management: data.delta.context_management,
+          };
           yield {
             event: "provider" as const,
             provider: "anthropic",
