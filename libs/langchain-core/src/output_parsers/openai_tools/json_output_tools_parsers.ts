@@ -252,8 +252,6 @@ export class JsonOutputKeyToolsParser<
 
   lc_serializable = true;
 
-  returnId = false;
-
   /** The type of tool calls to return. */
   keyName: string;
 
@@ -359,11 +357,20 @@ export class JsonOutputKeyToolsParser<
     if (!matchingResults.length) {
       return undefined;
     }
-    if (!this.returnId) {
-      returnedValues = matchingResults.map(
-        (result: ParsedToolCall) => result.args
-      );
+    if (this.returnId) {
+      // Validate only the tool call arguments and keep the id and type.
+      const validateToolCall = async (result: ParsedToolCall) => ({
+        ...result,
+        args: await this._validateResult(result.args),
+      });
+      if (this.returnSingle) {
+        return validateToolCall(matchingResults[0]);
+      }
+      return Promise.all(matchingResults.map(validateToolCall));
     }
+    returnedValues = matchingResults.map(
+      (result: ParsedToolCall) => result.args
+    );
     if (this.returnSingle) {
       return this._validateResult(returnedValues[0]);
     }
