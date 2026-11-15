@@ -1779,3 +1779,206 @@ export namespace Interactions {
     type: unknown;
   }
 }
+
+export namespace Decisions {
+
+  /**
+   * Request message for `CreateDecision`.
+   * 
+   * Evaluates one or more structured decision questions (Noul, Choice, or Score)
+   * against a shared `input`. Under the hood, each question is compiled into
+   * single-token candidate completions (plus an explicit out-of-distribution
+   * abstention option) and scored via forced decoding or Uniserve tree prefill.
+   */
+  export interface CreateDecisionRequest {
+    /**
+     * Required. Shared input prefix evaluated once across all decision questions.
+     */
+    input: Interactions.Content | Array<Interactions.Content> | string;
+
+    /**
+     * Required. The name of the `Model` to use for evaluating the decisions.
+     * 
+     * Format: `models/{model}`.
+     */
+    model: string;
+
+    /**
+     * Required. The decision questions to evaluate, keyed by caller-defined unique question
+     * identifiers (at least 1 question).
+     */
+    questions: Record<string, unknown>;
+  }
+
+  /** Response message for `CreateDecision`. */
+  export interface CreateDecisionResponse {
+    /**
+     * Output only. Decision answers keyed by the question identifiers from
+     * `CreateDecisionRequest.questions`.
+     */
+    readonly answers?: Record<string, unknown>;
+
+    /** Feedback from the recipe's input content filters. */
+    prompt_feedback?: PromptFeedback;
+
+    /** Statistics on the interaction request's token usage. */
+    usage?: Interactions.Usage;
+  }
+
+  /** A single decision question. */
+  export type Question = ChoiceQuestion | NoulQuestion | ScoreQuestion;
+
+  /**
+   * A single-select categorical decision question over mutually exclusive
+   * options.
+   */
+  export interface ChoiceQuestion {
+    /**
+     * Required. Mutually exclusive options to choose from (between 2 and 255 options; up
+     * to 254 when `include_none_of_above` is `true`), mapping option ID to
+     * optional description or rubric criteria. Option IDs must be non-empty
+     * with no control characters or leading/trailing whitespace;
+     * `none_of_the_above` is reserved when `include_none_of_above` is set.
+     */
+    criteria: Record<string, unknown>;
+
+    /**
+     * Required. Human-readable decision guidelines, rubrics, or criteria evaluated
+     * against the shared `input`. At least one content block is required.
+     */
+    instructions: Interactions.Content | Array<Interactions.Content> | string;
+    type: unknown;
+  }
+
+  /** A binary (true / false) decision question. */
+  export interface NoulQuestion {
+    /** Criteria descriptions for the `true` and `false` outcomes. */
+    criteria?: Criteria;
+
+    /**
+     * Required. Human-readable decision guidelines, rubrics, or criteria evaluated
+     * against the shared `input`. At least one content block is required.
+     */
+    instructions: Interactions.Content | Array<Interactions.Content> | string;
+    type: unknown;
+  }
+
+  /**
+   * A quantitative rubric scoring question over discrete numeric levels.
+   */
+  export interface ScoreQuestion {
+    /**
+     * Required. Discrete score levels in the rubric (between 2 and 255 non-empty levels),
+     * where 0-based index `i` corresponds to numeric level value `i` and rubric
+     * description `criteria[i]`.
+     */
+    criteria: Array<string>;
+
+    /**
+     * Required. Human-readable decision guidelines, rubrics, or criteria evaluated
+     * against the shared `input`. At least one content block is required.
+     */
+    instructions: Interactions.Content | Array<Interactions.Content> | string;
+    type: unknown;
+  }
+
+  /** Criteria descriptions for the `true` and `false` outcomes. */
+  export interface Criteria {
+    /**
+     * Optional. Optional criteria or description for the `false` outcome.
+     */
+    false_description?: string;
+
+    /**
+     * Optional. Optional criteria or description for the `true` outcome.
+     */
+    true_description?: string;
+  }
+
+  /**
+   * Decision answer for a single `CreateDecisionRequest.Question`.
+   */
+  export type Answer = ChoiceAnswer | NoulAnswer | ScoreAnswer;
+
+  /** Calibrated result for a `ChoiceQuestion`. */
+  export interface ChoiceAnswer {
+    /** The option ID with the highest probability. */
+    choice?: string;
+
+    /**
+     * Closed-world confidence score in `[0, 1]`, equal to the calibrated
+     * probability of the winning outcome:
+     * - `NoulAnswer`: `max(noul, 1 - noul)`
+     * - `ChoiceAnswer`: `p_max` (the probability of `choice`)
+     * - `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).
+     */
+    confidence?: number;
+
+    /**
+     * Closed-world normalized probability in `[0, 1]` for each option ID.
+     */
+    probabilities?: Record<string, unknown>;
+    type: unknown;
+  }
+
+  /** Calibrated result for a `NoulQuestion`. */
+  export interface NoulAnswer {
+    /**
+     * Closed-world confidence score in `[0, 1]`, equal to the calibrated
+     * probability of the winning outcome:
+     * - `NoulAnswer`: `max(noul, 1 - noul)`
+     * - `ChoiceAnswer`: `p_max` (the probability of `choice`)
+     * - `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).
+     */
+    confidence?: number;
+
+    /**
+     * Calibrated probability `P(true)` in `[0.01, 0.99]` from the 9-bin
+     * `ordinal9` readout: the expected bin `E[bin]` under the softmax over the
+     * nine bin log-likelihoods is mapped linearly so that bins 2 and 8 land
+     * on 0.01 and 0.99 (`clamp(0.01 + 0.98 * (E[bin] - 2) / 6, 0.01, 0.99)`).
+     */
+    noul?: number;
+    type: unknown;
+  }
+
+  /** Calibrated result for a `ScoreQuestion`. */
+  export interface ScoreAnswer {
+    /**
+     * Closed-world confidence score in `[0, 1]`, equal to the calibrated
+     * probability of the winning outcome:
+     * - `NoulAnswer`: `max(noul, 1 - noul)`
+     * - `ChoiceAnswer`: `p_max` (the probability of `choice`)
+     * - `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).
+     */
+    confidence?: number;
+
+    /** Rubric description for each non-empty 0-based level index. */
+    legend?: Record<string, unknown>;
+
+    /**
+     * Closed-world normalized probability in `[0, 1]` for each 0-based level
+     * index.
+     */
+    probabilities?: Record<string, unknown>;
+
+    /**
+     * Probability-weighted expected score (`sum_k k * probability_k`).
+     */
+    score?: number;
+    type: unknown;
+  }
+
+  /** Feedback from the recipe's input content filters. */
+  export interface PromptFeedback {
+    /**
+     * Optional. If set, the input was blocked and no answers are returned.
+     */
+    block_reason?: "safety" | "other" | "blocklist" | "prohibited_content" | "image_safety" | (string & {});
+
+    /**
+     * Optional. Optional message detailing the reason for blocking.
+     */
+    block_reason_message?: string;
+  }
+}
