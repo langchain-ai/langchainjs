@@ -36,6 +36,8 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
+import { convertMessagesToGeminiContents } from "../../converters/generate_content/messages.js";
+import { convertMessagesToInteractionsInput } from "../../converters/interactions/messages.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -47,6 +49,8 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import type { ToolChoice } from "@langchain/core/language_models/chat_models";
+import type { LLMResult } from "@langchain/core/outputs";
 
 /**
  * Builds the callback handler list for integration tests.
@@ -65,6 +69,7 @@ function buildTestCallbacks(
 }
 
 type ModelInfoConfig = {
+  desc?: string; // Description
   node?: boolean;
   useApiKey?: boolean; // Should we set the API key from TEST_API_KEY
   useCredentials?: boolean; // Should we set the credentials from TEST_CREDENTIALS
@@ -91,29 +96,25 @@ type ModelInfo = {
 
 const allModelInfo: ModelInfo[] = [
   {
-    model: "gemini-2.0-flash-lite",
-  },
-  {
-    model: "gemini-2.0-flash",
-  },
-  {
     model: "gemini-2.5-flash-lite",
+    // AI Studio: Officially not deprecated for existing projects
+    // GCP: Retired: 20 Oct 2026
   },
   {
     model: "gemini-2.5-flash",
+    // Deprecated
+    // AI Studio: Redirected to Gemini 3.8 Flash: 1 Dec 2026
+    // GCP: Retired: 20 Oct 2026
     testConfig: {},
   },
   {
     model: "gemini-2.5-pro",
+    // Deprecated
+    // AI Studio: Redirected to Gemini 3.8 Flash: 1 Dec 2026
+    // GCP: Retired: 20 Oct 2026
   },
   {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      isThinking: true,
-    },
-  },
-  {
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-lite",
     testConfig: {
       isThinking: true,
     },
@@ -125,7 +126,49 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3.5-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.5-flash-lite",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.6-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.7-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.8-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-4-argon",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-4-carbon",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-4-hydrogen",
     testConfig: {
       isThinking: true,
     },
@@ -137,7 +180,21 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3-pro-image-preview",
+    model: "gemini-3-pro-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-lite-image",
     testConfig: {
       isImage: true,
       hasImageThoughts: true,
@@ -147,6 +204,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-flash-preview-tts",
     testConfig: {
       isTts: true,
+      skip: true,
     },
   },
   {
@@ -154,6 +212,12 @@ const allModelInfo: ModelInfo[] = [
     testConfig: {
       isTts: true,
       skip: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-tts-preview",
+    testConfig: {
+      isTts: true,
     },
   },
   {
@@ -209,19 +273,40 @@ function filterTestableModels(
 const expansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
+      desc: "AI Studio - Generate",
       useApiKey: true,
     },
   },
   {
     testConfig: {
+      desc: "Vertex - Generate",
       node: true,
     },
   },
   {
     testConfig: {
+      desc: "Vertex Express - Generate",
       useApiKey: true,
       node: true,
       skip: true,
+    },
+  },
+  {
+    testConfig: {
+      desc: "AI Studio - Interactions",
+      useApiKey: true,
+    },
+    defaultGoogleParams: {
+      apiHandler: "interactions",
+    },
+  },
+  {
+    testConfig: {
+      desc: "Vertex - Interactions",
+      node: true,
+    },
+    defaultGoogleParams: {
+      apiHandler: "interactions",
     },
   },
 ];
@@ -387,15 +472,104 @@ const calculatorTool = tool((_) => "no-op", {
   }),
 });
 
+const readPages = tool(async ({ fileId }) => `page text for ${fileId}`, {
+  name: "read_document_pages",
+  description: "Read pages of a document.",
+  schema: z.object({ fileId: z.string() }),
+});
+
+const activeWarnSpies = new Set<(...args: any[]) => void>();
+let sharedConsoleWarnSpy: MockInstance<any> | undefined;
+
+function acquireWarnSpy(): MockInstance<any> {
+  const localSpy = vi.fn();
+  activeWarnSpies.add(localSpy);
+  if (!sharedConsoleWarnSpy) {
+    const originalWarn = global.console.warn.bind(global.console);
+    sharedConsoleWarnSpy = vi
+      .spyOn(global.console, "warn")
+      .mockImplementation((...args: any[]) => {
+        for (const spy of activeWarnSpies) {
+          spy(...args);
+        }
+        originalWarn(...args);
+      });
+  }
+  return localSpy;
+}
+
+function releaseWarnSpy(spy?: MockInstance<any>): void {
+  if (spy) {
+    activeWarnSpies.delete(spy as unknown as (...args: any[]) => void);
+  }
+  if (activeWarnSpies.size === 0 && sharedConsoleWarnSpy) {
+    sharedConsoleWarnSpy.mockRestore();
+    sharedConsoleWarnSpy = undefined;
+  }
+}
+
+type SequentialTestCallable = {
+  (
+    name: string,
+    fn: () => Promise<void> | void,
+    timeout?: number
+  ): ReturnType<typeof test>;
+  (
+    name: string,
+    options: Record<string, any>,
+    fn: () => Promise<void> | void
+  ): ReturnType<typeof test>;
+};
+
+function wrapSequentialCallable(target: any): SequentialTestCallable {
+  return (
+    name: string,
+    fnOrOptions: (() => Promise<void> | void) | Record<string, any>,
+    timeoutOrFn?: number | (() => Promise<void> | void)
+  ) => {
+    if (typeof fnOrOptions === "function") {
+      const options =
+        typeof timeoutOrFn === "number"
+          ? { concurrent: false, timeout: timeoutOrFn }
+          : { concurrent: false };
+      return target(name, options, fnOrOptions);
+    }
+    return target(
+      name,
+      { concurrent: false, ...fnOrOptions },
+      timeoutOrFn as () => Promise<void> | void
+    );
+  };
+}
+
+const sequentialTest = Object.assign(wrapSequentialCallable(test), {
+  only: wrapSequentialCallable(test.only),
+  skip: wrapSequentialCallable(test.skip),
+  runIf: (condition: boolean) => wrapSequentialCallable(test.runIf(condition)),
+  skipIf: (condition: boolean) =>
+    wrapSequentialCallable(test.skipIf(condition)),
+  each:
+    <T>(cases: ReadonlyArray<T>) =>
+    (name: string, fn: (arg: T) => Promise<void> | void, timeout?: number) => {
+      const options =
+        typeof timeout === "number"
+          ? { concurrent: false, timeout }
+          : { concurrent: false };
+      return test.each(cases)(name, options, fn as any);
+    },
+});
+
 const coreModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage,
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isTts,
 ]);
-describe.each(coreModelInfo)(
-  "Google Core ($model) $testConfig",
+describe.concurrent.each(coreModelInfo)(
+  "Google Core ($model) $testConfig.desc",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    const test = sequentialTest;
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
+    let isInteractions = defaultGoogleParams?.apiHandler === "interactions";
 
     let warnSpy: MockInstance<any>;
 
@@ -422,6 +596,7 @@ describe.each(coreModelInfo)(
         ...(defaultGoogleParams ?? {}),
         ...(fields ?? {}),
       };
+      isInteractions = params.apiHandler === "interactions";
       if (useNode) {
         return new ChatGoogleNode(params);
       } else {
@@ -430,7 +605,7 @@ describe.each(coreModelInfo)(
     }
 
     beforeEach(async () => {
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -438,7 +613,7 @@ describe.each(coreModelInfo)(
     });
 
     afterEach(() => {
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     test("invoke", async () => {
@@ -458,6 +633,22 @@ describe.each(coreModelInfo)(
 
       expect(result.response_metadata.serviceTier).toEqual("standard");
     });
+
+    test.runIf(testConfig?.node === true && model === "gemini-2.5-flash")(
+      "invoke from the Vertex multi-region endpoint",
+      async () => {
+        const llm = newChatGoogle({
+          platformType: "gcp",
+          location: "eu",
+        });
+
+        await llm.invoke("What is 1 + 1?");
+
+        expect(recorder.request?.url).toContain(
+          "https://aiplatform.eu.rep.googleapis.com/"
+        );
+      }
+    );
 
     test("invoke seed", async () => {
       const llm = newChatGoogle({
@@ -632,6 +823,51 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
+    test("function conversation multi-round", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle().bindTools(tools);
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      const toolCalls = result1.tool_calls!;
+      const toolCall = toolCalls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      const result2 = await llm.invoke(history);
+      history.push(result2);
+
+      expect(result2.content).toMatch(/21/);
+
+      const request3 = new HumanMessage("What about DC?");
+      history.push(request3);
+      const result3 = await llm.invoke(history);
+      history.push(result3);
+
+      expect(result3.type).toBe("ai");
+
+      const toolCalls3 = result3.tool_calls!;
+      const toolCall3 = toolCalls3[0];
+
+      console.log("Tool Call", toolCall3);
+
+      const toolMessage4 = await weatherTool.invoke(toolCall3);
+      history.push(toolMessage4);
+
+      const result4 = await llm.invoke(history);
+      expect(result4.type).toBe("ai");
+
+      console.log("Test Summary", {
+        platformType: defaultGoogleParams?.platformType,
+        isNode: testConfig?.node,
+        toolCall1Id: toolCall?.id,
+        toolCall3Id: toolCall3?.id,
+      });
+    });
+
     test("function reply", async () => {
       const tools: Gemini.Tool[] = [
         {
@@ -681,6 +917,181 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("function reply with image content is sent as a sibling part, not lost in JSON (#10297)", async () => {
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_screenshot",
+              description: "Get a screenshot of the current screen.",
+              parameters: { type: "object", properties: {} },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const messages: BaseMessage[] = [
+        new HumanMessage(
+          "Take a screenshot of the current screen and tell me what color it is."
+        ),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "lc-tool-call-screenshot-id",
+              name: "get_screenshot",
+              args: {},
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: [
+            { type: "text", text: "Screenshot captured successfully." },
+            { type: "image_url", image_url: dataUri },
+          ],
+          tool_call_id: "lc-tool-call-screenshot-id",
+        }),
+      ];
+
+      const res = await llm.invoke(messages);
+      expect(res).toBeDefined();
+
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        expect(sentInput).toBeDefined();
+        const functionResultStep = sentInput!.find(
+          (s): s is Gemini.Interactions.FunctionResultStep =>
+            s.type === "function_result"
+        );
+        expect(functionResultStep).toBeDefined();
+        expect(Array.isArray(functionResultStep!.result)).toBe(true);
+        const resultItems = functionResultStep!
+          .result as Gemini.Interactions.Content[];
+
+        const textItems = resultItems.filter((item) => item.type === "text");
+        expect(JSON.stringify(textItems)).not.toContain(data64);
+
+        const imageItem = resultItems.find(
+          (item): item is Gemini.Interactions.ImageContent =>
+            item.type === "image"
+        );
+        expect(imageItem).toBeDefined();
+        expect(imageItem!.data).toBe(data64);
+      } else {
+        const sentContents = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents).toBeDefined();
+        const toolResponseContent = sentContents!.find((c) =>
+          c.parts?.some((p) => "functionResponse" in p)
+        );
+        expect(toolResponseContent).toBeDefined();
+
+        const functionResponsePart = toolResponseContent!.parts!.find(
+          (p) => "functionResponse" in p && p.functionResponse
+        ) as Gemini.Part.FunctionResponse;
+        const resultStr = JSON.stringify(
+          functionResponsePart.functionResponse!.response
+        );
+        expect(resultStr).not.toContain(data64);
+
+        const inlineDataPart = toolResponseContent!.parts!.find(
+          (p) => "inlineData" in p && p.inlineData
+        ) as Gemini.Part.InlineData;
+        expect(inlineDataPart).toBeDefined();
+        expect(inlineDataPart.inlineData!.data).toBe(data64);
+      }
+    });
+
+    test("function reply with non-string content is sent as JSON, not double-stringified (#10439)", async () => {
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_video_captions",
+              description: "Get captions for a video.",
+              parameters: {
+                type: "object",
+                properties: {
+                  url: { type: "string", description: "The video URL." },
+                },
+                required: ["url"],
+              },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const toolResult = [
+        {
+          url: "https://www.youtube.com/watch?v=redacted",
+          error: "All 5 caption URLs failed",
+        },
+      ];
+      const messages: BaseMessage[] = [
+        new HumanMessage("Get the captions for this video."),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "lc-tool-call-captions-id",
+              name: "get_video_captions",
+              args: { url: "https://www.youtube.com/watch?v=redacted" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: toolResult as unknown as string,
+          tool_call_id: "lc-tool-call-captions-id",
+        }),
+      ];
+
+      const res = await llm.invoke(messages);
+      expect(res).toBeDefined();
+
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        expect(sentInput).toBeDefined();
+        const functionResultStep = sentInput!.find(
+          (s): s is Gemini.Interactions.FunctionResultStep =>
+            s.type === "function_result"
+        );
+        expect(functionResultStep).toBeDefined();
+
+        const result = (
+          functionResultStep!.result as Record<string, unknown> | undefined
+        )?.result;
+        expect(typeof result).not.toBe("string");
+        expect(result).toEqual(toolResult);
+      } else {
+        const sentContents = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents).toBeDefined();
+        const toolResponseContent = sentContents!.find((c) =>
+          c.parts?.some((p) => "functionResponse" in p)
+        );
+        expect(toolResponseContent).toBeDefined();
+
+        const functionResponsePart = toolResponseContent!.parts!.find(
+          (p) => "functionResponse" in p && p.functionResponse
+        ) as Gemini.Part.FunctionResponse;
+        const result = functionResponsePart.functionResponse!.response!.result;
+        expect(typeof result).not.toBe("string");
+        expect(result).toEqual(toolResult);
+      }
+    });
+
     test("function - force tool", async () => {
       const llm = newChatGoogle();
       const llmWithTools: Runnable = llm.bindTools(
@@ -704,6 +1115,35 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("streamEvents preserves stable tool call ids (regression for #11261)", async () => {
+      const llm = newChatGoogle();
+      const events = [];
+      for await (const event of llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      )) {
+        events.push(event);
+      }
+
+      const toolCallStart = events
+        .filter((event) => event.event === "content-block-start")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call_chunk");
+      const toolCallFinish = events
+        .filter((event) => event.event === "content-block-finish")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call");
+
+      expect(toolCallStart).toMatchObject({
+        id: expect.any(String),
+        name: "get_weather",
+      });
+      expect(toolCallFinish).toMatchObject({
+        id: toolCallStart?.id,
+        name: "get_weather",
+      });
+    });
+
     test("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
@@ -721,6 +1161,66 @@ describe.each(coreModelInfo)(
       expect(call.args).toHaveProperty("location");
       expect(call.args.location).toBe("New York");
     });
+
+    const toolChoices: ToolChoice[] = ["validated", { mode: "VALIDATED" }];
+
+    describe.each(toolChoices)(
+      "VALIDATED tool choice: %o",
+      { concurrent: false },
+      (toolChoice) => {
+        test("accepts a function call with schema-conforming arguments", async () => {
+          const llm = newChatGoogle().bindTools([weatherTool], {
+            tool_choice: toolChoice,
+          });
+          const result = await llm.invoke([
+            new HumanMessage(
+              'Call get_weather with location set to "New York".'
+            ),
+          ]);
+
+          if (isInteractions) {
+            expect(
+              recorder.request?.body?.generation_config?.tool_choice
+            ).toEqual("validated");
+          } else {
+            expect(recorder.request?.body?.toolConfig).toEqual({
+              functionCallingConfig: { mode: "VALIDATED" },
+            });
+          }
+          expect(result.tool_calls).toHaveLength(1);
+          expect(result.tool_calls?.[0]).toMatchObject({
+            name: "get_weather",
+            args: { location: "New York" },
+          });
+          expect(
+            weatherTool.schema.safeParse(result.tool_calls?.[0]?.args).success
+          ).toBe(true);
+        });
+
+        test("also permits a text response without forcing a function", async () => {
+          const llm = newChatGoogle().bindTools([weatherTool], {
+            tool_choice: toolChoice,
+          });
+          const result = await llm.invoke([
+            new HumanMessage(
+              "Do not use any tools. Reply with the single word Hello."
+            ),
+          ]);
+
+          if (isInteractions) {
+            expect(
+              recorder.request?.body?.generation_config?.tool_choice
+            ).toEqual("validated");
+          } else {
+            expect(recorder.request?.body?.toolConfig).toEqual({
+              functionCallingConfig: { mode: "VALIDATED" },
+            });
+          }
+          expect(result.tool_calls ?? []).toHaveLength(0);
+          expect(result.text).toMatch(/hello/i);
+        });
+      }
+    );
 
     test("Supports GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
@@ -756,6 +1256,26 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
+    test("Supports GoogleSearchTool - streaming (#9264)", async () => {
+      const searchTool: Gemini.Tool = {
+        googleSearch: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([searchTool]);
+
+      const stream = await llm.stream("Who won the 2024 MLB World Series?");
+      let finalMsg: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalMsg = finalMsg
+          ? concat(finalMsg, chunk as AIMessageChunk)
+          : (chunk as AIMessageChunk);
+      }
+      expect(finalMsg?.content as string).toContain("Dodgers");
+      expect(finalMsg).toHaveProperty("response_metadata");
+
+      expect(finalMsg?.response_metadata).toHaveProperty("groundingMetadata");
+      expect(finalMsg?.response_metadata).toHaveProperty("groundingSupport");
+    });
+
     test("URL Context Tool", async () => {
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash
@@ -767,7 +1287,8 @@ describe.each(coreModelInfo)(
         urlContext: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([urlTool]);
-      const url = "https://js.langchain.com/";
+      const url =
+        "https://docs.langchain.com/oss/javascript/langchain/overview";
       const prompt = `Summarize this web page: ${url}`;
       const result = await llm.invoke(prompt);
       const meta = result.response_metadata;
@@ -782,6 +1303,30 @@ describe.each(coreModelInfo)(
       expect(context.urlMetadata[0].urlRetrievalStatus).toEqual(
         "URL_RETRIEVAL_STATUS_SUCCESS"
       );
+    });
+
+    test("mixing a native tool with a custom tool (#10675, #10819)", async () => {
+      // Only Gemini 3+ models can mix built-in and function-calling tools at
+      // all, and only with toolConfig.includeServerSideToolInvocations set.
+      if (!testConfig?.isThinking) {
+        return;
+      }
+      const customTool = tool(({ query }) => `Result for ${query}`, {
+        name: "custom_tool",
+        description: "A custom tool",
+        schema: z.object({ query: z.string() }),
+      });
+      const searchTool: Gemini.Tool = { googleSearch: {} };
+      const llm: Runnable = newChatGoogle().bindTools([customTool, searchTool]);
+
+      const result = await llm.invoke(
+        "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
+      );
+      expect(
+        result.tool_calls?.some(
+          (c: { name: string }) => c.name === "custom_tool"
+        )
+      ).toBe(true);
     });
 
     test(`function - stream tools`, async () => {
@@ -893,12 +1438,17 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
-        "responseMimeType"
-      );
-      expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
-        "responseJsonSchema"
-      );
+      if (isInteractions) {
+        expect(recorder.request?.body).not.toHaveProperty("response_mime_type");
+        expect(recorder.request?.body).not.toHaveProperty("response_format");
+      } else {
+        expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
+          "responseMimeType"
+        );
+        expect(recorder.request?.body?.generationConfig).not.toHaveProperty(
+          "responseJsonSchema"
+        );
+      }
     });
 
     test("withStructuredOutput - zod jsonSchema", async () => {
@@ -912,12 +1462,16 @@ describe.each(coreModelInfo)(
       const result = await llm.invoke("Parse this: Amazing product, 10/10");
       expect(result).toHaveProperty("rating");
       expect(result).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty(
-        "responseMimeType"
-      );
-      expect(recorder.request?.body?.generationConfig).toHaveProperty(
-        "responseJsonSchema"
-      );
+      if (isInteractions) {
+        expect(recorder.request?.body).toHaveProperty("response_format");
+      } else {
+        expect(recorder.request?.body?.generationConfig).toHaveProperty(
+          "responseMimeType"
+        );
+        expect(recorder.request?.body?.generationConfig).toHaveProperty(
+          "responseJsonSchema"
+        );
+      }
     });
 
     test("withStructuredOutput - zod includeRaw", async () => {
@@ -948,12 +1502,40 @@ describe.each(coreModelInfo)(
       const resultJson = JSON.parse(result.content as string);
       expect(resultJson).toHaveProperty("rating");
       expect(resultJson).toHaveProperty("comment");
-      expect(recorder.request?.body?.generationConfig).toHaveProperty(
-        "responseJsonSchema"
-      );
-      expect(
-        recorder.request?.body?.generationConfig?.responseMimeType
-      ).toEqual("application/json");
+      if (isInteractions) {
+        expect(recorder.request?.body).toHaveProperty("response_format");
+      } else {
+        expect(recorder.request?.body?.generationConfig).toHaveProperty(
+          "responseJsonSchema"
+        );
+        expect(
+          recorder.request?.body?.generationConfig?.responseMimeType
+        ).toEqual("application/json");
+      }
+    });
+
+    test("function calling with a z.record() schema", async () => {
+      const recordTool = tool(({ input }) => `${input + 2}`, {
+        name: "magic_function",
+        description: "Applies a magic function to an input.",
+        schema: z.object({
+          input: z
+            .number()
+            .describe("Input number to apply the magic function to."),
+          metadata: z
+            .record(z.string(), z.string())
+            .optional()
+            .describe(
+              "A complex field that can hold various string key-value pairs."
+            ),
+        }),
+      });
+
+      const llm: Runnable = newChatGoogle().bindTools([recordTool]);
+      const result = await llm.invoke("Call magic_function with input 5.");
+
+      expect(result.tool_calls?.length).toBeGreaterThan(0);
+      expect(result.tool_calls?.[0].name).toBe("magic_function");
     });
 
     test("service tier - flex", async () => {
@@ -1100,9 +1682,25 @@ describe.each(coreModelInfo)(
       const lowDetailResult = await model.invoke([message], {
         mediaResolution: "MEDIA_RESOLUTION_LOW",
       });
-      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
-        "MEDIA_RESOLUTION_LOW"
-      );
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        const userStep = sentInput?.find(
+          (s): s is Gemini.Interactions.UserInputStep => s.type === "user_input"
+        );
+        const contentItems = Array.isArray(userStep?.content)
+          ? userStep.content
+          : [];
+        const imageBlock = contentItems.find(
+          (c): c is Gemini.Interactions.ImageContent => c.type === "image"
+        );
+        expect(imageBlock?.resolution).toEqual("low");
+      } else {
+        expect(
+          recorder.request?.body?.generationConfig?.mediaResolution
+        ).toEqual("MEDIA_RESOLUTION_LOW");
+      }
       const lowImageTokens =
         lowDetailResult.usage_metadata?.input_token_details?.image ?? 0;
       expect(lowImageTokens).toBeGreaterThan(0);
@@ -1110,9 +1708,25 @@ describe.each(coreModelInfo)(
       const highDetailResult = await model.invoke([message], {
         detail: "high",
       });
-      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
-        "MEDIA_RESOLUTION_HIGH"
-      );
+      if (isInteractions) {
+        const sentInput = recorder.request?.body?.input as
+          | Gemini.Interactions.Step[]
+          | undefined;
+        const userStep = sentInput?.find(
+          (s): s is Gemini.Interactions.UserInputStep => s.type === "user_input"
+        );
+        const contentItems = Array.isArray(userStep?.content)
+          ? userStep.content
+          : [];
+        const imageBlock = contentItems.find(
+          (c): c is Gemini.Interactions.ImageContent => c.type === "image"
+        );
+        expect(imageBlock?.resolution).toEqual("high");
+      } else {
+        expect(
+          recorder.request?.body?.generationConfig?.mediaResolution
+        ).toEqual("MEDIA_RESOLUTION_HIGH");
+      }
       const highImageTokens =
         highDetailResult.usage_metadata?.input_token_details?.image ?? 0;
       expect(highImageTokens).toBeGreaterThan(0);
@@ -1402,11 +2016,13 @@ describe.each(coreModelInfo)(
 const thinkingModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isThinking === true,
 ]);
-describe.each(thinkingModelInfo)(
-  "Google Thinking ($model) $testConfig",
+describe.concurrent.each(thinkingModelInfo)(
+  "Google Thinking ($model) $testConfig.desc",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    const test = sequentialTest;
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
+    let isInteractions = defaultGoogleParams?.apiHandler === "interactions";
 
     let warnSpy: MockInstance<any>;
 
@@ -1433,6 +2049,7 @@ describe.each(thinkingModelInfo)(
         ...(defaultGoogleParams ?? {}),
         ...(fields ?? {}),
       };
+      isInteractions = params.apiHandler === "interactions";
       if (useNode) {
         return new ChatGoogleNode(params);
       } else {
@@ -1441,7 +2058,7 @@ describe.each(thinkingModelInfo)(
     }
 
     beforeEach(async () => {
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1449,8 +2066,17 @@ describe.each(thinkingModelInfo)(
     });
 
     afterEach(() => {
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
+
+    test.each([{ maxReasoningTokens: 0 }, { reasoningEffort: "minimal" }])(
+      "minimal thinking %o",
+      async (fields) => {
+        const llm = newChatGoogle(fields as DefaultGoogleParams);
+        const result = await llm.invoke("What is 1 + 1?");
+        expect(result.text.length).toBeGreaterThan(0);
+      }
+    );
 
     test("thought signature - text", async () => {
       const llm = newChatGoogle({
@@ -1492,6 +2118,56 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
+    test("thoughtSignature survives a real multi-turn round trip via streamEvents (regression for #11181)", async () => {
+      const llm = newChatGoogle({ reasoningEffort: "high" });
+      const firstResult = await llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      );
+      expect(firstResult.tool_calls).toBeDefined();
+      expect(firstResult.tool_calls!.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      expect(toolCall.id).toBeDefined();
+
+      const toolCallBlock = firstResult.contentBlocks.find(
+        (block) => block.type === "tool_call"
+      ) as { thoughtSignature?: string } | undefined;
+      const expectedSignature = toolCallBlock?.thoughtSignature;
+      expect(expectedSignature).toBeDefined();
+
+      if (isInteractions) {
+        const steps = convertMessagesToInteractionsInput([
+          new HumanMessage("What is the weather in New York?"),
+          firstResult,
+          new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+        ]);
+        const sentFunctionCallStep = steps.find(
+          (s): s is Gemini.Interactions.FunctionCallStep =>
+            s.type === "function_call"
+        );
+        expect(sentFunctionCallStep).toBeDefined();
+        const sentThoughtStep = steps.find(
+          (s): s is Gemini.Interactions.ThoughtStep =>
+            s.type === "thought" && s.signature === expectedSignature
+        );
+        expect(sentThoughtStep).toBeDefined();
+        expect(sentThoughtStep?.signature).toBe(expectedSignature);
+      } else {
+        const contents = convertMessagesToGeminiContents([
+          new HumanMessage("What is the weather in New York?"),
+          firstResult,
+          new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+        ]);
+        const modelTurn = contents.find((c) => c.role === "model");
+        const sentFunctionCallPart = modelTurn?.parts?.find(
+          (p): p is Gemini.Part.FunctionCall => "functionCall" in p
+        );
+
+        expect(sentFunctionCallPart).toBeDefined();
+        expect(sentFunctionCallPart?.thoughtSignature).toBe(expectedSignature);
+      }
+    });
+
     test("thinking - invoke", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "high",
@@ -1504,9 +2180,12 @@ describe.each(thinkingModelInfo)(
       expect(reasoningSteps?.length).toBeGreaterThan(0);
       expect(textSteps?.length).toBeGreaterThan(0);
 
-      // I think result.text should just have actual text, not reasoning, but the code says otherwise
-      // const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
-      // expect(textStepsText).toEqual(result.text);
+      // Result.text should just have actual text, not reasoning
+      const textStepsText: string = textSteps.reduce(
+        (acc: string, val: ContentBlock.Text) => acc + val.text,
+        ""
+      );
+      expect(textStepsText).toEqual(result.text);
     });
 
     test("thinking - invoke with uppercase reasoningEffort", async () => {
@@ -1531,6 +2210,138 @@ describe.each(thinkingModelInfo)(
         (b) => "thoughtSignature" in b
       );
       expect(hasThoughtSignature).toBe(true);
+    });
+    test("thought/thoughtSignature survive a multi-turn round trip (regression for #10461)", async () => {
+      // Reproduces the production bug: resending a prior thinking AIMessage
+      // as history silently stripped its thought marker/signature before
+      // this fix, either losing the flag (legacy content array) or dropping
+      // the block outright (contentBlocks -> ChatGoogleTranslator ->
+      // "reasoning" -> default: return null in the standard converter).
+
+      // Make sure reasoning effort is high to force thinking blocks
+      const llm = newChatGoogle({ reasoningEffort: "high" });
+
+      const firstResult = await llm.invoke("Why is the sky blue?");
+      const firstReasoningBlocks = firstResult.contentBlocks.filter(
+        (b) => b.type === "reasoning"
+      );
+      expect(firstReasoningBlocks.length).toBeGreaterThan(0);
+      const firstSignatures = firstResult.contentBlocks
+        .filter((b) => "thoughtSignature" in b)
+        .map((b) => b.thoughtSignature);
+      expect(firstSignatures.length).toBeGreaterThan(0);
+
+      // Feed the thinking AIMessage back in as history and ask a follow-up.
+      // recorder.request captures the actual outbound HTTP body for the
+      // second call — assert the resent turn's `contents` entry still
+      // carries `thought`/`thoughtSignature` on the wire, not just that the
+      // call succeeds (a successful call alone wouldn't catch a silently
+      // dropped/unflagged thought block, since Gemini doesn't require the
+      // resent history to include one).
+      await llm.invoke([
+        new HumanMessage("Why is the sky blue?"),
+        firstResult,
+        new HumanMessage("Now explain it to a 5 year old."),
+      ]);
+
+      if (isInteractions) {
+        const sentInput = (recorder.request?.body?.input ??
+          []) as Gemini.Interactions.Step[];
+        const sentThoughtSteps = sentInput.filter(
+          (s): s is Gemini.Interactions.ThoughtStep => s.type === "thought"
+        );
+        expect(sentThoughtSteps.length).toBeGreaterThan(0);
+
+        const sentSignatures = sentThoughtSteps
+          .map((s) => s.signature)
+          .filter((sig): sig is string => typeof sig === "string");
+        expect(sentSignatures.length).toBeGreaterThan(0);
+        expect(
+          sentSignatures.some((sig) => firstSignatures.includes(sig))
+        ).toBe(true);
+      } else {
+        const sentContents = recorder.request?.body?.contents ?? [];
+        const modelTurn = sentContents.find(
+          (c: { role?: string }) => c.role === "model"
+        );
+        expect(modelTurn).toBeDefined();
+
+        const sentThoughtParts = (modelTurn?.parts ?? []).filter(
+          (p: { thought?: boolean }) => p.thought === true
+        );
+        expect(sentThoughtParts.length).toBeGreaterThan(0);
+
+        const sentSignatures = (modelTurn?.parts ?? [])
+          .filter((p: { thoughtSignature?: string }) => "thoughtSignature" in p)
+          .map((p: { thoughtSignature?: string }) => p.thoughtSignature);
+        expect(sentSignatures.length).toBeGreaterThan(0);
+        // At least one signature from the first response must round-trip
+        // verbatim — Gemini validates these, so a regenerated/blank value
+        // would defeat the point of preserving the field at all.
+        expect(
+          sentSignatures.some((sig: string | undefined) =>
+            firstSignatures.includes(sig)
+          )
+        ).toBe(true);
+      }
+    });
+
+    test("functionCall thoughtSignature survives a multi-turn round trip after a real tool call (root cause: tool_calls-rebuild path)", async () => {
+      // tool_calls-rebuilt functionCall parts don't get thoughtSignature "for free" like content-block items do.
+      const tools = [weatherTool];
+      const llm: Runnable = newChatGoogle({
+        reasoningEffort: "high",
+      }).bindTools(tools);
+
+      const firstResult = (await llm.invoke(
+        "What is the weather in New York?"
+      )) as AIMessage;
+      expect(firstResult.tool_calls?.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      const toolCallSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
+      expect(toolCallSignature).toBeDefined();
+
+      // Force v1 - the default (legacy) route already preserves this signature
+      firstResult.response_metadata = {
+        ...firstResult.response_metadata,
+        output_version: "v1",
+      };
+
+      await llm.invoke([
+        new HumanMessage("What is the weather in New York?"),
+        firstResult,
+        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+      ]);
+
+      if (isInteractions) {
+        const sentInput = (recorder.request?.body?.input ??
+          []) as Gemini.Interactions.Step[];
+        const sentFunctionCallStep = sentInput.find(
+          (s): s is Gemini.Interactions.FunctionCallStep =>
+            s.type === "function_call"
+        );
+        expect(sentFunctionCallStep).toBeDefined();
+
+        const sentThoughtStep = sentInput.find(
+          (s): s is Gemini.Interactions.ThoughtStep =>
+            s.type === "thought" && s.signature === toolCallSignature
+        );
+        expect(sentThoughtStep).toBeDefined();
+        expect(sentThoughtStep?.signature).toBe(toolCallSignature);
+      } else {
+        const sentContents = recorder.request?.body?.contents ?? [];
+        const modelTurn = sentContents.find(
+          (c: { role?: string }) => c.role === "model"
+        );
+        expect(modelTurn).toBeDefined();
+
+        const sentFunctionCallPart = (modelTurn?.parts ?? []).find(
+          (p: { functionCall?: unknown }) => "functionCall" in p
+        ) as { thoughtSignature?: string } | undefined;
+        expect(sentFunctionCallPart).toBeDefined();
+        expect(sentFunctionCallPart?.thoughtSignature).toBe(toolCallSignature);
+      }
     });
   }
 );
@@ -1581,7 +2392,7 @@ describe.each(imageModelInfo)(
 
     beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1590,7 +2401,7 @@ describe.each(imageModelInfo)(
 
     afterEach(() => {
       testSeq++;
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -1683,7 +2494,7 @@ const ttsModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => modelInfo.testConfig?.isTts === true,
 ]);
 
-describe.sequential.each(ttsModelInfo)(
+describe.each(ttsModelInfo)(
   "Google TTS ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -1728,7 +2539,7 @@ describe.sequential.each(ttsModelInfo)(
 
     beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1737,7 +2548,7 @@ describe.sequential.each(ttsModelInfo)(
 
     afterEach(() => {
       testSeq++;
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -1805,10 +2616,10 @@ describe.sequential.each(ttsModelInfo)(
       const prompt = `
         TTS the following conversation between Joe and Jane.
         Pay attention to instructions about how each each person speaks,
-        and other sounds they may make.  
+        and other sounds they may make.
         Joe: Hows it going today, Jane?
         Jane: Not too bad, how about you?
-        Joe: [Sighs and sounds tired] It has been a rough day. 
+        Joe: [Sighs and sounds tired] It has been a rough day.
         Joe: [Perks up] But the week should improve!
       `;
       const res = await model.invoke(prompt);
@@ -1855,7 +2666,7 @@ const audioModelInfo: ModelInfo[] = filterTestableModels([
 console.log(audioModelInfo);
 
 // Audio tests fail on Vertex
-describe.sequential.each(audioModelInfo)(
+describe.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
     let recorder: GoogleRequestRecorder;
@@ -1900,7 +2711,7 @@ describe.sequential.each(audioModelInfo)(
 
     beforeEach(async () => {
       imageSeq = 0;
-      warnSpy = vi.spyOn(global.console, "warn");
+      warnSpy = acquireWarnSpy();
       const delay = testConfig?.delay ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1909,7 +2720,7 @@ describe.sequential.each(audioModelInfo)(
 
     afterEach(() => {
       testSeq++;
-      warnSpy.mockRestore();
+      releaseWarnSpy(warnSpy);
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -1938,6 +2749,289 @@ describe.sequential.each(audioModelInfo)(
       const res = await model.invoke(prompt);
       const content = res?.contentBlocks;
       await handleResult(content);
+    });
+  }
+);
+
+// Vertex auth configuration only exists on the Node client params, so this
+// section narrows ModelInfo rather than reusing DefaultGoogleParams (whose
+// union type collapses to the web client, where googleAuthOptions is `never`).
+type ToolHistoryModelInfo = Omit<ModelInfo, "defaultGoogleParams"> & {
+  defaultGoogleParams?: Omit<ChatGoogleNodeParams, "model">;
+};
+
+const toolHistoryModelInfo: ToolHistoryModelInfo[] = [
+  {
+    model: "gemini-2.5-flash",
+    defaultGoogleParams: {
+      vertexai: true,
+      location: "global",
+      apiVersion: "v1",
+      googleAuthOptions: {
+        scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+        projectId: getEnvironmentVariable("GOOGLE_CLOUD_PROJECT"),
+      },
+    },
+    testConfig: {
+      node: true,
+    },
+  },
+];
+
+describe
+  .skipIf(!getEnvironmentVariable("GOOGLE_CLOUD_PROJECT"))
+  .each(toolHistoryModelInfo)(
+  "Google Tool History ($model) $testConfig",
+  ({ model, defaultGoogleParams }: ToolHistoryModelInfo) => {
+    // Exercises the request shapes produced from tool-call histories against
+    // the live Vertex AI API using Application Default Credentials. Vertex is
+    // where a `user` content mixing a functionResponse with text parts gets
+    // rejected or corrupted, and ADC keeps these tests independent of the
+    // TEST_API_KEY harness used above. Skipped entirely unless
+    // GOOGLE_CLOUD_PROJECT is configured.
+
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    function newChatGoogle(fields?: DefaultGoogleParams): ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = buildTestCallbacks(recorder);
+
+      const params = {
+        model,
+        callbacks,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      return new ChatGoogleNode(params);
+    }
+
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    type RecordedPart = Record<string, any>;
+    type RecordedContent = { role: string; parts: RecordedPart[] };
+
+    function recordedContents(
+      recorderArg: GoogleRequestRecorder
+    ): RecordedContent[] {
+      return recorderArg.request?.body?.contents ?? [];
+    }
+
+    test("keeps a tool response turn separate from a following human message (#11444)", async () => {
+      const llm = newChatGoogle().bindTools([readPages]);
+
+      const messages: BaseMessage[] = [
+        new HumanMessage("read it"),
+        new AIMessage({
+          content: "Reading the agreement now.",
+          tool_calls: [
+            {
+              name: "read_document_pages",
+              args: { fileId: "f1" },
+              id: "call_1",
+              type: "tool_call",
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "page text",
+          tool_call_id: "call_1",
+          name: "read_document_pages",
+        }),
+        new HumanMessage("continue"),
+      ];
+
+      const result = await llm.invoke(messages);
+      expect(result).toBeInstanceOf(AIMessage);
+
+      // The emitted request must keep the tool response turn and the human
+      // turn as SEPARATE user contents: a single user content mixing a
+      // functionResponse with text is rejected outright by newer Gemini
+      // models and corrupts generation on older ones.
+      const contents = recordedContents(recorder);
+      expect(contents).toHaveLength(4);
+
+      expect(contents[2].role).toBe("user");
+      expect(contents[2].parts).toHaveLength(1);
+      expect(contents[2].parts[0]).toHaveProperty("functionResponse");
+      expect(contents[2].parts[0].functionResponse.name).toBe(
+        "read_document_pages"
+      );
+
+      expect(contents[3]).toEqual({
+        role: "user",
+        parts: [{ text: "continue" }],
+      });
+    });
+
+    test("groups parallel tool responses into one user content", async () => {
+      // Parallel tool calls are the one case where merging is REQUIRED:
+      // all function responses for one model turn must share a single user
+      // content with a part count matching the call count.
+      const llm = newChatGoogle().bindTools([readPages]);
+
+      const messages: BaseMessage[] = [
+        new HumanMessage("Read both documents."),
+        new AIMessage({
+          content: "Reading both documents now.",
+          tool_calls: [
+            {
+              name: "read_document_pages",
+              args: { fileId: "f1" },
+              id: "call_1",
+              type: "tool_call",
+            },
+            {
+              name: "read_document_pages",
+              args: { fileId: "f2" },
+              id: "call_2",
+              type: "tool_call",
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "page text for f1",
+          tool_call_id: "call_1",
+          name: "read_document_pages",
+        }),
+        new ToolMessage({
+          content: "page text for f2",
+          tool_call_id: "call_2",
+          name: "read_document_pages",
+        }),
+      ];
+
+      const result = await llm.invoke(messages);
+      expect(result).toBeInstanceOf(AIMessage);
+
+      const contents = recordedContents(recorder);
+      expect(contents).toHaveLength(3);
+
+      expect(contents[2].role).toBe("user");
+      expect(contents[2].parts).toHaveLength(2);
+      for (const part of contents[2].parts) {
+        expect(part).toHaveProperty("functionResponse");
+      }
+      expect(contents[2].parts.map((p) => p.functionResponse.id)).toEqual([
+        "call_1",
+        "call_2",
+      ]);
+    });
+
+    test("keeps a v1-path tool response turn separate from a following human message (#11444)", async () => {
+      // Same contract as the legacy-path scenario, exercised through the v1
+      // standard-content path (`output_version: "v1"`), which this package
+      // stamps on messages it generates itself.
+      const llm = newChatGoogle().bindTools([readPages]);
+
+      const V1 = { output_version: "v1" } as const;
+      const messages: BaseMessage[] = [
+        new HumanMessage({ content: "read it", response_metadata: V1 }),
+        new AIMessage({
+          content: "Reading the agreement now.",
+          tool_calls: [
+            {
+              name: "read_document_pages",
+              args: { fileId: "f1" },
+              id: "call_1",
+              type: "tool_call",
+            },
+          ],
+          response_metadata: V1,
+        }),
+        new ToolMessage({
+          content: "page text",
+          tool_call_id: "call_1",
+          name: "read_document_pages",
+          response_metadata: V1,
+        }),
+        new HumanMessage({ content: "continue", response_metadata: V1 }),
+      ];
+
+      const result = await llm.invoke(messages);
+      expect(result).toBeInstanceOf(AIMessage);
+
+      const contents = recordedContents(recorder);
+      expect(contents).toHaveLength(4);
+
+      // The v1 model turn keeps its functionCall part...
+      expect(contents[1].role).toBe("model");
+      expect(contents[1].parts.some((p) => "functionCall" in p)).toBe(true);
+
+      // ...and the v1 tool turn carries ONLY its functionResponse, no text.
+      expect(contents[2]).toEqual({
+        role: "user",
+        parts: [
+          {
+            functionResponse: {
+              id: "call_1",
+              name: "read_document_pages",
+              response: { result: "page text" },
+            },
+          },
+        ],
+      });
+
+      expect(contents[3]).toEqual({
+        role: "user",
+        parts: [{ text: "continue" }],
+      });
+    });
+  }
+);
+
+describe.skipIf(!getEnvironmentVariable("TEST_API_KEY"))(
+  "Google token usage & cost accounting root-cause checks (live API)",
+  () => {
+    test("llmOutput.tokenUsage vs usage_metadata across call styles (#11424)", async () => {
+      async function run(streamingCtor: boolean, useStreamMethod: boolean) {
+        let callbackResult: LLMResult | undefined;
+        const llm = new ChatGoogle({
+          model: "gemini-3.8-flash",
+          apiKey: getEnvironmentVariable("TEST_API_KEY"),
+          streaming: streamingCtor,
+          callbacks: [
+            {
+              async handleLLMEnd(output: LLMResult) {
+                callbackResult = output;
+              },
+            },
+          ],
+        });
+
+        const prompt =
+          "Write a 300 word essay about why the sky is blue, covering Rayleigh scattering, wavelength, and atmospheric composition.";
+        let res: AIMessageChunk | AIMessage | null = null;
+        if (useStreamMethod) {
+          for await (const chunk of await llm.stream(prompt)) {
+            res = res ? (res as AIMessageChunk).concat(chunk) : chunk;
+          }
+        } else {
+          res = await llm.invoke(prompt);
+        }
+        return { res, callbackResult };
+      }
+
+      const nonStreaming = await run(false, false);
+      const invokeStreaming = await run(true, false);
+      const dotStream = await run(false, true);
+
+      expect(nonStreaming.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: nonStreaming.res?.usage_metadata?.input_tokens,
+        completionTokens: nonStreaming.res?.usage_metadata?.output_tokens,
+        totalTokens: nonStreaming.res?.usage_metadata?.total_tokens,
+      });
+
+      expect(invokeStreaming.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: invokeStreaming.res?.usage_metadata?.input_tokens,
+        completionTokens: invokeStreaming.res?.usage_metadata?.output_tokens,
+        totalTokens: invokeStreaming.res?.usage_metadata?.total_tokens,
+      });
+
+      expect(dotStream.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: dotStream.res?.usage_metadata?.input_tokens,
+        completionTokens: dotStream.res?.usage_metadata?.output_tokens,
+        totalTokens: dotStream.res?.usage_metadata?.total_tokens,
+      });
     });
   }
 );

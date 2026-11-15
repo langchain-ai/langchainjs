@@ -1,9 +1,28 @@
-import { ns as baseNs, LangChainError } from "@langchain/core/errors";
+import {
+  ns as baseNs,
+  LangChainError,
+  ModelRefusalError,
+  stampRetryable,
+} from "@langchain/core/errors";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "./misc.js";
 
 // Internal namespace for all Google provider errors
 const ns = baseNs.sub("google");
+
+const RETRYABLE_STATUS_CODES = [
+  408, // Request Timeout
+  429, // Too Many Requests
+  500, // Internal Server Error
+  502, // Bad Gateway
+  503, // Service Unavailable
+  504, // Gateway Timeout
+];
+
+function isRetryableStatus(statusCode?: number): boolean {
+  if (!statusCode) return false;
+  return RETRYABLE_STATUS_CODES.includes(statusCode);
+}
 
 async function readErrorResponseBody(response: Response): Promise<unknown> {
   return iife(async () => {
@@ -66,6 +85,11 @@ export class GoogleError extends ns.brand(LangChainError) {
  */
 export class ConfigurationError extends ns.brand(GoogleError, "configuration") {
   readonly name = "ConfigurationError";
+
+  constructor(message?: string) {
+    super(message);
+    stampRetryable(this, false);
+  }
 }
 
 /**
@@ -146,6 +170,7 @@ export class PromptBlockedError extends ns.brand(
     super(message);
     this.blockReason = params.blockReason;
     this.safetyRatings = params.safetyRatings;
+    stampRetryable(this, false);
   }
 
   /**
@@ -169,11 +194,54 @@ export class PromptBlockedError extends ns.brand(
   static fromPromptFeedback(
     promptFeedback: Gemini.PromptFeedback
   ): PromptBlockedError {
-    return new PromptBlockedError({
+    return new this({
       blockReason: promptFeedback.blockReason ?? "UNKNOWN",
       safetyRatings: promptFeedback.safetyRatings,
     });
   }
+}
+
+/**
+ * A {@link PromptBlockedError} for a prompt Gemini refused, such as one blocked
+ * for safety.
+ *
+ * It also matches `ModelRefusalError.isInstance` from `@langchain/core/errors`,
+ * so callers can handle it like a refusal from any other provider.
+ */
+export class PromptRefusedError extends baseNs.brand(
+  PromptBlockedError,
+  "model-refusal"
+) {
+  // The inherited check only looks for the refusal brand, which every
+  // `ModelRefusalError` carries.
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  static isInstance<T extends abstract new (...args: any[]) => any>(
+    this: T,
+    obj: unknown
+  ): obj is InstanceType<T> {
+    return (
+      PromptBlockedError.isInstance(obj) && ModelRefusalError.isInstance(obj)
+    );
+  }
+}
+
+// The Gemini API and Vertex AI spell the unspecified reason differently.
+const UNSPECIFIED_BLOCK_REASONS = new Set<string>([
+  "BLOCK_REASON_UNSPECIFIED",
+  "BLOCKED_REASON_UNSPECIFIED",
+]);
+
+/** Builds the error for a blocked prompt, a refusal unless the reason is unspecified. */
+export function promptBlockedError(
+  promptFeedback: Gemini.GenContent.GenerateContentResponse["promptFeedback"] &
+    object
+): PromptBlockedError {
+  const ErrorClass = UNSPECIFIED_BLOCK_REASONS.has(
+    promptFeedback.blockReason ?? ""
+  )
+    ? PromptBlockedError
+    : PromptRefusedError;
+  return ErrorClass.fromPromptFeedback(promptFeedback);
 }
 
 /**
@@ -279,6 +347,7 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
+    stampRetryable(this, isRetryableStatus(this.statusCode));
   }
 
   /**
@@ -332,15 +401,6 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     });
   }
 }
-
-const RETRYABLE_STATUS_CODES = [
-  408, // Request Timeout
-  429, // Too Many Requests
-  500, // Internal Server Error
-  502, // Bad Gateway
-  503, // Service Unavailable
-  504, // Gateway Timeout
-];
 
 /**
  * Parameters for constructing a RequestError
@@ -455,6 +515,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
+    stampRetryable(this, this.isRetryable());
   }
 
   /**
@@ -480,8 +541,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    * ```
    */
   isRetryable(): boolean {
-    if (!this.statusCode) return false;
-    return RETRYABLE_STATUS_CODES.includes(this.statusCode);
+    return isRetryableStatus(this.statusCode);
   }
 
   /**
@@ -602,6 +662,7 @@ export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
 
     super(message ?? defaultMessage);
     this.tool = tool;
+    stampRetryable(this, false);
   }
 }
 
@@ -644,6 +705,7 @@ export class ToolCallNotFoundError extends ns.brand(
 
     super(message ?? defaultMessage);
     this.toolCallId = toolCallId;
+    stampRetryable(this, false);
   }
 }
 
@@ -727,4 +789,9 @@ export class MalformedOutputError extends ns.brand(
  */
 export class InvalidInputError extends ns.brand(GoogleError, "invalid-input") {
   readonly name = "InvalidInputError";
+
+  constructor(message?: string) {
+    super(message);
+    stampRetryable(this, false);
+  }
 }

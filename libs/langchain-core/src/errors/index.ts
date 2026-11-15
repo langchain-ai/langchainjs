@@ -1,7 +1,11 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { AIMessageChunk } from "../messages/ai.js";
+import type { BaseMessage } from "../messages/base.js";
+import type { ContentBlock } from "../messages/content/index.js";
 import { ns as baseNs } from "../utils/namespace.js";
+
+export type { BrandedClass } from "../utils/namespace.js";
 
 export type LangChainErrorCodes =
   | "CONTEXT_OVERFLOW"
@@ -26,6 +30,49 @@ export function addLangChainErrorFields(
 
 /** The error namespace for all LangChain errors */
 export const ns = baseNs.sub("error");
+
+/** Registered globally so duplicate copies of core in one dependency tree agree. */
+const retryableSymbol = Symbol.for("langchain.errors.retryable");
+
+/**
+ * Mark an error as safe or unsafe to retry.
+ *
+ * Sets a non-enumerable symbol on the error itself, leaving its class and
+ * shape untouched, so it is safe to apply to a provider SDK's own error.
+ *
+ * @param error - The error to mark. Non-objects are returned untouched.
+ * @param retryable - `true` if retrying may succeed.
+ * @returns The same error instance, for chaining.
+ */
+export function stampRetryable<T>(error: T, retryable: boolean): T {
+  if (typeof error !== "object" || error === null) {
+    return error;
+  }
+  try {
+    Object.defineProperty(error, retryableSymbol, {
+      value: retryable,
+      configurable: true,
+    });
+  } catch {
+    // Frozen or sealed error object; leave it unmarked rather than throwing.
+  }
+  return error;
+}
+
+/**
+ * Read an error's retryability mark.
+ *
+ * @returns `true`/`false` when marked, `undefined` when unclassified —
+ *   supply your own default, e.g. `getRetryable(error) ?? true`.
+ */
+export function getRetryable(error: unknown): boolean | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+  return Object.getOwnPropertyDescriptor(error, retryableSymbol)?.value as
+    | boolean
+    | undefined;
+}
 
 /**
  * Base error class for all LangChain errors.
@@ -103,6 +150,8 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
   constructor(message: string, partialOutput?: AIMessageChunk) {
     super(message);
     this.partialOutput = partialOutput;
+    // Retrying would mean ignoring the caller's explicit abort signal.
+    stampRetryable(this, false);
   }
 }
 
@@ -154,6 +203,8 @@ export class ContextOverflowError extends ns.brand(
 
   constructor(message?: string) {
     super(message ?? "Input exceeded the model's context window.");
+    // The same oversized input fails identically; it needs trimming, not another attempt.
+    stampRetryable(this, false);
   }
 
   /**
@@ -179,5 +230,74 @@ export class ContextOverflowError extends ns.brand(
     const error = new ContextOverflowError(obj.message);
     error.cause = obj;
     return error;
+  }
+}
+
+const DEFAULT_REFUSAL_MESSAGE = "Model refused to produce the requested output";
+
+/**
+ * Error class representing a model refusal.
+ *
+ * Providers report a refusal, such as a safety-policy refusal, as a successful
+ * response rather than an error. LangChain raises this error where a refusal
+ * cannot be treated as an answer, for example when structured output has
+ * nothing to parse, or when an agent uses refusal middleware.
+ *
+ * The {@link ModelRefusalError} extends the {@link LangChainError} base class with
+ * the marker `"model-refusal"`. Retrying the same request is unlikely to succeed,
+ * so the error is marked as not retryable.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.withStructuredOutput(schema).invoke(input);
+ * } catch (err) {
+ *   if (ModelRefusalError.isInstance(err)) {
+ *     console.warn("Model refused:", err.message, err.rawMessage);
+ *   } else {
+ *     throw err;
+ *   }
+ * }
+ * ```
+ */
+export class ModelRefusalError extends ns.brand(
+  LangChainError,
+  "model-refusal"
+) {
+  readonly name = "ModelRefusalError";
+
+  /**
+   * The refused model response, if available.
+   */
+  rawMessage?: BaseMessage;
+
+  constructor(message?: string, fields?: { rawMessage?: BaseMessage }) {
+    super(message ?? DEFAULT_REFUSAL_MESSAGE);
+    this.rawMessage = fields?.rawMessage;
+    stampRetryable(this, false);
+  }
+
+  /**
+   * Creates a {@link ModelRefusalError} from a refusal content block.
+   *
+   * The message includes the provider's refusal `category`, when present, and
+   * the refusal text.
+   *
+   * @param refusal - The refusal content block from the model response.
+   * @param rawMessage - The refused model response.
+   */
+  static fromRefusal(
+    refusal: ContentBlock.Refusal,
+    rawMessage?: BaseMessage
+  ): ModelRefusalError {
+    let message = DEFAULT_REFUSAL_MESSAGE;
+    const category = refusal.extras?.category;
+    if (category) {
+      message += ` (category='${String(category)}')`;
+    }
+    if (refusal.refusal) {
+      message += `: ${refusal.refusal}`;
+    }
+    return new ModelRefusalError(message, { rawMessage });
   }
 }

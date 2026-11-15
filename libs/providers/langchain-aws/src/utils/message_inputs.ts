@@ -23,7 +23,10 @@ import {
   MessageContentReasoningBlock,
   MessageContentReasoningBlockReasoningText,
 } from "../types.js";
-import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
+import {
+  convertFromV1ToChatBedrockConverseMessage,
+  toBedrockReasoningText,
+} from "./compat.js";
 
 function isDefaultCachePoint(
   block: unknown
@@ -598,11 +601,10 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         // Merge whitespace/newlines with previous text blocks to avoid validation errors.
         const cleanedText = block.text?.replace(/\n/g, "").trim();
         if (cleanedText === "") {
-          if (contentBlocks.length > 0) {
-            const mergedTextContent = `${
-              contentBlocks[contentBlocks.length - 1].text
-            }${block.text}`;
-            contentBlocks[contentBlocks.length - 1].text = mergedTextContent;
+          // Only text blocks can absorb it; anything else (e.g. reasoning) drops it.
+          const previous = contentBlocks[contentBlocks.length - 1];
+          if (previous?.text !== undefined) {
+            previous.text += block.text;
           }
         } else {
           contentBlocks.push({
@@ -803,22 +805,11 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
     return undefined;
   }
 
-  if (
-    content.type === "reasoning" &&
-    "reasoning" in content &&
-    typeof content.reasoning === "string" &&
-    content.reasoning.length > 0
-  ) {
-    const signature =
-      "signature" in content && typeof content.signature === "string"
-        ? content.signature
-        : undefined;
-    return {
-      reasoningText: {
-        text: content.reasoning,
-        ...(signature !== undefined ? { signature } : {}),
-      },
-    };
+  if (content.type === "reasoning" && "reasoning" in content) {
+    return toBedrockReasoningText(
+      content.reasoning,
+      "signature" in content ? content.signature : undefined
+    );
   }
 
   if (content.type !== "reasoning_content") {
@@ -828,22 +819,16 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
   if (
     "reasoningText" in content &&
     typeof content.reasoningText === "object" &&
-    content.reasoningText !== null &&
-    "text" in content.reasoningText &&
-    typeof content.reasoningText.text === "string" &&
-    content.reasoningText.text.length > 0
+    content.reasoningText !== null
   ) {
-    const signature =
-      "signature" in content.reasoningText &&
-      typeof content.reasoningText.signature === "string"
-        ? content.reasoningText.signature
-        : undefined;
-    return {
-      reasoningText: {
-        text: content.reasoningText.text,
-        ...(signature !== undefined ? { signature } : {}),
-      },
-    };
+    const { reasoningText } = content;
+    const replayed = toBedrockReasoningText(
+      "text" in reasoningText ? reasoningText.text : undefined,
+      "signature" in reasoningText ? reasoningText.signature : undefined
+    );
+    if (replayed) {
+      return replayed;
+    }
   }
 
   if (
@@ -857,6 +842,29 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
   }
 
   return undefined;
+}
+
+type ReasoningPart = {
+  type: string;
+  reasoning?: string;
+  signature?: string;
+  index?: number | string;
+};
+
+// Whether `next` continues `previous`: an unsigned standard reasoning block
+// from the same (or an unknown) stream index.
+function continuesUnsignedReasoning(
+  previous: ReasoningPart | undefined,
+  next: ReasoningPart
+): boolean {
+  return (
+    previous?.type === "reasoning" &&
+    next.type === "reasoning" &&
+    !previous.signature &&
+    (previous.index === undefined ||
+      next.index === undefined ||
+      previous.index === next.index)
+  );
 }
 
 export function concatenateLangchainReasoningBlocks(
@@ -873,6 +881,18 @@ export function concatenateLangchainReasoningBlocks(
           concatenatedBlock as MessageContentReasoningBlock
         );
         concatenatedBlock = {};
+      }
+      const previous = concatenatedBlocks.at(-1) as ReasoningPart | undefined;
+      const part = block as ReasoningPart;
+      if (continuesUnsignedReasoning(previous, part)) {
+        // A standard reasoning block that lost its stream index arrives in
+        // parts; join them so the signature covers the text it was issued for.
+        concatenatedBlocks[concatenatedBlocks.length - 1] = {
+          ...previous,
+          ...part,
+          reasoning: `${previous?.reasoning ?? ""}${part.reasoning ?? ""}`,
+        };
+        continue;
       }
       concatenatedBlocks.push(block);
       continue;

@@ -5,7 +5,7 @@ import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
 
 import { createMiddleware } from "../middleware.js";
-import { sleep, calculateRetryDelay } from "./utils.js";
+import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
 
@@ -147,9 +147,10 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
       return retryOn(error);
     }
     // retryOn is an array of error constructors
-    return retryOn.some(
-      (ErrorConstructor) => error.constructor === ErrorConstructor
-    );
+    return retryOn.some((ErrorConstructor) => {
+      // oxlint-disable-next-line no-instanceof/no-instanceof
+      return error instanceof ErrorConstructor;
+    });
   };
 
   // Use the exported calculateRetryDelay function with our config
@@ -188,10 +189,15 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
     name: "modelRetryMiddleware",
     contextSchema: ModelRetryMiddlewareOptionsSchema,
     wrapModelCall: async (request, handler) => {
+      const delegated = {
+        ...request,
+        modelSettings: { maxRetries: 0, ...request.modelSettings },
+      };
+
       // Initial attempt + retries
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          return await handler(request);
+          return await handler(delegated);
         } catch (error) {
           const attemptsMade = attempt + 1; // attempt is 0-indexed
 
@@ -210,7 +216,11 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
           // Check if we have more retries left
           if (attempt < maxRetries) {
             // Calculate and apply backoff delay
-            const delay = calculateRetryDelay(delayConfig, attempt);
+            const delay = calculateRetryDelay(
+              delayConfig,
+              attempt,
+              getRetryAfterMs(err)
+            );
             if (delay > 0) {
               await sleep(delay);
             }

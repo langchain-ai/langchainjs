@@ -108,10 +108,15 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
         throw new Error(`Invalid characters in key: ${key}`);
       }
 
-      const fullPath = path.resolve(this.rootPath, keyAsTxtFile);
-      const commonPath = path.resolve(this.rootPath);
+      const rootPath = path.resolve(this.rootPath);
+      const fullPath = path.resolve(rootPath, keyAsTxtFile);
+      const relativePath = path.relative(rootPath, fullPath);
 
-      if (!fullPath.startsWith(commonPath)) {
+      if (
+        relativePath === ".." ||
+        relativePath.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(relativePath)
+      ) {
         throw new Error(
           `Invalid key: ${key}. Key should be relative to the root path. ` +
             `Root path: ${this.rootPath}, Full path: ${fullPath}`

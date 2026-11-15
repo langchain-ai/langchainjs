@@ -292,10 +292,20 @@ export abstract class StructuredTool<
       toolCallId = config.toolCall.id;
     }
 
+    let callbackInput: string | Record<string, unknown> | undefined;
+    if (
+      typeof inputForValidation === "object" &&
+      inputForValidation !== null &&
+      !Array.isArray(inputForValidation)
+    ) {
+      callbackInput = inputForValidation as Record<string, unknown>;
+    }
+    if (!callbackInput) {
+      callbackInput = typeof arg === "string" ? arg : JSON.stringify(arg);
+    }
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
-      // Log the original raw input arg
-      typeof arg === "string" ? arg : JSON.stringify(arg),
+      callbackInput,
       config.runId,
       undefined,
       undefined,
@@ -976,6 +986,10 @@ export function tool<
             cleanup();
             reject(getAbortSignalError(config.signal));
           };
+          if (config.signal.aborted) {
+            listener();
+            return;
+          }
           config.signal.addEventListener("abort", listener, { once: true });
         }
 

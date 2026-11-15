@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi, afterEach } from "vitest";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatBedrockConverse } from "../chat_models.js";
 import type {
@@ -25,11 +25,15 @@ vi.mock("@aws-sdk/client-bedrock-runtime", () => {
   }
   class BedrockRuntimeClient {
     static lastConfig: unknown;
+    static mockSend?: (command: unknown, options?: unknown) => Promise<unknown>;
     middlewareStack = { add: vi.fn() };
     constructor(config: unknown) {
       BedrockRuntimeClient.lastConfig = config;
     }
-    async send(command: unknown) {
+    async send(command: unknown, options?: unknown) {
+      if (BedrockRuntimeClient.mockSend) {
+        return BedrockRuntimeClient.mockSend(command, options);
+      }
       // Non-stream path
       if (
         (command as { constructor?: unknown })?.constructor === ConverseCommand
@@ -120,6 +124,64 @@ describe("ChatBedrockConverse invocationParams", () => {
     await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
       token: "test-bearer-token",
     });
+  });
+
+  test("configures LangSmith Gateway endpoint and bearer auth", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    try {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const clientClass = BedrockRuntimeClient as unknown as {
+        lastConfig?: {
+          endpoint?: string;
+          authSchemePreference?: string[];
+          credentials?: unknown;
+          token?: () => Promise<{ token: string }>;
+        };
+      };
+
+      expect(model.bedrockBearerToken).toBe("gateway-key");
+      expect(clientClass.lastConfig?.endpoint).toBe(
+        "https://gateway.smith.langchain.com/bedrock"
+      );
+      expect(clientClass.lastConfig?.authSchemePreference).toEqual([
+        "httpBearerAuth",
+      ]);
+      expect(clientClass.lastConfig?.credentials).toBeUndefined();
+      await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
+        token: "gateway-key",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  test("prefers explicit Bedrock configuration over LangSmith Gateway", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    try {
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        endpointHost: "bedrock.example.com",
+        bedrockBearerToken: "bedrock-key",
+      });
+      const clientClass = BedrockRuntimeClient as unknown as {
+        lastConfig?: {
+          endpoint?: string;
+          token?: () => Promise<{ token: string }>;
+        };
+      };
+
+      expect(model.bedrockBearerToken).toBe("bedrock-key");
+      expect(clientClass.lastConfig?.endpoint).toBe(
+        "https://bedrock.example.com"
+      );
+      await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
+        token: "bedrock-key",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   test("configures bearer auth from AWS_BEARER_TOKEN_BEDROCK", async () => {
@@ -466,6 +528,104 @@ describe("ChatBedrockConverse invocationParams", () => {
     test("does not register middleware when defaultHeaders is absent", () => {
       const model = new ChatBedrockConverse({ ...baseConstructorArgs });
       expect(model.client.middlewareStack.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("retries and AsyncCaller integration", () => {
+    afterEach(() => {
+      BedrockRuntimeClient.mockSend = undefined;
+    });
+
+    test("retries transient failure on invoke when maxRetries is configured", async () => {
+      let attempts = 0;
+      const onFailedAttempt = vi.fn();
+      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+        attempts++;
+        if (attempts === 1) {
+          throw new Error("Temporary network error");
+        }
+        return {
+          output: {
+            message: {
+              role: "assistant",
+              content: [{ text: "Recovered response" }],
+            },
+          },
+          usage: {
+            inputTokens: 10,
+            outputTokens: 5,
+            totalTokens: 15,
+          },
+        };
+      });
+
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        maxRetries: 2,
+        onFailedAttempt,
+      });
+
+      const response = await model.invoke("Hello");
+      expect(response.content).toBe("Recovered response");
+      expect(attempts).toBe(2);
+      expect(onFailedAttempt).toHaveBeenCalledTimes(1);
+    });
+
+    test("retries transient failure on stream when maxRetries is configured", async () => {
+      let attempts = 0;
+      const onFailedAttempt = vi.fn();
+      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+        attempts++;
+        if (attempts === 1) {
+          throw new Error("Temporary stream error");
+        }
+        return {
+          stream: (async function* () {
+            yield {
+              contentBlockDelta: {
+                contentBlockIndex: 0,
+                delta: { text: "Stream recovered" },
+              },
+            };
+          })(),
+        };
+      });
+
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        maxRetries: 2,
+        onFailedAttempt,
+      });
+
+      const chunks = [];
+      for await (const chunk of await model.stream("Hello")) {
+        chunks.push(chunk);
+      }
+      expect(chunks.map((c) => c.text).join("")).toBe("Stream recovered");
+      expect(attempts).toBe(2);
+      expect(onFailedAttempt).toHaveBeenCalledTimes(1);
+    });
+
+    test("respects call-level maxRetries override", async () => {
+      let attempts = 0;
+      const onFailedAttempt = vi.fn();
+      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+        attempts++;
+        throw new Error("Persistent error");
+      });
+
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        maxRetries: 5,
+        onFailedAttempt,
+      });
+
+      await expect(model.invoke("Hello", { maxRetries: 1 })).rejects.toThrow(
+        "Persistent error"
+      );
+      // Initial attempt + 1 retry = 2 attempts total
+      expect(attempts).toBe(2);
+      expect(onFailedAttempt).toHaveBeenCalledTimes(2);
     });
   });
 });

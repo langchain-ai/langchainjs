@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  AIMessage,
+  AIMessageChunk,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
 
@@ -114,6 +119,135 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
     };
     expect(lastCallFields.chunk.message.usage_metadata).toBeDefined();
     expect(lastCallFields.chunk.message.usage_metadata?.input_tokens).toBe(10);
+  });
+});
+
+describe("ChatOpenAICompletions cache token usage_metadata", () => {
+  it("should map cache_write_tokens to cache_creation for streaming responses", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      streaming: true,
+      streamUsage: true,
+    });
+
+    const fakeStream = (async function* () {
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant" as const, content: "Hello" },
+            finish_reason: null,
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "gpt-4o-mini",
+        service_tier: null,
+      };
+      yield {
+        choices: [],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 5,
+          total_tokens: 105,
+          prompt_tokens_details: { cached_tokens: 50, cache_write_tokens: 20 },
+          completion_tokens_details: null,
+        },
+        system_fingerprint: null,
+        model: "gpt-4o-mini",
+        service_tier: null,
+      };
+    })();
+
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+    const chunks = [];
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("test")],
+      {}
+    )) {
+      chunks.push(chunk);
+    }
+
+    const usageChunk = chunks[chunks.length - 1];
+    const usageMessage = usageChunk.message as AIMessageChunk;
+    expect(usageMessage.usage_metadata?.input_token_details).toEqual({
+      cache_read: 50,
+      cache_creation: 20,
+    });
+  });
+
+  it("should map cache_write_tokens to cache_creation for non-streaming responses", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+    });
+
+    model.completionWithRetry = vi.fn().mockResolvedValue({
+      id: "chatcmpl-test",
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: "Hello" },
+          finish_reason: "stop",
+          logprobs: null,
+        },
+      ],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 5,
+        total_tokens: 105,
+        prompt_tokens_details: { cached_tokens: 50, cache_write_tokens: 20 },
+        completion_tokens_details: null,
+      },
+    }) as typeof model.completionWithRetry;
+
+    const result = await model._generate([new HumanMessage("test")], {});
+
+    const message = result.generations[0].message as AIMessageChunk;
+    expect(message.usage_metadata?.input_token_details).toEqual({
+      cache_read: 50,
+      cache_creation: 20,
+    });
+  });
+
+  it("should omit cache_creation when cache_write_tokens is absent (non-streaming)", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+    });
+
+    model.completionWithRetry = vi.fn().mockResolvedValue({
+      id: "chatcmpl-test",
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: "Hello" },
+          finish_reason: "stop",
+          logprobs: null,
+        },
+      ],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 5,
+        total_tokens: 105,
+        // No cache_write_tokens key at all, as returned by models that
+        // don't support explicit prompt caching.
+        prompt_tokens_details: { cached_tokens: 0, audio_tokens: null },
+        completion_tokens_details: null,
+      },
+    }) as typeof model.completionWithRetry;
+
+    const result = await model._generate([new HumanMessage("test")], {});
+
+    const message = result.generations[0].message as AIMessageChunk;
+    expect(message.usage_metadata?.input_token_details).not.toHaveProperty(
+      "cache_creation"
+    );
   });
 });
 
@@ -244,5 +378,71 @@ describe("ChatOpenAICompletions strict tools for structured output", () => {
     expect(
       toolStrict({ response_format: { type: "json_object" } })
     ).toBeUndefined();
+  });
+});
+
+describe("ChatOpenAICompletions tool image errors", () => {
+  const invokeWithToolContent = (
+    content: ToolMessage["content"],
+    status = 400
+  ) => {
+    const fetch = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ error: { message: "Invalid value: 'image'." } }),
+          { status, headers: { "content-type": "application/json" } }
+        )
+    );
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.5",
+      apiKey: "test-key",
+      maxRetries: 0,
+      configuration: { fetch },
+    });
+    return model.invoke([
+      new HumanMessage("Read /a.png"),
+      new AIMessage({
+        content: "",
+        tool_calls: [{ id: "call_1", name: "read_file", args: {} }],
+      }),
+      new ToolMessage({ tool_call_id: "call_1", content }),
+    ]);
+  };
+
+  it("adds a Responses API hint to a 400 when a tool message has an image", async () => {
+    await expect(
+      invokeWithToolContent([
+        { type: "image", mimeType: "image/png", data: "AAA" },
+      ])
+    ).rejects.toThrow(
+      /Invalid value: 'image'[\s\S]*Chat Completions does not support images in tool messages/
+    );
+  });
+
+  it("leaves the 400 unchanged without a tool image", async () => {
+    const error = await invokeWithToolContent([
+      { type: "text", text: "42" },
+    ]).catch((e) => e);
+
+    expect(error.status).toBe(400);
+    expect(error.message).not.toContain("does not support images");
+  });
+
+  it("leaves the 400 unchanged for image_url tool content", async () => {
+    const error = await invokeWithToolContent([
+      { type: "image_url", image_url: { url: "data:image/png;base64,AAA" } },
+    ]).catch((e) => e);
+
+    expect(error.status).toBe(400);
+    expect(error.message).not.toContain("does not support images");
+  });
+
+  it("leaves other errors unchanged", async () => {
+    const error = await invokeWithToolContent(
+      [{ type: "image", mimeType: "image/png", data: "AAA" }],
+      500
+    ).catch((e) => e);
+
+    expect(error.message).not.toContain("does not support images");
   });
 });

@@ -6,7 +6,7 @@ export default defineConfig({
     hideSkippedTests: true,
     globals: true,
     testTimeout: 30_000,
-    maxWorkers: 0.5,
+    maxWorkers: "50%",
     exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
     include: configDefaults.include,
     typecheck: { enabled: true },

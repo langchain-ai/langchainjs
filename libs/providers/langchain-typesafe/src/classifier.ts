@@ -1,0 +1,308 @@
+import {
+  BaseDecisionModel,
+  type ClassifierResponse,
+  type JsonValue,
+  type Question,
+  type State,
+} from "@langchain/core/decisions";
+import type { RunnableConfig } from "@langchain/core/runnables";
+import {
+  AsyncCaller,
+  type AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable, isBrowser } from "@langchain/core/utils/env";
+
+import { serializeQuestion } from "./types.js";
+import { ImageAssets } from "./utils/assets.js";
+import { hasCircularReference } from "./utils/cycles.js";
+import { buildHeaders, parseResponse, SYSTEMONE_PATH } from "./utils/client.js";
+import {
+  sanitizeEndpoint,
+  TypeSafeAPIConnectionError,
+  TypeSafeAPITimeoutError,
+  TypeSafeError,
+} from "./utils/errors.js";
+import {
+  serializeState,
+  type State as SerializableState,
+} from "./utils/state.js";
+
+const DEFAULT_BASE_URL = "https://api.typesafe.ai";
+const DEFAULT_MODEL = "jev-latest";
+const DEFAULT_TIMEOUT_MS = 30_000;
+
+export interface TypeSafeClassifierFields extends AsyncCallerParams {
+  /** Model or alias. Defaults to `jev-latest`. */
+  model?: string;
+  /** Falls back to the `TYPESAFE_API_KEY` environment variable. */
+  apiKey?: string;
+  /** Falls back to `TYPESAFE_BASE_URL`, then `https://api.typesafe.ai`. */
+  baseUrl?: string;
+  /** Per-request timeout in **milliseconds**. Defaults to 30000. */
+  timeout?: number;
+  /** Custom transport, for tests, proxies or shared connection pools. */
+  fetch?: typeof fetch;
+  /**
+   * Whether to permit use in a browser, where the API key would be
+   * exposed to anyone who can read the bundle.
+   *
+   * Defaults to `true`, matching every other LangChain.js provider. Set
+   * it to `false` to adopt the stricter posture the vendor SDK takes.
+   */
+  dangerouslyAllowBrowser?: boolean;
+}
+
+/**
+ * Classify JSON-compatible state with TypeSafe.
+ *
+ * `TypeSafeClassifier` is a LangChain decision model for asking one or more
+ * typed questions about text, images, or structured state. A single request
+ * can combine binary `Noul` judgments, categorical `Choice` classifications,
+ * ordinal `Score` evaluations, and `Box` localizations. The response
+ * preserves probabilities, confidence, and token usage so application code
+ * can decide whether to act, route, or request human review. Questions in
+ * one request are evaluated in parallel by the model.
+ *
+ * LangChain messages are rendered as transcript lines before the request is
+ * sent. LangChain image content blocks with base64 data or a base64 `data:`
+ * URL, in state or in question instructions and criteria, are sent as
+ * TypeSafe image assets. PNG and JPEG images are supported. Images are not
+ * downloaded from other URLs.
+ *
+ * `Choice` and `Score` confidence describes how concentrated the probability
+ * distribution is; it is not the selected label's probability.
+ *
+ * Requests throw `TypeSafeError` subclasses: `TypeSafeAPIError` for
+ * unsuccessful HTTP responses and malformed responses, and other subclasses
+ * when no response is received or the request times out.
+ *
+ * The API key is read from `TYPESAFE_API_KEY` when `apiKey` is omitted.
+ *
+ * @example
+ * ```ts
+ * const classifier = new TypeSafeClassifier();
+ * const result = await classifier.invoke({
+ *   state: "My payouts have been failing.",
+ *   questions: {
+ *     urgent: { type: "noul", instructions: "Is this urgent?" },
+ *   },
+ * });
+ * result.nouls.urgent.noul;
+ * ```
+ */
+export class TypeSafeClassifier extends BaseDecisionModel {
+  static lc_name(): string {
+    return "TypeSafeClassifier";
+  }
+
+  lc_serializable = true;
+
+  lc_namespace = ["langchain", "classifiers", "typesafe"];
+
+  get lc_secrets(): Record<string, string> {
+    return { apiKey: "TYPESAFE_API_KEY" };
+  }
+
+  readonly baseUrl: string;
+
+  readonly timeout: number;
+
+  // `declare` is load-bearing: the base tsconfig sets
+  // `useDefineForClassFields: true`, so a normal field declaration would
+  // emit an enumerable `undefined` at construction time before the
+  // constructor body runs, which the non-enumerable `defineHidden` call
+  // below could not undo. `declare` emits no code at all. See
+  // `TypeSafeAPIError.body` in `utils/errors.ts` for the same pattern.
+  /** Non-enumerable: `util.inspect`/`console.log` must never print it. */
+  declare protected apiKey: string;
+
+  protected caller: AsyncCaller;
+
+  protected fetchImpl: typeof fetch;
+
+  constructor(fields: TypeSafeClassifierFields = {}) {
+    // `Serializable`'s own constructor stores whatever is passed here
+    // verbatim as `this.lc_kwargs` — a normal, enumerable property. If
+    // `apiKey` rode along, `util.inspect(classifier)` would print it via
+    // `lc_kwargs` even with the non-enumerable `this.apiKey` below.
+    // `toJSON()`'s secret redaction is unaffected: it re-reads `apiKey`
+    // from `this` (present, just hidden) whenever a secret's key is
+    // missing from `lc_kwargs`, so the sentinel still appears in output.
+    const { apiKey: _omittedFromKwargs, ...kwargsForSerialization } = fields;
+    const model = (fields.model ?? DEFAULT_MODEL).trim();
+    super({ ...kwargsForSerialization, model });
+
+    const allowBrowser = fields.dangerouslyAllowBrowser ?? true;
+    if (!allowBrowser && isBrowser()) {
+      throw new TypeSafeError(
+        "TypeSafeClassifier is running in a browser, which would expose your API key to anyone using the page. Call the API from a server instead, or set `dangerouslyAllowBrowser: true` if you understand the risk."
+      );
+    }
+
+    const apiKey =
+      fields.apiKey ?? getEnvironmentVariable("TYPESAFE_API_KEY") ?? "";
+    if (apiKey.trim().length === 0) {
+      throw new TypeSafeError(
+        "TypeSafe API key is required. Pass `apiKey` or set `TYPESAFE_API_KEY`."
+      );
+    }
+
+    if (model.length === 0) {
+      throw new TypeSafeError("TypeSafe model must not be empty.");
+    }
+
+    if (fields.timeout !== undefined && fields.timeout <= 0) {
+      throw new TypeSafeError(
+        "`timeout` must be a positive number of milliseconds."
+      );
+    }
+
+    // Plain assignment would land on a normal enumerable property (see
+    // the `declare` comment above), which is exactly what
+    // `util.inspect`/`console.log` would then print. `apiKey` has no
+    // Node special case the way `Error.prototype.cause` does (verified
+    // empirically), so non-enumerability genuinely hides it here.
+    Object.defineProperty(this, "apiKey", {
+      value: apiKey,
+      enumerable: false,
+      writable: false,
+      configurable: true,
+    });
+    let baseUrl =
+      fields.baseUrl ??
+      getEnvironmentVariable("TYPESAFE_BASE_URL") ??
+      DEFAULT_BASE_URL;
+    // Trimmed with a loop rather than /\/+$/, which backtracks quadratically
+    // on a long run of trailing slashes (CodeQL js/polynomial-redos).
+    while (baseUrl.endsWith("/")) baseUrl = baseUrl.slice(0, -1);
+    this.baseUrl = baseUrl;
+    this.timeout = fields.timeout ?? DEFAULT_TIMEOUT_MS;
+    // Not two fetch paths — one, resolved late. Storing `globalThis.fetch`
+    // directly would capture whatever is installed at construction time,
+    // so a later `vi.spyOn(globalThis, "fetch")` (or any runtime polyfill)
+    // would never be seen. The wrapper defers the lookup to call time.
+    this.fetchImpl =
+      fields.fetch ?? ((input, init) => globalThis.fetch(input, init));
+    // The vendor's own TypeScript SDK caps retries at 2
+    // (DEFAULT_RETRY_POLICY.maxRetries). Core defaults to 6, which against a
+    // 70-500ms model means seconds of backoff before the caller sees an
+    // error — and every attempt re-sends the full conversation state.
+    // Still overridable through AsyncCallerParams.
+    // Spread first, then override: a spread copies own keys even when the
+    // value is `undefined`, so `{ maxRetries: 2, ...fields }` would let an
+    // ordinary pass-through like `{ maxRetries: config.maxRetries }` restore
+    // core's default of 6.
+    this.caller = new AsyncCaller({
+      ...fields,
+      maxRetries: fields.maxRetries ?? 2,
+    });
+  }
+
+  get _provider(): string {
+    return "typesafe";
+  }
+
+  async _classify(
+    state: State,
+    questions: Record<string, Question>,
+    config?: Partial<RunnableConfig>
+  ): Promise<ClassifierResponse> {
+    return this.classify(this.payload(state, questions), config?.signal);
+  }
+
+  /** Builds the request body. Question key order is significant. */
+  protected payload(state: State, questions: Record<string, Question>): string {
+    const images = new ImageAssets();
+    // Null-prototype so an own `__proto__` question id is sent, not swallowed
+    // by the inherited setter.
+    const wireQuestions: Record<string, unknown> = Object.create(null);
+    for (const [id, question] of Object.entries(questions)) {
+      if (hasCircularReference(question)) {
+        throw new TypeSafeError(
+          `Invalid TypeSafe question "${id}": criteria or instructions contain a circular reference.`
+        );
+      }
+      wireQuestions[id] = images.replace(
+        serializeQuestion(question) as JsonValue
+      );
+    }
+    const wireState = serializeState(state as SerializableState, images);
+    return JSON.stringify({
+      state: wireState,
+      model: this.model,
+      questions: wireQuestions,
+      ...(Object.keys(images.assets).length > 0
+        ? { assets: images.assets }
+        : {}),
+    });
+  }
+
+  protected async classify(
+    body: string,
+    signal?: AbortSignal
+  ): Promise<ClassifierResponse> {
+    const url = `${this.baseUrl}${SYSTEMONE_PATH}`;
+    const endpoint = sanitizeEndpoint("POST", url);
+
+    // AsyncCaller retries outside this closure, so the attempt number is
+    // tracked here to populate the retry-count header the SDK sends.
+    let attempt = 0;
+
+    return this.caller.callWithOptions({ signal }, async () => {
+      const retryCount = attempt;
+      attempt += 1;
+
+      // `AbortSignal.any` is not available on the Node 20.0 floor this
+      // package declares (`engines.node: ">=20"`) — it landed in a later
+      // 20.x minor. Forward both signals into a fresh controller by hand
+      // instead, so the request aborts on either a caller-supplied signal
+      // or the per-request timeout.
+      const controller = new AbortController();
+      const timeoutSignal = AbortSignal.timeout(this.timeout);
+      timeoutSignal.addEventListener(
+        "abort",
+        () => controller.abort(timeoutSignal.reason),
+        { once: true }
+      );
+      if (signal?.aborted) {
+        controller.abort(signal.reason);
+      } else {
+        signal?.addEventListener(
+          "abort",
+          () => controller.abort(signal.reason),
+          { once: true }
+        );
+      }
+
+      try {
+        const response = await this.fetchImpl(url, {
+          method: "POST",
+          headers: buildHeaders({ apiKey: this.apiKey, retryCount }),
+          body,
+          signal: controller.signal,
+        });
+        // Parsing is inside the guarded block on purpose. `fetch` resolves
+        // once headers arrive, not once the body has been read, so a server
+        // that sends headers and then stalls — or a connection that drops
+        // mid-body — fails here, not at the call above. Outside this block
+        // the caller would receive a raw AbortError instead of
+        // TypeSafeAPITimeoutError.
+        return await parseResponse(response, endpoint);
+      } catch (error) {
+        // Anything already mapped to this package's own error type (every
+        // non-2xx response, and response-schema failures) passes through
+        // untouched; only transport-level failures get translated.
+        if (TypeSafeError.isInstance(error)) {
+          throw error;
+        }
+        if (timeoutSignal.aborted) {
+          throw new TypeSafeAPITimeoutError(this.timeout, { cause: error });
+        }
+        if (signal?.aborted) {
+          throw error;
+        }
+        throw new TypeSafeAPIConnectionError(undefined, { cause: error });
+      }
+    });
+  }
+}

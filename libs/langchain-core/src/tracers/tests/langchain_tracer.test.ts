@@ -1,11 +1,18 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 
-import { vi, test, expect, describe } from "vitest";
+import { vi, test, expect, describe, afterEach, beforeAll } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { AgentAddress } from "langsmith";
+import { RunTree } from "langsmith/run_trees";
 import * as uuid from "../../utils/uuid/index.js";
 
-import { RunnableLambda } from "../../runnables/base.js";
-import { LangChainTracer } from "../tracer_langchain.js";
+import { RunnableLambda, RunnableSequence } from "../../runnables/base.js";
+import {
+  LangChainTracer,
+  omitPayload,
+  type TracePolicy,
+} from "../tracer_langchain.js";
+import { RunCollectorCallbackHandler } from "../run_collector.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/async_local_storage/index.js";
 import { AIMessage } from "../../messages/ai.js";
@@ -111,6 +118,183 @@ const serialized: Serialized = {
   id: ["test"],
   kwargs: {},
 };
+
+describe("LangChainTracer code and environment destinations", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const CODE_ADDRESS = new AgentAddress("code-agent", "production");
+
+  function caseFor(inputs: {
+    codeProject: boolean;
+    codeAddress: boolean;
+    envProject: boolean;
+    envAddress: boolean;
+  }) {
+    // Expected outcome: code defined overrides supersede env vars
+    if (inputs.codeProject && inputs.codeAddress) {
+      return {
+        kind: "conflict",
+        description: "conflict",
+        error: /A run is sent to a project .* or to an address, not both/,
+      } as const;
+    }
+
+    if (inputs.codeProject) {
+      return {
+        kind: "traced",
+        description: "traced code-project",
+        payload: { session_name: "code-project", address: undefined },
+      } as const;
+    }
+
+    if (inputs.codeAddress) {
+      return {
+        kind: "traced",
+        description: "traced code-agent",
+        payload: { session_name: undefined, address: CODE_ADDRESS },
+      } as const;
+    }
+
+    if (inputs.envProject && inputs.envAddress)
+      return { kind: "untraced", description: "untraced" } as const;
+
+    if (inputs.envProject) {
+      return {
+        kind: "traced",
+        description: "traced env-project",
+        payload: { session_name: "env-project", address: undefined },
+      } as const;
+    }
+
+    if (inputs.envAddress) {
+      return {
+        kind: "traced",
+        description: "traced env-agent",
+        payload: {
+          session_name: undefined,
+          address: new AgentAddress("env-agent", "staging"),
+        },
+      } as const;
+    }
+
+    return {
+      kind: "traced",
+      description: "traced default",
+      payload: { session_name: "default", address: undefined },
+    } as const;
+  }
+
+  const cases = [false, true].flatMap((codeProject) =>
+    [false, true].flatMap((codeAddress) =>
+      [false, true].flatMap((envProject) =>
+        [false, true].map((envAddress) => {
+          const inputs = { codeProject, codeAddress, envProject, envAddress };
+          const outcome = caseFor(inputs);
+          const bool = (v: boolean) => (v ? "1" : "0");
+          const title = `project(code: ${bool(codeProject)}, env: ${bool(envProject)}) + address(code: ${bool(codeAddress)}; env: ${bool(envAddress)}) -> ${outcome.description}`;
+          return [title, { ...inputs, outcome }] as const;
+        })
+      )
+    )
+  );
+
+  test.each(cases)(
+    "%s",
+    async (
+      _,
+      { codeProject, codeAddress, envProject, envAddress, outcome }
+    ) => {
+      vi.stubEnv("LANGSMITH_PROJECT", envProject ? "env-project" : undefined);
+      vi.stubEnv("LANGCHAIN_PROJECT", undefined);
+      vi.stubEnv("LANGCHAIN_SESSION", undefined);
+      vi.stubEnv("LANGSMITH_AGENT_ID", envAddress ? "env-agent" : undefined);
+      vi.stubEnv(
+        "LANGSMITH_AGENT_ENVIRONMENT",
+        envAddress ? "staging" : undefined
+      );
+      vi.stubEnv("LANGSMITH_TRACING", "true");
+
+      const persistedCreateRun = vi.fn();
+      const persistedUpdateRun = vi.fn();
+      const tracerState: { tracer?: LangChainTracer } = {};
+      // Client payloads do not carry tracingEnabled. Read it from the SDK's
+      // configured RunTree so this mock respects its destination resolution.
+      const mockClient = {
+        createRun: vi.fn(async (run: { id?: string }) => {
+          if (
+            run.id &&
+            tracerState.tracer?.getRunTreeWithTracingConfig(run.id)
+              ?.tracingEnabled !== false
+          ) {
+            persistedCreateRun(run);
+          }
+        }),
+        updateRun: vi.fn(async (id: string, run: unknown) => {
+          if (
+            tracerState.tracer?.getRunTreeWithTracingConfig(id)
+              ?.tracingEnabled !== false
+          ) {
+            persistedUpdateRun(id, run);
+          }
+        }),
+      };
+      const tracer = new LangChainTracer({
+        client: mockClient,
+        projectName: codeProject ? "code-project" : undefined,
+        address: codeAddress ? CODE_ADDRESS : undefined,
+      });
+      tracerState.tracer = tracer;
+      const runId = uuid.v4();
+      const start = tracer.handleLLMStart(serialized, ["test prompt"], runId);
+
+      if (outcome.kind === "conflict") {
+        await expect(start).rejects.toThrow(outcome.error);
+        expect(mockClient.createRun).not.toHaveBeenCalled();
+        return;
+      }
+
+      await start;
+      await tracer.handleLLMEnd({ generations: [[{ text: "ok" }]] }, runId);
+
+      if (outcome.kind === "untraced") {
+        // An invalid environment destination leaves the run untraced.
+        expect(persistedCreateRun).not.toHaveBeenCalled();
+        expect(persistedUpdateRun).not.toHaveBeenCalled();
+        return;
+      }
+
+      expect(persistedCreateRun).toHaveBeenCalledTimes(1);
+      expect(persistedUpdateRun).toHaveBeenCalledTimes(1);
+      expect(persistedCreateRun).toHaveBeenCalledWith(
+        expect.objectContaining(outcome.payload)
+      );
+      expect(persistedUpdateRun).toHaveBeenCalledWith(
+        runId,
+        expect.objectContaining(outcome.payload)
+      );
+    }
+  );
+});
+
+test("LangChainTracer inherits an addressed parent without assigning a project", () => {
+  const tracer = new LangChainTracer();
+  const address = new AgentAddress("support", "production");
+
+  const parent = new RunTree({ name: "parent", address });
+
+  expect(tracer.projectName).toBeUndefined();
+  expect(parent.project_name).toBeUndefined();
+
+  tracer.updateFromRunTree(parent);
+
+  // Reconstructing the inherited run must not introduce a project/address conflict.
+  const runTree = tracer.getRunTreeWithTracingConfig(parent.id);
+  expect(runTree).toBeDefined();
+  expect(runTree?.address).toEqual(address);
+  expect(runTree?.project_name).toBeUndefined();
+});
 
 describe("LangChainTracer usage_metadata extraction", () => {
   test("onLLMEnd extracts usage_metadata and stores in run.extra.metadata", async () => {
@@ -394,5 +578,172 @@ describe("LangChainTracer usage_metadata extraction", () => {
     const updateCall = mockClient.updateRun.mock.calls[0][1];
     expect(updateCall.extra?.metadata?.ls_agent_type).toBe("subagent");
     expect(updateCall.extra?.metadata?.env).toBe("explicit");
+  });
+});
+
+describe("LangChainTracer trace policy", () => {
+  beforeAll(() => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+  });
+
+  function makeSequence(tracePolicy?: TracePolicy) {
+    return new RunnableSequence({
+      first: RunnableLambda.from((x: { n: number }) => ({ n: x.n + 1 })),
+      last: RunnableLambda.from((x: { n: number }) => ({ n: x.n * 2 })),
+      tracePolicy,
+    });
+  }
+
+  function makeTracer() {
+    const client = { createRun: vi.fn(), updateRun: vi.fn() } as any;
+    const tracer = new LangChainTracer({ client });
+    const created = (name: string) =>
+      client.createRun.mock.calls
+        .map((c: any) => c[0])
+        .filter((r: any) => r.name === name);
+    const updated = (id: string) =>
+      client.updateRun.mock.calls
+        .filter((c: any) => c[0] === id)
+        .map((c: any) => c[1]);
+    return { tracer, created, updated };
+  }
+
+  test("policy shapes only the sequence's own LangSmith run", async () => {
+    const { tracer, created, updated } = makeTracer();
+    const collector = new RunCollectorCallbackHandler();
+    const seq = makeSequence({
+      processInputs: omitPayload,
+      processOutputs: omitPayload,
+    });
+
+    const result = await seq.invoke(
+      { n: 1 },
+      { callbacks: [tracer, collector] }
+    );
+    await awaitAllCallbacks();
+
+    expect(result).toEqual({ n: 4 });
+    const [run] = created("RunnableSequence");
+    expect(run.inputs).toEqual({});
+    expect(Object.getOwnPropertySymbols(run.extra)).toEqual([]);
+    expect(updated(run.id).at(-1).outputs).toEqual({});
+
+    // Child runs and other handlers keep the raw payloads.
+    const children = created("RunnableLambda");
+    expect(children.map((r: any) => r.inputs)).toEqual([{ n: 1 }, { n: 2 }]);
+    expect(collector.tracedRuns[0].inputs).toEqual({ n: 1 });
+    expect(collector.tracedRuns[0].outputs).toEqual({ n: 4 });
+  });
+
+  test("policy applies on the stream path, and streamEvents sees raw values", async () => {
+    const { tracer, created, updated } = makeTracer();
+    const seq = makeSequence({
+      processInputs: () => ({ trimmed: true }),
+      processOutputs: () => ({ trimmed: true }),
+    });
+
+    const events = [];
+    for await (const event of seq.streamEvents(
+      { n: 1 },
+      { version: "v2", callbacks: [tracer] }
+    )) {
+      events.push(event);
+    }
+    await awaitAllCallbacks();
+
+    const start = events.find((e) => e.event === "on_chain_start");
+    const end = events.find(
+      (e) => e.event === "on_chain_end" && e.name === "RunnableSequence"
+    );
+    expect(start?.data.input).toEqual({ n: 1 });
+    expect(end?.data.output).toEqual({ n: 4 });
+
+    const [run] = created("RunnableSequence");
+    expect(run.inputs).toEqual({ trimmed: true });
+    expect(updated(run.id).at(-1).outputs).toEqual({ trimmed: true });
+  });
+
+  test("batch runs each record their own output", async () => {
+    const { tracer, created, updated } = makeTracer();
+    const processOutputs = vi.fn((outputs) => outputs);
+    const seq = makeSequence({ processOutputs });
+
+    await seq.batch([{ n: 1 }, { n: 2 }], { callbacks: [tracer] });
+    await awaitAllCallbacks();
+
+    const outputs = created("RunnableSequence").map(
+      (run: any) => updated(run.id).at(-1).outputs
+    );
+    expect(outputs).toEqual([{ n: 4 }, { n: 6 }]);
+    expect(processOutputs.mock.calls.map((c) => c[0])).toEqual(
+      expect.arrayContaining([{ n: 4 }, { n: 6 }])
+    );
+  });
+
+  test.each(["processInputs", "processOutputs"] as const)(
+    "a throwing %s still sends and ends the run, without that payload",
+    async (processor) => {
+      const { tracer, created, updated } = makeTracer();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const seq = makeSequence({
+        [processor]: () => {
+          throw new Error("boom");
+        },
+      });
+
+      await seq.invoke({ n: 1 }, { callbacks: [tracer] });
+      await awaitAllCallbacks();
+
+      const [run] = created("RunnableSequence");
+      const end = updated(run.id).at(-1);
+      expect(end.end_time).toBeDefined();
+      expect(end.error).toContain("boom");
+      if (processor === "processInputs") {
+        expect(run.inputs).toEqual({});
+        expect(end.inputs).not.toEqual({ n: 1 });
+      } else {
+        expect(run.inputs).toEqual({ n: 1 });
+        expect(end.outputs).toBeUndefined();
+      }
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    }
+  );
+
+  test("a throwing processor keeps the run's own error", async () => {
+    const { tracer, created, updated } = makeTracer();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const seq = new RunnableSequence({
+      first: RunnableLambda.from((x: { n: number }) => x),
+      last: RunnableLambda.from(() => {
+        throw new Error("runnable failed");
+      }),
+      tracePolicy: {
+        processInputs: () => {
+          throw new Error("boom");
+        },
+      },
+    });
+
+    await expect(seq.invoke({ n: 1 }, { callbacks: [tracer] })).rejects.toThrow(
+      "runnable failed"
+    );
+    await awaitAllCallbacks();
+
+    const [run] = created("RunnableSequence");
+    const end = updated(run.id).at(-1);
+    expect(end.error).toContain("runnable failed");
+    expect(end.error).not.toContain("boom");
+    warn.mockRestore();
+  });
+
+  test("policy is not serialized and is not kept by pipe()", () => {
+    const withPolicy = makeSequence({ processInputs: omitPayload });
+    expect(JSON.stringify(withPolicy)).toEqual(JSON.stringify(makeSequence()));
+
+    const piped = withPolicy.pipe(RunnableLambda.from((x: unknown) => x));
+    expect((piped as any)._tracePolicy).toBeUndefined();
   });
 });

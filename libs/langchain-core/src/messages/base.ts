@@ -312,17 +312,13 @@ export abstract class BaseMessage<
 
   /** Get text content of the message. */
   get text(): string {
-    if (typeof this.content === "string") {
-      return this.content;
-    }
-    if (!Array.isArray(this.content)) return "";
-    return this.content
-      .map((c) => {
-        if (typeof c === "string") return c;
-        if (c.type === "text") return c.text;
-        return "";
-      })
-      .join("");
+    const textBlocks: ContentBlock.Text[] = this.contentBlocks.filter(
+      (block: ContentBlock.Standard) => block.type === "text"
+    );
+    return textBlocks.reduce(
+      (acc: string, block: ContentBlock.Text) => acc + (block.text ?? ""),
+      ""
+    );
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
@@ -373,6 +369,10 @@ export abstract class BaseMessage<
       (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 
   // this private method is used to update the ID for the runtime
@@ -569,16 +569,25 @@ function getMergeableTypeBase(type: string): string {
   return type.endsWith("_delta") ? type.slice(0, -"_delta".length) : type;
 }
 
+// Anthropic streams tool arguments as `input_json_delta` blocks that continue
+// the preceding `tool_use` / `server_tool_use` block at the same index.
+const INPUT_JSON_DELTA_TARGETS = new Set(["tool_use", "server_tool_use"]);
+
 function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
   if (typeof left !== "object" || left === null) return false;
   if (typeof right !== "object" || right === null) return false;
   if (!("type" in left) || !("type" in right)) return false;
+  if (typeof left.type !== "string" || typeof right.type !== "string") {
+    return false;
+  }
+  if (
+    right.type === "input_json_delta" &&
+    INPUT_JSON_DELTA_TARGETS.has(left.type)
+  ) {
+    return false;
+  }
 
-  return (
-    typeof left.type === "string" &&
-    typeof right.type === "string" &&
-    getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type)
-  );
+  return getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type);
 }
 
 /**
@@ -716,6 +725,10 @@ export abstract class BaseMessageChunk<
       proto = Object.getPrototypeOf(proto);
     }
     return false;
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }
 

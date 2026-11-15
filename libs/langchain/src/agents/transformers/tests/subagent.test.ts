@@ -391,4 +391,66 @@ describe.skipIf(process.env.LC_DEPENDENCY_RANGE_TESTS)("run.subagents", () => {
     }
     expect(handles).toHaveLength(0);
   });
+
+  it("does not emit an unhandled rejection when a run is aborted mid-subagent and its output is never consumed", async () => {
+    const slowTool = tool(
+      async () => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 200);
+        });
+        return "done";
+      },
+      { name: "slow_tool", description: "A slow tool", schema: z.object({}) }
+    );
+
+    const slowAgent = createAgent({
+      model: fakeModel()
+        .respondWithTools([{ name: "slow_tool", args: {}, id: "call_s" }])
+        .respond(new AIMessage("Finished.")),
+      tools: [slowTool],
+      name: "slow_agent",
+    });
+
+    const callSlow = tool(
+      async (_input, config) => {
+        await slowAgent.invoke({ messages: [new HumanMessage("hi")] }, config);
+        return "ok";
+      },
+      {
+        name: "call_slow",
+        description: "Ask the slow sub-agent",
+        schema: z.object({}),
+      }
+    );
+
+    const supervisor = createAgent({
+      model: fakeModel()
+        .respondWithTools([{ name: "call_slow", args: {}, id: "call_c" }])
+        .respond(new AIMessage("Done.")),
+      tools: [callSlow],
+      name: "supervisor",
+    });
+
+    const rejections: unknown[] = [];
+    const onUnhandled = (reason: unknown) => rejections.push(reason);
+    process.on("unhandledRejection", onUnhandled);
+
+    try {
+      const controller = new AbortController();
+      const run = await supervisor.streamEvents(
+        { messages: [new HumanMessage("go")] },
+        { version: "v3", signal: controller.signal }
+      );
+      setTimeout(() => controller.abort(), 50);
+
+      await expect(Promise.resolve(run.output)).rejects.toThrow();
+      await new Promise((resolve) => {
+        setTimeout(resolve, 250);
+      });
+
+      expect(rejections).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+  });
 });

@@ -132,6 +132,20 @@ export interface DataDelta {
 }
 
 /**
+ * Incremental tool-call arguments. Append `args` to the active
+ * `tool_call_chunk` or `server_tool_call_chunk` block's `args` field, treating
+ * missing args as an empty string.
+ *
+ * A slice need not be valid JSON on its own. The call's `id` and `name` arrive
+ * on `content-block-start`, and `content-block-finish` carries the parsed call.
+ */
+export interface ToolCallDelta {
+  type: "tool-call-delta";
+  /** The new slice of the call's arguments string to append. */
+  args: string;
+}
+
+/**
  * Generic content block field update. Shallow-merge `fields` onto the active
  * content block.
  */
@@ -148,6 +162,7 @@ export type ContentBlockDelta =
   | TextDelta
   | ReasoningDelta
   | DataDelta
+  | ToolCallDelta
   | BlockDelta;
 
 /**
@@ -158,7 +173,15 @@ export type ContentBlockDelta =
  * - `text-delta` → append `text` to the active block's text field
  * - `reasoning-delta` → append `reasoning` to the active block's reasoning field
  * - `data-delta` → append `data` to the active block's data field
+ * - `tool-call-delta` → append `args` to the active tool-call block's args field
  * - `block-delta` → shallow-merge `fields` onto the active block
+ *
+ * Consumers ignore delta types they don't recognize.
+ * `content-block-finish` carries the complete block.
+ *
+ * A tool call's args stream in one of two forms, never both in one block:
+ * `tool-call-delta` slices, which append, or `block-delta` snapshots of the
+ * args so far, which replace.
  *
  * @example
  * ```ts
@@ -166,10 +189,14 @@ export type ContentBlockDelta =
  * { event: "content-block-delta", index: 0,
  *   delta: { type: "text-delta", text: " world" } }
  *
+ * // Tool call args slice
+ * { event: "content-block-delta", index: 1,
+ *   delta: { type: "tool-call-delta", args: '"wea' } }
+ *
  * // Tool call args snapshot
  * { event: "content-block-delta", index: 1,
  *   delta: { type: "block-delta",
- *     fields: { type: "tool_call_chunk", args: '{"q":"wea' } } } }
+ *     fields: { type: "tool_call_chunk", args: '{"q":"wea' } } }
  *
  * // Provider-specific field (e.g., signature)
  * { event: "content-block-delta", index: 0,

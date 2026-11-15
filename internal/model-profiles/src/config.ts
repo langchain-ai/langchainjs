@@ -21,6 +21,7 @@ const MODEL_PROFILE_FIELDS = new Set([
   "videoInputs",
   "imageToolMessage",
   "pdfToolMessage",
+  "fileMimeTypes",
   "maxOutputTokens",
   "reasoningOutput",
   "imageOutputs",
@@ -28,6 +29,8 @@ const MODEL_PROFILE_FIELDS = new Set([
   "videoOutputs",
   "toolCalling",
   "toolChoice",
+  "midConversationSystemMessages",
+  "midConversationTools",
   "structuredOutput",
 ]);
 

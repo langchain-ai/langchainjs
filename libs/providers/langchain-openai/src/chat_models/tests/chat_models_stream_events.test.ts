@@ -554,7 +554,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
   });
 
   describe("tool call streaming", () => {
-    test("tool call args accumulate correctly", async () => {
+    test("tool call args stream as slices", async () => {
       const model = new MockStreamChatOpenAICompletions(toolCallChunks());
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
@@ -566,24 +566,20 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
 
       const toolDeltas = events.filter(
         (e) =>
-          e.event === "content-block-delta" &&
-          "delta" in e &&
-          (e.delta as { type: string }).type === "block-delta"
+          e.event === "content-block-delta" && e.delta.type !== "text-delta"
       );
-      const toolArgDeltas = toolDeltas.filter(
-        (e) =>
-          (e as { delta: { fields?: { args?: string } } }).delta.fields?.args !=
-          null
-      );
-      expect(toolArgDeltas.length).toBe(2);
-      expect(
-        (toolArgDeltas[0] as { delta: { fields: { args: string } } }).delta
-          .fields.args
-      ).toBe('{"query"');
-      expect(
-        (toolArgDeltas[1] as { delta: { fields: { args: string } } }).delta
-          .fields.args
-      ).toBe('{"query":"weather"}');
+      expect(toolDeltas).toEqual([
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: '{"query"' },
+        },
+        {
+          event: "content-block-delta",
+          index: 1,
+          delta: { type: "tool-call-delta", args: ':"weather"}' },
+        },
+      ]);
     });
 
     test("tool call finish has parsed args", async () => {

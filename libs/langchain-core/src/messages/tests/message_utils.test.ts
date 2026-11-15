@@ -584,6 +584,38 @@ describe("trimMessages can trim", () => {
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (trimmedMessages as any).bound.func).toBe("function");
   });
+
+  it("supports a TextSplitter-style object as textSplitter", async () => {
+    class FakeTextSplitter {
+      separator = " ";
+
+      async splitText(text: string): Promise<string[]> {
+        return text
+          .split(this.separator)
+          .map((w, i, arr) => (i < arr.length - 1 ? `${w} ` : w));
+      }
+    }
+    const messages = [
+      new HumanMessage("aaaa bbbb cccc dddd eeee ffff gggg hhhh"),
+    ];
+    const trimmed = await trimMessages(messages, {
+      maxTokens: 4,
+      tokenCounter: (msgs) =>
+        msgs.reduce(
+          (n, m) =>
+            n +
+            (typeof m.content === "string"
+              ? m.content.split(/\s+/).filter(Boolean).length
+              : 1),
+          0
+        ),
+      strategy: "first",
+      allowPartial: true,
+      textSplitter: new FakeTextSplitter(),
+    });
+    expect(trimmed).toHaveLength(1);
+    expect(typeof trimmed[0].content).toBe("string");
+  });
 });
 
 test("getBufferString can handle complex messages", () => {
@@ -663,6 +695,30 @@ test("getBufferString includes tool_calls for AI messages", () => {
   // AI message without tools should not have tool info
   const bufferWithoutTools = getBufferString([messageWithoutTools]);
   expect(bufferWithoutTools).toBe("AI: The weather is sunny!");
+});
+
+test("getBufferString abbreviates long tool-call IDs without changing messages", () => {
+  const longId = `call_${"thought_signature".repeat(100)}`;
+  const boundaryId = "b".repeat(64);
+  const toolCalls = [
+    { name: "search", args: { query: "weather" }, id: longId },
+    { name: "search", args: {}, id: boundaryId },
+  ];
+  const aiMessage = new AIMessage({
+    content: "calling",
+    tool_calls: toolCalls,
+  });
+  const result = new ToolMessage({ content: "result", tool_call_id: longId });
+
+  const rendered = getBufferString([aiMessage, result]);
+
+  expect(rendered).toContain(`${longId.slice(0, 64)}...`);
+  expect(rendered).not.toContain(longId);
+  expect(rendered).toContain(boundaryId);
+  expect(rendered).toContain("Tool: result");
+  expect(aiMessage.tool_calls?.[0].id).toBe(longId);
+  expect(toolCalls[0].id).toBe(longId);
+  expect(result.tool_call_id).toBe(longId);
 });
 
 test("getBufferString uses text property to avoid metadata inflation", () => {

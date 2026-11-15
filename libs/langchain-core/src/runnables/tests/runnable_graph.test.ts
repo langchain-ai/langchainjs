@@ -3,6 +3,7 @@ import { StringOutputParser } from "../../output_parsers/string.js";
 import { FakeLLM } from "../../utils/testing/index.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
+import { Graph } from "../graph.js";
 
 test("Test graph single runnable", async () => {
   const jsonOutputParser = new StringOutputParser();
@@ -13,6 +14,38 @@ test("Test graph single runnable", async () => {
   expect(lastNode).not.toBeNull();
   expect(graph.edges.length).toBe(2);
   expect(Object.keys(graph.nodes).length).toBe(3);
+});
+
+test("Test graph toJSON includes node metadata when set", async () => {
+  const graph = new Graph();
+  const withMetadata = graph.addNode(new StringOutputParser(), "tools", {
+    __interrupt: "before",
+  });
+  const withoutMetadata = graph.addNode(new StringOutputParser(), "agent");
+  graph.addEdge(withoutMetadata, withMetadata);
+
+  expect(graph.toJSON()).toStrictEqual({
+    nodes: [
+      {
+        id: "tools",
+        type: "runnable",
+        data: {
+          id: ["langchain_core", "output_parsers", "string", "StrOutputParser"],
+          name: "StrOutputParser",
+        },
+        metadata: { __interrupt: "before" },
+      },
+      {
+        id: "agent",
+        type: "runnable",
+        data: {
+          id: ["langchain_core", "output_parsers", "string", "StrOutputParser"],
+          name: "StrOutputParser",
+        },
+      },
+    ],
+    edges: [{ source: "agent", target: "tools" }],
+  });
 });
 
 test("Test graph sequence", async () => {

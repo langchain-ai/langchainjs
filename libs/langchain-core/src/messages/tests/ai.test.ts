@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AIMessage, AIMessageChunk } from "../ai.js";
 import { ToolCallChunk } from "../tool.js";
+import * as json from "../../utils/json.js";
 
 describe("AIMessage", () => {
   it("can be constructed with tool calls", () => {
@@ -280,6 +281,251 @@ describe("AIMessage", () => {
 });
 
 describe("AIMessageChunk", () => {
+  describe("lazy tool call collapsing", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it.each(["tool_calls", "invalid_tool_calls"] as const)(
+      "parses once when %s is read first",
+      (firstProperty) => {
+        const parse = vi.spyOn(json, "parsePartialJson");
+        const chunk = new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [
+            {
+              type: "tool_call_chunk",
+              id: "call_1",
+              name: "get_weather",
+              args: '{"location": "San Francisco"}',
+              index: 0,
+            },
+          ],
+        });
+        expect(parse).not.toHaveBeenCalled();
+
+        // Both properties and lc_kwargs share the cached parse result.
+        expect(chunk[firstProperty]).toBeDefined();
+        expect(chunk.tool_calls).toEqual([
+          {
+            type: "tool_call",
+            id: "call_1",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ]);
+        expect(chunk.invalid_tool_calls).toEqual([]);
+        expect(chunk.lc_kwargs.tool_calls).toBe(chunk.tool_calls);
+        expect(chunk.lc_kwargs.invalid_tool_calls).toBe(
+          chunk.invalid_tool_calls
+        );
+        expect(parse).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it("keeps valid tool calls fixed at construction despite input mutations", () => {
+      const chunks: ToolCallChunk[] = [
+        {
+          type: "tool_call_chunk",
+          id: "call_1",
+          name: "get_weather",
+          args: '{"location": "Paris"}',
+          index: 0,
+        },
+      ];
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: chunks,
+      });
+
+      Object.assign(chunks[0], {
+        id: "changed",
+        name: "changed",
+        args: "invalid",
+        index: 1,
+        isCustomTool: true,
+      });
+      chunks.splice(0, 1, {
+        type: "tool_call_chunk",
+        id: "call_2",
+        name: "other_tool",
+        args: "{}",
+        index: 2,
+      });
+      chunks.push({ id: "call_3", args: "{}", index: 3 });
+
+      expect(chunk.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: { location: "Paris" },
+        },
+      ]);
+      expect(chunk.invalid_tool_calls).toEqual([]);
+      expect(JSON.parse(JSON.stringify(chunk)).kwargs.tool_calls).toEqual(
+        chunk.tool_calls
+      );
+    });
+
+    it("keeps invalid tool calls fixed at construction despite input mutations", () => {
+      const chunks: ToolCallChunk[] = [
+        {
+          type: "tool_call_chunk",
+          id: "call_1",
+          name: "get_weather",
+          args: "invalid",
+          index: 0,
+        },
+      ];
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: chunks,
+      });
+
+      Object.assign(chunks[0], {
+        id: "changed",
+        name: "changed",
+        args: '{"location": "Paris"}',
+      });
+      chunks.length = 0;
+
+      expect(chunk.invalid_tool_calls).toEqual([
+        {
+          type: "invalid_tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: "invalid",
+          error: "Malformed args.",
+        },
+      ]);
+      expect(chunk.tool_calls).toEqual([]);
+    });
+
+    it("exposes parsed tool calls through spread and Object.entries", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          {
+            id: "call_1",
+            name: "get_weather",
+            args: '{"location": "Paris"}',
+            index: 0,
+          },
+        ],
+      });
+      const spread = { ...chunk };
+      const entries = Object.fromEntries(Object.entries(chunk));
+      const expected = [
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: { location: "Paris" },
+        },
+      ];
+      expect(spread.tool_calls).toEqual(expected);
+      expect(entries.tool_calls).toEqual(expected);
+      expect(spread.invalid_tool_calls).toEqual([]);
+      expect(entries.invalid_tool_calls).toEqual([]);
+    });
+
+    it("aggregates streamed tool call deltas correctly", () => {
+      const parse = vi.spyOn(json, "parsePartialJson");
+      const args = JSON.stringify({ location: "San Francisco", days: 3 });
+      const deltas = [
+        new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [
+            {
+              type: "tool_call_chunk",
+              id: "call_1",
+              name: "get_weather",
+              args: "",
+              index: 0,
+            },
+          ],
+        }),
+        ...Array.from(
+          { length: args.length },
+          (_, i) =>
+            new AIMessageChunk({
+              content: "",
+              tool_call_chunks: [
+                {
+                  type: "tool_call_chunk",
+                  args: args.slice(i, i + 1),
+                  index: 0,
+                },
+              ],
+            })
+        ),
+      ];
+
+      const aggregated = deltas.reduce((acc, delta) => acc.concat(delta));
+      expect(parse).not.toHaveBeenCalled();
+      expect(aggregated.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: { location: "San Francisco", days: 3 },
+        },
+      ]);
+      expect(aggregated.invalid_tool_calls).toEqual([]);
+      expect(parse).toHaveBeenCalledTimes(1);
+    });
+
+    it("serializes collapsed tool calls", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            id: "call_1",
+            name: "get_weather",
+            args: '{"location": "Paris"}',
+            index: 0,
+          },
+        ],
+      });
+
+      const serialized = JSON.parse(JSON.stringify(chunk));
+      expect(serialized.kwargs.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: { location: "Paris" },
+        },
+      ]);
+      expect(serialized.kwargs.invalid_tool_calls).toEqual([]);
+    });
+
+    it("supports assigning tool_calls after construction", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            id: "call_1",
+            name: "get_weather",
+            args: '{"location": "Paris"}',
+            index: 0,
+          },
+        ],
+      });
+      chunk.tool_calls = [
+        { type: "tool_call", id: "call_2", name: "other_tool", args: {} },
+      ];
+      expect(chunk.tool_calls).toEqual([
+        { type: "tool_call", id: "call_2", name: "other_tool", args: {} },
+      ]);
+      // invalid_tool_calls still collapses lazily from the original chunks.
+      expect(chunk.invalid_tool_calls).toEqual([]);
+    });
+  });
+
   describe("constructor", () => {
     it("omits tool call chunks without IDs", () => {
       const chunks: ToolCallChunk[] = [

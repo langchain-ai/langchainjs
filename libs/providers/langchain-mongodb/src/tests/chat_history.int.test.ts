@@ -161,3 +161,29 @@ test("getMessages() returns messages in the order they were added", async () => 
     new AIMessage("Jimmy Page"),
   ]);
 });
+
+test("GHSA-m6rx-h84q-8r95: $eq filters block cross-session access even if the sessionId check is bypassed", async () => {
+  const victimSessionId = `victim-${new ObjectId().toString()}`;
+  const victimHistory = new MongoDBChatMessageHistory({
+    collection,
+    sessionId: victimSessionId,
+  });
+  await victimHistory.addMessage(new HumanMessage("victim's secret message"));
+
+  const attackerHistory = new MongoDBChatMessageHistory({
+    collection,
+    sessionId: "placeholder",
+  });
+  (attackerHistory as unknown as { sessionId: unknown }).sessionId = {
+    $regex: "^victim-",
+  };
+
+  expect(await attackerHistory.getMessages()).toStrictEqual([]);
+
+  await attackerHistory.addMessage(new AIMessage("attacker-injected message"));
+  await attackerHistory.clear();
+
+  expect(await victimHistory.getMessages()).toStrictEqual([
+    new HumanMessage("victim's secret message"),
+  ]);
+});

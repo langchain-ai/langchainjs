@@ -153,6 +153,47 @@ function toolEvents(): RawEvent[] {
   ];
 }
 
+function toolEventsWithInitialArgs(): RawEvent[] {
+  return [
+    {
+      type: "response.created",
+      response: { id: "resp_tools", model: "gpt-4o-mini" },
+    } as RawEvent,
+    {
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "function_call",
+        id: "fc_1",
+        call_id: "call_abc",
+        name: "web_search",
+        arguments: '{"query"',
+      },
+    } as RawEvent,
+    {
+      type: "response.function_call_arguments.delta",
+      output_index: 0,
+      delta: "",
+    } as RawEvent,
+    {
+      type: "response.function_call_arguments.delta",
+      output_index: 0,
+      delta: ':"weather"}',
+    } as RawEvent,
+    {
+      type: "response.output_item.done",
+      output_index: 0,
+      item: {
+        type: "function_call",
+        id: "fc_1",
+        call_id: "call_abc",
+        name: "web_search",
+        arguments: '{"query":"weather"}',
+      },
+    } as RawEvent,
+  ];
+}
+
 describe("ChatOpenAIResponses._streamChatModelEvents", () => {
   test("integration with ChatModelStream.text", async () => {
     const model = new MockStreamChatOpenAIResponses(textEvents());
@@ -203,6 +244,61 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
       const model = new MockStreamChatOpenAIResponses(toolEvents());
       await expect(model.streamEvents("Hello")).toHaveStreamToolCalls([
         { name: "web_search", args: { query: "weather" } },
+      ]);
+    });
+
+    test("streams tool call args as slices, sending initial args once", async () => {
+      const model = new MockStreamChatOpenAIResponses(
+        toolEventsWithInitialArgs()
+      );
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      expect(events.filter((e) => e.event.startsWith("content-block"))).toEqual(
+        [
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "tool_call_chunk",
+              id: "call_abc",
+              name: "web_search",
+              args: "",
+              index: 0,
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: '{"query"' },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "tool-call-delta", args: ':"weather"}' },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "tool_call",
+              id: "call_abc",
+              name: "web_search",
+              args: { query: "weather" },
+            },
+          },
+        ]
+      );
+      expect((await stream).tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_abc",
+          name: "web_search",
+          args: { query: "weather" },
+        },
       ]);
     });
   });

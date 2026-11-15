@@ -2,6 +2,9 @@ import { StandardSchemaV1 } from "@standard-schema/spec";
 import { BaseOutputParser, OutputParserException } from "./base.js";
 import { parseJsonMarkdown } from "./json.js";
 import { BaseMessage } from "../messages/index.js";
+import type { Callbacks } from "../callbacks/manager.js";
+import type { ChatGeneration, Generation } from "../outputs.js";
+import { throwIfRefused } from "./refusal.js";
 
 export class StandardSchemaOutputParser<
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,6 +28,17 @@ export class StandardSchemaOutputParser<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(schema: StandardSchemaV1<RunOutput>) {
     return new this(schema);
+  }
+
+  /**
+   * @throws {ModelRefusalError} If the model refused instead of answering.
+   */
+  override async parseResult(
+    generations: Generation[] | ChatGeneration[],
+    callbacks?: Callbacks
+  ): Promise<RunOutput> {
+    throwIfRefused(generations[0]);
+    return super.parseResult(generations, callbacks);
   }
 
   async parse(text: string): Promise<RunOutput> {

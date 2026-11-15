@@ -4,9 +4,9 @@
 import { z } from "zod/v3";
 import { ToolMessage } from "@langchain/core/messages";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-
+import { isGraphBubbleUp } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
-import { sleep, calculateRetryDelay } from "./utils.js";
+import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
 
@@ -289,6 +289,10 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
         try {
           return await handler(request);
         } catch (error) {
+          if (isGraphBubbleUp(error)) {
+            throw error;
+          }
+
           const attemptsMade = attempt + 1; // attempt is 0-indexed
 
           // Ensure error is an Error instance
@@ -306,7 +310,11 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
           // Check if we have more retries left
           if (attempt < maxRetries) {
             // Calculate and apply backoff delay
-            const delay = calculateRetryDelay(delayConfig, attempt);
+            const delay = calculateRetryDelay(
+              delayConfig,
+              attempt,
+              getRetryAfterMs(error)
+            );
             if (delay > 0) {
               await sleep(delay);
             }

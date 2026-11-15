@@ -3,6 +3,8 @@ import { Operation, compare } from "../utils/json_patch.js";
 import { ChatGeneration, Generation } from "../outputs.js";
 import { parseJsonMarkdown, parsePartialJson } from "../utils/json.js";
 import type { BaseMessage } from "../messages/index.js";
+import type { Callbacks } from "../callbacks/manager.js";
+import { throwIfRefused } from "./refusal.js";
 
 /**
  * Class for parsing the output of an LLM into a JSON object.
@@ -46,6 +48,17 @@ export class JsonOutputParser<
     generations: ChatGeneration[] | Generation[]
   ): Promise<T | undefined> {
     return parseJsonMarkdown(generations[0].text) as T | undefined;
+  }
+
+  /**
+   * @throws {ModelRefusalError} If the model refused instead of answering.
+   */
+  override async parseResult(
+    generations: Generation[] | ChatGeneration[],
+    callbacks?: Callbacks
+  ): Promise<T> {
+    throwIfRefused(generations[0]);
+    return super.parseResult(generations, callbacks);
   }
 
   async parse(text: string): Promise<T> {

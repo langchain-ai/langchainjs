@@ -18,6 +18,10 @@
     "allowJs": true,
     "strict": true
   },
-  "include": ["src/**/*", "../../../internal/tsconfig/vitest-matchers.d.ts"],
+  "include": [
+    "src/**/*",
+    "../../../internal/tsconfig/env.d.ts",
+    "../../../internal/tsconfig/vitest-matchers.d.ts"
+  ],
   "exclude": ["node_modules", "dist", "docs"]
 }

@@ -81,12 +81,14 @@ jobs:
             redis
             tavily
             together-ai
+            typesafe
             weaviate
             xai
             internal
             infra
             examples
             deps
+            deps-dev
           requireScope: false
           disallowScopes: |
             release

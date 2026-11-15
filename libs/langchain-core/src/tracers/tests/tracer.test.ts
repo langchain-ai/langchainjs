@@ -211,11 +211,23 @@ test("Test Tool Run", async () => {
     dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
-  await tracer.handleToolStart(serialized, "test", runId);
+  await tracer.handleToolStart(
+    serialized,
+    "test",
+    runId,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "tool-call-id"
+  );
   await tracer.handleToolEnd("output", runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toMatchObject(compareRun);
+  expect(run).toMatchObject({
+    ...compareRun,
+    extra: { tool_call_id: "tool-call-id" },
+  });
 });
 
 test("Test Retriever Run", async () => {

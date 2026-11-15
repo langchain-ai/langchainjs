@@ -1,18 +1,23 @@
 import { AIMessage, ContentBlock } from "@langchain/core/messages";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 
-function convertReasoningText(
+/**
+ * Bedrock reasoning goes back to the model unchanged when it is signed (the
+ * signature covers the original bytes, and Sonnet 5's default
+ * `display: "omitted"` signs empty text). Unsigned reasoning is only sent when
+ * it has text; Bedrock requires `text`, so a missing one is sent as "".
+ */
+export function toBedrockReasoningText(
   text: unknown,
   signature: unknown
 ): Bedrock.ReasoningContentBlock | undefined {
-  if (typeof text !== "string" || text.length === 0) {
+  const reasoning = typeof text === "string" ? text : "";
+  const signed = typeof signature === "string" && signature !== "";
+  if (!signed && reasoning === "") {
     return undefined;
   }
   return {
-    reasoningText: {
-      text,
-      ...(typeof signature === "string" ? { signature } : {}),
-    },
+    reasoningText: { text: reasoning, ...(signed ? { signature } : {}) },
   };
 }
 
@@ -31,7 +36,7 @@ function convertLegacyReasoningContent(
     value.reasoningText !== null
   ) {
     const reasoningText = value.reasoningText;
-    return convertReasoningText(
+    return toBedrockReasoningText(
       "text" in reasoningText ? reasoningText.text : undefined,
       "signature" in reasoningText ? reasoningText.signature : undefined
     );
@@ -60,7 +65,7 @@ function convertLegacyReasoningContent(
       value.reasoningContent.reasoningText !== null
     ) {
       const reasoningText = value.reasoningContent.reasoningText;
-      return convertReasoningText(
+      return toBedrockReasoningText(
         "text" in reasoningText ? reasoningText.text : undefined,
         "signature" in reasoningText ? reasoningText.signature : undefined
       );
@@ -249,7 +254,7 @@ export function convertFromV1ToChatBedrockConverseMessage(
         // no-op
         continue;
       } else if (block.type === "reasoning") {
-        const reasoningContent = convertReasoningText(
+        const reasoningContent = toBedrockReasoningText(
           block.reasoning,
           block.signature
         );
