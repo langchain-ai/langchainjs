@@ -22,13 +22,13 @@ Because `sparktype` validates and resolves `#/components/...` `$ref`s within eac
 The `typegen:merge:decisions` script in `package.json` runs:
 
 ```bash
-jq -S -s '.[0] | .paths = (.[1].paths + .paths) | .components.schemas = (.[1].components.schemas + .components.schemas)' \
+jq -S -s '.[0] as $i | .[1] as $d | $i | .paths = ($d.paths + .paths) | .components.schemas = ($d.components.schemas + .components.schemas)' \
   src/openapi/interactions-openapi.json \
   src/openapi/decisions-partial-openapi.json \
   > src/openapi/interactions-decisions-openapi.json
 ```
 
-Using `jq`'s shallow `+` operator with `interactions-openapi.json` (`?.[0]`) on the **right-hand side** guarantees:
+Using `jq`'s shallow `+` operator with `interactions-openapi.json` (`$i`) on the **right-hand side** guarantees:
 
 1. Zero existing paths or schemas in `interactions-openapi.json` are modified today.
 2. If upstream `interactions.openapi.json` begins adding any Decisions paths or schemas, the upstream definition automatically takes precedence over `decisions-partial-openapi.json` as a complete unit (avoiding half-merged schema objects).

@@ -1,4 +1,4 @@
-﻿{
+{
   "paths": {
     "/{api_version}/decisions": {
       "parameters": [
