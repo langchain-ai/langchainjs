@@ -10,7 +10,7 @@ import type {
 import type { AsyncCaller } from "@langchain/core/utils/async_caller";
 import type { ApiClient } from "../clients/index.js";
 import type { GenContent as GenContentNamespace } from "./api_types/generate_content.js";
-import type { Interactions as InteractionsNamespace } from "./api_types/interactions.js";
+import type { Interactions as InteractionsNamespace } from "../api_types/interactions.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 import type { GoogleChatApiHandler } from "./handlers/base.js";
 
@@ -634,7 +634,7 @@ export declare namespace Gemini {
     // Narrowed Content & MediaProcessing types
     // Note: interactions-openapi.json uses JSON Schema `"const"` instead of
     // `"enum"` for `type` discriminators, which sparktype generates as
-    // `type: unknown` in `./api_types/interactions.ts`. We narrow each
+    // `type: unknown` in `../api_types/interactions.ts`. We narrow each
     // discriminator here so TypeScript discriminated unions work without
     // modifying the sparktype-generated file.
     // =========================================================================
@@ -1255,7 +1255,7 @@ export declare namespace Gemini {
     };
 
     // =========================================================================
-    // Re-exported non-discriminated types from `./api_types/interactions.ts`
+    // Re-exported non-discriminated types from `../api_types/interactions.ts`
     // =========================================================================
     export type AllowedTools = InteractionsNamespace.Tools.AllowedTools;
     export type CodeExecutionCallStepArguments =
@@ -1335,7 +1335,7 @@ export declare namespace Gemini {
     // =========================================================================
     // SSE Stream Event & Delta types from `interactions-openapi.json`
     // Note: sparktype did not emit the SSE `text/event-stream` response union
-    // schemas into `./api_types/interactions.ts`, so we define them here with
+    // schemas into `../api_types/interactions.ts`, so we define them here with
     // narrowed discriminator literals (supporting both OpenAPI `step.*` /
     // `interaction.created` / `interaction.completed` and legacy `content.*` /
     // `interaction.start` / `interaction.complete` aliases).

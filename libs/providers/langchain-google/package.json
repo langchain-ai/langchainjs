@@ -27,9 +27,10 @@
     "typegen:sparktype": "sparktype generate",
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
     "typegen:check": "sparktype check",
-    "typegen:fetch": "pnpm run typegen:fetch:genContent && pnpm run typegen:fetch:interactions",
+    "typegen:fetch": "pnpm run typegen:fetch:genContent && pnpm run typegen:fetch:interactions && pnpm run typegen:merge:decisions",
     "typegen:fetch:genContent": "curl -o - 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta' | jq -S . > src/openapi/generate-content-openapi.json",
-    "typegen:fetch:interactions": "curl -o - 'https://ai.google.dev/static/api/interactions.openapi.json' | jq -S . > src/openapi/interactions-openapi.json"
+    "typegen:fetch:interactions": "curl -o - 'https://ai.google.dev/static/api/interactions.openapi.json' | jq -S . > src/openapi/interactions-openapi.json",
+    "typegen:merge:decisions": "jq -S -s '.[0] | .paths = (.[1].paths + .paths) | .components.schemas = (.[1].components.schemas + .components.schemas)' src/openapi/interactions-openapi.json src/openapi/decisions-partial-openapi.json > src/openapi/interactions-decisions-openapi.json"
   },
   "dependencies": {
     "eventsource-parser": "^4.1.3",

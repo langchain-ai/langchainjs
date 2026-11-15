@@ -4,8 +4,9 @@
     "genContent": {
       "path": "src/openapi/generate-content-openapi.json"
     },
+    // Temporary merged spec (interactions + decisions-partial); see src/openapi/README-decisions.md
     "interactions": {
-      "path": "src/openapi/interactions-openapi.json"
+      "path": "src/openapi/interactions-decisions-openapi.json"
     }
   },
   "outputs": [
@@ -125,7 +126,7 @@
       ]
     },
     {
-      "path": "./src/chat_models/api_types/interactions.ts",
+      "path": "./src/api_types/interactions.ts",
       "format": "typescript",
       "options": {
         "widenEnums": true
@@ -253,6 +254,23 @@
             "interactions:VideoContent",
             "interactions:VideoResponseFormat",
             "interactions:WordInfo"
+          ]
+        },
+        {
+          "namespace": "Decisions",
+          "contents": [
+            "interactions:CreateDecisionRequest",
+            "interactions:CreateDecisionResponse",
+            "interactions:Question",
+            "interactions:ChoiceQuestion",
+            "interactions:NoulQuestion",
+            "interactions:ScoreQuestion",
+            "interactions:Criteria",
+            "interactions:Answer",
+            "interactions:ChoiceAnswer",
+            "interactions:NoulAnswer",
+            "interactions:ScoreAnswer",
+            "interactions:PromptFeedback"
           ]
         }
       ]

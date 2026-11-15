@@ -1,0 +1,462 @@
+﻿{
+  "paths": {
+    "/{api_version}/decisions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/api_version"
+        }
+      ],
+      "post": {
+        "operationId": "CreateDecision",
+        "description": "Evaluates a batch of structured decision questions against a shared\ncontext state via HTTP body transcoding.",
+        "parameters": [],
+        "requestBody": {
+          "description": "Required. The HTTP body of the request payload.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDecisionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/{api_version}/projects/{projectsId}/locations/{locationsId}/decisions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/api_version"
+        }
+      ],
+      "post": {
+        "operationId": "CreateDecisionByProjectsIdAndLocationsId",
+        "description": "Evaluates a batch of structured decision questions against a shared\ncontext state via HTTP body transcoding.",
+        "parameters": [
+          {
+            "name": "locationsId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectsId",
+            "in": "path",
+            "description": "Required. The location to evaluate the decisions in.\n\nSupported only by the Vertex API.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Required. The HTTP body of the request payload.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDecisionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "tags": [
+          "projects.locations.decisions"
+        ],
+        "x-google-operation-name": "CreateDecision"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Answer": {
+        "description": "Decision answer for a single `CreateDecisionRequest.Question`.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChoiceAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/NoulAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/ScoreAnswer"
+          }
+        ]
+      },
+      "ChoiceAnswer": {
+        "description": "Calibrated result for a `ChoiceQuestion`.",
+        "type": "object",
+        "properties": {
+          "choice": {
+            "description": "The option ID with the highest probability.",
+            "type": "string"
+          },
+          "confidence": {
+            "description": "Closed-world confidence score in `[0, 1]`, equal to the calibrated\nprobability of the winning outcome:\n- `NoulAnswer`: `max(noul, 1 - noul)`\n- `ChoiceAnswer`: `p_max` (the probability of `choice`)\n- `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).",
+            "type": "number",
+            "format": "double"
+          },
+          "probabilities": {
+            "description": "Closed-world normalized probability in `[0, 1]` for each option ID.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "type": {
+            "const": "choice"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "ChoiceQuestion": {
+        "description": "A single-select categorical decision question over mutually exclusive\noptions.",
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "description": "Required. Mutually exclusive options to choose from (between 2 and 255 options; up\nto 254 when `include_none_of_above` is `true`), mapping option ID to\noptional description or rubric criteria. Option IDs must be non-empty\nwith no control characters or leading/trailing whitespace;\n`none_of_the_above` is reserved when `include_none_of_above` is set.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "instructions": {
+            "description": "Required. Human-readable decision guidelines, rubrics, or criteria evaluated\nagainst the shared `input`. At least one content block is required.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Content"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Content"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "type": {
+            "const": "choice"
+          }
+        },
+        "required": [
+          "criteria",
+          "instructions",
+          "type"
+        ]
+      },
+      "CreateDecisionRequest": {
+        "description": "Request message for `CreateDecision`.\n\nEvaluates one or more structured decision questions (Noul, Choice, or Score)\nagainst a shared `input`. Under the hood, each question is compiled into\nsingle-token candidate completions (plus an explicit out-of-distribution\nabstention option) and scored via forced decoding or Uniserve tree prefill.",
+        "type": "object",
+        "properties": {
+          "input": {
+            "description": "Required. Shared input prefix evaluated once across all decision questions.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Content"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Content"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "model": {
+            "description": "Required. The name of the `Model` to use for evaluating the decisions.\n\nFormat: `models/{model}`.",
+            "type": "string"
+          },
+          "questions": {
+            "description": "Required. The decision questions to evaluate, keyed by caller-defined unique question\nidentifiers (at least 1 question).",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        },
+        "required": [
+          "input",
+          "model",
+          "questions"
+        ]
+      },
+      "CreateDecisionResponse": {
+        "description": "Response message for `CreateDecision`.",
+        "type": "object",
+        "properties": {
+          "answers": {
+            "description": "Output only. Decision answers keyed by the question identifiers from\n`CreateDecisionRequest.questions`.",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "readOnly": true
+          },
+          "prompt_feedback": {
+            "description": "Output only. Feedback from the recipe's input content filters. If\n`prompt_feedback.block_reason` is set, the prompt (`input` and question\ntext) was blocked by the input policy, no decisions were evaluated, and\n`answers` is empty.",
+            "$ref": "#/components/schemas/PromptFeedback",
+            "readOnly": true
+          },
+          "usage": {
+            "description": "Output only. Token usage statistics for this decision evaluation request.",
+            "$ref": "#/components/schemas/Usage",
+            "readOnly": true
+          }
+        }
+      },
+      "Criteria": {
+        "description": "Criteria descriptions for the `true` and `false` outcomes.",
+        "type": "object",
+        "properties": {
+          "false_description": {
+            "description": "Optional. Optional criteria or description for the `false` outcome.",
+            "type": "string"
+          },
+          "true_description": {
+            "description": "Optional. Optional criteria or description for the `true` outcome.",
+            "type": "string"
+          }
+        }
+      },
+      "DecisionInputContent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AudioContent"
+          },
+          {
+            "$ref": "#/components/schemas/DocumentContent"
+          },
+          {
+            "$ref": "#/components/schemas/ImageContent"
+          },
+          {
+            "$ref": "#/components/schemas/TextContent"
+          },
+          {
+            "$ref": "#/components/schemas/VideoContent"
+          }
+        ]
+      },
+      "DecisionInstructionContent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/TextContent"
+          }
+        ]
+      },
+      "NoulAnswer": {
+        "description": "Calibrated result for a `NoulQuestion`.",
+        "type": "object",
+        "properties": {
+          "confidence": {
+            "description": "Closed-world confidence score in `[0, 1]`, equal to the calibrated\nprobability of the winning outcome:\n- `NoulAnswer`: `max(noul, 1 - noul)`\n- `ChoiceAnswer`: `p_max` (the probability of `choice`)\n- `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).",
+            "type": "number",
+            "format": "double"
+          },
+          "noul": {
+            "description": "Calibrated probability `P(true)` in `[0.01, 0.99]` from the 9-bin\n`ordinal9` readout: the expected bin `E[bin]` under the softmax over the\nnine bin log-likelihoods is mapped linearly so that bins 2 and 8 land\non 0.01 and 0.99 (`clamp(0.01 + 0.98 * (E[bin] - 2) / 6, 0.01, 0.99)`).",
+            "type": "number",
+            "format": "double"
+          },
+          "type": {
+            "const": "noul"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "NoulQuestion": {
+        "description": "A binary (true / false) decision question.",
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "description": "Optional. Optional criteria for the `true` and `false` outcomes.",
+            "$ref": "#/components/schemas/Criteria"
+          },
+          "instructions": {
+            "description": "Required. Human-readable decision guidelines, rubrics, or criteria evaluated\nagainst the shared `input`. At least one content block is required.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Content"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Content"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "type": {
+            "const": "noul"
+          }
+        },
+        "required": [
+          "instructions",
+          "type"
+        ]
+      },
+      "PromptFeedback": {
+        "description": "Feedback from the recipe's input content filters.",
+        "type": "object",
+        "properties": {
+          "block_reason": {
+            "description": "Optional. If set, the input was blocked and no answers are returned.",
+            "type": "string",
+            "enum": [
+              "safety",
+              "other",
+              "blocklist",
+              "prohibited_content",
+              "image_safety"
+            ],
+            "x-google-enum-descriptions": [
+              "Prompt was blocked due to safety reasons.",
+              "Prompt was blocked due to unknown reasons.",
+              "Prompt was blocked due to terms from the terminology blocklist.",
+              "Prompt was blocked due to prohibited content.",
+              "Prompt was blocked due to unsafe image content."
+            ]
+          },
+          "block_reason_message": {
+            "description": "Optional. Optional message detailing the reason for blocking.",
+            "type": "string"
+          }
+        }
+      },
+      "Question": {
+        "description": "A single decision question.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/NoulQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/ScoreQuestion"
+          }
+        ]
+      },
+      "ScoreAnswer": {
+        "description": "Calibrated result for a `ScoreQuestion`.",
+        "type": "object",
+        "properties": {
+          "confidence": {
+            "description": "Closed-world confidence score in `[0, 1]`, equal to the calibrated\nprobability of the winning outcome:\n- `NoulAnswer`: `max(noul, 1 - noul)`\n- `ChoiceAnswer`: `p_max` (the probability of `choice`)\n- `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).",
+            "type": "number",
+            "format": "double"
+          },
+          "legend": {
+            "description": "Rubric description for each non-empty 0-based level index.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "probabilities": {
+            "description": "Closed-world normalized probability in `[0, 1]` for each 0-based level\nindex.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "score": {
+            "description": "Probability-weighted expected score (`sum_k k * probability_k`).",
+            "type": "number",
+            "format": "double"
+          },
+          "type": {
+            "const": "score"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "ScoreQuestion": {
+        "description": "A quantitative rubric scoring question over discrete numeric levels.",
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "description": "Required. Discrete score levels in the rubric (between 2 and 255 non-empty levels),\nwhere 0-based index `i` corresponds to numeric level value `i` and rubric\ndescription `criteria[i]`.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "instructions": {
+            "description": "Required. Human-readable decision guidelines, rubrics, or criteria evaluated\nagainst the shared `input`. At least one content block is required.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Content"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Content"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "type": {
+            "const": "score"
+          }
+        },
+        "required": [
+          "criteria",
+          "instructions",
+          "type"
+        ]
+      }
+    }
+  }
+}
