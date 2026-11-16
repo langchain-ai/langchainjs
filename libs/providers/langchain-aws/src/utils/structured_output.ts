@@ -22,8 +22,16 @@ const LITERAL_VALUE_KEYWORDS = new Set([
   "enum",
   "examples",
 ]);
-const REFUSAL_STOP_REASON = "content_filtered";
-const TOKEN_LIMIT_STOP_REASON = "max_tokens";
+const MERGEABLE_OBJECT_KEYWORDS = new Set([
+  "type",
+  "properties",
+  "required",
+  "additionalProperties",
+  "title",
+  "description",
+]);
+const REFUSAL_STOP_REASONS = new Set(["content_filtered"]);
+const TOKEN_LIMIT_STOP_REASONS = new Set(["max_tokens", "length"]);
 
 function isUnsupportedKeyword(keyword: string, value: unknown): boolean {
   if (keyword === "minItems") {
@@ -62,14 +70,78 @@ function describesObject(schema: Record<string, unknown>): boolean {
   return Array.isArray(type) ? type.includes("object") : type === "object";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isMergeableObjectBranch(
+  branch: unknown
+): branch is Record<string, unknown> {
+  if (!isRecord(branch)) {
+    return false;
+  }
+  const keywords = Object.keys(branch);
+  return (
+    describesObject(branch) &&
+    typeof branch.additionalProperties !== "object" &&
+    keywords.every((keyword) => MERGEABLE_OBJECT_KEYWORDS.has(keyword))
+  );
+}
+
+function mergeProperties(
+  branches: Record<string, unknown>[]
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  for (const branch of branches) {
+    const properties = isRecord(branch.properties) ? branch.properties : {};
+    for (const [name, property] of Object.entries(properties)) {
+      const existing = merged[name];
+      merged[name] =
+        existing === undefined ? property : { allOf: [existing, property] };
+    }
+  }
+  return merged;
+}
+
+function mergeRequired(branches: Record<string, unknown>[]): string[] {
+  const required = branches.flatMap((branch) => {
+    const names: unknown[] = Array.isArray(branch.required)
+      ? branch.required
+      : [];
+    return names.filter((name) => typeof name === "string");
+  });
+  return [...new Set(required)];
+}
+
+/**
+ * Bedrock requires every object to be closed, and closing each branch of an
+ * `allOf` on its own forbids the keys of the other branches. An intersection of
+ * plain objects becomes one object instead, which can be closed safely.
+ */
+function mergeObjectIntersection(
+  schema: Record<string, unknown>
+): Record<string, unknown> {
+  const { allOf, ...rest } = schema;
+  if (!Array.isArray(allOf) || !allOf.every(isMergeableObjectBranch)) {
+    return schema;
+  }
+  return {
+    ...rest,
+    type: "object",
+    properties: mergeProperties(allOf),
+    required: mergeRequired(allOf),
+  };
+}
+
 function toConverseOutputSchema(schema: unknown): unknown {
   if (Array.isArray(schema)) {
     return schema.map((item) => toConverseOutputSchema(item));
   }
-  if (typeof schema !== "object" || schema === null) {
+  if (!isRecord(schema)) {
     return schema;
   }
-  const supported = Object.entries(schema).filter(
+  const merged = mergeObjectIntersection(schema);
+  const supported = Object.entries(merged).filter(
     ([keyword, value]) => !isUnsupportedKeyword(keyword, value)
   );
   const converted = Object.fromEntries(
@@ -136,38 +208,45 @@ export function toolsFromMessageHistory(
   }));
 }
 
-function hasStopReason(metadata: unknown, stopReason: string): boolean {
-  return (
-    typeof metadata === "object" &&
-    metadata !== null &&
-    "stopReason" in metadata &&
-    metadata.stopReason === stopReason
-  );
+function readField(container: unknown, field: string): unknown {
+  return isRecord(container) ? container[field] : undefined;
 }
 
-function stoppedWith(message: BaseMessage, stopReason: string): boolean {
-  const metadata: object = message.response_metadata;
-  const streamStop = "messageStop" in metadata ? metadata.messageStop : null;
+function readStopReason(message: BaseMessage): unknown {
+  const metadata = message.response_metadata;
+  const streamStop = readField(metadata, "messageStop");
   return (
-    hasStopReason(metadata, stopReason) || hasStopReason(streamStop, stopReason)
+    readField(metadata, "stopReason") ??
+    readField(streamStop, "stopReason") ??
+    readField(metadata, "finish_reason")
   );
 }
 
 /**
  * A refused or truncated response reaches Converse callers as a success, so
- * without this check it surfaces as a JSON parsing error. The stop reason sits
- * at the top of the metadata on `Converse` and under `messageStop` on
- * `ConverseStream`.
+ * without this check it surfaces as a JSON parsing error, or as a valid result
+ * when the partial text happens to parse. The stop reason sits at the top of
+ * the metadata on `Converse`, under `messageStop` on `ConverseStream`, and in
+ * `finish_reason`, mapped to the standard values, on the stream-event path.
+ *
+ * `guardrail_intervened` is not a refusal: a guardrail that masks PII reports
+ * it too, with a usable response whose values are replaced by placeholders. A
+ * blocking guardrail returns its configured message, which fails parsing. The
+ * standard `content_filter` covers both, so it is not a refusal either.
  */
 export function throwIfOutputIncomplete(message: BaseMessage): void {
-  if (stoppedWith(message, REFUSAL_STOP_REASON)) {
+  const stopReason = readStopReason(message);
+  if (typeof stopReason !== "string") {
+    return;
+  }
+  if (REFUSAL_STOP_REASONS.has(stopReason)) {
     throw new Error(
-      `Bedrock refused to produce the structured output (stopReason: ${REFUSAL_STOP_REASON}).`
+      `Bedrock refused to produce the structured output (stopReason: ${stopReason}).`
     );
   }
-  if (stoppedWith(message, TOKEN_LIMIT_STOP_REASON)) {
+  if (TOKEN_LIMIT_STOP_REASONS.has(stopReason)) {
     throw new Error(
-      `Bedrock cut the structured output at the token limit (stopReason: ${TOKEN_LIMIT_STOP_REASON}). Increase \`maxTokens\`.`
+      `Bedrock cut the structured output at the token limit (stopReason: ${stopReason}). Increase \`maxTokens\`.`
     );
   }
 }

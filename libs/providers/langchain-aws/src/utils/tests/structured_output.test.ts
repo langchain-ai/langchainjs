@@ -172,6 +172,69 @@ describe("convertToConverseOutputConfig", () => {
     expect(schema.required).toEqual(["minimum", "maxLength"]);
   });
 
+  test("merges an intersection of objects into one closed object", () => {
+    const schema = convertedSchema({
+      allOf: [
+        {
+          type: "object",
+          properties: { a: { type: "string" } },
+          required: ["a"],
+        },
+        {
+          type: "object",
+          properties: { b: { type: "string" } },
+          required: ["b"],
+          additionalProperties: false,
+        },
+      ],
+    });
+
+    expect(schema).toEqual({
+      type: "object",
+      properties: { a: { type: "string" }, b: { type: "string" } },
+      required: ["a", "b"],
+      additionalProperties: false,
+    });
+  });
+
+  test("merges a property that both sides of an intersection declare", () => {
+    const schema = convertedSchema({
+      allOf: [
+        {
+          type: "object",
+          properties: {
+            owner: { type: "object", properties: { id: { type: "string" } } },
+          },
+          required: ["owner"],
+        },
+        {
+          type: "object",
+          properties: {
+            owner: { type: "object", properties: { name: { type: "string" } } },
+          },
+          required: ["owner"],
+        },
+      ],
+    });
+
+    expect(schema.required).toEqual(["owner"]);
+    expect(schema.properties.owner).toEqual({
+      type: "object",
+      properties: { id: { type: "string" }, name: { type: "string" } },
+      required: [],
+      additionalProperties: false,
+    });
+  });
+
+  test("keeps an intersection that is not made of plain objects", () => {
+    const schema = convertedSchema({
+      allOf: [{ $ref: "#/$defs/base" }, { type: "object", properties: {} }],
+      $defs: { base: { type: "object", properties: {} } },
+    });
+
+    expect(schema.allOf).toHaveLength(2);
+  });
+
   test("leaves literal values untouched", () => {
     const literal = { type: "object", minimum: 1 };
     const schema = convertedSchema({
@@ -246,6 +309,33 @@ describe("throwIfOutputIncomplete", () => {
 
     expect(() => throwIfOutputIncomplete(message)).toThrow(error);
   });
+
+  test("throws on the standard finish reason length", () => {
+    const message = new AIMessage({
+      content: "{}",
+      response_metadata: { finish_reason: "length" },
+    });
+
+    expect(() => throwIfOutputIncomplete(message)).toThrow(
+      "stopReason: length"
+    );
+  });
+
+  test.each([
+    [{ stopReason: "guardrail_intervened" }],
+    [{ messageStop: { stopReason: "guardrail_intervened" } }],
+    [{ finish_reason: "content_filter" }],
+  ])(
+    "accepts a guardrail intervention, which may only have masked values",
+    (metadata) => {
+      const message = new AIMessage({
+        content: '{"name":"{NAME}"}',
+        response_metadata: metadata,
+      });
+
+      expect(() => throwIfOutputIncomplete(message)).not.toThrow();
+    }
+  );
 
   test("accepts any other stop reason", () => {
     const message = new AIMessage({

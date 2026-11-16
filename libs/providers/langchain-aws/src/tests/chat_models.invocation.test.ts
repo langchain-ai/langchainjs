@@ -6,6 +6,7 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { convertToConverseOutputConfig } from "../utils/structured_output.js";
 import type {
@@ -941,6 +942,22 @@ describe("ChatBedrockConverse invocationParams", () => {
         model
           .withStructuredOutput(Joke, { method: "jsonSchema" })
           .invoke("Tell me a joke")
+      ).rejects.toThrow("token limit");
+    });
+
+    test("throws a token limit error on valid JSON read through stream events", async () => {
+      class StreamEventHandler extends BaseCallbackHandler {
+        name = "stream-event-handler";
+
+        lc_prefer_chat_model_stream_events = true;
+      }
+      streamWith(['{"setup":"Why?","rating":7}'], "max_tokens");
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+
+      await expect(
+        model
+          .withStructuredOutput(Joke, { method: "jsonSchema" })
+          .invoke("Tell me a joke", { callbacks: [new StreamEventHandler()] })
       ).rejects.toThrow("token limit");
     });
 
