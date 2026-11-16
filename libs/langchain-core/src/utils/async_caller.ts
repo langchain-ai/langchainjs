@@ -251,6 +251,28 @@ export function classifyRateLimitError(
 }
 
 /**
+ * Turn a non-ok response into the error the retry policy inspects.
+ *
+ * Rejecting with the `Response` itself looks convenient, but the callable is
+ * wrapped in `new Error(error)` for non-`Error` rejections before the retry
+ * handler runs, so every response field (status, headers) was lost: a 404 was
+ * retried as if it were transient, and the caller only saw
+ * `"[object Response]"`. Keep the fields the handler reads on an `Error`.
+ */
+function httpError(response: Response): Error {
+  const statusText = response.statusText ? ` ${response.statusText}` : "";
+  const error = new Error(
+    `Request failed with status ${response.status}${statusText}`
+  );
+  return Object.assign(error, {
+    status: response.status,
+    statusText: response.statusText,
+    url: response.url,
+    headers: response.headers,
+  });
+}
+
+/**
  * The default failed attempt handler for the AsyncCaller.
  * @param error - The error to handle.
  * @returns void
@@ -462,7 +484,9 @@ export class AsyncCaller {
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
     return this.call(() =>
-      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res)))
+      fetch(...args).then((res) =>
+        res.ok ? res : Promise.reject(httpError(res))
+      )
     );
   }
 }
