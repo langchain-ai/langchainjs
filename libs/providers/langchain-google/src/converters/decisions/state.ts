@@ -206,17 +206,48 @@ export function isMediaLikeBlock(value: unknown): value is PlainRecord {
   return false;
 }
 
-function isInteractionsTextBlock(
-  value: unknown
-): value is { type: "text"; text: string } {
-  return (
-    isPlainRecord(value) &&
-    value.type === "text" &&
+const TEXT_CONTENT_BLOCK_ALLOWED_KEYS = new Set([
+  "type",
+  "text",
+  "id",
+  "index",
+  "annotations",
+  "metadata",
+  "extras",
+  "mimeType",
+  "mime_type",
+  "source_type",
+]);
+
+/**
+ * Extracts text from a LangChain standard `ContentBlock.Text`, `text-plain`
+ * block, deprecated `PlainTextContentBlock` (`source_type: "text"`), or Gemini
+ * Interactions `TextContent` block.
+ *
+ * Domain JSON objects that happen to carry `type: "text"` alongside arbitrary
+ * domain fields (e.g. `customer_id`) return `undefined` so they remain
+ * serialized as structured JSON.
+ */
+export function extractTextContentBlock(value: unknown): string | undefined {
+  if (!isPlainRecord(value)) {
+    return undefined;
+  }
+  if (
+    isDataContentBlock(value) &&
+    value.source_type === "text" &&
+    "text" in value &&
+    typeof value.text === "string"
+  ) {
+    return value.text;
+  }
+  if (
+    (value.type === "text" || value.type === "text-plain") &&
     typeof value.text === "string" &&
-    Object.keys(value).every(
-      (key) => key === "type" || key === "text" || key === "annotations"
-    )
-  );
+    Object.keys(value).every((key) => TEXT_CONTENT_BLOCK_ALLOWED_KEYS.has(key))
+  ) {
+    return value.text;
+  }
+  return undefined;
 }
 
 function buildInteractionsMediaContent(params: {
@@ -852,16 +883,16 @@ function convertRootArray(
   emptyErrorMessage: string
 ): GoogleDecisions.Input {
   const ancestors = new Set<object>([items]);
-  const hasRootMessageOrMedia = items.some(
+  const hasRootMessageOrContentBlock = items.some(
     (item) =>
       BaseMessage.isInstance(item) ||
       isMediaLikeBlock(item) ||
-      isInteractionsTextBlock(item)
+      extractTextContentBlock(item) !== undefined
   );
 
   // Pure JSON array (e.g. `["a", "b"]` or `[{ id: 1 }, { id: 2 }]`): serialize
   // as a JSON string per the Gemini Decisions structured-data guidance.
-  if (!hasRootMessageOrMedia) {
+  if (!hasRootMessageOrContentBlock) {
     const prepared = items.map((item) =>
       prepareNestedJsonValue(item, ancestors)
     );
@@ -871,22 +902,15 @@ function convertRootArray(
   const segments: StreamSegment[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const isLast = i === items.length - 1;
 
     if (typeof item === "string") {
-      segments.push({
-        kind: "text",
-        text: !isLast && !item.endsWith("\n") ? `${item}\n` : item,
-      });
+      segments.push({ kind: "text", text: item });
       continue;
     }
 
-    if (isInteractionsTextBlock(item)) {
-      const text = item.text;
-      segments.push({
-        kind: "text",
-        text: !isLast && !text.endsWith("\n") ? `${text}\n` : text,
-      });
+    const extractedText = extractTextContentBlock(item);
+    if (extractedText !== undefined) {
+      segments.push({ kind: "text", text: extractedText });
       continue;
     }
 
@@ -896,14 +920,8 @@ function convertRootArray(
         true,
         defaultMediaResolution
       );
-      if (!isLast && msgSegments.length > 0) {
-        const lastSeg = msgSegments[msgSegments.length - 1];
-        if (lastSeg.kind === "text" && !lastSeg.text.endsWith("\n")) {
-          lastSeg.text = `${lastSeg.text}\n`;
-        }
-      }
-      // If a preceding message ended with a media block, ensure the next
-      // message's text starts on a new line.
+      // If a preceding item ended with a media block, ensure the next
+      // message's role header starts on a new line.
       const prevSeg = segments[segments.length - 1];
       const firstNewSeg = msgSegments[0];
       if (
@@ -930,10 +948,7 @@ function convertRootArray(
 
     const prepared = prepareNestedJsonValue(item, ancestors);
     const jsonText = safeJsonStringify(prepared, CIRCULAR_INPUT_ERROR);
-    segments.push({
-      kind: "text",
-      text: !isLast ? `${jsonText}\n` : jsonText,
-    });
+    segments.push({ kind: "text", text: jsonText });
   }
 
   return finalizeSegments(segments, emptyErrorMessage);
@@ -978,11 +993,12 @@ export function convertStateToDecisionsInput(
     return convertRootArray(state, defaultMediaResolution, EMPTY_STATE_ERROR);
   }
 
-  if (isInteractionsTextBlock(state)) {
-    if (state.text.length === 0) {
+  const rootText = extractTextContentBlock(state);
+  if (rootText !== undefined) {
+    if (rootText.length === 0) {
       throw new InvalidInputError(EMPTY_STATE_ERROR);
     }
-    return state.text;
+    return rootText;
   }
 
   if (isMediaLikeBlock(state)) {
@@ -1032,11 +1048,12 @@ export function convertContentToDecisionsInstructions(
     );
   }
 
-  if (isInteractionsTextBlock(content)) {
-    if (content.text.length === 0) {
+  const rootText = extractTextContentBlock(content);
+  if (rootText !== undefined) {
+    if (rootText.length === 0) {
       throw new InvalidInputError(EMPTY_INSTRUCTIONS_ERROR);
     }
-    return content.text;
+    return rootText;
   }
 
   if (isMediaLikeBlock(content)) {

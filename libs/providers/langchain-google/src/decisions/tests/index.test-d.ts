@@ -12,9 +12,16 @@ import {
 
 describe("GoogleClassifier type narrowing", () => {
   test("narrows nouls, choices (with literal option keys), and scores on invoke()", async () => {
-    const classifier = new GoogleClassifier({ apiKey: "test-key" });
+    const classifier = new GoogleClassifier("gemini-decision-1", {
+      apiKey: "test-key",
+    });
 
     if (false as boolean) {
+      // @ts-expect-error model is required when constructing GoogleClassifier
+      new GoogleClassifier({ apiKey: "test-key" });
+      // @ts-expect-error model or params object is required
+      new GoogleClassifier();
+
       const response = await classifier.invoke({
         state: "Order #99 arrived shattered.",
         questions: {
@@ -52,6 +59,22 @@ describe("GoogleClassifier type narrowing", () => {
       >();
       expectTypeOf(response.scores.severity).toEqualTypeOf<ScoreAnswer>();
       expectTypeOf(response.answers.is_damaged).toEqualTypeOf<NoulAnswer>();
+
+      const contentBlocksResponse = await classifier.invoke({
+        state: [
+          { type: "text", text: "Inspect this return image:" },
+          { type: "image", mimeType: "image/png", data: "iVBOR..." },
+        ],
+        questions: {
+          is_damaged: {
+            type: "noul",
+            instructions: "Is the item damaged?",
+          },
+        },
+      });
+      expectTypeOf(
+        contentBlocksResponse.nouls.is_damaged
+      ).toEqualTypeOf<NoulAnswer>();
     }
   });
 

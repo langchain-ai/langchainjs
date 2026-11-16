@@ -123,9 +123,9 @@ export interface GoogleClassifierFields {
 export interface BaseGoogleClassifierParams
   extends AsyncCallerParams, GoogleClassifierFields {
   /**
-   * Gemini Decisions model identifier. Defaults to `"gemini-decision-1"`.
+   * Gemini Decisions model identifier (for example, `"gemini-decision-1"`).
    */
-  model?: string;
+  model: string;
 
   /**
    * Optional callbacks attached to every invocation of this classifier.

@@ -40,18 +40,21 @@ import type {
   GoogleDecisions,
 } from "./types.js";
 
-export const DEFAULT_DECISIONS_MODEL = "gemini-decision-1";
-
 export function normalizeGoogleClassifierParams<
   TParams extends BaseGoogleClassifierParams,
 >(
-  modelOrParams?: string | TParams,
+  modelOrParams: string | TParams,
   paramsArg?: Omit<TParams, "model">
 ): TParams {
   if (typeof modelOrParams === "string") {
     return { ...(paramsArg ?? {}), model: modelOrParams } as TParams;
   }
-  return { ...(modelOrParams ?? {}) } as TParams;
+  if (!modelOrParams || typeof modelOrParams !== "object") {
+    throw new ConfigurationError(
+      'GoogleClassifier requires a model name (for example, "gemini-decision-1").'
+    );
+  }
+  return { ...modelOrParams };
 }
 
 /**
@@ -111,8 +114,7 @@ export abstract class BaseGoogleClassifier extends BaseDecisionModel {
       googleAuthOptions?: unknown;
     }
   ) {
-    const rawModel =
-      params.model === undefined ? DEFAULT_DECISIONS_MODEL : params.model;
+    const rawModel = typeof params.model === "string" ? params.model : "";
     const model = rawModel.trim();
 
     // Strip credentials, clients, and runtime callbacks from `lc_kwargs` so

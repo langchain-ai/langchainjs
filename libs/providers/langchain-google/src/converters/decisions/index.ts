@@ -2,6 +2,7 @@ export {
   convertContentToDecisionsInstructions,
   convertMediaBlockToInteractionsContent,
   convertStateToDecisionsInput,
+  extractTextContentBlock,
   isMediaLikeBlock,
 } from "./state.js";
 export {
