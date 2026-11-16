@@ -74,6 +74,7 @@ const expansionInfo: Partial<ModelInfo>[] = [
     testConfig: {
       desc: "Vertex - Decisions",
       node: true,
+      skip: true, // Google Cloud does not yet support decision model
     },
   },
   {
@@ -270,6 +271,7 @@ describe.concurrent.each(decisionModelInfo)(
           },
         },
       });
+      console.log(result);
 
       expect(result.model).toBe(model);
       expect(result.nouls.is_damaged.type).toBe("noul");
@@ -467,6 +469,43 @@ describe.concurrent.each(decisionModelInfo)(
 
       expect(result.choices.dominant_color.choice).toBe("blue");
       expect(result.choices.dominant_color.confidence).toBeGreaterThan(0.5);
+    });
+
+    test("evaluates state with multiple ContentBlocks directly at the root", async () => {
+      const imageUrl = new URL(
+        "../../chat_models/tests/data/blue-square.png",
+        import.meta.url
+      );
+      const imageBytes = await fs.readFile(imageUrl);
+      const imageBase64 = imageBytes.toString("base64");
+
+      const classifier = newGoogleClassifier({ mediaResolution: "low" });
+      const result = await classifier.invoke({
+        state: [
+          {
+            type: "text",
+            text: "Inspection ticket #4012 — attached reference swatch:",
+          },
+          {
+            type: "image",
+            mimeType: "image/png",
+            data: imageBase64,
+          },
+          {
+            type: "text",
+            text: "Customer note: The swatch above should be solid blue.",
+          },
+        ],
+        questions: {
+          matches_customer_note: {
+            type: "noul",
+            instructions:
+              "Is the attached swatch blue as described in the customer note?",
+          },
+        },
+      });
+
+      expect(result.nouls.matches_customer_note.noul).toBeGreaterThan(0.7);
     });
   }
 );

@@ -3,7 +3,6 @@ import { WebApiClient } from "../clients/index.js";
 import { applyGeminiGatewayParams } from "../utils/connection.js";
 import {
   BaseGoogleClassifier,
-  DEFAULT_DECISIONS_MODEL,
   normalizeGoogleClassifierParams,
 } from "./base.js";
 import type {
@@ -14,8 +13,8 @@ import type {
 } from "./types.js";
 
 /**
- * Google Gemini Decisions model (`gemini-decision-1`) for web, edge, and
- * Node.js environments using API keys or GCP service account credentials.
+ * Google Gemini Decisions model (for example, `"gemini-decision-1"`) for web,
+ * edge, and Node.js environments using API keys or GCP service account credentials.
  *
  * Import from `@langchain/google/node` when authenticating with Application
  * Default Credentials (ADC) or `google-auth-library` `googleAuthOptions`.
@@ -24,7 +23,7 @@ import type {
  * ```ts
  * import { GoogleClassifier } from "@langchain/google";
  *
- * const classifier = new GoogleClassifier();
+ * const classifier = new GoogleClassifier("gemini-decision-1");
  * const result = await classifier.invoke({
  *   state: "The blue mug I ordered on Monday arrived cracked on Wednesday.",
  *   questions: {
@@ -40,10 +39,10 @@ import type {
 export class GoogleClassifier extends BaseGoogleClassifier {
   declare protected apiKey?: string;
 
-  constructor(params?: GoogleClassifierParams);
   constructor(model: string, params?: Omit<GoogleClassifierParams, "model">);
+  constructor(params: GoogleClassifierParams);
   constructor(
-    modelOrParams?: string | GoogleClassifierParams,
+    modelOrParams: string | GoogleClassifierParams,
     paramsArg?: Omit<GoogleClassifierParams, "model">
   ) {
     let params = normalizeGoogleClassifierParams(modelOrParams, paramsArg);
@@ -63,7 +62,6 @@ export class GoogleClassifier extends BaseGoogleClassifier {
 
 export {
   BaseGoogleClassifier,
-  DEFAULT_DECISIONS_MODEL,
   type BaseGoogleClassifierParams,
   type GoogleClassifierFields,
   type GoogleClassifierParams,

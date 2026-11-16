@@ -266,7 +266,7 @@ describe("convertStateToDecisionsInput", () => {
     expect(result).toEqual([
       {
         type: "text",
-        text: "Inspect all attachments:\nSecond header line.\n",
+        text: "Inspect all attachments:\nSecond header line.",
       },
       {
         type: "image",
@@ -297,6 +297,82 @@ describe("convertStateToDecisionsInput", () => {
         uri: "https://storage.googleapis.com/bucket/manual.pdf",
       },
     ]);
+  });
+
+  test("converts root state arrays of multiple text and multimodal ContentBlocks", () => {
+    const textBlocksOnly = convertStateToDecisionsInput([
+      {
+        type: "text",
+        text: "First text block.",
+        id: "lc-block-1",
+        index: 0,
+      },
+      {
+        type: "text-plain",
+        text: "Second plain-text block.",
+        mimeType: "text/plain",
+      },
+      {
+        type: "file",
+        source_type: "text",
+        text: "Third legacy text block.",
+      },
+    ]);
+    expect(textBlocksOnly).toBe(
+      "First text block.\nSecond plain-text block.\nThird legacy text block."
+    );
+
+    const mixedBlocks = convertStateToDecisionsInput(
+      [
+        { type: "text", text: "Reference photo:" },
+        { type: "text", text: "Inspect carefully." },
+        {
+          type: "image",
+          mimeType: "image/png",
+          data: TINY_PNG_BASE64,
+        },
+        { type: "text", text: "Submitted return photo:" },
+        {
+          type: "image",
+          mimeType: "image/png",
+          data: TINY_PNG_BASE64,
+          metadata: { mediaResolution: "high" },
+        },
+      ],
+      "low"
+    );
+    expect(mixedBlocks).toEqual([
+      {
+        type: "text",
+        text: "Reference photo:\nInspect carefully.",
+      },
+      {
+        type: "image",
+        mime_type: "image/png",
+        data: TINY_PNG_BASE64,
+        resolution: "low",
+      },
+      {
+        type: "text",
+        text: "Submitted return photo:",
+      },
+      {
+        type: "image",
+        mime_type: "image/png",
+        data: TINY_PNG_BASE64,
+        resolution: "high",
+      },
+    ]);
+
+    // Domain JSON objects that happen to include `type: "text"` alongside
+    // domain fields must remain serialized as JSON, not stripped to `.text`.
+    const domainObjects = [
+      { type: "text", text: "note-1", customer_id: "cust_1" },
+      { type: "text", text: "note-2", customer_id: "cust_2" },
+    ];
+    expect(convertStateToDecisionsInput(domainObjects)).toBe(
+      JSON.stringify(domainObjects)
+    );
   });
 
   test("throws InvalidInputError when media blocks appear nested inside a JSON object", () => {
@@ -429,7 +505,7 @@ describe("convertQuestionsToDecisionsQuestions", () => {
       "low"
     );
     expect(converted).toEqual([
-      { type: "text", text: "Does the input match this reference icon?\n" },
+      { type: "text", text: "Does the input match this reference icon?" },
       {
         type: "image",
         mime_type: "image/png",

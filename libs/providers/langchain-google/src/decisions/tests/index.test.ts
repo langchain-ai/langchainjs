@@ -3,11 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ModelRefusalError } from "@langchain/core/errors";
 import type { Question } from "@langchain/core/decisions";
 import { ApiClient } from "../../clients/index.js";
-import {
-  DEFAULT_DECISIONS_MODEL,
-  GoogleClassifier,
-  GoogleRequestRecorder,
-} from "../../index.js";
+import { GoogleClassifier, GoogleRequestRecorder } from "../../index.js";
 import { GoogleClassifier as GoogleClassifierNode } from "../../node.js";
 import {
   ConfigurationError,
@@ -131,10 +127,13 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     vi.restoreAllMocks();
   });
 
-  test("supports constructor overloads and defaults model to gemini-decision-1", () => {
+  test("supports object and positional constructor overloads", () => {
     const mockClient = new MockApiClient();
-    const defaultWeb = new GoogleClassifier({ apiClient: mockClient });
-    expect(defaultWeb.model).toBe(DEFAULT_DECISIONS_MODEL);
+    const objectWeb = new GoogleClassifier({
+      model: "gemini-decision-1",
+      apiClient: mockClient,
+    });
+    expect(objectWeb.model).toBe("gemini-decision-1");
     expect(GoogleClassifier.lc_name()).toBe("GoogleClassifier");
 
     const positionalWeb = new GoogleClassifier("gemini-decision-1", {
@@ -142,19 +141,31 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     });
     expect(positionalWeb.model).toBe("gemini-decision-1");
 
+    const objectNode = new GoogleClassifierNode({
+      model: "gemini-decision-1",
+      apiClient: mockClient,
+    });
+    expect(objectNode.model).toBe("gemini-decision-1");
+
     const positionalNode = new GoogleClassifierNode("gemini-decision-1", {
       apiClient: mockClient,
     });
     expect(positionalNode.model).toBe("gemini-decision-1");
   });
 
-  test("rejects empty or whitespace-only model names with ConfigurationError", () => {
+  test("rejects missing, empty, or whitespace-only model names with ConfigurationError", () => {
     const mockClient = new MockApiClient();
     expect(
       () => new GoogleClassifier("   ", { apiClient: mockClient })
     ).toThrow(ConfigurationError);
     expect(
       () => new GoogleClassifierNode("", { apiClient: mockClient })
+    ).toThrow(ConfigurationError);
+    expect(
+      () =>
+        new GoogleClassifier({
+          apiClient: mockClient,
+        } as unknown as ConstructorParameters<typeof GoogleClassifier>[0])
     ).toThrow(ConfigurationError);
   });
 
@@ -174,11 +185,11 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
         "https://www.googleapis.com/robot/v1/metadata/x509/svc",
     };
 
-    const web = new GoogleClassifier({
+    const web = new GoogleClassifier("gemini-decision-1", {
       apiKey: fakeApiKey,
       credentials: fakeCreds,
     });
-    const node = new GoogleClassifierNode({
+    const node = new GoogleClassifierNode("gemini-decision-1", {
       apiKey: fakeApiKey,
       credentials: fakeCreds,
       googleAuthOptions: {
@@ -201,6 +212,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     // 1. Gemini Developer API (default when API key is present)
     const gaiClient = new MockApiClient({ hasApiKey: true });
     const gaiClassifier = new GoogleClassifier({
+      model: "gemini-decision-1",
       apiClient: gaiClient,
       customHeaders: { "X-Custom-Client": "decisions-test" },
     });
@@ -230,6 +242,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
       projectId: "my-gcp-proj",
     });
     const vertexGlobal = new GoogleClassifierNode({
+      model: "gemini-decision-1",
       apiClient: vertexGlobalClient,
     });
     await vertexGlobal.invoke(SAMPLE_REQUEST);
@@ -243,6 +256,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
       projectId: "my-gcp-proj",
     });
     const vertexRegional = new GoogleClassifierNode({
+      model: "gemini-decision-1",
       apiClient: vertexRegionalClient,
       vertexai: true,
       location: "us-central1",
@@ -259,6 +273,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
       projectId: "my-gcp-proj",
     });
     const vertexMultiRegion = new GoogleClassifierNode({
+      model: "gemini-decision-1",
       apiClient: vertexMultiRegionClient,
       platformType: "gcp",
       location: "eu",
@@ -271,6 +286,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     // 5. Vertex Express (vertexai: true + API key, no explicit GCP credentials)
     const vertexExpressClient = new MockApiClient({ hasApiKey: true });
     const vertexExpress = new GoogleClassifier({
+      model: "gemini-decision-1",
       apiClient: vertexExpressClient,
       vertexai: true,
     });
@@ -282,6 +298,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     // 6. Custom local endpoint
     const customEndpointClient = new MockApiClient({ hasApiKey: true });
     const customClassifier = new GoogleClassifier({
+      model: "gemini-decision-1",
       apiClient: customEndpointClient,
       endpoint: "http://localhost:8080/proxy",
     });
@@ -296,7 +313,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     process.env.LANGSMITH_API_KEY = "ls_gateway_test_key";
 
     const mockClient = new MockApiClient({ hasApiKey: true });
-    const classifier = new GoogleClassifier({
+    const classifier = new GoogleClassifier("gemini-decision-1", {
       apiClient: mockClient,
     });
     await classifier.invoke(SAMPLE_REQUEST);
@@ -311,7 +328,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     const callRecorder = new GoogleRequestRecorder();
     const mockClient = new MockApiClient();
 
-    const classifier = new GoogleClassifier({
+    const classifier = new GoogleClassifier("gemini-decision-1", {
       apiClient: mockClient,
       callbacks: [ctorRecorder],
     });
@@ -328,6 +345,50 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
       "https://generativelanguage.googleapis.com/v1beta/decisions"
     );
     expect(callRecorder.response?.status).toBe(200);
+  });
+
+  test("sends multiple ContentBlocks in state as wire Interactions Content[]", async () => {
+    const tinyPng =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    const mockClient = new MockApiClient();
+    const classifier = new GoogleClassifier("gemini-decision-1", {
+      apiClient: mockClient,
+      mediaResolution: "low",
+    });
+
+    const res = await classifier.invoke({
+      state: [
+        { type: "text", text: "Customer photo for return #8821:" },
+        {
+          type: "image",
+          mimeType: "image/png",
+          data: tinyPng,
+        },
+        { type: "text", text: "Inspect only the ceramic rim." },
+      ],
+      questions: SAMPLE_REQUEST.questions,
+    });
+
+    expect(res.nouls.is_damaged.noul).toBe(0.91);
+    expect(mockClient.requests[0]?.body).toEqual({
+      model: "gemini-decision-1",
+      input: [
+        { type: "text", text: "Customer photo for return #8821:" },
+        {
+          type: "image",
+          mime_type: "image/png",
+          data: tinyPng,
+          resolution: "low",
+        },
+        { type: "text", text: "Inspect only the ceramic rim." },
+      ],
+      questions: {
+        is_damaged: {
+          type: "noul",
+          instructions: "Did the item arrive damaged?",
+        },
+      },
+    });
   });
 
   test("retries transient 503 errors via AsyncCaller and succeeds on retry", async () => {
@@ -358,7 +419,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
       },
     });
 
-    const classifier = new GoogleClassifier({
+    const classifier = new GoogleClassifier("gemini-decision-1", {
       apiClient: mockClient,
       maxRetries: 2,
     });
@@ -385,7 +446,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
         ),
     });
 
-    const badRequestClassifier = new GoogleClassifier({
+    const badRequestClassifier = new GoogleClassifier("gemini-decision-1", {
       apiClient: badRequestClient,
       maxRetries: 3,
     });
@@ -411,7 +472,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
         ),
     });
 
-    const safetyClassifier = new GoogleClassifier({
+    const safetyClassifier = new GoogleClassifier("gemini-decision-1", {
       apiClient: safetyClient,
       maxRetries: 3,
     });
@@ -428,7 +489,7 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
     controller.abort(new Error("Caller cancelled decision request"));
 
     const mockClient = new MockApiClient();
-    const classifier = new GoogleClassifier({
+    const classifier = new GoogleClassifier("gemini-decision-1", {
       apiClient: mockClient,
       maxRetries: 0,
     });
@@ -451,7 +512,9 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
         }),
     });
 
-    const classifier = new GoogleClassifier({ apiClient: mockClient });
+    const classifier = new GoogleClassifier("gemini-decision-1", {
+      apiClient: mockClient,
+    });
 
     const criteria: Record<string, string> = {};
     Object.defineProperty(criteria, "__proto__", {

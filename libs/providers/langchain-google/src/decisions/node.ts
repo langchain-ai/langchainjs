@@ -10,7 +10,6 @@ import {
 } from "../utils/connection.js";
 import {
   BaseGoogleClassifier,
-  DEFAULT_DECISIONS_MODEL,
   normalizeGoogleClassifierParams,
 } from "./base.js";
 import type {
@@ -25,13 +24,13 @@ export interface GoogleClassifierNodeParams
 class GoogleClassifierNode extends BaseGoogleClassifier {
   declare protected apiKey?: string;
 
-  constructor(params?: GoogleClassifierNodeParams);
   constructor(
     model: string,
     params?: Omit<GoogleClassifierNodeParams, "model">
   );
+  constructor(params: GoogleClassifierNodeParams);
   constructor(
-    modelOrParams?: string | GoogleClassifierNodeParams,
+    modelOrParams: string | GoogleClassifierNodeParams,
     paramsArg?: Omit<GoogleClassifierNodeParams, "model">
   ) {
     let params = normalizeGoogleClassifierParams(modelOrParams, paramsArg);
@@ -63,7 +62,6 @@ class GoogleClassifierNode extends BaseGoogleClassifier {
 
 export {
   BaseGoogleClassifier,
-  DEFAULT_DECISIONS_MODEL,
   GoogleClassifierNode as GoogleClassifier,
   type BaseGoogleClassifierParams,
   type GoogleClassifierFields,
