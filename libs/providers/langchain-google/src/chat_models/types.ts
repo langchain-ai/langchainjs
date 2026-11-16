@@ -11,6 +11,7 @@ import type { AsyncCaller } from "@langchain/core/utils/async_caller";
 import type { ApiClient } from "../clients/index.js";
 import type { GenContent as GenContentNamespace } from "./api_types/generate_content.js";
 import type { Interactions as InteractionsNamespace } from "../api_types/interactions.js";
+import type { GooglePlatformType } from "../utils/connection.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 import type { GoogleChatApiHandler } from "./handlers/base.js";
 
@@ -271,7 +272,7 @@ export interface ChatGoogleFields
     Partial<GenerateContentSpecificFields>,
     Partial<InteractionsSpecificFields> {}
 
-export type GooglePlatformType = "gai" | "gcp";
+export type { GooglePlatformType };
 
 export interface BaseChatGoogleParams
   extends BaseChatModelParams, ChatGoogleFields {
