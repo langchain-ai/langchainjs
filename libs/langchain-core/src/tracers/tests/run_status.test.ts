@@ -109,22 +109,38 @@ describe("tracer run status", () => {
   });
 
   test("status follows the latest recorded error", async () => {
-    const tracer = new FakeTracer();
+    class ExposedTracer extends FakeTracer {
+      record(runId: string, error: unknown) {
+        const run = this.getRunById(runId);
+        if (run === undefined) throw new Error("run not found");
+        this.setRunError(run, error);
+        return run;
+      }
+    }
+    const tracer = new ExposedTracer();
     const runId = uuid.v4();
     await tracer.handleToolStart(serialized, "in", runId);
-    const run = tracer.runs.length ? tracer.runs[0] : undefined;
-    expect(run).toBeUndefined();
     // Cancel then a real error on the same run must not stay `cancelled`.
-    const internal = (
-      tracer as unknown as { getRunById(id: string): { status?: string } }
-    ).getRunById(runId);
-    (
-      tracer as unknown as { setRunError(r: unknown, e: unknown): void }
-    ).setRunError(internal, new ExpectedCancellation("stop"));
-    expect(internal.status).toBe("cancelled");
-    (
-      tracer as unknown as { setRunError(r: unknown, e: unknown): void }
-    ).setRunError(internal, new Error("real failure"));
-    expect(internal.status).toBeUndefined();
+    expect(tracer.record(runId, new ExpectedCancellation("stop")).status).toBe(
+      "cancelled"
+    );
+    expect(tracer.record(runId, new Error("real failure")).status).toBe(
+      undefined
+    );
+  });
+
+  test("a throwing name or cause getter never throws", () => {
+    const hostile = Object.defineProperty(new Error("x"), "name", {
+      get() {
+        throw new Error("boom");
+      },
+    });
+    expect(getRunEndStatusFromError(hostile)).toBeUndefined();
+    const hostileCause = Object.defineProperty(new Error("x"), "cause", {
+      get() {
+        throw new Error("boom");
+      },
+    });
+    expect(getRunEndStatusFromError(hostileCause)).toBeUndefined();
   });
 });

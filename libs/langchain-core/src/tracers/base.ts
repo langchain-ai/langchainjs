@@ -39,19 +39,30 @@ const MAX_CAUSE_DEPTH = 5;
  * reason) gives `"cancelled"`, and a LangGraph interrupt gives
  * `"interrupted"`. Anything else, including an unmarked `AbortError` or a
  * timeout, gives `undefined` and stays an error.
+ *
+ * The `cause` chain is searched on purpose: provider SDKs wrap the abort
+ * reason, and a wrapped deliberate cancel or interrupt is still one. This
+ * mirrors the Python tracer, which treats the whole `GraphBubbleUp` family
+ * (so `ParentCommand` and `GraphDelegate` too) as `interrupted`.
  */
 export function getRunEndStatusFromError(
   error: unknown
 ): RunEndStatus | undefined {
-  let current = error;
-  for (let i = 0; i < MAX_CAUSE_DEPTH; i += 1) {
-    if (typeof current !== "object" || current === null) return undefined;
-    const { name, cause } = current as { name?: unknown; cause?: unknown };
-    if (typeof name === "string") {
-      if (INTERRUPT_ERROR_NAMES.has(name)) return "interrupted";
-      if (name === EXPECTED_CANCELLATION_NAME) return "cancelled";
+  // A tracer must never throw from its error path, so a hostile `name` or
+  // `cause` getter just means "no explicit status".
+  try {
+    let current = error;
+    for (let i = 0; i < MAX_CAUSE_DEPTH; i += 1) {
+      if (typeof current !== "object" || current === null) return undefined;
+      const { name, cause } = current as { name?: unknown; cause?: unknown };
+      if (typeof name === "string") {
+        if (INTERRUPT_ERROR_NAMES.has(name)) return "interrupted";
+        if (name === EXPECTED_CANCELLATION_NAME) return "cancelled";
+      }
+      current = cause;
     }
-    current = cause;
+  } catch {
+    // fall through to no status
   }
   return undefined;
 }
