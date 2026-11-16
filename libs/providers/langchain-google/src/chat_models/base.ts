@@ -36,115 +36,26 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
-import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   GoogleChatApiHandler,
   GenerateContentApiHandler,
   InteractionsApiHandler,
 } from "./handlers/index.js";
 import { convertParamsToPlatformType } from "../converters/shared/params.js";
+import {
+  applyGeminiGatewayParams,
+  getPlatformType,
+  hasVertexCredentials,
+  resolveGoogleApiVersion,
+  resolveGoogleEndpoint,
+} from "../utils/connection.js";
 
+export { applyGeminiGatewayParams, getPlatformType };
 export type {
   BaseChatGoogleParams,
   BaseChatGoogleCallOptions,
   GooglePlatformType,
 } from "./types.js";
-
-function hasVertexCredentials(params: {
-  credentials?: unknown;
-  googleAuthOptions?: unknown;
-}): boolean {
-  return (
-    typeof params.credentials !== "undefined" ||
-    typeof params.googleAuthOptions !== "undefined" ||
-    typeof getEnvironmentVariable("GOOGLE_CLOUD_CREDENTIALS") !== "undefined"
-  );
-}
-
-/**
- * Resolves LangSmith gateway routing for Google chat model params.
- *
- * The LangSmith gateway exposes direct paths for the Gemini Developer API and
- * Vertex AI. An explicit `endpoint` or explicit credentials (`apiKey`,
- * `credentials`, `googleAuthOptions`) suppress gateway routing.
- *
- * When `LANGSMITH_GATEWAY` is set, this rewrites `endpoint` to the gateway
- * host and uses the gateway key as the API key. The default
- * `https` gateway host is written scheme-less (the URL builders prepend
- * `https://`); a non-`https` custom gateway keeps its scheme so it is not
- * forced to TLS.
- *
- * This function is pure: it never mutates `params`. It returns a new object
- * with the gateway overrides applied when routing is active, or an unchanged
- * shallow copy otherwise.
- *
- * @returns a new params object with gateway routing applied when applicable.
- */
-export function applyGeminiGatewayParams<TParams extends object>(
-  params: TParams
-): TParams & {
-  apiKey?: string;
-  endpoint?: string;
-  platformType?: GooglePlatformType;
-} {
-  const p = params as {
-    apiKey?: string;
-    endpoint?: string;
-    platformType?: GooglePlatformType;
-    vertexai?: boolean;
-    credentials?: unknown;
-    googleAuthOptions?: unknown;
-  };
-  if (
-    typeof p.endpoint !== "undefined" ||
-    typeof p.apiKey !== "undefined" ||
-    typeof p.credentials !== "undefined" ||
-    typeof p.googleAuthOptions !== "undefined"
-  ) {
-    return { ...params };
-  }
-  const platform =
-    convertParamsToPlatformType(p) ?? (hasVertexCredentials(p) ? "gcp" : "gai");
-  const gatewayConfig = resolveLangSmithGatewayConfig({
-    providerPath: platform === "gcp" ? "vertex" : "gemini",
-  });
-  if (typeof gatewayConfig.baseURL === "undefined") {
-    return { ...params };
-  }
-
-  const gatewayUrl = new URL(gatewayConfig.baseURL);
-  const path = gatewayUrl.pathname.replace(/\/+$/, "");
-  // The URL builders compose `https://${endpoint}/${apiVersion}/...`. For the
-  // default `https` gateway, keep the endpoint scheme-less (host + path) so the
-  // builder's `https://` prefix produces the right URL. For a non-`https`
-  // custom gateway (e.g. `http://localhost:8080`), keep the full scheme so the
-  // builder does not force TLS; `buildUrlGemini` skips its prefix when the
-  // endpoint already includes a scheme.
-  const endpoint =
-    gatewayUrl.protocol === "https:"
-      ? `${gatewayUrl.host}${path}`
-      : `${gatewayUrl.protocol}//${gatewayUrl.host}${path}`;
-  return {
-    ...params,
-    apiKey: gatewayConfig.apiKey,
-    endpoint,
-    platformType: platform,
-  };
-}
-
-export function getPlatformType(
-  platform: GooglePlatformType | undefined,
-  hasApiKey: boolean
-): GooglePlatformType {
-  if (typeof platform !== "undefined") {
-    return platform;
-  } else if (hasApiKey) {
-    return "gai";
-  } else {
-    return "gcp";
-  }
-}
 
 export abstract class BaseChatGoogle<
   CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
@@ -223,13 +134,10 @@ export abstract class BaseChatGoogle<
   }
 
   protected get apiVersion(): string {
-    if (typeof this._apiVersion !== "undefined") {
-      return this._apiVersion;
-    } else if (this.platform === "gai") {
-      return "v1beta";
-    } else {
-      return "v1";
-    }
+    return resolveGoogleApiVersion({
+      platform: this.platform,
+      apiVersion: this._apiVersion,
+    });
   }
 
   protected get location(): string {
@@ -237,20 +145,12 @@ export abstract class BaseChatGoogle<
   }
 
   protected get endpoint(): string {
-    if (typeof this._endpoint !== "undefined") {
-      return this._endpoint;
-    } else if (this.platform === "gai") {
-      return "generativelanguage.googleapis.com";
-    } else if (this.isVertexExpress) {
-      return "aiplatform.googleapis.com";
-    } else if (this.location === "global") {
-      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
-      return "aiplatform.googleapis.com";
-    } else if (!this.location.includes("-")) {
-      return `aiplatform.${this.location}.rep.googleapis.com`;
-    } else {
-      return `${this.location}-aiplatform.googleapis.com`;
-    }
+    return resolveGoogleEndpoint({
+      platform: this.platform,
+      endpoint: this._endpoint,
+      location: this.location,
+      isVertexExpress: this.isVertexExpress,
+    });
   }
 
   protected get publisher(): string {
