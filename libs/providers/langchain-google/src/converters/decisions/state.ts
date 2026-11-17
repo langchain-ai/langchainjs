@@ -10,10 +10,11 @@ import {
   parseBase64DataUrl,
   ToolMessage,
 } from "@langchain/core/messages";
-import type { Gemini } from "../../chat_models/types.js";
+import { Gemini } from "../../chat_models/types.js";
 import type { GoogleDecisions } from "../../decisions/types.js";
 import { InvalidInputError } from "../../utils/errors.js";
 import { convertMediaResolutionToInteractions } from "../interactions/params.js";
+import { iife } from "../../utils/misc";
 
 const CIRCULAR_INPUT_ERROR =
   "Circular reference detected in Gemini Decisions input.";
@@ -130,6 +131,7 @@ function inferMimeTypeFromUri(uri: string): string | undefined {
     opus: "audio/opus",
     mp4: "video/mp4",
     mpeg: "video/mpeg",
+    mpg: "video/mpg",
     mov: "video/mov",
     avi: "video/avi",
     webm: "video/webm",
@@ -137,6 +139,7 @@ function inferMimeTypeFromUri(uri: string): string | undefined {
     flv: "video/x-flv",
     "3gp": "video/3gpp",
     pdf: "application/pdf",
+    csv: "text/csv",
   };
   try {
     const pathname = new URL(uri).pathname;
@@ -250,6 +253,15 @@ export function extractTextContentBlock(value: unknown): string | undefined {
   return undefined;
 }
 
+function optionalMimeType(mimeType?: string): Record<string, unknown> {
+  return mimeType
+    ? {
+      mime_type:
+        mimeType as Gemini.Interactions.ImageContent["mime_type"],
+    }
+    : {}
+}
+
 function buildInteractionsMediaContent(params: {
   kindHint?: "image" | "audio" | "video" | "document";
   mimeType?: string;
@@ -267,22 +279,18 @@ function buildInteractionsMediaContent(params: {
     defaultResolution,
   } = params;
 
+  const effectiveMime =
+    typeof mimeType === "string" && mimeType.length > 0 ? mimeType : undefined;
+
   let resolvedKind = kindHint;
-  if (!resolvedKind && mimeType) {
-    if (mimeType.startsWith("image/")) resolvedKind = "image";
-    else if (mimeType.startsWith("audio/")) resolvedKind = "audio";
-    else if (mimeType.startsWith("video/")) resolvedKind = "video";
+  if (!resolvedKind && effectiveMime) {
+    if (effectiveMime.startsWith("image/")) resolvedKind = "image";
+    else if (effectiveMime.startsWith("audio/")) resolvedKind = "audio";
+    else if (effectiveMime.startsWith("video/")) resolvedKind = "video";
     else resolvedKind = "document";
   }
   if (!resolvedKind) {
     resolvedKind = "document";
-  }
-
-  const effectiveMime = mimeType;
-  if (!effectiveMime) {
-    throw new InvalidInputError(
-      `Gemini Decisions ${resolvedKind} content blocks require a valid mimeType.`
-    );
   }
 
   const sourcePayload =
@@ -297,43 +305,25 @@ function buildInteractionsMediaContent(params: {
     );
   }
 
-  if (resolvedKind === "image") {
-    const resolution = explicitResolution ?? defaultResolution;
-    return {
-      type: "image",
-      mime_type: effectiveMime as Gemini.Interactions.ImageContent["mime_type"],
-      ...sourcePayload,
-      ...(resolution ? { resolution } : {}),
-    };
-  }
-
-  if (resolvedKind === "video") {
-    // Gemini Decisions supports `ultra_high` on images only; clamp an inherited
-    // `ultra_high` default down to `high` for video while preserving explicit settings.
-    const inherited =
-      defaultResolution === "ultra_high" ? "high" : defaultResolution;
-    const resolution = explicitResolution ?? inherited;
-    return {
-      type: "video",
-      mime_type: effectiveMime as Gemini.Interactions.VideoContent["mime_type"],
-      ...sourcePayload,
-      ...(resolution ? { resolution } : {}),
-    };
-  }
-
-  if (resolvedKind === "audio") {
-    return {
-      type: "audio",
-      mime_type: effectiveMime as Gemini.Interactions.AudioContent["mime_type"],
-      ...sourcePayload,
-    };
-  }
+  const resolution = iife(()=>{
+    let resolution: Gemini.Interactions.MediaResolution | undefined = undefined;
+    if (resolvedKind === "image") {
+      resolution = explicitResolution ?? defaultResolution;
+    } else if (resolvedKind === "video") {
+      // Gemini Decisions supports `ultra_high` on images only; clamp an inherited
+      // `ultra_high` default down to `high` for video while preserving explicit settings.
+      const inherited =
+        defaultResolution === "ultra_high" ? "high" : defaultResolution;
+      resolution = explicitResolution ?? inherited;
+    }
+    return resolution ? {resolution} : {};
+  });
 
   return {
-    type: "document",
-    mime_type:
-      effectiveMime as Gemini.Interactions.DocumentContent["mime_type"],
+    type: resolvedKind,
+    ...optionalMimeType(effectiveMime),
     ...sourcePayload,
+    ...resolution,
   };
 }
 
@@ -396,15 +386,20 @@ export function convertMediaBlockToInteractionsContent(
         "Missing URL in image_url content block for Gemini Decisions."
       );
     }
-    const parsedDataUrl = parseBase64DataUrl({ dataUrl: rawUrl });
-    if (parsedDataUrl?.data && parsedDataUrl?.mime_type) {
+    if (rawUrl.startsWith("data:")) {
+      const parsedDataUrl = parseBase64DataUrl({ dataUrl: rawUrl });
+      if (!parsedDataUrl?.data) {
+        throw new InvalidInputError(
+          "Malformed base64 data URL in Gemini Decisions image_url content block."
+        );
+      }
       const dataStr =
         typeof parsedDataUrl.data === "string"
           ? parsedDataUrl.data
           : uint8ArrayToBase64(parsedDataUrl.data);
       return buildInteractionsMediaContent({
         kindHint: "image",
-        mimeType: parsedDataUrl.mime_type,
+        mimeType: parsedDataUrl.mime_type || undefined,
         data: dataStr,
         explicitResolution,
         defaultResolution: defaultMediaResolution,
@@ -412,7 +407,7 @@ export function convertMediaBlockToInteractionsContent(
     }
     return buildInteractionsMediaContent({
       kindHint: "image",
-      mimeType: inferMimeTypeFromUri(rawUrl) ?? "image/jpeg",
+      mimeType: inferMimeTypeFromUri(rawUrl),
       uri: rawUrl,
       explicitResolution,
       defaultResolution: defaultMediaResolution,
