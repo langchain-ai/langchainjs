@@ -179,9 +179,10 @@ export abstract class MiddlewareNode<
     }
 
     /**
-     * If result is a state update, merge it with current state
+     * Emit only the hook's updates. Re-emitting untouched state would run
+     * its channel reducers again (for example, appending a list to itself).
      */
-    return { ...state, ...result, jumpTo: result.jumpTo };
+    return { ...result, jumpTo: result.jumpTo };
   }
 
   get nodeOptions() {
