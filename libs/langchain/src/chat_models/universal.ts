@@ -1140,6 +1140,7 @@ export async function initChatModel<
         modelProvider,
       },
       configPrefix,
+      configurableFields: [],
       profile,
     });
   } else {
