@@ -1152,7 +1152,7 @@ describe("withStructuredOutput over a streamed tool_use response", () => {
   });
 
   test(".stream() rejects tool input truncated by max_tokens", async () => {
-    const events = structuredOutputEvents();
+    const events: unknown[] = structuredOutputEvents();
     events[2] = {
       type: "content_block_delta" as const,
       index: 0,
