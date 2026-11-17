@@ -1,6 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { it, test, expect, describe, beforeAll, afterAll, vi } from "vitest";
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
@@ -28,6 +29,52 @@ const chatOpenAIApis = [
 ];
 
 describe("ChatOpenAI", () => {
+  // https://github.com/langchain-ai/langchainjs/issues/12137
+  test("bindTools omits redundant Zod format patterns on Responses API", async () => {
+    const fetch = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      return new Response(
+        JSON.stringify({
+          id: "r",
+          object: "response",
+          output: [],
+          status: "completed",
+        }),
+        { headers: { "content-type": "application/json" } }
+      );
+    });
+
+    const model = new ChatOpenAI({
+      model: "gpt-5",
+      apiKey: "test",
+      useResponsesApi: true,
+      maxRetries: 0,
+      configuration: { fetch },
+    });
+
+    await model
+      .bindTools([
+        {
+          name: "read_thing",
+          description: "Read a thing",
+          schema: z4.object({
+            id: z4.uuid(),
+            day: z4.iso.date(),
+            mail: z4.email(),
+            code: z4.string().regex(/^ABC-\d+$/),
+          }),
+        },
+      ])
+      .invoke("hi");
+
+    expect(fetch).toHaveBeenCalled();
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body));
+    const props = body.tools[0].parameters.properties;
+    expect(props.id).toEqual({ type: "string", format: "uuid" });
+    expect(props.day).toEqual({ type: "string", format: "date" });
+    expect(props.mail).toEqual({ type: "string", format: "email" });
+    expect(props.code.pattern).toBe("^ABC-\\d+$");
+    expect(props.code).not.toHaveProperty("format");
+  });
   describe("should initialize with correct values", () => {
     it("forwards and overrides prompt cache options", () => {
       const chat = new ChatOpenAI({

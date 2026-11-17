@@ -297,4 +297,118 @@ describe("toJsonSchema", () => {
       expect(result1.parameters).toBe(result2.parameters);
     });
   });
+
+  // https://github.com/langchain-ai/langchainjs/issues/12137
+  describe("strips redundant Zod format patterns", () => {
+    it("drops pattern next to uuid/date/date-time/email formats", () => {
+      const schema = z4.object({
+        id: z4.uuid(),
+        day: z4.iso.date(),
+        at: z4.iso.datetime(),
+        mail: z4.email(),
+      });
+      const jsonSchema = toJsonSchema(schema) as {
+        properties: Record<string, { format?: string; pattern?: string }>;
+      };
+      expect(jsonSchema.properties.id).toEqual({
+        type: "string",
+        format: "uuid",
+      });
+      expect(jsonSchema.properties.day).toEqual({
+        type: "string",
+        format: "date",
+      });
+      expect(jsonSchema.properties.at).toEqual({
+        type: "string",
+        format: "date-time",
+      });
+      expect(jsonSchema.properties.mail).toEqual({
+        type: "string",
+        format: "email",
+      });
+    });
+
+    it("keeps custom regex patterns without those formats", () => {
+      const schema = z4.object({
+        code: z4.string().regex(/^ABC-\d+$/),
+      });
+      const jsonSchema = toJsonSchema(schema) as {
+        properties: { code: { pattern?: string; format?: string } };
+      };
+      expect(jsonSchema.properties.code.pattern).toBe("^ABC-\\d+$");
+      expect(jsonSchema.properties.code.format).toBeUndefined();
+    });
+
+    it("keeps patterns for non-standard formats like cuid", () => {
+      const schema = z4.object({ id: z4.cuid() });
+      const jsonSchema = toJsonSchema(schema) as {
+        properties: { id: { format?: string; pattern?: string } };
+      };
+      expect(jsonSchema.properties.id.format).toBe("cuid");
+      expect(jsonSchema.properties.id.pattern).toBeDefined();
+    });
+
+    it("strips nested properties and array items", () => {
+      const schema = z4.object({
+        items: z4.array(
+          z4.object({
+            id: z4.uuid(),
+            nested: z4.object({ mail: z4.email() }),
+          })
+        ),
+      });
+      const jsonSchema = toJsonSchema(schema) as {
+        properties: {
+          items: {
+            items: {
+              properties: {
+                id: { format?: string; pattern?: string };
+                nested: {
+                  properties: { mail: { format?: string; pattern?: string } };
+                };
+              };
+            };
+          };
+        };
+      };
+      expect(jsonSchema.properties.items.items.properties.id).toEqual({
+        type: "string",
+        format: "uuid",
+      });
+      expect(
+        jsonSchema.properties.items.items.properties.nested.properties.mail
+      ).toEqual({
+        type: "string",
+        format: "email",
+      });
+    });
+
+    it("does not rewrite raw JSON schemas passed through", () => {
+      const raw = {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            format: "uuid",
+            pattern: "^custom-uuid-pattern$",
+          },
+        },
+      };
+      const jsonSchema = toJsonSchema(raw as never) as typeof raw;
+      expect(jsonSchema.properties.id.pattern).toBe("^custom-uuid-pattern$");
+      expect(jsonSchema).toBe(raw);
+    });
+
+    it("caches the stripped schema for repeated Zod conversions", () => {
+      const schema = z4.object({ id: z4.uuid() });
+      const a = toJsonSchema(schema) as {
+        properties: { id: { pattern?: string } };
+      };
+      const b = toJsonSchema(schema) as {
+        properties: { id: { pattern?: string } };
+      };
+      expect(a).toBe(b);
+      expect(a.properties.id.pattern).toBeUndefined();
+    });
+  });
 });
