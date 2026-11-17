@@ -352,6 +352,73 @@ describe("convertStateToDecisionsInput", () => {
     ]);
   });
 
+  test("omits mime_type when unavailable rather than throwing or guessing fake defaults, while sniffing known URI extensions", () => {
+    const result = convertStateToDecisionsInput([
+      {
+        type: "video",
+        url: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+      },
+      {
+        type: "image",
+        url: "https://cdn.example.com/photo?id=3",
+      },
+      {
+        type: "image",
+        fileId: "files/abc123",
+      },
+      {
+        type: "image_url",
+        image_url: "https://cdn.example.com/render?asset=99",
+      },
+      {
+        inlineData: {
+          data: TINY_PNG_BASE64,
+        },
+      },
+      {
+        type: "file",
+        url: "https://storage.googleapis.com/bucket/photo.png",
+      },
+      {
+        type: "file",
+        url: "https://storage.googleapis.com/bucket/table.csv",
+      },
+    ]);
+
+    expect(result).toEqual([
+      {
+        type: "video",
+        uri: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+      },
+      {
+        type: "image",
+        uri: "https://cdn.example.com/photo?id=3",
+      },
+      {
+        type: "image",
+        uri: "files/abc123",
+      },
+      {
+        type: "image",
+        uri: "https://cdn.example.com/render?asset=99",
+      },
+      {
+        type: "document",
+        data: TINY_PNG_BASE64,
+      },
+      {
+        type: "image",
+        mime_type: "image/png",
+        uri: "https://storage.googleapis.com/bucket/photo.png",
+      },
+      {
+        type: "document",
+        mime_type: "text/csv",
+        uri: "https://storage.googleapis.com/bucket/table.csv",
+      },
+    ]);
+  });
+
   test("converts root state arrays of multiple text and multimodal ContentBlocks", () => {
     const textBlocksOnly = convertStateToDecisionsInput([
       {
