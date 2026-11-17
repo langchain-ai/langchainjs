@@ -2284,3 +2284,49 @@ describe("profile.midConversationTools", () => {
     expect(PROFILES["gpt-5.5"].midConversationTools).toBe(true);
   });
 });
+
+describe("bound and call signals", () => {
+  // The request ends only when its own signal aborts.
+  const hangingFetch = (_url: any, init?: any) =>
+    new Promise<never>((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(init.signal.reason));
+    });
+
+  const makeModel = () =>
+    new ChatOpenAI({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      maxRetries: 0,
+      configuration: { fetch: hangingFetch },
+    });
+
+  it("aborts when the bound signal aborts and a call signal is passed", async () => {
+    const bound = new AbortController();
+    const model = makeModel().withConfig({ signal: bound.signal });
+    const pending = model.invoke("Hello", {
+      signal: new AbortController().signal,
+    });
+    bound.abort(new Error("bound"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("aborts when the call signal aborts and a signal is bound", async () => {
+    const call = new AbortController();
+    const model = makeModel().withConfig({
+      signal: new AbortController().signal,
+    });
+    const pending = model.invoke("Hello", { signal: call.signal });
+    call.abort(new Error("call"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("keeps both signals when withConfig binds a second signal", async () => {
+    const first = new AbortController();
+    const model = makeModel()
+      .withConfig({ signal: first.signal })
+      .withConfig({ signal: new AbortController().signal });
+    const pending = model.invoke("Hello");
+    first.abort(new Error("first"));
+    await expect(pending).rejects.toThrow();
+  });
+});

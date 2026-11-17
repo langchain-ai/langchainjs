@@ -270,6 +270,30 @@ export function getChatOpenAIModelParams<TParams extends BaseChatOpenAIFields>(
   return modelOrParams;
 }
 
+/**
+ * Spreads `overrides` over `base`, but keeps both abort signals: a signal on
+ * `overrides` would otherwise replace the one on `base`, as `mergeConfigs`
+ * in `@langchain/core` avoids for other runnables.
+ * @internal
+ */
+export function mergeCallOptions<T extends { signal?: AbortSignal }>(
+  base: T,
+  overrides?: Partial<T>
+): T {
+  const merged = { ...base, ...(overrides ?? {}) } as T;
+  const baseSignal = base?.signal;
+  const overrideSignal = overrides?.signal;
+  if (
+    baseSignal !== undefined &&
+    overrideSignal !== undefined &&
+    baseSignal !== overrideSignal &&
+    "any" in AbortSignal
+  ) {
+    merged.signal = AbortSignal.any([baseSignal, overrideSignal]);
+  }
+  return merged;
+}
+
 /** @internal */
 export abstract class BaseChatOpenAI<
   CallOptions extends BaseChatOpenAICallOptions,
@@ -709,10 +733,10 @@ export abstract class BaseChatOpenAI<
   protected _combineCallOptions(
     additionalOptions?: this["ParsedCallOptions"]
   ): this["ParsedCallOptions"] {
-    return {
-      ...this.defaultOptions,
-      ...(additionalOptions ?? {}),
-    };
+    return mergeCallOptions<this["ParsedCallOptions"]>(
+      this.defaultOptions,
+      additionalOptions
+    );
   }
 
   /** @internal */
