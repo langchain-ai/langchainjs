@@ -299,6 +299,59 @@ describe("convertStateToDecisionsInput", () => {
     ]);
   });
 
+  test("infers image, audio, video, and document kinds from mimeType on v1 file blocks", () => {
+    const result = convertStateToDecisionsInput(
+      [
+        {
+          type: "file",
+          mimeType: "image/png",
+          data: TINY_PNG_BASE64,
+        },
+        {
+          type: "file",
+          mimeType: "video/mp4",
+          fileId: "https://generativelanguage.googleapis.com/v1beta/files/vid1",
+        },
+        {
+          type: "file",
+          mimeType: "audio/mp3",
+          data: TINY_PNG_BASE64,
+        },
+        {
+          type: "file",
+          mimeType: "application/pdf",
+          url: "https://storage.googleapis.com/bucket/manual.pdf",
+        },
+      ],
+      "ultra_high"
+    );
+
+    expect(result).toEqual([
+      {
+        type: "image",
+        mime_type: "image/png",
+        data: TINY_PNG_BASE64,
+        resolution: "ultra_high",
+      },
+      {
+        type: "video",
+        mime_type: "video/mp4",
+        uri: "https://generativelanguage.googleapis.com/v1beta/files/vid1",
+        resolution: "high",
+      },
+      {
+        type: "audio",
+        mime_type: "audio/mp3",
+        data: TINY_PNG_BASE64,
+      },
+      {
+        type: "document",
+        mime_type: "application/pdf",
+        uri: "https://storage.googleapis.com/bucket/manual.pdf",
+      },
+    ]);
+  });
+
   test("converts root state arrays of multiple text and multimodal ContentBlocks", () => {
     const textBlocksOnly = convertStateToDecisionsInput([
       {
