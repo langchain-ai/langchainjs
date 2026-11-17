@@ -14,7 +14,7 @@ import { Gemini } from "../../chat_models/types.js";
 import type { GoogleDecisions } from "../../decisions/types.js";
 import { InvalidInputError } from "../../utils/errors.js";
 import { convertMediaResolutionToInteractions } from "../interactions/params.js";
-import { iife } from "../../utils/misc";
+import { iife } from "../../utils/misc.js";
 
 const CIRCULAR_INPUT_ERROR =
   "Circular reference detected in Gemini Decisions input.";
@@ -256,10 +256,9 @@ export function extractTextContentBlock(value: unknown): string | undefined {
 function optionalMimeType(mimeType?: string): Record<string, unknown> {
   return mimeType
     ? {
-      mime_type:
-        mimeType as Gemini.Interactions.ImageContent["mime_type"],
-    }
-    : {}
+        mime_type: mimeType as Gemini.Interactions.ImageContent["mime_type"],
+      }
+    : {};
 }
 
 function buildInteractionsMediaContent(params: {
@@ -305,7 +304,7 @@ function buildInteractionsMediaContent(params: {
     );
   }
 
-  const resolution = iife(()=>{
+  const resolution = iife(() => {
     let resolution: Gemini.Interactions.MediaResolution | undefined = undefined;
     if (resolvedKind === "image") {
       resolution = explicitResolution ?? defaultResolution;
@@ -316,7 +315,7 @@ function buildInteractionsMediaContent(params: {
         defaultResolution === "ultra_high" ? "high" : defaultResolution;
       resolution = explicitResolution ?? inherited;
     }
-    return resolution ? {resolution} : {};
+    return resolution ? { resolution } : {};
   });
 
   return {

@@ -2,8 +2,8 @@
 "@langchain/google": patch
 ---
 
-Adds **experimental** support for the Google Gemini Decisions API on AI 
-Studio. (Google Cloud / Vertex support has been added, but final support is 
+Adds **experimental** support for the Google Gemini Decisions API on AI
+Studio. (Google Cloud / Vertex support has been added, but final support is
 pending platform implementation.)
 
 - Add `GoogleClassifier` and `BaseGoogleClassifier` (implementing `BaseDecisionModel` from `@langchain/core/decisions`) in `@langchain/google` and `@langchain/google/node`
