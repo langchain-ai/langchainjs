@@ -10,6 +10,15 @@ test("Serialization", () => {
   );
 });
 
+describe("stop sequences", () => {
+  test("invocationParams forwards stop and omits an empty array", () => {
+    const model = new MistralAI({ apiKey: "foo" });
+    expect(model.invocationParams({ stop: ["END"] }).stop).toEqual(["END"]);
+    expect(model.invocationParams({ stop: [] }).stop).toBeUndefined();
+    expect(model.invocationParams({}).stop).toBeUndefined();
+  });
+});
+
 describe("useFim option", () => {
   test("useFim defaults to true for codestral-latest model", () => {
     const model = new MistralAI({

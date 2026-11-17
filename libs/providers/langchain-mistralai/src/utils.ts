@@ -92,3 +92,19 @@ export function _mistralContentChunkToMessageContentComplex(
     return contentChunk as ContentBlock;
   });
 }
+
+/**
+ * Normalize the `stop` call option before sending it to the Mistral API.
+ * Empty strings are dropped (they are never a meaningful stop sequence), and
+ * an empty list becomes `undefined` so no `stop` field is sent at all.
+ * A bare string (possible from untyped JS callers) is treated as one sequence.
+ */
+export function _normalizeStopSequences(
+  stop: string[] | string | null | undefined
+): string[] | undefined {
+  const sequences = typeof stop === "string" ? [stop] : (stop ?? []);
+  const nonEmpty = sequences.filter(
+    (s) => typeof s === "string" && s.length > 0
+  );
+  return nonEmpty.length ? nonEmpty : undefined;
+}

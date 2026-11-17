@@ -30,6 +30,36 @@ test("Test ChatMistralAI can invoke hello", async () => {
   expect(response.content.length).toBeGreaterThan(1);
 });
 
+test("Test ChatMistralAI respects stop sequences", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-small-latest",
+    temperature: 0,
+  });
+  const res = await model.invoke(
+    [new HumanMessage("Count from 1 to 10, separated by commas.")],
+    { stop: ["5"] }
+  );
+  expect(typeof res.content).toBe("string");
+  expect(res.content).toContain("4");
+  expect(res.content).not.toContain("6");
+});
+
+test("Test ChatMistralAI respects stop sequences when streaming", async () => {
+  const model = new ChatMistralAI({
+    model: "mistral-small-latest",
+    temperature: 0,
+  });
+  let content = "";
+  for await (const chunk of await model.stream(
+    [new HumanMessage("Count from 1 to 10, separated by commas.")],
+    { stop: ["5"] }
+  )) {
+    content += chunk.content;
+  }
+  expect(content).toContain("4");
+  expect(content).not.toContain("6");
+});
+
 test("Test ChatMistralAI can stream", async () => {
   const model = new ChatMistralAI();
   const prompt = ChatPromptTemplate.fromMessages([
