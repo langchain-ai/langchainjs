@@ -77,7 +77,7 @@ test("registers the X-Weaviate-Client-Integration header via getConnectionDetail
   // Mutates the live headers object by reference, so subsequent client requests
   // carry the telemetry header on both transports.
   expect(headers["X-Weaviate-Client-Integration"]).toBe(
-    `langchain/${__PKG_VERSION__}`
+    `langchain-typescript/${__PKG_VERSION__}`
   );
 });
 
