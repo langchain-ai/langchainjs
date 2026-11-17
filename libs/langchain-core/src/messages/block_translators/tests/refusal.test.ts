@@ -1,0 +1,242 @@
+import { describe, expect, it } from "vitest";
+import { AIMessage, AIMessageChunk } from "../../ai.js";
+
+const refusals = (message: AIMessage) =>
+  message.contentBlocks.filter((block) => block.type === "refusal");
+
+describe("OpenAI refusals", () => {
+  it("reads a Chat Completions refusal from additional_kwargs", () => {
+    const message = new AIMessage({
+      content: "",
+      additional_kwargs: { refusal: "I can't help with that." },
+      response_metadata: { model_provider: "openai" },
+    });
+    expect(refusals(message)).toEqual([
+      { type: "refusal", refusal: "I can't help with that." },
+    ]);
+  });
+
+  it("reads a streamed Chat Completions refusal", () => {
+    const chunk = new AIMessageChunk({
+      content: "",
+      additional_kwargs: { refusal: "No." },
+      response_metadata: { model_provider: "openai" },
+    });
+    expect(refusals(chunk)).toEqual([{ type: "refusal", refusal: "No." }]);
+  });
+
+  it("reads a Responses refusal content part once", () => {
+    const message = new AIMessage({
+      content: [{ type: "refusal", refusal: "No.", id: "msg_1" }],
+      additional_kwargs: { refusal: "No." },
+      response_metadata: { model_provider: "openai" },
+    });
+    expect(refusals(message)).toEqual([
+      { type: "refusal", refusal: "No.", id: "msg_1" },
+    ]);
+  });
+
+  it("reads a Responses refusal stored in additional_kwargs", () => {
+    const message = new AIMessage({
+      content: [{ type: "text", text: "Here is" }],
+      additional_kwargs: { refusal: "No." },
+      response_metadata: { model_provider: "openai" },
+    });
+    expect(message.contentBlocks).toEqual([
+      { type: "text", text: "Here is" },
+      { type: "refusal", refusal: "No." },
+    ]);
+  });
+
+  it("keeps a Responses refusal next to its message item", () => {
+    const message = new AIMessage({
+      content: [{ type: "refusal", refusal: "No.", id: "msg_1" }],
+      tool_calls: [{ id: "call_1", name: "search", args: {} }],
+      response_metadata: {
+        model_provider: "openai",
+        output: [
+          { type: "message", id: "msg_1" },
+          { type: "function_call", call_id: "call_1" },
+        ],
+      },
+    });
+    expect(message.contentBlocks.map((block) => block.type)).toEqual([
+      "refusal",
+      "tool_call",
+    ]);
+  });
+
+  it("ignores an empty refusal", () => {
+    const message = new AIMessage({
+      content: "Hello",
+      additional_kwargs: { refusal: "" },
+      response_metadata: { model_provider: "openai" },
+    });
+    expect(refusals(message)).toEqual([]);
+  });
+});
+
+describe("Anthropic refusals", () => {
+  it("builds a refusal from stop_reason and stop_details", () => {
+    const message = new AIMessage({
+      content: [],
+      response_metadata: {
+        model_provider: "anthropic",
+        stop_reason: "refusal",
+        stop_details: {
+          type: "refusal",
+          category: "cyber",
+          explanation: "Blocked under the usage policy.",
+        },
+      },
+    });
+    expect(refusals(message)).toEqual([
+      {
+        type: "refusal",
+        refusal: "Blocked under the usage policy.",
+        extras: { category: "cyber" },
+      },
+    ]);
+  });
+
+  it("reads streamed stop fields from additional_kwargs", () => {
+    const chunk = new AIMessageChunk({
+      content: [],
+      additional_kwargs: {
+        stop_reason: "refusal",
+        stop_details: { category: "cyber", explanation: "Blocked." },
+      },
+      response_metadata: { model_provider: "anthropic" },
+    });
+    expect(refusals(chunk)).toEqual([
+      { type: "refusal", refusal: "Blocked.", extras: { category: "cyber" } },
+    ]);
+  });
+
+  it("keeps partial text before the refusal", () => {
+    const message = new AIMessage({
+      content: "Here is",
+      response_metadata: {
+        model_provider: "anthropic",
+        stop_reason: "refusal",
+      },
+    });
+    expect(message.contentBlocks).toEqual([
+      { type: "text", text: "Here is" },
+      { type: "refusal", refusal: "" },
+    ]);
+  });
+
+  it("does not duplicate a stored refusal block", () => {
+    const message = new AIMessage({
+      content: [{ type: "refusal", refusal: "No." }],
+      response_metadata: {
+        model_provider: "anthropic",
+        stop_reason: "refusal",
+      },
+    });
+    expect(refusals(message)).toEqual([{ type: "refusal", refusal: "No." }]);
+  });
+
+  it("tolerates malformed stop_details", () => {
+    const message = new AIMessage({
+      content: [],
+      response_metadata: {
+        model_provider: "anthropic",
+        stop_reason: "refusal",
+        stop_details: "unexpected",
+      },
+    });
+    expect(refusals(message)).toEqual([{ type: "refusal", refusal: "" }]);
+  });
+
+  it("is not a refusal on a normal stop", () => {
+    const message = new AIMessage({
+      content: "Hi.",
+      response_metadata: {
+        model_provider: "anthropic",
+        stop_reason: "end_turn",
+      },
+    });
+    expect(refusals(message)).toEqual([]);
+  });
+});
+
+describe("Gemini refusals", () => {
+  const provider = "google";
+  it.each(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST"])(
+    "treats finishReason %s as a refusal",
+    (finishReason) => {
+      const message = new AIMessage({
+        content: "",
+        response_metadata: {
+          model_provider: provider,
+          finishReason,
+          finishMessage: "Blocked.",
+        },
+      });
+      expect(refusals(message)).toEqual([
+        { type: "refusal", refusal: "Blocked.", extras: { finishReason } },
+      ]);
+    }
+  );
+
+  it("reads a refusal from a chunk", () => {
+    const chunk = new AIMessageChunk({
+      content: "",
+      response_metadata: { model_provider: provider, finishReason: "SAFETY" },
+    });
+    expect(refusals(chunk)).toEqual([
+      { type: "refusal", refusal: "", extras: { finishReason: "SAFETY" } },
+    ]);
+  });
+
+  it("reads the snake_case finish_reason that invoke sets", () => {
+    const message = new AIMessage({
+      content: "",
+      response_metadata: { model_provider: provider, finish_reason: "SAFETY" },
+    });
+    expect(refusals(message)).toEqual([
+      { type: "refusal", refusal: "", extras: { finishReason: "SAFETY" } },
+    ]);
+  });
+
+  it("reads a streamed chunk's finish reason from additional_kwargs", () => {
+    const chunk = new AIMessageChunk({
+      content: "Partial",
+      response_metadata: { model_provider: provider },
+      additional_kwargs: { finishReason: "SAFETY", finishMessage: "Blocked." },
+    });
+    expect(refusals(chunk)).toEqual([
+      {
+        type: "refusal",
+        refusal: "Blocked.",
+        extras: { finishReason: "SAFETY" },
+      },
+    ]);
+  });
+
+  it.each(["STOP", "MAX_TOKENS", "RECITATION"])(
+    "does not treat finishReason %s as a refusal",
+    (finishReason) => {
+      const message = new AIMessage({
+        content: "Hi.",
+        response_metadata: { model_provider: provider, finishReason },
+      });
+      expect(refusals(message)).toEqual([]);
+    }
+  );
+});
+
+describe("v1 messages", () => {
+  it("returns a stored refusal block as is", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "text", text: "Here is" },
+        { type: "refusal", refusal: "No." },
+      ],
+      response_metadata: { model_provider: "openai", output_version: "v1" },
+    });
+    expect(refusals(message)).toEqual([{ type: "refusal", refusal: "No." }]);
+  });
+});

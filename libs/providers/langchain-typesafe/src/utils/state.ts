@@ -1,7 +1,9 @@
 import { BaseMessage } from "@langchain/core/messages";
 import * as z from "zod/v4";
 
-import type { JsonValue } from "../types.js";
+import type { JsonValue } from "@langchain/core/decisions";
+
+import type { ImageAssets } from "./assets.js";
 import { renderMessage } from "./messages.js";
 
 /** A value legal anywhere below the root. `Date` becomes an ISO string. */
@@ -40,11 +42,15 @@ const CIRCULAR_ERROR = "Circular reference detected in TypeSafe state.";
  */
 const RENDER_FAILURE = Symbol("typesafe.state.renderFailure");
 
+// Set only for the duration of the synchronous `safeParse` in
+// `serializeState`, so the module-level schema can collect message images.
+let activeImages: ImageAssets | undefined;
+
 const messageSchema = z
   .custom<BaseMessage>((value) => BaseMessage.isInstance(value))
   .transform((message) => {
     try {
-      return renderMessage(message);
+      return renderMessage(message, activeImages);
     } catch (error) {
       // Marked so the catch in `serializeState` can tell a real failure
       // (an unsupported message type) from a stack exhausted by a cycle.
@@ -124,6 +130,49 @@ function describeFailure(state: unknown, path: PropertyKey[]): string {
   return typeof value;
 }
 
+const isPlainObject = (value: object): boolean => {
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+};
+
+/**
+ * Walks raw state before parsing: detects cycles explicitly, and replaces
+ * image blocks with asset references so `Uint8Array` image data is never
+ * handed to the JSON schema. Messages are left for the schema to render.
+ */
+function prepare(
+  value: unknown,
+  images: ImageAssets | undefined,
+  ancestors: Set<object>
+): unknown {
+  if (typeof value !== "object" || value === null) return value;
+  if (ancestors.has(value)) throw new TypeError(CIRCULAR_ERROR);
+  if (BaseMessage.isInstance(value)) return value;
+  const reference = images?.reference(value);
+  if (reference !== undefined) return reference;
+  const isArray = Array.isArray(value);
+  // Symbol keys and non-plain objects are left for the schema to reject.
+  if (
+    !isArray &&
+    (!isPlainObject(value) || Object.getOwnPropertySymbols(value).length > 0)
+  ) {
+    return value;
+  }
+  ancestors.add(value);
+  try {
+    return isArray
+      ? value.map((item) => prepare(item, images, ancestors))
+      : Object.fromEntries(
+          Object.entries(value).map(([key, item]) => [
+            key,
+            prepare(item, images, ancestors),
+          ])
+        );
+  } finally {
+    ancestors.delete(value);
+  }
+}
+
 /**
  * Normalizes classifier input into the JSON `state` payload.
  *
@@ -133,10 +182,12 @@ function describeFailure(state: unknown, path: PropertyKey[]): string {
  * @throws TypeError if the root is a scalar, `null` or `undefined`, if a
  *   nested value cannot be expressed as JSON, or if `state` is cyclic.
  */
-export function serializeState(state: State): JsonValue {
+export function serializeState(state: State, images?: ImageAssets): JsonValue {
+  const prepared = prepare(state, images, new Set());
   let result: z.ZodSafeParseResult<JsonValue>;
+  activeImages = images;
   try {
-    result = rootSchema.safeParse(state);
+    result = rootSchema.safeParse(prepared);
   } catch (error) {
     if (
       error !== null &&
@@ -145,10 +196,13 @@ export function serializeState(state: State): JsonValue {
     ) {
       throw error;
     }
-    // Anything else escaping `safeParse` is a stack exhausted by a cycle.
+    // Anything else escaping `safeParse` is a stack exhausted by a cycle the
+    // pre-pass cannot see, such as one inside message content.
     // Do NOT match on the error type: the limit lands mid-expression (a
     // TypeError from inside `isInstance`) as often as on a RangeError.
     throw new TypeError(CIRCULAR_ERROR);
+  } finally {
+    activeImages = undefined;
   }
   if (result.success) {
     return result.data;
@@ -163,7 +217,7 @@ export function serializeState(state: State): JsonValue {
   }
   throw new TypeError(
     `Unsupported TypeSafe state value: ${describeFailure(
-      state,
+      prepared,
       deepestPath(result.error.issues)
     )}.`
   );

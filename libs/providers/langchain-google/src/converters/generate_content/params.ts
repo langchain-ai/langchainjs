@@ -34,6 +34,14 @@ function supportsMinimalThinkingLevel(model: string): boolean {
   );
 }
 
+// Models that accept thinkingLevel "XHIGH"; the others reject it.
+// TODO: Move this to model profile
+const XHIGH_THINKING_LEVEL_MODELS = ["gemini-4-hydrogen"];
+
+function supportsXHighThinkingLevel(model: string): boolean {
+  return XHIGH_THINKING_LEVEL_MODELS.includes(model);
+}
+
 /**
  * Builds the `thinkingConfig` object for the Gemini `generationConfig`,
  * translating user-facing reasoning fields into the wire format.
@@ -96,6 +104,10 @@ export function convertFieldsToThinkingConfig(
     // Gemini 3 Pro has only low and high.
     thinkingLevel = "HIGH";
   }
+  if (!supportsXHighThinkingLevel(model) && thinkingLevel === "XHIGH") {
+    // If they don't support XHIGH, then treat this like HIGH
+    thinkingLevel = "HIGH";
+  }
 
   // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
   // or we haven't explicitly tried to set a thinking budget/level, then bail out.
@@ -103,11 +115,11 @@ export function convertFieldsToThinkingConfig(
   const modelSpecialty = getModelSpecialty(model);
   const thoughtsNotSupported =
     modelVersion === "2.5" && modelSpecialty === "image";
-  if (
-    thoughtsNotSupported ||
-    typeof thinkingBudget === "undefined" ||
-    typeof thinkingLevel === "undefined"
-  ) {
+  const usesThinkingBudget = model.startsWith("gemini-2.5");
+  const missingThinkingValue = usesThinkingBudget
+    ? typeof thinkingBudget === "undefined"
+    : typeof thinkingLevel === "undefined";
+  if (thoughtsNotSupported || missingThinkingValue) {
     return undefined;
   }
 
@@ -118,7 +130,7 @@ export function convertFieldsToThinkingConfig(
 
   // Explicitly setting the budget/level is only valid (currently) for text models.
   if (modelSpecialty === "") {
-    if (model.startsWith("gemini-2.5")) {
+    if (usesThinkingBudget) {
       thinkingConfig.thinkingBudget = thinkingBudget;
     } else {
       thinkingConfig.thinkingLevel = thinkingLevel as Gemini.ThinkingLevel;

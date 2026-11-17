@@ -10,6 +10,16 @@ import {
   iife,
 } from "./utils.js";
 
+/** The refusal Chat Completions and Responses keep in `additional_kwargs`. */
+function refusalFromAdditionalKwargs(
+  message: AIMessage
+): ContentBlock.Refusal | undefined {
+  const refusal = message.additional_kwargs.refusal;
+  return _isString(refusal) && refusal.length > 0
+    ? { type: "refusal", refusal }
+    : undefined;
+}
+
 /**
  * Converts a ChatOpenAICompletions message to an array of v1 standard content blocks.
  *
@@ -69,6 +79,8 @@ export function convertToV1FromChatCompletions(
       args: toolCall.args,
     });
   }
+  const refusal = refusalFromAdditionalKwargs(message);
+  if (refusal) blocks.push(refusal);
   return blocks;
 }
 
@@ -131,6 +143,8 @@ export function convertToV1FromChatCompletionsChunk(
       args: toolCall.args,
     });
   }
+  const refusal = refusalFromAdditionalKwargs(message);
+  if (refusal) blocks.push(refusal);
   return blocks;
 }
 
@@ -553,6 +567,24 @@ export function convertToV1FromResponses(
           textBlockKey,
         ];
       }
+    }
+    let hasRefusalPart = false;
+    for (const block of content) {
+      if (_isContentBlock(block, "refusal") && _isString(block.refusal)) {
+        hasRefusalPart = true;
+        yield [
+          {
+            type: "refusal",
+            refusal: block.refusal,
+            ...(_isString(block.id) ? { id: block.id } : {}),
+          },
+          textBlockKey,
+        ];
+      }
+    }
+    if (!hasRefusalPart) {
+      const refusal = refusalFromAdditionalKwargs(message);
+      if (refusal) yield [refusal, textBlockKey];
     }
     for (const toolCall of message.tool_calls ?? []) {
       yield [

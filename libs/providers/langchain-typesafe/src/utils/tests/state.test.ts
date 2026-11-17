@@ -200,6 +200,14 @@ describe("serializeState", () => {
     );
   });
 
+  test("rejects an indirect cycle through an object and array", () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.children = [{ parent: cyclic }];
+    expect(() => serializeState(cyclic as never)).toThrow(
+      "Circular reference detected in TypeSafe state."
+    );
+  });
+
   test("does not false-positive on a non-cyclic DAG: the same object as two siblings", () => {
     // `JSON.stringify` rejects only a reference to one of a value's own
     // ancestors, so a shared reference appearing twice as siblings is fine.

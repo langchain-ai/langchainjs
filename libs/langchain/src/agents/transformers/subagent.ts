@@ -176,6 +176,8 @@ export function createSubagentTransformer(
         resolveOutput = resolve as (value: unknown) => void;
         rejectOutput = reject;
       });
+      // Same as tool-call.ts: an unconsumed failed `output` must not crash the process.
+      output.catch(() => {});
 
       handles.set(key, {
         key,

@@ -6,6 +6,7 @@ export * as callbacks__base from "../callbacks/base.js";
 export * as callbacks__manager from "../callbacks/manager.js";
 export * as callbacks__promises from "../callbacks/promises.js";
 export * as chat_history from "../chat_history.js";
+export * as decisions from "../decisions/index.js";
 export * as document_loaders__base from "../document_loaders/base.js";
 export * as document_loaders__langsmith from "../document_loaders/langsmith.js";
 export * as documents from "../documents/index.js";

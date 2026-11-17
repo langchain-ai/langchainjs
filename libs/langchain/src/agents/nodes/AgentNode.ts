@@ -433,9 +433,11 @@ export class AgentNode<
             typeof structuredResponseFormat.strategy.schema?.title === "string"
               ? structuredResponseFormat.strategy.schema.title
               : "providerStrategy";
-          throw new StructuredOutputParsingError(schemaTitle, [
-            "Model output did not satisfy the provided response schema.",
-          ]);
+          throw new StructuredOutputParsingError(
+            schemaTitle,
+            ["Model output did not satisfy the provided response schema."],
+            response
+          );
         }
 
         return response;
@@ -718,7 +720,10 @@ export class AgentNode<
 
             if (AIMessage.isInstance(middlewareResponse)) {
               lastAiMessage = middlewareResponse;
-            } else if (isCommand(middlewareResponse)) {
+            } else if (
+              isCommand(middlewareResponse) &&
+              !collectedCommands.includes(middlewareResponse)
+            ) {
               collectedCommands.push(middlewareResponse);
             }
 

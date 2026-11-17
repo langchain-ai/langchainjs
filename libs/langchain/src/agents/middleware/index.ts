@@ -60,6 +60,7 @@ export {
   type ModelCallLimitMiddlewareConfig,
 } from "./modelCallLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
+export { modelRefusalMiddleware } from "./modelRefusal.js";
 export {
   modelRetryMiddleware,
   type ModelRetryMiddlewareConfig,
@@ -77,6 +78,15 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export {
+  autoModeMiddleware,
+  type AutoModeMiddlewareConfig,
+} from "./autoMode.js";
+export {
+  modelRouterMiddleware,
+  type ModelRouterMiddlewareConfig,
+  type ModelChoice,
+} from "./modelRouter.js";
 export {
   providerToolSearchMiddleware,
   type ProviderToolSearchMiddlewareConfig,
@@ -111,6 +121,5 @@ export {
 export {
   openAIModelRouterMiddleware,
   type OpenAIModelRouterMiddlewareOptions,
-  type ModelChoice,
 } from "./provider/openai/modelRouter.js";
 export { type OpenAIDecisionsLike } from "./provider/openai/decisions.js";

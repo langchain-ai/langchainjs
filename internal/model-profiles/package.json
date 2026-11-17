@@ -13,7 +13,7 @@
     "@langchain/core": "workspace:^",
     "commander": "^15.0.0",
     "typescript": "^7.0.2",
-    "zod": "^4.3.6"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/iarna__toml": "^2.0.5",
