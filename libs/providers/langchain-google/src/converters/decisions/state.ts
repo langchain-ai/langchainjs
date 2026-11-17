@@ -474,7 +474,9 @@ export function convertMediaBlockToInteractionsContent(
   }
 
   // 4. Standard v1 ContentBlock (`image`, `audio`, `video`, `file`), legacy `media`,
-  //    or Interactions-native (`image`, `audio`, `video`, `document`)
+  //    or Interactions-native (`image`, `audio`, `video`, `document`).
+  //    Leave `kindHint` undefined for generic `file` and `media` blocks so
+  //    `buildInteractionsMediaContent` infers the target kind from `mimeType`.
   const blockType = typeof block.type === "string" ? block.type : undefined;
   const kindHint: "image" | "audio" | "video" | "document" | undefined =
     blockType === "image" ||
@@ -482,9 +484,7 @@ export function convertMediaBlockToInteractionsContent(
     blockType === "video" ||
     blockType === "document"
       ? blockType
-      : blockType === "file"
-        ? "document"
-        : undefined;
+      : undefined;
 
   const declaredMime =
     typeof block.mimeType === "string"
