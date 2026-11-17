@@ -322,7 +322,7 @@ interface ConfigurableModelFields extends BaseChatModelParams {
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   defaultConfig?: Record<string, any>;
   /**
-   * @default "any"
+   * @default []
    */
   configurableFields?: string[] | "any";
   /**
@@ -362,9 +362,9 @@ export class ConfigurableModel<
   _defaultConfig?: Record<string, any> = {};
 
   /**
-   * @default "any"
+   * @default []
    */
-  _configurableFields: string[] | "any" = "any";
+  _configurableFields: string[] | "any" = [];
 
   /**
    * @default ""
@@ -391,14 +391,7 @@ export class ConfigurableModel<
     super(fields);
     this._defaultConfig = fields.defaultConfig ?? {};
 
-    if (fields.configurableFields === "any") {
-      this._configurableFields = "any";
-    } else {
-      this._configurableFields = fields.configurableFields ?? [
-        "model",
-        "modelProvider",
-      ];
-    }
+    this._configurableFields = fields.configurableFields ?? [];
 
     if (fields.configPrefix) {
       this._configPrefix = fields.configPrefix.endsWith("_")
@@ -1140,7 +1133,6 @@ export async function initChatModel<
         modelProvider,
       },
       configPrefix,
-      configurableFields: [],
       profile,
     });
   } else {

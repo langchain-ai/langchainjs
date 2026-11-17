@@ -2,6 +2,6 @@
 "langchain": patch
 ---
 
-fix(langchain): make `initChatModel` non-configurable when a model is given without `configurableFields`
+fix(langchain): make `ConfigurableModel` non-configurable when `configurableFields` is omitted
 
-Previously `configurable.model` / `configurable.modelProvider` at invoke time could still swap the model, contrary to the docs. Pass `configurableFields: ["model", "modelProvider"]` to keep runtime model swapping.
+`initChatModel` with a model and no `configurableFields` (and direct `new ConfigurableModel(...)` without it) no longer lets `configurable.model` / `configurable.modelProvider` swap the model at invoke time, matching the docs. Pass `configurableFields: ["model", "modelProvider"]` to keep runtime model swapping.
