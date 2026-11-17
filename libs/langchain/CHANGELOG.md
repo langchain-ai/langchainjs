@@ -1,5 +1,13 @@
 # langchain
 
+## 1.6.6
+
+### Patch Changes
+
+- [#11289](https://github.com/langchain-ai/langchainjs/pull/11289) [`586edab`](https://github.com/langchain-ai/langchainjs/commit/586edabbe3d63079187d64a577def99af4526f4b) Thanks [@lowweihong](https://github.com/lowweihong)! - Prevent a failed tool call or subagent from crashing the process when its `output` promise is never consumed
+
+- [#12214](https://github.com/langchain-ai/langchainjs/pull/12214) [`eed4c32`](https://github.com/langchain-ai/langchainjs/commit/eed4c3250a721fe2a14dd6cd25c0ab1ba490deb9) Thanks [@jackjin1997](https://github.com/jackjin1997)! - apply a `Command` returned from `wrapModelCall` once when outer middleware passes it through
+
 ## 1.6.5
 
 ### Patch Changes

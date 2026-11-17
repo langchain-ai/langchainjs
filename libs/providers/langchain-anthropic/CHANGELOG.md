@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.6.5
+
+### Patch Changes
+
+- [#12230](https://github.com/langchain-ai/langchainjs/pull/12230) [`84e85cc`](https://github.com/langchain-ai/langchainjs/commit/84e85cc8657a6922c9db34ff7a2a1a692e83a503) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fall back to `tool_calls` in `AnthropicToolsOutputParser` so `withStructuredOutput` works when streamed content is normalized to `tool_call` blocks
+
 ## 1.6.4
 
 ### Patch Changes
