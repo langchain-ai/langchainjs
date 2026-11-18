@@ -1,6 +1,65 @@
-import { ns as baseNs, LangChainError } from "@langchain/core/errors";
+import {
+  ContextOverflowError,
+  ns as baseNs,
+  LangChainError,
+} from "@langchain/core/errors";
 
 const ns = baseNs.sub("openrouter");
+
+/**
+ * Provider wording already recognized by `@langchain/openai` and
+ * `@langchain/anthropic`, plus the routed-provider forms OpenRouter nests
+ * under `metadata.raw` / `previous_errors`.
+ */
+const CONTEXT_WINDOW_PHRASES = [
+  "prompt is too long",
+  "context_length_exceeded",
+  "maximum context length",
+  "exceeds the context window",
+  "input tokens exceed the configured limit",
+  "too many input tokens",
+] as const;
+
+/**
+ * "input token count exceeds" and "the input token count (N) exceeds".
+ * The count sits between the two halves, so a single substring misses it.
+ */
+const INPUT_TOKEN_COUNT_EXCEEDS = /input token count(?:\s*\(\d+\))?\s+exceeds/i;
+
+/**
+ * OpenRouter's top-level message is often "Provider returned error".
+ * The window rejection is in `metadata.raw` and `previous_errors[].raw`.
+ */
+function contextWindowText(value: unknown): string[] {
+  if (typeof value === "string") {
+    return [value];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => contextWindowText(item));
+  }
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    return [
+      ...contextWindowText(record.message),
+      ...contextWindowText(record.raw),
+      ...contextWindowText(record.error),
+      ...contextWindowText(record.previous_errors),
+    ];
+  }
+  return [];
+}
+
+function isContextWindowRejection(
+  message: string,
+  metadata: Record<string, unknown> | undefined
+): boolean {
+  const haystack = [message, ...contextWindowText(metadata)].join("\n");
+  if (INPUT_TOKEN_COUNT_EXCEEDS.test(haystack)) {
+    return true;
+  }
+  const normalized = haystack.toLowerCase();
+  return CONTEXT_WINDOW_PHRASES.some((phrase) => normalized.includes(phrase));
+}
 
 /**
  * Base error for all OpenRouter API errors.
@@ -52,6 +111,12 @@ export class OpenRouterError extends ns.brand(LangChainError) {
    * Status-code mapping:
    * - 401 / 403 -> {@link OpenRouterAuthError}
    * - 429       -> {@link OpenRouterRateLimitError}
+   * - context-window rejections on any other status throw
+   *   {@link ContextOverflowError}. The original {@link OpenRouterError}
+   *   stays on `cause` (JavaScript cannot multiply-inherit). The check
+   *   reads the full message plus `metadata.raw` and `previous_errors`,
+   *   because OpenRouter's top-level message is often
+   *   "Provider returned error".
    * - anything else -> {@link OpenRouterError}
    */
   static async fromResponse(response: Response): Promise<OpenRouterError> {
@@ -99,13 +164,17 @@ export class OpenRouterError extends ns.brand(LangChainError) {
       );
     }
 
-    return new OpenRouterError(
+    const apiError = new OpenRouterError(
       message,
       response.status,
       code,
       error?.metadata,
       headers
     );
+    if (isContextWindowRejection(apiError.message, apiError.metadata)) {
+      throw ContextOverflowError.fromError(apiError);
+    }
+    return apiError;
   }
 }
 
