@@ -136,9 +136,8 @@ export function parseXMLMarkdown(s: string): XMLResult {
       parsedResult = element as ParsedResult;
     }
 
-    if (!node.isSelfClosing) {
-      elementStack.push(element);
-    }
+    // SAX emits a close event for self-closing tags too.
+    elementStack.push(element);
   };
 
   parser.onclosetag = () => {
