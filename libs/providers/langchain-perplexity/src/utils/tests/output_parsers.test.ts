@@ -341,3 +341,33 @@ describe("ReasoningJsonOutputParser", () => {
     });
   });
 });
+
+describe.each(["json", "structured"])("%s literal think tags", (kind) => {
+  test.each([false, true])(
+    "preserves JSON strings with a reasoning prefix=%s",
+    async (prefix) => {
+      const expected = {
+        answer: 'A "quoted" <think>literal value</think> and a backslash: \\',
+        nested: { "<think>key</think>": "<think>value</think>" },
+      };
+      const parser =
+        kind === "json"
+          ? new ReasoningJsonOutputParser()
+          : new ReasoningStructuredOutputParser(
+              z.object({
+                answer: z.string(),
+                nested: z.record(z.string()),
+              })
+            );
+      const input = prefix
+        ? [
+            '<think>Actual reasoning with "quotes"</think>',
+            "```json",
+            JSON.stringify(expected),
+            "```",
+          ].join("\n")
+        : JSON.stringify(expected);
+      await expect(parser.parse(input)).resolves.toEqual(expected);
+    }
+  );
+});
