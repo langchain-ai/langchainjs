@@ -5,7 +5,7 @@ import { z as z4 } from "zod/v4";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
+import { tool, type ClientTool } from "@langchain/core/tools";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { fakeModel } from "@langchain/core/testing";
@@ -21,7 +21,13 @@ import {
   hasSupportForJsonSchemaOutput,
   ProviderStrategy,
   ToolStrategy,
+  type ResponseFormatInput,
 } from "../responses.js";
+
+/** The tool calls a `FakeToolCallingModel` replays, one entry per request. */
+type FakeToolCalls = NonNullable<
+  ConstructorParameters<typeof FakeToolCallingModel>[0]
+>["toolCalls"];
 
 function makeSerializableSchema(
   jsonSchema: Record<string, unknown> = {
@@ -49,20 +55,29 @@ describe("structured output handling", () => {
   describe("toolStrategy", () => {
     describe("multiple structured output tool calls", () => {
       it("should retry by default when multiple structured outputs are called", async () => {
+        const responseFormat = toolStrategy([
+          z.object({
+            foo: z.string(),
+          }),
+          z.object({
+            bar: z.string(),
+          }),
+        ]);
+        const [{ name: fooToolName }, { name: barToolName }] = responseFormat;
         const model = new FakeToolCallingChatModel({
           responses: [
             new AIMessage({
               content: "",
               tool_calls: [
-                { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
-                { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
+                { name: fooToolName, args: { foo: "foo" }, id: "call_1" },
+                { name: barToolName, args: { bar: "bar" }, id: "call_2" },
               ],
             }),
             new AIMessage({
               content: "",
               tool_calls: [
                 {
-                  name: "extract-1",
+                  name: fooToolName,
                   args: { foo: "valid structured value" },
                   id: "call_1",
                 },
@@ -73,14 +88,7 @@ describe("structured output handling", () => {
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy([
-            z.object({
-              foo: z.string(),
-            }),
-            z.object({
-              bar: z.string(),
-            }),
-          ]),
+          responseFormat,
         });
 
         const res = await agent.invoke({
@@ -101,33 +109,32 @@ describe("structured output handling", () => {
       });
 
       it("should throw if error handler is set to false", async () => {
+        const responseFormat = toolStrategy(
+          [
+            z.object({
+              foo: z.string(),
+            }),
+            z.object({
+              bar: z.string(),
+            }),
+          ],
+          {
+            handleError: false,
+          }
+        );
+        const [{ name: fooToolName }, { name: barToolName }] = responseFormat;
         const model = new FakeToolCallingModel({
           toolCalls: [
             [
-              /**
-               * `extract-3` and `extract-5` are the computed function names for the json schemas
-               */
-              { name: "extract-3", args: { foo: "foo" }, id: "call_1" },
-              { name: "extract-4", args: { bar: "bar" }, id: "call_2" },
+              { name: fooToolName, args: { foo: "foo" }, id: "call_1" },
+              { name: barToolName, args: { bar: "bar" }, id: "call_2" },
             ],
           ],
         });
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            [
-              z.object({
-                foo: z.string(),
-              }),
-              z.object({
-                bar: z.string(),
-              }),
-            ],
-            {
-              handleError: false,
-            }
-          ),
+          responseFormat,
         });
 
         await expect(
@@ -138,13 +145,27 @@ describe("structured output handling", () => {
       });
 
       it("should retry if error handler is set to true", async () => {
+        const responseFormat = toolStrategy(
+          [
+            z.object({
+              foo: z.string(),
+            }),
+            z.object({
+              bar: z.string(),
+            }),
+          ],
+          {
+            handleError: true,
+          }
+        );
+        const [{ name: fooToolName }, { name: barToolName }] = responseFormat;
         const toolCalls = [
-          { name: "extract-5", args: { foo: "foo" }, id: "call_1" },
-          { name: "extract-6", args: { bar: "bar" }, id: "call_2" },
+          { name: fooToolName, args: { foo: "foo" }, id: "call_1" },
+          { name: barToolName, args: { bar: "bar" }, id: "call_2" },
         ];
         const toolCall2 = [
           {
-            name: "extract-5",
+            name: fooToolName,
             args: { foo: "valid structured value" },
             id: "call_3",
           },
@@ -164,19 +185,7 @@ describe("structured output handling", () => {
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            [
-              z.object({
-                foo: z.string(),
-              }),
-              z.object({
-                bar: z.string(),
-              }),
-            ],
-            {
-              handleError: true,
-            }
-          ),
+          responseFormat,
         });
 
         const res = await agent.invoke({
@@ -204,13 +213,27 @@ describe("structured output handling", () => {
       });
 
       it("should retry if the error handler is set to the MultipleStructuredOutputsError", async () => {
+        const responseFormat = toolStrategy(
+          [
+            z.object({
+              foo: z.string(),
+            }),
+            z.object({
+              bar: z.string(),
+            }),
+          ],
+          {
+            handleError: () => "foobar",
+          }
+        );
+        const [{ name: fooToolName }, { name: barToolName }] = responseFormat;
         const toolCalls = [
-          { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
-          { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
+          { name: fooToolName, args: { foo: "foo" }, id: "call_1" },
+          { name: barToolName, args: { bar: "bar" }, id: "call_2" },
         ];
         const toolCall2 = [
           {
-            name: "extract-7",
+            name: fooToolName,
             args: { foo: "fixed structured value" },
             id: "call_3",
           },
@@ -219,39 +242,18 @@ describe("structured output handling", () => {
           responses: [
             new AIMessage({
               content: "",
-              tool_calls: [
-                { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
-                { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
-              ],
+              tool_calls: toolCalls,
             }),
             new AIMessage({
               content: "",
-              tool_calls: [
-                {
-                  name: "extract-7",
-                  args: { foo: "fixed structured value" },
-                  id: "call_3",
-                },
-              ],
+              tool_calls: toolCall2,
             }),
           ],
         });
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            [
-              z.object({
-                foo: z.string(),
-              }),
-              z.object({
-                bar: z.string(),
-              }),
-            ],
-            {
-              handleError: () => "foobar",
-            }
-          ),
+          responseFormat,
         });
 
         const res = await agent.invoke({
@@ -277,13 +279,29 @@ describe("structured output handling", () => {
       });
 
       it("should throw if error handler throws an error", async () => {
+        const responseFormat = toolStrategy(
+          [
+            z.object({
+              foo: z.string(),
+            }),
+            z.object({
+              bar: z.string(),
+            }),
+          ],
+          {
+            handleError: () => {
+              throw new Error("foobar");
+            },
+          }
+        );
+        const [{ name: fooToolName }, { name: barToolName }] = responseFormat;
         const model = new FakeToolCallingChatModel({
           responses: [
             new AIMessage({
               content: "",
               tool_calls: [
-                { name: "extract-9", args: { foo: "foo" }, id: "call_1" },
-                { name: "extract-10", args: { bar: "bar" }, id: "call_2" },
+                { name: fooToolName, args: { foo: "foo" }, id: "call_1" },
+                { name: barToolName, args: { bar: "bar" }, id: "call_2" },
               ],
             }),
           ],
@@ -291,21 +309,7 @@ describe("structured output handling", () => {
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            [
-              z.object({
-                foo: z.string(),
-              }),
-              z.object({
-                bar: z.string(),
-              }),
-            ],
-            {
-              handleError: () => {
-                throw new Error("foobar");
-              },
-            }
-          ),
+          responseFormat,
         });
 
         await expect(
@@ -318,12 +322,21 @@ describe("structured output handling", () => {
 
     describe("single structured output tool call", () => {
       it("should retry if error handler is set to true", async () => {
+        const responseFormat = toolStrategy(
+          z.object({
+            foo: z.string(),
+          }),
+          {
+            handleError: true,
+          }
+        );
+        const [{ name: toolName }] = responseFormat;
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-11", args: { bar: "foo" }, id: "call_1" }],
+            [{ name: toolName, args: { bar: "foo" }, id: "call_1" }],
             [
               {
-                name: "extract-11",
+                name: toolName,
                 args: { foo: "fixed structured value" },
                 id: "call_2",
               },
@@ -333,14 +346,7 @@ describe("structured output handling", () => {
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            z.object({
-              foo: z.string(),
-            }),
-            {
-              handleError: true,
-            }
-          ),
+          responseFormat,
         });
 
         const res = await agent.invoke({
@@ -360,22 +366,24 @@ describe("structured output handling", () => {
       });
 
       it("should return a structured response if it matches the schema", async () => {
+        const responseFormat = toolStrategy(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        const [{ name: toolName }] = responseFormat;
         const model = new FakeToolCallingModel({
           toolCalls: [
             [
               { name: "something", args: { result: 123 }, id: "call_1" },
-              { name: "extract-12", args: { foo: "bar" }, id: "call_2" },
+              { name: toolName, args: { foo: "bar" }, id: "call_2" },
             ],
           ],
         });
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            z.object({
-              foo: z.string(),
-            })
-          ),
+          responseFormat,
         });
 
         const res = await agent.invoke({
@@ -386,23 +394,23 @@ describe("structured output handling", () => {
       });
 
       it("should return a structured response if it matches the schema and toolMessageContent is provided", async () => {
+        const responseFormat = toolStrategy(
+          z.object({
+            foo: z.string(),
+          }),
+          {
+            toolMessageContent: "foobar",
+          }
+        );
+        const [{ name: toolName }] = responseFormat;
         const model = new FakeToolCallingModel({
-          toolCalls: [
-            [{ name: "extract-13", args: { foo: "bar" }, id: "call_1" }],
-          ],
+          toolCalls: [[{ name: toolName, args: { foo: "bar" }, id: "call_1" }]],
         });
 
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy(
-            z.object({
-              foo: z.string(),
-            }),
-            {
-              toolMessageContent: "foobar",
-            }
-          ),
+          responseFormat,
         });
 
         const res = await agent.invoke({
@@ -422,22 +430,24 @@ describe("structured output handling", () => {
       });
 
       it("should return structured response if it matches one of the schemas", async () => {
+        const responseFormat = toolStrategy([
+          z.object({
+            foo: z.string(),
+          }),
+          z.object({
+            bar: z.string(),
+          }),
+        ]);
+        const [, { name: barToolName }] = responseFormat;
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-15", args: { bar: "foo" }, id: "call_1" }],
+            [{ name: barToolName, args: { bar: "foo" }, id: "call_1" }],
           ],
         });
         const agent = createAgent({
           model,
           tools: [],
-          responseFormat: toolStrategy([
-            z.object({
-              foo: z.string(),
-            }),
-            z.object({
-              bar: z.string(),
-            }),
-          ]),
+          responseFormat,
         });
         const res = await agent.invoke({
           messages: [{ role: "user", content: "hi" }],
@@ -473,14 +483,14 @@ describe("structured output handling", () => {
         expect(strategy.name).toBe("my_json_tool");
       });
 
-      it("should fall back to extract-{n} when no title is provided", () => {
+      it("should fall back to a schema-derived name when no title is provided", () => {
         const zodSchema = z4.object({
           status: z4.string(),
         });
 
         const [strategy] = toolStrategy(zodSchema);
 
-        expect(strategy.name).toMatch(/^extract-\d+$/);
+        expect(strategy.name).toMatch(/^extract-[0-9a-f]{16}$/);
       });
 
       it("should use title from ToolStrategy.fromSchema with Zod v4 schema", () => {
@@ -509,6 +519,245 @@ describe("structured output handling", () => {
         expect(strategy.name).toBe("get_data");
       });
     });
+
+    describe("deterministic tool naming", () => {
+      /**
+       * Tools reach `bindTools` in two shapes: user tools as class instances
+       * carrying `name`, structured output tools as OpenAI-style function
+       * definitions carrying it under `function`.
+       */
+      function nameOfBoundTool(boundTool: unknown): string {
+        const { name, function: fn } = boundTool as {
+          name?: string;
+          function?: { name?: string };
+        };
+        const boundName = name ?? fn?.name;
+        if (boundName == null) {
+          throw new Error(
+            `Bound tool has no name: ${JSON.stringify(boundTool)}`
+          );
+        }
+        return boundName;
+      }
+
+      /**
+       * Runs an agent against a fake model, capturing the tool names it
+       * offered the model on each model request.
+       *
+       * The generated name is not public API, so tests read it back from what
+       * was actually bound rather than hardcoding it - except where pinning
+       * the literal is the point.
+       *
+       * @returns the agent, `boundToolNames` (one entry per model request, and
+       *   appended to by any further invocation), and the run's result
+       */
+      async function runAgent({
+        responseFormat,
+        tools = [],
+        toolCalls = [],
+      }: {
+        responseFormat: ResponseFormatInput;
+        tools?: ClientTool[];
+        toolCalls?: FakeToolCalls;
+      }) {
+        const model = new FakeToolCallingModel({ toolCalls });
+
+        const boundToolNames: string[][] = [];
+        const bindTools = model.bindTools.bind(model);
+        vi.spyOn(model, "bindTools").mockImplementation((bound) => {
+          boundToolNames.push(bound.map(nameOfBoundTool));
+          return bindTools(bound);
+        });
+
+        const agent = createAgent({
+          model,
+          tools,
+          /**
+           * Every form under test is valid input, but overload resolution
+           * cannot see that through the union.
+           */
+          responseFormat: responseFormat as ToolStrategy,
+        });
+        const result = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        return { agent, boundToolNames, result };
+      }
+
+      it("should offer the same name on every model request in a loop", async () => {
+        const responseFormat = z.object({ answer: z.string() });
+        const [{ name: structuredToolName }] = toolStrategy(responseFormat);
+
+        const getWeather = tool(() => "sunny", {
+          name: "get_weather",
+          description: "Get the weather",
+          schema: z.object({}),
+        });
+
+        const { boundToolNames, result } = await runAgent({
+          responseFormat,
+          tools: [getWeather],
+          toolCalls: [
+            [{ name: "get_weather", args: {}, id: "call_1" }],
+            [
+              {
+                name: structuredToolName,
+                args: { answer: "sunny" },
+                id: "call_2",
+              },
+            ],
+          ],
+        });
+
+        expect(boundToolNames).toHaveLength(2);
+        expect(boundToolNames[1]).toEqual(boundToolNames[0]);
+        expect(result.structuredResponse).toEqual({ answer: "sunny" });
+      });
+
+      it("should offer the same name on a later invocation of the same agent", async () => {
+        const { agent, boundToolNames } = await runAgent({
+          responseFormat: z.object({ answer: z.string() }),
+        });
+
+        /** A second conversation turn, served by the same agent. */
+        await agent.invoke({
+          messages: [{ role: "user", content: "hi again" }],
+        });
+
+        expect(boundToolNames).toHaveLength(2);
+        expect(boundToolNames[1]).toEqual(boundToolNames[0]);
+      });
+
+      it("should offer the same name for separately constructed identical schemas", async () => {
+        const first = await runAgent({
+          responseFormat: z.object({ answer: z.string() }),
+        });
+        const second = await runAgent({
+          responseFormat: z.object({ answer: z.string() }),
+        });
+
+        expect(first.boundToolNames).toEqual(second.boundToolNames);
+      });
+
+      it("should offer different names for different schemas", async () => {
+        const answer = await runAgent({
+          responseFormat: z.object({ answer: z.string() }),
+        });
+        const result = await runAgent({
+          responseFormat: z.object({ result: z.string() }),
+        });
+
+        expect(answer.boundToolNames).not.toEqual(result.boundToolNames);
+      });
+
+      it("should offer a different name when a field description changes", async () => {
+        const plain = await runAgent({
+          responseFormat: z.object({ answer: z.string() }),
+        });
+        const described = await runAgent({
+          responseFormat: z.object({
+            answer: z.string().describe("the answer"),
+          }),
+        });
+
+        expect(plain.boundToolNames).not.toEqual(described.boundToolNames);
+      });
+
+      it("should offer a distinctly named tool per entry and parse against the one called", async () => {
+        const responseFormat = toolStrategy([
+          z.object({ foo: z.string() }),
+          z.object({ bar: z.string() }),
+        ]);
+        const [{ name: fooToolName }, { name: barToolName }] = responseFormat;
+
+        const { boundToolNames, result } = await runAgent({
+          responseFormat,
+          toolCalls: [
+            [{ name: barToolName, args: { bar: "foo" }, id: "call_1" }],
+          ],
+        });
+
+        expect(boundToolNames[0]).toEqual([fooToolName, barToolName]);
+        expect(new Set(boundToolNames[0]).size).toBe(2);
+        expect(result.structuredResponse).toEqual({ bar: "foo" });
+      });
+
+      it("should offer one tool when the same schema is passed twice", async () => {
+        const schema = z.object({ foo: z.string() });
+        const responseFormat = toolStrategy([schema, schema]);
+        const [{ name: toolName }] = responseFormat;
+
+        const { boundToolNames, result } = await runAgent({
+          responseFormat,
+          toolCalls: [[{ name: toolName, args: { foo: "bar" }, id: "call_1" }]],
+        });
+
+        /**
+         * Same-named entries collapse in the agent's name-keyed strategy map,
+         * so the model is never offered two indistinguishable tools.
+         */
+        expect(boundToolNames[0]).toEqual([toolName]);
+        expect(result.structuredResponse).toEqual({ foo: "bar" });
+      });
+
+      it("should offer the same names for every composition form", async () => {
+        const schema = z.object({ answer: z.string() });
+
+        const runs = await Promise.all(
+          [
+            schema,
+            [schema],
+            toolStrategy(schema),
+            toolStrategy([schema]),
+            ToolStrategy.fromSchema(schema),
+          ].map((responseFormat) => runAgent({ responseFormat }))
+        );
+
+        for (const run of runs) {
+          expect(run.boundToolNames).toEqual(runs[0].boundToolNames);
+        }
+      });
+
+      it("should offer a titled schema under its title", async () => {
+        const { boundToolNames } = await runAgent({
+          responseFormat: z4
+            .object({ answer: z4.string() })
+            .meta({ title: "my_custom_tool" }),
+        });
+
+        expect(boundToolNames[0]).toEqual(["my_custom_tool"]);
+      });
+
+      /**
+       * Pinning the literal names is the point here: the promise is that the
+       * same schema yields the same name in every process and every release,
+       * so a refactor that changes the derivation must fail loudly rather than
+       * silently rename every user's tool.
+       */
+      describe("generated name", () => {
+        it("should be pinned for a known Standard Schema", async () => {
+          const { boundToolNames } = await runAgent({
+            responseFormat: makeSerializableSchema(),
+          });
+
+          expect(boundToolNames[0]).toEqual(["extract-b24ae6e238353a13"]);
+        });
+
+        it("should be pinned for a known JSON schema", async () => {
+          const { boundToolNames } = await runAgent({
+            responseFormat: {
+              type: "object",
+              properties: {
+                value: { type: "number" },
+              },
+            },
+          });
+
+          expect(boundToolNames[0]).toEqual(["extract-757afc2191c3f222"]);
+        });
+      });
+    });
   });
 
   describe("providerStrategy", () => {
@@ -516,7 +765,7 @@ describe("structured output handling", () => {
       it("should not throw error if use provider strategy directly", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-16", args: { foo: "bar" }, id: "call_2" }],
+            [{ name: "extract-unmatched", args: { foo: "bar" }, id: "call_2" }],
           ],
         });
         const agent = createAgent({

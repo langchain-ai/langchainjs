@@ -10,7 +10,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { StateSchema, ReducedValue, Command } from "@langchain/langgraph";
 
-import { createAgent, createMiddleware } from "../index.js";
+import { createAgent, createMiddleware, toolStrategy } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 import type { InferAgentState } from "../types.js";
 import type { NormalizedSchemaInput } from "../middleware/types.js";
@@ -652,12 +652,14 @@ describe("StateSchema support", () => {
         confidence: z.number(),
       });
 
+      const [structuredTool] = toolStrategy(responseFormat);
+
       const agent = createAgent({
         model: new FakeToolCallingModel({
           toolCalls: [
             [
               {
-                name: "extract-1",
+                name: structuredTool.name,
                 args: { answer: "test", confidence: 0.9 },
                 id: "extract",
               },
