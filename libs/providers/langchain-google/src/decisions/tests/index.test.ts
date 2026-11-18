@@ -185,26 +185,43 @@ describe("GoogleClassifier & GoogleClassifierNode unit tests", () => {
         "https://www.googleapis.com/robot/v1/metadata/x509/svc",
     };
 
+    const secretHeaders = {
+      Authorization: "Bearer HEADER_SECRET_TOKEN",
+      "x-goog-api-key": "HEADER_API_KEY_SECRET",
+    };
+
     const web = new GoogleClassifier("gemini-decision-1", {
       apiKey: fakeApiKey,
       credentials: fakeCreds,
+      customHeaders: secretHeaders,
     });
     const node = new GoogleClassifierNode("gemini-decision-1", {
       apiKey: fakeApiKey,
       credentials: fakeCreds,
+      customHeaders: secretHeaders,
       googleAuthOptions: {
         keyFilename: "/tmp/NODE_SUPER_SECRET_KEY.json",
       },
     });
 
-    expect(web.lc_secrets).toEqual({ apiKey: "GOOGLE_API_KEY" });
     for (const instance of [web, node]) {
+      expect(instance.lc_serializable).toBe(false);
+      expect(instance.toJSON()).toEqual({
+        lc: 1,
+        type: "not_implemented",
+        id: ["langchain", "classifiers", "google", "GoogleClassifier"],
+      });
+
       const kwargsDump = JSON.stringify(instance.lc_kwargs);
+      const serializedDump = JSON.stringify(instance.toJSON());
       const inspected = util.inspect(instance, { depth: 5 });
-      expect(kwargsDump).not.toContain(fakeApiKey);
-      expect(kwargsDump).not.toContain("SUPER_SECRET");
-      expect(inspected).not.toContain(fakeApiKey);
-      expect(inspected).not.toContain("SUPER_SECRET");
+
+      for (const dump of [kwargsDump, serializedDump, inspected]) {
+        expect(dump).not.toContain(fakeApiKey);
+        expect(dump).not.toContain("SUPER_SECRET");
+        expect(dump).not.toContain("HEADER_SECRET_TOKEN");
+        expect(dump).not.toContain("HEADER_API_KEY_SECRET");
+      }
     }
   });
 

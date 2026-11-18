@@ -65,17 +65,7 @@ export function normalizeGoogleClassifierParams<
  * (`POST /{api_version}/decisions`).
  */
 export abstract class BaseGoogleClassifier extends BaseDecisionModel {
-  static lc_name(): string {
-    return "GoogleClassifier";
-  }
-
-  lc_serializable = true;
-
   lc_namespace = ["langchain", "classifiers", "google"];
-
-  get lc_secrets(): Record<string, string> {
-    return { apiKey: "GOOGLE_API_KEY" };
-  }
 
   get _provider(): string {
     return "google";
@@ -99,7 +89,7 @@ export abstract class BaseGoogleClassifier extends BaseDecisionModel {
 
   protected _apiVersion?: string;
 
-  protected _customHeaders?: Record<string, string>;
+  declare protected _customHeaders?: Record<string, string>;
 
   protected _mediaResolution?: GoogleClassifierFields["mediaResolution"];
 
@@ -117,12 +107,13 @@ export abstract class BaseGoogleClassifier extends BaseDecisionModel {
     const rawModel = typeof params.model === "string" ? params.model : "";
     const model = rawModel.trim();
 
-    // Strip credentials, clients, and runtime callbacks from `lc_kwargs` so
-    // `util.inspect` / `console.log` never expose sensitive values.
+    // Strip credentials, headers, clients, and runtime callbacks from `lc_kwargs`
+    // so `util.inspect` / `console.log` never expose sensitive values.
     const {
       apiKey: _apiKey,
       credentials: _credentials,
       googleAuthOptions: _googleAuthOptions,
+      customHeaders: _customHeaders,
       apiClient: _apiClient,
       callbacks: _callbacks,
       onFailedAttempt: _onFailedAttempt,
@@ -147,6 +138,12 @@ export abstract class BaseGoogleClassifier extends BaseDecisionModel {
       configurable: true,
       writable: true,
     });
+    Object.defineProperty(this, "_customHeaders", {
+      value: params.customHeaders,
+      enumerable: false,
+      configurable: true,
+      writable: true,
+    });
     this.caller = new AsyncCaller(params);
     this.callbacks = params.callbacks;
     this.tags = params.tags;
@@ -156,7 +153,6 @@ export abstract class BaseGoogleClassifier extends BaseDecisionModel {
     this._endpoint = params.endpoint;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
-    this._customHeaders = params.customHeaders;
     this._mediaResolution = params.mediaResolution;
     this._detail = params.detail;
     this._hasExplicitVertexCredentials = hasVertexCredentials(params);

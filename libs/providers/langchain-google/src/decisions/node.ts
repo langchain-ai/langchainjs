@@ -22,7 +22,9 @@ export interface GoogleClassifierNodeParams
   extends BaseGoogleClassifierParams, NodeApiClientParams {}
 
 class GoogleClassifierNode extends BaseGoogleClassifier {
-  declare protected apiKey?: string;
+  static override lc_name(): string {
+    return "GoogleClassifier";
+  }
 
   constructor(
     model: string,
@@ -50,13 +52,6 @@ class GoogleClassifierNode extends BaseGoogleClassifier {
     }
     const apiClient = params.apiClient ?? new NodeApiClient(params);
     super({ ...params, apiClient });
-
-    Object.defineProperty(this, "apiKey", {
-      value: params.apiKey,
-      enumerable: false,
-      configurable: true,
-      writable: true,
-    });
   }
 }
 

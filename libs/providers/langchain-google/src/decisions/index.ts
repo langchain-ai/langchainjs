@@ -37,7 +37,9 @@ import type {
  * ```
  */
 export class GoogleClassifier extends BaseGoogleClassifier {
-  declare protected apiKey?: string;
+  static override lc_name(): string {
+    return "GoogleClassifier";
+  }
 
   constructor(model: string, params?: Omit<GoogleClassifierParams, "model">);
   constructor(params: GoogleClassifierParams);
@@ -50,13 +52,6 @@ export class GoogleClassifier extends BaseGoogleClassifier {
     params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     const apiClient = params.apiClient ?? new WebApiClient(params);
     super({ ...params, apiClient });
-
-    Object.defineProperty(this, "apiKey", {
-      value: params.apiKey,
-      enumerable: false,
-      configurable: true,
-      writable: true,
-    });
   }
 }
 
