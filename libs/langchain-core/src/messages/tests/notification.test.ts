@@ -46,7 +46,7 @@ describe("addNotificationMetadata", () => {
     });
 
     const message = addNotificationMetadata(original, {
-      source: "human_in_the_loop",
+      source: "hitl_interrupt_decision",
       data: { decision: "reject" },
     });
 
@@ -59,7 +59,7 @@ describe("addNotificationMetadata", () => {
     expect(message.artifact).toEqual({ detail: "kept" });
     expect(message.additional_kwargs).toEqual({
       other: 1,
-      lc_source: "human_in_the_loop",
+      lc_source: "hitl_interrupt_decision",
       lc_data: { decision: "reject" },
     });
     expect(original.additional_kwargs).toEqual({ other: 1 });
@@ -70,7 +70,7 @@ describe("addNotificationMetadata", () => {
 
     expect(ToolMessage.isInstance(restored)).toBe(true);
     expect(getNotificationMetadata(restored)).toEqual({
-      source: "human_in_the_loop",
+      source: "hitl_interrupt_decision",
       data: { decision: "reject" },
     });
   });

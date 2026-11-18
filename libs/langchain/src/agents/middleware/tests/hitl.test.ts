@@ -2995,7 +2995,10 @@ describe("humanInTheLoopMiddleware notification metadata", () => {
 
       expect(getNotificationMetadata(toolMessages(final).call_email)).toEqual(
         tagged
-          ? { source: "human_in_the_loop", data: { decision: answer.type } }
+          ? {
+              source: "hitl_interrupt_decision",
+              data: { decision: answer.type },
+            }
           : undefined
       );
     }

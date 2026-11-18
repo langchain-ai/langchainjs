@@ -518,7 +518,7 @@ function decisionToolMessage(
       tool_call_id: toolCall.id!,
       status: decision === "respond" ? "success" : "error",
     }),
-    { source: "human_in_the_loop", data: { decision } }
+    { source: "hitl_interrupt_decision", data: { decision } }
   );
 }
 
