@@ -323,7 +323,7 @@ const response = await llm.invoke(
 );
 ```
 
-For more information, see [Anthropic's Web Fetch Tool documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-fetch-tool).
+For more information, see [Anthropic's Web Fetch Tool documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/web-fetch-tool).
 
 ### Tool Search Tools
 
@@ -388,7 +388,7 @@ const response = await llm.invoke("What is the weather in San Francisco?", {
 });
 ```
 
-For more information, see [Anthropic's Tool Search documentation](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/tool-search-tool).
+For more information, see [Anthropic's Tool Search documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/tool-search-tool).
 
 ### Text Editor Tool
 
@@ -529,7 +529,7 @@ const computer = tools.computer_20251124({
 });
 ```
 
-For more information, see [Anthropic's Computer Use documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use).
+For more information, see [Anthropic's Computer Use documentation](https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/computer-use-tool).
 
 ### Code Execution Tool
 
