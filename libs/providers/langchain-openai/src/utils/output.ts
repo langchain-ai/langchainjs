@@ -89,6 +89,102 @@ function makeParseableResponseFormat<ParsedT>(
   return obj;
 }
 
+/**
+ * OpenAI strict mode rejects `$ref` nodes that carry sibling keywords
+ * ("$ref cannot have keywords {...}"). The conversion in
+ * `interopZodResponseFormat` produces exactly that for zod v4 fields whose
+ * metadata lives on a wrapper type, e.g. `.default().describe()`: the inner
+ * schema is hoisted into `$defs` while `default`/`description` (and the
+ * injected `title`) stay behind as siblings of the `$ref`. The same keywords
+ * are accepted inline, so merge the referenced definition into the node and
+ * drop definitions that end up unreferenced.
+ *
+ * Post-processing is the only viable layer for this: zod's `override` hook
+ * runs before `$defs` assembly so it cannot resolve refs, and switching to
+ * `reused: "inline"` would duplicate genuinely reused schemas, breaking
+ * parity with OpenAI's native `zodResponseFormat`.
+ */
+export function inlineRefsWithSiblings(
+  schema: Record<string, unknown>
+): Record<string, unknown> {
+  const defs = (schema.$defs ?? {}) as Record<string, unknown>;
+
+  const refName = (ref: unknown): string | undefined =>
+    typeof ref === "string" ? /^#\/\$defs\/(.+)$/.exec(ref)?.[1] : undefined;
+
+  const resolveRef = (ref: unknown): Record<string, unknown> | undefined => {
+    const name = refName(ref);
+    const target = name === undefined ? undefined : defs[name];
+    return target && typeof target === "object"
+      ? (target as Record<string, unknown>)
+      : undefined;
+  };
+
+  const walk = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(walk);
+    if (!node || typeof node !== "object") return node;
+    let out = node as Record<string, unknown>;
+    if (out.$ref !== undefined && Object.keys(out).length > 1) {
+      const target = resolveRef(out.$ref);
+      if (target) {
+        const { $ref: _ref, ...siblings } = out;
+        out = { ...target, ...siblings };
+      }
+    }
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(out)) {
+      result[key] = key === "$defs" ? value : walk(value);
+    }
+    return result;
+  };
+
+  const processed = walk(schema) as Record<string, unknown>;
+
+  const defNames = Object.keys(defs);
+  if (defNames.length > 0) {
+    // Inline inside the definitions first, so a definition absorbed into
+    // another one does not survive pruning as a dead copy in the payload.
+    const processedDefs: Record<string, unknown> = {};
+    for (const name of defNames) {
+      processedDefs[name] = walk(defs[name]);
+    }
+
+    // Definitions may reference each other, so resolve reachability from the
+    // schema body before dropping anything.
+    const referenced = new Set<string>();
+    const collect = (node: unknown): void => {
+      if (Array.isArray(node)) {
+        node.forEach(collect);
+        return;
+      }
+      if (!node || typeof node !== "object") return;
+      for (const [key, value] of Object.entries(
+        node as Record<string, unknown>
+      )) {
+        if (key === "$ref") {
+          const name = refName(value);
+          if (name !== undefined && !referenced.has(name)) {
+            referenced.add(name);
+            collect(processedDefs[name]);
+          }
+        } else if (key !== "$defs") {
+          collect(value);
+        }
+      }
+    };
+    collect(processed);
+
+    const kept: Record<string, unknown> = {};
+    for (const name of defNames) {
+      if (referenced.has(name)) kept[name] = processedDefs[name];
+    }
+    if (Object.keys(kept).length > 0) processed.$defs = kept;
+    else delete processed.$defs;
+  }
+
+  return processed;
+}
+
 export function interopZodResponseFormat(
   zodSchema: InteropZodType,
   name: string,
@@ -105,21 +201,23 @@ export function interopZodResponseFormat(
           ...props,
           name,
           strict: true,
-          schema: toJsonSchema(zodSchema, {
-            cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
-            reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
-            override(ctx) {
-              ctx.jsonSchema.title = name; // equivalent to `name` property
-              // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
-              // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
-            },
-            /// property equivalents from native `zodResponseFormat` fn
-            // openaiStrictMode: true,
-            // name,
-            // nameStrategy: 'duplicate-ref',
-            // $refStrategy: 'extract-to-root',
-            // nullableStrategy: 'property',
-          }),
+          schema: inlineRefsWithSiblings(
+            toJsonSchema(zodSchema, {
+              cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
+              reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
+              override(ctx) {
+                ctx.jsonSchema.title = name; // equivalent to `name` property
+                // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
+                // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
+              },
+              /// property equivalents from native `zodResponseFormat` fn
+              // openaiStrictMode: true,
+              // name,
+              // nameStrategy: 'duplicate-ref',
+              // $refStrategy: 'extract-to-root',
+              // nullableStrategy: 'property',
+            }) as Record<string, unknown>
+          ),
         },
       },
       (content) =>
