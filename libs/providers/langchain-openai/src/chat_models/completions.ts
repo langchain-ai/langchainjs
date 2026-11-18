@@ -128,7 +128,10 @@ export class ChatOpenAICompletions<
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };
-    } else if (this.streamUsage && (this.streaming || extra?.streaming)) {
+    } else if (
+      (options?.streamUsage ?? this.streamUsage) &&
+      (this.streaming || extra?.streaming)
+    ) {
       streamOptionsConfig = { stream_options: { include_usage: true } };
     }
 
@@ -399,7 +402,7 @@ export class ChatOpenAICompletions<
     };
 
     const streamIterable = await this.completionWithRetry(params, options);
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+    const shouldStreamUsage = options.streamUsage ?? this.streamUsage;
 
     const abortableStream = async function* (
       source: AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>,
