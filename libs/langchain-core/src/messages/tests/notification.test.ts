@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { HumanMessage } from "../human.js";
+import { ToolMessage } from "../tool.js";
 import {
   addNotificationMetadata,
   getNotificationMetadata,
@@ -31,6 +32,47 @@ describe("addNotificationMetadata", () => {
       lc_data: { task_id: "t_42" },
     });
     expect(original.additional_kwargs).toEqual({ other: 1 });
+  });
+
+  it("keeps a tool message a tool message", () => {
+    const original = new ToolMessage({
+      content: "denied",
+      id: "msg_1",
+      name: "send_email",
+      tool_call_id: "call_1",
+      status: "error",
+      artifact: { detail: "kept" },
+      additional_kwargs: { other: 1 },
+    });
+
+    const message = addNotificationMetadata(original, {
+      source: "human_in_the_loop",
+      data: { decision: "reject" },
+    });
+
+    expect(message).toBeInstanceOf(ToolMessage);
+    expect(message.id).toBe("msg_1");
+    expect(message.content).toBe("denied");
+    expect(message.name).toBe("send_email");
+    expect(message.tool_call_id).toBe("call_1");
+    expect(message.status).toBe("error");
+    expect(message.artifact).toEqual({ detail: "kept" });
+    expect(message.additional_kwargs).toEqual({
+      other: 1,
+      lc_source: "human_in_the_loop",
+      lc_data: { decision: "reject" },
+    });
+    expect(original.additional_kwargs).toEqual({ other: 1 });
+
+    const [restored] = mapStoredMessagesToChatMessages(
+      mapChatMessagesToStoredMessages([message])
+    );
+
+    expect(ToolMessage.isInstance(restored)).toBe(true);
+    expect(getNotificationMetadata(restored)).toEqual({
+      source: "human_in_the_loop",
+      data: { decision: "reject" },
+    });
   });
 
   it("keeps fields set after the message was built", () => {
