@@ -553,6 +553,7 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      let streamDone = false;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -568,6 +569,11 @@ export abstract class BaseChatModel<
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
+          if (!generationChunk) {
+            generationChunk = chunk;
+          } else {
+            generationChunk = generationChunk.concat(chunk);
+          }
           if (outputVersion === "v1") {
             yield castStandardMessageContent(
               chunk.message
@@ -575,21 +581,32 @@ export abstract class BaseChatModel<
           } else {
             yield chunk.message as OutputMessageType;
           }
-          if (!generationChunk) {
-            generationChunk = chunk;
-          } else {
-            generationChunk = generationChunk.concat(chunk);
-          }
         }
         // Throw error if stream ended due to abort (provider returned early)
         callOptions.signal?.throwIfAborted();
+        streamDone = true;
       } catch (err) {
+        streamDone = true;
         await Promise.all(
           (runManagers ?? []).map((runManager) =>
             runManager?.handleLLMError(err)
           )
         );
         throw err;
+      } finally {
+        // The consumer called return() (e.g. `break` in `for await`) at a yield.
+        if (!streamDone) {
+          await Promise.all(
+            (runManagers ?? []).map((runManager) =>
+              runManager?.handleLLMError(
+                new ModelAbortError(
+                  "Model stream was closed before completion.",
+                  generationChunk?.message as AIMessageChunk | undefined
+                )
+              )
+            )
+          );
+        }
       }
       // Built from the fully-accumulated chunk, not any single chunk's delta.
       let llmOutput: LLMResult["llmOutput"];
