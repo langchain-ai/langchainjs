@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.4.2
+
+### Patch Changes
+
+- [#12257](https://github.com/langchain-ai/langchainjs/pull/12257) [`f852414`](https://github.com/langchain-ai/langchainjs/commit/f852414703a7fcaf0332508dbca44eccbebe41c5) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Mark tool messages that `humanInTheLoopMiddleware` creates for `reject` and `respond` decisions with `lc_source: "hitl_interrupt_decision"` and `lc_data: { decision }`, and let `addNotificationMetadata` accept tool messages
+
 ## 1.4.1
 
 ### Patch Changes
