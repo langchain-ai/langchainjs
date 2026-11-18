@@ -822,9 +822,10 @@ export declare namespace Gemini {
     // interactions-openapi.json uses `"const": "code_execution_result"`, which sparktype outputs as `unknown`.
     export type CodeExecutionResultStep = Omit<
       InteractionsNamespace.CodeExecutionResultStep,
-      "type"
+      "type" | "result"
     > & {
       type: "code_execution_result";
+      result: Array<Content> | string;
     };
 
     // Narrowed from InteractionsNamespace.GoogleSearchCallStep because
@@ -937,24 +938,6 @@ export declare namespace Gemini {
       type: "processing_result";
     };
 
-    // Narrowed from InteractionsNamespace.RetrievalCallStep because
-    // interactions-openapi.json uses `"const": "retrieval_call"`, which sparktype outputs as `unknown`.
-    export type RetrievalCallStep = Omit<
-      InteractionsNamespace.RetrievalCallStep,
-      "type"
-    > & {
-      type: "retrieval_call";
-    };
-
-    // Narrowed from InteractionsNamespace.RetrievalResultStep because
-    // interactions-openapi.json uses `"const": "retrieval_result"`, which sparktype outputs as `unknown`.
-    export type RetrievalResultStep = Omit<
-      InteractionsNamespace.RetrievalResultStep,
-      "type"
-    > & {
-      type: "retrieval_result";
-    };
-
     // Narrowed union of Step types with literal `type` discriminators.
     export type Step =
       | UserInputStep
@@ -975,9 +958,7 @@ export declare namespace Gemini {
       | McpServerToolCallStep
       | McpServerToolResultStep
       | ProcessingCallStep
-      | ProcessingResultStep
-      | RetrievalCallStep
-      | RetrievalResultStep;
+      | ProcessingResultStep;
 
     // =========================================================================
     // Narrowed Tool types
@@ -1059,15 +1040,6 @@ export declare namespace Gemini {
       type: "mcp_server";
     };
 
-    // Narrowed from InteractionsNamespace.Tools.Retrieval because
-    // interactions-openapi.json uses `"const": "retrieval"`, which sparktype outputs as `unknown`.
-    export type Retrieval = Omit<
-      InteractionsNamespace.Tools.Retrieval,
-      "type"
-    > & {
-      type: "retrieval";
-    };
-
     // Narrowed union of Tool types with literal `type` discriminators.
     export type Tool =
       | Function
@@ -1077,8 +1049,7 @@ export declare namespace Gemini {
       | ComputerUse
       | FileSearch
       | GoogleMaps
-      | McpServer
-      | Retrieval;
+      | McpServer;
 
     export namespace Tools {
       export type AllowedTools = InteractionsNamespace.Tools.AllowedTools;
@@ -1089,11 +1060,8 @@ export declare namespace Gemini {
       export type GoogleMaps = Gemini.Interactions.GoogleMaps;
       export type GoogleSearch = Gemini.Interactions.GoogleSearch;
       export type McpServer = Gemini.Interactions.McpServer;
-      export type Retrieval = Gemini.Interactions.Retrieval;
       export type Tool = Gemini.Interactions.Tool;
       export type UrlContext = Gemini.Interactions.UrlContext;
-      export type VertexAISearchConfig =
-        InteractionsNamespace.Tools.VertexAISearchConfig;
     }
 
     // =========================================================================
@@ -1157,15 +1125,6 @@ export declare namespace Gemini {
       type: "antigravity";
     };
 
-    // Narrowed from InteractionsNamespace.CodeMenderAgentConfig because
-    // interactions-openapi.json uses `"const": "code-mender"`, which sparktype outputs as `unknown`.
-    export type CodeMenderAgentConfig = Omit<
-      InteractionsNamespace.CodeMenderAgentConfig,
-      "type"
-    > & {
-      type: "code-mender";
-    };
-
     // Narrowed from InteractionsNamespace.DeepResearchAgentConfig because
     // interactions-openapi.json uses `"const": "deep-research"`, which sparktype outputs as `unknown`.
     export type DeepResearchAgentConfig = Omit<
@@ -1187,7 +1146,6 @@ export declare namespace Gemini {
     // Narrowed union of AgentConfig types with literal `type` discriminators.
     export type AgentConfig =
       | AntigravityAgentConfig
-      | CodeMenderAgentConfig
       | DeepResearchAgentConfig
       | DynamicAgentConfig;
 
@@ -1261,8 +1219,7 @@ export declare namespace Gemini {
     export type AllowedTools = InteractionsNamespace.Tools.AllowedTools;
     export type CodeExecutionCallStepArguments =
       InteractionsNamespace.CodeExecutionCallStepArguments;
-    export type Error = InteractionsNamespace.Status;
-    export type Status = InteractionsNamespace.Status;
+    export type Error = InteractionsNamespace.Error;
     export interface FileSearchResultItem {
       title?: string;
       text?: string;
@@ -1303,10 +1260,6 @@ export declare namespace Gemini {
     export type ReviewSnippet = InteractionsNamespace.ReviewSnippet;
     export type PlaceCitationReviewSnippet =
       InteractionsNamespace.ReviewSnippet;
-    export type RetrievalStepArguments =
-      InteractionsNamespace.RetrievalStepArguments;
-    export type RetrievalCallArguments =
-      InteractionsNamespace.RetrievalStepArguments;
     export type SafetySetting = InteractionsNamespace.SafetySetting;
     export type ServiceTier = InteractionsNamespace.ServiceTier;
     export type SpeakerConfig = InteractionsNamespace.SpeakerConfig;
@@ -1327,10 +1280,6 @@ export declare namespace Gemini {
     export type UrlContextResultItem = InteractionsNamespace.UrlContextResult;
     export type UrlContextResult = InteractionsNamespace.UrlContextResult;
     export type Usage = InteractionsNamespace.Usage;
-    export type VertexAISearchConfig =
-      InteractionsNamespace.Tools.VertexAISearchConfig;
-    export type VertexAiSearchConfig =
-      InteractionsNamespace.Tools.VertexAISearchConfig;
     export type WebhookConfig = InteractionsNamespace.WebhookConfig;
 
     // =========================================================================
@@ -1518,21 +1467,6 @@ export declare namespace Gemini {
       signature?: string;
     }
 
-    export interface RetrievalCallDelta {
-      type: "retrieval_call";
-      id?: string;
-      arguments?: RetrievalCallArguments;
-      retrieval_type?: RetrievalCallStep["retrieval_type"];
-      signature?: string;
-    }
-
-    export interface RetrievalResultDelta {
-      type: "retrieval_result";
-      call_id?: string;
-      is_error?: boolean;
-      signature?: string;
-    }
-
     export type StepDeltaData =
       | TextDelta
       | TextAnnotationDelta
@@ -1556,9 +1490,7 @@ export declare namespace Gemini {
       | McpServerToolCallDelta
       | McpServerToolResultDelta
       | ProcessingCallDelta
-      | ProcessingResultDelta
-      | RetrievalCallDelta
-      | RetrievalResultDelta;
+      | ProcessingResultDelta;
 
     export interface InteractionCreatedEvent {
       event_id?: string;

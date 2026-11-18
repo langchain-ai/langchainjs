@@ -18,7 +18,6 @@ const INTERACTIONS_TOOL_TYPES = new Set([
   "file_search",
   "google_maps",
   "mcp_server",
-  "retrieval",
 ]);
 
 /**
@@ -59,7 +58,6 @@ function isGenerateContentTool(tool: BindToolsInput): tool is Gemini.Tool {
     "fileSearch",
     "computerUse",
     "mcpServers",
-    "retrieval",
   ];
 
   return geminiToolAttributes.some((attr) => attr in tool);
@@ -208,30 +206,6 @@ function convertGenerateContentToolToInteractionsTools(
         ...(allowedTools ? { allowed_tools: allowedTools } : {}),
       });
     }
-  }
-
-  if ("retrieval" in tool && tool.retrieval) {
-    const ret = tool.retrieval as Record<string, unknown>;
-    const vas = (ret.vertex_ai_search_config ?? ret.vertexAiSearch) as
-      | Record<string, unknown>
-      | undefined;
-    const datastores = Array.isArray(vas?.datastores)
-      ? (vas.datastores as string[])
-      : typeof vas?.datastore === "string"
-        ? [vas.datastore]
-        : undefined;
-    results.push({
-      type: "retrieval",
-      ...(vas
-        ? {
-            retrieval_types: ["vertex_ai_search"],
-            vertex_ai_search_config: {
-              ...(datastores ? { datastores } : {}),
-              ...(typeof vas.engine === "string" ? { engine: vas.engine } : {}),
-            },
-          }
-        : {}),
-    });
   }
 
   return results;
