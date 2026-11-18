@@ -41,6 +41,7 @@ export const toolCallModificationSchema = z
   .object({
     headers: z.record(z.string(), z.string()),
     args: z.record(z.string(), z.unknown()),
+    _meta: z.record(z.string(), z.unknown()),
   })
   .partial();
 export type ToolCallModification = z.output<typeof toolCallModificationSchema>;
@@ -66,7 +67,11 @@ export const toolHooksSchema = z.object({
    *         ...toolCallRequest.args,
    *         custom: "Custom Value"
    *       },
-   *       headers: { "X-Custom-Header": "Custom Value" }
+   *       headers: { "X-Custom-Header": "Custom Value" },
+   *       _meta: {
+   *         "com.example/traceId": runtime.configurable?.traceId,
+   *         "com.example/spanId": crypto.randomUUID()
+   *       }
    *     };
    *   },
    * };
