@@ -108,6 +108,10 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/google",
     className: "ChatGoogle",
   },
+  "google-node": {
+    package: "@langchain/google/node",
+    className: "ChatGoogle",
+  },
   "google-vertexai": {
     package: "@langchain/google-vertexai",
     className: "ChatVertexAI",
@@ -879,6 +883,7 @@ export async function initChatModel<
  *   - google-vertexai (@langchain/google-vertexai)
  *   - google-vertexai-web (@langchain/google-vertexai-web)
  *   - google-genai (@langchain/google-genai)
+ *   - google-node (@langchain/google/node)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
  *   - fireworks (@langchain/fireworks)
