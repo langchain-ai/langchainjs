@@ -875,6 +875,7 @@ describe("convertDecisionsResponseToClassifierResponse & safety error helpers", 
             bad_noul: {
               type: "noul",
               noul: 2.5,
+              confidence: 1,
             },
           },
         },
