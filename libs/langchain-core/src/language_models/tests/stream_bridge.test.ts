@@ -417,7 +417,7 @@ describe("_streamChatModelEvents bridge", () => {
       // message-finish
       const msgFinish = events[events.length - 1]!;
       expect(msgFinish.event).toBe("message-finish");
-      expect((msgFinish as { reason: string }).reason).toBe("stop");
+      expect(msgFinish).not.toHaveProperty("normalizedFinishReason");
     });
   });
 

@@ -10,6 +10,7 @@ import { AIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import { normalizeFinishReason } from "./finish_reason.js";
 
 const MIME_TYPE_BY_AUDIO_FORMAT: Record<string, string> = {
   wav: "audio/wav",
@@ -154,11 +155,23 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
+  let rawFinishReason: string | undefined;
+  let sawToolCalls = false;
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
 
     const msg = chunk.message;
+    rawFinishReason =
+      readRawFinishReason(chunk.generationInfo) ??
+      readRawFinishReason(msg.response_metadata) ??
+      rawFinishReason;
+    if (
+      AIMessageChunk.isInstance(msg) &&
+      (msg.tool_call_chunks?.length ?? 0) > 0
+    ) {
+      sawToolCalls = true;
+    }
 
     // Message start
     let usageHandledInStart = false;
@@ -408,9 +421,21 @@ export async function* convertChunksToEvents(
 
   yield {
     event: "message-finish" as const,
-    reason: "stop" as const,
+    ...(rawFinishReason != null ? { finishReason: rawFinishReason } : {}),
+    ...normalizeFinishReason(rawFinishReason, { hasToolCalls: sawToolCalls }),
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
+}
+
+function readRawFinishReason(
+  metadata: Record<string, unknown> | undefined
+): string | undefined {
+  if (metadata == null) return undefined;
+  for (const key of ["finish_reason", "stop_reason", "finishReason"]) {
+    const value = metadata[key];
+    if (typeof value === "string" && value !== "") return value;
+  }
+  return undefined;
 }
 
 /**

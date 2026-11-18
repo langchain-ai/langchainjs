@@ -52,6 +52,43 @@ describe("convertGoogleGeminiStream", () => {
     });
   });
 
+  test("maps unknown Gemini finish reasons to other", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: { parts: [{ text: "" }] },
+            finishReason: "MALFORMED_FUNCTION_CALL",
+          },
+        ],
+      },
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "MALFORMED_FUNCTION_CALL",
+      normalizedFinishReason: "other",
+      finishState: "complete",
+    });
+  });
+
+  test("maps STOP with a function call to tool_call", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [{ functionCall: { name: "search", args: { q: "x" } } }],
+            },
+            finishReason: "STOP",
+          },
+        ],
+      },
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "STOP",
+      normalizedFinishReason: "tool_call",
+    });
+  });
+
   test("maps Gemini finish reasons", async () => {
     const lengthEvents = await collectEvents([
       {
@@ -64,7 +101,10 @@ describe("convertGoogleGeminiStream", () => {
       },
     ]);
     const lengthFinish = lengthEvents.find((e) => e.event === "message-finish");
-    expect(lengthFinish).toMatchObject({ reason: "length" });
+    expect(lengthFinish).toMatchObject({
+      finishReason: "MAX_TOKENS",
+      normalizedFinishReason: "length",
+    });
 
     const filterEvents = await collectEvents([
       {
@@ -77,7 +117,9 @@ describe("convertGoogleGeminiStream", () => {
       },
     ]);
     const filterFinish = filterEvents.find((e) => e.event === "message-finish");
-    expect(filterFinish).toMatchObject({ reason: "content_filter" });
+    expect(filterFinish).toMatchObject({
+      normalizedFinishReason: "content_filter",
+    });
   });
 
   test("thinking parts map to reasoning", async () => {

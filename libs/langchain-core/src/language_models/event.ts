@@ -56,22 +56,49 @@ export interface MessageStartEvent {
 }
 
 /**
- * Finish reason for a model response.
+ * Normalized finish reason for a model response. Values follow the
+ * OpenTelemetry GenAI semantic conventions, plus `"other"`.
  *
  * - `"stop"`: Natural end of generation.
- * - `"length"`: Hit max token limit.
- * - `"tool_use"`: Model is requesting tool execution.
- * - `"content_filter"`: Content was filtered by safety systems.
+ * - `"length"`: Hit an output token or context window limit.
+ * - `"tool_call"`: Model is requesting tool execution.
+ * - `"content_filter"`: Blocked by provider safety or policy, including refusals.
+ * - `"error"`: Stream ended in an error status but still returned output.
+ * - `"other"`: Provider value has no mapping; check the raw `finishReason`.
  */
-export type FinishReason = "stop" | "length" | "tool_use" | "content_filter";
+export type FinishReason =
+  | "stop"
+  | "length"
+  | "tool_call"
+  | "content_filter"
+  | "error"
+  | "other";
+
+/**
+ * Whether the turn is done.
+ *
+ * - `"complete"`: The response is final.
+ * - `"suspended"`: The model paused mid-turn and expects a continuation
+ *   request (e.g. Anthropic `pause_turn`).
+ */
+export type FinishState = "complete" | "suspended";
 
 /**
  * Emitted once when the model response is complete.
  */
 export interface MessageFinishEvent {
   event: "message-finish";
-  /** Why the model stopped generating. */
-  reason?: FinishReason;
+  /** Raw provider finish reason, unchanged. */
+  finishReason?: string;
+  /** Best-effort normalized finish reason. */
+  normalizedFinishReason?: FinishReason;
+  /** Whether the caller must continue the turn. Missing means `"complete"`. */
+  finishState?: FinishState;
+  /**
+   * @deprecated Use `normalizedFinishReason`. Still read when the new
+   * fields are absent; `"tool_use"` is treated as `"tool_call"`.
+   */
+  reason?: FinishReason | "tool_use";
   /** Final usage snapshot. */
   usage?: Partial<UsageMetadata>;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */

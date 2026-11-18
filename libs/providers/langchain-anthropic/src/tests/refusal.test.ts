@@ -52,7 +52,8 @@ describe("Anthropic refusals", () => {
     }
 
     const finish = events.find((event) => event.event === "message-finish");
-    expect(finish.reason).toBe("content_filter");
+    expect(finish.finishReason).toBe("refusal");
+    expect(finish.normalizedFinishReason).toBe("content_filter");
   });
 
   it("raises ModelRefusalError from the tools output parser", async () => {

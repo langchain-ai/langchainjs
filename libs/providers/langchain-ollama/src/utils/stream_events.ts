@@ -8,6 +8,7 @@ import { finalizeContentBlock } from "@langchain/core/language_models/compat";
 import type {
   ChatModelStreamEvent,
   FinishReason,
+  MessageFinishEvent,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 
@@ -49,7 +50,7 @@ export async function* convertOllamaStream(
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let rawDoneReason: string | undefined;
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -85,7 +86,7 @@ export async function* convertOllamaStream(
     }
 
     if (chunk.done_reason) {
-      finishReason = mapOllamaDoneReason(chunk.done_reason);
+      rawDoneReason = chunk.done_reason;
     }
 
     const { message } = chunk;
@@ -192,19 +193,37 @@ export async function* convertOllamaStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...mapOllamaDoneReason(
+      rawDoneReason,
+      [...blockKeyToIndex.keys()].some((key) => key.startsWith("tool:"))
+    ),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "ollama" },
   };
 }
 
-function mapOllamaDoneReason(reason: string): FinishReason {
+function mapOllamaDoneReason(
+  reason: string | undefined,
+  sawToolCall: boolean
+): Pick<
+  MessageFinishEvent,
+  "finishReason" | "normalizedFinishReason" | "finishState"
+> {
+  if (!reason) return {};
+  let normalizedFinishReason: FinishReason;
   switch (reason) {
     case "stop":
-      return "stop";
+      normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
+      break;
     case "length":
-      return "length";
+      normalizedFinishReason = "length";
+      break;
     default:
-      return "stop";
+      normalizedFinishReason = "other";
   }
+  return {
+    finishReason: reason,
+    normalizedFinishReason,
+    finishState: "complete",
+  };
 }

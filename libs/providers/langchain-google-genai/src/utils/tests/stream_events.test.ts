@@ -48,7 +48,7 @@ describe("convertGoogleGenAIStream", () => {
       },
     ]);
     const lengthFinish = lengthEvents.find((e) => e.event === "message-finish");
-    expect(lengthFinish).toMatchObject({ reason: "length" });
+    expect(lengthFinish).toMatchObject({ normalizedFinishReason: "length" });
 
     const filterEvents = await collectEvents([
       {
@@ -61,7 +61,9 @@ describe("convertGoogleGenAIStream", () => {
       },
     ]);
     const filterFinish = filterEvents.find((e) => e.event === "message-finish");
-    expect(filterFinish).toMatchObject({ reason: "content_filter" });
+    expect(filterFinish).toMatchObject({
+      normalizedFinishReason: "content_filter",
+    });
   });
 
   test("thought parts map to reasoning", async () => {

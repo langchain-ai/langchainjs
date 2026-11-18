@@ -57,7 +57,7 @@ describe("convertGoogleGeminiStream", () => {
       },
     ]);
     const lengthFinish = lengthEvents.find((e) => e.event === "message-finish");
-    expect(lengthFinish).toMatchObject({ reason: "length" });
+    expect(lengthFinish).toMatchObject({ normalizedFinishReason: "length" });
 
     const filterEvents = await collectEvents([
       {
@@ -70,7 +70,9 @@ describe("convertGoogleGeminiStream", () => {
       },
     ]);
     const filterFinish = filterEvents.find((e) => e.event === "message-finish");
-    expect(filterFinish).toMatchObject({ reason: "content_filter" });
+    expect(filterFinish).toMatchObject({
+      normalizedFinishReason: "content_filter",
+    });
   });
 
   test("thinking parts map to reasoning", async () => {

@@ -4,10 +4,7 @@
  * @module
  */
 
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock } from "@langchain/core/messages/content";
 
 export interface CloudflareStreamChunk {
@@ -51,7 +48,6 @@ export async function* convertCloudflareStream(
 
   yield {
     event: "message-finish" as const,
-    reason: "stop" as FinishReason,
     responseMetadata: { model_provider: "cloudflare" },
   };
 }

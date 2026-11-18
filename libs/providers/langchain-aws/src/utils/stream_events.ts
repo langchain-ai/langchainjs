@@ -9,6 +9,7 @@ import { finalizeContentBlock } from "@langchain/core/language_models/compat";
 import type {
   ChatModelStreamEvent,
   FinishReason,
+  MessageFinishEvent,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { getReasoningTokensFromAdditionalFields } from "./message_outputs.js";
@@ -31,7 +32,7 @@ export async function* convertBedrockConverseStream(
   >();
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let rawStopReason: string | undefined;
   let reasoningTokens: number | undefined;
 
   for await (const event of source) {
@@ -150,7 +151,7 @@ export async function* convertBedrockConverseStream(
       };
       yield { event: "usage" as const, usage: usageSnapshot };
     } else if (event.messageStop?.stopReason) {
-      finishReason = mapStopReason(event.messageStop.stopReason);
+      rawStopReason = event.messageStop.stopReason;
       reasoningTokens = getReasoningTokensFromAdditionalFields(
         event.messageStop.additionalModelResponseFields
       );
@@ -181,25 +182,42 @@ export async function* convertBedrockConverseStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...mapStopReason(rawStopReason),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "bedrock-converse" },
   };
 }
 
-function mapStopReason(stopReason: string): FinishReason {
-  switch (stopReason) {
+function mapStopReason(
+  reason: string | undefined
+): Pick<
+  MessageFinishEvent,
+  "finishReason" | "normalizedFinishReason" | "finishState"
+> {
+  if (!reason) return {};
+  let normalizedFinishReason: FinishReason;
+  switch (reason) {
     case "end_turn":
     case "stop_sequence":
-      return "stop";
+      normalizedFinishReason = "stop";
+      break;
     case "tool_use":
-      return "tool_use";
+      normalizedFinishReason = "tool_call";
+      break;
     case "max_tokens":
-      return "length";
+    case "model_context_window_exceeded":
+      normalizedFinishReason = "length";
+      break;
     case "guardrail_intervened":
     case "content_filtered":
-      return "content_filter";
+      normalizedFinishReason = "content_filter";
+      break;
     default:
-      return "stop";
+      normalizedFinishReason = "other";
   }
+  return {
+    finishReason: reason,
+    normalizedFinishReason,
+    finishState: "complete",
+  };
 }

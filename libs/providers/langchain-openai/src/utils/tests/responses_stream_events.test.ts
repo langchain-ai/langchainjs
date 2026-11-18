@@ -297,4 +297,44 @@ describe("convertOpenAIResponsesStream", () => {
     }
     expect(out.filter((e) => e.event === "usage")).toHaveLength(0);
   });
+
+  test.each([
+    ["completed", null, "stop"],
+    ["incomplete", { reason: "max_output_tokens" }, "length"],
+    ["incomplete", { reason: "content_filter" }, "content_filter"],
+    ["incomplete", { reason: "something_new" }, "other"],
+    ["failed", null, "error"],
+  ])(
+    "maps status %s (%j) to %s",
+    async (status, incomplete_details, normalized) => {
+      const events = await collectEvents([
+        completedResponse({ status, incomplete_details }),
+      ]);
+      expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+        finishReason: status,
+        normalizedFinishReason: normalized,
+        finishState: "complete",
+      });
+    }
+  );
+
+  test("completed with a function call maps to tool_call", async () => {
+    const events = await collectEvents([
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "function_call",
+          id: "fc_1",
+          call_id: "call_abc",
+          name: "web_search",
+          arguments: "{}",
+        },
+      } as RawEvent,
+      completedResponse(),
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      normalizedFinishReason: "tool_call",
+    });
+  });
 });

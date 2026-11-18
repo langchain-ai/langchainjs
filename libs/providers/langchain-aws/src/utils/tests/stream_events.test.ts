@@ -156,7 +156,7 @@ describe("convertBedrockConverseStream", () => {
     const finish = events.find((e) => e.event === "message-finish");
     expect(finish).toMatchObject({
       event: "message-finish",
-      reason: "length",
+      normalizedFinishReason: "length",
     });
   });
 

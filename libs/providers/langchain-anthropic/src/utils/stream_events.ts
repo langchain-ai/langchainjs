@@ -8,6 +8,7 @@ import type {
   ChatModelStreamEvent,
   ContentBlockDelta,
   FinishReason,
+  MessageFinishEvent,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
@@ -98,7 +99,7 @@ export async function* convertAnthropicStream(
       case "message_stop": {
         yield {
           event: "message-finish" as const,
-          reason: mapStopReason(stopReason),
+          ...mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
           responseMetadata,
@@ -168,20 +169,37 @@ export async function* convertAnthropicStream(
 
 // ─── Internal helpers ───────────────────────────────────────────
 
-function mapStopReason(stopReason: string | null | undefined): FinishReason {
+function mapStopReason(
+  stopReason: string | null | undefined
+): Pick<
+  MessageFinishEvent,
+  "finishReason" | "normalizedFinishReason" | "finishState"
+> {
+  if (stopReason == null) return {};
+  let normalizedFinishReason: FinishReason;
   switch (stopReason) {
     case "end_turn":
     case "stop_sequence":
-      return "stop";
+      normalizedFinishReason = "stop";
+      break;
     case "tool_use":
-      return "tool_use";
+      normalizedFinishReason = "tool_call";
+      break;
     case "max_tokens":
-      return "length";
+    case "model_context_window_exceeded":
+      normalizedFinishReason = "length";
+      break;
     case "refusal":
-      return "content_filter";
+      normalizedFinishReason = "content_filter";
+      break;
     default:
-      return "stop";
+      normalizedFinishReason = "other";
   }
+  return {
+    finishReason: stopReason,
+    normalizedFinishReason,
+    finishState: stopReason === "pause_turn" ? "suspended" : "complete",
+  };
 }
 
 function mapBlockToContentBlock(

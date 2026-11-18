@@ -21,6 +21,8 @@ export type OpenAICompletionsFinishReason =
   | "tool_calls"
   | "function_call"
   | "content_filter"
+  // OpenAI-compatible servers send other values.
+  | (string & {})
   | null;
 
 export interface OpenAICompletionsUsage {
@@ -117,7 +119,7 @@ export async function* convertOpenAICompletionsStream(
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let finishReason: string | undefined;
   let responseMetadata: Record<string, unknown> | undefined;
   let emittedProviderMetadata = false;
 
@@ -177,7 +179,7 @@ export async function* convertOpenAICompletionsStream(
     }
 
     if (choice.finish_reason != null) {
-      finishReason = mapFinishReason(choice.finish_reason);
+      finishReason = choice.finish_reason;
       responseMetadata = buildResponseMetadata(data, choice);
     }
 
@@ -359,7 +361,13 @@ export async function* convertOpenAICompletionsStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...(finishReason != null
+      ? {
+          finishReason,
+          normalizedFinishReason: mapFinishReason(finishReason),
+          finishState: "complete" as const,
+        }
+      : {}),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
   };
@@ -386,7 +394,7 @@ function buildGroqUsageSnapshot(usage: {
   };
 }
 
-function mapFinishReason(reason: OpenAICompletionsFinishReason): FinishReason {
+function mapFinishReason(reason: string): FinishReason {
   switch (reason) {
     case "stop":
       return "stop";
@@ -395,11 +403,11 @@ function mapFinishReason(reason: OpenAICompletionsFinishReason): FinishReason {
       return "length";
     case "tool_calls":
     case "function_call":
-      return "tool_use";
+      return "tool_call";
     case "content_filter":
       return "content_filter";
     default:
-      return "stop";
+      return "other";
   }
 }
 

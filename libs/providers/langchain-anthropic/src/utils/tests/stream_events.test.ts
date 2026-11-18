@@ -95,7 +95,7 @@ describe("convertAnthropicStream", () => {
   test("leaves the rest of the message-finish event untouched", async () => {
     const events = await convert({ cost: 0.0123 });
 
-    expect(messageFinish(events).reason).toBe("stop");
+    expect(messageFinish(events).normalizedFinishReason).toBe("stop");
     expect(messageFinish(events).metadata).toEqual({
       model_provider: "anthropic",
     });
@@ -180,6 +180,36 @@ describe("convertAnthropicStream", () => {
       output_tokens: 42,
       total_tokens: 642,
       input_token_details: { cache_creation: 0, cache_read: 500 },
+    });
+  });
+
+  test.each([
+    ["end_turn", "stop", "complete"],
+    ["tool_use", "tool_call", "complete"],
+    ["max_tokens", "length", "complete"],
+    ["model_context_window_exceeded", "length", "complete"],
+    ["refusal", "content_filter", "complete"],
+    ["pause_turn", "other", "suspended"],
+    ["brand_new_reason", "other", "complete"],
+  ])("maps %s to %s / %s", async (raw, normalized, state) => {
+    const source = (async function* () {
+      for (const event of rawEvents()) {
+        if (event.type === "message_delta") {
+          yield { ...event, delta: { ...event.delta, stop_reason: raw } };
+        } else {
+          yield event;
+        }
+      }
+    })();
+    const events = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const event of convertAnthropicStream(source as any)) {
+      events.push(event);
+    }
+    expect(messageFinish(events)).toMatchObject({
+      finishReason: raw,
+      normalizedFinishReason: normalized,
+      finishState: state,
     });
   });
 });
