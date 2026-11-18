@@ -684,9 +684,10 @@ function renderMessageSegments(
     }
   }
 
+  const annotations: string[] = [];
   const refusal = message.additional_kwargs?.refusal;
   if (typeof refusal === "string" && refusal.length > 0) {
-    textBuffer.push(`[refused: ${refusal}]`);
+    annotations.push(`[refused: ${refusal}]`);
   }
 
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
@@ -696,25 +697,33 @@ function renderMessageSegments(
         call.args ?? {},
         "Gemini Decisions tool-call arguments could not be serialized."
       );
-      textBuffer.push(`[called ${call.name}${id} with ${serializedArgs}]`);
+      annotations.push(`[called ${call.name}${id} with ${serializedArgs}]`);
     }
   }
 
-  if (segments.length === 0 && textBuffer.length === 0) {
+  const trailingContentText = textBuffer.join("\n");
+  const trailingParts: string[] = [];
+  if (trailingContentText.length > 0) {
+    trailingParts.push(trailingContentText);
+  }
+  trailingParts.push(...annotations);
+
+  if (segments.length === 0 && trailingParts.length === 0) {
     return [{ kind: "text", text: header.trimEnd() }];
   }
 
-  if (textBuffer.length > 0) {
+  if (trailingParts.length > 0) {
+    const trailingJoined = trailingParts.join(" ");
     if (segments.length === 0) {
       segments.push({
         kind: "text",
-        text: `${header}${textBuffer.join(" ")}`,
+        text: `${header}${trailingJoined}`,
       });
     } else {
       const prevWasMedia = segments[segments.length - 1]?.kind === "media";
       segments.push({
         kind: "text",
-        text: `${prevWasMedia ? "\n" : ""}${textBuffer.join(" ")}`,
+        text: `${prevWasMedia ? "\n" : ""}${trailingJoined}`,
       });
     }
   }

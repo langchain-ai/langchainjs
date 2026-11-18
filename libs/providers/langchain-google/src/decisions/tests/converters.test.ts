@@ -100,10 +100,16 @@ describe("convertStateToDecisionsInput", () => {
   test("renders text-only BaseMessage conversations preserving roles, tool calls, and refusals", () => {
     const messages = [
       new SystemMessage("Follow the warehouse refund policy."),
-      new HumanMessage("Please delete temporary logs and refund order #7."),
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Please delete temporary logs." },
+          { type: "text", text: "Also refund order #7." },
+        ],
+      }),
       new AIMessage({
         content: [
           { type: "text", text: "Checking order #7 first." },
+          { type: "text", text: "Fetching warehouse record." },
           // Duplicate v1 tool_call block should not be rendered twice when tool_calls is set
           {
             type: "tool_call",
@@ -137,8 +143,8 @@ describe("convertStateToDecisionsInput", () => {
     expect(rendered).toBe(
       [
         "system: Follow the warehouse refund policy.",
-        "user: Please delete temporary logs and refund order #7.",
-        'assistant: Checking order #7 first. [called lookup_order#call_1 with {"orderId":"7"}]',
+        "user: Please delete temporary logs.\nAlso refund order #7.",
+        'assistant: Checking order #7 first.\nFetching warehouse record. [called lookup_order#call_1 with {"orderId":"7"}]',
         'tool#call_1 (lookup_order): {"status":"delivered","damaged":true}',
         "assistant: [refused: Cannot delete production logs.]",
         "moderator: Escalated to supervisor.",
@@ -202,25 +208,27 @@ describe("convertStateToDecisionsInput", () => {
 
     const msg = new HumanMessage({
       content: [
-        { type: "text", text: "Before image." },
+        { type: "text", text: "Before image 1." },
+        { type: "text", text: "Before image 2." },
         {
           type: "image",
           mimeType: "image/png",
           data: TINY_PNG_BASE64,
           metadata: { mediaResolution: "high" },
         },
-        { type: "text", text: "After image." },
+        { type: "text", text: "After image 1." },
+        { type: "text", text: "After image 2." },
       ],
     });
     expect(convertStateToDecisionsInput(msg, "low")).toEqual([
-      { type: "text", text: "user: Before image.\n" },
+      { type: "text", text: "user: Before image 1.\nBefore image 2.\n" },
       {
         type: "image",
         mime_type: "image/png",
         data: TINY_PNG_BASE64,
         resolution: "high",
       },
-      { type: "text", text: "\nAfter image." },
+      { type: "text", text: "\nAfter image 1.\nAfter image 2." },
     ]);
   });
 
