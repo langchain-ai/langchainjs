@@ -1,17 +1,20 @@
-import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
+import {
+  BaseDecisionModel,
+  type ClassifierResponse,
+  type JsonValue,
+  type Question,
+  type State,
+} from "@langchain/core/decisions";
+import type { RunnableConfig } from "@langchain/core/runnables";
 import {
   AsyncCaller,
   type AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable, isBrowser } from "@langchain/core/utils/env";
 
-import {
-  parseQuestions,
-  serializeQuestion,
-  type ClassificationResponse,
-  type Question,
-  type ValidatedQuestions,
-} from "./types.js";
+import { serializeQuestion } from "./types.js";
+import { ImageAssets } from "./utils/assets.js";
+import { hasCircularReference } from "./utils/cycles.js";
 import { buildHeaders, parseResponse, SYSTEMONE_PATH } from "./utils/client.js";
 import {
   sanitizeEndpoint,
@@ -19,17 +22,16 @@ import {
   TypeSafeAPITimeoutError,
   TypeSafeError,
 } from "./utils/errors.js";
-import { serializeState, type State } from "./utils/state.js";
+import {
+  serializeState,
+  type State as SerializableState,
+} from "./utils/state.js";
 
 const DEFAULT_BASE_URL = "https://api.typesafe.ai";
 const DEFAULT_MODEL = "jev-latest";
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-export interface TypeSafeClassifierCallOptions extends RunnableConfig {}
-
 export interface TypeSafeClassifierFields extends AsyncCallerParams {
-  /** The questions to ask. At least one is required. */
-  questions: Record<string, Question>;
   /** Model or alias. Defaults to `jev-latest`. */
   model?: string;
   /** Falls back to the `TYPESAFE_API_KEY` environment variable. */
@@ -51,28 +53,44 @@ export interface TypeSafeClassifierFields extends AsyncCallerParams {
 }
 
 /**
- * Classifies unstructured state into typed, probabilistic answers using
- * TypeSafe's System One models.
+ * Classify JSON-compatible state with TypeSafe.
  *
- * Questions in one call are evaluated in parallel by the model, so
- * batching many questions into a single classifier is far cheaper than
- * making one call per question.
+ * `TypeSafeClassifier` is a LangChain decision model for asking one or more
+ * typed questions about text, images, or structured state. A single request
+ * can combine binary `Noul` judgments, categorical `Choice` classifications,
+ * ordinal `Score` evaluations, and `Box` localizations. The response
+ * preserves probabilities, confidence, and token usage so application code
+ * can decide whether to act, route, or request human review. Questions in
+ * one request are evaluated in parallel by the model.
+ *
+ * LangChain messages are rendered as transcript lines before the request is
+ * sent. LangChain image content blocks with base64 data or a base64 `data:`
+ * URL, in state or in question instructions and criteria, are sent as
+ * TypeSafe image assets. PNG and JPEG images are supported. Images are not
+ * downloaded from other URLs.
+ *
+ * `Choice` and `Score` confidence describes how concentrated the probability
+ * distribution is; it is not the selected label's probability.
+ *
+ * Requests throw `TypeSafeError` subclasses: `TypeSafeAPIError` for
+ * unsuccessful HTTP responses and malformed responses, and other subclasses
+ * when no response is received or the request times out.
+ *
+ * The API key is read from `TYPESAFE_API_KEY` when `apiKey` is omitted.
  *
  * @example
  * ```ts
- * const classifier = new TypeSafeClassifier({
+ * const classifier = new TypeSafeClassifier();
+ * const result = await classifier.invoke({
+ *   state: "My payouts have been failing.",
  *   questions: {
  *     urgent: { type: "noul", instructions: "Is this urgent?" },
  *   },
  * });
- * const result = await classifier.invoke("My payouts have been failing.");
+ * result.nouls.urgent.noul;
  * ```
  */
-export class TypeSafeClassifier extends Runnable<
-  State,
-  ClassificationResponse,
-  TypeSafeClassifierCallOptions
-> {
+export class TypeSafeClassifier extends BaseDecisionModel {
   static lc_name(): string {
     return "TypeSafeClassifier";
   }
@@ -84,10 +102,6 @@ export class TypeSafeClassifier extends Runnable<
   get lc_secrets(): Record<string, string> {
     return { apiKey: "TYPESAFE_API_KEY" };
   }
-
-  readonly questions: ValidatedQuestions;
-
-  readonly model: string;
 
   readonly baseUrl: string;
 
@@ -106,7 +120,7 @@ export class TypeSafeClassifier extends Runnable<
 
   protected fetchImpl: typeof fetch;
 
-  constructor(fields: TypeSafeClassifierFields) {
+  constructor(fields: TypeSafeClassifierFields = {}) {
     // `Serializable`'s own constructor stores whatever is passed here
     // verbatim as `this.lc_kwargs` — a normal, enumerable property. If
     // `apiKey` rode along, `util.inspect(classifier)` would print it via
@@ -115,7 +129,8 @@ export class TypeSafeClassifier extends Runnable<
     // from `this` (present, just hidden) whenever a secret's key is
     // missing from `lc_kwargs`, so the sentinel still appears in output.
     const { apiKey: _omittedFromKwargs, ...kwargsForSerialization } = fields;
-    super(kwargsForSerialization);
+    const model = (fields.model ?? DEFAULT_MODEL).trim();
+    super({ ...kwargsForSerialization, model });
 
     const allowBrowser = fields.dangerouslyAllowBrowser ?? true;
     if (!allowBrowser && isBrowser()) {
@@ -132,21 +147,8 @@ export class TypeSafeClassifier extends Runnable<
       );
     }
 
-    const model = (fields.model ?? DEFAULT_MODEL).trim();
     if (model.length === 0) {
       throw new TypeSafeError("TypeSafe model must not be empty.");
-    }
-
-    // `parseQuestions` throws a plain `Error` (it predates this package's
-    // branded error subtree). Rethrown here as a `TypeSafeError` so the
-    // whole constructor surface stays catchable via
-    // `TypeSafeError.isInstance()`. The original message is preserved.
-    let questions: ValidatedQuestions;
-    try {
-      questions = parseQuestions(fields.questions);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new TypeSafeError(message);
     }
 
     if (fields.timeout !== undefined && fields.timeout <= 0) {
@@ -166,8 +168,6 @@ export class TypeSafeClassifier extends Runnable<
       writable: false,
       configurable: true,
     });
-    this.model = model;
-    this.questions = questions;
     let baseUrl =
       fields.baseUrl ??
       getEnvironmentVariable("TYPESAFE_BASE_URL") ??
@@ -198,40 +198,51 @@ export class TypeSafeClassifier extends Runnable<
     });
   }
 
-  async invoke(
-    input: State,
-    options?: Partial<TypeSafeClassifierCallOptions>
-  ): Promise<ClassificationResponse> {
-    return this._callWithConfig(
-      (state: State) => this.classify(state, options?.signal),
-      input,
-      options
-    );
+  get _provider(): string {
+    return "typesafe";
+  }
+
+  async _classify(
+    state: State,
+    questions: Record<string, Question>,
+    config?: Partial<RunnableConfig>
+  ): Promise<ClassifierResponse> {
+    return this.classify(this.payload(state, questions), config?.signal);
   }
 
   /** Builds the request body. Question key order is significant. */
-  protected payload(state: State): string {
-    // Null-prototype for the same reason as `serializeState`: an own
-    // `__proto__` question id would otherwise hit the inherited setter and
-    // drop that question from the request without any error.
-    const questions: Record<string, unknown> = Object.create(null);
-    for (const [id, question] of Object.entries(this.questions)) {
-      questions[id] = serializeQuestion(question);
+  protected payload(state: State, questions: Record<string, Question>): string {
+    const images = new ImageAssets();
+    // Null-prototype so an own `__proto__` question id is sent, not swallowed
+    // by the inherited setter.
+    const wireQuestions: Record<string, unknown> = Object.create(null);
+    for (const [id, question] of Object.entries(questions)) {
+      if (hasCircularReference(question)) {
+        throw new TypeSafeError(
+          `Invalid TypeSafe question "${id}": criteria or instructions contain a circular reference.`
+        );
+      }
+      wireQuestions[id] = images.replace(
+        serializeQuestion(question) as JsonValue
+      );
     }
+    const wireState = serializeState(state as SerializableState, images);
     return JSON.stringify({
-      state: serializeState(state),
+      state: wireState,
       model: this.model,
-      questions,
+      questions: wireQuestions,
+      ...(Object.keys(images.assets).length > 0
+        ? { assets: images.assets }
+        : {}),
     });
   }
 
   protected async classify(
-    state: State,
+    body: string,
     signal?: AbortSignal
-  ): Promise<ClassificationResponse> {
+  ): Promise<ClassifierResponse> {
     const url = `${this.baseUrl}${SYSTEMONE_PATH}`;
     const endpoint = sanitizeEndpoint("POST", url);
-    const body = this.payload(state);
 
     // AsyncCaller retries outside this closure, so the attempt number is
     // tracked here to populate the retry-count header the SDK sends.

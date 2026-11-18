@@ -55,7 +55,58 @@ describe("parseResponse", () => {
     const parsed = await parseResponse(response, ENDPOINT);
     expect(parsed.model).toBe("jev-1.13.0");
     expect(parsed.requestId).toBe("req_abc");
-    expect(parsed.usage).toEqual({ inputTokens: 10, outputTokens: 2 });
+    expect(parsed.usage_metadata).toEqual({
+      input_tokens: 10,
+      output_tokens: 2,
+      total_tokens: 12,
+    });
+    expect(parsed.nouls.urgent.noul).toBe(0.9);
+  });
+
+  test("parses a box answer", async () => {
+    const parsed = await parseResponse(
+      ok({
+        model: "m",
+        answers: {
+          dog: {
+            type: "box",
+            box: { top: 0.1, bottom: 0.9, left: 0.2, right: 0.8 },
+            confidence: null,
+          },
+        },
+      }),
+      ENDPOINT
+    );
+    expect(parsed.boxes.dog).toEqual({
+      type: "box",
+      box: { top: 0.1, bottom: 0.9, left: 0.2, right: 0.8 },
+    });
+  });
+
+  test.each([
+    [{ future: { type: "UNKNOWN" } }, "answers.future.type"],
+    [{ urgent: { type: "noul", noul: 1.5 } }, "answers.urgent.noul"],
+  ])("names the field path of an invalid answer", async (answers, path) => {
+    const error = await parseResponse(ok({ model: "m", answers }), ENDPOINT)
+      .then(() => null)
+      .catch((e: unknown) => e);
+    if (!TypeSafeAPIResponseValidationError.isInstance(error)) {
+      throw new Error("wrong error type");
+    }
+    expect(error.fieldPath).toBe(path);
+  });
+
+  test("names usage in the field path of invalid usage", async () => {
+    const error = await parseResponse(
+      ok({ model: "m", answers: {}, usage: { input_tokens: "x" } }),
+      ENDPOINT
+    )
+      .then(() => null)
+      .catch((e: unknown) => e);
+    if (!TypeSafeAPIResponseValidationError.isInstance(error)) {
+      throw new Error("wrong error type");
+    }
+    expect(error.fieldPath).toBe("usage.input_tokens");
   });
 
   test("leaves requestId undefined when the header is absent", async () => {

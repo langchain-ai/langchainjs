@@ -12,6 +12,7 @@ import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
@@ -639,6 +640,21 @@ test("streaming with structured output", async () => {
     finalChunk2 = chunk;
   }
   expect(typeof finalChunk2).toEqual("object");
+});
+
+class PrefersChatModelStreamEventsHandler extends BaseCallbackHandler {
+  name = "prefers_chat_model_stream_events";
+
+  lc_prefer_chat_model_stream_events = true;
+}
+
+test("structured output under a chat model stream events handler", async () => {
+  const result = await model
+    .withStructuredOutput(zodSchema)
+    .invoke("weather in london", {
+      callbacks: [new PrefersChatModelStreamEventsHandler()],
+    });
+  expect(result).toEqual({ location: expect.any(String) });
 });
 
 test("Can bound and invoke different tool types", async () => {

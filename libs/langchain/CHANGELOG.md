@@ -1,5 +1,24 @@
 # langchain
 
+## 1.6.6
+
+### Patch Changes
+
+- [#11289](https://github.com/langchain-ai/langchainjs/pull/11289) [`586edab`](https://github.com/langchain-ai/langchainjs/commit/586edabbe3d63079187d64a577def99af4526f4b) Thanks [@lowweihong](https://github.com/lowweihong)! - Prevent a failed tool call or subagent from crashing the process when its `output` promise is never consumed
+
+- [#12214](https://github.com/langchain-ai/langchainjs/pull/12214) [`eed4c32`](https://github.com/langchain-ai/langchainjs/commit/eed4c3250a721fe2a14dd6cd25c0ab1ba490deb9) Thanks [@jackjin1997](https://github.com/jackjin1997)! - apply a `Command` returned from `wrapModelCall` once when outer middleware passes it through
+
+## 1.6.5
+
+### Patch Changes
+
+- [#12183](https://github.com/langchain-ai/langchainjs/pull/12183) [`e220aee`](https://github.com/langchain-ai/langchainjs/commit/e220aeed6fd91ec8a1b91b1e9f25b6d87c856d31) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(langchain): add model router and auto mode middleware
+
+  - Add `modelRouterMiddleware`, which picks the agent's model for each run from a decision model's `Choice` answer
+  - Add `autoModeMiddleware`, which blocks listed tool calls that a decision model judges risky
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
 ## 1.6.4
 
 ### Patch Changes
