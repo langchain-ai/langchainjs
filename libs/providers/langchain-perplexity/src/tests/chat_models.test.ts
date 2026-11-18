@@ -857,3 +857,44 @@ describe("ChatPerplexity", () => {
     });
   });
 });
+
+describe("text content blocks", () => {
+  test.each([
+    ["user", HumanMessage],
+    ["assistant", AIMessage],
+    ["system", SystemMessage],
+  ] as const)("serializes %s text blocks", async (role, Message) => {
+    const model = new ChatPerplexity({ model: "sonar", apiKey: "test-key" });
+    const createSpy = vi
+      .spyOn(model.client.chat.completions, "create")
+      .mockResolvedValue({
+        id: "test",
+        object: "chat.completion",
+        created: 0,
+        model: "sonar",
+        choices: [
+          {
+            index: 0,
+            finish_reason: "stop",
+            logprobs: null,
+            message: { role: "assistant", content: "Done", refusal: null },
+          },
+        ],
+      });
+    try {
+      await model.invoke([
+        new Message({
+          contentBlocks: [
+            { type: "text", text: "Hello, " },
+            { type: "text", text: "世界!" },
+          ],
+        }),
+      ]);
+      expect(createSpy.mock.calls[0][0].messages).toEqual([
+        { role, content: "Hello, 世界!" },
+      ]);
+    } finally {
+      createSpy.mockRestore();
+    }
+  });
+});
