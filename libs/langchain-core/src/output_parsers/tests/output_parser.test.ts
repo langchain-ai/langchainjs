@@ -83,3 +83,16 @@ for (const [Parser, input, output] of listTestCases) {
     await expect(parser.parse(input)).resolves.toEqual(output);
   });
 }
+
+test("NumberedListOutputParser streams items that straddle multi-char chunks", async () => {
+  // Realistic LLM streaming emits multi-character chunks. Here "4. data" is
+  // split across the two chunks; it must not be dropped from the stream.
+  async function* generator() {
+    for (const chunk of ["1. a\n2. b\n3. c\n4. da", "ta\n5. e\n"]) {
+      yield chunk;
+    }
+  }
+  const parser = new NumberedListOutputParser();
+  const chunks = await acc(parser.transform(generator(), {}));
+  expect(chunks).toEqual([["a"], ["b"], ["c"], ["data"], ["e"]]);
+});
