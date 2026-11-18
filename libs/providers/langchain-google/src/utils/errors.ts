@@ -244,6 +244,59 @@ export function promptBlockedError(
   return ErrorClass.fromPromptFeedback(promptFeedback);
 }
 
+const DECISION_SAFETY_BLOCK_CODES = new Set<string>([
+  "safety",
+  "prohibited_content",
+  "blocklist",
+  "image_safety",
+  "content_blocked",
+]);
+
+/**
+ * Builds a {@link PromptBlockedError} (or {@link PromptRefusedError}) from a
+ * Gemini Decisions API `prompt_feedback` payload when `block_reason` is set.
+ */
+export function decisionBlockedErrorFromFeedback(promptFeedback: {
+  block_reason?: string;
+  block_reason_message?: string;
+}): PromptBlockedError | undefined {
+  const blockReason = promptFeedback.block_reason;
+  if (!blockReason) {
+    return undefined;
+  }
+  const ErrorClass = UNSPECIFIED_BLOCK_REASONS.has(blockReason.toUpperCase())
+    ? PromptBlockedError
+    : PromptRefusedError;
+  return new ErrorClass({
+    blockReason,
+    message: promptFeedback.block_reason_message,
+  });
+}
+
+/**
+ * Builds a {@link PromptRefusedError} when the Gemini Decisions API returns an
+ * HTTP 400 error body whose `error.code` indicates an input safety block
+ * (`safety`, `prohibited_content`, `blocklist`, `image_safety`, `content_blocked`).
+ */
+export function decisionBlockedErrorFromErrorBody(
+  data: unknown
+): PromptRefusedError | undefined {
+  const errorObj =
+    typeof data === "object" && data !== null && "error" in data
+      ? (data as { error?: { code?: unknown; message?: unknown } }).error
+      : undefined;
+  const code = typeof errorObj?.code === "string" ? errorObj.code : undefined;
+  if (!code || !DECISION_SAFETY_BLOCK_CODES.has(code.toLowerCase())) {
+    return undefined;
+  }
+  const message =
+    typeof errorObj?.message === "string" ? errorObj.message : undefined;
+  return new PromptRefusedError({
+    blockReason: code,
+    message,
+  });
+}
+
 /**
  * Parameters for constructing an AuthError
  */

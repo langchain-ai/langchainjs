@@ -8,7 +8,7 @@ export namespace Interactions {
     agent?: AgentOption;
 
     /** Configuration parameters for the agent interaction. */
-    agent_config?: AntigravityAgentConfig | CodeMenderAgentConfig | DeepResearchAgentConfig | DynamicAgentConfig;
+    agent_config?: AntigravityAgentConfig | DeepResearchAgentConfig | DynamicAgentConfig;
 
     /**
      * Input only. Whether to run the model interaction in the background.
@@ -16,15 +16,17 @@ export namespace Interactions {
     background?: boolean;
 
     /**
-     * The name of the cached content used as context to serve the prediction. Note: only used in explicit caching, where users can have control over caching (e.g. what content to cache) and enjoy guaranteed cost savings. Format: cachedContents/{cachedContent}
+     * Opaque token to resume a long decode. Output: set when status is
+     * REQUIRES_CONTINUATION and decoding can be resumed. Input: pass the latest
+     * token back unchanged in CreateInteraction to continue decoding.
      */
-    cached_content?: string;
+    continuation_token?: string;
 
     /**
      * Required. Output only. The time at which the response was created in ISO 8601 format
      * (YYYY-MM-DDThh:mm:ssZ).
      */
-    readonly created?: string;
+    readonly created: string;
 
     /**
      * The environment configuration for the interaction. Can be an object
@@ -50,7 +52,7 @@ export namespace Interactions {
     /**
      * Required. Output only. A unique identifier for the interaction completion.
      */
-    readonly id?: string;
+    readonly id: string;
 
     /** The input for the interaction. */
     input?: InteractionsInput;
@@ -65,8 +67,11 @@ export namespace Interactions {
      */
     labels?: Record<string, unknown>;
 
+    /** Max total tokens for the agent run. */
+    max_total_tokens?: string;
+
     /**
-     * The model that will complete your prompt.\n\nSee [models](https://ai.google.dev/gemini-api/docs/models) for additional details.
+     * The model that will complete your prompt.\n\nSee [models](https://aistudio.google.com/docs/models) for additional details.
      */
     model?: ModelOption;
 
@@ -94,200 +99,12 @@ export namespace Interactions {
     service_tier?: ServiceTier;
 
     /** Required. Output only. The status of the interaction. */
-    readonly status: "in_progress" | "requires_action" | "completed" | "failed" | "cancelled" | "incomplete" | "budget_exceeded" | "queued" | (string & {});
+    readonly status: "in_progress" | "requires_action" | "completed" | "failed" | "cancelled" | "incomplete" | "budget_exceeded" | "requires_continuation" | (string & {});
 
     /**
      * Required. Output only. The steps that make up the interaction, when included in the response.
      */
-    readonly steps?: Array<Step>;
-
-    /**
-     * Input only. Whether to store the response and request for later retrieval.
-     */
-    store?: boolean;
-
-    /** Input only. Whether the interaction will be streamed. */
-    stream?: boolean;
-
-    /** System instruction for the interaction. */
-    system_instruction?: string;
-
-    /**
-     * A list of tool declarations the model may call during interaction.
-     */
-    tools?: Array<Interactions.Tools.Tool>;
-
-    /**
-     * Required. Output only. The time at which the response was last updated in ISO 8601 format
-     * (YYYY-MM-DDThh:mm:ssZ).
-     */
-    readonly updated?: string;
-
-    /** Statistics on the interaction request's token usage. */
-    usage?: Usage;
-
-    /** Message for configuring webhook events for a request. */
-    webhook_config?: WebhookConfig;
-  }
-
-  /** Interaction for generating the completion using agents. */
-  export interface AgentInteraction {
-    /** The agent to interact with. */
-    agent: AgentOption;
-
-    /** Configuration parameters for the agent interaction. */
-    agent_config?: AntigravityAgentConfig | CodeMenderAgentConfig | DeepResearchAgentConfig | DynamicAgentConfig;
-
-    /**
-     * Input only. Whether to run the model interaction in the background.
-     */
-    background?: boolean;
-
-    /**
-     * The environment configuration for the interaction. Can be an object
-     * specifying remote environment sources or a string referencing an existing
-     * environment ID.
-     */
-    environment?: EnvironmentConfig | string;
-
-    /** The input for the interaction. */
-    input?: InteractionsInput;
-
-    /**
-     * The labels with user-defined metadata for the request.
-     * 
-     * Label keys and values can be no longer than 63 characters
-     * (Unicode codepoints) and can only contain lowercase letters, numeric
-     * characters, underscores, and dashes. International characters are allowed.
-     * Label values are optional. Label keys must start with a letter.
-     */
-    labels?: Record<string, unknown>;
-
-    /** The ID of the previous interaction, if any. */
-    previous_interaction_id?: string;
-
-    /**
-     * Enforces that the generated response is a JSON object that complies with
-     * the JSON schema specified in this field.
-     */
-    response_format?: ResponseFormat | Array<ResponseFormat>;
-
-    /**
-     * The mime type of the response. This is required if response_format is set.
-     */
-    response_mime_type?: string;
-
-    /**
-     * The requested modalities of the response (TEXT, IMAGE, AUDIO).
-     */
-    response_modalities?: Array<ResponseModality>;
-
-    /** Safety settings for the interaction. */
-    safety_settings?: Array<SafetySetting>;
-    service_tier?: ServiceTier;
-
-    /**
-     * Input only. Whether to store the response and request for later retrieval.
-     */
-    store?: boolean;
-
-    /** Input only. Whether the interaction will be streamed. */
-    stream?: boolean;
-
-    /** System instruction for the interaction. */
-    system_instruction?: string;
-
-    /**
-     * A list of tool declarations the model may call during interaction.
-     */
-    tools?: Array<Interactions.Tools.Tool>;
-
-    /** Message for configuring webhook events for a request. */
-    webhook_config?: WebhookConfig;
-  }
-
-  /** Interaction for generating the completion using models. */
-  export interface ModelInteraction {
-    /**
-     * Input only. Whether to run the model interaction in the background.
-     */
-    background?: boolean;
-
-    /**
-     * The name of the cached content used as context to serve the prediction. Note: only used in explicit caching, where users can have control over caching (e.g. what content to cache) and enjoy guaranteed cost savings. Format: cachedContents/{cachedContent}
-     */
-    cached_content?: string;
-
-    /**
-     * Required. Output only. The time at which the response was created in ISO 8601 format
-     * (YYYY-MM-DDThh:mm:ssZ).
-     */
-    readonly created: string;
-
-    /**
-     * The environment configuration for the interaction. Can be an object
-     * specifying remote environment sources or a string referencing an existing
-     * environment ID.
-     */
-    environment?: EnvironmentConfig | string;
-
-    /**
-     * Output only. The environment ID for the interaction. Only populated if environment
-     * config is set in the request.
-     */
-    readonly environment_id?: string;
-
-    /** Configuration parameters for model interactions. */
-    generation_config?: GenerationConfig;
-
-    /**
-     * Required. Output only. A unique identifier for the interaction completion.
-     */
-    readonly id: string;
-
-    /** The input for the interaction. */
-    input?: InteractionsInput;
-
-    /**
-     * The labels with user-defined metadata for the request.
-     * 
-     * Label keys and values can be no longer than 63 characters
-     * (Unicode codepoints) and can only contain lowercase letters, numeric
-     * characters, underscores, and dashes. International characters are allowed.
-     * Label values are optional. Label keys must start with a letter.
-     */
-    labels?: Record<string, unknown>;
-
-    /**
-     * The model that will complete your prompt.\n\nSee [models](https://ai.google.dev/gemini-api/docs/models) for additional details.
-     */
-    model: ModelOption;
-
-    /** The ID of the previous interaction, if any. */
-    previous_interaction_id?: string;
-
-    /**
-     * Enforces that the generated response is a JSON object that complies with
-     * the JSON schema specified in this field.
-     */
-    response_format?: ResponseFormat | Array<ResponseFormat>;
-
-    /**
-     * The mime type of the response. This is required if response_format is set.
-     */
-    response_mime_type?: string;
-
-    /**
-     * The requested modalities of the response (TEXT, IMAGE, AUDIO).
-     */
-    response_modalities?: Array<ResponseModality>;
-
-    /** Safety settings for the interaction. */
-    safety_settings?: Array<SafetySetting>;
-    service_tier?: ServiceTier;
-
-    /** Required. Output only. The status of the interaction. */
-    readonly status: "in_progress" | "requires_action" | "completed" | "failed" | "cancelled" | "incomplete" | "budget_exceeded" | "queued" | (string & {});
+    readonly steps: Array<Step>;
 
     /**
      * Input only. Whether to store the response and request for later retrieval.
@@ -311,12 +128,15 @@ export namespace Interactions {
      */
     readonly updated: string;
 
+    /** Statistics on the interaction request's token usage. */
+    usage?: Usage;
+
     /** Message for configuring webhook events for a request. */
     webhook_config?: WebhookConfig;
   }
 
   /** The agent to interact with. */
-  export type AgentOption = "deep-research-pro-preview-12-2025" | "deep-research-preview-04-2026" | "deep-research-max-preview-04-2026" | "antigravity-preview-05-2026" | (string & {});
+  export type AgentOption = "deep-research-preview-04-2026" | "deep-research-max-preview-04-2026" | "antigravity-preview-05-2026" | "antigravity-preview-09-2026" | (string & {});
 
   /**
    * Configuration for the Antigravity agent runtime.
@@ -332,37 +152,6 @@ export namespace Interactions {
     type: unknown;
   }
 
-  /** Configuration for the CodeMender agent. */
-  export interface CodeMenderAgentConfig {
-    /**
-     * Request parameters specific to FIND sessions, used for discovering
-     * vulnerabilities in a codebase.
-     */
-    find_request?: FindRequest;
-
-    /**
-     * Request parameters specific to FIX sessions, used for generating and
-     * validating security patches.
-     */
-    fix_request?: FixRequest;
-
-    /**
-     * The name of the model to use for the CodeMender agent. One
-     * CodeMender session will only use one model.
-     */
-    model?: string;
-
-    /** The configuration of CodeMender sessions. */
-    session_config?: SessionConfig;
-
-    /**
-     * Parameter for grouping multiple interactions that belong to
-     * the same CodeMender session.
-     */
-    session_id?: string;
-    type: unknown;
-  }
-
   /** Configuration for the Deep Research agent. */
   export interface DeepResearchAgentConfig {
     /**
@@ -372,9 +161,6 @@ export namespace Interactions {
      * turn.
      */
     collaborative_planning?: boolean;
-
-    /** Enables bigquery tool for the Deep Research agent. */
-    enable_bigquery_tool?: boolean;
     thinking_summaries?: ThinkingSummaries;
     type: unknown;
 
@@ -389,14 +175,24 @@ export namespace Interactions {
 
   /** Configuration for a custom environment. */
   export interface EnvironmentConfig {
+    /**
+     * Optional. Arbitrary customer-defined JSON configuration passed through
+     * to the self-hosted environment poller. Only supported when `mode` is
+     * `SELF_HOSTED`.
+     */
+    custom_config?: Record<string, unknown>;
+
     /** Environment variables to set in the sandbox environment. */
-    env?: Record<string, unknown>;
+    env?: Record<string, unknown> | string;
 
     /**
      * Optional. The environment ID for the interaction. If specified, the request will
      * update the existing environment instead of creating a new one.
      */
     environment_id?: string;
+
+    /** The compute lifecycle mode for this environment. */
+    mode?: "on_demand" | "self_hosted" | (string & {});
 
     /** Network configuration for the environment. */
     network?: EnvironmentNetworkEgressAllowlist | "disabled" | (string & {});
@@ -424,13 +220,13 @@ export namespace Interactions {
     /** Seed used in decoding for reproducibility. */
     seed?: number;
 
-    /** Optional. Speech and multi-speaker configuration. */
-    speech_config?: SpeakerConfig | Array<SpeechConfig>;
-
     /**
      * A list of character sequences that will stop output interaction.
      */
     stop_sequences?: Array<string>;
+
+    /** Speech and multi-speaker configuration. */
+    structured_speech_config?: SpeakerConfig | Array<SpeechConfig>;
 
     /** Controls the randomness of the output. */
     temperature?: number;
@@ -456,9 +252,9 @@ export namespace Interactions {
   export type InteractionsInput = Content | Array<Step> | Array<Content> | string;
 
   /**
-   * The model that will complete your prompt.\n\nSee [models](https://ai.google.dev/gemini-api/docs/models) for additional details.
+   * The model that will complete your prompt.\n\nSee [models](https://aistudio.google.com/docs/models) for additional details.
    */
-  export type ModelOption = "gemma-4-26b-a4b-it" | "gemma-4-31b-it" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "gemini-pro-latest" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-2.5-flash-lite" | "gemini-3.5-flash-lite" | "gemini-2.5-flash-image" | "gemini-3-flash-preview" | "gemini-3.1-pro-preview" | "gemini-3.1-pro-preview-customtools" | "gemini-3.1-flash-lite" | "gemini-3.1-flash-lite-image" | "gemini-3-pro-image" | "nano-banana-pro-preview" | "gemini-3.1-flash-image" | "gemini-nano-banana-2.1" | "gemini-3.1-flash-tts-preview" | "gemini-3.5-flash" | "gemini-3.6-flash" | "gemini-3.7-flash" | "gemini-3.8-flash" | "gemini-4-argon" | "gemini-3.8-flash-tts" | "gemini-3.8-flash-lite-tts" | "lyria-3-clip-preview" | "lyria-3-pro-preview" | "gemini-robotics-er-1.6-preview" | "gemini-robotics-er-2-preview" | "lyria-3.5" | "gemini-omni-1.1-flash" | "gemini-omni-flash-preview" | (string & {});
+  export type ModelOption = "gemma-4-26b-a4b-it" | "gemma-4-31b-it" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "gemini-pro-latest" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-2.5-flash-lite" | "gemini-3.5-flash-lite" | "gemini-2.5-flash-image" | "gemini-3-flash-preview" | "gemini-3.1-pro-preview" | "gemini-3.1-pro-preview-customtools" | "gemini-3.1-flash-lite" | "gemini-3.1-flash-lite-image" | "gemini-3-pro-image" | "nano-banana-pro-preview" | "gemini-3.1-flash-image" | "gemini-nano-banana-2.1" | "gemini-3.1-flash-tts-preview" | "gemini-3.5-flash" | "gemini-3.6-flash" | "gemini-3.7-flash" | "gemini-3.8-flash" | "gemini-4-argon" | "gemini-4-carbon" | "gemini-4-hydrogen" | "gemini-3.8-flash-tts" | "gemini-3.8-flash-lite-tts" | "gemini-3.5-transcribe" | "lyria-3-clip-preview" | "lyria-3-pro-preview" | "gemini-robotics-er-1.6-preview" | "gemini-robotics-er-2-preview" | "lyria-3.5" | "gemini-omni-1.2-flash" | "gemini-omni-1.1-flash" | "gemini-omni-flash-preview" | (string & {});
 
   export type ResponseFormat = AudioResponseFormat | ImageResponseFormat | TextResponseFormat | VideoResponseFormat | Record<string, unknown>;
 
@@ -483,14 +279,14 @@ export namespace Interactions {
      * Required. The threshold for blocking content. If the harm probability
      * exceeds this threshold, the content will be blocked.
      */
-    threshold: "block_low_and_above" | "block_medium_and_above" | "block_only_high" | "block_none" | "off" | (string & {});
+    threshold: "block_low_and_above" | "block_medium_and_above" | "block_only_high" | "off" | (string & {});
     type: HarmCategory;
   }
 
-  export type ServiceTier = "flex" | "standard" | "priority" | "deferred" | (string & {});
+  export type ServiceTier = "flex" | "standard" | "priority" | (string & {});
 
   /** A step in the interaction. */
-  export type Step = CodeExecutionCallStep | CodeExecutionResultStep | FileSearchCallStep | FileSearchResultStep | FunctionCallStep | FunctionResultStep | GoogleMapsCallStep | GoogleMapsResultStep | GoogleSearchCallStep | GoogleSearchResultStep | McpServerToolCallStep | McpServerToolResultStep | ModelOutputStep | ProcessingCallStep | ProcessingResultStep | RetrievalCallStep | RetrievalResultStep | ThoughtStep | UrlContextCallStep | UrlContextResultStep | UserInputStep;
+  export type Step = CodeExecutionCallStep | CodeExecutionResultStep | FileSearchCallStep | FileSearchResultStep | FunctionCallStep | FunctionResultStep | GoogleMapsCallStep | GoogleMapsResultStep | GoogleSearchCallStep | GoogleSearchResultStep | McpServerToolCallStep | McpServerToolResultStep | ModelOutputStep | ProcessingCallStep | ProcessingResultStep | ThoughtStep | UrlContextCallStep | UrlContextResultStep | UserInputStep;
 
   /** Statistics on the interaction request's token usage. */
   export interface Usage {
@@ -499,6 +295,11 @@ export namespace Interactions {
 
     /** Grounding tool count. */
     grounding_tool_count?: Array<GroundingToolCount>;
+
+    /**
+     * Number of input tokens used in the first turn of this interaction.
+     */
+    initial_input_tokens?: number;
 
     /** A breakdown of input token usage by modality. */
     input_tokens_by_modality?: Array<ModalityTokens>;
@@ -551,7 +352,7 @@ export namespace Interactions {
   export namespace Tools {
 
     /** A tool that can be used by the model. */
-    export type Tool = CodeExecution | ComputerUse | FileSearch | Function | GoogleMaps | GoogleSearch | McpServer | Retrieval | UrlContext;
+    export type Tool = CodeExecution | ComputerUse | FileSearch | Function | GoogleMaps | GoogleSearch | McpServer | UrlContext;
 
     /** A tool that can be used by the model to execute code. */
     export interface CodeExecution {
@@ -604,7 +405,13 @@ export namespace Interactions {
       /** The name of the function. */
       name?: string;
 
-      /** The JSON Schema for the function's parameters. */
+      /**
+       * The JSON Schema for the function's parameters.
+       * 
+       * Supports a subset of JSON Schema. `minLength`, `maxLength`,
+       * `minProperties`, `maxProperties`, `uniqueItems`, `contains`,
+       * `minContains`, and `maxContains` are ignored and not enforced.
+       */
       parameters?: unknown;
       type: unknown;
     }
@@ -628,7 +435,7 @@ export namespace Interactions {
     /** A tool that can be used by the model to search Google. */
     export interface GoogleSearch {
       /** The types of search grounding to enable. */
-      search_types?: Array<"web_search" | "image_search" | "enterprise_web_search" | (string & {})>;
+      search_types?: Array<"web_search" | "image_search" | (string & {})>;
       type: unknown;
     }
 
@@ -655,25 +462,6 @@ export namespace Interactions {
       url?: string;
     }
 
-    /** A tool that can be used by the model to retrieve files. */
-    export interface Retrieval {
-      /** Used to specify configuration for ExaAISearch. */
-      exa_ai_search_config?: ExaAISearchConfig;
-
-      /** Used to specify configuration for ParallelAISearch. */
-      parallel_ai_search_config?: ParallelAISearchConfig;
-
-      /** Use to specify configuration for RAG Store. */
-      rag_store_config?: RagStoreConfig;
-
-      /** The types of file retrieval to enable. */
-      retrieval_types?: Array<"vertex_ai_search" | "rag_store" | "exa_ai_search" | "parallel_ai_search" | (string & {})>;
-      type: unknown;
-
-      /** Used to specify configuration for VertexAISearch. */
-      vertex_ai_search_config?: VertexAISearchConfig;
-    }
-
     /** A tool that can be used by the model to fetch URL context. */
     export interface UrlContext {
       type: unknown;
@@ -686,124 +474,6 @@ export namespace Interactions {
 
       /** The names of the allowed tools. */
       tools?: Array<string>;
-    }
-
-    /** Used to specify configuration for ExaAISearch. */
-    export interface ExaAISearchConfig {
-      /** Required. The API key for ExaAiSearch. */
-      api_key: string;
-
-      /**
-       * Optional. This field can be used to pass any parameter from the Exa.ai Search API.
-       */
-      custom_config?: Record<string, unknown>;
-    }
-
-    /** Config for filters. */
-    export interface Filter {
-      /** Optional. String for metadata filtering. */
-      metadata_filter?: string;
-
-      /**
-       * Optional. Only returns contexts with vector distance smaller than the
-       * threshold.
-       */
-      vector_distance_threshold?: number;
-
-      /**
-       * Optional. Only returns contexts with vector similarity larger than the
-       * threshold.
-       */
-      vector_similarity_threshold?: number;
-    }
-
-    /** Config for Hybrid Search. */
-    export interface HybridSearch {
-      /**
-       * Optional. Alpha value controls the weight between dense and sparse vector search
-       * results.
-       */
-      alpha?: number;
-    }
-
-    /** Used to specify configuration for ParallelAISearch. */
-    export interface ParallelAISearchConfig {
-      /** Optional. The API key for ParallelAiSearch. */
-      api_key?: string;
-
-      /** Optional. Custom configs for ParallelAiSearch. */
-      custom_config?: Record<string, unknown>;
-    }
-
-    /** The definition of the Rag resource. */
-    export interface RagResource {
-      /** Optional. RagCorpora resource name. */
-      rag_corpus?: string;
-
-      /**
-       * Optional. rag_file_id. The files should be in the same rag_corpus set in
-       * rag_corpus field.
-       */
-      rag_file_ids?: Array<string>;
-    }
-
-    /** Specifies the context retrieval config. */
-    export interface RagRetrievalConfig {
-      /** Config for filters. */
-      filter?: Filter;
-
-      /** Config for Hybrid Search. */
-      hybrid_search?: HybridSearch;
-
-      /** Config for ranking and reranking. */
-      ranking?: Ranking;
-
-      /** Optional. The number of contexts to retrieve. */
-      top_k?: number;
-    }
-
-    /** Use to specify configuration for RAG Store. */
-    export interface RagStoreConfig {
-      /** Optional. The representation of the rag source. */
-      rag_resources?: Array<RagResource>;
-
-      /** Specifies the context retrieval config. */
-      rag_retrieval_config?: RagRetrievalConfig;
-
-      /**
-       * Optional. Number of top k results to return from the selected corpora.
-       */
-      similarity_top_k?: number;
-
-      /**
-       * Optional. Only return results with vector distance smaller than the threshold.
-       */
-      vector_distance_threshold?: number;
-    }
-
-    /** Config for ranking and reranking. */
-    export interface Ranking {
-      /** Optional. The model name of the rank service. */
-      model_name?: string;
-
-      /** Config for Rank Service. */
-      rank_service?: RankService;
-      ranking_config: unknown;
-    }
-
-    /** Config for Rank Service. */
-    export interface RankService {
-      /** Optional. The model name of the rank service. */
-      model_name?: string;
-    }
-
-    /** Used to specify configuration for VertexAISearch. */
-    export interface VertexAISearchConfig {
-      /** Optional. Used to specify Vertex AI Search datastores. */
-      datastores?: Array<string>;
-
-      /** Optional. Used to specify Vertex AI Search engine. */
-      engine?: string;
     }
   }
 
@@ -867,7 +537,7 @@ export namespace Interactions {
     code?: string;
 
     /** Programming language of the `code`. */
-    language?: "python" | (string & {});
+    language?: "python" | "bash" | (string & {});
   }
 
   /** Code execution result step. */
@@ -878,8 +548,8 @@ export namespace Interactions {
     /** Whether the code execution resulted in an error. */
     is_error?: boolean;
 
-    /** Required. The output of the code execution. */
-    result: string;
+    /** The output of the code execution. */
+    result: Array<Content> | string;
 
     /** A signature hash for backend validation. */
     signature?: string;
@@ -895,7 +565,7 @@ export namespace Interactions {
     data?: string;
 
     /** The mime type of the document. */
-    mime_type?: "application/pdf" | "text/csv" | (string & {});
+    mime_type?: "application/pdf" | "text/csv" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.ms-powerpoint" | "application/vnd.oasis.opendocument.presentation" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.template" | "application/vnd.oasis.opendocument.text" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-excel" | "application/vnd.oasis.opendocument.spreadsheet" | (string & {});
     type: unknown;
 
     /** The URI of the document. */
@@ -918,9 +588,11 @@ export namespace Interactions {
     domain: string;
 
     /**
-     * Headers to inject on all outbound requests matching this domain. Accepts a single dict or a list of dicts. The egress proxy injects these automatically.
+     * Headers to inject into requests matching this rule.
+     * Key: header name (e.g., "Authorization").
+     * Value: header value (e.g., "Bearer your-token").
      */
-    transform?: Array<Record<string, unknown>> | Record<string, unknown>;
+    transform?: Record<string, unknown>;
   }
 
   /** Network egress configuration for the environment. */
@@ -964,15 +636,6 @@ export namespace Interactions {
     type: unknown;
   }
 
-  /** Content of a single file in the codebase. */
-  export interface FileContent {
-    /** The UTF-8 encoded text content of the file. */
-    content?: string;
-
-    /** The relative path of the file from the project root. */
-    path?: string;
-  }
-
   /** File Search call step. */
   export interface FileSearchCallStep {
     /** Required. A unique ID for this specific tool call. */
@@ -991,55 +654,6 @@ export namespace Interactions {
     /** A signature hash for backend validation. */
     signature?: string;
     type: unknown;
-  }
-
-  /**
-   * Request parameters specific to FIND sessions, used for discovering
-   * vulnerabilities in a codebase.
-   */
-  export interface FindRequest {
-    /**
-     * Additional context or custom instructions provided by the user to guide
-     * the vulnerability analysis.
-     */
-    description?: string;
-
-    /**
-     * The identifier of a specific finding to verify. This is primarily used in
-     * VERIFY mode to focus the agent's execution-based validation on a single
-     * vulnerability.
-     */
-    finding_id?: string;
-
-    /** The mode of the find session. */
-    mode?: "scan" | "verify" | (string & {});
-
-    /** A list of source files to provide as context for the scan. */
-    source_files?: Array<FileContent>;
-  }
-
-  /**
-   * Request parameters specific to FIX sessions, used for generating and
-   * validating security patches.
-   */
-  export interface FixRequest {
-    /**
-     * Additional context or custom instructions provided by the user to guide
-     * the patch generation process.
-     */
-    description?: string;
-
-    /**
-     * The identifier of the specific security finding to be remediated. This ID
-     * maps to a previously discovered vulnerability.
-     */
-    finding_id?: string;
-
-    /**
-     * A list of source files providing context for the remediation. These files
-     * are typically the ones containing the identified vulnerability.
-     */
-    source_files?: Array<FileContent>;
   }
 
   /** A function tool call step. */
@@ -1123,7 +737,7 @@ export namespace Interactions {
     id: string;
 
     /** The type of search grounding enabled. */
-    search_type?: "web_search" | "image_search" | "enterprise_web_search" | (string & {});
+    search_type?: "web_search" | "image_search" | (string & {});
 
     /** A signature hash for backend validation. */
     signature?: string;
@@ -1166,10 +780,10 @@ export namespace Interactions {
     count?: number;
 
     /** The grounding tool type associated with the count. */
-    type?: "google_search" | "google_maps" | "retrieval" | (string & {});
+    type?: "google_search" | "google_maps" | (string & {});
   }
 
-  export type HarmCategory = "hate_speech" | "dangerous_content" | "harassment" | "sexually_explicit" | "civic_integrity" | "image_hate" | "image_dangerous_content" | "image_harassment" | "image_sexually_explicit" | "jailbreak" | (string & {});
+  export type HarmCategory = "hate_speech" | "dangerous_content" | "harassment" | "sexually_explicit" | "jailbreak" | (string & {});
 
   /** The configuration for image interaction. */
   export interface ImageConfig {
@@ -1180,13 +794,13 @@ export namespace Interactions {
      * If not specified, the model will choose a default aspect ratio based on any
      * reference images provided.
      */
-    aspect_ratio?: "1:1" | "2:3" | "3:2" | "3:4" | "4:3" | "4:5" | "5:4" | "9:16" | "16:9" | "21:9" | "1:8" | "8:1" | "1:4" | "4:1" | (string & {});
+    aspect_ratio?: string;
 
     /**
      * Specifies the size of generated images. Supported values are `1K`, `2K`,
      * `4K`. If not specified, the model will use default value `1K`.
      */
-    image_size?: "1K" | "2K" | "4K" | "512" | (string & {});
+    image_size?: string;
   }
 
   /** An image content block. */
@@ -1270,17 +884,6 @@ export namespace Interactions {
   /** Output generated by the model. */
   export interface ModelOutputStep {
     content?: Array<Content>;
-
-    /**
-     * The `Status` type defines a logical error model that is suitable for
-     * different programming environments, including REST APIs and RPC APIs. It is
-     * used by [gRPC](https://github.com/grpc). Each `Status` message contains
-     * three pieces of data: error code, error message, and error details.
-     * 
-     * You can find out more about this error model and how to work with it in the
-     * [API Design Guide](https://cloud.google.com/apis/design/errors).
-     */
-    error?: Status;
     type: unknown;
   }
 
@@ -1337,49 +940,6 @@ export namespace Interactions {
   }
 
   /**
-   * Retrieval call step.
-   * Used by Vertex Retrieval tools such as Parallel AI, Exa AI, Vertex AI Search,
-   * etc. RetrievalType decides which tool is used.
-   */
-  export interface RetrievalCallStep {
-    /** The arguments to pass to Retrieval tools. */
-    arguments: RetrievalStepArguments;
-
-    /** Required. A unique ID for this specific tool call. */
-    id: string;
-
-    /** The type of retrieval tools. */
-    retrieval_type?: "vertex_ai_search" | "rag_store" | "exa_ai_search" | "parallel_ai_search" | (string & {});
-
-    /** A signature hash for backend validation. */
-    signature?: string;
-    type: unknown;
-  }
-
-  /**
-   * Vertex Retrieval result step.
-   * Used by Vertex Retrieval tools such as Parallel AI, Exa AI, Vertex AI Search,
-   * etc.
-   */
-  export interface RetrievalResultStep {
-    /** Required. ID to match the ID from the function call block. */
-    call_id: string;
-
-    /** Whether the retrieval resulted in an error. */
-    is_error?: boolean;
-
-    /** A signature hash for backend validation. */
-    signature?: string;
-    type: unknown;
-  }
-
-  /** The arguments to pass to Retrieval tools. */
-  export interface RetrievalStepArguments {
-    /** Queries for Retrieval information. */
-    queries?: Array<string>;
-  }
-
-  /**
    * Encapsulates a snippet of a user review that answers a question about
    * the features of a specific place in Google Maps.
    */
@@ -1394,17 +954,14 @@ export namespace Interactions {
     url?: string;
   }
 
-  /** The configuration of CodeMender sessions. */
-  export interface SessionConfig {
-    /**
-     * The maximum number of interaction rounds the agent is allowed to perform
-     * before reaching a timeout.
-     */
-    max_rounds?: number;
-  }
-
   /** Configuration for smart transcription mode. */
   export interface SmartTranscriptionMode {
+    /**
+     * The source text to be edited or rewritten via voice instructions.
+     * When provided, the model performs voice-driven editing and outputs the
+     * finalized replacement text.
+     */
+    source_text?: string;
     type: unknown;
   }
 
@@ -1425,7 +982,7 @@ export namespace Interactions {
 
     /** Where the source should appear in the environment. */
     target?: string;
-    type?: "gcs" | "inline" | "repository" | "skill_registry" | (string & {});
+    type?: "gcs" | "inline" | "repository" | (string & {});
   }
 
   /** Configuration for multi-speaker and speech generation. */
@@ -1487,35 +1044,6 @@ export namespace Interactions {
     type: unknown;
   }
 
-  /**
-   * The `Status` type defines a logical error model that is suitable for
-   * different programming environments, including REST APIs and RPC APIs. It is
-   * used by [gRPC](https://github.com/grpc). Each `Status` message contains
-   * three pieces of data: error code, error message, and error details.
-   * 
-   * You can find out more about this error model and how to work with it in the
-   * [API Design Guide](https://cloud.google.com/apis/design/errors).
-   */
-  export interface Status {
-    /**
-     * The status code, which should be an enum value of google.rpc.Code.
-     */
-    code?: number;
-
-    /**
-     * A list of messages that carry the error details.  There is a common set of
-     * message types for APIs to use.
-     */
-    details?: Array<Record<string, unknown>>;
-
-    /**
-     * A developer-facing error message, which should be in English. Any
-     * user-facing error message should be localized and sent in the
-     * google.rpc.Status.details field, or localized by the client.
-     */
-    message?: string;
-  }
-
   /** A text content block. */
   export interface TextContent {
     /** Citation information for model-generated content. */
@@ -1534,16 +1062,21 @@ export namespace Interactions {
     /**
      * The JSON schema that the output should conform to. Only applicable when
      * mime_type is application/json.
+     * 
+     * Supports a subset of JSON Schema. `minLength`, `maxLength`,
+     * `minProperties`, `maxProperties`, `uniqueItems`, `contains`,
+     * `minContains`, and `maxContains` are ignored and not enforced; validate
+     * these in your application. `minItems` and `maxItems` are enforced. Schemas
+     * that are too complex to enforce (for example, large `maxItems` on nested
+     * arrays) return a 400 INVALID_ARGUMENT error.
      */
     schema?: Record<string, unknown>;
     type: unknown;
   }
 
-  export type ThinkingLevel = "minimal" | "low" | "medium" | "high" | (string & {});
+  export type ThinkingLevel = "minimal" | "low" | "medium" | "high" | "xhigh" | (string & {});
 
   export type ThinkingSummaries = "auto" | "none" | (string & {});
-
-  export type ThoughtContent = ImageContent | TextContent;
 
   /** A thought step. */
   export interface ThoughtStep {
@@ -1551,7 +1084,7 @@ export namespace Interactions {
     signature?: string;
 
     /** A summary of the thought. */
-    summary?: Array<ThoughtContent>;
+    summary?: Array<Content>;
     type: unknown;
   }
 
@@ -1582,11 +1115,6 @@ export namespace Interactions {
      * audio. If omitted or empty, defaults to automatic language detection.
      */
     language_codes?: Array<string>;
-
-    /**
-     * Deprecated: use language_codes. BCP-47 language codes providing hints about the languages present in the audio.
-     */
-    language_hints?: Array<string>;
 
     /** Discriminated transcription mode options or enum. */
     mode?: TranscriptionMode | "verbatim" | "smart" | (string & {});
@@ -1730,12 +1258,6 @@ export namespace Interactions {
     /** The duration for the video output. */
     duration?: string;
 
-    /**
-     * The Cloud Storage URI to store the video output. Required for Vertex if
-     * delivery mode is URI.
-     */
-    gcs_uri?: string;
-
     /** The video output resolution. Defaults to 720p. */
     resolution?: "360p" | "720p" | "1080p" | "4k" | (string & {});
     type: unknown;
@@ -1777,5 +1299,202 @@ export namespace Interactions {
     /** The transcribed word. */
     text?: string;
     type: unknown;
+  }
+}
+
+export namespace Decisions {
+
+  /**
+   * Evaluates one or more structured decision questions (`noul`, `choice`, or `score`) against a shared `input`.
+   */
+  export interface CreateDecisionRequest {
+    /**
+     * Required. Shared input prefix evaluated once across all decision questions.
+     */
+    input: DecisionInputContent | Array<DecisionInputContent> | string;
+
+    /**
+     * Required. The name of the `Model` used for evaluating the decisions.
+     */
+    model: string;
+
+    /**
+     * Required. The decision questions to evaluate, keyed by caller-defined unique question
+     * identifiers (at least 1 question).
+     */
+    questions: Record<string, unknown>;
+  }
+
+  export type DecisionInputContent = Interactions.AudioContent | Interactions.DocumentContent | Interactions.ImageContent | Interactions.TextContent | Interactions.VideoContent;
+
+  /** The response from evaluating a batch of decision questions. */
+  export interface CreateDecisionResponse {
+    /**
+     * Output only. Decision answers keyed by the question identifiers from `questions`.
+     */
+    readonly answers?: Record<string, unknown>;
+
+    /** Feedback from input content filters. */
+    prompt_feedback?: PromptFeedback;
+
+    /** Statistics on the interaction request's token usage. */
+    usage?: Interactions.Usage;
+  }
+
+  /** A single decision question. */
+  export type Question = ChoiceQuestion | NoulQuestion | ScoreQuestion;
+
+  export type DecisionInstructionContent = Interactions.TextContent;
+
+  /**
+   * A single-select categorical decision question over mutually exclusive
+   * options.
+   */
+  export interface ChoiceQuestion {
+    /**
+     * Required. Mutually exclusive options to choose from (between 2 and 255 options),
+     * mapping option ID to optional description or rubric criteria. Option IDs
+     * must be non-empty with no control characters or leading/trailing
+     * whitespace.
+     */
+    criteria: Record<string, unknown>;
+
+    /**
+     * Required. Human-readable decision guidelines, rubrics, or criteria evaluated
+     * against the shared `input`. At least one content block is required.
+     */
+    instructions: DecisionInstructionContent | Array<DecisionInstructionContent> | string;
+    type: unknown;
+  }
+
+  /** A binary (true / false) decision question. */
+  export interface NoulQuestion {
+    /** Criteria descriptions for the `true` and `false` outcomes. */
+    criteria?: Criteria;
+
+    /**
+     * Required. Human-readable decision guidelines, rubrics, or criteria evaluated
+     * against the shared `input`. At least one content block is required.
+     */
+    instructions: DecisionInstructionContent | Array<DecisionInstructionContent> | string;
+    type: unknown;
+  }
+
+  /**
+   * A quantitative rubric scoring question over discrete numeric levels.
+   */
+  export interface ScoreQuestion {
+    /**
+     * Required. Discrete score levels in the rubric (between 2 and 255 non-empty levels),
+     * where 0-based index `i` corresponds to numeric level value `i` and rubric
+     * description `criteria[i]`.
+     */
+    criteria: Array<string>;
+
+    /**
+     * Required. Human-readable decision guidelines, rubrics, or criteria evaluated
+     * against the shared `input`. At least one content block is required.
+     */
+    instructions: DecisionInstructionContent | Array<DecisionInstructionContent> | string;
+    type: unknown;
+  }
+
+  /** Criteria descriptions for the `true` and `false` outcomes. */
+  export interface Criteria {
+    /**
+     * Optional. Optional criteria or description for the `false` outcome.
+     */
+    false_description?: string;
+
+    /**
+     * Optional. Optional criteria or description for the `true` outcome.
+     */
+    true_description?: string;
+  }
+
+  /** Decision answer for a single question. */
+  export type Answer = ChoiceAnswer | NoulAnswer | ScoreAnswer;
+
+  /** Calibrated result for a `ChoiceQuestion`. */
+  export interface ChoiceAnswer {
+    /**
+     * Required. Output only. The option ID with the highest probability.
+     */
+    readonly choice: string;
+
+    /**
+     * Required. Output only. Closed-world confidence score in `[0, 1]`, equal to the calibrated
+     * probability of the winning outcome:
+     * - `NoulAnswer`: `max(noul, 1 - noul)`
+     * - `ChoiceAnswer`: `p_max` (the probability of `choice`)
+     * - `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).
+     */
+    readonly confidence: number;
+
+    /**
+     * Required. Output only. Closed-world normalized probability in `[0, 1]` for each option ID.
+     */
+    readonly probabilities: Record<string, unknown>;
+    type: unknown;
+  }
+
+  /** Calibrated result for a `NoulQuestion`. */
+  export interface NoulAnswer {
+    /**
+     * Required. Output only. Closed-world confidence score in `[0, 1]`, equal to the calibrated
+     * probability of the winning outcome:
+     * - `NoulAnswer`: `max(noul, 1 - noul)`
+     * - `ChoiceAnswer`: `p_max` (the probability of `choice`)
+     * - `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).
+     */
+    readonly confidence: number;
+
+    /**
+     * Required. Output only. Calibrated probability `P(true)` in `[0.01, 0.99]`.
+     */
+    readonly noul: number;
+    type: unknown;
+  }
+
+  /** Calibrated result for a `ScoreQuestion`. */
+  export interface ScoreAnswer {
+    /**
+     * Required. Output only. Closed-world confidence score in `[0, 1]`, equal to the calibrated
+     * probability of the winning outcome:
+     * - `NoulAnswer`: `max(noul, 1 - noul)`
+     * - `ChoiceAnswer`: `p_max` (the probability of `choice`)
+     * - `ScoreAnswer`: `p_max` (the highest probability in `probabilities`).
+     */
+    readonly confidence: number;
+
+    /**
+     * Required. Output only. Rubric description for each non-empty 0-based level index.
+     */
+    readonly legend: Record<string, unknown>;
+
+    /**
+     * Required. Output only. Closed-world normalized probability in `[0, 1]` for each 0-based level
+     * index.
+     */
+    readonly probabilities: Record<string, unknown>;
+
+    /**
+     * Required. Output only. Probability-weighted expected score (`sum_k k * probability_k`).
+     */
+    readonly score: number;
+    type: unknown;
+  }
+
+  /** Feedback from input content filters. */
+  export interface PromptFeedback {
+    /**
+     * Optional. If set, the input was blocked and no answers are returned.
+     */
+    block_reason?: "safety" | "other" | "blocklist" | "prohibited_content" | "image_safety" | (string & {});
+
+    /**
+     * Optional. Optional message detailing the reason for blocking.
+     */
+    block_reason_message?: string;
   }
 }

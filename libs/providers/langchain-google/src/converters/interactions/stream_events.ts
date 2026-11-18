@@ -479,9 +479,7 @@ export async function* convertInteractionsStreamToChunks(
           case "mcp_server_tool_call":
           case "mcp_server_tool_result":
           case "processing_call":
-          case "processing_result":
-          case "retrieval_call":
-          case "retrieval_result": {
+          case "processing_result": {
             builtInToolSteps.push(delta as unknown as Gemini.Interactions.Step);
             break;
           }
