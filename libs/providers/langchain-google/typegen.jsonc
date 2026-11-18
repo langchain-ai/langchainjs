@@ -6,7 +6,7 @@
     },
     // Temporary merged spec (interactions + decisions-partial); see src/openapi/README-decisions.md
     "interactions": {
-      "path": "src/openapi/interactions-decisions-openapi.json"
+      "path": "src/openapi/interactions-openapi.json"
     }
   },
   "outputs": [
@@ -260,8 +260,10 @@
           "namespace": "Decisions",
           "contents": [
             "interactions:CreateDecisionRequest",
+            "interactions:DecisionInputContent",
             "interactions:CreateDecisionResponse",
             "interactions:Question",
+            "interactions:DecisionInstructionContent",
             "interactions:ChoiceQuestion",
             "interactions:NoulQuestion",
             "interactions:ScoreQuestion",

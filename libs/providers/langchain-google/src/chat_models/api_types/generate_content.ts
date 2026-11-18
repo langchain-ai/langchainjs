@@ -1935,11 +1935,11 @@ export namespace GenContent {
     mode?: "MODE_UNSPECIFIED" | "MODE_DYNAMIC" | (string & {});
   }
 
-  /** Required. The type of tool that was called. */
-  export type ToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
-
   /**
    * Optional. If specified, the media resolution specified will be used.
    */
   export type MediaResolution = "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | (string & {});
+
+  /** Required. The type of tool that was called. */
+  export type ToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
 }
