@@ -122,6 +122,90 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
   });
 });
 
+describe("ChatOpenAICompletions streamed token usage", () => {
+  function fakeStream(withUsage: boolean) {
+    return (async function* () {
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant" as const, content: "Hello" },
+            finish_reason: "stop",
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "gpt-4o-mini",
+        service_tier: null,
+      };
+      if (withUsage) {
+        yield {
+          choices: [],
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 5,
+            total_tokens: 15,
+            prompt_tokens_details: null,
+            completion_tokens_details: null,
+          },
+          system_fingerprint: null,
+          model: "gpt-4o-mini",
+          service_tier: null,
+        };
+      }
+    })();
+  }
+
+  // https://github.com/langchain-ai/langchainjs/issues/11944
+  it("should use the streamed usage instead of estimating tokens", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      streaming: true,
+    });
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream(true)) as typeof model.completionWithRetry;
+    const getNumTokens = vi.spyOn(model, "getNumTokens");
+
+    const result = await model._generate(
+      [new HumanMessage("test")],
+      {} as typeof model.ParsedCallOptions
+    );
+
+    expect(getNumTokens).not.toHaveBeenCalled();
+    expect(result.llmOutput?.estimatedTokenUsage).toEqual({
+      promptTokens: 10,
+      completionTokens: 5,
+      totalTokens: 15,
+    });
+  });
+
+  it("should still estimate tokens when the stream reports no usage", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      streaming: true,
+      streamUsage: false,
+    });
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream(false)) as typeof model.completionWithRetry;
+    const getNumTokens = vi.spyOn(model, "getNumTokens").mockResolvedValue(1);
+
+    const result = await model._generate(
+      [new HumanMessage("test")],
+      {} as typeof model.ParsedCallOptions
+    );
+
+    expect(getNumTokens).toHaveBeenCalled();
+    expect(result.llmOutput?.estimatedTokenUsage?.totalTokens).toBeGreaterThan(
+      0
+    );
+  });
+});
+
 describe("ChatOpenAICompletions cache token usage_metadata", () => {
   it("should map cache_write_tokens to cache_creation for streaming responses", async () => {
     const model = new ChatOpenAICompletions({
