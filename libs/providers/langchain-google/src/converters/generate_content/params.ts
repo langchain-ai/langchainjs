@@ -36,7 +36,7 @@ function supportsMinimalThinkingLevel(model: string): boolean {
 
 // Models that accept thinkingLevel "XHIGH"; the others reject it.
 // TODO: Move this to model profile
-const XHIGH_THINKING_LEVEL_MODELS = ["gemini-4-hydrogen"];
+const XHIGH_THINKING_LEVEL_MODELS = ["gemini-4-hydrogen", "gemini-4-neon"];
 
 function supportsXHighThinkingLevel(model: string): boolean {
   return XHIGH_THINKING_LEVEL_MODELS.includes(model);
