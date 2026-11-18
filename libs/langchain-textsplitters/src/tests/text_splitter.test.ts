@@ -400,6 +400,37 @@ test("Token text splitter overlap when last chunk is large", async () => {
   expect(output).toEqual(expectedOutput);
 });
 
+test.each([
+  ["Chinese", "自然语言处理是人工智能和语言学领域的分支学科。".repeat(20)],
+  [
+    "Japanese",
+    "日本語のテキストを分割して埋め込みモデルに渡します。".repeat(20),
+  ],
+  ["emoji", "😀🎉🚀✨🔥".repeat(40)],
+])(
+  "Token text splitter does not cut %s characters in half",
+  async (_name, text) => {
+    for (const encodingName of ["gpt2", "cl100k_base"] as const) {
+      const noOverlap = await new TokenTextSplitter({
+        encodingName,
+        chunkSize: 30,
+        chunkOverlap: 0,
+      }).splitText(text);
+      expect(noOverlap.join("")).toBe(text);
+
+      const overlapping = await new TokenTextSplitter({
+        encodingName,
+        chunkSize: 30,
+        chunkOverlap: 7,
+      }).splitText(text);
+      for (const chunk of [...noOverlap, ...overlapping]) {
+        expect(chunk).not.toContain("�");
+        expect(text).toContain(chunk);
+      }
+    }
+  }
+);
+
 test("Test markdown text splitter", async () => {
   const text =
     "# 🦜️🔗 LangChain\n" +

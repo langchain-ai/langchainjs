@@ -754,15 +754,46 @@ export class TokenTextSplitter
       this.disallowedSpecial
     );
 
+    // A character takes at most four bytes, so at most this many tokens
+    const maxCharacterTokens = 4;
     let start_idx = 0;
+    let previous_end_idx = 0;
 
     while (start_idx < input_ids.length) {
       if (start_idx > 0) {
         start_idx -= this.chunkOverlap;
       }
-      const end_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-      const chunk_ids = input_ids.slice(start_idx, end_idx);
-      splits.push(this.tokenizer.decode(chunk_ids));
+      let end_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+      let chunk = this.tokenizer.decode(input_ids.slice(start_idx, end_idx));
+
+      // A cut between two tokens can fall inside a multi-byte character (emoji,
+      // CJK), and decoding the broken side gives U+FFFD. Move the cut to a
+      // character boundary: extend the end to finish the character, and skip the
+      // start past the rest of a character the previous chunk already holds.
+      for (
+        let i = 0;
+        i < maxCharacterTokens &&
+        start_idx < previous_end_idx &&
+        start_idx < end_idx - 1 &&
+        chunk.startsWith("�");
+        i += 1
+      ) {
+        start_idx += 1;
+        chunk = this.tokenizer.decode(input_ids.slice(start_idx, end_idx));
+      }
+      for (
+        let i = 0;
+        i < maxCharacterTokens &&
+        end_idx < input_ids.length &&
+        chunk.endsWith("�");
+        i += 1
+      ) {
+        end_idx += 1;
+        chunk = this.tokenizer.decode(input_ids.slice(start_idx, end_idx));
+      }
+
+      splits.push(chunk);
+      previous_end_idx = end_idx;
       start_idx = end_idx;
     }
 
