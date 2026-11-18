@@ -1,5 +1,15 @@
 # langchain
 
+## 1.6.7
+
+### Patch Changes
+
+- [#12257](https://github.com/langchain-ai/langchainjs/pull/12257) [`f852414`](https://github.com/langchain-ai/langchainjs/commit/f852414703a7fcaf0332508dbca44eccbebe41c5) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Mark tool messages that `humanInTheLoopMiddleware` creates for `reject` and `respond` decisions with `lc_source: "hitl_interrupt_decision"` and `lc_data: { decision }`, and let `addNotificationMetadata` accept tool messages
+
+- [#12248](https://github.com/langchain-ai/langchainjs/pull/12248) [`9850f1d`](https://github.com/langchain-ai/langchainjs/commit/9850f1d94a2697ef98cb7edd42e5cb054b054045) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): make `ConfigurableModel` non-configurable when `configurableFields` is omitted
+
+  `initChatModel` with a model and no `configurableFields` (and direct `new ConfigurableModel(...)` without it) no longer lets `configurable.model` / `configurable.modelProvider` swap the model at invoke time, matching the docs. Pass `configurableFields: ["model", "modelProvider"]` to keep runtime model swapping.
+
 ## 1.6.6
 
 ### Patch Changes

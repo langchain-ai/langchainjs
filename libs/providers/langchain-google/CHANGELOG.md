@@ -1,5 +1,22 @@
 # @langchain/google
 
+## 0.2.16
+
+### Patch Changes
+
+- [#12263](https://github.com/langchain-ai/langchainjs/pull/12263) [`7f1c5e1`](https://github.com/langchain-ai/langchainjs/commit/7f1c5e1ee2fefa331b7fa6f0c8e63cd630a36b28) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `gemini-4-neon` model profile and `xhigh` thinking level support.
+
+- [#12243](https://github.com/langchain-ai/langchainjs/pull/12243) [`c93f9bc`](https://github.com/langchain-ai/langchainjs/commit/c93f9bc61611677507760f8e31ca23f8e3463fa1) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds **experimental** support for the Google Gemini Decisions API on AI
+  Studio. (Google Cloud / Vertex support has been added, but final support is
+  pending platform implementation.)
+
+  - Add `GoogleClassifier` and `BaseGoogleClassifier` (implementing `BaseDecisionModel` from `@langchain/core/decisions`) in `@langchain/google` and `@langchain/google/node`
+  - Support `Noul`, `Choice`, and `Score` questions across text, structured JSON, `BaseMessage` conversations, and multimodal `ContentBlock` inputs
+  - Add Decisions API converters for state, questions, responses, and `PromptRefusedError` safety refusals
+
+  Incorporates the most recent changes to the Interactions API as well,
+  including the removal of the Retrieval tools.
+
 ## 0.2.15
 
 ### Patch Changes
