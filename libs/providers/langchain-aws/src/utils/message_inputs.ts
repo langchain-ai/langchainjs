@@ -74,6 +74,17 @@ function isConverseCachePoint(block: unknown): boolean {
   );
 }
 
+function isGuardContentBlock(
+  block: unknown
+): block is Bedrock.ContentBlock.GuardContentMember {
+  return (
+    typeof block === "object" &&
+    block !== null &&
+    "guardContent" in block &&
+    block.guardContent !== undefined
+  );
+}
+
 function createConverseCachePointBlock(
   cacheControl: BedrockPromptCacheControl,
   isNovaModel: boolean
@@ -496,6 +507,10 @@ function convertLangChainContentBlockToConverseContentBlock<
 
   if (isDataContentBlock(block)) {
     return convertToProviderContentBlock(block, standardContentBlockConverter);
+  }
+
+  if (isGuardContentBlock(block)) {
+    return { guardContent: block.guardContent };
   }
 
   if (block.type === "text") {
