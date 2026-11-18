@@ -26,6 +26,7 @@ import {
   convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
   convertResponsesMessageToAIMessage,
+  createResponsesToolCallArgsRecovery,
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
 import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
@@ -317,25 +318,31 @@ export class ChatOpenAIResponses<
       options
     );
 
+    const recoverToolCallArgs = createResponsesToolCallArgsRecovery();
     try {
       for await (const data of streamIterable) {
         if (options.signal?.aborted) {
           return;
         }
-        const chunk = convertResponsesDeltaToChatGenerationChunk(data);
-        if (chunk == null) continue;
-        yield chunk;
-        await runManager?.handleLLMNewToken(
-          chunk.text || "",
-          {
-            prompt: options.promptIndex ?? 0,
-            completion: 0,
-          },
-          undefined,
-          undefined,
-          undefined,
-          { chunk }
-        );
+        const chunks = [
+          convertResponsesDeltaToChatGenerationChunk(data),
+          recoverToolCallArgs(data),
+        ];
+        for (const chunk of chunks) {
+          if (chunk == null) continue;
+          yield chunk;
+          await runManager?.handleLLMNewToken(
+            chunk.text || "",
+            {
+              prompt: options.promptIndex ?? 0,
+              completion: 0,
+            },
+            undefined,
+            undefined,
+            undefined,
+            { chunk }
+          );
+        }
       }
     } catch (e) {
       const error = wrapOpenAIClientError(e);

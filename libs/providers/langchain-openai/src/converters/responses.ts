@@ -997,6 +997,116 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   });
 };
 
+/**
+ * Returns the complete tool call text carried by a final Responses stream
+ * event, or `undefined` for any other event.
+ */
+function getFinalToolCallText(
+  event: OpenAIClient.Responses.ResponseStreamEvent
+): { index: number; text: string; isCustomTool: boolean } | undefined {
+  if (event.type === "response.function_call_arguments.done") {
+    return {
+      index: event.output_index,
+      text: event.arguments,
+      isCustomTool: false,
+    };
+  }
+  if (event.type === "response.custom_tool_call_input.done") {
+    return { index: event.output_index, text: event.input, isCustomTool: true };
+  }
+  if (event.type === "response.output_item.done") {
+    if (event.item.type === "function_call") {
+      return {
+        index: event.output_index,
+        text: event.item.arguments ?? "",
+        isCustomTool: false,
+      };
+    }
+    if (event.item.type === "custom_tool_call") {
+      return {
+        index: event.output_index,
+        text: event.item.input ?? "",
+        isCustomTool: true,
+      };
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Creates a stateful companion to {@link convertResponsesDeltaToChatGenerationChunk}
+ * that recovers tool call arguments a stream delivers only in its final events.
+ *
+ * OpenAI streams `function_call` arguments and `custom_tool_call` input as
+ * `*.delta` events, then repeats the complete text in the matching `*.done`
+ * event and in `response.output_item.done`. Some OpenAI-compatible servers
+ * send no deltas, or only part of the text as deltas, and put the complete
+ * text in the final events alone. The per-event converter reads deltas only,
+ * so those calls would end with empty or truncated arguments.
+ *
+ * The returned function must see every event of one stream, in order. It
+ * tracks the text each output item has received and, on a final event,
+ * returns a chunk holding only the text still missing. A call that streamed
+ * in full gets no extra chunk, and a final text that does not start with the
+ * received text is left alone.
+ *
+ * @returns A converter that yields a `tool_call_chunks` chunk with the missing
+ *   text, or `null` when nothing is missing.
+ */
+export function createResponsesToolCallArgsRecovery(): Converter<
+  OpenAIClient.Responses.ResponseStreamEvent,
+  ChatGenerationChunk | null
+> {
+  const received = new Map<number, string>();
+  return (event) => {
+    if (
+      event.type === "response.output_item.added" &&
+      (event.item.type === "function_call" ||
+        event.item.type === "custom_tool_call")
+    ) {
+      received.set(
+        event.output_index,
+        (event.item.type === "function_call"
+          ? event.item.arguments
+          : event.item.input) ?? ""
+      );
+      return null;
+    }
+    if (
+      event.type === "response.function_call_arguments.delta" ||
+      event.type === "response.custom_tool_call_input.delta"
+    ) {
+      received.set(
+        event.output_index,
+        (received.get(event.output_index) ?? "") + event.delta
+      );
+      return null;
+    }
+    const final = getFinalToolCallText(event);
+    if (final === undefined) return null;
+    const prior = received.get(final.index) ?? "";
+    if (final.text.length <= prior.length || !final.text.startsWith(prior)) {
+      return null;
+    }
+    received.set(final.index, final.text);
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: [],
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            args: final.text.slice(prior.length),
+            index: final.index,
+            ...(final.isCustomTool ? { isCustomTool: true } : {}),
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      }),
+    });
+  };
+}
+
 function resolveImageItem(
   block: ContentBlock.Multimodal.Image
 ): OpenAIClient.Responses.ResponseInputImage | undefined {

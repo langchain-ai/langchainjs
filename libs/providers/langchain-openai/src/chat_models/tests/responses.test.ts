@@ -1,5 +1,5 @@
 import { ContextOverflowError } from "@langchain/core/errors";
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { describe, it, expect, vi } from "vitest";
 import { ChatOpenAIResponses } from "../responses.js";
 
@@ -169,6 +169,155 @@ describe("streaming errors", () => {
 
     expect(caughtError).toBeInstanceOf(ContextOverflowError);
     expect((caughtError as ContextOverflowError).cause).toBe(originalError);
+  });
+});
+
+describe("streamed tool call arguments", () => {
+  type StreamEvent = Record<string, unknown>;
+
+  async function streamToolCalls(events: StreamEvent[]) {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    async function* stream() {
+      yield* events;
+    }
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(stream()) as typeof model.completionWithRetry;
+
+    let message: AIMessageChunk | undefined;
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("hello")],
+      {}
+    )) {
+      if (!AIMessageChunk.isInstance(chunk.message)) {
+        throw new Error("Expected an AIMessageChunk");
+      }
+      message = message ? message.concat(chunk.message) : chunk.message;
+    }
+    return message;
+  }
+
+  function functionCall(index: number, args: string): StreamEvent[] {
+    const item = {
+      type: "function_call",
+      id: `fc_${index}`,
+      call_id: `call_${index}`,
+      name: "get_weather",
+      arguments: "",
+      status: "in_progress",
+    };
+    return [
+      { type: "response.output_item.added", output_index: index, item },
+      {
+        type: "response.function_call_arguments.done",
+        output_index: index,
+        item_id: item.id,
+        arguments: args,
+      },
+      {
+        type: "response.output_item.done",
+        output_index: index,
+        item: { ...item, arguments: args, status: "completed" },
+      },
+    ];
+  }
+
+  function argumentDelta(index: number, delta: string): StreamEvent {
+    return {
+      type: "response.function_call_arguments.delta",
+      output_index: index,
+      item_id: `fc_${index}`,
+      delta,
+    };
+  }
+
+  it("keeps arguments that arrive only in the final events", async () => {
+    const cities = ["Paris", "Tokyo", "Lima"];
+    const message = await streamToolCalls(
+      cities.flatMap((city, index) =>
+        functionCall(index, JSON.stringify({ city }))
+      )
+    );
+
+    expect(message?.tool_calls).toEqual(
+      cities.map((city, index) => ({
+        type: "tool_call",
+        name: "get_weather",
+        args: { city },
+        id: `call_${index}`,
+      }))
+    );
+  });
+
+  it("does not repeat arguments that were streamed in full", async () => {
+    const args = JSON.stringify({ city: "Paris" });
+    const [added, ...done] = functionCall(0, args);
+    const message = await streamToolCalls([
+      added,
+      argumentDelta(0, args.slice(0, 5)),
+      argumentDelta(0, args.slice(5)),
+      ...done,
+    ]);
+
+    expect(message?.tool_call_chunks?.[0].args).toBe(args);
+    expect(message?.tool_calls?.[0].args).toEqual({ city: "Paris" });
+  });
+
+  it("fills in the text missing after partial deltas", async () => {
+    const args = JSON.stringify({ city: "Paris" });
+    const [added, ...done] = functionCall(0, args);
+    const message = await streamToolCalls([
+      added,
+      argumentDelta(0, args.slice(0, 6)),
+      ...done,
+    ]);
+
+    expect(message?.tool_call_chunks?.[0].args).toBe(args);
+    expect(message?.tool_calls?.[0].args).toEqual({ city: "Paris" });
+  });
+
+  it("leaves a final text that does not extend the streamed text", async () => {
+    const [added, ...done] = functionCall(0, JSON.stringify({ city: "Paris" }));
+    const message = await streamToolCalls([
+      added,
+      argumentDelta(0, '{"town":"Lyon"}'),
+      ...done,
+    ]);
+
+    expect(message?.tool_call_chunks?.[0].args).toBe('{"town":"Lyon"}');
+  });
+
+  it("keeps custom tool input that arrives only in the final events", async () => {
+    const item = {
+      type: "custom_tool_call",
+      id: "ctc_0",
+      call_id: "call_0",
+      name: "execute_code",
+      input: "",
+    };
+    const message = await streamToolCalls([
+      { type: "response.output_item.added", output_index: 0, item },
+      {
+        type: "response.custom_tool_call_input.done",
+        output_index: 0,
+        item_id: item.id,
+        input: "print(1)",
+      },
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: { ...item, input: "print(1)" },
+      },
+    ]);
+
+    expect(message?.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "execute_code",
+        args: { input: "print(1)" },
+        id: "call_0",
+      },
+    ]);
   });
 });
 
