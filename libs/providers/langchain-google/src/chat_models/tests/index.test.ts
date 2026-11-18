@@ -1144,6 +1144,12 @@ describe("Google Mock", () => {
       expectIncludeThoughts: true,
       expectThinkingLevel: "XHIGH",
     },
+    {
+      model: "gemini-4-neon",
+      reasoningEffort: "xhigh",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "XHIGH",
+    },
   ];
 
   const testReasoning: TestReasoning[] = [
