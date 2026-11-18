@@ -79,11 +79,15 @@ export function getEnvironmentVariable(name: string): string | undefined {
   // Certain Deno setups will throw an error if you try to access environment variables
   // https://github.com/langchain-ai/langchainjs/issues/1412
   try {
-    if (typeof process !== "undefined") {
+    if (typeof process !== "undefined" && process.env) {
       // oxlint-disable-next-line no-process-env
       return process.env?.[name];
     } else if (isDeno()) {
       return Deno?.env.get(name);
+    } else if (typeof globalThis !== "undefined") {
+      // Fallback for modern Edge runtimes (Cloudflare / Next.js Edge)
+      const globalEnv = (globalThis as any).process?.env || (globalThis as any).env;
+      return globalEnv?.[name];
     } else {
       return undefined;
     }
