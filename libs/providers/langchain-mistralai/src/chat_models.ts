@@ -449,13 +449,14 @@ function mistralAIResponseToChatMessage(
   }
 }
 
-function _convertDeltaToMessageChunk(
+export function _convertDeltaToMessageChunk(
   delta: {
     role?: string | null | undefined;
     content?: string | MistralAIContentChunk[] | null | undefined;
     toolCalls?: MistralAIToolCall[] | null | undefined;
   },
-  usage?: MistralAITokenUsage | null
+  usage?: MistralAITokenUsage | null,
+  toolCallIds?: Map<number, string>
 ) {
   if (!delta.content && !delta.toolCalls) {
     if (usage) {
@@ -477,12 +478,16 @@ function _convertDeltaToMessageChunk(
   // need to insert it here.
   const rawToolCallChunksWithIndex = delta.toolCalls?.length
     ? delta.toolCalls?.map(
-        (toolCall, index): MistralAIToolCall & { index: number } => ({
-          ...toolCall,
-          index,
-          id: toolCall.id ?? uuidv4().replace(/-/g, ""),
-          type: "function",
-        })
+        (toolCall, index): MistralAIToolCall & { index: number } => {
+          const id =
+            toolCall.id && toolCall.id !== "null"
+              ? toolCall.id
+              : toolCallIds?.get(index) ?? uuidv4().replace(/-/g, "");
+          if (toolCall.function?.name) {
+            toolCallIds?.set(index, id);
+          }
+          return { ...toolCall, index, id, type: "function" };
+        }
       )
     : undefined;
 
@@ -1278,6 +1283,7 @@ export class ChatMistralAI<
     };
 
     const streamIterable = await this.completionWithRetry(input, true);
+    const toolCallIds = new Map<number, string>();
     for await (const { data } of streamIterable) {
       if (options.signal?.aborted) {
         return;
@@ -1298,7 +1304,8 @@ export class ChatMistralAI<
       const shouldStreamUsage = this.streamUsage || options.streamUsage;
       const message = _convertDeltaToMessageChunk(
         delta,
-        shouldStreamUsage ? data.usage : null
+        shouldStreamUsage ? data.usage : null,
+        toolCallIds
       );
       if (message === null) {
         // Do not yield a chunk if the message is empty
