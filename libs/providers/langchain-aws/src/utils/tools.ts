@@ -53,11 +53,47 @@ export function convertToConverseTools(
   });
 }
 
+/**
+ * OpenAI-style tool choice that forces a call to one named function, as used
+ * by `createAgent` middleware.
+ */
+type FunctionToolChoice = {
+  type: "function";
+  function: { name: string };
+};
+
 export type BedrockConverseToolChoice =
   | "any"
   | "auto"
+  | "required"
   | string
+  | FunctionToolChoice
   | BedrockToolChoice;
+
+function isFunctionToolChoice(
+  toolChoice: BedrockConverseToolChoice
+): toolChoice is FunctionToolChoice {
+  return (
+    typeof toolChoice === "object" &&
+    "type" in toolChoice &&
+    toolChoice.type === "function"
+  );
+}
+
+function toNamedBedrockToolChoice(
+  name: string,
+  tools: BedrockTool[]
+): BedrockToolChoice {
+  const foundTool = tools.find((tool) => tool.toolSpec?.name === name);
+  if (!foundTool) {
+    throw new Error(`Tool with name ${name} not found in tools list.`);
+  }
+  return {
+    tool: {
+      name,
+    },
+  };
+}
 
 export function convertToBedrockToolChoice(
   toolChoice: BedrockConverseToolChoice,
@@ -73,6 +109,7 @@ export function convertToBedrockToolChoice(
   if (typeof toolChoice === "string") {
     switch (toolChoice) {
       case "any":
+      case "required":
         bedrockToolChoice = {
           any: {},
         };
@@ -82,22 +119,14 @@ export function convertToBedrockToolChoice(
           auto: {},
         };
         break;
-      default: {
-        const foundTool = tools.find(
-          (tool) => tool.toolSpec?.name === toolChoice
-        );
-        if (!foundTool) {
-          throw new Error(
-            `Tool with name ${toolChoice} not found in tools list.`
-          );
-        }
-        bedrockToolChoice = {
-          tool: {
-            name: toolChoice,
-          },
-        };
-      }
+      default:
+        bedrockToolChoice = toNamedBedrockToolChoice(toolChoice, tools);
     }
+  } else if (isFunctionToolChoice(toolChoice)) {
+    bedrockToolChoice = toNamedBedrockToolChoice(
+      toolChoice.function.name,
+      tools
+    );
   } else {
     bedrockToolChoice = toolChoice;
   }
