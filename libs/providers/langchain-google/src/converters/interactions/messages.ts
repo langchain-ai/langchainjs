@@ -9,7 +9,6 @@ import {
   OutputTokenDetails,
 } from "@langchain/core/messages";
 import type { Gemini } from "../../chat_models/types.js";
-import { GoogleError } from "../../utils/errors.js";
 import {
   convertGeminiPartToContentBlock,
   convertGeminiPartsToToolCalls,
@@ -1109,12 +1108,6 @@ export function convertInteractionToAIMessage(
       }
 
       case "model_output": {
-        if (step.error?.message) {
-          throw new GoogleError(
-            `Google Interactions API model output error (${step.error.code ?? "unknown"}): ${step.error.message}`
-          );
-        }
-
         const contents: Gemini.Interactions.Content[] =
           typeof step.content === "string"
             ? [{ type: "text", text: step.content }]
@@ -1171,15 +1164,34 @@ export function convertInteractionToAIMessage(
       }
 
       case "code_execution_result": {
+        let output = "";
+        const extraParts: Gemini.Part[] = [];
+        if (typeof step.result === "string") {
+          output = step.result;
+        } else if (Array.isArray(step.result)) {
+          const textOutputs: string[] = [];
+          for (const contentItem of step.result) {
+            if (contentItem.type === "text") {
+              textOutputs.push(contentItem.text);
+            } else {
+              const part = convertInteractionsContentToGeminiPart(contentItem);
+              if (part) {
+                extraParts.push(part);
+              }
+            }
+          }
+          output = textOutputs.join("\n");
+        }
         geminiParts.push({
           codeExecutionResult: {
-            output: step.result ?? "",
+            output,
             outcome: step.is_error ? "OUTCOME_FAILED" : "OUTCOME_OK",
           },
           ...(step.signature || pendingThoughtSignature
             ? { thoughtSignature: step.signature ?? pendingThoughtSignature }
             : {}),
         });
+        geminiParts.push(...extraParts);
         pendingThoughtSignature = undefined;
         break;
       }
@@ -1195,9 +1207,7 @@ export function convertInteractionToAIMessage(
       case "mcp_server_tool_call":
       case "mcp_server_tool_result":
       case "processing_call":
-      case "processing_result":
-      case "retrieval_call":
-      case "retrieval_result": {
+      case "processing_result": {
         builtInToolSteps.push(step);
         break;
       }

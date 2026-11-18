@@ -1,5 +1,19 @@
 # @langchain/openai
 
+## 1.8.4
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.8.3
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(openai): surface model refusals as `ModelRefusalError`
+
+  Chat Completions keeps `refusal` from responses, refusals are sent back natively on assistant messages (including `v1` messages), and `withStructuredOutput` with `jsonSchema` throws `ModelRefusalError` on a refusal.
+
 ## 1.8.2
 
 ### Patch Changes

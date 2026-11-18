@@ -1,5 +1,45 @@
 # @langchain/core
 
+## 1.4.2
+
+### Patch Changes
+
+- [#12257](https://github.com/langchain-ai/langchainjs/pull/12257) [`f852414`](https://github.com/langchain-ai/langchainjs/commit/f852414703a7fcaf0332508dbca44eccbebe41c5) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Mark tool messages that `humanInTheLoopMiddleware` creates for `reject` and `respond` decisions with `lc_source: "hitl_interrupt_decision"` and `lc_data: { decision }`, and let `addNotificationMetadata` accept tool messages
+
+## 1.4.1
+
+### Patch Changes
+
+- [#12230](https://github.com/langchain-ai/langchainjs/pull/12230) [`84e85cc`](https://github.com/langchain-ai/langchainjs/commit/84e85cc8657a6922c9db34ff7a2a1a692e83a503) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Merge streamed `input_json_delta` blocks into the preceding `tool_use` / `server_tool_use` block at the same index
+
+## 1.4.0
+
+### Minor Changes
+
+- [#12178](https://github.com/langchain-ai/langchainjs/pull/12178) [`01e5f2d`](https://github.com/langchain-ai/langchainjs/commit/01e5f2dbbf30823045fc82c69bef7b2c032315f4) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add decision models
+
+  - Add `@langchain/core/decisions` with `BaseDecisionModel`, a `Runnable` that answers typed `Noul`, `Choice`, `Score`, and `Box` questions about text, messages, or JSON state
+  - Add question and answer types, `parseQuestions`, and `parseClassifierResponse` for providers
+  - Type `invoke` answers from the questions asked, including `Choice` labels, and reject provider responses that leave a question unanswered or answer it with the wrong type or label
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.3.7
+
+### Patch Changes
+
+- [#12120](https://github.com/langchain-ai/langchainjs/pull/12120) [`a4fb396`](https://github.com/langchain-ai/langchainjs/commit/a4fb396d7b323b9f3f8c7e45875376ec5fb88d72) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): add a standard `refusal` content block and `ModelRefusalError`
+
+  Model refusals from OpenAI, Anthropic, and Gemini now appear as a `refusal` content block in `message.contentBlocks`. JSON, tool-call, and structured output parsers throw `ModelRefusalError` (from `@langchain/core/errors`) when the model refuses, instead of a generic parsing error.
+
+## 1.3.6
+
+### Patch Changes
+
+- [#12140](https://github.com/langchain-ai/langchainjs/pull/12140) [`f054550`](https://github.com/langchain-ai/langchainjs/commit/f054550c61df603c0daf6757a9f3f2076fc06be4) Thanks [@hntrl](https://github.com/hntrl)! - Stop `streamEvents` v2 from hanging or leaking an unhandled rejection when aborted, and from throwing its own `AbortError` when the consumer breaks early.
+
 ## 1.3.5
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @langchain/anthropic
 
+## 1.6.5
+
+### Patch Changes
+
+- [#12230](https://github.com/langchain-ai/langchainjs/pull/12230) [`84e85cc`](https://github.com/langchain-ai/langchainjs/commit/84e85cc8657a6922c9db34ff7a2a1a692e83a503) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fall back to `tool_calls` in `AnthropicToolsOutputParser` so `withStructuredOutput` works when streamed content is normalized to `tool_call` blocks
+
+## 1.6.4
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 1.6.3
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(anthropic): surface model refusals as `ModelRefusalError`
+
+  A `refusal` stop reason maps to the `content_filter` finish reason in stream events, and `withStructuredOutput` throws `ModelRefusalError` on a refusal, including when thinking is enabled.
+
 ## 1.6.2
 
 ### Patch Changes

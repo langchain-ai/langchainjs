@@ -110,6 +110,26 @@ describe("convertGeminiPartsToToolCalls", () => {
 });
 
 describe("convertMessagesToGeminiContents", () => {
+  test.each(["v0", "v1"] as const)(
+    "drops refusal blocks from AI messages (%s)",
+    (outputVersion) => {
+      const contents = convertMessagesToGeminiContents([
+        new HumanMessage("hello"),
+        new AIMessage({
+          content: [
+            { type: "text", text: "Hello" },
+            { type: "refusal" as const, refusal: "No." },
+          ],
+          response_metadata: { output_version: outputVersion },
+        }),
+      ]);
+      expect(contents[1]).toEqual({
+        role: "model",
+        parts: [{ text: "Hello" }],
+      });
+    }
+  );
+
   test("passes tool_call_id through as functionResponse.id (legacy path)", () => {
     const messages = [
       new HumanMessage("hello"),

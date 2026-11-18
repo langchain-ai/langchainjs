@@ -1,5 +1,40 @@
 # @langchain/google
 
+## 0.2.16
+
+### Patch Changes
+
+- [#12263](https://github.com/langchain-ai/langchainjs/pull/12263) [`7f1c5e1`](https://github.com/langchain-ai/langchainjs/commit/7f1c5e1ee2fefa331b7fa6f0c8e63cd630a36b28) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `gemini-4-neon` model profile and `xhigh` thinking level support.
+
+- [#12243](https://github.com/langchain-ai/langchainjs/pull/12243) [`c93f9bc`](https://github.com/langchain-ai/langchainjs/commit/c93f9bc61611677507760f8e31ca23f8e3463fa1) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds **experimental** support for the Google Gemini Decisions API on AI
+  Studio. (Google Cloud / Vertex support has been added, but final support is
+  pending platform implementation.)
+
+  - Add `GoogleClassifier` and `BaseGoogleClassifier` (implementing `BaseDecisionModel` from `@langchain/core/decisions`) in `@langchain/google` and `@langchain/google/node`
+  - Support `Noul`, `Choice`, and `Score` questions across text, structured JSON, `BaseMessage` conversations, and multimodal `ContentBlock` inputs
+  - Add Decisions API converters for state, questions, responses, and `PromptRefusedError` safety refusals
+
+  Incorporates the most recent changes to the Interactions API as well,
+  including the removal of the Retrieval tools.
+
+## 0.2.15
+
+### Patch Changes
+
+- [#12219](https://github.com/langchain-ai/langchainjs/pull/12219) [`bef937b`](https://github.com/langchain-ai/langchainjs/commit/bef937baa28c114b0702498efedb8b6f83d9382e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - - Add `gemini-4-hydrogen` model profile.
+  - Support the `xhigh` (`XHIGH`) thinking level (clamping to `HIGH` on models
+    that do not support `XHIGH` and passing through future thinking levels on level-based models).
+
+- [#12189](https://github.com/langchain-ai/langchainjs/pull/12189) [`571a1b4`](https://github.com/langchain-ai/langchainjs/commit/571a1b4ff11c014d534af1ccdba3242bb9016747) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): add Gemini 4 Carbon model capability profile
+
+## 0.2.14
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): surface model refusals as `ModelRefusalError`
+
+  Blocked prompts throw `PromptRefusedError`, which matches `ModelRefusalError.isInstance`, including when streaming. A streamed safety stop keeps the text already streamed and ends with a refusal block, and refusal blocks are dropped when history is sent back.
+
 ## 0.2.13
 
 ### Patch Changes

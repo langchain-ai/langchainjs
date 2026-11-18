@@ -283,6 +283,92 @@ test("_mergeLists keeps different content block types separate when indices coll
   ]);
 });
 
+describe("_mergeLists with input_json_delta continuations", () => {
+  test.each(["tool_use", "server_tool_use"])(
+    "merges input_json_delta into a preceding %s block at the same index",
+    (toolType) => {
+      const start = new AIMessageChunk({
+        content: [
+          { type: toolType, index: 0, id: "toolu_1", name: "Title", input: "" },
+        ],
+      });
+      const delta1 = new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 0, input: '{"title":' }],
+      });
+      const delta2 = new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 0, input: '"Truck 42"}' }],
+      });
+
+      const merged = start.concat(delta1).concat(delta2);
+      expect(merged.content).toEqual([
+        {
+          type: toolType,
+          index: 0,
+          id: "toolu_1",
+          name: "Title",
+          input: '{"title":"Truck 42"}',
+        },
+      ]);
+    }
+  );
+
+  test("merges input_json_delta into the tool block with the matching index only", () => {
+    const merged = new AIMessageChunk({
+      content: [
+        { type: "text", index: 0, text: "Let me check." },
+        { type: "tool_use", index: 1, id: "toolu_1", name: "Title", input: "" },
+      ],
+    }).concat(
+      new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 1, input: '{"a":1}' }],
+      })
+    );
+
+    expect(merged.content).toEqual([
+      { type: "text", index: 0, text: "Let me check." },
+      {
+        type: "tool_use",
+        index: 1,
+        id: "toolu_1",
+        name: "Title",
+        input: '{"a":1}',
+      },
+    ]);
+  });
+
+  test("does not merge input_json_delta into a non-tool block at the same index", () => {
+    const merged = new AIMessageChunk({
+      content: [{ type: "text", index: 0, text: "Hello" }],
+    }).concat(
+      new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 0, input: '{"a":1}' }],
+      })
+    );
+
+    expect(merged.content).toEqual([
+      { type: "text", index: 0, text: "Hello" },
+      { type: "input_json_delta", index: 0, input: '{"a":1}' },
+    ]);
+  });
+
+  test("does not merge input_json_delta into an mcp_tool_use block", () => {
+    const merged = new AIMessageChunk({
+      content: [
+        { type: "mcp_tool_use", index: 0, id: "mcptoolu_1", name: "search" },
+      ],
+    }).concat(
+      new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 0, input: '{"a":1}' }],
+      })
+    );
+
+    expect(merged.content).toEqual([
+      { type: "mcp_tool_use", index: 0, id: "mcptoolu_1", name: "search" },
+      { type: "input_json_delta", index: 0, input: '{"a":1}' },
+    ]);
+  });
+});
+
 test("_mergeLists merges blocks by string index", () => {
   const chunk1 = new AIMessageChunk({
     content: [

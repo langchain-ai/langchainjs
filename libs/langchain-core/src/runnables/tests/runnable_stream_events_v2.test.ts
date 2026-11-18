@@ -2396,6 +2396,71 @@ test("Runnable streamEvents v2 should respect timeout option", async () => {
   expect(Date.now() - start).toBeLessThan(1500);
 });
 
+async function collectUnhandledRejections(fn: () => Promise<void>) {
+  const rejections: unknown[] = [];
+  const onRejection = (reason: unknown) => rejections.push(reason);
+  process.on("unhandledRejection", onRejection);
+  try {
+    await fn();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  } finally {
+    process.off("unhandledRejection", onRejection);
+  }
+  return rejections;
+}
+
+const slowGenerator = RunnableLambda.from(async function* () {
+  for (let i = 0; i < 10; i += 1) {
+    yield `chunk-${i}`;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+});
+
+test("Runnable streamEvents v2 rejects with the abort reason when aborted mid-stream", async () => {
+  const controller = new AbortController();
+  const reason = new Error("stop");
+  const rejections = await collectUnhandledRejections(async () => {
+    await expect(async () => {
+      for await (const event of slowGenerator.streamEvents("hello", {
+        version: "v2",
+        signal: controller.signal,
+      })) {
+        if (event.event === "on_chain_stream") controller.abort(reason);
+      }
+    }).rejects.toBe(reason);
+  });
+  expect(rejections).toEqual([]);
+});
+
+test("Runnable streamEvents v2 does not throw or leak when aborted after the consumer breaks", async () => {
+  const controller = new AbortController();
+  const rejections = await collectUnhandledRejections(async () => {
+    for await (const event of slowGenerator.streamEvents("hello", {
+      version: "v2",
+      signal: controller.signal,
+    })) {
+      if (event.event === "on_chain_stream") break;
+    }
+    controller.abort(new Error("stop"));
+  });
+  expect(rejections).toEqual([]);
+});
+
+test("Runnable streamEvents v2 does not leak when aborted after the consumer stops reading", async () => {
+  // A wrapping stream can stop reading without returning the generator.
+  const controller = new AbortController();
+  const rejections = await collectUnhandledRejections(async () => {
+    const stream = slowGenerator.streamEvents("hello", {
+      version: "v2",
+      signal: controller.signal,
+    });
+    await stream.next();
+    await stream.next();
+    controller.abort(new Error("stop"));
+  });
+  expect(rejections).toEqual([]);
+});
+
 test("streamEvents method handles errors", async () => {
   let caughtError: unknown;
   const model = new FakeListChatModel({
