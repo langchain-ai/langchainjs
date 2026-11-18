@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*", "../../../verify-fix.ts"],
+  "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"],
   "references": [{ "path": "../../langchain-core" }]
 }
