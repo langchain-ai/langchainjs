@@ -7,6 +7,7 @@ import {
   BaseMessage,
   HumanMessage,
   ToolMessage,
+  getNotificationMetadata,
 } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
@@ -2943,4 +2944,60 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
       humanInTheLoopMiddleware({ interruptOn: INTERRUPT_ON }).wrapToolCall
     ).toBeUndefined();
   });
+});
+
+describe("humanInTheLoopMiddleware notification metadata", () => {
+  it.each([
+    { mode: "batched", answer: { type: "approve" }, tagged: false },
+    {
+      mode: "batched",
+      answer: { type: "reject", message: "not now" },
+      tagged: true,
+    },
+    {
+      mode: "batched",
+      answer: { type: "respond", message: "Sent it myself." },
+      tagged: true,
+    },
+    { mode: "per_call", answer: { type: "approve" }, tagged: false },
+    {
+      mode: "per_call",
+      answer: edit("send_email", { to: "bob" }),
+      tagged: false,
+    },
+    {
+      mode: "per_call",
+      answer: { type: "reject", message: "not now" },
+      tagged: true,
+    },
+    {
+      mode: "per_call",
+      answer: { type: "respond", message: "Sent it myself." },
+      tagged: true,
+    },
+  ] as const)(
+    "tags $answer.type in $mode mode: $tagged",
+    async ({ mode, answer, tagged }) => {
+      const ran: Ran = [];
+      const agent = perCallAgent(ran, EMAIL, {
+        interruptOn: { send_email: true },
+        mode,
+      });
+      const paused = await agent.invoke(
+        { messages: [new HumanMessage("go")] },
+        CFG
+      );
+      const [intr] = paused.__interrupt__ ?? [];
+
+      const final = await resume(agent, {
+        [intr.id]: mode === "batched" ? { decisions: [answer] } : answer,
+      });
+
+      expect(getNotificationMetadata(toolMessages(final).call_email)).toEqual(
+        tagged
+          ? { source: "human_in_the_loop", data: { decision: answer.type } }
+          : undefined
+      );
+    }
+  );
 });
