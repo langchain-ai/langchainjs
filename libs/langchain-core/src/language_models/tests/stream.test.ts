@@ -975,3 +975,40 @@ describe("ChatModelStream", () => {
     });
   });
 });
+
+describe("additionalKwargs assembly", () => {
+  test("message-finish additionalKwargs lands on the assembled AIMessage", async () => {
+    const stream = new ChatModelStream(
+      iterEvents([
+        { event: "message-start", id: "msg_kw" },
+        {
+          event: "content-block-start",
+          index: 0,
+          content: { type: "text", text: "" },
+        },
+        {
+          event: "content-block-delta",
+          index: 0,
+          delta: { type: "text-delta", text: "Hi" },
+        },
+        {
+          event: "content-block-finish",
+          index: 0,
+          content: { type: "text", text: "Hi" },
+        },
+        {
+          event: "message-finish",
+          reason: "stop",
+          additionalKwargs: {
+            reasoning: { id: "rs_123", type: "reasoning", summary: [] },
+          },
+        },
+      ])
+    );
+
+    const message = await stream;
+    expect(message.additional_kwargs).toEqual({
+      reasoning: { id: "rs_123", type: "reasoning", summary: [] },
+    });
+  });
+});
