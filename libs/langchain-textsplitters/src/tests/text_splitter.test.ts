@@ -374,6 +374,28 @@ test("Separator length is considered correctly for chunk size", async () => {
   expect(output).toEqual(expectedOutput);
 });
 
+test("Separator length uses the custom length function", async () => {
+  const splitter = new CharacterTextSplitter({
+    separator: "💠",
+    chunkSize: 3,
+    chunkOverlap: 0,
+    lengthFunction: (text) => Array.from(text).length,
+  });
+
+  expect(await splitter.splitText("a💠b💠c")).toEqual(["a💠b", "c"]);
+});
+
+test("Async separator length is included when retaining overlapping splits", async () => {
+  const splitter = new CharacterTextSplitter({
+    separator: "€",
+    chunkSize: 5,
+    chunkOverlap: 2,
+    lengthFunction: async (text) => new TextEncoder().encode(text).length,
+  });
+
+  expect(await splitter.splitText("a€b€c")).toEqual(["a€b", "b€c"]);
+});
+
 test("Token text splitter", async () => {
   const text = "foo bar baz a a";
   const splitter = new TokenTextSplitter({
