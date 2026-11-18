@@ -470,16 +470,21 @@ export class ChatOpenRouter extends BaseChatModel<
       stream: true,
     };
 
-    const response = await fetch(this.buildUrl(), {
-      method: "POST",
-      headers: this.buildHeaders(),
-      body: JSON.stringify(body),
-      signal: options.signal,
-    });
-
-    if (!response.ok) {
-      throw await OpenRouterError.fromResponse(response);
-    }
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => {
+        const nextResponse = await fetch(this.buildUrl(), {
+          method: "POST",
+          headers: this.buildHeaders(),
+          body: JSON.stringify(body),
+          signal: options.signal,
+        });
+        if (!nextResponse.ok) {
+          throw await OpenRouterError.fromResponse(nextResponse);
+        }
+        return nextResponse;
+      }
+    );
 
     if (!response.body) {
       return;
