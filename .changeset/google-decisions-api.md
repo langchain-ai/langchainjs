@@ -10,5 +10,5 @@ pending platform implementation.)
 - Support `Noul`, `Choice`, and `Score` questions across text, structured JSON, `BaseMessage` conversations, and multimodal `ContentBlock` inputs
 - Add Decisions API converters for state, questions, responses, and `PromptRefusedError` safety refusals
 
-Incorporates the most recent changes to the Interactions API as well, 
+Incorporates the most recent changes to the Interactions API as well,
 including the removal of the Retrieval tools.
