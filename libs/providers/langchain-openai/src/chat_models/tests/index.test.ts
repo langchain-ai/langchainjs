@@ -5,7 +5,7 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
-import type { BaseChatOpenAIFields } from "../base.js";
+import { mergeCallOptions, type BaseChatOpenAIFields } from "../base.js";
 import { ChatOpenAICompletions } from "../completions.js";
 import { ChatOpenAIResponses } from "../responses.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
@@ -2328,5 +2328,35 @@ describe("bound and call signals", () => {
     const pending = model.invoke("Hello");
     first.abort(new Error("first"));
     await expect(pending).rejects.toThrow();
+  });
+
+  it("keeps the bound signal when the call passes signal: undefined", async () => {
+    const bound = new AbortController();
+    const model = makeModel().withConfig({ signal: bound.signal });
+    const pending = model.invoke("Hello", { signal: undefined });
+    bound.abort(new Error("bound"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("uses the shorter of the bound and call timeouts", async () => {
+    const model = makeModel().withConfig({ timeout: 50 });
+    await expect(model.invoke("Hello", { timeout: 60_000 })).rejects.toThrow();
+  });
+});
+
+describe("mergeCallOptions", () => {
+  it("keeps the shorter timeout and ignores undefined overrides", () => {
+    expect(mergeCallOptions({ timeout: 1000 }, { timeout: 60_000 })).toEqual({
+      timeout: 1000,
+    });
+    expect(mergeCallOptions({ timeout: 60_000 }, { timeout: 1000 })).toEqual({
+      timeout: 1000,
+    });
+    expect(mergeCallOptions({ timeout: 1000 }, { timeout: undefined })).toEqual(
+      {
+        timeout: 1000,
+      }
+    );
+    expect(mergeCallOptions({}, { timeout: 1000 })).toEqual({ timeout: 1000 });
   });
 });

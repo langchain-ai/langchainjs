@@ -271,25 +271,33 @@ export function getChatOpenAIModelParams<TParams extends BaseChatOpenAIFields>(
 }
 
 /**
- * Spreads `overrides` over `base`, but keeps both abort signals: a signal on
- * `overrides` would otherwise replace the one on `base`, as `mergeConfigs`
- * in `@langchain/core` avoids for other runnables.
+ * Spreads `overrides` over `base`, but merges `signal` and `timeout` the way
+ * `mergeConfigs` in `@langchain/core` does for other runnables: both abort
+ * signals are kept, the shorter timeout wins, and an `undefined` override
+ * does not clear the value on `base`.
  * @internal
  */
-export function mergeCallOptions<T extends { signal?: AbortSignal }>(
-  base: T,
-  overrides?: Partial<T>
-): T {
+export function mergeCallOptions<
+  T extends { signal?: AbortSignal; timeout?: number },
+>(base: T, overrides?: Partial<T>): T {
   const merged = { ...base, ...(overrides ?? {}) } as T;
   const baseSignal = base?.signal;
   const overrideSignal = overrides?.signal;
-  if (
+  if (overrideSignal === undefined) {
+    if (baseSignal !== undefined) merged.signal = baseSignal;
+  } else if (
     baseSignal !== undefined &&
-    overrideSignal !== undefined &&
     baseSignal !== overrideSignal &&
     "any" in AbortSignal
   ) {
     merged.signal = AbortSignal.any([baseSignal, overrideSignal]);
+  }
+  const baseTimeout = base?.timeout;
+  const overrideTimeout = overrides?.timeout;
+  if (overrideTimeout === undefined) {
+    if (baseTimeout !== undefined) merged.timeout = baseTimeout;
+  } else if (baseTimeout !== undefined) {
+    merged.timeout = Math.min(baseTimeout, overrideTimeout);
   }
   return merged;
 }
