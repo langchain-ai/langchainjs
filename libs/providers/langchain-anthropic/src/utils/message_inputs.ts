@@ -171,6 +171,7 @@ function* _formatContentBlocks(
         contentPart,
         standardContentBlockConverter
       );
+      continue;
     }
 
     const cacheControl =
