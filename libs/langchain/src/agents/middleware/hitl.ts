@@ -1153,9 +1153,61 @@ export function humanInTheLoopMiddleware(
         };
 
         /**
+         * LangGraph parses the answer against `responseSchema` before saving it. An
+         * invalid answer throws and isn't saved, so the interrupt can be answered again
+         * instead of the bad answer being replayed on every resume.
+         */
+        const badDecisions =
+          "Invalid HITLResponse: decisions must be a non-empty array";
+        const responseSchema = z4
+          .object(
+            { decisions: z4.array(z4.any(), { error: badDecisions }) },
+            { error: badDecisions }
+          )
+          .superRefine((response, ctx) => {
+            if (response.decisions.length !== interruptToolCalls.length) {
+              ctx.addIssue({
+                code: "custom",
+                message: `Number of human decisions (${response.decisions.length}) does not match number of hanging tool calls (${interruptToolCalls.length}).`,
+              });
+              return;
+            }
+            response.decisions.forEach((decision, i) => {
+              const toolCall = interruptToolCalls[i]!;
+              try {
+                processDecision(
+                  decision,
+                  toolCall,
+                  resolvedConfigs[toolCall.name]!
+                );
+              } catch (error) {
+                ctx.addIssue({
+                  code: "custom",
+                  path: ["decisions", i],
+                  message:
+                    error instanceof Error ? error.message : String(error),
+                });
+              }
+            });
+          });
+
+        /**
          * Send interrupt and get response
          */
-        const hitlResponse = (await interrupt(hitlRequest)) as HITLResponse;
+        let hitlResponse: HITLResponse;
+        try {
+          hitlResponse = interrupt<HITLRequest, HITLResponse>(hitlRequest, {
+            responseSchema,
+          });
+        } catch (error) {
+          // Not a pause (GraphInterrupt): keep the plain message for a bad answer.
+          // `cause` keeps LangGraph's invalid-answer marker on the wrapped error.
+          const issues = (error as z4.ZodError | undefined)?.issues;
+          if (Array.isArray(issues) && issues.length > 0) {
+            throw new Error(issues[0]!.message, { cause: error });
+          }
+          throw error;
+        }
         const decisions = hitlResponse.decisions;
 
         /**
