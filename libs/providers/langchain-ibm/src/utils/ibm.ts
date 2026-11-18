@@ -1,12 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
-  IamAuthenticator,
-  BearerTokenAuthenticator,
-  CloudPakForDataAuthenticator,
-  Authenticator,
-} from "ibm-cloud-sdk-core";
-import {
   JsonOutputKeyToolsParserParamsInterop,
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
@@ -21,118 +15,35 @@ import {
 } from "@langchain/core/utils/types";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, WatsonxInit } from "../types.js";
+import { prepareInstanceConfig } from "../auth/config.js";
+export { checkValidProps, expectOneOf } from "./validation.js";
 
-const createAuthenticator = ({
-  watsonxAIApikey,
-  watsonxAIAuthType,
-  watsonxAIBearerToken,
-  watsonxAIUsername,
-  watsonxAIPassword,
-  watsonxAIUrl,
-  disableSSL,
-  serviceUrl,
-}: WatsonxAuth): Authenticator | undefined => {
-  if (watsonxAIAuthType === "iam" && watsonxAIApikey) {
-    return new IamAuthenticator({
-      apikey: watsonxAIApikey,
-    });
-  } else if (watsonxAIAuthType === "bearertoken" && watsonxAIBearerToken) {
-    return new BearerTokenAuthenticator({
-      bearerToken: watsonxAIBearerToken,
-    });
-  } else if (watsonxAIAuthType === "cp4d") {
-    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
-      const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
-      return new CloudPakForDataAuthenticator({
-        username: watsonxAIUsername,
-        password: watsonxAIPassword,
-        url: watsonxCPDAuthUrl.concat("/icp4d-api/v1/authorize"),
-        apikey: watsonxAIApikey,
-        disableSslVerification: disableSSL,
-      });
-    }
+/**
+ * Initializes and returns a WatsonX AI or Gateway instance with authentication.
+ *
+ *
+ * @param params - Initialization and authentication parameters
+ * @param useGateway - If true, returns Gateway instance; otherwise returns WatsonXAI instance
+ * @returns Configured WatsonXAI or Gateway instance
+ */
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway: true
+): Gateway;
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway?: false
+): WatsonXAI;
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway = false
+): WatsonXAI | Gateway {
+  const config = prepareInstanceConfig(params);
+  try {
+    return useGateway ? new Gateway(config) : new WatsonXAI(config);
+  } catch (_e) {
+    throw new Error("You have not provided any type of authentication");
   }
-  return undefined;
-};
-
-export const authenticateAndSetInstance = ({
-  watsonxAIApikey,
-  watsonxAIAuthType,
-  watsonxAIBearerToken,
-  watsonxAIUsername,
-  watsonxAIPassword,
-  watsonxAIUrl,
-  disableSSL,
-  version,
-  serviceUrl,
-}: WatsonxAuth & Omit<WatsonxInit, "authenticator">): WatsonXAI | undefined => {
-  if (watsonxAIAuthType === "iam" && watsonxAIApikey) {
-    return WatsonXAI.newInstance({
-      version,
-      serviceUrl,
-      authenticator: new IamAuthenticator({
-        apikey: watsonxAIApikey,
-      }),
-    });
-  } else if (watsonxAIAuthType === "bearertoken" && watsonxAIBearerToken) {
-    return WatsonXAI.newInstance({
-      version,
-      serviceUrl,
-      authenticator: new BearerTokenAuthenticator({
-        bearerToken: watsonxAIBearerToken,
-      }),
-    });
-  } else if (watsonxAIAuthType === "cp4d") {
-    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
-      const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
-      return WatsonXAI.newInstance({
-        version,
-        serviceUrl,
-        disableSslVerification: disableSSL,
-        authenticator: new CloudPakForDataAuthenticator({
-          username: watsonxAIUsername,
-          password: watsonxAIPassword,
-          url: watsonxCPDAuthUrl.concat("/icp4d-api/v1/authorize"),
-          apikey: watsonxAIApikey,
-          disableSslVerification: disableSSL,
-        }),
-      });
-    }
-  } else
-    return WatsonXAI.newInstance({
-      version,
-      serviceUrl,
-    });
-  return undefined;
-};
-
-export function authenticateAndSetGatewayInstance({
-  watsonxAIApikey,
-  watsonxAIAuthType,
-  watsonxAIBearerToken,
-  watsonxAIUsername,
-  watsonxAIPassword,
-  watsonxAIUrl,
-  disableSSL,
-  version,
-  serviceUrl,
-}: WatsonxAuth & Omit<WatsonxInit, "authenticator">) {
-  const authenticator = createAuthenticator({
-    watsonxAIApikey,
-    watsonxAIAuthType,
-    watsonxAIBearerToken,
-    watsonxAIUsername,
-    watsonxAIPassword,
-    watsonxAIUrl,
-    disableSSL,
-    serviceUrl,
-  });
-
-  return new Gateway({
-    version,
-    serviceUrl,
-    authenticator,
-  });
 }
 
 const TOOL_CALL_ID_PATTERN = /^[a-zA-Z0-9]{9}$/;
@@ -329,50 +240,3 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
   }
   throw new Error("Unsupported root schema type");
 }
-
-export const expectOneOf = (
-  params: Record<string, any>,
-  keys: string[],
-  exactlyOneOf = false
-) => {
-  const provided = keys.filter(
-    (key) => key in params && params[key] !== undefined
-  );
-  if (exactlyOneOf && provided.length !== 1) {
-    throw new Error(
-      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`
-    );
-  } else if (!exactlyOneOf && provided.length > 1) {
-    throw new Error(
-      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`
-    );
-  }
-};
-
-export const checkValidProps = (
-  params: Record<string, any>,
-  allowedKeys: string[]
-) => {
-  const unexpected = Object.keys(params).filter(
-    (key) => !allowedKeys.includes(key)
-  );
-  if (unexpected.length > 0) {
-    throw new Error(
-      `Unexpected properties: ${unexpected.join(
-        ", "
-      )}. Expected only: ${allowedKeys.join(", ")}.`
-    );
-  }
-};
-
-export const checkRequiredProps = (
-  params: Record<string, any>,
-  requiredKeys: string[]
-) => {
-  const missing = requiredKeys.filter(
-    (key) => !(key in params) || params[key] === undefined
-  );
-  if (missing.length > 0) {
-    throw new Error(`Missing required properties: ${missing.join(", ")}.`);
-  }
-};
