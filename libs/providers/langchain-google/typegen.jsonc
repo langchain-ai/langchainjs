@@ -4,7 +4,6 @@
     "genContent": {
       "path": "src/openapi/generate-content-openapi.json"
     },
-    // Temporary merged spec (interactions + decisions-partial); see src/openapi/README-decisions.md
     "interactions": {
       "path": "src/openapi/interactions-openapi.json"
     }

@@ -4,11 +4,17 @@ import type {
   NoulAnswer,
   ScoreAnswer,
 } from "@langchain/core/decisions";
-import { GoogleClassifier, type GoogleClassifierParams } from "../../index.js";
+import {
+  GoogleClassifier,
+  type GoogleClassifierParams,
+  type GoogleDecisions,
+} from "../../index.js";
 import {
   GoogleClassifier as GoogleClassifierNode,
   type GoogleClassifierParams as GoogleClassifierNodeParams,
+  type GoogleDecisions as GoogleDecisionsNode,
 } from "../../node.js";
+import type { Gemini } from "../../chat_models/types.js";
 
 describe("GoogleClassifier type narrowing", () => {
   test("narrows nouls, choices (with literal option keys), and scores on invoke()", async () => {
@@ -93,5 +99,31 @@ describe("GoogleClassifier type narrowing", () => {
       },
     });
     expectTypeOf(nodeClassifier).toEqualTypeOf<GoogleClassifierNode>();
+  });
+
+  test("exports narrowed DecisionInputContent and text-only DecisionInstructionContent on GoogleDecisions", () => {
+    expectTypeOf<GoogleDecisions.DecisionInputContent>().toEqualTypeOf<
+      | Gemini.Interactions.AudioContent
+      | Gemini.Interactions.DocumentContent
+      | Gemini.Interactions.ImageContent
+      | Gemini.Interactions.TextContent
+      | Gemini.Interactions.VideoContent
+    >();
+    expectTypeOf<GoogleDecisions.DecisionInstructionContent>().toEqualTypeOf<Gemini.Interactions.TextContent>();
+    expectTypeOf<GoogleDecisionsNode.DecisionInstructionContent>().toEqualTypeOf<Gemini.Interactions.TextContent>();
+    expectTypeOf<
+      GoogleDecisions.CreateDecisionRequest["input"]
+    >().toEqualTypeOf<
+      | GoogleDecisions.DecisionInputContent
+      | Array<GoogleDecisions.DecisionInputContent>
+      | string
+    >();
+    expectTypeOf<
+      GoogleDecisions.ChoiceQuestion["instructions"]
+    >().toEqualTypeOf<
+      | GoogleDecisions.DecisionInstructionContent
+      | Array<GoogleDecisions.DecisionInstructionContent>
+      | string
+    >();
   });
 });

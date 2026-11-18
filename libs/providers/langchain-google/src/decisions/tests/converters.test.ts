@@ -620,27 +620,53 @@ describe("convertQuestionsToDecisionsQuestions", () => {
     ).toThrow(InvalidInputError);
   });
 
-  test("allows root media blocks through in question instructions so the API enforces modality", () => {
-    const converted = convertContentToDecisionsInstructions(
-      [
+  test("converts text blocks in question instructions while rejecting media blocks with InvalidInputError", () => {
+    expect(
+      convertContentToDecisionsInstructions({
+        type: "text",
+        text: "Does the item match the return policy?",
+      })
+    ).toBe("Does the item match the return policy?");
+
+    expect(
+      convertContentToDecisionsInstructions([
+        "Follow all policy clauses:",
+        { type: "text", text: "Clause 1: cracked items qualify." },
+      ])
+    ).toBe("Follow all policy clauses:\nClause 1: cracked items qualify.");
+
+    // Root media block in instructions
+    expect(() =>
+      convertContentToDecisionsInstructions({
+        type: "image",
+        mimeType: "image/png",
+        data: TINY_PNG_BASE64,
+      })
+    ).toThrow(InvalidInputError);
+
+    // Media block in instructions array
+    expect(() =>
+      convertContentToDecisionsInstructions([
         "Does the input match this reference icon?",
         {
           type: "image",
           mimeType: "image/png",
           data: TINY_PNG_BASE64,
         },
-      ],
-      "low"
-    );
-    expect(converted).toEqual([
-      { type: "text", text: "Does the input match this reference icon?" },
-      {
-        type: "image",
-        mime_type: "image/png",
-        data: TINY_PNG_BASE64,
-        resolution: "low",
-      },
-    ]);
+      ])
+    ).toThrow(InvalidInputError);
+
+    // Media block nested inside JSON instructions
+    expect(() =>
+      convertContentToDecisionsInstructions({
+        prompt: "Compare against reference:",
+        reference: {
+          type: "image",
+          mimeType: "image/png",
+          data: TINY_PNG_BASE64,
+        },
+      })
+    ).toThrow(InvalidInputError);
   });
 
   test("preserves own __proto__ question and option keys across JSON serialization", () => {

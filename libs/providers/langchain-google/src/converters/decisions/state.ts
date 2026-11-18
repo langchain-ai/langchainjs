@@ -29,15 +29,15 @@ const ROOT_STATE_TYPE_ERROR =
  *
  * Unlike TypeSafe (which carries out-of-band media in a separate `assets` map
  * keyed by `<image:...>` placeholders), the Gemini Decisions API accepts a flat
- * `input: string | Content | Content[]` where structured JSON objects and
- * multi-turn conversations must be serialized as text, and adjacent text blocks
- * are concatenated with no separator.
+ * `input: string | DecisionInputContent | DecisionInputContent[]` where structured
+ * JSON objects and multi-turn conversations must be serialized as text, and
+ * adjacent text blocks are concatenated with no separator.
  *
  * To start with the simplest, least surprising behavior while consulting the
  * Google Decisions API team on recommended prompt/token formatting for keyed
  * media, `GoogleClassifier` currently supports media content blocks ONLY:
- *   1. Directly at the root of `state` (or `instructions`),
- *   2. Directly as elements of a root `state` (or `instructions`) array, or
+ *   1. Directly at the root of `state`,
+ *   2. Directly as elements of a root `state` array, or
  *   3. Inside root `BaseMessage` instances (`state = message` or `state = [msg1, msg2]`).
  *
  * Media blocks nested inside plain `{ key: value }` JSON objects (including
@@ -46,13 +46,15 @@ const ROOT_STATE_TYPE_ERROR =
  * rather than silently serializing base64 payloads as text tokens.
  *
  * Candidate approaches when revisiting:
- *   - Interleaving native `Interactions.Content` blocks inline by splitting the
+ *   - Interleaving native `DecisionInputContent` blocks inline by splitting the
  *     serialized JSON string at each media value boundary, or
  *   - Substituting `<image:N>` / `<document:N>` placeholder strings in the JSON
- *     object followed by labeled `Content` blocks at the end of `input`.
+ *     object followed by labeled `DecisionInputContent` blocks at the end of `input`.
  */
 const NESTED_MEDIA_ERROR =
   "Media content blocks nested inside JSON objects are not currently supported by GoogleClassifier. Pass media blocks at the root of state or inside root BaseMessage objects.";
+const QUESTION_MEDIA_ERROR =
+  "Gemini Decisions questions only accept text in instructions (DecisionInstructionContent). Pass media content blocks in state instead.";
 
 const MEDIA_BLOCK_TYPE_NAMES = new Set([
   "image",
@@ -268,7 +270,7 @@ function buildInteractionsMediaContent(params: {
   uri?: string;
   explicitResolution?: Gemini.Interactions.MediaResolution;
   defaultResolution?: Gemini.Interactions.MediaResolution;
-}): Gemini.Interactions.Content {
+}): GoogleDecisions.DecisionInputContent {
   const {
     kindHint,
     mimeType,
@@ -327,12 +329,12 @@ function buildInteractionsMediaContent(params: {
 }
 
 /**
- * Converts a recognized media block into an Interactions `Content` block.
+ * Converts a recognized media block into a `GoogleDecisions.DecisionInputContent` block.
  */
 export function convertMediaBlockToInteractionsContent(
   block: PlainRecord,
   defaultMediaResolution?: Gemini.Interactions.MediaResolution
-): Gemini.Interactions.Content {
+): GoogleDecisions.DecisionInputContent {
   const explicitResolution = extractBlockResolution(block, undefined);
 
   // 1. Gemini GenerateContent `inlineData` / `fileData`
@@ -559,7 +561,7 @@ export function convertMediaBlockToInteractionsContent(
 
 type StreamSegment =
   | { kind: "text"; text: string }
-  | { kind: "media"; content: Gemini.Interactions.Content };
+  | { kind: "media"; content: GoogleDecisions.DecisionInputContent };
 
 function roleForMessage(message: BaseMessage): string {
   switch (message.getType()) {
@@ -825,8 +827,8 @@ function prepareNestedJsonValue(
 
 /**
  * Collapses an ordered list of text and media segments into the wire
- * `string | Content[]` representation, inserting `\n` between adjacent text
- * chunks because the Gemini Decisions API concatenates consecutive
+ * `string | DecisionInputContent[]` representation, inserting `\n` between
+ * adjacent text chunks because the Gemini Decisions API concatenates consecutive
  * `TextContent` blocks with no separator.
  */
 function finalizeSegments(
@@ -854,7 +856,7 @@ function finalizeSegments(
     return joined;
   }
 
-  const contents: Gemini.Interactions.Content[] = [];
+  const contents: GoogleDecisions.DecisionInputContent[] = [];
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
     if (seg.kind === "media") {
@@ -959,7 +961,8 @@ function convertRootArray(
 
 /**
  * Converts a `@langchain/core/decisions` `State` value into the Gemini
- * Decisions API `CreateDecisionRequest.input` payload (`string | Content | Content[]`).
+ * Decisions API `CreateDecisionRequest.input` payload
+ * (`string | DecisionInputContent | DecisionInputContent[]`).
  *
  * Media blocks are supported at the root of `state`, as elements of a root
  * `state` array, and inside root `BaseMessage` instances (`BaseMessage` or
@@ -1016,16 +1019,16 @@ export function convertStateToDecisionsInput(
 
 /**
  * Converts a `@langchain/core/decisions` `Content` value (`Question.instructions`)
- * into the Gemini Decisions API `instructions` field (`string | Content | Content[]`).
+ * into the Gemini Decisions API `instructions` field
+ * (`string | DecisionInstructionContent | DecisionInstructionContent[]`).
  *
- * Although the public Gemini Decisions guide documents `instructions` as text-only,
- * root media blocks in `instructions` are intentionally converted and passed
- * through so the Gemini API itself enforces modality constraints.
+ * Because the Gemini Decisions schema restricts question instructions to
+ * `DecisionInstructionContent` (`TextContent` only), media content blocks
+ * in `instructions` throw `InvalidInputError`.
  */
 export function convertContentToDecisionsInstructions(
-  content: DecisionContent,
-  defaultMediaResolution?: Gemini.Interactions.MediaResolution
-): GoogleDecisions.Input {
+  content: DecisionContent
+): GoogleDecisions.Instructions {
   if (typeof content === "string") {
     if (content.length === 0) {
       throw new InvalidInputError(EMPTY_INSTRUCTIONS_ERROR);
@@ -1044,11 +1047,15 @@ export function convertContentToDecisionsInstructions(
   }
 
   if (Array.isArray(content)) {
-    return convertRootArray(
+    const converted = convertRootArray(
       content,
-      defaultMediaResolution,
+      undefined,
       EMPTY_INSTRUCTIONS_ERROR
     );
+    if (typeof converted !== "string") {
+      throw new InvalidInputError(QUESTION_MEDIA_ERROR);
+    }
+    return converted;
   }
 
   const rootText = extractTextContentBlock(content);
@@ -1060,9 +1067,7 @@ export function convertContentToDecisionsInstructions(
   }
 
   if (isMediaLikeBlock(content)) {
-    return [
-      convertMediaBlockToInteractionsContent(content, defaultMediaResolution),
-    ];
+    throw new InvalidInputError(QUESTION_MEDIA_ERROR);
   }
 
   const prepared = prepareNestedJsonValue(content, new Set());

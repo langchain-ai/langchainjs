@@ -255,10 +255,7 @@ export abstract class BaseGoogleClassifier extends BaseDecisionModel {
       this._detail
     );
     const input = convertStateToDecisionsInput(state, mediaResolution);
-    const wireQuestions = convertQuestionsToDecisionsQuestions(
-      questions,
-      mediaResolution
-    );
+    const wireQuestions = convertQuestionsToDecisionsQuestions(questions);
 
     const body: GoogleDecisions.CreateDecisionRequest = {
       model: this.model,

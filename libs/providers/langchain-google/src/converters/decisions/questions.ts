@@ -1,5 +1,4 @@
 import type { JsonValue, Question } from "@langchain/core/decisions";
-import type { Gemini } from "../../chat_models/types.js";
 import type { GoogleDecisions } from "../../decisions/types.js";
 import { InvalidInputError } from "../../utils/errors.js";
 import { convertContentToDecisionsInstructions } from "./state.js";
@@ -36,8 +35,7 @@ function stringifyCriterion(value: JsonValue, questionId: string): string {
  */
 export function convertQuestionToDecisionsQuestion(
   id: string,
-  question: Question,
-  defaultMediaResolution?: Gemini.Interactions.MediaResolution
+  question: Question
 ): GoogleDecisions.Question {
   if (question.type === "box") {
     throw new InvalidInputError(
@@ -46,8 +44,7 @@ export function convertQuestionToDecisionsQuestion(
   }
 
   const instructions = convertContentToDecisionsInstructions(
-    question.instructions,
-    defaultMediaResolution
+    question.instructions
   );
 
   if (question.type === "noul") {
@@ -117,15 +114,14 @@ export function convertQuestionToDecisionsQuestion(
  * used so an own `"__proto__"` key is preserved across `JSON.stringify`.
  */
 export function convertQuestionsToDecisionsQuestions(
-  questions: Record<string, Question>,
-  defaultMediaResolution?: Gemini.Interactions.MediaResolution
+  questions: Record<string, Question>
 ): Record<string, GoogleDecisions.Question> {
   const wireQuestions: Record<string, GoogleDecisions.Question> = {};
   for (const [id, question] of Object.entries(questions)) {
     defineOwn(
       wireQuestions,
       id,
-      convertQuestionToDecisionsQuestion(id, question, defaultMediaResolution)
+      convertQuestionToDecisionsQuestion(id, question)
     );
   }
   return wireQuestions;

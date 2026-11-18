@@ -17,9 +17,23 @@ import type { GooglePlatformType } from "../utils/connection.js";
  * modifying generated files.
  */
 export namespace GoogleDecisions {
+  export type DecisionInputContent =
+    | Gemini.Interactions.AudioContent
+    | Gemini.Interactions.DocumentContent
+    | Gemini.Interactions.ImageContent
+    | Gemini.Interactions.TextContent
+    | Gemini.Interactions.VideoContent;
+
+  export type DecisionInstructionContent = Gemini.Interactions.TextContent;
+
   export type Input =
-    | Gemini.Interactions.Content
-    | Array<Gemini.Interactions.Content>
+    | DecisionInputContent
+    | Array<DecisionInputContent>
+    | string;
+
+  export type Instructions =
+    | DecisionInstructionContent
+    | Array<DecisionInstructionContent>
     | string;
 
   export type Criteria = DecisionsNamespace.Criteria;
@@ -29,7 +43,7 @@ export namespace GoogleDecisions {
     "type" | "instructions" | "criteria"
   > & {
     type: "choice";
-    instructions: Input;
+    instructions: Instructions;
     criteria: Record<string, string>;
   };
 
@@ -38,7 +52,7 @@ export namespace GoogleDecisions {
     "type" | "instructions"
   > & {
     type: "noul";
-    instructions: Input;
+    instructions: Instructions;
   };
 
   export type ScoreQuestion = Omit<
@@ -46,7 +60,7 @@ export namespace GoogleDecisions {
     "type" | "instructions"
   > & {
     type: "score";
-    instructions: Input;
+    instructions: Instructions;
   };
 
   export type Question = ChoiceQuestion | NoulQuestion | ScoreQuestion;
