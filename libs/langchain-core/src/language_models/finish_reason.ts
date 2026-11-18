@@ -1,4 +1,8 @@
-import type { FinishReason, FinishState } from "./event.js";
+import type {
+  FinishReason,
+  FinishState,
+  MessageFinishEvent,
+} from "./event.js";
 
 /** @internal */
 export interface NormalizedFinish {
@@ -61,4 +65,15 @@ export function normalizeFinishReason(
     return { normalizedFinishReason: "tool_call", finishState: "complete" };
   }
   return { normalizedFinishReason: mapped, finishState: "complete" };
+}
+
+/**
+ * Keeps the deprecated `reason` populated with its old values.
+ * @internal
+ */
+export function toLegacyFinishReason(
+  reason: FinishReason | undefined
+): MessageFinishEvent["reason"] {
+  if (reason === "tool_call") return "tool_use";
+  return reason === "other" || reason === "error" ? undefined : reason;
 }

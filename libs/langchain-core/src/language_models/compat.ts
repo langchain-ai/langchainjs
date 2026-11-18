@@ -10,7 +10,10 @@ import { AIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
-import { normalizeFinishReason } from "./finish_reason.js";
+import {
+  normalizeFinishReason,
+  toLegacyFinishReason,
+} from "./finish_reason.js";
 
 const MIME_TYPE_BY_AUDIO_FORMAT: Record<string, string> = {
   wav: "audio/wav",
@@ -419,10 +422,14 @@ export async function* convertChunksToEvents(
     };
   }
 
+  const finish = normalizeFinishReason(rawFinishReason, {
+    hasToolCalls: sawToolCalls,
+  });
   yield {
     event: "message-finish" as const,
     ...(rawFinishReason != null ? { finishReason: rawFinishReason } : {}),
-    ...normalizeFinishReason(rawFinishReason, { hasToolCalls: sawToolCalls }),
+    ...finish,
+    reason: toLegacyFinishReason(finish.normalizedFinishReason),
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
 }

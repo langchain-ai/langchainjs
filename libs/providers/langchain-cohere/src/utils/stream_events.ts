@@ -135,7 +135,7 @@ function mapCohereFinishReason(
   sawToolCall: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState"
+  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
 > {
   if (!reason) return {};
   let normalizedFinishReason: FinishReason;
@@ -163,6 +163,13 @@ function mapCohereFinishReason(
   return {
     finishReason: reason,
     normalizedFinishReason,
+    reason: toLegacyReason(normalizedFinishReason),
     finishState: "complete",
   };
+}
+
+// Keeps the deprecated `reason` populated with its old values.
+function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
+  if (reason === "tool_call") return "tool_use";
+  return reason === "other" || reason === "error" ? undefined : reason;
 }

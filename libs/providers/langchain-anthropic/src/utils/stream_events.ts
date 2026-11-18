@@ -173,7 +173,7 @@ function mapStopReason(
   stopReason: string | null | undefined
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState"
+  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
 > {
   if (stopReason == null) return {};
   let normalizedFinishReason: FinishReason;
@@ -198,6 +198,7 @@ function mapStopReason(
   return {
     finishReason: stopReason,
     normalizedFinishReason,
+    reason: toLegacyReason(normalizedFinishReason),
     finishState: stopReason === "pause_turn" ? "suspended" : "complete",
   };
 }
@@ -395,4 +396,10 @@ function finalizeBlock(
 
   const { index: _index, ...rest } = accumulated;
   return rest as ContentBlock;
+}
+
+// Keeps the deprecated `reason` populated with its old values.
+function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
+  if (reason === "tool_call") return "tool_use";
+  return reason === "other" || reason === "error" ? undefined : reason;
 }

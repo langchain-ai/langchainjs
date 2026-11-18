@@ -10,6 +10,7 @@
  */
 
 import { finalizeContentBlock } from "./compat.js";
+import { toLegacyFinishReason } from "./finish_reason.js";
 import type { ChatModelStreamEvent, FinishReason } from "./event.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
@@ -366,6 +367,7 @@ export async function* convertOpenAICompletionsStream(
           finishReason,
           normalizedFinishReason: mapFinishReason(finishReason),
           finishState: "complete" as const,
+          reason: toLegacyFinishReason(mapFinishReason(finishReason)),
         }
       : {}),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),

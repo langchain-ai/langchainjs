@@ -44,7 +44,7 @@ export async function* convertOpenAIResponsesStream(
   let usageSnapshot: UsageMetadata | undefined;
   let finish: Pick<
     MessageFinishEvent,
-    "finishReason" | "normalizedFinishReason" | "finishState"
+    "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
   > = {};
   let sawToolCall = false;
   let responseMetadata: Record<string, unknown> | undefined;
@@ -341,7 +341,7 @@ function mapResponseStatus(
   sawToolCall: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState"
+  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
 > {
   let normalizedFinishReason: FinishReason;
   if (status === "completed") {
@@ -362,6 +362,13 @@ function mapResponseStatus(
   return {
     finishReason: status,
     normalizedFinishReason,
+    reason: toLegacyReason(normalizedFinishReason),
     finishState: "complete",
   };
+}
+
+// Keeps the deprecated `reason` populated with its old values.
+function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
+  if (reason === "tool_call") return "tool_use";
+  return reason === "other" || reason === "error" ? undefined : reason;
 }

@@ -3,7 +3,10 @@ import { AIMessageChunk } from "../../messages/ai.js";
 import { ChatGenerationChunk } from "../../outputs.js";
 import { convertChunksToEvents } from "../compat.js";
 import type { ChatModelStreamEvent, MessageFinishEvent } from "../event.js";
-import { normalizeFinishReason } from "../finish_reason.js";
+import {
+  normalizeFinishReason,
+  toLegacyFinishReason,
+} from "../finish_reason.js";
 import { ChatModelStream } from "../stream.js";
 
 async function* iter<T>(items: T[]): AsyncGenerator<T> {
@@ -182,5 +185,39 @@ describe("ChatModelStream finish assembly", () => {
     expect(message.response_metadata.normalized_finish_reason).toBe(
       "tool_call"
     );
+  });
+});
+
+describe("toLegacyFinishReason", () => {
+  test.each([
+    ["stop", "stop"],
+    ["length", "length"],
+    ["tool_call", "tool_use"],
+    ["content_filter", "content_filter"],
+    ["other", undefined],
+    ["error", undefined],
+    [undefined, undefined],
+  ] as const)("%s -> %s", (input, expected) => {
+    expect(toLegacyFinishReason(input)).toBe(expected);
+  });
+
+  test("legacy bridge still emits deprecated reason", async () => {
+    const events: ChatModelStreamEvent[] = [];
+    for await (const event of convertChunksToEvents(
+      iter([
+        new ChatGenerationChunk({
+          text: "hi",
+          message: new AIMessageChunk({
+            content: "hi",
+            response_metadata: { finish_reason: "length" },
+          }),
+        }),
+      ])
+    )) {
+      events.push(event);
+    }
+    const finish = events.at(-1) as MessageFinishEvent;
+    expect(finish.reason).toBe("length");
+    expect(finish.normalizedFinishReason).toBe("length");
   });
 });

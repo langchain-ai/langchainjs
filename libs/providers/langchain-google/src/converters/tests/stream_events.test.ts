@@ -86,6 +86,7 @@ describe("convertGoogleGeminiStream", () => {
     expect(events.find((e) => e.event === "message-finish")).toMatchObject({
       finishReason: "STOP",
       normalizedFinishReason: "tool_call",
+      reason: "tool_use",
     });
   });
 
