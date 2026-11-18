@@ -45,21 +45,108 @@ export function strictParsePartialJson(s: string): unknown {
   let pos = 0;
 
   function skipWhitespace(): void {
-    while (pos < buffer.length && /\s/.test(buffer[pos])) {
-      pos += 1;
+    while (pos < buffer.length) {
+      const code = buffer.charCodeAt(pos);
+      if (code === 32 || code === 10 || code === 13 || code === 9) {
+        pos += 1;
+      } else if (code < 128 && code > 32) {
+        return;
+      } else if (/\s/.test(buffer[pos])) {
+        pos += 1;
+      } else {
+        return;
+      }
     }
   }
 
-  function parseString(): string {
-    if (buffer[pos] !== '"') {
-      throw new Error(`Expected '"' at position ${pos}, got '${buffer[pos]}'`);
-    }
+  // Matches the next quote or backslash so plain runs can be sliced at once.
+  const specialCharRegex = /["\\]/g;
 
-    pos += 1;
+  /**
+   * Fast path: locate the end of the string literal and let the native
+   * JSON.parse decode it. Any literal JSON.parse rejects (or a string that is
+   * cut inside an escape sequence) falls back to parseStringSlow, so results
+   * and errors are unchanged.
+   */
+  function parseString(): string {
+    if (buffer[pos] === '"') {
+      const start = pos;
+      let from = pos + 1;
+      for (;;) {
+        const quote = buffer.indexOf('"', from);
+        if (quote === -1) break;
+        let backslashes = 0;
+        while (buffer[quote - 1 - backslashes] === "\\") backslashes += 1;
+        if (backslashes % 2 === 1) {
+          from = quote + 1;
+          continue;
+        }
+        try {
+          const value = JSON.parse(buffer.slice(start, quote + 1));
+          pos = quote + 1;
+          return value;
+        } catch {
+          return parseStringSlow();
+        }
+      }
+      // Unterminated string. An incomplete trailing escape makes JSON.parse
+      // throw, which routes it to the slow path.
+      try {
+        const value = JSON.parse(`${buffer.slice(start)}"`);
+        pos = buffer.length;
+        return value;
+      } catch {
+        // Decode everything before a trailing partial escape natively and
+        // let the slow path handle only the tail.
+        const lastBackslash = buffer.lastIndexOf("\\");
+        let run = 0;
+        while (buffer[lastBackslash - run] === "\\") run += 1;
+        if (lastBackslash > start && run % 2 === 1) {
+          let head: string | undefined;
+          try {
+            head = JSON.parse(`${buffer.slice(start, lastBackslash)}"`);
+          } catch {
+            // Fall through to the slow path.
+          }
+          if (head !== undefined) {
+            pos = lastBackslash;
+            return parseStringSlow(head);
+          }
+        }
+      }
+    }
+    return parseStringSlow();
+  }
+
+  function parseStringSlow(prefix?: string): string {
     let result = "";
+    if (prefix !== undefined) {
+      result = prefix;
+    } else {
+      if (buffer[pos] !== '"') {
+        throw new Error(
+          `Expected '"' at position ${pos}, got '${buffer[pos]}'`
+        );
+      }
+      pos += 1;
+    }
     let escaped = false;
 
     while (pos < buffer.length) {
+      if (!escaped) {
+        specialCharRegex.lastIndex = pos;
+        const match = specialCharRegex.exec(buffer);
+        if (match === null) {
+          result += buffer.slice(pos);
+          pos = buffer.length;
+          break;
+        }
+        if (match.index > pos) {
+          result += buffer.slice(pos, match.index);
+          pos = match.index;
+        }
+      }
+
       const char = buffer[pos];
 
       if (escaped) {
