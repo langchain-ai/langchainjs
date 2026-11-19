@@ -330,4 +330,27 @@ describe("convertOpenAICompletionsStream", () => {
       reason: "tool_use",
     });
   });
+
+  test.each([
+    ["model_length", "length", "length"],
+    ["error", "error", undefined],
+  ])("%s normalizes to %s", async (raw, normalized, legacy) => {
+    const events = await collectEvents([
+      {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "hi" },
+            finish_reason: raw,
+          },
+        ],
+      },
+    ]);
+    const finish = events.find((e) => e.event === "message-finish");
+    expect(finish).toMatchObject({
+      finishReason: raw,
+      normalizedFinishReason: normalized,
+    });
+    expect((finish as { reason?: string }).reason).toBe(legacy);
+  });
 });

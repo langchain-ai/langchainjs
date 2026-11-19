@@ -415,12 +415,15 @@ function mapFinishReason(reason: string): FinishReason {
       return "stop";
     case "length":
     case "max_tokens":
+    case "model_length":
       return "length";
     case "tool_calls":
     case "function_call":
       return "tool_call";
     case "content_filter":
       return "content_filter";
+    case "error":
+      return "error";
     default:
       return "other";
   }
