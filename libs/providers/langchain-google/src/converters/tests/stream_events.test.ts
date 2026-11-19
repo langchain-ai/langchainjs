@@ -119,7 +119,7 @@ describe("convertGoogleGeminiStream", () => {
     ]);
     const filterFinish = filterEvents.find((e) => e.event === "message-finish");
     expect(filterFinish).toMatchObject({
-      normalizedFinishReason: "content_filter",
+      normalizedFinishReason: "refusal",
     });
   });
 

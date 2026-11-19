@@ -198,10 +198,12 @@ function mapGeminiFinishReason(
       normalizedFinishReason = "length";
       break;
     case "safety":
-    case "recitation":
-    case "language":
     case "blocklist":
     case "prohibited_content":
+      normalizedFinishReason = "refusal";
+      break;
+    case "recitation":
+    case "language":
     case "spii":
     case "image_safety":
     case "image_prohibited_content":
