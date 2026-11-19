@@ -184,11 +184,16 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
         }, [] as string[]),
       ];
 
-      await this.fs.writeFile(
-        outputPath,
-        await formatWithOxfmt(lines.join("\n"), outputPath)
-      );
-      this.info(`📝 Generated import map file: ${outputPath}`);
+      const content = await formatWithOxfmt(lines.join("\n"), outputPath);
+      // The file is committed, so it rarely changes. Rewriting it anyway
+      // truncates it while the declaration build may be reading it.
+      const current = await this.fs
+        .readFile(outputPath, { encoding: "utf8" })
+        .catch(() => undefined);
+      if (current !== content) {
+        await this.fs.writeFile(outputPath, content);
+        this.info(`📝 Generated import map file: ${outputPath}`);
+      }
     },
   };
 }
