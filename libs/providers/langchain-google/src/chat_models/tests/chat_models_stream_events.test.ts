@@ -113,6 +113,38 @@ const usageChunks: Gemini.GenerateContentResponse[] = [
   },
 ];
 
+// Gemini reports cumulative usage on every chunk. `candidatesTokenCount`
+// excludes the thinking tokens, which come in `thoughtsTokenCount`.
+const thinkingUsageChunks: Gemini.GenerateContentResponse[] = [
+  {
+    candidates: [{ content: { parts: [{ text: "The" }], role: "model" } }],
+    usageMetadata: {
+      promptTokenCount: 10,
+      candidatesTokenCount: 1,
+      totalTokenCount: 31,
+      promptTokensDetails: [{ modality: "TEXT", tokenCount: 10 }],
+      thoughtsTokenCount: 20,
+    },
+    modelVersion: "gemini-2.5-flash",
+  },
+  {
+    candidates: [
+      {
+        content: { parts: [{ text: " sky is blue." }], role: "model" },
+        finishReason: "STOP",
+      },
+    ],
+    usageMetadata: {
+      promptTokenCount: 10,
+      candidatesTokenCount: 5,
+      totalTokenCount: 35,
+      promptTokensDetails: [{ modality: "TEXT", tokenCount: 10 }],
+      thoughtsTokenCount: 20,
+    },
+    modelVersion: "gemini-2.5-flash",
+  },
+];
+
 function mockChatGoogle(chunks: Gemini.GenerateContentResponse[]) {
   return new ChatGoogle({
     model: "gemini-2.0-flash",
@@ -149,6 +181,18 @@ describe("ChatGoogle.streamEvents", () => {
       input_tokens: 10,
       output_tokens: 4,
       total_tokens: 14,
+    });
+  });
+
+  test("counts thinking tokens as output tokens, as invoke() does", async () => {
+    await expect(
+      mockChatGoogle(thinkingUsageChunks).streamEvents("Why is the sky blue?")
+    ).toHaveStreamUsage({
+      input_tokens: 10,
+      output_tokens: 25,
+      total_tokens: 35,
+      input_token_details: { text: 10, cache_read: 0 },
+      output_token_details: { reasoning: 20 },
     });
   });
 });
