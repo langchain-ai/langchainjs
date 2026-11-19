@@ -17,11 +17,11 @@ describe("Anthropic Bash Tool Integration Tests", () => {
 
     const bash = bash_20250124({
       execute: async (args) => {
-        if (args.restart) {
+        if ("restart" in args) {
           return "Bash session restarted";
         }
         try {
-          const output = execSync(args.command!, {
+          const output = execSync(args.command, {
             encoding: "utf-8",
             timeout: 10000,
           });
