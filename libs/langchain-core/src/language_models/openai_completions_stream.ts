@@ -10,7 +10,7 @@
  */
 
 import { finalizeContentBlock } from "./compat.js";
-import { toLegacyFinishReason } from "./finish_reason.js";
+import { correctFinishReason, toLegacyFinishReason } from "./finish_reason.js";
 import type { ChatModelStreamEvent, FinishReason } from "./event.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
@@ -123,6 +123,7 @@ export async function* convertOpenAICompletionsStream(
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: string | undefined;
   let sawRefusal = false;
+  let sawToolCall = false;
   let responseMetadata: Record<string, unknown> | undefined;
   let emittedProviderMetadata = false;
 
@@ -242,6 +243,7 @@ export async function* convertOpenAICompletionsStream(
     if (delta.refusal) sawRefusal = true;
 
     if (Array.isArray(delta.tool_calls)) {
+      if (delta.tool_calls.length > 0) sawToolCall = true;
       for (const rawToolCall of delta.tool_calls) {
         const toolIndex = rawToolCall.index ?? 0;
         const key: BlockKey = `tool:${toolIndex}`;
@@ -364,17 +366,21 @@ export async function* convertOpenAICompletionsStream(
     };
   }
 
+  // A forced `tool_choice` ends with `stop` even though the model called a tool.
+  const normalizedFinishReason =
+    finishReason != null
+      ? correctFinishReason(mapFinishReason(finishReason), {
+          hasToolCalls: sawToolCall,
+          hasRefusal: sawRefusal,
+        })
+      : undefined;
   yield {
     event: "message-finish" as const,
     ...(finishReason != null
       ? {
           finishReason,
-          normalizedFinishReason: sawRefusal
-            ? ("refusal" as const)
-            : mapFinishReason(finishReason),
-          reason: toLegacyFinishReason(
-            sawRefusal ? "refusal" : mapFinishReason(finishReason)
-          ),
+          normalizedFinishReason,
+          reason: toLegacyFinishReason(normalizedFinishReason),
         }
       : {}),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),

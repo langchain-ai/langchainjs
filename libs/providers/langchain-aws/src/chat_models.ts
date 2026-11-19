@@ -8,6 +8,7 @@ import type {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertBedrockConverseStream } from "./utils/stream_events.js";
+import { getFinishReasonMetadata } from "./utils/finish_reason.js";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -1326,7 +1327,10 @@ export class ChatBedrockConverse
                 text: "",
                 message: new AIMessageChunk({
                   content: "",
-                  response_metadata: { ...chunk },
+                  response_metadata: {
+                    ...chunk,
+                    ...getFinishReasonMetadata(chunk.messageStop?.stopReason),
+                  },
                 }),
               });
             }

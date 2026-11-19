@@ -34,6 +34,10 @@ import {
   RequestError,
 } from "../../utils/errors.js";
 import {
+  mapGeminiFinishReason,
+  toFinishReasonMetadata,
+} from "../../utils/finish_reason.js";
+import {
   convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
   convertGeminiGenerateContentResponseToUsageMetadata,
@@ -353,6 +357,12 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                   tool_calls: toolCalls,
                   response_metadata: {
                     model_provider: "google",
+                    ...toFinishReasonMetadata(
+                      mapGeminiFinishReason(
+                        candidate.finishReason,
+                        toolCalls.length > 0
+                      )
+                    ),
                   },
                   additional_kwargs: {
                     ...(message.additional_kwargs.originalTextContentBlock

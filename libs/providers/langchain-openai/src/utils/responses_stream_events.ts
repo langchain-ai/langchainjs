@@ -13,6 +13,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import { hasRefusalOutput, normalizeResponseStatus } from "./finish_reason.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -345,25 +346,11 @@ function mapResponseStatus(
   MessageFinishEvent,
   "finishReason" | "normalizedFinishReason" | "reason"
 > {
-  let normalizedFinishReason: FinishReason;
-  if (sawRefusal) {
-    // OpenAI refuses with a normal `completed` status.
-    normalizedFinishReason = "refusal";
-  } else if (status === "completed") {
-    normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
-  } else if (status === "incomplete") {
-    if (incompleteReason === "max_output_tokens") {
-      normalizedFinishReason = "length";
-    } else if (incompleteReason === "content_filter") {
-      normalizedFinishReason = "content_filter";
-    } else {
-      normalizedFinishReason = "other";
-    }
-  } else if (status === "failed") {
-    normalizedFinishReason = "error";
-  } else {
-    normalizedFinishReason = "other";
-  }
+  const normalizedFinishReason = normalizeResponseStatus(
+    status,
+    incompleteReason,
+    { hasToolCalls: sawToolCall, hasRefusal: sawRefusal }
+  );
   return {
     finishReason: status,
     normalizedFinishReason,
@@ -377,16 +364,4 @@ function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
   if (reason === "refusal") return "content_filter";
   if (reason === "context_exceeded") return "length";
   return reason === "other" || reason === "error" ? undefined : reason;
-}
-
-function hasRefusalOutput(output: unknown): boolean {
-  if (!Array.isArray(output)) return false;
-  return output.some(
-    (item) =>
-      item?.type === "message" &&
-      Array.isArray(item.content) &&
-      item.content.some(
-        (part: { type?: string } | null) => part?.type === "refusal"
-      )
-  );
 }

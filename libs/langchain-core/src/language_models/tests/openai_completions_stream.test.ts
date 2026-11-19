@@ -298,4 +298,36 @@ describe("convertOpenAICompletionsStream", () => {
       reason: "content_filter",
     });
   });
+
+  test("forced tool call with stop normalizes to tool_call", async () => {
+    const events = await collectEvents([
+      {
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: "assistant",
+              tool_calls: [
+                {
+                  index: 0,
+                  id: "call_1",
+                  type: "function",
+                  function: { name: "search", arguments: "{}" },
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      },
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "stop",
+      normalizedFinishReason: "tool_call",
+      reason: "tool_use",
+    });
+  });
 });

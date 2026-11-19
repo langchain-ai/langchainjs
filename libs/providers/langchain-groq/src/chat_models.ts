@@ -81,6 +81,27 @@ import {
 
 type ChatGroqToolType = BindToolsInput | ChatCompletionTool;
 
+// Core reads `normalized_finish_reason` but no longer maps provider values.
+const NORMALIZED_FINISH_REASONS: Record<string, string> = {
+  stop: "stop",
+  length: "length",
+  max_tokens: "length",
+  tool_calls: "tool_call",
+  function_call: "tool_call",
+  content_filter: "content_filter",
+};
+
+function finishReasonFields(
+  finishReason: string | null | undefined
+): Record<string, string> {
+  if (!finishReason) return {};
+  return {
+    finish_reason: finishReason,
+    normalized_finish_reason:
+      NORMALIZED_FINISH_REASONS[finishReason] ?? "other",
+  };
+}
+
 /**
  * Const list of fields that we'll pick from the `ChatCompletionCreateParams` interface
  * to use as the options allowed to be passed to invocation methods.
@@ -1268,7 +1289,7 @@ export class ChatGroq extends BaseChatModel<
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
-        generationInfo.finish_reason = choice.finish_reason;
+        Object.assign(generationInfo, finishReasonFields(choice.finish_reason));
         // Only include system fingerprint in the last chunk for now
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;
@@ -1405,7 +1426,7 @@ export class ChatGroq extends BaseChatModel<
           ),
         };
         generation.generationInfo = {
-          ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
+          ...finishReasonFields(part.finish_reason),
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
         generations.push(generation);

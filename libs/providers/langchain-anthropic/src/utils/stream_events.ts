@@ -13,6 +13,7 @@ import type {
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
 import { _mergeStreamUsage, buildUsageMetadata } from "./message_outputs.js";
+import { mapAnthropicStopReason } from "./finish_reason.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -175,33 +176,11 @@ function mapStopReason(
   MessageFinishEvent,
   "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
 > {
-  if (stopReason == null) return {};
-  let normalizedFinishReason: FinishReason;
-  switch (stopReason) {
-    case "end_turn":
-    case "stop_sequence":
-      normalizedFinishReason = "stop";
-      break;
-    case "tool_use":
-      normalizedFinishReason = "tool_call";
-      break;
-    case "max_tokens":
-      normalizedFinishReason = "length";
-      break;
-    case "model_context_window_exceeded":
-      normalizedFinishReason = "context_exceeded";
-      break;
-    case "refusal":
-      normalizedFinishReason = "refusal";
-      break;
-    default:
-      normalizedFinishReason = "other";
-  }
+  const info = mapAnthropicStopReason(stopReason);
+  if (!info) return {};
   return {
-    finishReason: stopReason,
-    normalizedFinishReason,
-    reason: toLegacyReason(normalizedFinishReason),
-    finishState: stopReason === "pause_turn" ? "suspended" : "complete",
+    ...info,
+    reason: toLegacyReason(info.normalizedFinishReason),
   };
 }
 

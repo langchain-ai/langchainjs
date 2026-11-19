@@ -5,12 +5,9 @@
  */
 
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-  MessageFinishEvent,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapCohereFinishReason } from "./finish_reason.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type CohereStreamChunk = Record<string, any>;
@@ -128,49 +125,4 @@ export async function* convertCohereStream(
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "cohere" },
   };
-}
-
-function mapCohereFinishReason(
-  reason: string | undefined,
-  sawToolCall: boolean
-): Pick<
-  MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "reason"
-> {
-  if (!reason) return {};
-  let normalizedFinishReason: FinishReason;
-  switch (reason) {
-    case "COMPLETE":
-    case "STOP_SEQUENCE":
-      normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
-      break;
-    case "TOOL_CALL":
-      normalizedFinishReason = "tool_call";
-      break;
-    case "MAX_TOKENS":
-    case "ERROR_LIMIT":
-      normalizedFinishReason = "length";
-      break;
-    case "ERROR_TOXIC":
-      normalizedFinishReason = "content_filter";
-      break;
-    case "ERROR":
-      normalizedFinishReason = "error";
-      break;
-    default:
-      normalizedFinishReason = "other";
-  }
-  return {
-    finishReason: reason,
-    normalizedFinishReason,
-    reason: toLegacyReason(normalizedFinishReason),
-  };
-}
-
-// Keeps the deprecated `reason` populated with its old values.
-function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
-  if (reason === "tool_call") return "tool_use";
-  if (reason === "refusal") return "content_filter";
-  if (reason === "context_exceeded") return "length";
-  return reason === "other" || reason === "error" ? undefined : reason;
 }

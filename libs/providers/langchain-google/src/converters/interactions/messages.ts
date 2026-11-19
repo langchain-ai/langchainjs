@@ -11,6 +11,10 @@ import {
 import type { Gemini } from "../../chat_models/types.js";
 import { GoogleError } from "../../utils/errors.js";
 import {
+  mapInteractionStatus,
+  toFinishReasonMetadata,
+} from "../../utils/finish_reason.js";
+import {
   convertGeminiPartToContentBlock,
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
@@ -1273,6 +1277,9 @@ export function convertInteractionToAIMessage(
     model_provider: "google",
     ...(interaction.model ? { model_name: interaction.model } : {}),
     ...(finishReason ? { finishReason } : {}),
+    ...toFinishReasonMetadata(
+      mapInteractionStatus(interaction.status, toolCalls.length > 0)
+    ),
     ...synthesized,
     ...(builtInToolSteps.length > 0
       ? { interactionSteps: builtInToolSteps }

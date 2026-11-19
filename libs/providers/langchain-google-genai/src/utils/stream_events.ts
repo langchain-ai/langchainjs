@@ -6,13 +6,10 @@
 
 import type { EnhancedGenerateContentResponse } from "@google/generative-ai";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-  MessageFinishEvent,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { convertUsageMetadata } from "./common.js";
+import { mapGeminiFinishReason } from "./finish_reason.js";
 
 export interface ConvertGoogleGenAIStreamOptions {
   streamUsage?: boolean;
@@ -178,52 +175,4 @@ export async function* convertGoogleGenAIStream(
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "google-genai" },
   };
-}
-
-function mapGeminiFinishReason(
-  reason: string | undefined,
-  sawToolCall: boolean
-): Pick<
-  MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "reason"
-> {
-  if (!reason) return {};
-  let normalizedFinishReason: FinishReason;
-  switch (reason.toLowerCase().replace(/-/g, "_")) {
-    case "stop":
-      normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
-      break;
-    case "max_tokens":
-    case "max_token":
-      normalizedFinishReason = "length";
-      break;
-    case "safety":
-    case "blocklist":
-    case "prohibited_content":
-      normalizedFinishReason = "refusal";
-      break;
-    case "recitation":
-    case "language":
-    case "spii":
-    case "image_safety":
-    case "image_prohibited_content":
-    case "image_recitation":
-      normalizedFinishReason = "content_filter";
-      break;
-    default:
-      normalizedFinishReason = "other";
-  }
-  return {
-    finishReason: reason,
-    normalizedFinishReason,
-    reason: toLegacyReason(normalizedFinishReason),
-  };
-}
-
-// Keeps the deprecated `reason` populated with its old values.
-function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
-  if (reason === "tool_call") return "tool_use";
-  if (reason === "refusal") return "content_filter";
-  if (reason === "context_exceeded") return "length";
-  return reason === "other" || reason === "error" ? undefined : reason;
 }

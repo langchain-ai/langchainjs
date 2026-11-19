@@ -75,6 +75,39 @@ describe("convertGoogleGeminiStream", () => {
     });
   });
 
+  test.each(["MALFORMED_FUNCTION_CALL", "MALFORMED_RESPONSE"])(
+    "maps %s to error",
+    async (finishReason) => {
+      const events = await collectEvents([
+        { candidates: [{ content: { parts: [{ text: "" }] }, finishReason }] },
+      ]);
+      expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+        finishReason,
+        normalizedFinishReason: "error",
+        reason: undefined,
+      });
+    }
+  );
+
+  test("maps STOP to tool_call when the function call came in an earlier chunk", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [{ functionCall: { name: "search", args: { q: "x" } } }],
+            },
+          },
+        ],
+      },
+      { candidates: [{ content: { parts: [] }, finishReason: "STOP" }] },
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "STOP",
+      normalizedFinishReason: "tool_call",
+    });
+  });
+
   test("thinking parts map to reasoning", async () => {
     const events = await collectEvents([
       {

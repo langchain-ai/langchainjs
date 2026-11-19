@@ -30,50 +30,21 @@ class FakeInvokeModel extends BaseChatModel {
 }
 
 describe("invoke finish fields", () => {
-  test("adds normalized fields and keeps the raw value", async () => {
-    const msg = await new FakeInvokeModel({
-      model_provider: "anthropic",
-      stop_reason: "max_tokens",
-    }).invoke("hi");
-    expect(msg.response_metadata).toMatchObject({
+  test("keeps provider fields unchanged", async () => {
+    const metadata = {
       stop_reason: "max_tokens",
       finish_reason: "max_tokens",
       normalized_finish_reason: "length",
       finish_state: "complete",
-    });
+    };
+    const msg = await new FakeInvokeModel(metadata).invoke("hi");
+    expect(msg.response_metadata).toMatchObject(metadata);
   });
 
-  test("keeps an existing finish_reason and maps tool calls", async () => {
-    const msg = await new FakeInvokeModel({ finish_reason: "STOP" }, [
-      { name: "search", args: {}, id: "call_1", type: "tool_call" },
-    ]).invoke("hi");
-    expect(msg.response_metadata.finish_reason).toBe("STOP");
-    expect(msg.response_metadata.normalized_finish_reason).toBe("tool_call");
-  });
-
-  test("maps OpenAI Responses status", async () => {
-    const msg = await new FakeInvokeModel({
-      model_provider: "openai",
-      status: "incomplete",
-      incomplete_details: { reason: "max_output_tokens" },
-    }).invoke("hi");
-    expect(msg.response_metadata.finish_reason).toBe("incomplete");
-    expect(msg.response_metadata.normalized_finish_reason).toBe("length");
-    expect(msg.response_metadata).not.toHaveProperty("finish_state");
-  });
-
-  test("marks pause_turn as suspended", async () => {
+  test("adds nothing when the provider sets nothing", async () => {
     const msg = await new FakeInvokeModel({
       model_provider: "anthropic",
-      stop_reason: "pause_turn",
-    }).invoke("hi");
-    expect(msg.response_metadata.normalized_finish_reason).toBe("other");
-    expect(msg.response_metadata.finish_state).toBe("suspended");
-  });
-
-  test("adds nothing without a raw value", async () => {
-    const msg = await new FakeInvokeModel({
-      model_provider: "anthropic",
+      stop_reason: "end_turn",
     }).invoke("hi");
     expect(msg.response_metadata).not.toHaveProperty("finish_reason");
     expect(msg.response_metadata).not.toHaveProperty(
@@ -82,9 +53,22 @@ describe("invoke finish fields", () => {
     expect(msg.response_metadata).not.toHaveProperty("finish_state");
   });
 
-  test("an OpenAI refusal normalizes to refusal", async () => {
+  test("corrects stop with tool calls", async () => {
     const msg = await new FakeInvokeModel(
-      { model_provider: "openai", finish_reason: "stop" },
+      { finish_reason: "stop", normalized_finish_reason: "stop" },
+      [{ name: "search", args: {}, id: "call_1", type: "tool_call" }]
+    ).invoke("hi");
+    expect(msg.response_metadata.finish_reason).toBe("stop");
+    expect(msg.response_metadata.normalized_finish_reason).toBe("tool_call");
+  });
+
+  test("corrects a refusal", async () => {
+    const msg = await new FakeInvokeModel(
+      {
+        model_provider: "openai",
+        finish_reason: "stop",
+        normalized_finish_reason: "stop",
+      },
       [],
       { refusal: "I can't help with that." }
     ).invoke("hi");

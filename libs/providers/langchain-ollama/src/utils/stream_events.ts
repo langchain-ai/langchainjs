@@ -5,12 +5,9 @@
  */
 
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-  MessageFinishEvent,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapOllamaDoneReason } from "./finish_reason.js";
 
 export interface OllamaStreamChunk {
   message: {
@@ -200,38 +197,4 @@ export async function* convertOllamaStream(
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "ollama" },
   };
-}
-
-function mapOllamaDoneReason(
-  reason: string | undefined,
-  sawToolCall: boolean
-): Pick<
-  MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "reason"
-> {
-  if (!reason) return {};
-  let normalizedFinishReason: FinishReason;
-  switch (reason) {
-    case "stop":
-      normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
-      break;
-    case "length":
-      normalizedFinishReason = "length";
-      break;
-    default:
-      normalizedFinishReason = "other";
-  }
-  return {
-    finishReason: reason,
-    normalizedFinishReason,
-    reason: toLegacyReason(normalizedFinishReason),
-  };
-}
-
-// Keeps the deprecated `reason` populated with its old values.
-function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
-  if (reason === "tool_call") return "tool_use";
-  if (reason === "refusal") return "content_filter";
-  if (reason === "context_exceeded") return "length";
-  return reason === "other" || reason === "error" ? undefined : reason;
 }

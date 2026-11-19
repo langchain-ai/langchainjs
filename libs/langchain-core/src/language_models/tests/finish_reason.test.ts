@@ -4,7 +4,8 @@ import { ChatGenerationChunk } from "../../outputs.js";
 import { convertChunksToEvents } from "../compat.js";
 import type { ChatModelStreamEvent, MessageFinishEvent } from "../event.js";
 import {
-  normalizeFinishReason,
+  correctFinishReason,
+  readFinishFields,
   toLegacyFinishReason,
 } from "../finish_reason.js";
 import { ChatModelStream } from "../stream.js";
@@ -23,79 +24,88 @@ async function lastEvent(
   return events[events.length - 1] as MessageFinishEvent;
 }
 
-describe("normalizeFinishReason", () => {
-  test.each([
-    ["stop", "stop"],
-    ["length", "length"],
-    ["max_tokens", "length"],
-    ["tool_calls", "tool_call"],
-    ["function_call", "tool_call"],
-    ["content_filter", "content_filter"],
-    ["end_turn", "stop"],
-    ["stop_sequence", "stop"],
-    ["tool_use", "tool_call"],
-    ["refusal", "refusal"],
-    ["model_context_window_exceeded", "context_exceeded"],
-    ["STOP", "stop"],
-    ["MAX_TOKENS", "length"],
-    ["SAFETY", "refusal"],
-    ["RECITATION", "content_filter"],
-    ["IMAGE-SAFETY", "content_filter"],
-    ["MALFORMED_FUNCTION_CALL", "other"],
-    ["something_new", "other"],
-  ])("%s -> %s", (raw, expected) => {
-    expect(normalizeFinishReason(raw)).toEqual({
-      normalizedFinishReason: expected,
-    });
-  });
+const STOP = { finish_reason: "stop", normalized_finish_reason: "stop" };
 
-  test("pause_turn is suspended", () => {
-    expect(normalizeFinishReason("pause_turn")).toEqual({
+describe("readFinishFields", () => {
+  test("reads provider-set fields", () => {
+    expect(
+      readFinishFields({
+        stop_reason: "pause_turn",
+        finish_reason: "pause_turn",
+        normalized_finish_reason: "other",
+        finish_state: "suspended",
+      })
+    ).toEqual({
+      finishReason: "pause_turn",
       normalizedFinishReason: "other",
       finishState: "suspended",
     });
   });
 
+  test("ignores provider-specific keys", () => {
+    expect(readFinishFields({ stop_reason: "end_turn" })).toEqual({});
+    expect(readFinishFields({ finishReason: "STOP" })).toEqual({});
+    expect(readFinishFields(undefined)).toEqual({});
+  });
+});
+
+describe("correctFinishReason", () => {
   test("stop with tool calls is tool_call", () => {
-    expect(
-      normalizeFinishReason("STOP", { hasToolCalls: true })
-        .normalizedFinishReason
-    ).toBe("tool_call");
+    expect(correctFinishReason("stop", { hasToolCalls: true })).toBe(
+      "tool_call"
+    );
   });
 
-  test("missing raw value is omitted", () => {
-    expect(normalizeFinishReason(undefined)).toEqual({});
-    expect(normalizeFinishReason("")).toEqual({});
+  test("other values are kept with tool calls", () => {
+    expect(correctFinishReason("length", { hasToolCalls: true })).toBe(
+      "length"
+    );
+  });
+
+  test("refusal wins", () => {
+    expect(correctFinishReason("stop", { hasRefusal: true })).toBe("refusal");
+  });
+
+  test("nothing to correct without a provider value", () => {
+    expect(correctFinishReason(undefined, { hasRefusal: true })).toBe(
+      undefined
+    );
   });
 });
 
 describe("convertChunksToEvents finish fields", () => {
-  test("reads raw reason from generationInfo", async () => {
+  test("passes provider fields from generationInfo", async () => {
     const finish = await lastEvent([
-      new ChatGenerationChunk({
-        text: "hi",
-        message: new AIMessageChunk({ content: "hi" }),
-      }),
       new ChatGenerationChunk({
         text: "",
         message: new AIMessageChunk({ content: "" }),
-        generationInfo: { finish_reason: "length" },
+        generationInfo: {
+          finish_reason: "length",
+          normalized_finish_reason: "length",
+        },
       }),
     ]);
     expect(finish).toMatchObject({
       event: "message-finish",
       finishReason: "length",
       normalizedFinishReason: "length",
+      reason: "length",
     });
+    expect(finish).not.toHaveProperty("finishState");
   });
 
-  test("reads Anthropic stop_reason from response_metadata", async () => {
+  test("passes finish state from response_metadata", async () => {
     const finish = await lastEvent([
       new ChatGenerationChunk({
         text: "",
         message: new AIMessageChunk({
           content: "",
-          response_metadata: { stop_reason: "pause_turn" },
+          response_metadata: {
+            stop_reason: "pause_turn",
+            finish_reason: "pause_turn",
+            normalized_finish_reason: "other",
+            finish_state: "suspended",
+          },
         }),
       }),
     ]);
@@ -115,22 +125,48 @@ describe("convertChunksToEvents finish fields", () => {
           tool_call_chunks: [
             { id: "call_1", name: "search", args: "{}", index: 0 },
           ],
-          response_metadata: { finishReason: "STOP" },
         }),
       }),
+      new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({ content: "", response_metadata: STOP }),
+      }),
     ]);
+    expect(finish.finishReason).toBe("stop");
     expect(finish.normalizedFinishReason).toBe("tool_call");
+    expect(finish.reason).toBe("tool_use");
   });
 
-  test("no raw reason omits finish fields", async () => {
+  test("refusal overrides stop", async () => {
+    const finish = await lastEvent([
+      new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({
+          content: "",
+          additional_kwargs: { refusal: "I can't help with that." },
+        }),
+      }),
+      new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({ content: "", response_metadata: STOP }),
+      }),
+    ]);
+    expect(finish.normalizedFinishReason).toBe("refusal");
+  });
+
+  test("no provider fields omits finish fields", async () => {
     const finish = await lastEvent([
       new ChatGenerationChunk({
         text: "hi",
-        message: new AIMessageChunk({ content: "hi" }),
+        message: new AIMessageChunk({
+          content: "hi",
+          response_metadata: { stop_reason: "end_turn" },
+        }),
       }),
     ]);
     expect(finish).not.toHaveProperty("finishReason");
     expect(finish).not.toHaveProperty("normalizedFinishReason");
+    expect(finish.reason).toBeUndefined();
   });
 });
 
@@ -200,33 +236,5 @@ describe("toLegacyFinishReason", () => {
     [undefined, undefined],
   ] as const)("%s -> %s", (input, expected) => {
     expect(toLegacyFinishReason(input)).toBe(expected);
-  });
-
-  test("legacy bridge still emits deprecated reason", async () => {
-    const events: ChatModelStreamEvent[] = [];
-    for await (const event of convertChunksToEvents(
-      iter([
-        new ChatGenerationChunk({
-          text: "hi",
-          message: new AIMessageChunk({
-            content: "hi",
-            response_metadata: { finish_reason: "length" },
-          }),
-        }),
-      ])
-    )) {
-      events.push(event);
-    }
-    const finish = events.at(-1) as MessageFinishEvent;
-    expect(finish.reason).toBe("length");
-    expect(finish.normalizedFinishReason).toBe("length");
-  });
-});
-
-describe("refusal override", () => {
-  test("refusal block wins over stop", () => {
-    expect(normalizeFinishReason("stop", { hasRefusal: true })).toEqual({
-      normalizedFinishReason: "refusal",
-    });
   });
 });

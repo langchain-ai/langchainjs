@@ -52,20 +52,55 @@ describe("convertGoogleGeminiStream", () => {
     });
   });
 
+  test.each(["MALFORMED_FUNCTION_CALL", "malformed_response"])(
+    "maps %s to error",
+    async (finishReason) => {
+      const events = await collectEvents([
+        {
+          candidates: [{ content: { parts: [{ text: "" }] }, finishReason }],
+        },
+      ]);
+      expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+        finishReason,
+        normalizedFinishReason: "error",
+        reason: undefined,
+      });
+    }
+  );
+
   test("maps unknown Gemini finish reasons to other", async () => {
     const events = await collectEvents([
       {
         candidates: [
           {
             content: { parts: [{ text: "" }] },
-            finishReason: "MALFORMED_FUNCTION_CALL",
+            finishReason: "SOMETHING_NEW",
           },
         ],
       },
     ]);
     expect(events.find((e) => e.event === "message-finish")).toMatchObject({
-      finishReason: "MALFORMED_FUNCTION_CALL",
+      finishReason: "SOMETHING_NEW",
       normalizedFinishReason: "other",
+    });
+  });
+
+  test("maps STOP to tool_call when the function call came in an earlier chunk", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [{ functionCall: { name: "search", args: { q: "x" } } }],
+            },
+          },
+        ],
+      },
+      { candidates: [{ content: { parts: [] }, finishReason: "STOP" }] },
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "STOP",
+      normalizedFinishReason: "tool_call",
     });
   });
 

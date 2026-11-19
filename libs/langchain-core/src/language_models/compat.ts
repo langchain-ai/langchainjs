@@ -11,8 +11,9 @@ import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 import {
-  normalizeFinishReason,
-  readRawFinishReason,
+  correctFinishReason,
+  type FinishFields,
+  readFinishFields,
   toLegacyFinishReason,
 } from "./finish_reason.js";
 
@@ -159,7 +160,7 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
-  let rawFinishReason: string | undefined;
+  let finishFields: FinishFields = {};
   let sawToolCalls = false;
   let sawRefusal = false;
 
@@ -167,10 +168,11 @@ export async function* convertChunksToEvents(
     options?.signal?.throwIfAborted();
 
     const msg = chunk.message;
-    rawFinishReason =
-      readRawFinishReason(chunk.generationInfo) ??
-      readRawFinishReason(msg.response_metadata) ??
-      rawFinishReason;
+    finishFields = {
+      ...finishFields,
+      ...readFinishFields(chunk.generationInfo),
+      ...readFinishFields(msg.response_metadata),
+    };
     if (
       AIMessageChunk.isInstance(msg) &&
       (msg.tool_call_chunks?.length ?? 0) > 0
@@ -431,15 +433,15 @@ export async function* convertChunksToEvents(
     };
   }
 
-  const finish = normalizeFinishReason(rawFinishReason, {
-    hasToolCalls: sawToolCalls,
-    hasRefusal: sawRefusal,
-  });
+  const normalizedFinishReason = correctFinishReason(
+    finishFields.normalizedFinishReason,
+    { hasToolCalls: sawToolCalls, hasRefusal: sawRefusal }
+  );
   yield {
     event: "message-finish" as const,
-    ...(rawFinishReason != null ? { finishReason: rawFinishReason } : {}),
-    ...finish,
-    reason: toLegacyFinishReason(finish.normalizedFinishReason),
+    ...finishFields,
+    ...(normalizedFinishReason ? { normalizedFinishReason } : {}),
+    reason: toLegacyFinishReason(normalizedFinishReason),
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
 }

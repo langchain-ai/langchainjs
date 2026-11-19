@@ -70,7 +70,7 @@ import { assembleStructuredOutputPipeline } from "./structured_output.js";
 import type { ChatModelStreamEvent } from "./event.js";
 import { ChatModelStream } from "./stream.js";
 import { convertChunksToEvents } from "./compat.js";
-import { addFinishReasonFields } from "./finish_reason.js";
+import { correctFinishFields } from "./finish_reason.js";
 import {
   EventStreamCallbackHandlerInput,
   StreamEvent,
@@ -830,7 +830,7 @@ export abstract class BaseChatModel<
             aggregated.message
           ) as AIMessageChunk;
         }
-        addFinishReasonFields(aggregated.message);
+        correctFinishFields(aggregated.message);
         generations.push([aggregated]);
         // Built from the fully-accumulated chunk, same as _streamIterator above.
         let llmOutput: LLMResult["llmOutput"];
@@ -895,7 +895,7 @@ export abstract class BaseChatModel<
               };
             }
             for (const generation of result.generations) {
-              addFinishReasonFields(generation.message);
+              correctFinishFields(generation.message);
             }
             generations[i] = result.generations;
             llmOutputs[i] = result.llmOutput;

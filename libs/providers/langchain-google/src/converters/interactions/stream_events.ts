@@ -1,10 +1,6 @@
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-  MessageFinishEvent,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   AIMessageChunk,
   type ContentBlock,
@@ -15,6 +11,10 @@ import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../../chat_models/types.js";
 import { GoogleError } from "../../utils/errors.js";
+import {
+  mapInteractionStatus,
+  toFinishReasonMetadata,
+} from "../../utils/finish_reason.js";
 import {
   convertGeminiPartToContentBlock,
   convertGeminiPartsToToolCalls,
@@ -728,6 +728,9 @@ export async function* convertInteractionsStreamToChunks(
           model_provider: "google",
           ...(modelName ? { model_name: modelName } : {}),
           ...(finishReason ? { finishReason } : {}),
+          ...toFinishReasonMetadata(
+            mapInteractionStatus(interactionStatus, false)
+          ),
           ...synthesized,
           ...(builtInToolSteps.length > 0
             ? { interactionSteps: builtInToolSteps }
@@ -1079,41 +1082,4 @@ export async function* convertInteractionsStream(
       ...synthesized,
     },
   };
-}
-
-function mapInteractionStatus(
-  status: string | undefined,
-  sawToolCall: boolean
-): Pick<
-  MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "reason"
-> {
-  if (!status) return {};
-  let normalizedFinishReason: FinishReason;
-  switch (status) {
-    case "completed":
-      normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
-      break;
-    case "requires_action":
-      normalizedFinishReason = "tool_call";
-      break;
-    case "failed":
-      normalizedFinishReason = "error";
-      break;
-    default:
-      normalizedFinishReason = "other";
-  }
-  return {
-    finishReason: status,
-    normalizedFinishReason,
-    reason: toLegacyReason(normalizedFinishReason),
-  };
-}
-
-// Keeps the deprecated `reason` populated with its old values.
-function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
-  if (reason === "tool_call") return "tool_use";
-  if (reason === "refusal") return "content_filter";
-  if (reason === "context_exceeded") return "length";
-  return reason === "other" || reason === "error" ? undefined : reason;
 }

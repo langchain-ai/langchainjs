@@ -6,12 +6,9 @@
 
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-  MessageFinishEvent,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapStopReason } from "./finish_reason.js";
 import { getReasoningTokensFromAdditionalFields } from "./message_outputs.js";
 
 export interface ConvertBedrockConverseStreamOptions {
@@ -186,48 +183,4 @@ export async function* convertBedrockConverseStream(
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "bedrock-converse" },
   };
-}
-
-function mapStopReason(
-  reason: string | undefined
-): Pick<
-  MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "reason"
-> {
-  if (!reason) return {};
-  let normalizedFinishReason: FinishReason;
-  switch (reason) {
-    case "end_turn":
-    case "stop_sequence":
-      normalizedFinishReason = "stop";
-      break;
-    case "tool_use":
-      normalizedFinishReason = "tool_call";
-      break;
-    case "max_tokens":
-      normalizedFinishReason = "length";
-      break;
-    case "model_context_window_exceeded":
-      normalizedFinishReason = "context_exceeded";
-      break;
-    case "guardrail_intervened":
-    case "content_filtered":
-      normalizedFinishReason = "content_filter";
-      break;
-    default:
-      normalizedFinishReason = "other";
-  }
-  return {
-    finishReason: reason,
-    normalizedFinishReason,
-    reason: toLegacyReason(normalizedFinishReason),
-  };
-}
-
-// Keeps the deprecated `reason` populated with its old values.
-function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
-  if (reason === "tool_call") return "tool_use";
-  if (reason === "refusal") return "content_filter";
-  if (reason === "context_exceeded") return "length";
-  return reason === "other" || reason === "error" ? undefined : reason;
 }

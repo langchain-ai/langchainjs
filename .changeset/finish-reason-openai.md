@@ -2,4 +2,4 @@
 "@langchain/openai": patch
 ---
 
-Emit raw `finishReason`, `normalizedFinishReason` and `finishState` on Responses API `message-finish` events, using `status` and `incomplete_details`. Refusal output normalizes to `refusal`, and `failed` to `error`.
+Set `normalized_finish_reason` in `response_metadata` for Chat Completions (a refusal or a forced tool call ending in `stop` maps to `refusal` / `tool_call`), and `finish_reason` (the `status`) plus `normalized_finish_reason` for the Responses API, on `invoke` and streamed results. Responses `message-finish` events carry the same fields.
