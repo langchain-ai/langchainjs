@@ -186,11 +186,13 @@ function mapStopReason(
       normalizedFinishReason = "tool_call";
       break;
     case "max_tokens":
-    case "model_context_window_exceeded":
       normalizedFinishReason = "length";
       break;
+    case "model_context_window_exceeded":
+      normalizedFinishReason = "context_exceeded";
+      break;
     case "refusal":
-      normalizedFinishReason = "content_filter";
+      normalizedFinishReason = "refusal";
       break;
     default:
       normalizedFinishReason = "other";
@@ -401,5 +403,7 @@ function finalizeBlock(
 // Keeps the deprecated `reason` populated with its old values.
 function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
   if (reason === "tool_call") return "tool_use";
+  if (reason === "refusal") return "content_filter";
+  if (reason === "context_exceeded") return "length";
   return reason === "other" || reason === "error" ? undefined : reason;
 }

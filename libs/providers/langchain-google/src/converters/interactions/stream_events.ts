@@ -1114,5 +1114,7 @@ function mapInteractionStatus(
 // Keeps the deprecated `reason` populated with its old values.
 function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
   if (reason === "tool_call") return "tool_use";
+  if (reason === "refusal") return "content_filter";
+  if (reason === "context_exceeded") return "length";
   return reason === "other" || reason === "error" ? undefined : reason;
 }

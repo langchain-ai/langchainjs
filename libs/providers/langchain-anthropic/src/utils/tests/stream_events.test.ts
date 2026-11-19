@@ -187,8 +187,8 @@ describe("convertAnthropicStream", () => {
     ["end_turn", "stop", "complete"],
     ["tool_use", "tool_call", "complete"],
     ["max_tokens", "length", "complete"],
-    ["model_context_window_exceeded", "length", "complete"],
-    ["refusal", "content_filter", "complete"],
+    ["model_context_window_exceeded", "context_exceeded", "complete"],
+    ["refusal", "refusal", "complete"],
     ["pause_turn", "other", "suspended"],
     ["brand_new_reason", "other", "complete"],
   ])("maps %s to %s / %s", async (raw, normalized, state) => {

@@ -59,9 +59,11 @@ export interface MessageStartEvent {
  * Normalized finish reason for a model response.
  *
  * - `"stop"`: Natural end of generation.
- * - `"length"`: Hit an output token or context window limit.
+ * - `"length"`: Hit the output token limit.
+ * - `"context_exceeded"`: Hit the context window limit.
  * - `"tool_call"`: Model is requesting tool execution.
- * - `"content_filter"`: Blocked by provider safety or policy, including refusals.
+ * - `"content_filter"`: Blocked by provider safety or policy.
+ * - `"refusal"`: Model declined to answer.
  * - `"error"`: Stream ended in an error status but still returned output.
  * - `"other"`: Provider value has no mapping; check the raw `finishReason`.
  */
@@ -70,6 +72,8 @@ export type FinishReason =
   | "length"
   | "tool_call"
   | "content_filter"
+  | "refusal"
+  | "context_exceeded"
   | "error"
   | "other";
 
@@ -97,7 +101,7 @@ export interface MessageFinishEvent {
    * @deprecated Use `normalizedFinishReason`. Still read when the new
    * fields are absent; `"tool_use"` is treated as `"tool_call"`.
    */
-  reason?: FinishReason | "tool_use";
+  reason?: "stop" | "length" | "tool_use" | "content_filter";
   /** Final usage snapshot. */
   usage?: Partial<UsageMetadata>;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */

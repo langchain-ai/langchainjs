@@ -18,8 +18,8 @@ const GENERIC_FINISH_REASONS: Record<string, FinishReason> = {
   end_turn: "stop",
   stop_sequence: "stop",
   tool_use: "tool_call",
-  refusal: "content_filter",
-  model_context_window_exceeded: "length",
+  refusal: "refusal",
+  model_context_window_exceeded: "context_exceeded",
   // Gemini
   max_token: "length",
   safety: "content_filter",
@@ -71,5 +71,7 @@ export function toLegacyFinishReason(
   reason: FinishReason | undefined
 ): MessageFinishEvent["reason"] {
   if (reason === "tool_call") return "tool_use";
+  if (reason === "refusal") return "content_filter";
+  if (reason === "context_exceeded") return "length";
   return reason === "other" || reason === "error" ? undefined : reason;
 }

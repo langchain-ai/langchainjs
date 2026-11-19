@@ -24,7 +24,7 @@ describe("Anthropic refusals", () => {
     vi.unstubAllGlobals();
   });
 
-  it("maps a refusal stop reason to content_filter in stream events", async () => {
+  it("maps a refusal stop reason to refusal in stream events", async () => {
     const source = (async function* () {
       yield {
         type: "message_start",
@@ -53,7 +53,7 @@ describe("Anthropic refusals", () => {
 
     const finish = events.find((event) => event.event === "message-finish");
     expect(finish.finishReason).toBe("refusal");
-    expect(finish.normalizedFinishReason).toBe("content_filter");
+    expect(finish.normalizedFinishReason).toBe("refusal");
   });
 
   it("raises ModelRefusalError from the tools output parser", async () => {
