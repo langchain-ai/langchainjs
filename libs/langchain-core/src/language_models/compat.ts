@@ -12,6 +12,7 @@ import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 import {
   normalizeFinishReason,
+  readRawFinishReason,
   toLegacyFinishReason,
 } from "./finish_reason.js";
 
@@ -441,17 +442,6 @@ export async function* convertChunksToEvents(
     reason: toLegacyFinishReason(finish.normalizedFinishReason),
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
-}
-
-function readRawFinishReason(
-  metadata: Record<string, unknown> | undefined
-): string | undefined {
-  if (metadata == null) return undefined;
-  for (const key of ["finish_reason", "stop_reason", "finishReason"]) {
-    const value = metadata[key];
-    if (typeof value === "string" && value !== "") return value;
-  }
-  return undefined;
 }
 
 /**

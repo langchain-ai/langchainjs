@@ -106,9 +106,14 @@ function normalizeResponsesStatus(
   return "other";
 }
 
-function readFinishValue(
-  metadata: Record<string, unknown>
+/**
+ * Reads the raw finish reason from provider metadata.
+ * @internal
+ */
+export function readRawFinishReason(
+  metadata: Record<string, unknown> | undefined
 ): string | undefined {
+  if (metadata == null) return undefined;
   for (const key of ["finish_reason", "stop_reason", "finishReason"]) {
     const value = metadata[key];
     if (typeof value === "string" && value !== "") return value;
@@ -130,7 +135,7 @@ export function addFinishReasonFields(message: BaseMessage): void {
     (block) => block.type === "refusal"
   );
   const status = metadata.status;
-  let raw = readFinishValue(metadata);
+  let raw = readRawFinishReason(metadata);
   let finish: NormalizedFinish;
   if (
     raw === undefined &&
