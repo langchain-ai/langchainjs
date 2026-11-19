@@ -439,6 +439,9 @@ export class AsyncCaller {
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
     const retries = options.maxRetries ?? this.maxRetries;
+    if (options.signal?.aborted) {
+      return Promise.reject(getAbortSignalError(options.signal));
+    }
     // Note this doesn't cancel the underlying request,
     // when available prefer to use the signal option of the underlying call
     if (options.signal) {
