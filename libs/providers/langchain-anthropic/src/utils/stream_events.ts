@@ -39,6 +39,8 @@ export async function* convertAnthropicStream(
   let usageSnapshot: UsageMetadata | undefined;
   let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
+  let stopDetails: unknown;
+  let nextIndex = 0;
 
   for await (const data of source) {
     switch (data.type) {
@@ -65,6 +67,9 @@ export async function* convertAnthropicStream(
 
       case "message_delta": {
         stopReason = data.delta.stop_reason;
+        if ("stop_details" in data.delta) {
+          stopDetails = data.delta.stop_details;
+        }
         // Some gateway providers add additional usage values to the final usage object
         if (
           "usage" in data &&
@@ -96,6 +101,21 @@ export async function* convertAnthropicStream(
       }
 
       case "message_stop": {
+        // Native stream messages skip the block translator, so the refusal
+        // block that `invoke` gets from stop_details has to be emitted here.
+        if (stopReason === "refusal") {
+          const content = refusalFromStopDetails(stopDetails);
+          yield {
+            event: "content-block-start" as const,
+            index: nextIndex,
+            content,
+          };
+          yield {
+            event: "content-block-finish" as const,
+            index: nextIndex,
+            content,
+          };
+        }
         yield {
           event: "message-finish" as const,
           reason: mapStopReason(stopReason),
@@ -110,6 +130,7 @@ export async function* convertAnthropicStream(
       case "content_block_start": {
         const { index, content_block } = data;
         const mapped = mapBlockToContentBlock(content_block, index);
+        nextIndex = Math.max(nextIndex, index + 1);
         blockAccumulators.set(index, { ...mapped });
         yield {
           event: "content-block-start" as const,
@@ -182,6 +203,15 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
     default:
       return "stop";
   }
+}
+
+function refusalFromStopDetails(details: unknown): ContentBlock.Refusal {
+  const { explanation, category } = (details ?? {}) as Record<string, unknown>;
+  return {
+    type: "refusal",
+    refusal: typeof explanation === "string" ? explanation : "",
+    ...(typeof category === "string" ? { extras: { category } } : {}),
+  };
 }
 
 function mapBlockToContentBlock(
