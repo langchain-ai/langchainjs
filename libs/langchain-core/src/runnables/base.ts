@@ -2790,7 +2790,8 @@ export class RunnableLambda<
       }
       const stream = await output.stream(finalChunk as RunInput, {
         ...childConfig,
-        recursionLimit: (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        recursionLimit:
+          (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
       for await (const chunk of stream) {
         yield chunk;
