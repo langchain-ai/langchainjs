@@ -59,7 +59,7 @@ describe("ChatGroq finish reason", () => {
     ["stop", "stop"],
     ["length", "length"],
     ["tool_calls", "tool_call"],
-    ["function_call", "other"],
+    ["function_call", "tool_call"],
     ["content_filter", "content_filter"],
     ["something_new", "other"],
   ])("invoke maps %s to %s", async (raw, normalized) => {

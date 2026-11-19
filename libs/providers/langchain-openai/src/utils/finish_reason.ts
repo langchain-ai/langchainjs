@@ -16,6 +16,7 @@ export function normalizeCompletionsFinishReason(
     case "length":
       return "length";
     case "tool_calls":
+    case "function_call":
       return "tool_call";
     case "content_filter":
       return "content_filter";

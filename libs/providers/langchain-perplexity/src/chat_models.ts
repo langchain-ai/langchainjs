@@ -216,6 +216,7 @@ const NORMALIZED_FINISH_REASONS: Record<string, string> = {
   length: "length",
   max_tokens: "length",
   tool_calls: "tool_call",
+  function_call: "tool_call",
   content_filter: "content_filter",
 };
 
