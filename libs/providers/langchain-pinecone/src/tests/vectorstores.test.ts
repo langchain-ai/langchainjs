@@ -1,7 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, describe, expect, it, vi } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import { Index } from "@pinecone-database/pinecone";
 import { PineconeStore } from "../vectorstores.js";
+
+// Record the arguments PineconeStore constructs its Index with, while still
+// building a real Index. Returning the instance from the implementation makes
+// `new Index(...)` give a real Index rather than one with the mock's prototype.
+vi.mock("@pinecone-database/pinecone", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@pinecone-database/pinecone")>();
+  return {
+    ...actual,
+    Index: vi.fn(function (
+      ...args: ConstructorParameters<typeof actual.Index>
+    ) {
+      return new actual.Index(...args);
+    }),
+  };
+});
 
 test("PineconeStore with external ids", async () => {
   const upsert = vi.fn();
@@ -30,13 +47,15 @@ test("PineconeStore with external ids", async () => {
     ["id1"]
   );
   expect(upsert).toHaveBeenCalledTimes(1);
-  expect(upsert).toHaveBeenCalledWith([
-    {
-      id: "id1",
-      metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
-      values: [0.1, 0.2, 0.3, 0.4],
-    },
-  ]);
+  expect(upsert).toHaveBeenCalledWith({
+    records: [
+      {
+        id: "id1",
+        metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
+        values: [0.1, 0.2, 0.3, 0.4],
+      },
+    ],
+  });
 
   const results = await store.similaritySearch("hello", 1);
   expect(results).toHaveLength(0);
@@ -92,22 +111,24 @@ test("PineconeStore with string arrays", async () => {
     ["id1"]
   );
 
-  expect(upsert).toHaveBeenCalledWith([
-    {
-      id: "id1",
-      metadata: {
-        a: 1,
-        "b.nested.0": 1,
-        "b.nested.1.a": 4,
-        c: ["some", "string", "array"],
-        "d.0": 1,
-        "d.1.nested": 2,
-        "d.2": "string",
-        text: "hello",
+  expect(upsert).toHaveBeenCalledWith({
+    records: [
+      {
+        id: "id1",
+        metadata: {
+          a: 1,
+          "b.nested.0": 1,
+          "b.nested.1.a": 4,
+          c: ["some", "string", "array"],
+          "d.0": 1,
+          "d.1.nested": 2,
+          "d.2": "string",
+          text: "hello",
+        },
+        values: [0.1, 0.2, 0.3, 0.4],
       },
-      values: [0.1, 0.2, 0.3, 0.4],
-    },
-  ]);
+    ],
+  });
 });
 
 describe("PineconeStore with null pageContent", () => {
@@ -150,6 +171,30 @@ test("PineconeStore can instantiate without passing in client", async () => {
   expect(store.pineconeIndex).toBeDefined();
 });
 
+test("PineconeStore passes pineconeConfig to the Index as IndexOptions", async () => {
+  const embeddings = new FakeEmbeddings();
+  new PineconeStore(embeddings, {
+    pineconeConfig: {
+      indexName: "indexName",
+      config: {
+        apiKey: "apiKey",
+      },
+      namespace: "namespace",
+      indexHostUrl: "https://index-host.example",
+      additionalHeaders: { "x-header": "value" },
+    },
+  });
+  expect(Index).toHaveBeenLastCalledWith(
+    {
+      name: "indexName",
+      namespace: "namespace",
+      host: "https://index-host.example",
+      additionalHeaders: { "x-header": "value" },
+    },
+    { apiKey: "apiKey", sourceTag: "langchainjs" }
+  );
+});
+
 test("PineconeStore throws when no config or index is passed", async () => {
   const embeddings = new FakeEmbeddings();
   expect(() => new PineconeStore(embeddings, {})).toThrow();
@@ -179,4 +224,41 @@ test("PineconeStore throws when config and index is passed", async () => {
         },
       })
   ).toThrow();
+});
+
+describe("PineconeStore.delete", () => {
+  const storeWithDeleteMany = () => {
+    const pineconeIndex = new Index(
+      { name: "indexName" },
+      { apiKey: "apiKey" }
+    );
+    vi.spyOn(pineconeIndex, "namespace").mockReturnValue(pineconeIndex);
+    const deleteMany = vi
+      .spyOn(pineconeIndex, "deleteMany")
+      .mockResolvedValue(undefined);
+    const store = new PineconeStore(new FakeEmbeddings(), { pineconeIndex });
+    return { store, deleteMany };
+  };
+
+  it("passes ids to deleteMany as { ids }, in batches of 1000", async () => {
+    const { store, deleteMany } = storeWithDeleteMany();
+    const ids = Array.from({ length: 1001 }, (_, i) => `id${i}`);
+
+    await store.delete({ ids });
+
+    expect(deleteMany).toHaveBeenCalledTimes(2);
+    expect(deleteMany).toHaveBeenNthCalledWith(1, { ids: ids.slice(0, 1000) });
+    expect(deleteMany).toHaveBeenNthCalledWith(2, { ids: ids.slice(1000) });
+  });
+
+  it("passes a filter to deleteMany as { filter }", async () => {
+    const { store, deleteMany } = storeWithDeleteMany();
+
+    await store.delete({ filter: { genre: { $eq: "drama" } } });
+
+    expect(deleteMany).toHaveBeenCalledTimes(1);
+    expect(deleteMany).toHaveBeenCalledWith({
+      filter: { genre: { $eq: "drama" } },
+    });
+  });
 });
