@@ -166,7 +166,8 @@ describe("Bedrock retry safeguards", () => {
             });
             const result = (async () => {
               if (operation === "invoke") {
-                return model.invoke([new HumanMessage("Hello")]);
+                await model.invoke([new HumanMessage("Hello")]);
+                return;
               }
               const stream =
                 operation === "legacy stream"

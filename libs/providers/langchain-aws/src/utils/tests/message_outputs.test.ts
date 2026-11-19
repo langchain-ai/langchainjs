@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
+import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import {
   convertConverseMessageToLangChainMessage,
@@ -198,11 +199,16 @@ describe("message output usage metadata conversion", () => {
           cacheReadInputTokens: 9,
           cacheWriteInputTokens: 6,
         },
+        metrics: { latencyMs: 0 },
       },
       { streamUsage: true }
     );
 
-    expect(result.message.usage_metadata).toEqual({
+    const { message } = result;
+    if (!AIMessageChunk.isInstance(message)) {
+      throw new Error("Message is not an AIMessageChunk");
+    }
+    expect(message.usage_metadata).toEqual({
       input_tokens: 35,
       output_tokens: 4,
       total_tokens: 39,
@@ -226,7 +232,9 @@ describe("thinking token usage conversion", () => {
     const result = convertConverseMessageToLangChainMessage(
       { role: "assistant", content: [{ text: "Hello" }] },
       {
+        stopReason: "end_turn",
         usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        metrics: { latencyMs: 0 },
         additionalModelResponseFields: nativeUsage,
       } as Omit<Bedrock.ConverseResponse, "output">
     );
@@ -243,7 +251,9 @@ describe("thinking token usage conversion", () => {
     const result = convertConverseMessageToLangChainMessage(
       { role: "assistant", content: [{ text: "Hello" }] },
       {
+        stopReason: "end_turn",
         usage: { inputTokens: 20, outputTokens: 5, totalTokens: 25 },
+        metrics: { latencyMs: 0 },
         additionalModelResponseFields: { usage: { output_tokens: 5 } },
       } as Omit<Bedrock.ConverseResponse, "output">
     );
@@ -253,11 +263,18 @@ describe("thinking token usage conversion", () => {
 
   test("maps thinking tokens for stream metadata", () => {
     const result = handleConverseStreamMetadata(
-      { usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 } },
+      {
+        usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        metrics: { latencyMs: 0 },
+      },
       { streamUsage: true, reasoningTokens: 562 }
     );
 
-    expect(result.message.usage_metadata).toEqual({
+    const { message } = result;
+    if (!AIMessageChunk.isInstance(message)) {
+      throw new Error("Message is not an AIMessageChunk");
+    }
+    expect(message.usage_metadata).toEqual({
       input_tokens: 20,
       output_tokens: 565,
       total_tokens: 585,

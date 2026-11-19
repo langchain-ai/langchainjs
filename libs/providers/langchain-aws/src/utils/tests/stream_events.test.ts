@@ -1,9 +1,10 @@
 import { describe, test, expect } from "vitest";
+import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertBedrockConverseStream } from "../stream_events.js";
 
 async function collectEvents(
-  events: Record<string, unknown>[]
+  events: Bedrock.ConverseStreamOutput[]
 ): Promise<ChatModelStreamEvent[]> {
   const out: ChatModelStreamEvent[] = [];
   async function* source() {
@@ -137,6 +138,7 @@ describe("convertBedrockConverseStream", () => {
             outputTokens: 2,
             totalTokens: 7,
           },
+          metrics: { latencyMs: 0 },
         },
       },
     ]);
@@ -161,7 +163,7 @@ describe("convertBedrockConverseStream", () => {
   });
 
   test("maps thinking tokens from messageStop into usage", async () => {
-    const messageStop = {
+    const messageStop: Bedrock.ConverseStreamOutput = {
       messageStop: {
         stopReason: "end_turn",
         additionalModelResponseFields: {
@@ -172,9 +174,10 @@ describe("convertBedrockConverseStream", () => {
         },
       },
     };
-    const metadata = {
+    const metadata: Bedrock.ConverseStreamOutput = {
       metadata: {
         usage: { inputTokens: 20, outputTokens: 565, totalTokens: 585 },
+        metrics: { latencyMs: 0 },
       },
     };
 

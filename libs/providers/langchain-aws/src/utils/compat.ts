@@ -200,12 +200,6 @@ export function convertFromV1ToChatBedrockConverseMessage(
       } else if (block.type === "audio") {
         // no-op
         continue;
-      } else if (block.type === "code_interpreter_call") {
-        // no-op
-        continue;
-      } else if (block.type === "code_interpreter_result") {
-        // no-op
-        continue;
       } else if (block.type === "file") {
         const format = formatToMimeType.document(block.mimeType ?? "");
         if (block.data) {
@@ -306,12 +300,6 @@ export function convertFromV1ToChatBedrockConverseMessage(
             },
           };
         }
-      } else if (block.type === "web_search_call") {
-        // no-op
-        continue;
-      } else if (block.type === "web_search_result") {
-        // no-op
-        continue;
       } else if (
         block.type === "non_standard" &&
         modelProvider === "bedrock-converse"
