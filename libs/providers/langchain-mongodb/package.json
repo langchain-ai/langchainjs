@@ -17,7 +17,6 @@
     "build": "turbo build:compile --filter @langchain/mongodb --output-logs new-only",
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
-    "typecheck": "tsc --noEmit --composite false --incremental false",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int"
