@@ -8,6 +8,7 @@ import {
   BaseMessage,
   BaseMessageChunk,
   BaseMessageLike,
+  ContentBlock,
   HumanMessage,
   HumanMessageChunk,
   MessageContentComplex,
@@ -151,7 +152,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       new AIMessage("T"),
       new HumanMessage("Flip the coin again"),
     ];
-    const res = await model.predictMessages(messages);
+    const res = await model.invoke(messages);
     expect(res).toBeDefined();
     expect(res._getType()).toEqual("ai");
 
@@ -263,16 +264,10 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     };
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),
-      new AIMessage("", {
+      new AIMessage({
+        content: "",
         tool_calls: [
-          {
-            id: "test",
-            type: "function",
-            function: {
-              name: "test",
-              arguments: '{"testName":"cobalt"}',
-            },
-          },
+          { id: "test", name: "test", args: { testName: "cobalt" } },
         ],
       }),
       new ToolMessage(JSON.stringify(toolResult), "test"),
@@ -422,7 +417,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       },
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -720,7 +715,7 @@ test("Context caching", async () => {
     maxRetries: 0,
   });
 
-  const res = await model.invoke("What is in the content?", {
+  await model.invoke("What is in the content?", {
     cachedContent:
       "projects/570601939772/locations/us-east5/cachedContents/3718741839184920576",
   });
@@ -952,7 +947,7 @@ describe.each(testAnthropicThinkingModelNames)(
         return response;
       }
 
-      const invokeMessages = [new HumanMessage("Hello")];
+      const invokeMessages: BaseMessage[] = [new HumanMessage("Hello")];
 
       invokeMessages.push(await doInvoke(invokeMessages));
       invokeMessages.push(new HumanMessage("What is 42+7?"));
@@ -994,7 +989,7 @@ describe.each(testAnthropicThinkingModelNames)(
         return response;
       }
 
-      const invokeMessages = [
+      const invokeMessages: BaseMessage[] = [
         new HumanMessage(
           "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
         ),
@@ -1033,7 +1028,7 @@ describe.each(testAnthropicThinkingModelNames)(
         ),
       ];
       const modelWithTools = model.bindTools(tools);
-      const messages = [
+      const messages: BaseMessage[] = [
         new HumanMessage("What is the current weather in London?"),
       ];
 
