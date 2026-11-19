@@ -271,7 +271,7 @@ export class ChatOpenAIResponses<
       options
     );
 
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+    const shouldStreamUsage = this.streamUsage;
 
     const abortableStream = async function* (
       source: AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>,
