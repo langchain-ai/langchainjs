@@ -4,7 +4,7 @@ import { mapStoredMessageToChatMessage } from "../messages/utils.js";
 import { type StoredGeneration } from "../messages/base.js";
 
 export const defaultHashKeyEncoder: HashKeyEncoder = (...strings) =>
-  sha256(strings.join("_"));
+  sha256(JSON.stringify(strings));
 
 export function deserializeStoredGeneration(
   storedGeneration: StoredGeneration
