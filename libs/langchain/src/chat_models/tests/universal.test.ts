@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatOpenAI } from "@langchain/openai";
+import type { ChatAnthropic } from "@langchain/anthropic";
 
 import { initChatModel } from "../universal.js";
 
@@ -24,6 +25,38 @@ describe("Will appropriately infer a model profiles", () => {
       temperature: 0,
     });
     expect(model.profile.maxInputTokens).toBeDefined();
+  });
+});
+
+describe("initChatModel configurableFields", () => {
+  const swap = {
+    configurable: { model: "claude-sonnet-4-5", modelProvider: "anthropic" },
+  };
+
+  beforeEach(() => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "test");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("ignores runtime model overrides when configurableFields is not set", async () => {
+    const model = await initChatModel("openai:gpt-4o-mini");
+    const chat = (await model._getModelInstance(swap)) as ChatOpenAI;
+
+    expect(chat._llmType()).toBe("openai");
+    expect(chat.model).toBe("gpt-4o-mini");
+  });
+
+  it("applies runtime model overrides for explicit configurableFields", async () => {
+    const model = await initChatModel("openai:gpt-4o-mini", {
+      configurableFields: ["model", "modelProvider"],
+    });
+    const chat = (await model._getModelInstance(swap)) as ChatAnthropic;
+
+    expect(chat._llmType()).toBe("anthropic");
+    expect(chat.model).toBe("claude-sonnet-4-5");
   });
 });
 

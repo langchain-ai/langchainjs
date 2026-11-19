@@ -10,7 +10,8 @@ import type {
 import type { AsyncCaller } from "@langchain/core/utils/async_caller";
 import type { ApiClient } from "../clients/index.js";
 import type { GenContent as GenContentNamespace } from "./api_types/generate_content.js";
-import type { Interactions as InteractionsNamespace } from "./api_types/interactions.js";
+import type { Interactions as InteractionsNamespace } from "../api_types/interactions.js";
+import type { GooglePlatformType } from "../utils/connection.js";
 import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 import type { GoogleChatApiHandler } from "./handlers/base.js";
 
@@ -271,7 +272,7 @@ export interface ChatGoogleFields
     Partial<GenerateContentSpecificFields>,
     Partial<InteractionsSpecificFields> {}
 
-export type GooglePlatformType = "gai" | "gcp";
+export type { GooglePlatformType };
 
 export interface BaseChatGoogleParams
   extends BaseChatModelParams, ChatGoogleFields {
@@ -634,7 +635,7 @@ export declare namespace Gemini {
     // Narrowed Content & MediaProcessing types
     // Note: interactions-openapi.json uses JSON Schema `"const"` instead of
     // `"enum"` for `type` discriminators, which sparktype generates as
-    // `type: unknown` in `./api_types/interactions.ts`. We narrow each
+    // `type: unknown` in `../api_types/interactions.ts`. We narrow each
     // discriminator here so TypeScript discriminated unions work without
     // modifying the sparktype-generated file.
     // =========================================================================
@@ -821,9 +822,10 @@ export declare namespace Gemini {
     // interactions-openapi.json uses `"const": "code_execution_result"`, which sparktype outputs as `unknown`.
     export type CodeExecutionResultStep = Omit<
       InteractionsNamespace.CodeExecutionResultStep,
-      "type"
+      "type" | "result"
     > & {
       type: "code_execution_result";
+      result: Array<Content> | string;
     };
 
     // Narrowed from InteractionsNamespace.GoogleSearchCallStep because
@@ -936,24 +938,6 @@ export declare namespace Gemini {
       type: "processing_result";
     };
 
-    // Narrowed from InteractionsNamespace.RetrievalCallStep because
-    // interactions-openapi.json uses `"const": "retrieval_call"`, which sparktype outputs as `unknown`.
-    export type RetrievalCallStep = Omit<
-      InteractionsNamespace.RetrievalCallStep,
-      "type"
-    > & {
-      type: "retrieval_call";
-    };
-
-    // Narrowed from InteractionsNamespace.RetrievalResultStep because
-    // interactions-openapi.json uses `"const": "retrieval_result"`, which sparktype outputs as `unknown`.
-    export type RetrievalResultStep = Omit<
-      InteractionsNamespace.RetrievalResultStep,
-      "type"
-    > & {
-      type: "retrieval_result";
-    };
-
     // Narrowed union of Step types with literal `type` discriminators.
     export type Step =
       | UserInputStep
@@ -974,9 +958,7 @@ export declare namespace Gemini {
       | McpServerToolCallStep
       | McpServerToolResultStep
       | ProcessingCallStep
-      | ProcessingResultStep
-      | RetrievalCallStep
-      | RetrievalResultStep;
+      | ProcessingResultStep;
 
     // =========================================================================
     // Narrowed Tool types
@@ -1058,15 +1040,6 @@ export declare namespace Gemini {
       type: "mcp_server";
     };
 
-    // Narrowed from InteractionsNamespace.Tools.Retrieval because
-    // interactions-openapi.json uses `"const": "retrieval"`, which sparktype outputs as `unknown`.
-    export type Retrieval = Omit<
-      InteractionsNamespace.Tools.Retrieval,
-      "type"
-    > & {
-      type: "retrieval";
-    };
-
     // Narrowed union of Tool types with literal `type` discriminators.
     export type Tool =
       | Function
@@ -1076,8 +1049,7 @@ export declare namespace Gemini {
       | ComputerUse
       | FileSearch
       | GoogleMaps
-      | McpServer
-      | Retrieval;
+      | McpServer;
 
     export namespace Tools {
       export type AllowedTools = InteractionsNamespace.Tools.AllowedTools;
@@ -1088,11 +1060,8 @@ export declare namespace Gemini {
       export type GoogleMaps = Gemini.Interactions.GoogleMaps;
       export type GoogleSearch = Gemini.Interactions.GoogleSearch;
       export type McpServer = Gemini.Interactions.McpServer;
-      export type Retrieval = Gemini.Interactions.Retrieval;
       export type Tool = Gemini.Interactions.Tool;
       export type UrlContext = Gemini.Interactions.UrlContext;
-      export type VertexAISearchConfig =
-        InteractionsNamespace.Tools.VertexAISearchConfig;
     }
 
     // =========================================================================
@@ -1156,15 +1125,6 @@ export declare namespace Gemini {
       type: "antigravity";
     };
 
-    // Narrowed from InteractionsNamespace.CodeMenderAgentConfig because
-    // interactions-openapi.json uses `"const": "code-mender"`, which sparktype outputs as `unknown`.
-    export type CodeMenderAgentConfig = Omit<
-      InteractionsNamespace.CodeMenderAgentConfig,
-      "type"
-    > & {
-      type: "code-mender";
-    };
-
     // Narrowed from InteractionsNamespace.DeepResearchAgentConfig because
     // interactions-openapi.json uses `"const": "deep-research"`, which sparktype outputs as `unknown`.
     export type DeepResearchAgentConfig = Omit<
@@ -1186,7 +1146,6 @@ export declare namespace Gemini {
     // Narrowed union of AgentConfig types with literal `type` discriminators.
     export type AgentConfig =
       | AntigravityAgentConfig
-      | CodeMenderAgentConfig
       | DeepResearchAgentConfig
       | DynamicAgentConfig;
 
@@ -1255,13 +1214,12 @@ export declare namespace Gemini {
     };
 
     // =========================================================================
-    // Re-exported non-discriminated types from `./api_types/interactions.ts`
+    // Re-exported non-discriminated types from `../api_types/interactions.ts`
     // =========================================================================
     export type AllowedTools = InteractionsNamespace.Tools.AllowedTools;
     export type CodeExecutionCallStepArguments =
       InteractionsNamespace.CodeExecutionCallStepArguments;
-    export type Error = InteractionsNamespace.Status;
-    export type Status = InteractionsNamespace.Status;
+    export type Error = InteractionsNamespace.Error;
     export interface FileSearchResultItem {
       title?: string;
       text?: string;
@@ -1302,10 +1260,6 @@ export declare namespace Gemini {
     export type ReviewSnippet = InteractionsNamespace.ReviewSnippet;
     export type PlaceCitationReviewSnippet =
       InteractionsNamespace.ReviewSnippet;
-    export type RetrievalStepArguments =
-      InteractionsNamespace.RetrievalStepArguments;
-    export type RetrievalCallArguments =
-      InteractionsNamespace.RetrievalStepArguments;
     export type SafetySetting = InteractionsNamespace.SafetySetting;
     export type ServiceTier = InteractionsNamespace.ServiceTier;
     export type SpeakerConfig = InteractionsNamespace.SpeakerConfig;
@@ -1326,16 +1280,12 @@ export declare namespace Gemini {
     export type UrlContextResultItem = InteractionsNamespace.UrlContextResult;
     export type UrlContextResult = InteractionsNamespace.UrlContextResult;
     export type Usage = InteractionsNamespace.Usage;
-    export type VertexAISearchConfig =
-      InteractionsNamespace.Tools.VertexAISearchConfig;
-    export type VertexAiSearchConfig =
-      InteractionsNamespace.Tools.VertexAISearchConfig;
     export type WebhookConfig = InteractionsNamespace.WebhookConfig;
 
     // =========================================================================
     // SSE Stream Event & Delta types from `interactions-openapi.json`
     // Note: sparktype did not emit the SSE `text/event-stream` response union
-    // schemas into `./api_types/interactions.ts`, so we define them here with
+    // schemas into `../api_types/interactions.ts`, so we define them here with
     // narrowed discriminator literals (supporting both OpenAPI `step.*` /
     // `interaction.created` / `interaction.completed` and legacy `content.*` /
     // `interaction.start` / `interaction.complete` aliases).
@@ -1517,21 +1467,6 @@ export declare namespace Gemini {
       signature?: string;
     }
 
-    export interface RetrievalCallDelta {
-      type: "retrieval_call";
-      id?: string;
-      arguments?: RetrievalCallArguments;
-      retrieval_type?: RetrievalCallStep["retrieval_type"];
-      signature?: string;
-    }
-
-    export interface RetrievalResultDelta {
-      type: "retrieval_result";
-      call_id?: string;
-      is_error?: boolean;
-      signature?: string;
-    }
-
     export type StepDeltaData =
       | TextDelta
       | TextAnnotationDelta
@@ -1555,9 +1490,7 @@ export declare namespace Gemini {
       | McpServerToolCallDelta
       | McpServerToolResultDelta
       | ProcessingCallDelta
-      | ProcessingResultDelta
-      | RetrievalCallDelta
-      | RetrievalResultDelta;
+      | ProcessingResultDelta;
 
     export interface InteractionCreatedEvent {
       event_id?: string;

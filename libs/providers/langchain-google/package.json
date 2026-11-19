@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "description": "Google integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "typegen:check": "sparktype check",
     "typegen:fetch": "pnpm run typegen:fetch:genContent && pnpm run typegen:fetch:interactions",
     "typegen:fetch:genContent": "curl -o - 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta' | jq -S . > src/openapi/generate-content-openapi.json",
-    "typegen:fetch:interactions": "curl -o - 'https://ai.google.dev/static/api/interactions.openapi.json' | jq -S . > src/openapi/interactions-openapi.json"
+    "typegen:fetch:interactions": "curl -o - 'https://aistudio.google.com/api-reference/interactions.openapi.json' | jq -S 'walk(if type == \"object\" and (has(\"oneOf\") or has(\"anyOf\")) and .type == \"object\" and (has(\"properties\") | not) and (has(\"additionalProperties\") | not) then del(.type) else . end)' > src/openapi/interactions-openapi.json"
   },
   "dependencies": {
     "eventsource-parser": "^4.1.3",

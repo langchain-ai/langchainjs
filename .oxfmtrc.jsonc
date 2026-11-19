@@ -19,6 +19,7 @@
   "ignorePatterns": [
     "libs/providers/langchain-google/src/openapi/**",
     "libs/providers/langchain-google/src/chat_models/api_types/**",
+    "libs/providers/langchain-google/src/api_types/**",
     "libs/providers/langchain-google/typegen.jsonc",
     "libs/langchain/src/load/import_type.ts",
     "libs/langchain/src/load/import_map.ts",
