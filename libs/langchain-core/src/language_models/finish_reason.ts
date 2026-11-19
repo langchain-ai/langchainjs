@@ -50,12 +50,16 @@ const SUSPENDED_FINISH_REASONS = new Set(["pause_turn"]);
  */
 export function normalizeFinishReason(
   raw: string | null | undefined,
-  options?: { hasToolCalls?: boolean }
+  options?: { hasToolCalls?: boolean; hasRefusal?: boolean }
 ): NormalizedFinish {
   if (raw == null || raw === "") return {};
   const key = raw.toLowerCase().replace(/-/g, "_");
   if (SUSPENDED_FINISH_REASONS.has(key)) {
     return { normalizedFinishReason: "other", finishState: "suspended" };
+  }
+  // OpenAI refuses with a normal `stop`; the refusal block is the signal.
+  if (options?.hasRefusal) {
+    return { normalizedFinishReason: "refusal", finishState: "complete" };
   }
   const mapped = GENERIC_FINISH_REASONS[key] ?? "other";
   // Gemini reports STOP even when the response contains function calls.
@@ -121,6 +125,9 @@ export function addFinishReasonFields(message: BaseMessage): void {
   if (message.type !== "ai") return;
   const metadata = (message.response_metadata ?? {}) as Record<string, unknown>;
   const hasToolCalls = ((message as AIMessage).tool_calls?.length ?? 0) > 0;
+  const hasRefusal = message.contentBlocks.some(
+    (block) => block.type === "refusal"
+  );
   const status = metadata.status;
   let raw = readFinishValue(metadata);
   let finish: NormalizedFinish;
@@ -132,15 +139,17 @@ export function addFinishReasonFields(message: BaseMessage): void {
     // OpenAI Responses reports `status` instead of a finish reason.
     raw = status;
     finish = {
-      normalizedFinishReason: normalizeResponsesStatus(
-        status,
-        metadata.incomplete_details,
-        hasToolCalls
-      ),
+      normalizedFinishReason: hasRefusal
+        ? "refusal"
+        : normalizeResponsesStatus(
+            status,
+            metadata.incomplete_details,
+            hasToolCalls
+          ),
       finishState: "complete",
     };
   } else {
-    finish = normalizeFinishReason(raw, { hasToolCalls });
+    finish = normalizeFinishReason(raw, { hasToolCalls, hasRefusal });
   }
   if (raw === undefined) return;
   message.response_metadata = {

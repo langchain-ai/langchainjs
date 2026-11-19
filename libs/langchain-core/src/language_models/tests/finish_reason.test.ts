@@ -224,3 +224,12 @@ describe("toLegacyFinishReason", () => {
     expect(finish.normalizedFinishReason).toBe("length");
   });
 });
+
+describe("refusal override", () => {
+  test("refusal block wins over stop", () => {
+    expect(normalizeFinishReason("stop", { hasRefusal: true })).toEqual({
+      normalizedFinishReason: "refusal",
+      finishState: "complete",
+    });
+  });
+});

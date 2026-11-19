@@ -283,7 +283,8 @@ export async function* convertOpenAIResponsesStream(
         event.response.status ??
           (event.type === "response.incomplete" ? "incomplete" : "completed"),
         event.response.incomplete_details?.reason,
-        sawToolCall
+        sawToolCall,
+        hasRefusalOutput(event.response.output)
       );
       responseMetadata = {
         model_provider: provider,
@@ -338,13 +339,17 @@ export async function* convertOpenAIResponsesStream(
 function mapResponseStatus(
   status: string,
   incompleteReason: string | null | undefined,
-  sawToolCall: boolean
+  sawToolCall: boolean,
+  sawRefusal: boolean
 ): Pick<
   MessageFinishEvent,
   "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
 > {
   let normalizedFinishReason: FinishReason;
-  if (status === "completed") {
+  if (sawRefusal) {
+    // OpenAI refuses with a normal `completed` status.
+    normalizedFinishReason = "refusal";
+  } else if (status === "completed") {
     normalizedFinishReason = sawToolCall ? "tool_call" : "stop";
   } else if (status === "incomplete") {
     if (incompleteReason === "max_output_tokens") {
@@ -373,4 +378,16 @@ function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
   if (reason === "refusal") return "content_filter";
   if (reason === "context_exceeded") return "length";
   return reason === "other" || reason === "error" ? undefined : reason;
+}
+
+function hasRefusalOutput(output: unknown): boolean {
+  if (!Array.isArray(output)) return false;
+  return output.some(
+    (item) =>
+      item?.type === "message" &&
+      Array.isArray(item.content) &&
+      item.content.some(
+        (part: { type?: string } | null) => part?.type === "refusal"
+      )
+  );
 }

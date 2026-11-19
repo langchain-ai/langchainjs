@@ -8,7 +8,8 @@ import { BaseChatModel } from "../chat_models.js";
 class FakeInvokeModel extends BaseChatModel {
   constructor(
     private fakeMetadata: Record<string, unknown>,
-    private toolCalls: ToolCall[] = []
+    private toolCalls: ToolCall[] = [],
+    private additionalKwargs: Record<string, unknown> = {}
   ) {
     super({});
   }
@@ -21,6 +22,7 @@ class FakeInvokeModel extends BaseChatModel {
     const message = new AIMessage({
       content: "hi",
       response_metadata: { ...this.fakeMetadata },
+      additional_kwargs: { ...this.additionalKwargs },
       tool_calls: this.toolCalls,
     });
     return { generations: [{ text: "hi", message }] };
@@ -77,5 +79,15 @@ describe("invoke finish fields", () => {
       "normalized_finish_reason"
     );
     expect(msg.response_metadata).not.toHaveProperty("finish_state");
+  });
+
+  test("an OpenAI refusal normalizes to refusal", async () => {
+    const msg = await new FakeInvokeModel(
+      { model_provider: "openai", finish_reason: "stop" },
+      [],
+      { refusal: "I can't help with that." }
+    ).invoke("hi");
+    expect(msg.response_metadata.finish_reason).toBe("stop");
+    expect(msg.response_metadata.normalized_finish_reason).toBe("refusal");
   });
 });

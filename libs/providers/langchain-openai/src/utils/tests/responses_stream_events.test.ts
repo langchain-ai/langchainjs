@@ -338,4 +338,24 @@ describe("convertOpenAIResponsesStream", () => {
       reason: "tool_use",
     });
   });
+
+  test("maps a refusal in completed output to refusal", async () => {
+    const events = await collectEvents([
+      completedResponse({
+        output: [
+          {
+            type: "message",
+            id: "msg_1",
+            role: "assistant",
+            status: "completed",
+            content: [{ type: "refusal", refusal: "I can't help with that." }],
+          },
+        ],
+      }),
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "completed",
+      normalizedFinishReason: "refusal",
+    });
+  });
 });

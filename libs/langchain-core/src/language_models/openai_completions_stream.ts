@@ -55,6 +55,7 @@ export interface OpenAICompletionsDelta {
   content?: string | null;
   reasoning_content?: string;
   reasoning?: string;
+  refusal?: string | null;
   tool_calls?: OpenAICompletionsToolCallDelta[];
   function_call?: unknown;
   audio?: {
@@ -121,6 +122,7 @@ export async function* convertOpenAICompletionsStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: string | undefined;
+  let sawRefusal = false;
   let responseMetadata: Record<string, unknown> | undefined;
   let emittedProviderMetadata = false;
 
@@ -236,6 +238,8 @@ export async function* convertOpenAICompletionsStream(
         delta: { type: "text-delta" as const, text: delta.content },
       };
     }
+
+    if (delta.refusal) sawRefusal = true;
 
     if (Array.isArray(delta.tool_calls)) {
       for (const rawToolCall of delta.tool_calls) {
@@ -365,9 +369,13 @@ export async function* convertOpenAICompletionsStream(
     ...(finishReason != null
       ? {
           finishReason,
-          normalizedFinishReason: mapFinishReason(finishReason),
+          normalizedFinishReason: sawRefusal
+            ? ("refusal" as const)
+            : mapFinishReason(finishReason),
           finishState: "complete" as const,
-          reason: toLegacyFinishReason(mapFinishReason(finishReason)),
+          reason: toLegacyFinishReason(
+            sawRefusal ? "refusal" : mapFinishReason(finishReason)
+          ),
         }
       : {}),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),

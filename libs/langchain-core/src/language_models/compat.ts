@@ -160,6 +160,7 @@ export async function* convertChunksToEvents(
   const emittedImageKeys = new Set<string>();
   let rawFinishReason: string | undefined;
   let sawToolCalls = false;
+  let sawRefusal = false;
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
@@ -174,6 +175,13 @@ export async function* convertChunksToEvents(
       (msg.tool_call_chunks?.length ?? 0) > 0
     ) {
       sawToolCalls = true;
+    }
+    if (
+      msg.additional_kwargs?.refusal ||
+      (Array.isArray(msg.content) &&
+        msg.content.some((part) => part?.type === "refusal"))
+    ) {
+      sawRefusal = true;
     }
 
     // Message start
@@ -424,6 +432,7 @@ export async function* convertChunksToEvents(
 
   const finish = normalizeFinishReason(rawFinishReason, {
     hasToolCalls: sawToolCalls,
+    hasRefusal: sawRefusal,
   });
   yield {
     event: "message-finish" as const,

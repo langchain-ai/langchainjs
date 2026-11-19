@@ -276,4 +276,26 @@ describe("convertOpenAICompletionsStream", () => {
       },
     ]);
   });
+
+  test("refusal delta normalizes to refusal", async () => {
+    const events = await collectEvents([
+      {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", refusal: "I can't help with that." },
+            finish_reason: null,
+          },
+        ],
+      },
+      {
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      },
+    ]);
+    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
+      finishReason: "stop",
+      normalizedFinishReason: "refusal",
+      reason: "content_filter",
+    });
+  });
 });
