@@ -1565,12 +1565,7 @@ describe("tool search", () => {
     const toolCall = aiResponse.tool_calls![0];
     expect(toolCall.name).toBe("get_weather");
 
-    const matchingTool = [getWeather, getPopulation].find(
-      (t) => t.name === toolCall.name
-    );
-    expect(matchingTool).toBeDefined();
-
-    const toolResult = await matchingTool!.invoke(toolCall);
+    const toolResult = await getWeather.invoke(toolCall);
     messages.push(aiResponse, toolResult);
 
     response = await modelWithTools.invoke(messages);
@@ -1623,7 +1618,11 @@ describe("tool search", () => {
       (b) => b.name === "tool_search"
     );
     const toolSearchResult = serverToolResults.find(
-      (b) => b.extras?.name === "tool_search"
+      (b) =>
+        typeof b.extras === "object" &&
+        b.extras !== null &&
+        "name" in b.extras &&
+        b.extras.name === "tool_search"
     );
 
     expect(toolSearchCall).toBeDefined();
