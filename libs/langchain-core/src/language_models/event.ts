@@ -56,8 +56,7 @@ export interface MessageStartEvent {
 }
 
 /**
- * Normalized finish reason for a model response. Values follow the
- * OpenTelemetry GenAI semantic conventions, plus `"other"`.
+ * Normalized finish reason for a model response.
  *
  * - `"stop"`: Natural end of generation.
  * - `"length"`: Hit an output token or context window limit.

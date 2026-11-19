@@ -1,8 +1,4 @@
-import type {
-  FinishReason,
-  FinishState,
-  MessageFinishEvent,
-} from "./event.js";
+import type { FinishReason, FinishState, MessageFinishEvent } from "./event.js";
 
 /** @internal */
 export interface NormalizedFinish {
