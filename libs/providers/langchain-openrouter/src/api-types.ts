@@ -342,6 +342,12 @@ export namespace OpenRouter {
   // Token usage
   // ═══════════════════════════════════════════════════════════════════════
 
+  export interface ChatGenerationCostDetails {
+    upstream_inference_cost?: number;
+    upstream_inference_prompt_cost?: number;
+    upstream_inference_completions_cost?: number;
+  }
+
   export interface ChatGenerationTokenUsage {
     completion_tokens: number;
     prompt_tokens: number;
@@ -358,6 +364,10 @@ export namespace OpenRouter {
       audio_tokens?: number;
       video_tokens?: number;
     } | null;
+    /** Actual request cost in USD when returned by OpenRouter. */
+    cost?: number;
+    /** Upstream provider cost breakdown when returned by OpenRouter. */
+    cost_details?: ChatGenerationCostDetails;
   }
 
   // ═══════════════════════════════════════════════════════════════════════

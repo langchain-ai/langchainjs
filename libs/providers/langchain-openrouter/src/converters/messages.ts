@@ -18,6 +18,31 @@ import type { OpenRouter } from "../api-types.js";
  */
 export type StreamingChunkData = OpenRouter.ChatStreamingResponseChunk["data"];
 
+/**
+ * Copy OpenRouter spend fields onto `response_metadata` when present.
+ * Omits keys the API did not send so callers do not invent cost.
+ */
+export function extractOpenRouterCostMetadata(
+  usage?: OpenRouter.ChatGenerationTokenUsage
+): {
+  cost?: number;
+  cost_details?: OpenRouter.ChatGenerationCostDetails;
+} {
+  if (!usage) return {};
+
+  const metadata: {
+    cost?: number;
+    cost_details?: OpenRouter.ChatGenerationCostDetails;
+  } = {};
+  if (usage.cost != null) {
+    metadata.cost = usage.cost;
+  }
+  if (usage.cost_details != null) {
+    metadata.cost_details = usage.cost_details;
+  }
+  return metadata;
+}
+
 // LangChain → OpenRouter
 /**
  * Convert an array of LangChain messages to the OpenRouter request format.
@@ -88,6 +113,7 @@ export function convertOpenRouterResponseToBaseMessage(
     model_provider: "openrouter",
     model_name: rawResponse.model,
     finish_reason: choice.finish_reason,
+    ...extractOpenRouterCostMetadata(rawResponse.usage),
   };
 
   return message;
@@ -134,6 +160,10 @@ export function convertOpenRouterDeltaToBaseMessageChunk(
   chunk.response_metadata = {
     ...chunk.response_metadata,
     model_provider: "openrouter",
+    // Only stamp spend on the chunk that actually carries usage.
+    // `_mergeDicts` adds numbers, so copying cost onto every delta
+    // would inflate the concatenated total.
+    ...(rawChunk.usage ? extractOpenRouterCostMetadata(rawChunk.usage) : {}),
   };
 
   return chunk;
