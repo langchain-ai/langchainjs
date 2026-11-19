@@ -78,11 +78,11 @@ export type FinishReason =
   | "other";
 
 /**
- * Whether the turn is done.
+ * Whether the turn is done. Only set for Anthropic.
  *
  * - `"complete"`: The response is final.
- * - `"suspended"`: The model paused mid-turn and expects a continuation
- *   request (e.g. Anthropic `pause_turn`).
+ * - `"suspended"`: The model paused mid-turn (`pause_turn`) and expects a
+ *   continuation request.
  */
 export type FinishState = "complete" | "suspended";
 
