@@ -1,6 +1,9 @@
 import { expect, it } from "vitest";
 import * as fs from "node:fs/promises";
-import { strictParsePartialJson as parsePartialJson } from "../json.js";
+import {
+  parseJsonMarkdown,
+  strictParsePartialJson as parsePartialJson,
+} from "../json.js";
 
 function* generateSegments(rawJson: string) {
   for (let i = 1; i < rawJson.length; i += 1) {
@@ -300,4 +303,36 @@ it("kitchen sink of partial json parsing", async () => {
   for (const [item, i] of generateSegments(rawJson)) {
     expectPartialJson(item).toEqual(segments[i]);
   }
+});
+
+it("parseJsonMarkdown ignores backticks inside JSON strings", () => {
+  const value = { answer: "Run ```bash\nls -la\n``` to list files", ok: true };
+  const json = JSON.stringify(value);
+
+  for (const parser of [parsePartialJson, JSON.parse]) {
+    expect.soft(parseJsonMarkdown(json, parser)).toEqual(value);
+    expect
+      .soft(parseJsonMarkdown(`\`\`\`json\n${json}\n\`\`\``, parser))
+      .toEqual(value);
+    expect
+      .soft(parseJsonMarkdown(`\`\`\`\n${json}\n\`\`\``, parser))
+      .toEqual(value);
+    expect
+      .soft(
+        parseJsonMarkdown(
+          `Here it is:\n\`\`\`json\n${json}\n\`\`\`\nDone.`,
+          parser
+        )
+      )
+      .toEqual(value);
+  }
+});
+
+it("parseJsonMarkdown keeps backticks in a partial JSON string", () => {
+  expect(parseJsonMarkdown('{"answer": "Run ```bash\nls')).toEqual({
+    answer: "Run ```bash\nls",
+  });
+  expect(parseJsonMarkdown('```json\n{"answer": "Run ```bash\nls')).toEqual({
+    answer: "Run ```bash\nls",
+  });
 });
