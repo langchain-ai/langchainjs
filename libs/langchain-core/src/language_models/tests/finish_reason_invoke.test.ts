@@ -59,6 +59,7 @@ describe("invoke finish fields", () => {
     }).invoke("hi");
     expect(msg.response_metadata.finish_reason).toBe("incomplete");
     expect(msg.response_metadata.normalized_finish_reason).toBe("length");
+    expect(msg.response_metadata).not.toHaveProperty("finish_state");
   });
 
   test("marks pause_turn as suspended", async () => {

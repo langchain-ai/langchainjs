@@ -46,7 +46,6 @@ describe("normalizeFinishReason", () => {
   ])("%s -> %s", (raw, expected) => {
     expect(normalizeFinishReason(raw)).toEqual({
       normalizedFinishReason: expected,
-      finishState: "complete",
     });
   });
 
@@ -87,7 +86,6 @@ describe("convertChunksToEvents finish fields", () => {
       event: "message-finish",
       finishReason: "length",
       normalizedFinishReason: "length",
-      finishState: "complete",
     });
   });
 
@@ -229,7 +227,6 @@ describe("refusal override", () => {
   test("refusal block wins over stop", () => {
     expect(normalizeFinishReason("stop", { hasRefusal: true })).toEqual({
       normalizedFinishReason: "refusal",
-      finishState: "complete",
     });
   });
 });

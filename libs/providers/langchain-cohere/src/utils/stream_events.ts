@@ -135,7 +135,7 @@ function mapCohereFinishReason(
   sawToolCall: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+  "finishReason" | "normalizedFinishReason" | "reason"
 > {
   if (!reason) return {};
   let normalizedFinishReason: FinishReason;
@@ -164,7 +164,6 @@ function mapCohereFinishReason(
     finishReason: reason,
     normalizedFinishReason,
     reason: toLegacyReason(normalizedFinishReason),
-    finishState: "complete",
   };
 }
 

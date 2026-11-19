@@ -207,7 +207,7 @@ function mapOllamaDoneReason(
   sawToolCall: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+  "finishReason" | "normalizedFinishReason" | "reason"
 > {
   if (!reason) return {};
   let normalizedFinishReason: FinishReason;
@@ -225,7 +225,6 @@ function mapOllamaDoneReason(
     finishReason: reason,
     normalizedFinishReason,
     reason: toLegacyReason(normalizedFinishReason),
-    finishState: "complete",
   };
 }
 

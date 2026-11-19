@@ -1086,7 +1086,7 @@ function mapInteractionStatus(
   sawToolCall: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+  "finishReason" | "normalizedFinishReason" | "reason"
 > {
   if (!status) return {};
   let normalizedFinishReason: FinishReason;
@@ -1107,7 +1107,6 @@ function mapInteractionStatus(
     finishReason: status,
     normalizedFinishReason,
     reason: toLegacyReason(normalizedFinishReason),
-    finishState: "complete",
   };
 }
 

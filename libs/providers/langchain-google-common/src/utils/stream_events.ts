@@ -185,7 +185,7 @@ function mapGeminiFinishReason(
   sawToolCall: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+  "finishReason" | "normalizedFinishReason" | "reason"
 > {
   if (!reason) return {};
   let normalizedFinishReason: FinishReason;
@@ -217,7 +217,6 @@ function mapGeminiFinishReason(
     finishReason: reason,
     normalizedFinishReason,
     reason: toLegacyReason(normalizedFinishReason),
-    finishState: "complete",
   };
 }
 

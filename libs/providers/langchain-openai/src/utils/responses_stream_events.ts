@@ -44,7 +44,7 @@ export async function* convertOpenAIResponsesStream(
   let usageSnapshot: UsageMetadata | undefined;
   let finish: Pick<
     MessageFinishEvent,
-    "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+    "finishReason" | "normalizedFinishReason" | "reason"
   > = {};
   let sawToolCall = false;
   let responseMetadata: Record<string, unknown> | undefined;
@@ -343,7 +343,7 @@ function mapResponseStatus(
   sawRefusal: boolean
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+  "finishReason" | "normalizedFinishReason" | "reason"
 > {
   let normalizedFinishReason: FinishReason;
   if (sawRefusal) {
@@ -368,7 +368,6 @@ function mapResponseStatus(
     finishReason: status,
     normalizedFinishReason,
     reason: toLegacyReason(normalizedFinishReason),
-    finishState: "complete",
   };
 }
 

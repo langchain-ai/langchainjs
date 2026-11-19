@@ -372,7 +372,6 @@ export async function* convertOpenAICompletionsStream(
           normalizedFinishReason: sawRefusal
             ? ("refusal" as const)
             : mapFinishReason(finishReason),
-          finishState: "complete" as const,
           reason: toLegacyFinishReason(
             sawRefusal ? "refusal" : mapFinishReason(finishReason)
           ),

@@ -192,7 +192,7 @@ function mapStopReason(
   reason: string | undefined
 ): Pick<
   MessageFinishEvent,
-  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+  "finishReason" | "normalizedFinishReason" | "reason"
 > {
   if (!reason) return {};
   let normalizedFinishReason: FinishReason;
@@ -221,7 +221,6 @@ function mapStopReason(
     finishReason: reason,
     normalizedFinishReason,
     reason: toLegacyReason(normalizedFinishReason),
-    finishState: "complete",
   };
 }
 

@@ -59,14 +59,14 @@ export function normalizeFinishReason(
   }
   // OpenAI refuses with a normal `stop`; the refusal block is the signal.
   if (options?.hasRefusal) {
-    return { normalizedFinishReason: "refusal", finishState: "complete" };
+    return { normalizedFinishReason: "refusal" };
   }
   const mapped = GENERIC_FINISH_REASONS[key] ?? "other";
   // Gemini reports STOP even when the response contains function calls.
   if (mapped === "stop" && options?.hasToolCalls) {
-    return { normalizedFinishReason: "tool_call", finishState: "complete" };
+    return { normalizedFinishReason: "tool_call" };
   }
-  return { normalizedFinishReason: mapped, finishState: "complete" };
+  return { normalizedFinishReason: mapped };
 }
 
 /**
@@ -117,8 +117,9 @@ function readFinishValue(
 }
 
 /**
- * Adds `finish_reason`, `normalized_finish_reason` and `finish_state` to a
- * non-streamed AI message's `response_metadata`. Existing values are kept.
+ * Adds `finish_reason`, `normalized_finish_reason` and (Anthropic only)
+ * `finish_state` to a non-streamed AI message's `response_metadata`.
+ * Existing values are kept.
  * @internal
  */
 export function addFinishReasonFields(message: BaseMessage): void {
@@ -146,16 +147,19 @@ export function addFinishReasonFields(message: BaseMessage): void {
             metadata.incomplete_details,
             hasToolCalls
           ),
-      finishState: "complete",
     };
   } else {
     finish = normalizeFinishReason(raw, { hasToolCalls, hasRefusal });
   }
   if (raw === undefined) return;
+  // Only Anthropic can suspend a turn, so only it reports a finish state.
+  const finishState =
+    finish.finishState ??
+    (metadata.model_provider === "anthropic" ? "complete" : undefined);
   message.response_metadata = {
     finish_reason: raw,
     normalized_finish_reason: finish.normalizedFinishReason,
-    finish_state: finish.finishState,
+    ...(finishState ? { finish_state: finishState } : {}),
     ...metadata,
   };
 }

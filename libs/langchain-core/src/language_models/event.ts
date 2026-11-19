@@ -95,7 +95,7 @@ export interface MessageFinishEvent {
   finishReason?: string;
   /** Best-effort normalized finish reason. */
   normalizedFinishReason?: FinishReason;
-  /** Whether the caller must continue the turn. Missing means `"complete"`. */
+  /** Whether the caller must continue the turn. Only Anthropic sets it; missing means `"complete"`. */
   finishState?: FinishState;
   /**
    * @deprecated Use `normalizedFinishReason`. Still read when the new

@@ -313,7 +313,6 @@ describe("convertOpenAIResponsesStream", () => {
       expect(events.find((e) => e.event === "message-finish")).toMatchObject({
         finishReason: status,
         normalizedFinishReason: normalized,
-        finishState: "complete",
       });
     }
   );
