@@ -975,6 +975,10 @@ export function tool<
     func: async (input, runManager, config) => {
       return new Promise<ToolOutputT>((resolve, reject) => {
         let listener: (() => void) | undefined;
+        if (config?.signal?.aborted) {
+          reject(getAbortSignalError(config.signal));
+          return;
+        }
         const cleanup = () => {
           if (config?.signal && listener) {
             config.signal.removeEventListener("abort", listener);
