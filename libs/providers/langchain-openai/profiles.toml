@@ -253,6 +253,14 @@ midConversationTools = true
 midConversationSystemMessages = true
 midConversationTools = true
 
+[overrides."gpt-6.2-astra"]
+midConversationSystemMessages = true
+midConversationTools = true
+
+[overrides."gpt-6.2-sol"]
+midConversationSystemMessages = true
+midConversationTools = true
+
 [overrides."o3"]
 midConversationSystemMessages = true
 midConversationTools = true
