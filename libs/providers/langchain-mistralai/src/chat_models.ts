@@ -98,7 +98,6 @@ const NORMALIZED_FINISH_REASONS: Record<string, string> = {
   max_tokens: "length",
   model_length: "length",
   tool_calls: "tool_call",
-  function_call: "tool_call",
   content_filter: "content_filter",
   error: "error",
 };
