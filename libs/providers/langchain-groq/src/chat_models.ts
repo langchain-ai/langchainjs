@@ -491,6 +491,7 @@ function _convertDeltaToMessageChunk(
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
       id: groqMessageId,
+      usage_metadata: usage,
       response_metadata,
     });
   } else if (role === "system") {
