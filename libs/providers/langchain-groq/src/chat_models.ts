@@ -2,7 +2,10 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertOpenAICompletionsStream } from "@langchain/core/language_models/openai_completions_stream";
+import {
+  convertOpenAICompletionsStream,
+  type OpenAICompletionsStreamChunk,
+} from "@langchain/core/language_models/openai_completions_stream";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -46,7 +49,6 @@ import type {
   ChatCompletionCreateParamsStreaming,
   ChatCompletionTool,
 } from "groq-sdk/resources/chat/completions";
-import type { RequestOptions } from "groq-sdk/core";
 import { Runnable } from "@langchain/core/runnables";
 import {
   BaseLanguageModelInput,
@@ -297,6 +299,14 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * @see https://console.groq.com/docs/reasoning#options-for-reasoning-effort
    */
   reasoningEffort?: "none" | "default" | "low" | "medium" | "high" | null;
+
+  /**
+   * How the model outputs reasoning tokens: `"parsed"` returns them in a
+   * separate `reasoning` field, `"raw"` inline in `<think>` tags, and
+   * `"hidden"` not at all.
+   * @see https://console.groq.com/docs/reasoning
+   */
+  reasoningFormat?: ChatCompletionsAPI.ChatCompletionCreateParamsBase["reasoning_format"];
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -520,6 +530,26 @@ function _convertDeltaToMessageChunk(
   } else {
     return new ChatMessageChunk({ content, role, response_metadata });
   }
+}
+
+/**
+ * groq-sdk types `x_groq.usage` and `delta.reasoning` as nullable, where
+ * `convertOpenAICompletionsStream` takes them as optional. The converter skips
+ * a null value of either just as it skips a missing one, so map null to
+ * `undefined` and keep every other field as it is.
+ */
+function _groqChunkToOpenAICompletionsChunk(
+  chunk: ChatCompletionsAPI.ChatCompletionChunk
+): OpenAICompletionsStreamChunk {
+  const { x_groq, choices, ...rest } = chunk;
+  return {
+    ...rest,
+    x_groq: x_groq && { ...x_groq, usage: x_groq.usage ?? undefined },
+    choices: choices.map(({ delta, ...choice }) => ({
+      ...choice,
+      delta: delta && { ...delta, reasoning: delta.reasoning ?? undefined },
+    })),
+  };
 }
 
 /*
@@ -1033,13 +1063,13 @@ export class ChatGroq extends BaseChatModel<
   );
   constructor(fields: ChatGroqInput);
   constructor(
-    modelOrFields?: string | ChatGroqInput,
+    modelOrFields: string | ChatGroqInput,
     fields?: Omit<ChatGroqInput, "model">
   ) {
     const params =
       typeof modelOrFields === "string"
         ? { ...(fields ?? {}), model: modelOrFields }
-        : (modelOrFields ?? {});
+        : modelOrFields;
     super(params);
     this._addVersion("@langchain/groq", __PKG_VERSION__);
 
@@ -1059,7 +1089,6 @@ export class ChatGroq extends BaseChatModel<
       dangerouslyAllowBrowser: true,
       baseURL: params.baseUrl,
       timeout: params.timeout,
-      httpAgent: params.httpAgent,
       fetch: params.fetch,
       maxRetries: 0,
       defaultHeaders,
@@ -1083,6 +1112,8 @@ export class ChatGroq extends BaseChatModel<
     this.logitBias = params.logitBias;
     this.user = params.user;
     this.reasoningEffort = params.reasoningEffort;
+    this.reasoningFormat = params.reasoningFormat;
+    this.topLogprobs = params.topLogprobs;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1099,17 +1130,17 @@ export class ChatGroq extends BaseChatModel<
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
-    options?: RequestOptions
+    options?: Groq.RequestOptions
   ): Promise<AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsNonStreaming,
-    options?: RequestOptions
+    options?: Groq.RequestOptions
   ): Promise<ChatCompletion>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParams,
-    options?: RequestOptions
+    options?: Groq.RequestOptions
   ): Promise<
     AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk> | ChatCompletion
   > {
@@ -1202,7 +1233,7 @@ export class ChatGroq extends BaseChatModel<
         if (signal?.aborted) {
           return;
         }
-        yield data;
+        yield _groqChunkToOpenAICompletionsChunk(data);
       }
     };
     yield* convertOpenAICompletionsStream(

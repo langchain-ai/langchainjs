@@ -265,7 +265,7 @@ test("response metadata includes groq metadata", async () => {
   const message = new HumanMessage("What color is the sky?");
   const res = await model.invoke([message]);
   // console.dir(res, { depth: Infinity });
-  expect(res.response_metadata.x_groq?.id).toBeDefined();
+  expect(res.response_metadata.x_groq).toHaveProperty("id");
 });
 
 test("response metadata includes groq metadata when streaming", async () => {
@@ -279,7 +279,7 @@ test("response metadata includes groq metadata when streaming", async () => {
     finalRes = !finalRes ? chunk : concat(finalRes, chunk);
   }
   // console.dir(finalRes, { depth: Infinity });
-  expect(finalRes?.response_metadata.x_groq?.id).toBeDefined();
+  expect(finalRes?.response_metadata.x_groq).toHaveProperty("id");
 });
 
 test("invoke with image input", async () => {
