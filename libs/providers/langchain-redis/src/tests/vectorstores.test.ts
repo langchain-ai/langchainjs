@@ -89,6 +89,30 @@ test("RedisVectorStore with generated keys", async () => {
   expect(results).toHaveLength(0);
 });
 
+test.each([
+  ["node-redis 5 and later", { num_docs: 2 }],
+  ["node-redis 4", { numDocs: "2" }],
+])(
+  "RedisVectorStore generates keys after the indexed documents (%s FT.INFO reply)",
+  async (_, info) => {
+    const client = createRedisClientMockup();
+    client.ft.info.mockResolvedValue(info);
+    const embeddings = new FakeEmbeddings();
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+    });
+
+    await store.addDocuments([{ pageContent: "hello", metadata: { a: 1 } }]);
+
+    expect(client.hSet).toHaveBeenCalledWith(
+      "doc:documents:2",
+      expect.any(Object)
+    );
+  }
+);
+
 test("RedisVectorStore with TTL", async () => {
   const client = createRedisClientMockup();
   const embeddings = new FakeEmbeddings();
@@ -216,7 +240,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       redisClient: client as any,
       indexName: "documents",
     });
-    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
+    vi.spyOn(store, "checkIndexExists").mockResolvedValue(false);
 
     await store.createIndex();
 
@@ -251,7 +275,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         LANGUAGE: "German",
       },
     });
-    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
+    vi.spyOn(store, "checkIndexExists").mockResolvedValue(false);
 
     await store.createIndex();
 
@@ -392,7 +416,7 @@ describe("RedisVectorStore with Custom Schema", () => {
       customSchema,
     });
 
-    store.checkIndexExists = vi.fn<any>().mockResolvedValue(false);
+    vi.spyOn(store, "checkIndexExists").mockResolvedValue(false);
     await store.createIndex();
 
     expect(client.ft.create).toHaveBeenCalledWith(

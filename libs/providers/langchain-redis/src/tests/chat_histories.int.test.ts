@@ -25,7 +25,7 @@ test("Test Redis history store", async () => {
   expect(blankResult).toStrictEqual([]);
 
   await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
+  await chatHistory.addAIMessage("Ozzy Osbourne");
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
@@ -42,7 +42,7 @@ test("Test clear Redis history store", async () => {
   });
 
   await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
+  await chatHistory.addAIMessage("Ozzy Osbourne");
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
@@ -68,7 +68,7 @@ test("Test Redis history with a TTL", async () => {
   expect(blankResult).toStrictEqual([]);
 
   await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
+  await chatHistory.addAIMessage("Ozzy Osbourne");
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
