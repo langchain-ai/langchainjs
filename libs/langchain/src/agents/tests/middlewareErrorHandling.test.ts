@@ -7,7 +7,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { GraphInterrupt, MemorySaver } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware } from "../index.js";
@@ -202,7 +202,7 @@ describe("Middleware Error Handling", () => {
       expect(result.__interrupt__?.[0].value).toBe("subagent-interrupt");
     });
 
-    it("should preserve errors from the downstream handler", async () => {
+    it("should handle tool errors that pass through middleware as tool errors", async () => {
       const originalError = new Error("regular error");
       const errorTool = tool(
         async () => {
@@ -230,9 +230,40 @@ describe("Middleware Error Handling", () => {
         middleware: [middleware],
       });
 
-      await expect(
-        agent.invoke({ messages: [new HumanMessage("test")] })
-      ).rejects.toBe(originalError);
+      const result = await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+      const toolMessage = result.messages.find(ToolMessage.isInstance);
+      expect(toolMessage?.status).toBe("error");
+      expect(toolMessage?.content).toContain("regular error");
+    });
+
+    it("should handle invalid tool args that pass through middleware", async () => {
+      const stringTool = tool(async ({ value }) => value, {
+        name: "string_tool",
+        description: "A tool that takes a string",
+        schema: z.object({ value: z.string() }),
+      });
+      const middleware = createMiddleware({
+        name: "testMiddleware",
+        wrapToolCall: async (request, handler) => handler(request),
+      });
+      const agent = createAgent({
+        model: new FakeToolCallingModel({
+          toolCalls: [
+            [{ name: "string_tool", args: { value: 1 }, id: "call_1" }],
+          ],
+        }),
+        tools: [stringTool],
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+      const toolMessage = result.messages.find(ToolMessage.isInstance);
+      expect(toolMessage?.status).toBe("error");
+      expect(toolMessage?.content).toContain("expected schema");
     });
 
     it("should wrap errors thrown by middleware", async () => {
