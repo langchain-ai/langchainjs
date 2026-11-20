@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from "vitest";
+import { AsyncLocalStorage } from "node:async_hooks";
 import {
   ContextOverflowError,
   getRetryable,
@@ -71,6 +72,56 @@ describe("AsyncCaller", () => {
 
     expect(resultWrapped).toEqual([2, 1]);
     expect(callable.mock.calls).toHaveLength(2);
+  });
+
+  test("runs queued calls in their caller's async context", async () => {
+    const requestContext = new AsyncLocalStorage<string>();
+    const caller = new AsyncCaller({ maxConcurrency: 2, maxRetries: 0 });
+    const requests = Array.from({ length: 6 }, (_, i) => `request-${i}`);
+    let active = 0;
+    let maxActive = 0;
+
+    const seen = await Promise.all(
+      requests.map((request) =>
+        requestContext.run(request, () =>
+          caller.call(async () => {
+            active += 1;
+            maxActive = Math.max(maxActive, active);
+            const store = requestContext.getStore();
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            active -= 1;
+            return store;
+          })
+        )
+      )
+    );
+
+    expect(seen).toEqual(requests);
+    expect(maxActive).toBe(2);
+  });
+
+  test("frees the slot after a failed call and keeps context across retries", async () => {
+    const requestContext = new AsyncLocalStorage<string>();
+    const caller = new AsyncCaller({ maxConcurrency: 1, maxRetries: 1 });
+    const failing = requestContext.run("request-0", () =>
+      caller.callWithOptions({ maxRetries: 0 }, async () => {
+        throw new Error("boom");
+      })
+    );
+    const seenPerAttempt: (string | undefined)[] = [];
+    const retried = requestContext.run("request-1", () =>
+      caller.call(async () => {
+        seenPerAttempt.push(requestContext.getStore());
+        if (seenPerAttempt.length === 1) {
+          throw new Error("retry me");
+        }
+        return requestContext.getStore();
+      })
+    );
+
+    await expect(failing).rejects.toThrow("boom");
+    await expect(retried).resolves.toBe("request-1");
+    expect(seenPerAttempt).toEqual(["request-1", "request-1"]);
   });
 
   test("defaultFailedAttemptHandler treats AbortError as non-retryable", async () => {
