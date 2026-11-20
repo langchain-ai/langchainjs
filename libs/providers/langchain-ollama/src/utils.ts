@@ -48,7 +48,17 @@ function extractBase64FromDataUrl(dataUrl: string): string {
   return match ? match[1] : "";
 }
 
+/**
+ * Thinking models such as Qwen 3 expect the reasoning of earlier assistant
+ * turns in the history, especially between tool calls.
+ */
+function getThinking(message: AIMessage): string | undefined {
+  const thinking = message.additional_kwargs?.reasoning_content;
+  return typeof thinking === "string" && thinking !== "" ? thinking : undefined;
+}
+
 function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
+  const thinking = getThinking(messages);
   if (typeof messages.content === "string") {
     if (messages.tool_calls?.length) {
       const toolCalls: OllamaToolCall[] = messages.tool_calls.map((tc) => ({
@@ -63,6 +73,7 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
         {
           role: "assistant",
           content: messages.content,
+          ...(thinking ? { thinking } : {}),
           tool_calls: toolCalls,
         },
       ];
@@ -71,6 +82,7 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
       {
         role: "assistant",
         content: messages.content,
+        ...(thinking ? { thinking } : {}),
       },
     ];
   }
@@ -78,7 +90,9 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
   const textFields = messages.content.filter(
     (c) => c.type === "text" && typeof c.text === "string"
   );
-  const textMessages = (textFields as MessageContentText[]).map((c) => ({
+  const textMessages: OllamaMessage[] = (
+    textFields as MessageContentText[]
+  ).map((c) => ({
     role: "assistant",
     content: c.text,
   }));
@@ -116,7 +130,12 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
     );
   }
 
-  return [...textMessages, ...(toolCallMsgs ? [toolCallMsgs] : [])];
+  const result = [...textMessages, ...(toolCallMsgs ? [toolCallMsgs] : [])];
+  // The reasoning precedes the whole turn, so it is sent once, on its first message.
+  if (thinking && result.length > 0) {
+    result[0].thinking = thinking;
+  }
+  return result;
 }
 
 function convertHumanGenericMessagesToOllama(
