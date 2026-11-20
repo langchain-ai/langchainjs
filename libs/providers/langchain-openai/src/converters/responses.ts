@@ -67,7 +67,7 @@ type OpenAIAnnotation =
  *
  * This function maps them to LangChain's Citation format or preserves them as non-standard blocks.
  */
-function convertOpenAIAnnotationToLangChain(
+export function convertOpenAIAnnotationToLangChain(
   annotation: OpenAIAnnotation
 ): ContentBlock.Citation | ContentBlock.NonStandard {
   if (annotation.type === "url_citation") {
@@ -1509,7 +1509,14 @@ export const convertMessagesToResponsesInput: Converter<
         | Record<string, unknown>
         | undefined;
       if (responseMetadata?.output_version === "v1") {
-        return convertStandardContentMessageToResponsesInput(lcMsg);
+        const items = convertStandardContentMessageToResponsesInput(lcMsg);
+        // Same rule as the legacy branch below: with ZDR, reasoning items
+        // aren't stored, so only replay ones that carry encrypted_content.
+        return zdrEnabled
+          ? items.filter(
+              (item) => item.type !== "reasoning" || !!item.encrypted_content
+            )
+          : items;
       }
       assertAdditionalToolsPlacement(lcMsg, "responses");
 

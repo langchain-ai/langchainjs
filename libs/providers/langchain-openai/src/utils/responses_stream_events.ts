@@ -11,7 +11,10 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
-import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import {
+  convertOpenAIAnnotationToLangChain,
+  convertResponsesUsageToUsageMetadata,
+} from "../converters/responses.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -21,8 +24,19 @@ export interface ConvertOpenAIResponsesStreamOptions {
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
 type BlockKey =
   | `text:${number}:${number}`
-  | `reasoning:${number}:${number}`
-  | `tool:${number}`;
+  | `reasoning:${number}`
+  | `tool:${number}`
+  | `item:${number}`;
+
+// Output items the converter streams itself; everything else (web search,
+// file search, code interpreter, MCP, ...) is kept whole as a `non_standard`
+// block so it replays verbatim.
+const STREAMED_ITEM_TYPES = new Set([
+  "message",
+  "reasoning",
+  "function_call",
+  "custom_tool_call",
+]);
 
 export async function* convertOpenAIResponsesStream(
   source: AsyncIterable<RawEvent>,
@@ -44,6 +58,7 @@ export async function* convertOpenAIResponsesStream(
   let finishReason: FinishReason | undefined;
   let responseMetadata: Record<string, unknown> | undefined;
   const finalizedBlockIndices = new Set<number>();
+  const lastSummaryIndex = new Map<number, number>();
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -101,15 +116,17 @@ export async function* convertOpenAIResponsesStream(
     if (event.type === "response.output_text.delta") {
       yield* ensureMessageStart();
       const key: BlockKey = `text:${event.output_index}:${event.content_index}`;
-      const { index, isNew } = getOrCreateBlockIndex(key, {
+      const start = {
         type: "text",
         text: "",
-      });
+        ...(event.item_id ? { id: event.item_id } : {}),
+      };
+      const { index, isNew } = getOrCreateBlockIndex(key, start);
       if (isNew) {
         yield {
           event: "content-block-start" as const,
           index,
-          content: { type: "text", text: "" } as ContentBlock,
+          content: start as ContentBlock,
         };
       }
       const acc = blockAccumulators.get(index)!;
@@ -122,28 +139,107 @@ export async function* convertOpenAIResponsesStream(
       continue;
     }
 
-    if (event.type === "response.reasoning_summary_text.delta") {
+    if (event.type === "response.output_text.annotation.added") {
+      const index = blockKeyToIndex.get(
+        `text:${event.output_index}:${event.content_index}`
+      );
+      if (index !== undefined) {
+        const acc = blockAccumulators.get(index)!;
+        acc.annotations = [
+          ...(acc.annotations ?? []),
+          convertOpenAIAnnotationToLangChain(
+            event.annotation as OpenAIClient.Responses.ResponseOutputText["annotations"][number]
+          ),
+        ];
+      }
+      continue;
+    }
+
+    // One reasoning block per reasoning item, so its id and encrypted_content
+    // stay on a single block and replay as a single input item.
+    if (
+      (event.type === "response.output_item.added" &&
+        event.item.type === "reasoning") ||
+      event.type === "response.reasoning_summary_text.delta"
+    ) {
       yield* ensureMessageStart();
-      const key: BlockKey = `reasoning:${event.output_index}:${event.summary_index}`;
-      const { index, isNew } = getOrCreateBlockIndex(key, {
-        type: "reasoning",
-        reasoning: "",
-      });
+      const id =
+        event.type === "response.output_item.added"
+          ? event.item.id
+          : event.item_id;
+      const { index, isNew } = getOrCreateBlockIndex(
+        `reasoning:${event.output_index}`,
+        { type: "reasoning", reasoning: "", ...(id ? { id } : {}) }
+      );
+      const acc = blockAccumulators.get(index)!;
       if (isNew) {
         yield {
           event: "content-block-start" as const,
           index,
-          content: { type: "reasoning", reasoning: "" } as ContentBlock,
+          content: { ...acc } as ContentBlock,
         };
       }
-      const acc = blockAccumulators.get(index)!;
-      acc.reasoning = (acc.reasoning ?? "") + event.delta;
-      yield {
-        event: "content-block-delta" as const,
-        index,
-        delta: { type: "reasoning-delta" as const, reasoning: event.delta },
-      };
+      if (event.type === "response.reasoning_summary_text.delta") {
+        const prev = lastSummaryIndex.get(index);
+        lastSummaryIndex.set(index, event.summary_index);
+        // Summary parts are paragraphs; keep them apart in the one block.
+        const isNewPart = prev !== undefined && prev !== event.summary_index;
+        const text = isNewPart ? `\n\n${event.delta}` : event.delta;
+        acc.reasoning = (acc.reasoning ?? "") + text;
+        yield {
+          event: "content-block-delta" as const,
+          index,
+          delta: { type: "reasoning-delta" as const, reasoning: text },
+        };
+      }
       continue;
+    }
+
+    if (
+      event.type === "response.output_item.done" &&
+      event.item.type === "reasoning"
+    ) {
+      yield* ensureMessageStart();
+      const { item } = event;
+      const { index, isNew } = getOrCreateBlockIndex(
+        `reasoning:${event.output_index}`,
+        { type: "reasoning", reasoning: "" }
+      );
+      const acc = blockAccumulators.get(index)!;
+      acc.id = item.id;
+      if (item.encrypted_content) {
+        acc.encrypted_content = item.encrypted_content;
+      }
+      if (isNew) {
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: { type: "reasoning", reasoning: "", id: item.id },
+        };
+      }
+      yield* finalizeBlock(index);
+      continue;
+    }
+
+    if (
+      event.type === "response.output_item.done" &&
+      !STREAMED_ITEM_TYPES.has(event.item.type)
+    ) {
+      yield* ensureMessageStart();
+      const { index } = getOrCreateBlockIndex(`item:${event.output_index}`, {
+        type: "non_standard",
+        value: event.item,
+      });
+      yield {
+        event: "content-block-start" as const,
+        index,
+        content: {
+          type: "non_standard",
+          value: { type: event.item.type, id: event.item.id },
+        },
+      };
+      yield* finalizeBlock(index);
+      // Fall through: the raw event still goes out as a provider event.
     }
 
     if (

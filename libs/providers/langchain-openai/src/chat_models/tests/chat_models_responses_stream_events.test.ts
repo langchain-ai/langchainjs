@@ -4,6 +4,7 @@ import { ChatModelStream } from "@langchain/core/language_models/stream";
 import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { OpenAI as OpenAIClient } from "openai";
 import { ChatOpenAIResponses } from "../responses.js";
+import { convertMessagesToResponsesInput } from "../../converters/responses.js";
 
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
 
@@ -301,5 +302,98 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
         },
       ]);
     });
+  });
+
+  test("a streamed message replays its reasoning and built-in tool items", async () => {
+    const reasoning = {
+      type: "reasoning",
+      id: "rs_1",
+      summary: [],
+      encrypted_content: "ENC",
+    };
+    const search = {
+      type: "web_search_call",
+      id: "ws_1",
+      status: "completed",
+      action: { type: "search", query: "q" },
+    };
+    const model = new MockStreamChatOpenAIResponses([
+      {
+        type: "response.created",
+        response: { id: "resp_1", model: "gpt-5" },
+      } as RawEvent,
+      {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: { ...reasoning, encrypted_content: undefined },
+      } as RawEvent,
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: reasoning,
+      } as RawEvent,
+      {
+        type: "response.output_item.done",
+        output_index: 1,
+        item: search,
+      } as RawEvent,
+      {
+        type: "response.output_text.delta",
+        item_id: "msg_1",
+        delta: "Found.",
+        content_index: 0,
+        output_index: 2,
+      } as RawEvent,
+      ...textEvents().slice(-1),
+    ]);
+    const message = await new ChatModelStream(
+      model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+    );
+
+    const input = convertMessagesToResponsesInput({
+      messages: [message],
+      zdrEnabled: true,
+      model: "gpt-5",
+    });
+    expect(input).toMatchObject([
+      { type: "reasoning", id: "rs_1", encrypted_content: "ENC" },
+      search,
+      { role: "assistant", content: [{ type: "output_text", text: "Found." }] },
+    ]);
+  });
+
+  test("drops a streamed reasoning item without encrypted_content under ZDR", async () => {
+    const reasoning = { type: "reasoning", id: "rs_1", summary: [] };
+    const model = new MockStreamChatOpenAIResponses([
+      {
+        type: "response.created",
+        response: { id: "resp_1", model: "gpt-5" },
+      } as RawEvent,
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: reasoning,
+      } as RawEvent,
+      {
+        type: "response.output_text.delta",
+        item_id: "msg_1",
+        delta: "Hi",
+        content_index: 0,
+        output_index: 1,
+      } as RawEvent,
+      ...textEvents().slice(-1),
+    ]);
+    const message = await new ChatModelStream(
+      model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+    );
+
+    const replay = (zdrEnabled: boolean) =>
+      convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled,
+        model: "gpt-5",
+      }).map((item) => item.type ?? item.role);
+    expect(replay(true)).toEqual(["message"]);
+    expect(replay(false)).toEqual(["reasoning", "message"]);
   });
 });

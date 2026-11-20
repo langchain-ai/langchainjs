@@ -185,6 +185,175 @@ describe("convertOpenAIResponsesStream", () => {
     ]);
   });
 
+  test("keeps a reasoning item's id, summary parts and encrypted content on one block", async () => {
+    const events = await collectEvents([
+      {
+        type: "response.created",
+        response: { id: "resp_r", model: "o3" },
+      } as RawEvent,
+      {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: { type: "reasoning", id: "rs_1", summary: [] },
+      } as RawEvent,
+      {
+        type: "response.reasoning_summary_text.delta",
+        item_id: "rs_1",
+        delta: "First",
+        summary_index: 0,
+        output_index: 0,
+      } as RawEvent,
+      {
+        type: "response.reasoning_summary_text.delta",
+        item_id: "rs_1",
+        delta: "Second",
+        summary_index: 1,
+        output_index: 0,
+      } as RawEvent,
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_1",
+          summary: [],
+          encrypted_content: "ENC",
+        },
+      } as RawEvent,
+      completedResponse({ id: "resp_r" }),
+    ]);
+
+    const blockEvents = events.filter((e) => e.event.startsWith("content-"));
+    expect(blockEvents).toEqual([
+      {
+        event: "content-block-start",
+        index: 0,
+        content: { type: "reasoning", reasoning: "", id: "rs_1" },
+      },
+      {
+        event: "content-block-delta",
+        index: 0,
+        delta: { type: "reasoning-delta", reasoning: "First" },
+      },
+      {
+        event: "content-block-delta",
+        index: 0,
+        delta: { type: "reasoning-delta", reasoning: "\n\nSecond" },
+      },
+      {
+        event: "content-block-finish",
+        index: 0,
+        content: {
+          type: "reasoning",
+          reasoning: "First\n\nSecond",
+          id: "rs_1",
+          encrypted_content: "ENC",
+        },
+      },
+    ]);
+  });
+
+  test("emits a reasoning block for an item with no summary", async () => {
+    const events = await collectEvents([
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_2",
+          summary: [],
+          encrypted_content: "ENC",
+        },
+      } as RawEvent,
+      completedResponse(),
+    ]);
+
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({
+      content: {
+        type: "reasoning",
+        reasoning: "",
+        id: "rs_2",
+        encrypted_content: "ENC",
+      },
+    });
+  });
+
+  test("puts the item id on text starts and annotations on the finished block", async () => {
+    const citation = {
+      type: "url_citation",
+      url: "https://example.com/a",
+      title: "A",
+      start_index: 0,
+      end_index: 5,
+    };
+    const events = await collectEvents([
+      {
+        type: "response.output_text.delta",
+        item_id: "msg_1",
+        delta: "Found.",
+        content_index: 0,
+        output_index: 0,
+      } as RawEvent,
+      {
+        type: "response.output_text.annotation.added",
+        item_id: "msg_1",
+        output_index: 0,
+        content_index: 0,
+        annotation_index: 0,
+        annotation: citation,
+      } as RawEvent,
+      completedResponse(),
+    ]);
+
+    expect(events.find((e) => e.event === "content-block-start")).toMatchObject(
+      { content: { type: "text", text: "", id: "msg_1" } }
+    );
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({
+      content: {
+        type: "text",
+        text: "Found.",
+        id: "msg_1",
+        annotations: [
+          {
+            type: "citation",
+            source: "url_citation",
+            url: "https://example.com/a",
+          },
+        ],
+      },
+    });
+  });
+
+  test("keeps built-in tool items whole as non_standard blocks", async () => {
+    const search = {
+      type: "web_search_call",
+      id: "ws_1",
+      status: "completed",
+      action: { type: "search", query: "q" },
+    };
+    const events = await collectEvents([
+      {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: search,
+      } as RawEvent,
+      completedResponse(),
+    ]);
+
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({ content: { type: "non_standard", value: search } });
+    expect(
+      events.find(
+        (e) => e.event === "provider" && e.name === "response.output_item.done"
+      )
+    ).toBeDefined();
+  });
+
   test("tool call streaming and finalization", async () => {
     const events = await collectEvents([
       {
