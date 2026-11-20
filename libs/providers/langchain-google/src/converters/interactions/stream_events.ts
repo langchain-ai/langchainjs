@@ -1,9 +1,6 @@
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   AIMessageChunk,
   type ContentBlock,
@@ -14,6 +11,10 @@ import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../../chat_models/types.js";
 import { GoogleError } from "../../utils/errors.js";
+import {
+  mapInteractionStatus,
+  toFinishReasonMetadata,
+} from "../../utils/finish_reason.js";
 import {
   convertGeminiPartToContentBlock,
   convertGeminiPartsToToolCalls,
@@ -725,6 +726,9 @@ export async function* convertInteractionsStreamToChunks(
           model_provider: "google",
           ...(modelName ? { model_name: modelName } : {}),
           ...(finishReason ? { finishReason } : {}),
+          ...toFinishReasonMetadata(
+            mapInteractionStatus(interactionStatus, false)
+          ),
           ...synthesized,
           ...(builtInToolSteps.length > 0
             ? { interactionSteps: builtInToolSteps }
@@ -767,7 +771,7 @@ export async function* convertInteractionsStream(
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  const finishReason: FinishReason = "stop";
+  let interactionStatus: string | undefined;
   let pendingThoughtSignature: string | undefined;
   let pendingFunctionCallSignature: string | undefined;
   let nextToolIdx = 0;
@@ -1026,6 +1030,7 @@ export async function* convertInteractionsStream(
       event.event_type === "interaction.completed" ||
       event.event_type === "interaction.complete"
     ) {
+      interactionStatus = event.interaction?.status ?? interactionStatus;
       if (shouldStreamUsage && event.interaction?.usage) {
         usageSnapshot = convertInteractionsUsageToUsageMetadata(
           event.interaction.usage
@@ -1065,7 +1070,10 @@ export async function* convertInteractionsStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...mapInteractionStatus(
+      interactionStatus,
+      [...blockKeyToIndex.keys()].some((key) => key.startsWith("tool:"))
+    ),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: {
       model_provider: "google",

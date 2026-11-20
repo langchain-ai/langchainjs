@@ -58,6 +58,7 @@ import {
   convertOpenRouterResponseToBaseMessage,
   convertOpenRouterDeltaToBaseMessageChunk,
   convertUsageMetadata,
+  finishReasonFields,
 } from "../converters/messages.js";
 import {
   convertToolsToOpenRouter,
@@ -450,9 +451,7 @@ export class ChatOpenRouter extends BaseChatModel<
         {
           text,
           message,
-          generationInfo: {
-            finish_reason: choice.finish_reason,
-          },
+          generationInfo: finishReasonFields(choice.finish_reason),
         },
       ],
       llmOutput: { tokenUsage: data.usage },
@@ -584,11 +583,7 @@ export class ChatOpenRouter extends BaseChatModel<
         const generationChunk = new ChatGenerationChunk({
           message: chunk,
           text,
-          generationInfo: {
-            ...(choice.finish_reason
-              ? { finish_reason: choice.finish_reason }
-              : {}),
-          },
+          generationInfo: finishReasonFields(choice.finish_reason),
         });
 
         yield generationChunk;

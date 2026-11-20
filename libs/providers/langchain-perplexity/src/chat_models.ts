@@ -210,6 +210,27 @@ export interface PerplexityChatCallOptions extends BaseChatModelCallOptions {
   include?: string[];
 }
 
+// Core reads `normalized_finish_reason` but no longer maps provider values.
+const NORMALIZED_FINISH_REASONS: Record<string, string> = {
+  stop: "stop",
+  length: "length",
+  max_tokens: "length",
+  tool_calls: "tool_call",
+  function_call: "tool_call",
+  content_filter: "content_filter",
+};
+
+function finishReasonFields(
+  finishReason: string | null | undefined
+): Record<string, string> {
+  if (!finishReason) return {};
+  return {
+    finish_reason: finishReason,
+    normalized_finish_reason:
+      NORMALIZED_FINISH_REASONS[finishReason] ?? "other",
+  };
+}
+
 function _isBuiltinTool(tool: Record<string, unknown>): boolean {
   return typeof tool.type === "string" && tool.type !== "function";
 }
@@ -697,7 +718,7 @@ export class ChatPerplexity
       stream: false,
     });
 
-    const { message } = response.choices[0];
+    const { message, finish_reason } = response.choices[0];
 
     const generations: ChatGeneration[] = [];
 
@@ -709,6 +730,7 @@ export class ChatPerplexity
           // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           citations: (response as any).citations,
         },
+        response_metadata: finishReasonFields(finish_reason),
       }),
     });
 
@@ -844,6 +866,7 @@ export class ChatPerplexity
         text: delta.content,
         generationInfo: {
           finishReason: choice.finish_reason,
+          ...finishReasonFields(choice.finish_reason),
         },
       });
 

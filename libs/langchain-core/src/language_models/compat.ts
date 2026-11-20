@@ -10,6 +10,12 @@ import { AIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import {
+  correctFinishReason,
+  type FinishFields,
+  readFinishFields,
+  toLegacyFinishReason,
+} from "./finish_reason.js";
 
 const MIME_TYPE_BY_AUDIO_FORMAT: Record<string, string> = {
   wav: "audio/wav",
@@ -154,11 +160,32 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
+  let finishFields: FinishFields = {};
+  let sawToolCalls = false;
+  let sawRefusal = false;
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
 
     const msg = chunk.message;
+    finishFields = {
+      ...finishFields,
+      ...readFinishFields(chunk.generationInfo),
+      ...readFinishFields(msg.response_metadata),
+    };
+    if (
+      AIMessageChunk.isInstance(msg) &&
+      (msg.tool_call_chunks?.length ?? 0) > 0
+    ) {
+      sawToolCalls = true;
+    }
+    if (
+      msg.additional_kwargs?.refusal ||
+      (Array.isArray(msg.content) &&
+        msg.content.some((part) => part?.type === "refusal"))
+    ) {
+      sawRefusal = true;
+    }
 
     // Message start
     let usageHandledInStart = false;
@@ -406,9 +433,15 @@ export async function* convertChunksToEvents(
     };
   }
 
+  const normalizedFinishReason = correctFinishReason(
+    finishFields.normalizedFinishReason,
+    { hasToolCalls: sawToolCalls, hasRefusal: sawRefusal }
+  );
   yield {
     event: "message-finish" as const,
-    reason: "stop" as const,
+    ...finishFields,
+    ...(normalizedFinishReason ? { normalizedFinishReason } : {}),
+    reason: toLegacyFinishReason(normalizedFinishReason),
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
 }

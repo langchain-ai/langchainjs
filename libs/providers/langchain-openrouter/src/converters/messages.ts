@@ -37,6 +37,32 @@ export function convertMessagesToOpenRouterParams(
   });
 }
 
+// Core reads `normalized_finish_reason` but no longer maps provider values.
+const NORMALIZED_FINISH_REASONS: Record<string, string> = {
+  stop: "stop",
+  length: "length",
+  max_tokens: "length",
+  tool_calls: "tool_call",
+  function_call: "tool_call",
+  content_filter: "content_filter",
+  error: "error",
+};
+
+/**
+ * Raw and normalized finish reason fields for `response_metadata`.
+ * Empty when the provider returned no finish reason.
+ */
+export function finishReasonFields(
+  finishReason: string | null | undefined
+): Record<string, string> {
+  if (!finishReason) return {};
+  return {
+    finish_reason: finishReason,
+    normalized_finish_reason:
+      NORMALIZED_FINISH_REASONS[finishReason] ?? "other",
+  };
+}
+
 // OpenRouter → LangChain (non-streaming)
 /**
  * Convert a non-streaming OpenRouter response choice into a BaseMessage.
@@ -88,6 +114,7 @@ export function convertOpenRouterResponseToBaseMessage(
     model_provider: "openrouter",
     model_name: rawResponse.model,
     finish_reason: choice.finish_reason,
+    ...finishReasonFields(choice.finish_reason),
   };
 
   return message;

@@ -50,6 +50,10 @@ import {
 } from "../types.js";
 import { assertNoEmptyStringEnums } from "./validate_schema.js";
 import { EmptyContentError } from "./errors.js";
+import {
+  mapGeminiFinishReason,
+  toFinishReasonMetadata,
+} from "./finish_reason.js";
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -756,6 +760,12 @@ export function mapGenerateContentResultToChatResult(
         ...generationInfo,
         [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]: functionThoughtSignatures,
       },
+      response_metadata: toFinishReasonMetadata(
+        mapGeminiFinishReason(
+          generationInfo.finishReason,
+          (functionCalls?.length ?? 0) > 0
+        )
+      ),
       usage_metadata: extra?.usageMetadata,
     }),
     generationInfo,
@@ -913,6 +923,12 @@ export function convertResponseContentToChatGenerationChunk(
       },
       response_metadata: {
         model_provider: "google-genai",
+        ...toFinishReasonMetadata(
+          mapGeminiFinishReason(
+            generationInfo.finishReason,
+            toolCallChunks.length > 0
+          )
+        ),
       },
       usage_metadata: extra.usageMetadata,
     }),

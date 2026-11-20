@@ -1,0 +1,5 @@
+---
+"@langchain/core": minor
+---
+
+Standardize finish reason on `message-finish` events and final `AIMessage`s. Provider integrations set `finish_reason` (raw provider value), `normalized_finish_reason` (`stop | length | tool_call | content_filter | refusal | context_exceeded | error | other`) and, for Anthropic, `finish_state` (`complete | suspended`) in `response_metadata`; events carry them as `finishReason`, `normalizedFinishReason` and `finishState`. Core no longer maps provider values: it passes these fields through and corrects two provider-agnostic cases (a refusal block becomes `refusal`, and `stop` with tool calls becomes `tool_call`). The `FinishReason` type changes from `stop | length | tool_use | content_filter` to the values above (`tool_use` is now `tool_call`). `MessageFinishEvent.reason` is deprecated but still emitted with its old values (`tool_call` maps to `tool_use`, `refusal` to `content_filter`, `context_exceeded` to `length`; left unset for `other` and `error`). `response_metadata.finish_reason` on streamed messages now holds the raw provider value instead of the normalized one.

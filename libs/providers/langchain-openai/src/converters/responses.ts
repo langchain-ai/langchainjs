@@ -46,6 +46,10 @@ import {
 } from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
+import {
+  hasRefusalOutput,
+  normalizeResponseStatus,
+} from "../utils/finish_reason.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
@@ -543,6 +547,18 @@ export const convertResponsesMessageToAIMessage: Converter<
     }
   }
 
+  if (response.status) {
+    response_metadata.finish_reason = response.status;
+    response_metadata.normalized_finish_reason = normalizeResponseStatus(
+      response.status,
+      response.incomplete_details?.reason,
+      {
+        hasToolCalls: tool_calls.length + invalid_tool_calls.length > 0,
+        hasRefusal: hasRefusalOutput(response.output),
+      }
+    );
+  }
+
   return new AIMessage({
     id: response.id,
     content,
@@ -868,6 +884,11 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         response_metadata[key] = msg.response_metadata.output;
       } else {
         response_metadata[key] = value;
+      }
+    }
+    for (const key of ["finish_reason", "normalized_finish_reason"]) {
+      if (msg.response_metadata[key] !== undefined) {
+        response_metadata[key] = msg.response_metadata[key];
       }
     }
   } else if (
