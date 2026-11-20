@@ -346,3 +346,130 @@ describe("Real-world URLs", () => {
     expect(result).toBe(true);
   });
 });
+
+describe("address spellings", () => {
+  const blocked = (url: string) =>
+    expect(() => validateSafeUrl(url), url).toThrow();
+  const allowed = (url: string) => expect(validateSafeUrl(url), url).toBe(url);
+
+  test("bracketed IPv6 literals", () => {
+    blocked("https://[::1]/");
+    blocked("https://[::]/");
+    blocked("https://[fd12:3456::1]/");
+    blocked("https://[fe80::1]/");
+    blocked("https://[ff02::1]/");
+    allowed("https://[2606:4700:4700::1111]/");
+  });
+
+  test("IPv4-mapped IPv6 in every spelling", () => {
+    // new URL() rewrites the dotted form to hex: ::ffff:7f00:1
+    blocked("https://[::ffff:127.0.0.1]/");
+    blocked("https://[::ffff:7f00:1]/");
+    blocked("https://[0:0:0:0:0:ffff:7f00:1]/");
+    blocked("https://[::ffff:10.0.0.1]/");
+    blocked("https://[::ffff:169.254.169.254]/");
+    allowed("https://[::ffff:8.8.8.8]/");
+  });
+
+  test("IPv4 embedded in 6to4, Teredo and NAT64", () => {
+    blocked("https://[2002:7f00:1::]/"); // 6to4 127.0.0.1
+    blocked("https://[2002:a9fe:a9fe::1]/"); // 6to4 169.254.169.254
+    allowed("https://[2002:808:808::1]/"); // 6to4 8.8.8.8
+    blocked("https://[2001:0:4136:e378:8000:63bf:80ff:fffe]/"); // Teredo client 127.0.0.1
+    allowed("https://[2001:0:4136:e378:8000:63bf:f7f7:f7f7]/"); // Teredo client 8.8.8.8
+    blocked("https://[64:ff9b::7f00:1]/"); // NAT64 127.0.0.1
+    blocked("https://[64:ff9b::a00:1]/"); // NAT64 10.0.0.1
+    allowed("https://[64:ff9b::808:808]/"); // NAT64 8.8.8.8
+  });
+
+  test("local NAT64, IPv4-compatible and documentation IPv6 ranges", () => {
+    blocked("https://[64:ff9b:1::808:808]/");
+    blocked("https://[::808:808]/");
+    blocked("https://[2001:db8::1]/");
+  });
+
+  test.each([
+    "100.64.0.1",
+    "192.0.0.1",
+    "192.0.2.1",
+    "198.18.0.1",
+    "198.51.100.1",
+    "203.0.113.1",
+    "224.0.0.1",
+    "240.0.0.1",
+    "255.255.255.255",
+  ])("reserved IPv4 range %s", (ip) => {
+    blocked(`https://${ip}/`);
+    expect(isPrivateIp(ip)).toBe(true);
+  });
+
+  test("non-canonical IPv4 forms are canonicalized by URL", () => {
+    expect(new URL("https://127.1/").hostname).toBe("127.0.0.1");
+    blocked("https://127.1/");
+    blocked("https://0x7f000001/");
+    blocked("https://2130706433/");
+    blocked("https://0177.0.0.1/");
+    blocked("https://0/");
+  });
+
+  test("cloud metadata is blocked even with allowPrivate", () => {
+    for (const url of [
+      "https://169.254.169.254/",
+      "https://169.254.170.2/",
+      "https://169.254.170.23/",
+      "https://169.254.1.1/",
+      "https://100.100.100.200/",
+      "https://[fd00:ec2::254]/",
+      "https://[fd00:ec2::23]/",
+      "https://[fe80::a9fe:a9fe]/",
+      "https://metadata.google.internal/",
+      "https://metadata.amazonaws.com/",
+      "https://METADATA.google.internal./",
+    ]) {
+      expect(() => validateSafeUrl(url, { allowPrivate: true }), url).toThrow(
+        /metadata/
+      );
+    }
+  });
+
+  test("localhost and Kubernetes names", () => {
+    blocked("https://host.docker.internal/");
+    blocked("https://localhost./");
+    blocked("https://app.localhost/");
+    blocked("https://api.default.svc.cluster.local/");
+    expect(
+      validateSafeUrl("https://api.default.svc.cluster.local/", {
+        blockK8sInternal: false,
+      })
+    ).toBe("https://api.default.svc.cluster.local/");
+  });
+
+  test("allowedHosts skip the host checks but not metadata", () => {
+    expect(
+      validateSafeUrl("https://10.0.0.5/", { allowedHosts: ["10.0.0.5"] })
+    ).toBe("https://10.0.0.5/");
+    expect(
+      validateSafeUrl("https://localhost/", { allowedHosts: ["LOCALHOST"] })
+    ).toBe("https://localhost/");
+    expect(() =>
+      validateSafeUrl("https://169.254.169.254/", {
+        allowedHosts: ["169.254.169.254"],
+      })
+    ).toThrow(/metadata/);
+  });
+
+  test("policy options", () => {
+    expect(
+      validateSafeUrl("http://example.com/", { allowedSchemes: ["http"] })
+    ).toBe("http://example.com/");
+    expect(() =>
+      validateSafeUrl("https://example.com/", { allowedSchemes: ["http"] })
+    ).toThrow(/scheme/);
+    expect(
+      validateSafeUrl("https://192.168.1.1/", { blockPrivateIps: false })
+    ).toBe("https://192.168.1.1/");
+    expect(() =>
+      validateSafeUrl("https://127.0.0.1/", { blockPrivateIps: false })
+    ).toThrow(/localhost/);
+  });
+});
