@@ -1695,6 +1695,63 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  describe("bound abort signal", () => {
+    const neverAnsweringFetch = vi.fn<
+      (url: any, options?: any) => Promise<any>
+    >(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(init.signal.reason);
+          });
+        })
+    );
+
+    const makeModel = () =>
+      new ChatOpenAI({
+        apiKey: "test",
+        model: "gpt-5",
+        maxRetries: 0,
+        configuration: {
+          fetch: neverAnsweringFetch,
+        },
+      });
+
+    it("aborts when the bound signal fires and no call signal is given", async () => {
+      const bound = makeModel().withConfig({
+        signal: AbortSignal.timeout(1000),
+      });
+
+      await expect(bound.invoke("Hello")).rejects.toMatchObject({
+        name: "AbortError",
+      });
+    }, 5000);
+
+    it("aborts when the bound signal fires and a call signal is also present", async () => {
+      const bound = makeModel().withConfig({
+        signal: AbortSignal.timeout(1000),
+      });
+
+      // The request must end when the bound signal fires, roughly 1
+      // second in, instead of waiting on the call signal forever.
+      await expect(
+        bound.invoke("Hello", { signal: new AbortController().signal })
+      ).rejects.toThrow();
+    }, 5000);
+
+    it("aborts when the call signal fires and a bound signal is also present", async () => {
+      const bound = makeModel().withConfig({
+        signal: AbortSignal.timeout(10000),
+      });
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 100);
+
+      await expect(
+        bound.invoke("Hello", { signal: controller.signal })
+      ).rejects.toMatchObject({ name: "AbortError" });
+    });
+  });
+
   describe("generate", () => {
     test("should pass run manager to responsesAPI", async () => {
       const mockResponseDefaults = {
