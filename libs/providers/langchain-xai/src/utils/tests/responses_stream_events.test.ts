@@ -77,6 +77,8 @@ describe("convertXAIResponsesStream", () => {
         type: "response.completed",
         response: {
           id: "resp_r",
+          object: "response",
+          created_at: 0,
           status: "completed",
           model: "grok-3",
           output: [],
