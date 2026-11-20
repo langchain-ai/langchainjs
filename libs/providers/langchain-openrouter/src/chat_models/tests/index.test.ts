@@ -12,7 +12,7 @@ import { AIMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
-import { OpenRouterAuthError } from "../../utils/errors.js";
+import { OpenRouterAuthError, OpenRouterError } from "../../utils/errors.js";
 
 let savedKey: string | undefined;
 let savedSessionId: string | undefined;
@@ -97,6 +97,16 @@ describe("ChatOpenRouter constructor", () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
     expect(model.baseURL).toBe("https://openrouter.ai/api/v1");
     expect(model.streamUsage).toBe(true);
+  });
+
+  it("copies disableStreaming from params", () => {
+    expect(
+      new ChatOpenRouter({ model: "openai/gpt-4o" }).disableStreaming
+    ).toBe(false);
+    expect(
+      new ChatOpenRouter({ model: "openai/gpt-4o", disableStreaming: true })
+        .disableStreaming
+    ).toBe(true);
   });
 
   it("defaults siteUrl and siteName for OpenRouter attribution", () => {
@@ -456,6 +466,57 @@ describe("stream callbacks", () => {
         chunk: expect.objectContaining({ text }),
       })
     );
+  });
+
+  it("throws OpenRouterError on a mid-stream error event", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      streamUsage: false,
+    });
+
+    const events = [
+      {
+        id: "chatcmpl-1",
+        choices: [{ index: 0, delta: { content: "Partial answ" } }],
+      },
+      {
+        id: "chatcmpl-1",
+        error: { code: 502, message: "Provider disconnected" },
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "error" }],
+      },
+    ];
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const event of events) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
+          );
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(stream, { status: 200 }));
+
+    try {
+      const res = await model.stream("Hello");
+      await expect(async () => {
+        for await (const _chunk of res) {
+          // consume stream
+        }
+      }).rejects.toSatisfy(
+        (err: unknown) =>
+          OpenRouterError.isInstance(err) &&
+          err.message === "Provider disconnected" &&
+          err.code === 502
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });
 
