@@ -121,7 +121,22 @@ export class _HashedDocument implements HashedDocumentInterface {
   }
 
   private _hashNestedDictToUUID(data: Record<string, unknown>): string {
-    const serialized_data = JSON.stringify(data, Object.keys(data).sort());
+    // An array replacer is an allowlist applied at every depth, so it has to
+    // hold the keys of nested objects too, or their values are dropped from
+    // the hash. Sorted, it also fixes the key order at every level. For flat
+    // metadata this is the same list as before, so existing hashes still match.
+    const keys = new Set<string>();
+    JSON.stringify(data, (_key, value) => {
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+        for (const k of Object.keys(value)) keys.add(k);
+      }
+      return value;
+    });
+    const serialized_data = JSON.stringify(data, [...keys].sort());
     const hash_value = this.keyEncoder(serialized_data);
     return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
