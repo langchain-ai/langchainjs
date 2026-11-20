@@ -359,6 +359,39 @@ Bye!\n\n-H.`;
     ];
     expect(docs).toEqual(expectedDocs);
   });
+
+  test("Keeps an oversized split whole once the last separator is used", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      separators: ["\n\n", "\n", " "],
+      chunkSize: 20,
+      chunkOverlap: 0,
+    });
+    const output = await splitter.splitText(
+      "see https://example.com/a-very-long-url for details"
+    );
+    expect(output).toEqual([
+      "see",
+      " https://example.com/a-very-long-url",
+      "for details",
+    ]);
+  });
+
+  test("Does not throw when the last separator is used and keepSeparator is false", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      separators: ["\n\n", "\n", " "],
+      chunkSize: 20,
+      chunkOverlap: 0,
+      keepSeparator: false,
+    });
+    const output = await splitter.splitText(
+      "see https://example.com/a-very-long-url for details"
+    );
+    expect(output).toEqual([
+      "see",
+      "https://example.com/a-very-long-url",
+      "for details",
+    ]);
+  });
 });
 
 test("Separator length is considered correctly for chunk size", async () => {
