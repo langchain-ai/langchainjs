@@ -109,26 +109,15 @@ export class PineconeEmbeddings
    * @param text - Query string for which to generate embeddings.
    * */
   async embedQuery(text: string): Promise<number[]> {
-    // Change inputType to query-specific param for multilingual-e5-large embedding model
-    this.params.inputType = "query";
-
     if (!text) {
       throw new Error("No query passed for which to generate embeddings");
     }
-    let embeddings: EmbeddingsList;
-    if (this.params) {
-      embeddings = await this.caller.call(async () => {
-        return await this.client.inference.embed(
-          this.model,
-          [text],
-          this.params
-        );
-      });
-    } else {
-      embeddings = await this.caller.call(async () => {
-        return await this.client.inference.embed(this.model, [text], {});
-      });
-    }
+    // Use the query-specific inputType for this call only, without changing
+    // the instance params that embedDocuments relies on.
+    const queryParams = { ...this.params, inputType: "query" };
+    const embeddings: EmbeddingsList = await this.caller.call(async () => {
+      return await this.client.inference.embed(this.model, [text], queryParams);
+    });
     if ("values" in embeddings.data[0]) {
       return embeddings.data[0].values as number[];
     } else {
