@@ -1,6 +1,6 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAICompletions } from "@langchain/openai";
 import { CloudflareKVCache } from "@langchain/cloudflare";
 
 export interface Env {
@@ -12,9 +12,10 @@ export default {
   async fetch(_request: Request, env: Env) {
     try {
       const cache = new CloudflareKVCache(env.KV_NAMESPACE);
-      const model = new ChatOpenAI({
+      const model = new ChatOpenAICompletions({
         cache,
-        model: "gpt-3.5-turbo",
+        model: "gpt-5.6-terra",
+        reasoning: { effort: "none" },
         apiKey: env.OPENAI_API_KEY,
       });
       const response = await model.invoke("How are you today?");
