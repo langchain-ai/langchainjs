@@ -59,9 +59,7 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     // We want stable `.js` ESM output for `"type": "module"` packages.
     fixedExtension: false,
     dts: {
-      parallel: true,
       generator: "tsgo",
-      build: true,
     },
     sourcemap: true,
     unbundle: true,
