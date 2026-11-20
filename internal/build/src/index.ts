@@ -51,6 +51,7 @@ export {
  * ```
  */
 export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
+  const { dts, ...rest } = options ?? {};
   return {
     format: ["cjs", "esm"],
     target: "es2022",
@@ -58,11 +59,19 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     // rolldown/tsdown can emit `.mjs` for ESM when `fixedExtension` is enabled.
     // We want stable `.js` ESM output for `"type": "module"` packages.
     fixedExtension: false,
-    dts: {
-      parallel: true,
-      generator: "tsgo",
-      build: true,
-    },
+    // A package's own `dts` options are merged in, so a package that still has
+    // type errors can opt out with `dts: { typecheck: false }`.
+    dts:
+      dts !== undefined && typeof dts !== "object"
+        ? dts
+        : {
+            parallel: true,
+            generator: "tsgo",
+            build: true,
+            // Fail the build on type errors in anything the tsconfig includes.
+            typecheck: true,
+            ...dts,
+          },
     sourcemap: true,
     unbundle: true,
     // In unbundle (transpile-only) mode, dependencies remain as external imports
@@ -158,6 +167,6 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
       level: "error",
     },
     ignoreWatch: [`.turbo`, `dist`, `node_modules`],
-    ...options,
+    ...rest,
   };
 }

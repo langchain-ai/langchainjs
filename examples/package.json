@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "tsc --declaration --outDir dist/",
+    "build:compile": "tsc --noEmit --composite false --incremental false",
     "clean": "rm -rf .turbo dist/",
     "start": "tsx --experimental-wasm-modules -r dotenv/config src/index.ts",
     "start:dist": "pnpm build && node -r dotenv/config dist/index.js",
