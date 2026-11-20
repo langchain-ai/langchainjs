@@ -4,7 +4,8 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
 
   const firstFenceIndex = s.indexOf("```");
   if (firstFenceIndex === -1) {
-    return parser(s);
+    // JSON written as inline code (`{"a": 1}`): Python strips backticks too
+    return parser(s.replace(/^`+|`+$/g, "").trim());
   }
 
   let contentAfterFence = s.substring(firstFenceIndex + 3);
