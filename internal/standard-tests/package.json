@@ -18,6 +18,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
     "build": "exit 0",
+    "build:compile": "tsc --noEmit --composite false --incremental false",
     "clean": "rm -rf .turbo"
   },
   "dependencies": {
