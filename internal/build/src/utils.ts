@@ -1,5 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { setTimeout } from "node:timers/promises";
 import { format, type FormatConfig } from "oxfmt";
 
 export const PROJECT_ROOT = process.cwd();
@@ -68,9 +70,45 @@ export async function formatWithOxfmt(
 }
 
 /**
+ * Replaces `filePath` with `content` in one step: writes a temporary file next
+ * to it and renames that into place, so a build reading the file at the same
+ * time sees the old or the new content, never a half-written file. On Windows
+ * the rename can fail while another process has the file open, so it is
+ * retried a few times.
+ */
+export async function writeFileAtomic(
+  filePath: string,
+  content: string
+): Promise<void> {
+  const temporaryPath = `${filePath}.${randomUUID()}.tmp`;
+  try {
+    await fs.writeFile(temporaryPath, content, { flag: "wx" });
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        await fs.rename(temporaryPath, filePath);
+        return;
+      } catch (error) {
+        if (
+          process.platform !== "win32" ||
+          attempt >= 5 ||
+          !["EPERM", "EACCES", "EBUSY"].includes(
+            (error as NodeJS.ErrnoException).code ?? ""
+          )
+        ) {
+          throw error;
+        }
+        await setTimeout(50 * (attempt + 1));
+      }
+    }
+  } finally {
+    await fs.rm(temporaryPath, { force: true });
+  }
+}
+
+/**
  * Writes `content` to `filePath` unless the file already holds exactly that.
- * Generated files are committed and rarely change; rewriting an unchanged one
- * truncates it while the declaration build may be reading it.
+ * Generated files are committed and rarely change, so most builds skip the
+ * write entirely.
  *
  * @returns Whether the file was written
  */
@@ -80,6 +118,6 @@ export async function writeFileIfChanged(
 ): Promise<boolean> {
   const current = await fs.readFile(filePath, "utf-8").catch(() => undefined);
   if (current === content) return false;
-  await fs.writeFile(filePath, content);
+  await writeFileAtomic(filePath, content);
   return true;
 }
