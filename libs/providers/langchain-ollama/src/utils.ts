@@ -84,11 +84,9 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
   }));
   let toolCallMsgs: OllamaMessage | undefined;
 
-  if (
-    messages.content.find((c) => c.type === "tool_use") &&
-    messages.tool_calls?.length
-  ) {
-    // `tool_use` content types are accepted if the message has tool calls
+  if (messages.tool_calls?.length) {
+    // `tool_calls` is the source of truth, whether the content repeats them as
+    // `tool_use` blocks or as v1 `tool_call` blocks.
     const toolCalls: OllamaToolCall[] | undefined = messages.tool_calls?.map(
       (tc) => ({
         id: tc.id,
@@ -107,10 +105,7 @@ function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
         content: "",
       };
     }
-  } else if (
-    messages.content.find((c) => c.type === "tool_use") &&
-    !messages.tool_calls?.length
-  ) {
+  } else if (messages.content.find((c) => c.type === "tool_use")) {
     throw new Error(
       "'tool_use' content type is not supported without tool calls."
     );
