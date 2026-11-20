@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.6.6
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `finish_reason` (the `stop_reason`), `normalized_finish_reason` and `finish_state` in `response_metadata` on `invoke` and streamed results, and emit them on `message-finish`. `refusal` and `model_context_window_exceeded` map to `refusal` and `context_exceeded`, and `pause_turn` sets `finish_state: "suspended"`.
+
 ## 1.6.5
 
 ### Patch Changes
