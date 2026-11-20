@@ -1172,32 +1172,91 @@ describe("reasoning content replay", () => {
     ]);
   });
 
-  it("combines streamed redacted reasoning bytes before replay", () => {
-    const firstFragment = Buffer.from("a");
-    const secondFragment = Buffer.from("bc");
+  it("preserves adjacent redacted reasoning blocks before tool use", () => {
+    const blocks = [Buffer.from("a"), Buffer.from("bc")];
     const result = convertToConverseMessages([
       new AIMessage({
-        content: [
-          {
-            type: "reasoning_content",
-            redactedContent: firstFragment.toString("base64"),
-          },
-          {
-            type: "reasoning_content",
-            redactedContent: secondFragment.toString("base64"),
-          },
-        ],
+        content: blocks.map((block) => ({
+          type: "reasoning_content",
+          redactedContent: block.toString("base64"),
+        })),
+        tool_calls: [{ id: "call_1", name: "lookup", args: {} }],
       }),
     ]);
 
     expect(result.converseMessages[0].content).toEqual([
-      {
-        reasoningContent: {
-          redactedContent: Buffer.concat([firstFragment, secondFragment]),
-        },
-      },
+      ...blocks.map((redactedContent) => ({
+        reasoningContent: { redactedContent },
+      })),
+      { toolUse: { toolUseId: "call_1", name: "lookup", input: {} } },
     ]);
   });
+
+  it.each(["stream", "streamEvents"] as const)(
+    "buffers redacted %s fragments per block before replay",
+    async (method) => {
+      const model = new ChatBedrockConverse({
+        region: "us-east-1",
+        credentials: { accessKeyId: "fake", secretAccessKey: "fake" },
+      });
+      const blocks = [Buffer.from("abcde"), Buffer.from("fghij")];
+      vi.spyOn(model.client, "send").mockResolvedValue({
+        stream: (async function* () {
+          for (const [contentBlockIndex, block] of blocks.entries()) {
+            for (const redactedContent of [
+              block.subarray(0, 1),
+              block.subarray(1),
+            ]) {
+              yield {
+                contentBlockDelta: {
+                  contentBlockIndex,
+                  delta: { reasoningContent: { redactedContent } },
+                },
+              };
+            }
+            yield { contentBlockStop: { contentBlockIndex } };
+          }
+          yield {
+            contentBlockStart: {
+              contentBlockIndex: 2,
+              start: { toolUse: { toolUseId: "call_1", name: "lookup" } },
+            },
+          };
+          yield {
+            contentBlockDelta: {
+              contentBlockIndex: 2,
+              delta: { toolUse: { input: "{}" } },
+            },
+          };
+          yield { contentBlockStop: { contentBlockIndex: 2 } };
+        })(),
+      } as never);
+
+      let full: AIMessage | undefined;
+      if (method === "streamEvents") {
+        full = await model.streamEvents("Hello").output;
+      } else {
+        let accumulated: AIMessageChunk | undefined;
+        for await (const chunk of await model.stream("Hello")) {
+          accumulated = accumulated ? concat(accumulated, chunk) : chunk;
+        }
+        full = accumulated;
+        expect(full?.content).toEqual(
+          blocks.map((block) => ({
+            type: "reasoning_content",
+            redactedContent: block.toString("base64"),
+          }))
+        );
+      }
+      const result = convertToConverseMessages([full!]);
+      expect(result.converseMessages[0].content).toEqual([
+        ...blocks.map((redactedContent) => ({
+          reasoningContent: { redactedContent },
+        })),
+        { toolUse: { toolUseId: "call_1", name: "lookup", input: {} } },
+      ]);
+    }
+  );
 
   it("replays legacy provider-native reasoning", () => {
     const result = convertToConverseMessages([
