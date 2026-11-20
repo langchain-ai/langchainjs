@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
 import type { PackageJson } from "type-fest";
-import { formatWithOxfmt } from "../utils.ts";
+import { formatWithOxfmt, writeFileIfChanged } from "../utils.ts";
 import { pathToFileURL } from "node:url";
 
 /**
@@ -177,13 +177,7 @@ export function importConstantsPlugin(
       ];
 
       const content = await formatWithOxfmt(lines.join("\n"), outputPath);
-      // The file is committed, so it rarely changes. Rewriting it anyway
-      // truncates it while the declaration build may be reading it.
-      const current = await this.fs
-        .readFile(outputPath, { encoding: "utf8" })
-        .catch(() => undefined);
-      if (current !== content) {
-        await this.fs.writeFile(outputPath, content);
+      if (await writeFileIfChanged(outputPath, content)) {
         this.info(`📝 Generated import constants file: ${outputPath}`);
       }
     },

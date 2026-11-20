@@ -66,3 +66,20 @@ export async function formatWithOxfmt(
   }
   return result.code;
 }
+
+/**
+ * Writes `content` to `filePath` unless the file already holds exactly that.
+ * Generated files are committed and rarely change; rewriting an unchanged one
+ * truncates it while the declaration build may be reading it.
+ *
+ * @returns Whether the file was written
+ */
+export async function writeFileIfChanged(
+  filePath: string,
+  content: string
+): Promise<boolean> {
+  const current = await fs.readFile(filePath, "utf-8").catch(() => undefined);
+  if (current === content) return false;
+  await fs.writeFile(filePath, content);
+  return true;
+}
