@@ -5,11 +5,9 @@
  */
 
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapGeminiFinishReason } from "./finish_reason.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type GeminiStreamResponse = Record<string, any>;
@@ -34,7 +32,7 @@ export async function* convertGoogleGeminiStream(
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason = "stop";
+  let rawFinishReason: string | undefined;
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -70,7 +68,7 @@ export async function* convertGoogleGeminiStream(
 
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
-      finishReason = mapGeminiFinishReason(candidate.finishReason);
+      rawFinishReason = candidate.finishReason;
     }
 
     const parts = candidate?.content?.parts;
@@ -170,33 +168,11 @@ export async function* convertGoogleGeminiStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...mapGeminiFinishReason(
+      rawFinishReason,
+      [...blockKeyToIndex.keys()].some((key) => key.startsWith("tool:"))
+    ),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "google" },
   };
-}
-
-function mapGeminiFinishReason(reason: string): FinishReason {
-  switch (reason.toLowerCase()) {
-    case "max_tokens":
-    case "max-token":
-    case "max_token":
-      return "length";
-    case "safety":
-    case "recitation":
-    case "language":
-    case "blocklist":
-    case "prohibited_content":
-    case "prohibited-content":
-    case "spii":
-    case "image_safety":
-    case "image-safety":
-    case "image_prohibited_content":
-    case "image-prohibited-content":
-    case "image_recitation":
-    case "image-recitation":
-      return "content_filter";
-    default:
-      return "stop";
-  }
 }

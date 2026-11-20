@@ -3,6 +3,12 @@ import { _makeMessageChunkFromAnthropicEvent } from "../message_outputs.js";
 
 const fields = { streamUsage: true, coerceContentToString: false };
 
+const endTurnMetadata = {
+  finish_reason: "end_turn",
+  normalized_finish_reason: "stop",
+  finish_state: "complete",
+};
+
 describe("_makeMessageChunkFromAnthropicEvent", () => {
   test("message_start chunk carries no usage", () => {
     const event = {
@@ -75,13 +81,14 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
 
     expect(result!.chunk.response_metadata).toEqual({
       usage: { cache_read_input_tokens: 1000, cost: 0.0123 },
+      ...endTurnMetadata,
     });
     expect(result!.chunk.usage_metadata).toMatchObject({
       output_tokens: 42,
     });
   });
 
-  test("message_delta with no cost leaves response_metadata unchanged", () => {
+  test("message_delta with no cost only carries finish reason metadata", () => {
     const event = {
       type: "message_delta" as const,
       delta: { stop_reason: "end_turn" as const, stop_sequence: null },
@@ -91,7 +98,7 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = _makeMessageChunkFromAnthropicEvent(event as any, fields);
     expect(result).not.toBeNull();
-    expect(result!.chunk.response_metadata).toEqual({});
+    expect(result!.chunk.response_metadata).toEqual(endTurnMetadata);
   });
 
   test("message_delta cost is preserved when streamUsage is false", () => {
@@ -109,6 +116,7 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
     expect(result).not.toBeNull();
     expect(result!.chunk.response_metadata).toEqual({
       usage: { cost: 0.0123 },
+      ...endTurnMetadata,
     });
     expect(result!.chunk.usage_metadata).toBeUndefined();
   });
@@ -152,6 +160,7 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
     expect(final.response_metadata).toEqual({
       model_provider: "anthropic",
       usage: { cost: 0.0123 },
+      ...endTurnMetadata,
     });
   });
 

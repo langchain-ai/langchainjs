@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.8.5
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `normalized_finish_reason` in `response_metadata` for Chat Completions (a refusal or a forced tool call ending in `stop` maps to `refusal` / `tool_call`), and `finish_reason` (the `status`) plus `normalized_finish_reason` for the Responses API, on `invoke` and streamed results. Responses `message-finish` events carry the same fields.
+
 ## 1.8.4
 
 ### Patch Changes

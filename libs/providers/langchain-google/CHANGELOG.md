@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.2.17
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `normalized_finish_reason` in `response_metadata` on `invoke` and streamed results for generate content and interactions, and emit it on `message-finish`. `SAFETY`, `PROHIBITED_CONTENT` and `BLOCKLIST` normalize to `refusal`, `MALFORMED_FUNCTION_CALL` and `MALFORMED_RESPONSE` to `error`, and unmapped values to `other`.
+
 ## 0.2.16
 
 ### Patch Changes

@@ -478,7 +478,7 @@ describe("ChatModelStream", () => {
       expect(message.usage_metadata?.output_tokens).toBe(2);
 
       // Response metadata
-      expect(message.response_metadata?.finish_reason).toBe("stop");
+      expect(message.response_metadata?.normalized_finish_reason).toBe("stop");
       expect(message.response_metadata?.model_name).toBe("test-model");
     });
 
@@ -515,7 +515,9 @@ describe("ChatModelStream", () => {
       expect(message.tool_calls?.[0]?.name).toBe("calculator");
 
       // Finish reason
-      expect(message.response_metadata?.finish_reason).toBe("tool_use");
+      expect(message.response_metadata?.normalized_finish_reason).toBe(
+        "tool_call"
+      );
     });
 
     test("normalizes provider tool-use blocks into tool calls", async () => {

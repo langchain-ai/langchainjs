@@ -504,6 +504,88 @@ describe("GenerateContentApiHandler", () => {
       expect(receivedChunks[0].text).toBe("Hello ");
       expect(receivedChunks[1].text).toBe("world!");
     });
+
+    test.each([
+      ["STOP", [{ text: "hi" }], "stop"],
+      ["MAX_TOKENS", [{ text: "hi" }], "length"],
+      ["SAFETY", [{ text: "hi" }], "refusal"],
+      ["MALFORMED_FUNCTION_CALL", [{ text: "" }], "error"],
+      ["MALFORMED_RESPONSE", [{ text: "" }], "error"],
+      ["SOMETHING_NEW", [{ text: "hi" }], "other"],
+      [
+        "STOP",
+        [{ functionCall: { name: "search", args: { q: "x" } } }],
+        "tool_call",
+      ],
+    ])(
+      "sets finish reason metadata on generate for %s",
+      async (finishReason, parts, normalized) => {
+        const mockClient = new MockApiClient(
+          () =>
+            new Response(
+              JSON.stringify({
+                candidates: [{ content: { parts }, finishReason }],
+              }),
+              { headers: { "Content-Type": "application/json" } }
+            )
+        );
+        const handler = createHandler({ apiClient: mockClient });
+
+        const result = await handler.generate([new HumanMessage("Hello")]);
+
+        expect(result.generations[0].message.response_metadata).toMatchObject({
+          finish_reason: finishReason,
+          normalized_finish_reason: normalized,
+        });
+      }
+    );
+
+    test("sets finish reason metadata only on the finishing legacy stream chunk", async () => {
+      const chunks = [
+        { candidates: [{ content: { parts: [{ text: "Hello " }] } }] },
+        {
+          candidates: [
+            {
+              content: { parts: [{ text: "world!" }] },
+              finishReason: "MAX_TOKENS",
+            },
+          ],
+        },
+      ];
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          for (const chunk of chunks) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`)
+            );
+          }
+          controller.close();
+        },
+      });
+      const mockClient = new MockApiClient(
+        () =>
+          new Response(stream, {
+            headers: { "Content-Type": "text/event-stream" },
+          })
+      );
+      const handler = createHandler({ apiClient: mockClient });
+
+      const receivedChunks: ChatGenerationChunk[] = [];
+      for await (const chunk of handler.streamResponseChunks([
+        new HumanMessage("Hello"),
+      ])) {
+        receivedChunks.push(chunk);
+      }
+
+      expect(receivedChunks[0].message.response_metadata).not.toHaveProperty(
+        "normalized_finish_reason"
+      );
+      expect(receivedChunks[1].message.response_metadata).toMatchObject({
+        finish_reason: "MAX_TOKENS",
+        normalized_finish_reason: "length",
+      });
+    });
   });
 
   describe("BaseChatGoogle with custom handler", () => {

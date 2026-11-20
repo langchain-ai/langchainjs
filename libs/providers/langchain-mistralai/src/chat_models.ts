@@ -91,6 +91,30 @@ interface TokenUsage {
 
 type ChatMistralAIToolType = MistralAIToolCall | MistralAITool | BindToolsInput;
 
+// Core reads `normalized_finish_reason` but no longer maps provider values.
+const NORMALIZED_FINISH_REASONS: Record<string, string> = {
+  stop: "stop",
+  length: "length",
+  max_tokens: "length",
+  model_length: "length",
+  tool_calls: "tool_call",
+  function_call: "tool_call",
+  content_filter: "content_filter",
+  error: "error",
+};
+
+function finishReasonFields(
+  finishReason: string | null | undefined
+): Record<string, string> {
+  if (!finishReason) return {};
+  return {
+    finishReason,
+    finish_reason: finishReason,
+    normalized_finish_reason:
+      NORMALIZED_FINISH_REASONS[finishReason] ?? "other",
+  };
+}
+
 export interface ChatMistralAICallOptions extends Omit<
   BaseLanguageModelCallOptions,
   "stop"
@@ -1222,9 +1246,7 @@ export class ChatMistralAI<
         message: mistralAIResponseToChatMessage(part, response?.usage),
       };
       const generationInfo: Record<string, unknown> = {};
-      if (part.finishReason) {
-        generationInfo.finishReason = part.finishReason;
-      }
+      Object.assign(generationInfo, finishReasonFields(part.finishReason));
       if (response?.model) {
         generationInfo.model = response.model;
       }
@@ -1312,9 +1334,7 @@ export class ChatMistralAI<
       if (data?.model) {
         generationInfo.model = data.model;
       }
-      if (choice.finishReason) {
-        generationInfo.finishReason = choice.finishReason;
-      }
+      Object.assign(generationInfo, finishReasonFields(choice.finishReason));
       const generationChunk = new ChatGenerationChunk({
         message,
         text,

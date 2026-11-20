@@ -5,11 +5,9 @@
  */
 
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapCohereFinishReason } from "./finish_reason.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type CohereStreamChunk = Record<string, any>;
@@ -28,6 +26,7 @@ export async function* convertCohereStream(
   let textStarted = false;
   let accumulatedText = "";
   let usageSnapshot: UsageMetadata | undefined;
+  let rawFinishReason: string | undefined;
   const toolBlocks = new Map<
     number,
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,6 +59,7 @@ export async function* convertCohereStream(
       };
     } else if (chunk.eventType === "stream-end") {
       const response = chunk.response ?? {};
+      rawFinishReason = chunk.finishReason ?? response.finishReason;
       if (shouldStreamUsage && response.meta?.tokens) {
         const input = response.meta.tokens.inputTokens ?? 0;
         const output = response.meta.tokens.outputTokens ?? 0;
@@ -121,7 +121,7 @@ export async function* convertCohereStream(
 
   yield {
     event: "message-finish" as const,
-    reason: "stop" as FinishReason,
+    ...mapCohereFinishReason(rawFinishReason, toolBlocks.size > 0),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "cohere" },
   };

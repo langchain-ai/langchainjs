@@ -16,6 +16,7 @@ import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertCohereStream } from "./utils/stream_events.js";
+import { getFinishReasonMetadata } from "./utils/finish_reason.js";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -1120,6 +1121,10 @@ export class ChatCohere<
           content: response.text,
           additional_kwargs: generationInfo,
           tool_calls: toolCalls,
+          response_metadata: getFinishReasonMetadata(
+            response.finishReason,
+            toolCalls.length > 0
+          ),
           usage_metadata: {
             input_tokens: tokenUsage.promptTokens ?? 0,
             output_tokens: tokenUsage.completionTokens ?? 0,
@@ -1249,6 +1254,10 @@ export class ChatCohere<
             additional_kwargs: {
               eventType: "stream-end",
             },
+            response_metadata: getFinishReasonMetadata(
+              chunk.finishReason ?? chunk.response.finishReason,
+              toolCallChunks.length > 0
+            ),
             tool_call_chunks: toolCallChunks,
             usage_metadata: {
               input_tokens,

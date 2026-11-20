@@ -9,6 +9,7 @@ import {
 } from "@langchain/core/messages";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
+import type { ChatGenerationChunk } from "@langchain/core/outputs";
 import {
   ConversationRole as BedrockConversationRole,
   BedrockRuntimeClient,
@@ -2887,6 +2888,93 @@ describe("additionalModelResponseFieldPaths / Anthropic thinking tokens", () => 
       output_tokens: 565,
       total_tokens: 585,
       output_token_details: { reasoning: 562 },
+    });
+  });
+});
+
+describe("finish reason response metadata", () => {
+  function createModel() {
+    return new ChatBedrockConverse({
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      region: "us-east-1",
+      credentials: { accessKeyId: "fake", secretAccessKey: "fake" },
+    });
+  }
+
+  test.each([
+    ["end_turn", "stop"],
+    ["stop_sequence", "stop"],
+    ["max_tokens", "length"],
+    ["tool_use", "tool_call"],
+    ["guardrail_intervened", "content_filter"],
+    ["content_filtered", "content_filter"],
+    ["model_context_window_exceeded", "context_exceeded"],
+    ["malformed_model_output", "error"],
+    ["malformed_tool_use", "error"],
+    ["something_new", "other"],
+  ])("invoke maps %s to %s", async (stopReason, normalized) => {
+    const model = createModel();
+    vi.spyOn(model.client, "send").mockResolvedValue({
+      output: { message: { role: "assistant", content: [{ text: "hi" }] } },
+      stopReason,
+    } as never);
+
+    const result = await model.invoke("Hello");
+
+    expect(result.response_metadata).toMatchObject({
+      stopReason,
+      finish_reason: stopReason,
+      normalized_finish_reason: normalized,
+    });
+  });
+
+  test("invoke sets nothing without a stop reason", async () => {
+    const model = createModel();
+    vi.spyOn(model.client, "send").mockResolvedValue({
+      output: { message: { role: "assistant", content: [{ text: "hi" }] } },
+    } as never);
+
+    const result = await model.invoke("Hello");
+
+    expect(result.response_metadata).not.toHaveProperty("finish_reason");
+    expect(result.response_metadata).not.toHaveProperty(
+      "normalized_finish_reason"
+    );
+  });
+
+  test("legacy stream sets finish keys only on the messageStop chunk", async () => {
+    const model = createModel();
+    vi.spyOn(model.client, "send").mockResolvedValue({
+      stream: (async function* () {
+        yield { messageStart: { role: "assistant" } };
+        yield {
+          contentBlockDelta: { contentBlockIndex: 0, delta: { text: "hi" } },
+        };
+        yield { messageStop: { stopReason: "malformed_tool_use" } };
+        yield {
+          metadata: {
+            usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+          },
+        };
+      })(),
+    } as never);
+
+    const chunks: ChatGenerationChunk[] = [];
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("Hello")],
+      {}
+    )) {
+      chunks.push(chunk);
+    }
+
+    const withFinish = chunks.filter(
+      (c) => c.message.response_metadata.finish_reason !== undefined
+    );
+    expect(withFinish).toHaveLength(1);
+    expect(withFinish[0].message.response_metadata).toMatchObject({
+      messageStop: { stopReason: "malformed_tool_use" },
+      finish_reason: "malformed_tool_use",
+      normalized_finish_reason: "error",
     });
   });
 });

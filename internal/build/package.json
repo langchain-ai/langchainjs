@@ -13,7 +13,7 @@
     "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "publint": "^0.3.25",
     "rolldown": "^1.2.16",
-    "tsdown": "^0.23.4",
+    "tsdown": "^0.23.7",
     "type-fest": "^5.10.0",
     "typescript": "^7.0.2",
     "unplugin-unused": "^0.6.0"

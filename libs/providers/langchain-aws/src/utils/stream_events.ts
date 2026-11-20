@@ -6,11 +6,9 @@
 
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapStopReason } from "./finish_reason.js";
 import { getReasoningTokensFromAdditionalFields } from "./message_outputs.js";
 
 export interface ConvertBedrockConverseStreamOptions {
@@ -31,7 +29,7 @@ export async function* convertBedrockConverseStream(
   >();
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let rawStopReason: string | undefined;
   let reasoningTokens: number | undefined;
 
   for await (const event of source) {
@@ -150,7 +148,7 @@ export async function* convertBedrockConverseStream(
       };
       yield { event: "usage" as const, usage: usageSnapshot };
     } else if (event.messageStop?.stopReason) {
-      finishReason = mapStopReason(event.messageStop.stopReason);
+      rawStopReason = event.messageStop.stopReason;
       reasoningTokens = getReasoningTokensFromAdditionalFields(
         event.messageStop.additionalModelResponseFields
       );
@@ -181,25 +179,8 @@ export async function* convertBedrockConverseStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...mapStopReason(rawStopReason),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "bedrock-converse" },
   };
-}
-
-function mapStopReason(stopReason: string): FinishReason {
-  switch (stopReason) {
-    case "end_turn":
-    case "stop_sequence":
-      return "stop";
-    case "tool_use":
-      return "tool_use";
-    case "max_tokens":
-      return "length";
-    case "guardrail_intervened":
-    case "content_filtered":
-      return "content_filter";
-    default:
-      return "stop";
-  }
 }
