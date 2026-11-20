@@ -27,6 +27,7 @@ import {
   BaseChatOpenAI,
   BaseChatOpenAIFields,
   getChatOpenAIModelParams,
+  mergeCallOptions,
 } from "./base.js";
 
 export type { OpenAICallOptions, OpenAIChatInput };
@@ -792,7 +793,7 @@ export class ChatOpenAI<
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     const newModel = new ChatOpenAI<CallOptions>(this.fields);
-    newModel.defaultOptions = { ...this.defaultOptions, ...config };
+    newModel.defaultOptions = mergeCallOptions(this.defaultOptions, config);
     return newModel;
   }
 }
