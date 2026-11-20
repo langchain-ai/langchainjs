@@ -1,6 +1,7 @@
 import { getBuildConfig, cjsCompatPlugin } from "@langchain/build";
 
 export default getBuildConfig({
+  dts: { typecheck: false },
   entry: ["./src/index.ts"],
   plugins: [
     cjsCompatPlugin({
