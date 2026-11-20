@@ -237,6 +237,16 @@ export function _formatStandardContent(
           id: block.id ?? "",
           input: block.args,
         });
+      } else if (
+        block.name === "tool_search_tool_bm25" ||
+        block.name === "tool_search_tool_regex"
+      ) {
+        result.push({
+          type: "server_tool_use",
+          name: block.name,
+          id: block.id ?? "",
+          input: block.args,
+        });
       }
     } else if (block.type === "server_tool_call_result" && isAnthropicMessage) {
       if (block.name === "web_search" && Array.isArray(block.output.urls)) {
@@ -261,6 +271,13 @@ export function _formatStandardContent(
       } else if (block.name === "mcp_tool_result") {
         result.push({
           type: "mcp_tool_result",
+          tool_use_id: block.toolCallId ?? "",
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+          content: block.output as any,
+        });
+      } else if (block.name === "tool_search") {
+        result.push({
+          type: "tool_search_tool_result",
           tool_use_id: block.toolCallId ?? "",
           // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           content: block.output as any,
