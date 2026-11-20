@@ -156,9 +156,23 @@ describe("convertBedrockConverseStream", () => {
     const finish = events.find((e) => e.event === "message-finish");
     expect(finish).toMatchObject({
       event: "message-finish",
-      reason: "length",
+      normalizedFinishReason: "length",
     });
   });
+
+  test.each(["malformed_model_output", "malformed_tool_use"])(
+    "maps %s stop reason to error",
+    async (stopReason) => {
+      const events = await collectEvents([{ messageStop: { stopReason } }]);
+
+      const finish = events.find((e) => e.event === "message-finish");
+      expect(finish).toMatchObject({
+        finishReason: stopReason,
+        normalizedFinishReason: "error",
+      });
+      expect(finish).not.toHaveProperty("reason", expect.anything());
+    }
+  );
 
   test("maps thinking tokens from messageStop into usage", async () => {
     const messageStop = {

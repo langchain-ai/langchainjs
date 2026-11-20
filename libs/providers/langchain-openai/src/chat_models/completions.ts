@@ -40,6 +40,7 @@ import {
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
 import { convertOpenAICompletionsStream } from "../utils/stream_events.js";
+import { normalizeCompletionsFinishReason } from "../utils/finish_reason.js";
 
 export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
@@ -345,7 +346,18 @@ export class ChatOpenAICompletions<
           ),
         };
         generation.generationInfo = {
-          ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
+          ...(part.finish_reason
+            ? {
+                finish_reason: part.finish_reason,
+                normalized_finish_reason: normalizeCompletionsFinishReason(
+                  part.finish_reason,
+                  {
+                    hasToolCalls: (part.message?.tool_calls?.length ?? 0) > 0,
+                    hasRefusal: !!part.message?.refusal,
+                  }
+                ),
+              }
+            : {}),
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
         if (isAIMessage(generation.message)) {
@@ -485,6 +497,9 @@ export class ChatOpenAICompletions<
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
+        // Refusal and tool calls from earlier chunks are corrected by core.
+        generationInfo.normalized_finish_reason =
+          normalizeCompletionsFinishReason(choice.finish_reason);
         // Only include system fingerprint in the last chunk for now
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;

@@ -1,5 +1,11 @@
 # @langchain/perplexity
 
+## 0.3.1
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `finish_reason` and `normalized_finish_reason` in `response_metadata` on Chat Completions `invoke` and streamed results; unmapped values normalize to `other`.
+
 ## 0.3.0
 
 ### Minor Changes

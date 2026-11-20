@@ -8,10 +8,12 @@ import type {
   ChatModelStreamEvent,
   ContentBlockDelta,
   FinishReason,
+  MessageFinishEvent,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
 import { _mergeStreamUsage, buildUsageMetadata } from "./message_outputs.js";
+import { mapAnthropicStopReason } from "./finish_reason.js";
 
 // ─── Public API ─────────────────────────────────────────────────
 
@@ -98,7 +100,7 @@ export async function* convertAnthropicStream(
       case "message_stop": {
         yield {
           event: "message-finish" as const,
-          reason: mapStopReason(stopReason),
+          ...mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
           responseMetadata,
@@ -168,20 +170,18 @@ export async function* convertAnthropicStream(
 
 // ─── Internal helpers ───────────────────────────────────────────
 
-function mapStopReason(stopReason: string | null | undefined): FinishReason {
-  switch (stopReason) {
-    case "end_turn":
-    case "stop_sequence":
-      return "stop";
-    case "tool_use":
-      return "tool_use";
-    case "max_tokens":
-      return "length";
-    case "refusal":
-      return "content_filter";
-    default:
-      return "stop";
-  }
+function mapStopReason(
+  stopReason: string | null | undefined
+): Pick<
+  MessageFinishEvent,
+  "finishReason" | "normalizedFinishReason" | "finishState" | "reason"
+> {
+  const info = mapAnthropicStopReason(stopReason);
+  if (!info) return {};
+  return {
+    ...info,
+    reason: toLegacyReason(info.normalizedFinishReason),
+  };
 }
 
 function mapBlockToContentBlock(
@@ -377,4 +377,12 @@ function finalizeBlock(
 
   const { index: _index, ...rest } = accumulated;
   return rest as ContentBlock;
+}
+
+// Keeps the deprecated `reason` populated with its old values.
+function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
+  if (reason === "tool_call") return "tool_use";
+  if (reason === "refusal") return "content_filter";
+  if (reason === "context_exceeded") return "length";
+  return reason === "other" || reason === "error" ? undefined : reason;
 }

@@ -1,4 +1,4 @@
-import type { UserConfig as BuildOptions } from "tsdown";
+import type { UserConfig as BuildOptions, DtsOptions } from "tsdown";
 import type { PackageJson } from "type-fest";
 import path from "node:path";
 
@@ -19,6 +19,21 @@ export {
   lcSecretsPlugin,
 } from "./plugins/lc-secrets.ts";
 
+/** Declaration build options shared by every package. */
+const sharedDts: DtsOptions = {
+  generator: "tsgo",
+  // Fail the build on type errors in anything the package's tsconfig includes.
+  typecheck: true,
+};
+
+type BuildConfigOptions = Omit<Partial<BuildOptions>, "dts"> & {
+  /**
+   * Merged into the shared declaration options. A package that still has type
+   * errors opts out with `{ typecheck: false }`.
+   */
+  dts?: Extract<BuildOptions["dts"], object>;
+};
+
 /**
  * Creates a standardized tsdown build configuration for LangChain packages.
  *
@@ -29,7 +44,8 @@ export {
  * - Source maps
  * - Validation via ATTW, publint, and unused exports checking
  *
- * @param options - Optional partial build options to override defaults
+ * @param options - Optional partial build options to override defaults. `dts`
+ *   is merged into the shared declaration options instead of replacing them.
  * @returns A complete tsdown build configuration object
  *
  * @example
@@ -50,7 +66,8 @@ export {
  * });
  * ```
  */
-export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
+export function getBuildConfig(options?: BuildConfigOptions): BuildOptions {
+  const { dts, ...rest } = options ?? {};
   return {
     format: ["cjs", "esm"],
     target: "es2022",
@@ -58,11 +75,7 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     // rolldown/tsdown can emit `.mjs` for ESM when `fixedExtension` is enabled.
     // We want stable `.js` ESM output for `"type": "module"` packages.
     fixedExtension: false,
-    dts: {
-      parallel: true,
-      generator: "tsgo",
-      build: true,
-    },
+    dts: { ...sharedDts, ...dts },
     sourcemap: true,
     unbundle: true,
     // In unbundle (transpile-only) mode, dependencies remain as external imports
@@ -158,6 +171,6 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
       level: "error",
     },
     ignoreWatch: [`.turbo`, `dist`, `node_modules`],
-    ...options,
+    ...rest,
   };
 }

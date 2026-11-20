@@ -13,6 +13,7 @@ import { AnthropicMessageResponse } from "../types.js";
 import { extractToolCalls } from "../output_parsers.js";
 import { _isAnthropicCompactionBlock } from "./content.js";
 import { iife } from "./index.js";
+import { finishReasonResponseMetadata } from "./finish_reason.js";
 
 /**
  * `message_delta` usage is cumulative for the request, but some providers
@@ -75,7 +76,11 @@ export function _makeMessageChunkFromAnthropicEvent(
       if (Object.keys(usage).length > 0) {
         output["usage"] = usage;
       }
-      return output;
+      // Only on this chunk: concat would join repeated string values.
+      return {
+        ...output,
+        ...finishReasonResponseMetadata(data.delta.stop_reason),
+      };
     });
     return {
       chunk: new AIMessageChunk({
@@ -284,6 +289,9 @@ export function anthropicResponseToChatMessages(
   const response_metadata = {
     ...additionalKwargs,
     model_provider: "anthropic",
+    ...finishReasonResponseMetadata(
+      additionalKwargs.stop_reason as string | null | undefined
+    ),
   };
   const usage: Record<string, number> | null | undefined =
     additionalKwargs.usage as Record<string, number> | null | undefined;

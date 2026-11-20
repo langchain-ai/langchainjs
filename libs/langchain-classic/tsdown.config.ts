@@ -7,6 +7,7 @@ import {
 } from "@langchain/build";
 
 export default getBuildConfig({
+  dts: { typecheck: false },
   external: ["langsmith", "eventemitter3"],
   inlineOnly: false,
   entry: [

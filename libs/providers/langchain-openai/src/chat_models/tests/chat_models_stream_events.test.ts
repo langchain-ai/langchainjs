@@ -488,9 +488,9 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       }
 
       const finish = events.find((e) => e.event === "message-finish") as {
-        reason: string;
+        normalizedFinishReason: string;
       };
-      expect(finish.reason).toBe("stop");
+      expect(finish.normalizedFinishReason).toBe("stop");
     });
   });
 
@@ -643,9 +643,9 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       }
 
       const finish = events.find((e) => e.event === "message-finish") as {
-        reason: string;
+        normalizedFinishReason: string;
       };
-      expect(finish.reason).toBe("tool_use");
+      expect(finish.normalizedFinishReason).toBe("tool_call");
     });
 
     test("parallel tool calls get distinct block indices", async () => {

@@ -467,9 +467,9 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       const finish = events.find((e) => e.event === "message-finish") as {
-        reason: string;
+        normalizedFinishReason: string;
       };
-      expect(finish.reason).toBe("stop");
+      expect(finish.normalizedFinishReason).toBe("stop");
     });
   });
 
@@ -587,9 +587,9 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       const finish = events.find((e) => e.event === "message-finish") as {
-        reason: string;
+        normalizedFinishReason: string;
       };
-      expect(finish.reason).toBe("tool_use");
+      expect(finish.normalizedFinishReason).toBe("tool_call");
     });
   });
 

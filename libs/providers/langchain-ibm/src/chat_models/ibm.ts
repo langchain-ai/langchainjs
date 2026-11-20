@@ -164,6 +164,28 @@ export type ChatWatsonxConstructor = BaseChatModelParams &
   WatsonxCallParams &
   WatsonxDeployedParams;
 
+// Core reads `normalized_finish_reason` but no longer maps provider values.
+const NORMALIZED_FINISH_REASONS: Record<string, string> = {
+  stop: "stop",
+  length: "length",
+  max_tokens: "length",
+  tool_calls: "tool_call",
+  function_call: "tool_call",
+  content_filter: "content_filter",
+  error: "error",
+};
+
+function finishReasonFields(
+  finishReason: string | null | undefined
+): Record<string, string> {
+  if (!finishReason) return {};
+  return {
+    finish_reason: finishReason,
+    normalized_finish_reason:
+      NORMALIZED_FINISH_REASONS[finishReason] ?? "other",
+  };
+}
+
 function _convertToValidToolId(model: string, tool_call_id: string): string {
   if (model.startsWith("mistralai") && tool_call_id)
     return _convertToolCallIdToMistralCompatible(tool_call_id);
@@ -991,7 +1013,7 @@ export class ChatWatsonx<
           ),
         };
         if (part.finish_reason) {
-          generation.generationInfo = { finish_reason: part.finish_reason };
+          generation.generationInfo = finishReasonFields(part.finish_reason);
         }
         generations.push(generation);
       }
@@ -1176,6 +1198,7 @@ export class ChatWatsonx<
       const generationInfo = {
         ...newTokenIndices,
         finish_reason: choice.finish_reason,
+        ...finishReasonFields(choice.finish_reason),
       };
 
       const message = _convertDeltaToMessageChunk(
