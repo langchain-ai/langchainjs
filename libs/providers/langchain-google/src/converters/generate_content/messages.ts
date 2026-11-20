@@ -563,11 +563,15 @@ function convertStandardContentMessageToGeminiContent(
       },
     });
 
-    // For tool messages, keep only the functionResponse part(s): any text is
-    // already included in functionResponse.response.result, and a `user`
-    // content mixing a functionResponse with text is rejected or corrupted
-    // by the API. Mirrors the legacy-path filter.
-    parts = parts.filter((part) => "functionResponse" in part);
+    // For tool messages, drop the text parts: their content is already in
+    // functionResponse.response.result, and a `user` content mixing a
+    // functionResponse with text is rejected or corrupted by the API. Keep
+    // media parts (inlineData/fileData) as siblings, since they are stripped
+    // from the result. Mirrors the legacy-path filter.
+    parts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
   }
 
   // Only return content if we have parts
@@ -860,6 +864,25 @@ function convertLegacyContentMessageToGeminiContent(
       }
       const part = convertLegacyPartToGeminiPart(item);
       parts.push(part);
+    }
+  }
+
+  // An AIMessage from Gemini already carries its calls as functionCall
+  // content items (with their thoughtSignature), so only build parts from
+  // tool_calls when the content has none, as with a hand-built AIMessage or
+  // one from another provider. Building both would send each call twice.
+  if (
+    AIMessage.isInstance(message) &&
+    message.tool_calls?.length &&
+    !parts.some((part) => "functionCall" in part)
+  ) {
+    for (const toolCall of message.tool_calls) {
+      parts.push({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args ?? {},
+        },
+      } as Gemini.Part.FunctionCall);
     }
   }
 
