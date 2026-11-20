@@ -2,6 +2,7 @@ import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   OpenAI,
+  type BaseChatOpenAIFields,
   type OpenAICallOptions,
   type OpenAIClient,
   type OpenAICoreRequestOptions,
@@ -22,6 +23,8 @@ type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
 export interface FireworksInput
   extends
     Partial<Omit<OpenAIInput, "openAIApiKey" | FireworksUnsupportedArgs>>,
+    // `configuration` moved off the OpenAI input interfaces.
+    Pick<BaseChatOpenAIFields, "configuration">,
     BaseLLMParams {
   /**
    * Prefer `apiKey`.
@@ -173,6 +176,11 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     delete request.presence_penalty;
     delete request.best_of;
     delete request.logit_bias;
+
+    // Narrow the union so each call matches one of super's overloads.
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
 
     return super.completionWithRetry(request, options);
   }
