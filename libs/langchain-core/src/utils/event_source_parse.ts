@@ -94,6 +94,13 @@ export function getLines(
   // return a function that can process each incoming byte chunk:
   return function onChunk(arr: Uint8Array, flush?: boolean) {
     if (flush) {
+      // A stream can end in the middle of a line: a server that closes without a
+      // final newline leaves its last event in `buffer`. Report the bytes still
+      // buffered as that line before the flush, or the reader never sees it.
+      if (buffer !== undefined && buffer.length > 0) {
+        onLine(buffer, fieldLength);
+        buffer = undefined;
+      }
       onLine(arr, 0, true);
       return;
     }
