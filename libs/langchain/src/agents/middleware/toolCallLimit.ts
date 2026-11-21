@@ -144,9 +144,9 @@ export const ToolCallLimitOptionsSchema = z.object({
    * What to do when limits are exceeded.
    * - "continue": Block exceeded tools with error messages, let other tools continue (default)
    * - "error": Raise a ToolCallLimitExceededError exception
-   * - "end": Stop execution immediately, injecting a ToolMessage and an AI message
-   *   for the single tool call that exceeded the limit. Raises NotImplementedError
-   *   if there are multiple tool calls.
+   * - "end": Stop execution immediately, injecting an error ToolMessage for every
+   *   cancelled call and a final AI message. Throws if the pending calls have
+   *   different tool names.
    *
    * @default "continue"
    */
@@ -187,10 +187,10 @@ const DEFAULT_TOOL_COUNT_KEY = "__all__";
  * @param options.exitBehavior - What to do when limits are exceeded.
  *   - "continue": Block exceeded tools with error messages, let other tools continue. Model decides when to end. (default)
  *   - "error": Raise a ToolCallLimitExceededError exception
- *   - "end": Stop execution immediately with a ToolMessage + AI message for the single tool call that exceeded the limit. Raises NotImplementedError if there are multiple tool calls.
+ *   - "end": Stop execution immediately with an error ToolMessage for every cancelled call and a final AI message. Throws if the pending calls have different tool names.
  *
  * @throws {Error} If both limits are undefined, if exitBehavior is invalid, or if runLimit exceeds threadLimit.
- * @throws {NotImplementedError} If exitBehavior is "end" and there are multiple tool calls.
+ * @throws {Error} If exitBehavior is "end" and the pending calls have different tool names.
  *
  * @example Continue execution with blocked tools (default)
  * ```ts
@@ -435,21 +435,20 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
         /**
          * Inject artificial error ToolMessages for blocked tool calls
          */
+        const createErrorMessage = (toolCall: ToolCall, content: string) =>
+          new ToolMessage({
+            content,
+            tool_call_id: toolCall.id!,
+            name: toolCall.name,
+            status: "error",
+          });
         const artificialMessages: Array<ToolMessage | AIMessage> = blocked.map(
-          (toolCall) =>
-            new ToolMessage({
-              content: toolMsgContent,
-              tool_call_id: toolCall.id!,
-              name: toolCall.name,
-              status: "error",
-            })
+          (toolCall) => createErrorMessage(toolCall, toolMsgContent)
         );
 
         if (exitBehavior === "end") {
           /**
-           * Check if there are tool calls to other tools that would continue executing
-           * For tool-specific limiters: check for calls to other tools
-           * For global limiters: check if there are multiple different tool types
+           * Reject mixed-tool batches before generating cancellation replies.
            */
           let otherTools: ToolCall[] = [];
           if (options.toolName !== undefined) {
@@ -461,9 +460,7 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
             );
           } else {
             /**
-             * Global limiter: check if there are multiple different tool types
-             * If there are allowed calls, those would execute
-             * But even if all are blocked, we can't handle multiple tool types with "end"
+             * Global limiters reject mixed-tool batches even if all calls are blocked.
              */
             const uniqueToolNames = new Set(
               lastAIMessage.tool_calls.map((tc) => tc.name).filter(Boolean)
@@ -485,6 +482,16 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
               `Cannot end execution with other tool calls pending. Found calls to: ${toolNames}. Use 'continue' or 'error' behavior instead.`
             );
           }
+
+          // End mode also cancels calls within the limit; close their history.
+          artificialMessages.unshift(
+            ...allowed.map((toolCall) =>
+              createErrorMessage(
+                toolCall,
+                "Tool call not executed because the tool call limit ended the run."
+              )
+            )
+          );
 
           /**
            * Build final AI message content (displayed to user - includes thread/run details)
