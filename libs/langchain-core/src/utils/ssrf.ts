@@ -124,6 +124,35 @@ function expandIpv6(ip: string): string | null {
 }
 
 /**
+ * WHATWG `URL` keeps an IPv6 literal in brackets ("[::1]"), and every check
+ * below reads a bare address.
+ */
+function unbracket(hostname: string): string {
+  return hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
+}
+
+/**
+ * The IPv4 address an IPv4-mapped IPv6 address carries ("::ffff:127.0.0.1" is
+ * the host 127.0.0.1), so the private and metadata checks see it. Null for
+ * every other address, including a plain IPv4 one.
+ */
+function mappedIpv4(ip: string): string | null {
+  const expanded = expandIpv6(ip);
+  if (!expanded) {
+    return null;
+  }
+  const groups = expanded.split(":").map((part) => parseInt(part, 16));
+  if (groups.slice(0, 5).some((group) => group !== 0) || groups[5] !== 0xffff) {
+    return null;
+  }
+  const high = groups[6]!;
+  const low = groups[7]!;
+  return [high >> 8, high & 0xff, low >> 8, low & 0xff].join(".");
+}
+
+/**
  * Parse CIDR notation (e.g., "192.168.0.0/24") into network address and prefix length.
  */
 function parseCidr(
@@ -289,7 +318,7 @@ export function validateSafeUrl(
       throw new Error(`Invalid URL: ${url}`);
     }
 
-    const hostname = parsedUrl.hostname;
+    const hostname = unbracket(parsedUrl.hostname);
     if (!hostname) {
       throw new Error("URL missing hostname.");
     }
@@ -323,7 +352,7 @@ export function validateSafeUrl(
 
     // If hostname is already an IP, validate it directly
     if (isIP(hostname)) {
-      const ip = hostname;
+      const ip = mappedIpv4(hostname) ?? hostname;
 
       // Check if it's localhost first (before private IP check)
       if (isLocalhost(hostname, ip)) {
