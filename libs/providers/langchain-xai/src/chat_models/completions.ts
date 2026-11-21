@@ -1,3 +1,4 @@
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   BaseChatModelCallOptions,
@@ -5,13 +6,20 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   isLangChainTool,
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Serialized } from "@langchain/core/load/serializable";
-import { AIMessageChunk, type UsageMetadata } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  type BaseMessage,
+  type UsageMetadata,
+} from "@langchain/core/messages";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -31,6 +39,35 @@ import {
   XAI_LIVE_SEARCH_TOOL_TYPE,
   XAILiveSearchTool,
 } from "../tools/live_search.js";
+
+/**
+ * xAI's Chat Completions API leaves reasoning tokens out of `completion_tokens`
+ * but counts them in `total_tokens` (unlike OpenAI, where they are part of
+ * `completion_tokens`). Reasoning is billed as output, so fold it into
+ * `output_tokens` and keep `total_tokens === input_tokens + output_tokens`.
+ *
+ * Returns the usage unchanged when there are no reasoning tokens or when they
+ * are already inside `output_tokens` (`total_tokens === input + output`). That
+ * also makes it safe to apply more than once to the same usage.
+ */
+function includeReasoningInOutputTokens<T extends Partial<UsageMetadata>>(
+  usage: T
+): T {
+  const reasoning = usage.output_token_details?.reasoning;
+  if (!reasoning) {
+    return usage;
+  }
+  const inputTokens = usage.input_tokens ?? 0;
+  const outputTokens = usage.output_tokens ?? 0;
+  if (usage.total_tokens === inputTokens + outputTokens) {
+    return usage;
+  }
+  return {
+    ...usage,
+    output_tokens: outputTokens + reasoning,
+    total_tokens: inputTokens + outputTokens + reasoning,
+  };
+}
 
 export type OpenAIToolChoice =
   | OpenAIClient.ChatCompletionToolChoiceOption
@@ -854,6 +891,73 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       messageChunk.usage_metadata = responseMetadata.usage;
     }
     return messageChunk;
+  }
+
+  override async _generate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const result = await super._generate(messages, options, runManager);
+    // With `streaming: true` the generations come from `_streamResponseChunks`
+    // below, which has already adjusted the usage.
+    if (this.streaming) {
+      return result;
+    }
+    for (const generation of result.generations) {
+      if (
+        AIMessage.isInstance(generation.message) &&
+        generation.message.usage_metadata
+      ) {
+        generation.message.usage_metadata = includeReasoningInOutputTokens(
+          generation.message.usage_metadata
+        );
+      }
+    }
+    return result;
+  }
+
+  override async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    for await (const chunk of super._streamResponseChunks(
+      messages,
+      options,
+      runManager
+    )) {
+      if (
+        AIMessageChunk.isInstance(chunk.message) &&
+        chunk.message.usage_metadata
+      ) {
+        chunk.message.usage_metadata = includeReasoningInOutputTokens(
+          chunk.message.usage_metadata
+        );
+      }
+      yield chunk;
+    }
+  }
+
+  override async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    for await (const event of super._streamChatModelEvents(
+      messages,
+      options,
+      runManager
+    )) {
+      if (
+        (event.event === "usage" || event.event === "message-finish") &&
+        event.usage
+      ) {
+        yield { ...event, usage: includeReasoningInOutputTokens(event.usage) };
+      } else {
+        yield event;
+      }
+    }
   }
 
   /**
