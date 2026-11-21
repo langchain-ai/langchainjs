@@ -8,6 +8,19 @@ This package contains the LangChain.js integration for the [Qdrant](https://qdra
 npm install @langchain/qdrant
 ```
 
+## Custom payload fields
+
+Extra fields passed in `customPayload` are stored under the point's
+`customPayload` key by default. Set `customPayloadAtTopLevel: true` in the
+`QdrantVectorStore` constructor or `fromDocuments` configuration to store those
+fields directly on the point's payload.
+
+For example, filter on `customPayload.status` with the default layout and
+`status` with the top-level layout. Top-level custom fields must have different
+names from the configured `contentPayloadKey` and `metadataPayloadKey`.
+The option applies to writes made through the configured store. Existing points
+retain their stored layout until rewritten.
+
 ## Development
 
 To develop the this package, you'll need to follow these instructions:

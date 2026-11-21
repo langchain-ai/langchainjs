@@ -88,6 +88,94 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
   });
 });
 
+const topLevelPayloadOptions = {
+  customPayloadAtTopLevel: true,
+  contentPayloadKey: "text",
+  metadataPayloadKey: "attributes",
+};
+
+function mockPayloadClient() {
+  return {
+    upsert: vi.fn(),
+    getCollections: vi.fn().mockResolvedValue({ collections: [] }),
+    createCollection: vi.fn(),
+  };
+}
+
+test("QdrantVectorStore writes top-level custom fields through fromDocuments", async () => {
+  const client = mockPayloadClient();
+  await QdrantVectorStore.fromDocuments(
+    [
+      { pageContent: "first", metadata: { source: "a" } },
+      { pageContent: "second", metadata: { source: "b" } },
+    ],
+    new FakeEmbeddings(),
+    {
+      ...topLevelPayloadOptions,
+      client: client as any,
+      customPayload: [{ status: "active" }, { status: "archived" }],
+    }
+  );
+
+  expect(client.upsert).toHaveBeenCalledTimes(1);
+  expect(client.upsert).toHaveBeenCalledWith("documents", {
+    wait: true,
+    points: [
+      expect.objectContaining({
+        payload: {
+          text: "first",
+          attributes: { source: "a" },
+          status: "active",
+        },
+      }),
+      expect.objectContaining({
+        payload: {
+          text: "second",
+          attributes: { source: "b" },
+          status: "archived",
+        },
+      }),
+    ],
+  });
+});
+
+test("QdrantVectorStore accepts no custom payload with top-level fields enabled", async () => {
+  const client = mockPayloadClient();
+  const store = new QdrantVectorStore(new FakeEmbeddings(), {
+    ...topLevelPayloadOptions,
+    client: client as any,
+  });
+
+  await store.addVectors([[1, 2]], [{ pageContent: "hello", metadata: {} }]);
+
+  expect(client.upsert.mock.calls[0][1].points[0].payload).toStrictEqual({
+    text: "hello",
+    attributes: {},
+  });
+});
+
+test.each(["text", "attributes"])(
+  "QdrantVectorStore rejects a top-level custom field that collides with %s",
+  async (key) => {
+    const client = mockPayloadClient();
+    const store = new QdrantVectorStore(new FakeEmbeddings(), {
+      ...topLevelPayloadOptions,
+      client: client as any,
+    });
+
+    await expect(
+      store.addDocuments(
+        [
+          { pageContent: "valid", metadata: {} },
+          { pageContent: "conflict", metadata: {} },
+        ],
+        { customPayload: [{ status: "active" }, { [key]: "conflict" }] }
+      )
+    ).rejects.toThrow(`Custom payload key "${key}" conflicts`);
+    expect(client.upsert).not.toHaveBeenCalled();
+  }
+);
+
 test("QdrantVectorStore adds vectors with multiple custom payload", async () => {
   // Mock Qdrant client
   const client = {
