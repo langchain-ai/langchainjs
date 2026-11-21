@@ -2,13 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatOpenAI } from "@langchain/openai";
 import type { ChatAnthropic } from "@langchain/anthropic";
 
-import { initChatModel } from "../universal.js";
+import { _inferModelProvider, initChatModel } from "../universal.js";
 
 const LANGSMITH_ENVIRONMENT_VARIABLES = [
   "LANGSMITH_GATEWAY",
   "LANGSMITH_GATEWAY_API_KEY",
   "LANGSMITH_API_KEY",
 ];
+
+describe("_inferModelProvider", () => {
+  it.each(["gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-6.1-sol"])(
+    "infers openai for %s",
+    (model) => {
+      expect(_inferModelProvider(model)).toBe("openai");
+    }
+  );
+});
 
 describe("Will appropriately infer a model profiles", () => {
   it("when provided a profile", async () => {
