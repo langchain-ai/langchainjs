@@ -9,6 +9,80 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { _convertMessagesToAnthropicPayload } from "../message_inputs.js";
 import { convertPromptToAnthropic } from "../prompts.js";
 
+describe("tool result status", () => {
+  describe.each([
+    { name: "string", content: "lookup failed" },
+    { name: "blocks", content: [{ type: "text", text: "lookup failed" }] },
+  ])("$name content", ({ content }) => {
+    test.each([undefined, "success", "error"] as const)(
+      "preserves %s status",
+      (status) => {
+        const payload = _convertMessagesToAnthropicPayload([
+          new ToolMessage({
+            content,
+            tool_call_id: "lookup_call",
+            status,
+            artifact: { internal: "not sent to the model" },
+          }),
+        ]);
+
+        expect(payload.messages).toEqual([
+          {
+            role: "user",
+            content: [
+              {
+                type: "tool_result",
+                content,
+                tool_use_id: "lookup_call",
+                ...(status === "error" ? { is_error: true } : {}),
+              },
+            ],
+          },
+        ]);
+      }
+    );
+  });
+
+  test("keeps each status when consecutive tool results are merged", () => {
+    const payload = _convertMessagesToAnthropicPayload([
+      new ToolMessage({
+        content: "found",
+        tool_call_id: "first_call",
+        status: "success",
+      }),
+      new ToolMessage({
+        content: "lookup failed",
+        tool_call_id: "second_call",
+        status: "error",
+      }),
+      new ToolMessage({
+        content: "found again",
+        tool_call_id: "third_call",
+      }),
+    ]);
+
+    expect(payload.messages).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "tool_result", content: "found", tool_use_id: "first_call" },
+          {
+            type: "tool_result",
+            content: "lookup failed",
+            tool_use_id: "second_call",
+            is_error: true,
+          },
+          {
+            type: "tool_result",
+            content: "found again",
+            tool_use_id: "third_call",
+          },
+        ],
+      },
+    ]);
+  });
+});
+
 describe("system messages", () => {
   test("hoists a single leading system message as a plain string", () => {
     const payload = _convertMessagesToAnthropicPayload([
