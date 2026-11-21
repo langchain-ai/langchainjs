@@ -14,7 +14,6 @@ import {
   HumanMessage,
   SystemMessage,
   ToolMessage,
-  type MessageContentComplex,
 } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
@@ -577,7 +576,12 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     }),
   ];
 
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    false,
+    "gemini-2.0-flash"
+  );
   // console.log(messagesAsGoogleContent);
   // Google Generative AI API only allows for 'model' and 'user' roles
   // This means that 'system', 'human' and 'tool' messages are converted
@@ -623,7 +627,8 @@ test("Input has single system message followed by one user message, convert syst
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "gemini-2.0-flash"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -643,7 +648,7 @@ test("Input has a system message that is not the first message, convert system m
     new SystemMessage("You are a helpful assistant"),
   ];
   expect(() => {
-    convertBaseMessagesToContent(messages, false, false);
+    convertBaseMessagesToContent(messages, false, false, "gemini-2.0-flash");
   }).toThrow("System message should be the first one");
 });
 
@@ -653,7 +658,7 @@ test("Input has multiple system messages, convert system message is false", asyn
     new SystemMessage("You are not a helpful assistant"),
   ];
   expect(() => {
-    convertBaseMessagesToContent(messages, false, false);
+    convertBaseMessagesToContent(messages, false, false, "gemini-2.0-flash");
   }).toThrow("System message should be the first one");
 });
 
@@ -662,7 +667,8 @@ test("Input has no system message and one user message, convert system message i
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "gemini-2.0-flash"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -682,7 +688,8 @@ test("Input has no system message and multiple user message, convert system mess
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "gemini-2.0-flash"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -710,7 +717,8 @@ test("Input has single system message followed by one user message, convert syst
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "gemini-2.0-flash"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -731,9 +739,9 @@ test("Input has single system message that is not the first message, convert sys
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
-    "System message should be the first one"
-  );
+  expect(() =>
+    convertBaseMessagesToContent(messages, false, true, "gemini-2.0-flash")
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has multiple system message, convert system message is true", async () => {
@@ -742,9 +750,9 @@ test("Input has multiple system message, convert system message is true", async 
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
-    "System message should be the first one"
-  );
+  expect(() =>
+    convertBaseMessagesToContent(messages, false, true, "gemini-2.0-flash")
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has no system message and one user message, convert system message is true", async () => {
@@ -753,7 +761,8 @@ test("Input has no system message and one user message, convert system message i
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "gemini-2.0-flash"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -774,7 +783,8 @@ test("Input has no system message and multiple user messages, convert system mes
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "gemini-2.0-flash"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -966,7 +976,7 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
     tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
   });
 
-  const toolMessageContentArray: MessageContentComplex[] = [
+  const toolMessageContentArray: ContentBlock[] = [
     { type: "text", text: "Tool response text." },
     {
       type: "image_url",
@@ -1010,7 +1020,7 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
     tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
   });
 
-  const toolMessageContentArray: MessageContentComplex[] = [
+  const toolMessageContentArray: ContentBlock[] = [
     { type: "text", text: "Tool error details text." },
     {
       type: "image_url",
@@ -1120,7 +1130,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi.spyOn(model, "invoke").mockResolvedValue(
-      new AIMessage({
+      new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -1179,7 +1189,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi.spyOn(model, "invoke").mockResolvedValue(
-      new AIMessage({
+      new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -1203,7 +1213,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   });
 
   test("functionCalling with includeRaw returns raw and parsed", async () => {
-    const mockResponse = new AIMessage({
+    const mockResponse = new AIMessageChunk({
       content: "",
       tool_calls: [
         {
