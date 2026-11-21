@@ -2,6 +2,8 @@ import type * as tiktoken from "js-tiktoken";
 import { Document, BaseDocumentTransformer } from "@langchain/core/documents";
 import { getEncoding } from "@langchain/core/utils/tiktoken";
 
+const defaultLengthFunction = (text: string) => text.length;
+
 export interface TextSplitterParams {
   chunkSize: number;
   chunkOverlap: number;
@@ -38,8 +40,7 @@ export abstract class TextSplitter
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
-    this.lengthFunction =
-      fields?.lengthFunction ?? ((text: string) => text.length);
+    this.lengthFunction = fields?.lengthFunction ?? defaultLengthFunction;
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
@@ -99,7 +100,20 @@ export abstract class TextSplitter
         let pageContent = chunkHeader;
 
         // we need to count the \n that are in the text before getting removed by the splitting
-        const indexChunk = text.indexOf(chunk, indexPrevChunk + 1);
+        let indexChunk = text.indexOf(chunk, indexPrevChunk + 1);
+        if (
+          this.chunkOverlap === 0 &&
+          this.lengthFunction === defaultLengthFunction &&
+          prevChunk !== null &&
+          indexPrevChunk >= 0
+        ) {
+          // Custom length functions can retain zero-cost overlapping splits.
+          const nextIndexChunk = text.indexOf(
+            chunk,
+            indexPrevChunk + prevChunk.length
+          );
+          if (nextIndexChunk !== -1) indexChunk = nextIndexChunk;
+        }
         if (prevChunk === null) {
           const newLinesBeforeFirstChunk = this.numberOfNewLines(
             text,
