@@ -56,6 +56,28 @@ test("Test multi variable pipeline", async () => {
   ).toEqual("okay jim halpert");
 });
 
+test("Test mustache inverted section variables in a pipeline", async () => {
+  const prompt = new PipelinePromptTemplate({
+    pipelinePrompts: [
+      {
+        name: "summary",
+        prompt: PromptTemplate.fromTemplate(
+          "{{^items}}No items for {{name}}.{{/items}}",
+          { templateFormat: "mustache" }
+        ),
+      },
+    ],
+    finalPrompt: PromptTemplate.fromTemplate("{{summary}}", {
+      templateFormat: "mustache",
+    }),
+  });
+
+  expect(prompt.inputVariables).toEqual(["items", "name"]);
+  expect(await prompt.format({ items: [], name: "Bob" })).toEqual(
+    "No items for Bob."
+  );
+});
+
 test("Test longer pipeline", async () => {
   const prompt = new PipelinePromptTemplate({
     pipelinePrompts: [
