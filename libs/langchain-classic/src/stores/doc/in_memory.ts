@@ -1,5 +1,5 @@
 import { Document } from "@langchain/core/documents";
-import { BaseStoreInterface } from "@langchain/core/stores";
+import type { BaseStore } from "@langchain/core/stores";
 import { Docstore } from "./base.js";
 
 /**
@@ -8,7 +8,11 @@ import { Docstore } from "./base.js";
  */
 export class InMemoryDocstore
   extends Docstore
-  implements BaseStoreInterface<string, Document>
+  implements
+    Pick<
+      BaseStore<string, Document>,
+      "mget" | "mset" | "mdelete" | "yieldKeys"
+    >
 {
   _docs: Map<string, Document>;
 
