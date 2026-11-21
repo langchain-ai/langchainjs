@@ -26,6 +26,11 @@ export interface QdrantLibArgs {
   collectionConfig?: QdrantSchemas["CreateCollection"];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customPayload?: Record<string, any>[];
+  /**
+   * Store custom payload fields at the top level of each point payload.
+   * By default, custom fields are nested under `customPayload`.
+   */
+  customPayloadAtTopLevel?: boolean;
   contentPayloadKey?: string;
   metadataPayloadKey?: string;
 }
@@ -86,6 +91,8 @@ export class QdrantVectorStore extends VectorStore {
 
   metadataPayloadKey: string;
 
+  private readonly customPayloadAtTopLevel: boolean;
+
   _vectorstoreType(): string {
     return "qdrant";
   }
@@ -114,6 +121,7 @@ export class QdrantVectorStore extends VectorStore {
     this.contentPayloadKey = args.contentPayloadKey ?? CONTENT_KEY;
 
     this.metadataPayloadKey = args.metadataPayloadKey ?? METADATA_KEY;
+    this.customPayloadAtTopLevel = args.customPayloadAtTopLevel ?? false;
   }
 
   /**
@@ -154,17 +162,35 @@ export class QdrantVectorStore extends VectorStore {
       return;
     }
 
-    await this.ensureCollection();
+    const points = vectors.map((embedding, idx) => {
+      const document = documents[idx];
+      const customPayload = documentOptions?.customPayload?.[idx];
+      const extraFields = this.customPayloadAtTopLevel
+        ? customPayload
+        : { customPayload };
 
-    const points = vectors.map((embedding, idx) => ({
-      id: documents[idx].id ?? documentOptions?.ids?.[idx] ?? uuid(),
-      vector: embedding,
-      payload: {
-        [this.contentPayloadKey]: documents[idx].pageContent,
-        [this.metadataPayloadKey]: documents[idx].metadata,
-        customPayload: documentOptions?.customPayload?.[idx],
-      },
-    }));
+      if (this.customPayloadAtTopLevel && customPayload) {
+        for (const key of [this.contentPayloadKey, this.metadataPayloadKey]) {
+          if (Object.hasOwn(customPayload, key)) {
+            throw new Error(
+              `Custom payload key "${key}" conflicts with a document payload key.`
+            );
+          }
+        }
+      }
+
+      return {
+        id: document.id ?? documentOptions?.ids?.[idx] ?? uuid(),
+        vector: embedding,
+        payload: {
+          [this.contentPayloadKey]: document.pageContent,
+          [this.metadataPayloadKey]: document.metadata,
+          ...extraFields,
+        },
+      };
+    });
+
+    await this.ensureCollection();
 
     try {
       await this.client.upsert(this.collectionName, {
