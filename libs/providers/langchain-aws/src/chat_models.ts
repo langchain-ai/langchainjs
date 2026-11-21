@@ -224,6 +224,7 @@ export interface ChatBedrockConverseInput
 
   /**
    * Configuration information for a guardrail that you want to use in the request.
+   * Call options override the configuration passed to the constructor.
    */
   guardrailConfig?: GuardrailConfiguration;
 
@@ -1036,7 +1037,7 @@ export class ChatBedrockConverse
       additionalModelResponseFieldPaths:
         options?.additionalModelResponseFieldPaths ??
         this.additionalModelResponseFieldPaths,
-      guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
+      guardrailConfig: options?.guardrailConfig ?? this.guardrailConfig,
       performanceConfig: options?.performanceConfig,
       serviceTier: serviceTierType
         ? {
