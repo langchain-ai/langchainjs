@@ -14,7 +14,7 @@ let db: SqlDatabase;
 
 beforeEach(async () => {
   const datasource = new DataSource({
-    type: "sqlite",
+    type: "better-sqlite3",
     database: ":memory:",
     synchronize: true,
   });
