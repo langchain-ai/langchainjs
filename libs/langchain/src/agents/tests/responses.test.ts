@@ -5,6 +5,8 @@ import { z as z4 } from "zod/v4";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import type { ToolCall } from "@langchain/core/messages/tool";
+import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { tool } from "@langchain/core/tools";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
@@ -16,6 +18,7 @@ import {
   toolStrategy,
   providerStrategy,
 } from "../index.js";
+import { toolCallLimitMiddleware } from "../middleware/index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
 import {
   hasSupportForJsonSchemaOutput,
@@ -443,6 +446,91 @@ describe("structured output handling", () => {
           messages: [{ role: "user", content: "hi" }],
         });
         expect(res.structuredResponse).toEqual({ bar: "foo" });
+      });
+    });
+
+    describe("retry with afterModel middleware", () => {
+      /**
+       * Returns `firstToolCalls(name)` on the first call and a valid structured
+       * output on the next one, where `name` is the bound structured output tool.
+       */
+      class FlakyStructuredOutputModel extends FakeToolCallingChatModel {
+        calls = 0;
+
+        toolNames: string[] = [];
+
+        constructor(private firstToolCalls: (name: string) => ToolCall[]) {
+          super({});
+        }
+
+        bindTools(tools: BindToolsInput[]) {
+          this.toolNames = tools.map((t) => {
+            const def = t as { name?: string; function?: { name: string } };
+            return def.name ?? def.function?.name ?? "";
+          });
+          return this as unknown as ReturnType<
+            FakeToolCallingChatModel["bindTools"]
+          >;
+        }
+
+        async _generate() {
+          this.calls += 1;
+          const name = this.toolNames.at(-1) ?? "";
+          const toolCalls =
+            this.calls === 1
+              ? this.firstToolCalls(name)
+              : [{ name, args: { foo: "ok" }, id: `call_${this.calls}` }];
+          return {
+            generations: [
+              {
+                text: "",
+                message: new AIMessage({ content: "", tool_calls: toolCalls }),
+              },
+            ],
+          };
+        }
+      }
+
+      let afterModelCalls = 0;
+      const afterModelMiddleware = createMiddleware({
+        name: "AfterModelMiddleware",
+        afterModel: () => {
+          afterModelCalls += 1;
+        },
+      });
+
+      it.each([
+        [
+          "an invalid structured output",
+          (name: string) => [{ name, args: { foo: 42 }, id: "call_1" }],
+        ],
+        [
+          "multiple structured outputs",
+          (name: string) => [
+            { name, args: { foo: "a" }, id: "call_1" },
+            { name, args: { foo: "b" }, id: "call_1b" },
+          ],
+        ],
+      ])("should retry %s", async (_, firstToolCalls) => {
+        afterModelCalls = 0;
+        const model = new FlakyStructuredOutputModel(firstToolCalls);
+        const agent = createAgent({
+          model,
+          tools: [],
+          middleware: [
+            afterModelMiddleware,
+            toolCallLimitMiddleware({ runLimit: 10, exitBehavior: "continue" }),
+          ],
+          responseFormat: toolStrategy(z.object({ foo: z.string() })),
+        });
+
+        const res = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        expect(res.structuredResponse).toEqual({ foo: "ok" });
+        expect(model.calls).toBe(2);
+        expect(afterModelCalls).toBe(2);
       });
     });
 
