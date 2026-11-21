@@ -17,7 +17,7 @@ test("AsyncCaller.call passes on arguments and returns return value", async () =
 test("AsyncCaller doesn't retry on axios error 401", async () => {
   const llm = new OpenAI({ openAIApiKey: "invalid" });
 
-  await expect(() => llm.call("test")).rejects.toThrowError();
+  await expect(() => llm.invoke("test")).rejects.toThrowError();
 }, 5000);
 
 test("AsyncCaller doesn't retry on timeout", async () => {
