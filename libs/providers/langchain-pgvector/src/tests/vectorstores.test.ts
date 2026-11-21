@@ -540,6 +540,51 @@ describe("PGVectorStore", () => {
     });
   });
 
+  describe("empty in/notIn lists", () => {
+    let pool: ReturnType<typeof createMockPool>;
+    let store: PGVectorStore;
+
+    beforeEach(() => {
+      pool = createMockPool();
+      pool.query.mockResolvedValue({ rows: [] });
+      store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+    });
+
+    test("an empty 'in' list matches nothing without emitting invalid SQL", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: [] },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("FALSE");
+      expect(queryCall[0]).not.toContain("IN ()");
+    });
+
+    test("an empty 'notIn' list omits the clause entirely", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { notIn: [] },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).not.toContain("NOT IN");
+      expect(queryCall[0]).not.toContain("WHERE");
+    });
+
+    test("an empty 'in' list keeps other filters and their parameters intact", async () => {
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        category: { in: [] },
+        score: { gte: 50 },
+      });
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("FALSE");
+      expect(queryCall[0]).toContain(">=");
+      // $1 embedding, $2 k, so the `score` key is the third parameter.
+      expect(queryCall[1][2]).toBe("score");
+      expect(queryCall[1][3]).toBe(50);
+    });
+  });
+
   describe("score normalization", () => {
     test("returns raw distance when scoreNormalization is 'distance'", () => {
       const store = createStore({ scoreNormalization: "distance" });

@@ -733,16 +733,24 @@ export class PGVectorStore extends VectorStore {
         const _value = value as Record<string, unknown>;
 
         if (Array.isArray(_value.in)) {
-          const placeholders = _value.in
-            .map((item: unknown) => addParameter(item))
-            .join(",");
-          const keyPlaceholder = addParameter(key);
-          whereClauses.push(
-            `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
-          );
+          // An empty list can never match. Emitting `IN ()` is a syntax error,
+          // so short-circuit to a clause that is always false instead.
+          if (_value.in.length === 0) {
+            whereClauses.push("FALSE");
+          } else {
+            const placeholders = _value.in
+              .map((item: unknown) => addParameter(item))
+              .join(",");
+            const keyPlaceholder = addParameter(key);
+            whereClauses.push(
+              `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
+            );
+          }
         }
 
-        if (Array.isArray(_value.notIn)) {
+        if (Array.isArray(_value.notIn) && _value.notIn.length > 0) {
+          // An empty exclusion list excludes nothing, so the clause is a no-op
+          // and is omitted rather than emitted as `NOT IN ()`.
           const placeholders = _value.notIn
             .map((item: unknown) => addParameter(item))
             .join(",");
