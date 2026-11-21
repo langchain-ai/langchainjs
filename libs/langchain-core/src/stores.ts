@@ -104,3 +104,13 @@ export class InMemoryStore<T = any> extends BaseStore<string, T> {
     }
   }
 }
+
+/**
+ * Minimal store interface for runtime tool execution.
+ * This represents the common read capabilities supported by
+ * different store implementations (core and langgraph).
+ */
+export interface RuntimeStore<V = unknown> {
+  get?(key: string): Promise<V | undefined>;
+  mget?(keys: string[]): Promise<(V | undefined)[]>;
+}
