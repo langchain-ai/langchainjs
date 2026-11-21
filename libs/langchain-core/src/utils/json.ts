@@ -9,12 +9,21 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
 
   let contentAfterFence = s.substring(firstFenceIndex + 3);
 
-  if (contentAfterFence.startsWith("json\n")) {
-    contentAfterFence = contentAfterFence.substring(5);
-  } else if (contentAfterFence.startsWith("json")) {
-    contentAfterFence = contentAfterFence.substring(4);
-  } else if (contentAfterFence.startsWith("\n")) {
-    contentAfterFence = contentAfterFence.substring(1);
+  // A fence's info string is a language tag, and Markdown compares it
+  // case-insensitively: models write a JSON fence as ```JSON as often as
+  // ```json. A bare ``` fence (empty tag) still means JSON here.
+  const infoString = /^[ \t]*([A-Za-z0-9_+-]*)[ \t]*\r?\n/.exec(
+    contentAfterFence
+  );
+  if (
+    infoString &&
+    (infoString[1] === "" || infoString[1].toLowerCase() === "json")
+  ) {
+    contentAfterFence = contentAfterFence.slice(infoString[0].length);
+  } else if (/^json/i.test(contentAfterFence)) {
+    // ```json{...}: the tag and the payload share one line, so there is
+    // no info-string line break to consume.
+    contentAfterFence = contentAfterFence.slice(4);
   }
 
   const closingFenceIndex = contentAfterFence.indexOf("```");
