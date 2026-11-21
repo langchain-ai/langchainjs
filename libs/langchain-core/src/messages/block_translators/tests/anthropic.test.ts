@@ -184,7 +184,7 @@ describe("anthropicTranslator", () => {
     expect(message2.content).toEqual(expectedContent);
   });
 
-  it.skip("should translate anthropic message chunk to standard content blocks", () => {
+  it("should translate anthropic message chunk to standard content blocks", () => {
     const chunks = [
       new AIMessageChunk({
         content: [
@@ -349,6 +349,10 @@ describe("anthropicTranslator", () => {
       else full = full.concat(chunk);
     }
 
+    // The raw concatenation keeps the frames as they arrived -- the `tool_use`
+    // frame, then the `input_json_delta` that carries the arguments -- and stays
+    // untouched by translation. `contentBlocks` is where the two become one
+    // tool call chunk.
     const expectedContent = [
       {
         type: "text",
@@ -358,13 +362,17 @@ describe("anthropicTranslator", () => {
       {
         type: "tool_use",
         name: "get_weather",
-        partial_json: '{"location": "San Francisco"}',
         input: {},
         id: "toolu_abc123",
         index: 1,
       },
+      {
+        type: "input_json_delta",
+        partial_json: '{"location": "San Francisco"}',
+        index: 1,
+      },
     ];
-    expect(full?.contentBlocks).toEqual(expectedContent);
+    expect(full?.content).toEqual(expectedContent);
 
     const expectedContentBlocks = [
       {
