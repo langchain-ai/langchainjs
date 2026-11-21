@@ -138,13 +138,18 @@ export function validatesOnlyStrings(schema: unknown): boolean {
     return schema.allOf.some((subschema) => validatesOnlyStrings(subschema));
   }
 
-  if (
-    ("anyOf" in schema && Array.isArray(schema.anyOf)) ||
-    ("oneOf" in schema && Array.isArray(schema.oneOf))
-  ) {
-    const subschemas = (
-      "anyOf" in schema ? schema.anyOf : schema.oneOf
-    ) as unknown[];
+  if ("anyOf" in schema && Array.isArray(schema.anyOf)) {
+    const subschemas = schema.anyOf as unknown[];
+
+    // All subschemas must validate only strings
+    return (
+      subschemas.length > 0 &&
+      subschemas.every((subschema) => validatesOnlyStrings(subschema))
+    );
+  }
+
+  if ("oneOf" in schema && Array.isArray(schema.oneOf)) {
+    const subschemas = schema.oneOf as unknown[];
 
     // All subschemas must validate only strings
     return (
