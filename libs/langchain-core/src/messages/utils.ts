@@ -26,6 +26,7 @@ import {
   ToolCall,
   ToolCallChunk,
   ToolMessage,
+  ToolMessageChunk,
   ToolMessageFields,
 } from "./tool.js";
 
@@ -544,6 +545,8 @@ export function convertToChunk(message: BaseMessage) {
     return new SystemMessageChunk({ ...message });
   } else if (type === "function") {
     return new FunctionMessageChunk({ ...message });
+  } else if (type === "tool") {
+    return new ToolMessageChunk({ ...message });
   } else if (ChatMessage.isInstance(message)) {
     return new ChatMessageChunk({ ...message });
   } else {
