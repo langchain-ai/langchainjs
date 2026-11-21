@@ -8,6 +8,7 @@ import type { EnhancedGenerateContentResponse } from "@google/generative-ai";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { convertUsageMetadata } from "./common.js";
 import { mapGeminiFinishReason } from "./finish_reason.js";
 
@@ -121,8 +122,17 @@ export async function* convertGoogleGenAIStream(
       } else if ("functionCall" in part && part.functionCall) {
         const key: BlockKey = `tool:${toolIdx}`;
         const args = JSON.stringify(part.functionCall.args ?? {});
+        // Gemini does not always return an id for function calls. When present,
+        // propagate it; otherwise generate a stable id so downstream
+        // ToolMessage.tool_call_id matching works in agent loops.
+        const toolCallId =
+          "id" in part.functionCall &&
+          typeof part.functionCall.id === "string"
+            ? part.functionCall.id
+            : uuidv4();
         const { index, isNew } = getOrCreateBlockIndex(key, {
           type: "tool_call_chunk",
+          id: toolCallId,
           name: part.functionCall.name,
           args: "",
           index: toolIdx,
@@ -133,6 +143,7 @@ export async function* convertGoogleGenAIStream(
             index,
             content: {
               type: "tool_call_chunk",
+              id: toolCallId,
               name: part.functionCall.name,
               args: "",
               index: toolIdx,
@@ -140,6 +151,7 @@ export async function* convertGoogleGenAIStream(
           };
         }
         const acc = blockAccumulators.get(index)!;
+        acc.id = toolCallId;
         acc.args = args;
         yield {
           event: "content-block-delta" as const,
@@ -148,6 +160,7 @@ export async function* convertGoogleGenAIStream(
             type: "block-delta" as const,
             fields: {
               type: "tool_call_chunk",
+              id: acc.id,
               name: acc.name,
               args: acc.args,
             },
