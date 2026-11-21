@@ -127,9 +127,18 @@ export function convertToBedrockToolChoice(
   return bedrockToolChoice;
 }
 
+export function rejectsForcedToolChoice(model: string): boolean {
+  return (
+    model.includes("claude-opus-5-5") || model.includes("claude-sonnet-5-5")
+  );
+}
+
 export function supportedToolChoiceValuesForModel(
   model: string
 ): Array<"auto" | "any" | "tool"> | undefined {
+  if (rejectsForcedToolChoice(model)) {
+    return ["auto"];
+  }
   if (
     model.includes("claude-3") ||
     model.includes("claude-4") ||

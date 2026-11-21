@@ -619,3 +619,50 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
   }, 60000);
 });
+
+describe("withStructuredOutput with method jsonSchema", () => {
+  const Joke = z
+    .object({
+      setup: z.string().describe("The setup of the joke"),
+      rating: z.number().min(1).max(10).describe("From 1 to 10"),
+    })
+    .describe("A joke and its rating");
+
+  test.each(["us.anthropic.claude-sonnet-5-5", "us.anthropic.claude-opus-5-5"])(
+    "%s returns JSON that matches the schema by default",
+    async (model) => {
+      const llm = new ChatBedrockConverse({ ...baseConstructorArgs, model });
+
+      const joke = await llm
+        .withStructuredOutput(Joke, { name: "Joke" })
+        .invoke("Tell me a joke about cats");
+
+      expect(Object.keys(joke)).toEqual(["setup", "rating"]);
+    }
+  );
+
+  test("answers after a history with tool calls", async () => {
+    const llm = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "us.anthropic.claude-sonnet-5-5",
+    });
+
+    const joke = await llm
+      .withStructuredOutput(Joke, { name: "Joke", method: "jsonSchema" })
+      .invoke([
+        new HumanMessage("Find a joke about cats and return it"),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { id: "1", name: "search", args: {}, type: "tool_call" },
+          ],
+        }),
+        new ToolMessage({
+          content: "Why did the cat sit on the computer? To watch the mouse.",
+          tool_call_id: "1",
+        }),
+      ]);
+
+    expect(typeof joke.setup).toBe("string");
+  });
+});
