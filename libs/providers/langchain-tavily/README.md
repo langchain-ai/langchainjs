@@ -4,7 +4,7 @@
 
 This package provides integrations for the [Tavily](https://tavily.com/) search engine within LangChain.js. Tavily is a search engine built specifically for AI agents (LLMs), delivering real-time, accurate, and factual results at speed.
 
-This package exposes four tools:
+This package exposes six tools:
 
 - `TavilySearch`: Performs a search optimized for LLMs and RAG.
 - `TavilyExtract`: Extracts raw content from a list of URLs.
@@ -52,6 +52,19 @@ const results = await tool.invoke({
 console.log(results);
 ```
 
+Search accepts `fast` and `ultra-fast` depths and optional date, language, domain-preference and safe-search controls. Constructor values take precedence over invocation values, including `false`. `safeSearch` requires `basic` or `advanced` depth; `includeDomainsMode` requires `includeDomains`, and `filterByLanguage` requires `language`. Date estimates can reflect publication or last update and can be later than original publication. These options are beta and can add latency; `filterByPublishedDate` applies to an active `timeRange`, `startDate` or `endDate` window. Omitted options are left to the API; `maxResults` remains constructor-only, including `0` for answer-only requests.
+
+```typescript
+const search = new TavilySearch({
+  includeAnswer: "advanced",
+  includeDomainsMode: "prefer",
+  includeDomains: ["example.com"],
+});
+await search.invoke({ query: "release notes", startDate: "2026-01-01" });
+```
+
+Tools keep their existing `{ error: string }` result on request failures, including the HTTP status and available API detail. Check for `error` before consuming results. Requests use `X-Client-Name: langchain-js` and `X-Client-Source: api` for attribution.
+
 ### TavilyExtract
 
 ```typescript
@@ -70,6 +83,8 @@ const results = await tool.invoke({
 
 console.log(results);
 ```
+
+Extract accepts `chunksPerSource` (1–5, with `query`) and an API `timeout` of 1–60 seconds. Crawl accepts `chunksPerSource` (1–5, with `instructions`); Crawl and Map accept an API `timeout` of 10–150 seconds. These are server processing limits, not local transport cancellation. Existing defaults and full API response metadata are preserved.
 
 ### TavilyResearch
 
