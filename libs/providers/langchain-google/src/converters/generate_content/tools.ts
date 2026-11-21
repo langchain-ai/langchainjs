@@ -100,19 +100,59 @@ const GEMINI_SCHEMA_KEYS = new Set([
   "type",
 ]);
 
+// Resolves a local JSON pointer (eg. "#/$defs/address") against the root schema; non-local refs resolve to undefined.
+function resolveLocalRef(root: unknown, ref: string): unknown {
+  if (!ref.startsWith("#")) {
+    return undefined;
+  }
+  return ref
+    .slice(1)
+    .split("/")
+    .filter(Boolean)
+    .reduce<unknown>(
+      (node, segment) =>
+        node !== null && typeof node === "object"
+          ? (node as Record<string, unknown>)[
+              segment.replace(/~1/g, "/").replace(/~0/g, "~")
+            ]
+          : undefined,
+      root
+    );
+}
+
 // Recursively allowlist-filters a schema node; `properties`' own keys are user field names, not schema keywords, so only its values recurse.
-function sanitizeGeminiSchema(node: unknown): unknown {
+// Local `$ref`s (eg. `$defs` in JSON Schema 2020-12 tool schemas) are inlined; recursive or non-local ones still throw.
+function sanitizeGeminiSchema(
+  node: unknown,
+  root: unknown = node,
+  refStack: string[] = []
+): unknown {
   if (Array.isArray(node)) {
-    return node.map(sanitizeGeminiSchema);
+    return node.map((item) => sanitizeGeminiSchema(item, root, refStack));
   }
   if (typeof node !== "object" || node === null) {
     return node;
   }
 
   if ("$ref" in node) {
-    throw new InvalidInputError(
-      "Gemini does not support recursive or referenced ($ref) schemas in function or response schemas. Inline the schema instead."
-    );
+    const { $ref, ...siblings } = node as Record<string, unknown>;
+    const target =
+      typeof $ref === "string" && !refStack.includes($ref)
+        ? resolveLocalRef(root, $ref)
+        : undefined;
+    if (
+      typeof target !== "object" ||
+      target === null ||
+      Array.isArray(target)
+    ) {
+      throw new InvalidInputError(
+        "Gemini does not support recursive or referenced ($ref) schemas in function or response schemas. Inline the schema instead."
+      );
+    }
+    return sanitizeGeminiSchema({ ...target, ...siblings }, root, [
+      ...refStack,
+      $ref as string,
+    ]);
   }
 
   const source = node as Record<string, unknown>;
@@ -130,15 +170,17 @@ function sanitizeGeminiSchema(node: unknown): unknown {
     schema.properties = Object.fromEntries(
       Object.entries(schema.properties).map(([name, value]) => [
         name,
-        sanitizeGeminiSchema(value),
+        sanitizeGeminiSchema(value, root, refStack),
       ])
     );
   }
   if (schema.items !== undefined) {
-    schema.items = sanitizeGeminiSchema(schema.items);
+    schema.items = sanitizeGeminiSchema(schema.items, root, refStack);
   }
   if (Array.isArray(schema.anyOf)) {
-    schema.anyOf = schema.anyOf.map(sanitizeGeminiSchema);
+    schema.anyOf = schema.anyOf.map((item) =>
+      sanitizeGeminiSchema(item, root, refStack)
+    );
   }
 
   return schema;
