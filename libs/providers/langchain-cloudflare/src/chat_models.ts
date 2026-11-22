@@ -248,7 +248,7 @@ export class ChatCloudflareWorkersAI
     }
     if (!this.cloudflareApiToken) {
       throw new Error(
-        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`
+        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_TOKEN" in your environment variables.`
       );
     }
   }
@@ -260,59 +260,32 @@ export class ChatCloudflareWorkersAI
   ) {
     options.signal?.throwIfAborted();
     this.validateEnvironment();
-    if (this.binding) {
-      const binding = this.binding;
-      const data = {
-        ...this.invocationParams(options),
-        messages: this._formatMessages(messages),
-        stream,
-      };
-      return this.caller.callWithOptions(
-        { signal: options.signal },
-        async () => {
-          options.signal?.throwIfAborted();
-          const response = await binding.run(this.model, data, {
+    const data = { ...this.invocationParams(options), messages: this._formatMessages(messages), stream };
+    return this.caller.callWithOptions({ signal: options.signal }, async () => {
+      options.signal?.throwIfAborted();
+      // Workers and DOM Response/AbortSignal types differ, but expose the same
+      // runtime interfaces used by this transport.
+      const response = this.binding
+        ? ((await this.binding.run(this.model, data, {
             returnRawResponse: true,
             signal: options.signal as unknown as WorkersAbortSignal | undefined,
+          })) as unknown as Response)
+        : await fetch(`${this.baseUrl}/${this.model}`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.cloudflareApiToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+            signal: options.signal,
           });
-          // Workers and DOM Response types differ, but expose the same API here.
-          const rawResponse = response as unknown as Response;
-          if (!rawResponse.ok) {
-            throw new Error(
-              `Cloudflare LLM call failed with status code ${rawResponse.status}`
-            );
-          }
-          return rawResponse;
-        }
-      );
-    }
-    const url = `${this.baseUrl}/${this.model}`;
-    const headers = {
-      Authorization: `Bearer ${this.cloudflareApiToken}`,
-      "Content-Type": "application/json",
-    };
-
-    const formattedMessages = this._formatMessages(messages);
-
-    const data = {
-      ...this.invocationParams(options),
-      messages: formattedMessages,
-      stream,
-    };
-    return this.caller.call(async () => {
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(data),
-        signal: options.signal,
-      });
       if (!response.ok) {
-        const error = new Error(
-          `Cloudflare LLM call failed with status code ${response.status}`
+        throw Object.assign(
+          new Error(
+            `Cloudflare LLM call failed with status code ${response.status}`
+          ),
+          { response }
         );
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).response = response;
-        throw error;
       }
       return response;
     });

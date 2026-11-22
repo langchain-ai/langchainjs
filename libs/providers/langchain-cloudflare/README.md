@@ -27,6 +27,11 @@ const response = await model.invoke("Hello!");
 const stream = await model.stream("Hello!");
 ```
 
+This option changes only the request transport. Binding and REST requests share
+LangChain's retry/cancellation wrapper and the same HTTP error contract; the
+binding returns a raw response for the existing model parser. Tool execution,
+argument validation, and application-specific repairs are outside this change.
+
 When `binding` is supplied, it takes precedence over REST credentials and
 `baseUrl`. Binding-backed models cannot be serialized.
 
