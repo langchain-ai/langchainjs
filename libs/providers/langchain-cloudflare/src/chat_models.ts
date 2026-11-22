@@ -4,20 +4,49 @@ import type {
 } from "@cloudflare/workers-types";
 import {
   LangSmithParams,
-  SimpleChatModel,
+  BaseChatModel,
+  type BindToolsInput,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+} from "@langchain/core/language_models/base";
+import { Runnable } from "@langchain/core/runnables";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
+  type InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
+import {
+  type SerializableSchema,
+  isSerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
+import {
+  parseToolCall,
+  makeInvalidToolCall,
+} from "@langchain/core/output_parsers/openai_tools";
+
+import {
+  AIMessage,
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
+  isAIMessage,
+  ToolMessage,
+  type OpenAIToolCall,
+  type UsageMetadata,
 } from "@langchain/core/messages";
-import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { type ChatResult, ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { convertCloudflareStream } from "./utils/stream_events.js";
 
 import type { CloudflareWorkersAIInput } from "./llms.js";
 import { convertEventStreamToIterableReadableDataStream } from "./utils/event_source_parse.js";
@@ -26,17 +55,36 @@ import { convertEventStreamToIterableReadableDataStream } from "./utils/event_so
  * An interface defining the options for a Cloudflare Workers AI call. It extends
  * the BaseLanguageModelCallOptions interface.
  */
-export interface ChatCloudflareWorkersAICallOptions extends BaseLanguageModelCallOptions {}
+export interface ChatCloudflareWorkersAICallOptions extends BaseLanguageModelCallOptions {
+  tools?: BindToolsInput[];
+  tool_choice?:
+    | "auto"
+    | "none"
+    | "required"
+    | "any"
+    | string
+    | { type: "function"; function: { name: string } };
+  response_format?:
+    | { type: "json_object" }
+    | { type: "json_schema"; json_schema: Record<string, unknown> };
+  temperature?: number;
+  max_tokens?: number;
+  modelKwargs?: Record<string, unknown>;
+}
 
 /** Configuration for a Cloudflare Workers AI chat model. */
 export interface ChatCloudflareWorkersAIInput extends CloudflareWorkersAIInput {
   /** Workers AI binding. When provided, REST credentials are not required. */
   binding?: Ai;
+  temperature?: number;
+  maxTokens?: number;
+  /** Additional model-specific inference parameters. */
+  modelKwargs?: Record<string, unknown>;
 }
 
 /**
  * A class that enables calls to the Cloudflare Workers AI API to access large language
- * models in a chat-like fashion. It extends the SimpleChatModel class and
+ * models in a chat-like fashion. It extends the BaseChatModel class and
  * implements the CloudflareWorkersAIInput interface.
  * @example
  * ```typescript
@@ -55,7 +103,7 @@ export interface ChatCloudflareWorkersAIInput extends CloudflareWorkersAIInput {
  * ```
  */
 export class ChatCloudflareWorkersAI
-  extends SimpleChatModel
+  extends BaseChatModel<ChatCloudflareWorkersAICallOptions>
   implements CloudflareWorkersAIInput
 {
   static lc_name() {
@@ -75,6 +123,12 @@ export class ChatCloudflareWorkersAI
   streaming = false;
 
   binding?: Ai;
+
+  temperature?: number;
+
+  maxTokens?: number;
+
+  modelKwargs: Record<string, unknown>;
 
   constructor(
     model: string,
@@ -97,6 +151,9 @@ export class ChatCloudflareWorkersAI
     super(fields);
     this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
+    this.temperature = fields.temperature;
+    this.maxTokens = fields.maxTokens;
+    this.modelKwargs = fields.modelKwargs ?? {};
     this.binding = fields.binding;
     // A runtime binding cannot be reconstructed from serialized configuration.
     if (this.binding) this.lc_serializable = false;
@@ -122,6 +179,8 @@ export class ChatCloudflareWorkersAI
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_stop: options.stop,
+      ls_temperature: options.temperature ?? this.temperature,
+      ls_max_tokens: options.max_tokens ?? this.maxTokens,
     };
   }
 
@@ -143,10 +202,34 @@ export class ChatCloudflareWorkersAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(_options?: this["ParsedCallOptions"]) {
+  invocationParams(options?: this["ParsedCallOptions"]) {
+    const choice = options?.tool_choice;
     return {
-      model: this.model,
+      ...this.modelKwargs,
+      ...options?.modelKwargs,
+      temperature: options?.temperature ?? this.temperature,
+      max_tokens: options?.max_tokens ?? this.maxTokens,
+      stop: options?.stop,
+      tools: options?.tools?.map((tool) => convertToOpenAITool(tool)),
+      tool_choice:
+        choice === "any"
+          ? "required"
+          : typeof choice === "string" &&
+              !["auto", "none", "required"].includes(choice)
+            ? { type: "function", function: { name: choice } }
+            : choice,
+      response_format: options?.response_format,
     };
+  }
+
+  override bindTools(
+    tools: BindToolsInput[],
+    kwargs?: Partial<ChatCloudflareWorkersAICallOptions>
+  ) {
+    return this.withConfig({
+      ...kwargs,
+      tools: tools.map((tool) => convertToOpenAITool(tool)),
+    });
   }
 
   _combineLLMOutput() {
@@ -179,7 +262,11 @@ export class ChatCloudflareWorkersAI
     this.validateEnvironment();
     if (this.binding) {
       const binding = this.binding;
-      const data = { messages: this._formatMessages(messages), stream };
+      const data = {
+        ...this.invocationParams(options),
+        messages: this._formatMessages(messages),
+        stream,
+      };
       return this.caller.callWithOptions(
         { signal: options.signal },
         async () => {
@@ -207,7 +294,11 @@ export class ChatCloudflareWorkersAI
 
     const formattedMessages = this._formatMessages(messages);
 
-    const data = { messages: formattedMessages, stream };
+    const data = {
+      ...this.invocationParams(options),
+      messages: formattedMessages,
+      stream,
+    };
     return this.caller.call(async () => {
       const response = await fetch(url, {
         method: "POST",
@@ -227,127 +318,344 @@ export class ChatCloudflareWorkersAI
     });
   }
 
-  async *_streamChatModelEvents(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatModelStreamEvent> {
-    const response = await this._request(messages, options, true);
-    if (!response.body) {
-      throw new Error("Empty response from Cloudflare. Please try again.");
-    }
-    const byteStream = convertEventStreamToIterableReadableDataStream(
-      response.body
-    );
-    async function* parseChunks(
-      source: AsyncIterable<string>,
-      signal?: AbortSignal
-    ) {
-      for await (const chunk of source) {
-        if (signal?.aborted) {
-          return;
-        }
-        if (chunk !== "[DONE]") {
-          yield JSON.parse(chunk) as { response?: string };
-        }
-      }
-    }
-    yield* convertCloudflareStream(parseChunks(byteStream, options.signal));
-  }
-
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const response = await this._request(messages, options, true);
-    if (!response.body) {
+    if (!response.body)
       throw new Error("Empty response from Cloudflare. Please try again.");
-    }
     const stream = convertEventStreamToIterableReadableDataStream(
       response.body
     );
+    let usage: UsageMetadata | undefined;
+    const toolIndexes = new Set<number>();
     for await (const chunk of stream) {
-      if (options.signal?.aborted) {
-        return;
-      }
-      if (chunk !== "[DONE]") {
-        const parsedChunk = JSON.parse(chunk);
-        const generationChunk = new ChatGenerationChunk({
-          message: new AIMessageChunk({ content: parsedChunk.response }),
-          text: parsedChunk.response,
-        });
-        yield generationChunk;
-        // oxlint-disable-next-line no-void
-        void runManager?.handleLLMNewToken(generationChunk.text ?? "");
-      }
+      options.signal?.throwIfAborted();
+      if (chunk === "[DONE]") break;
+      const data = JSON.parse(chunk) as CloudflareChatResponse;
+      if (data.error)
+        throw new Error(
+          `Cloudflare stream error: ${JSON.stringify(data.error)}`
+        );
+      if (data.usage) usage = usageMetadata(data.usage);
+      const choice = data.choices?.[0];
+      const delta = choice?.delta;
+      const text =
+        delta?.content ??
+        (typeof data.response === "string" ? data.response : "");
+      const rawTools = delta?.tool_calls ?? data.tool_calls ?? [];
+      if (
+        !text &&
+        rawTools.length === 0 &&
+        !delta?.reasoning_content &&
+        !choice?.finish_reason
+      )
+        continue;
+      const message = new AIMessageChunk({
+        content: text,
+        id: data.id,
+        tool_call_chunks: rawTools.map((tool, index) => {
+          const toolIndex = tool.index ?? index;
+          const first = !toolIndexes.has(toolIndex);
+          toolIndexes.add(toolIndex);
+          const args = tool.function?.arguments ?? tool.arguments;
+          return {
+            index: toolIndex,
+            id: first ? (tool.id ?? crypto.randomUUID()) : undefined,
+            name: tool.function?.name ?? tool.name,
+            args:
+              typeof args === "string"
+                ? args
+                : args === undefined
+                  ? ""
+                  : JSON.stringify(args),
+            type: "tool_call_chunk",
+          };
+        }),
+        additional_kwargs: delta?.reasoning_content
+          ? { reasoning_content: delta.reasoning_content }
+          : {},
+        response_metadata: choice?.finish_reason
+          ? { finish_reason: choice.finish_reason }
+          : {},
+      });
+      const generation = new ChatGenerationChunk({
+        message,
+        text,
+        generationInfo: choice?.finish_reason
+          ? { finish_reason: choice.finish_reason }
+          : undefined,
+      });
+      yield generation;
+      if (text) await runManager?.handleLLMNewToken(text);
     }
+    // Native streams can include cumulative usage on every delta. Emit only
+    // the final aggregate so LangChain does not sum it multiple times.
+    if (usage)
+      yield new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({ content: "", usage_metadata: usage }),
+      });
   }
 
   protected _formatMessages(
     messages: BaseMessage[]
-  ): { role: string; content: string }[] {
-    const formattedMessages = messages.map((message) => {
-      let role;
-      if (message._getType() === "human") {
-        role = "user";
-      } else if (message._getType() === "ai") {
-        role = "assistant";
-      } else if (message._getType() === "system") {
-        role = "system";
-      } else if (ChatMessage.isInstance(message)) {
-        role = message.role;
-      } else {
-        console.warn(
+  ): Record<string, unknown>[] {
+    return messages.map((message) => {
+      let role: string;
+      if (message._getType() === "human") role = "user";
+      else if (message._getType() === "ai") role = "assistant";
+      else if (message._getType() === "system") role = "system";
+      else if (ToolMessage.isInstance(message)) role = "tool";
+      else if (ChatMessage.isInstance(message)) role = message.role;
+      else
+        throw new Error(
           `Unsupported message type passed to Cloudflare: "${message._getType()}"`
         );
-        role = "user";
-      }
-      if (typeof message.content !== "string") {
-        throw new Error(
-          "ChatCloudflareWorkersAI currently does not support non-string message content."
-        );
-      }
-      return {
+      const formatted: Record<string, unknown> = {
         role,
         content: message.content,
       };
+      if (ToolMessage.isInstance(message))
+        formatted.tool_call_id = message.tool_call_id;
+      if (isAIMessage(message)) {
+        if (message.tool_calls?.length)
+          formatted.tool_calls = message.tool_calls.map((call) => ({
+            id: call.id,
+            type: "function",
+            function: { name: call.name, arguments: JSON.stringify(call.args) },
+          }));
+        else if (message.additional_kwargs.tool_calls)
+          formatted.tool_calls = message.additional_kwargs.tool_calls;
+        if (message.additional_kwargs.reasoning_content)
+          formatted.reasoning_content =
+            message.additional_kwargs.reasoning_content;
+      }
+      return formatted;
     });
-    return formattedMessages;
   }
 
-  /** @ignore */
-  async _call(
+  async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
-  ): Promise<string> {
+  ): Promise<ChatResult> {
     options.signal?.throwIfAborted();
-    if (!this.streaming) {
-      const response = await this._request(messages, options);
-
-      const responseData = await response.json();
-
-      return this.binding
-        ? responseData.response
-        : responseData.result.response;
-    } else {
-      const stream = this._streamResponseChunks(messages, options, runManager);
-      let finalResult: ChatGenerationChunk | undefined;
-      for await (const chunk of stream) {
-        if (finalResult === undefined) {
-          finalResult = chunk;
-        } else {
-          finalResult = finalResult.concat(chunk);
-        }
-      }
-      const messageContent = finalResult?.message.content;
-      if (messageContent && typeof messageContent !== "string") {
-        throw new Error(
-          "Non-string output for ChatCloudflareWorkersAI is currently not supported."
-        );
-      }
-      return messageContent ?? "";
+    if (this.streaming) {
+      let result: ChatGenerationChunk | undefined;
+      for await (const chunk of this._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      ))
+        result = result ? result.concat(chunk) : chunk;
+      if (!result)
+        throw new Error("Empty response from Cloudflare. Please try again.");
+      return { generations: [result] };
     }
+    const response = await this._request(messages, options);
+    const body = await response.json();
+    const data = (this.binding ? body : body.result) as CloudflareChatResponse;
+    if (!data || data.error)
+      throw new Error(
+        `Invalid Cloudflare response: ${JSON.stringify(data?.error)}`
+      );
+    const choice = data.choices?.[0];
+    const output = choice?.message;
+    const text =
+      output?.content ??
+      (typeof data.response === "string"
+        ? data.response
+        : data.response == null
+          ? ""
+          : JSON.stringify(data.response));
+    const rawTools: OpenAIToolCall[] = (
+      output?.tool_calls ??
+      data.tool_calls ??
+      []
+    ).map((call) => ({
+      id: call.id ?? crypto.randomUUID(),
+      type: "function",
+      function: {
+        name: call.function?.name ?? call.name ?? "",
+        arguments:
+          typeof (call.function?.arguments ?? call.arguments) === "string"
+            ? ((call.function?.arguments ?? call.arguments) as string)
+            : JSON.stringify(call.arguments ?? {}),
+      },
+    }));
+    const tool_calls = [];
+    const invalid_tool_calls = [];
+    for (const raw of rawTools) {
+      try {
+        tool_calls.push(parseToolCall(raw, { returnId: true }));
+      } catch (error) {
+        invalid_tool_calls.push(makeInvalidToolCall(raw, String(error)));
+      }
+    }
+    if (data.response === undefined && !output && rawTools.length === 0)
+      throw new Error("Cloudflare response contains no message.");
+    const message = new AIMessage({
+      content: text,
+      id: data.id,
+      tool_calls,
+      invalid_tool_calls,
+      additional_kwargs: {
+        ...(rawTools.length ? { tool_calls: rawTools } : {}),
+        ...(output?.reasoning_content
+          ? { reasoning_content: output.reasoning_content }
+          : {}),
+      },
+      usage_metadata: data.usage ? usageMetadata(data.usage) : undefined,
+      response_metadata: {
+        model_name: data.model ?? this.model,
+        ...(choice?.finish_reason
+          ? { finish_reason: choice.finish_reason }
+          : {}),
+      },
+    });
+    return {
+      generations: [
+        {
+          text,
+          message,
+          generationInfo: choice?.finish_reason
+            ? { finish_reason: choice.finish_reason }
+            : undefined,
+        },
+      ],
+    };
   }
+
+  withStructuredOutput<
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
+  >(
+    schema:
+      | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
+      | Record<string, unknown>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  withStructuredOutput<
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
+  >(
+    schema:
+      | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
+      | Record<string, unknown>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  withStructuredOutput<
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
+  >(
+    schema:
+      | InteropZodType<RunOutput>
+      | SerializableSchema<RunOutput>
+      | Record<string, unknown>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    const method = config?.method ?? "functionCalling";
+    const name = config?.name ?? "extract";
+    const jsonSchema =
+      isInteropZodSchema(schema) || isSerializableSchema(schema)
+        ? toJsonSchema(schema)
+        : schema;
+    let model: Runnable<BaseLanguageModelInput>;
+    let parser;
+    if (method === "functionCalling") {
+      model = this.bindTools(
+        [
+          {
+            type: "function",
+            function: {
+              name,
+              description: jsonSchema.description ?? "Extract structured data",
+              parameters: jsonSchema,
+              ...(config?.strict === undefined
+                ? {}
+                : { strict: config.strict }),
+            },
+          },
+        ],
+        { tool_choice: name }
+      );
+      parser = createFunctionCallingParser(schema, name);
+    } else if (method === "jsonMode" || method === "jsonSchema") {
+      if (config?.strict && method === "jsonMode")
+        throw new Error("strict is not supported with jsonMode.");
+      model = this.withConfig({
+        response_format:
+          method === "jsonMode"
+            ? { type: "json_object" }
+            : {
+                type: "json_schema",
+                json_schema: {
+                  name,
+                  schema: jsonSchema,
+                  ...(config?.strict === undefined
+                    ? {}
+                    : { strict: config.strict }),
+                },
+              },
+      });
+      parser = createContentParser(schema);
+    } else throw new Error(`Unsupported structured output method: ${method}`);
+    return assembleStructuredOutputPipeline(
+      model,
+      parser,
+      config?.includeRaw,
+      "CloudflareStructuredOutput"
+    );
+  }
+}
+
+type CloudflareToolCall = {
+  index?: number;
+  id?: string;
+  name?: string;
+  arguments?: string | Record<string, unknown>;
+  function?: { name?: string; arguments?: string };
+};
+type CloudflareChatResponse = {
+  id?: string;
+  model?: string;
+  error?: unknown;
+  response?: string | Record<string, unknown>;
+  tool_calls?: CloudflareToolCall[];
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+  choices?: {
+    message?: {
+      content?: string | null;
+      tool_calls?: CloudflareToolCall[];
+      reasoning_content?: string;
+    };
+    delta?: {
+      content?: string | null;
+      tool_calls?: CloudflareToolCall[];
+      reasoning_content?: string;
+    };
+    finish_reason?: string | null;
+  }[];
+};
+function usageMetadata(
+  usage: NonNullable<CloudflareChatResponse["usage"]>
+): UsageMetadata {
+  const input_tokens = usage.prompt_tokens ?? 0;
+  const output_tokens = usage.completion_tokens ?? 0;
+  return {
+    input_tokens,
+    output_tokens,
+    total_tokens: usage.total_tokens ?? input_tokens + output_tokens,
+  };
 }

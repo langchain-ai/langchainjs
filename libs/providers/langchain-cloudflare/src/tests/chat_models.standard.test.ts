@@ -1,6 +1,5 @@
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import {
   ChatCloudflareWorkersAI,
   ChatCloudflareWorkersAICallOptions,
@@ -13,8 +12,8 @@ class ChatCloudflareWorkersAIStandardUnitTests extends ChatModelUnitTests<
   constructor() {
     super({
       Cls: ChatCloudflareWorkersAI,
-      chatModelHasToolCalling: false,
-      chatModelHasStructuredOutput: false,
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
       constructorArgs: {},
     });
   }
@@ -25,18 +24,6 @@ class ChatCloudflareWorkersAIStandardUnitTests extends ChatModelUnitTests<
       "ChatCloudflareWorkersAI",
       this.multipleApiKeysRequiredMessage
     );
-  }
-
-  expectedLsParams(): Partial<LangSmithParams> {
-    console.warn(
-      "Overriding testStandardParams. ChatCloudflareWorkersAI does not support temperature or max tokens."
-    );
-    return {
-      ls_provider: "string",
-      ls_model_name: "string",
-      ls_model_type: "chat",
-      ls_stop: ["Array<string>"],
-    };
   }
 }
 

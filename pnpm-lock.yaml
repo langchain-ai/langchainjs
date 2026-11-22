@@ -1299,6 +1299,10 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.0.5)(vite@7.3.7(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)(yaml@2.9.1))
 
+      zod:
+        specifier: '>=4.6.6 <5'
+        version: 4.6.7
+
   libs/providers/langchain-cohere:
     dependencies:
       cohere-ai:
