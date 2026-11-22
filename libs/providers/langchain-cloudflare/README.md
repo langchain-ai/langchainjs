@@ -8,6 +8,29 @@ This package contains the LangChain.js integrations for Cloudflare through their
 npm install @langchain/cloudflare @langchain/core
 ```
 
+## Chat models in Cloudflare Workers
+
+Pass a Workers AI binding to use `ChatCloudflareWorkersAI` without an account ID
+or API token. Configure an AI binding named `AI` in your Wrangler configuration,
+then pass it from your Worker:
+
+```typescript
+import { ChatCloudflareWorkersAI } from "@langchain/cloudflare";
+
+const model = new ChatCloudflareWorkersAI({
+  binding: env.AI,
+  model: "@cf/meta/llama-3.1-8b-instruct",
+});
+
+const response = await model.invoke("Hello!");
+// Streaming is also supported:
+const stream = await model.stream("Hello!");
+```
+
+When `binding` is supplied, it takes precedence over REST credentials and
+`baseUrl`. Binding-backed models cannot be serialized. This transport option
+does not add tool calling or structured output support.
+
 ## Development
 
 To develop the Cloudflare package, you'll need to follow these instructions:
