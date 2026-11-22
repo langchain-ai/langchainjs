@@ -48,6 +48,8 @@ import { type ChatResult, ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
+import { toolArgumentRepair } from "./utils/tool_argument_repair.js";
+
 import type { CloudflareWorkersAIInput } from "./llms.js";
 import { convertEventStreamToIterableReadableDataStream } from "./utils/event_source_parse.js";
 
@@ -331,6 +333,11 @@ export class ChatCloudflareWorkersAI
     );
     let usage: UsageMetadata | undefined;
     const toolIndexes = new Set<number>();
+    const argumentRepair = toolArgumentRepair(options.tools);
+    const bufferedTools = new Map<
+      number,
+      { id?: string; name: string; args: string }
+    >();
     for await (const chunk of stream) {
       options.signal?.throwIfAborted();
       if (chunk === "[DONE]") break;
@@ -353,27 +360,43 @@ export class ChatCloudflareWorkersAI
         !choice?.finish_reason
       )
         continue;
+      const toolChunks = rawTools.map((tool, index) => {
+        const toolIndex = tool.index ?? index;
+        const first = !toolIndexes.has(toolIndex);
+        toolIndexes.add(toolIndex);
+        const args = tool.function?.arguments ?? tool.arguments;
+        return {
+          index: toolIndex,
+          id: first ? (tool.id ?? crypto.randomUUID()) : undefined,
+          name: tool.function?.name ?? tool.name,
+          args:
+            typeof args === "string"
+              ? args
+              : args === undefined
+                ? ""
+                : JSON.stringify(args),
+          type: "tool_call_chunk" as const,
+        };
+      });
+      if (argumentRepair.bufferStreamArguments) {
+        for (const chunk of toolChunks) {
+          const previous = bufferedTools.get(chunk.index) ?? {
+            name: "",
+            args: "",
+          };
+          bufferedTools.set(chunk.index, {
+            id: previous.id ?? chunk.id,
+            name: previous.name + (chunk.name ?? ""),
+            args: previous.args + chunk.args,
+          });
+        }
+      }
       const message = new AIMessageChunk({
         content: text,
         id: data.id,
-        tool_call_chunks: rawTools.map((tool, index) => {
-          const toolIndex = tool.index ?? index;
-          const first = !toolIndexes.has(toolIndex);
-          toolIndexes.add(toolIndex);
-          const args = tool.function?.arguments ?? tool.arguments;
-          return {
-            index: toolIndex,
-            id: first ? (tool.id ?? crypto.randomUUID()) : undefined,
-            name: tool.function?.name ?? tool.name,
-            args:
-              typeof args === "string"
-                ? args
-                : args === undefined
-                  ? ""
-                  : JSON.stringify(args),
-            type: "tool_call_chunk",
-          };
-        }),
+        tool_call_chunks: argumentRepair.bufferStreamArguments
+          ? []
+          : toolChunks,
         additional_kwargs: delta?.reasoning_content
           ? { reasoning_content: delta.reasoning_content }
           : {},
@@ -391,6 +414,20 @@ export class ChatCloudflareWorkersAI
       yield generation;
       if (text) await runManager?.handleLLMNewToken(text);
     }
+    options.signal?.throwIfAborted();
+    if (bufferedTools.size)
+      yield new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({
+          content: "",
+          tool_call_chunks: [...bufferedTools].map(([index, call]) => ({
+            ...call,
+            index,
+            args: argumentRepair.repair(call.name, call.args),
+            type: "tool_call_chunk" as const,
+          })),
+        }),
+      });
     // Native streams can include cumulative usage on every delta. Emit only
     // the final aggregate so LangChain does not sum it multiple times.
     if (usage)
@@ -486,6 +523,12 @@ export class ChatCloudflareWorkersAI
             : JSON.stringify(call.arguments ?? {}),
       },
     }));
+    const argumentRepair = toolArgumentRepair(options.tools);
+    for (const call of rawTools)
+      call.function.arguments = argumentRepair.repair(
+        call.function.name,
+        call.function.arguments
+      );
     const tool_calls = [];
     const invalid_tool_calls = [];
     for (const raw of rawTools) {

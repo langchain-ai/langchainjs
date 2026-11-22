@@ -453,3 +453,131 @@ test("bound runnable events preserve the final tool call", async () => {
     { name: "search", args: { query: "diagram" } },
   ]);
 });
+
+const nullableSearch = tool(async (args) => JSON.stringify(args), {
+  name: "search_scenes",
+  description: "Search scenes with optional IDs",
+  schema: z4.object({
+    query: z4.string(),
+    video_ids: z4.array(z4.number()).nullable(),
+    label: z4.string().nullable(),
+  }),
+});
+const nullableArgs = { query: "null", video_ids: "null", label: "null" };
+
+test("repairs string null before normal LangChain tool validation", async () => {
+  const { model } = fixture({
+    choices: [
+      {
+        message: {
+          tool_calls: [
+            {
+              id: "nullable",
+              function: {
+                name: "search_scenes",
+                arguments: JSON.stringify(nullableArgs),
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+  const result = await model.bindTools([nullableSearch]).invoke("Search");
+  expect(result.tool_calls?.[0]?.args).toEqual({
+    ...nullableArgs,
+    video_ids: null,
+  });
+  expect(
+    JSON.parse(result.additional_kwargs.tool_calls![0].function.arguments)
+  ).toEqual({ ...nullableArgs, video_ids: null });
+  expect(await nullableSearch.invoke(result.tool_calls![0])).toMatchObject({
+    content: JSON.stringify({ ...nullableArgs, video_ids: null }),
+  });
+});
+
+test("repairs fragmented streamed arguments before exposing the completed call", async () => {
+  const model = streamFixture([
+    {
+      choices: [
+        {
+          delta: {
+            content: "Checking",
+            tool_calls: [
+              {
+                index: 0,
+                id: "nullable",
+                function: {
+                  name: "search_",
+                  arguments: '{"query":"null","video_ids":"nu',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              {
+                index: 0,
+                function: { name: "scenes", arguments: 'll","label":"null"}' },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ]);
+  let result: AIMessageChunk | undefined;
+  const chunks: AIMessageChunk[] = [];
+  for await (const chunk of await model
+    .bindTools([nullableSearch])
+    .stream("Search")) {
+    chunks.push(chunk);
+    result = result ? result.concat(chunk) : chunk;
+  }
+  expect(chunks[0].content).toBe("Checking");
+  expect(chunks[0].tool_call_chunks).toHaveLength(0);
+  expect(result?.tool_calls?.[0]?.args).toEqual({
+    ...nullableArgs,
+    video_ids: null,
+  });
+  expect(await nullableSearch.invoke(result!.tool_calls![0])).toMatchObject({
+    content: JSON.stringify({ ...nullableArgs, video_ids: null }),
+  });
+});
+
+test("repair does not bypass validation of other incorrect arguments", async () => {
+  const { model } = fixture({
+    response: "",
+    tool_calls: [
+      { name: "search_scenes", arguments: { ...nullableArgs, query: 42 } },
+    ],
+  });
+  const result = await model.bindTools([nullableSearch]).invoke("Search");
+  expect(result.tool_calls?.[0]?.args.video_ids).toBeNull();
+  await expect(nullableSearch.invoke(result.tool_calls![0])).rejects.toThrow();
+});
+
+test("runnable stream events expose repaired arguments to the agent", async () => {
+  const model = streamFixture([
+    { tool_calls: [{ name: "search_scenes", arguments: nullableArgs }] },
+  ]);
+  let result;
+  for await (const event of model
+    .bindTools([nullableSearch])
+    .streamEvents("Search", { version: "v2" })) {
+    if (event.event === "on_chat_model_end") result = event.data.output;
+  }
+  expect(result.tool_calls[0].args).toEqual({
+    ...nullableArgs,
+    video_ids: null,
+  });
+  expect(await nullableSearch.invoke(result.tool_calls[0])).toMatchObject({
+    status: "success",
+  });
+});
