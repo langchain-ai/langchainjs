@@ -99,13 +99,34 @@ integration. Tool arguments continue streaming incrementally, including for
 nullable schemas.
 
 `withStructuredOutput` supports `functionCalling` (default), `jsonMode`, and
-`jsonSchema`. Zod v3/v4 schemas are validated by LangChain; a plain JSON Schema
-uses LangChain's JSON parser. `includeRaw: true` returns the original message
-alongside parsed output, or `parsed: null` if parsing fails. Native JSON Schema
-requests use the OpenAI-compatible `json_schema: { name, schema, strict }` shape;
-support for these modes, strict enforcement, tools plus JSON Schema, and
-streaming depends on the selected Workers AI model. The integration does not
-silently downgrade or retry requests with a different output method.
+`jsonSchema`. Its model policies follow Cloudflare's Python integration 0.4.3:
+
+- Gemma and Mistral use schema-assisted JSON instead of function calling for
+  structured output. GPT-OSS uses native JSON Schema. Other families retain
+  function calling by default.
+- `jsonSchema` uses schema-assisted JSON for other families. The schema is
+  appended to an existing system message or prepended as a new system message.
+  `jsonMode` leaves prompting to the caller.
+- Native Workers AI schemas are sent directly under `json_schema`; Mistral
+  translates response formats to `guided_json` and omits unsupported tool choice.
+- Schema output supplies 4096 tokens for reasoning families only when no caller
+  budget is set. Explicit model and invocation budgets take precedence.
+- `strict: true` is rejected for JSON/schema output because Workers AI does not
+  expose OpenAI's strict enforcement contract. Unlike Python, it is not silently
+  discarded. Standard function calling forwards its strict option.
+
+Zod v3/v4 schemas are validated by LangChain; plain JSON Schema uses the JSON
+parser. `includeRaw: true` retains raw output and returns `parsed: null` on a
+parse failure. These are request-time model policies, not retries after failures.
+Dynamic route names and `cloudflare/auto` never select a family policy.
+
+Tool definitions receive Python's draft-07 and `additionalProperties: false`
+defaults without replacing explicit schema settings. Boolean tool choice is
+accepted by `bindTools`: `true` requires exactly one tool, `false` leaves choice
+unspecified. Llama replays its first tool call as native JSON content alongside
+the complete standard tool-call array. Legacy GLM parameter restrictions exclude
+GLM 5.2 and 5.3 Flash. This is targeted chat-policy alignment, not full Python
+feature parity; AI Gateway routing and alternate REST endpoints are outside this PR.
 
 Messages may contain OpenAI-compatible text and `image_url` content blocks for
 vision-capable models. Legacy native `response`/`tool_calls` and newer

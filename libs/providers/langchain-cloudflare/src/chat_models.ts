@@ -13,7 +13,7 @@ import type {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -42,6 +42,7 @@ import {
   ChatMessage,
   isAIMessage,
   ToolMessage,
+  SystemMessage,
   type OpenAIToolCall,
   type UsageMetadata,
 } from "@langchain/core/messages";
@@ -54,6 +55,11 @@ import {
 import { type ChatResult, ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+
+import {
+  getModelBehavior,
+  translateModelParams,
+} from "./utils/model_behavior.js";
 
 import type { CloudflareWorkersAIInput } from "./llms.js";
 import { convertEventStreamToIterableReadableDataStream } from "./utils/event_source_parse.js";
@@ -209,15 +215,42 @@ export class ChatCloudflareWorkersAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(options?: this["ParsedCallOptions"]) {
-    const choice = options?.tool_choice;
-    return {
+  invocationParams(
+    options?: Omit<this["ParsedCallOptions"], "tool_choice"> & {
+      tool_choice?: ChatCloudflareWorkersAICallOptions["tool_choice"] | boolean;
+    }
+  ) {
+    const tools = options?.tools?.map((tool) => {
+      const converted = convertToOpenAITool(tool);
+      return {
+        ...converted,
+        function: {
+          ...converted.function,
+          parameters: {
+            $schema: "http://json-schema.org/draft-07/schema#",
+            additionalProperties: false,
+            ...converted.function.parameters,
+          },
+        },
+      };
+    });
+    let choice = options?.tool_choice;
+    if (choice === true) {
+      if (tools?.length !== 1)
+        throw new Error("tool_choice=true requires exactly one tool.");
+      choice = tools[0].function.name;
+    } else if (choice === false) choice = undefined;
+    return translateModelParams(this.model, {
       ...this.modelKwargs,
       ...options?.modelKwargs,
       temperature: options?.temperature ?? this.temperature,
-      max_tokens: options?.max_tokens ?? this.maxTokens,
+      max_tokens:
+        options?.max_tokens ??
+        this.maxTokens ??
+        options?.modelKwargs?.max_tokens ??
+        this.modelKwargs.max_tokens,
       stop: options?.stop,
-      tools: options?.tools?.map((tool) => convertToOpenAITool(tool)),
+      tools,
       tool_choice:
         choice === "any"
           ? "required"
@@ -226,15 +259,27 @@ export class ChatCloudflareWorkersAI
             ? { type: "function", function: { name: choice } }
             : choice,
       response_format: options?.response_format,
-    };
+    });
   }
 
   override bindTools(
     tools: BindToolsInput[],
-    kwargs?: Partial<ChatCloudflareWorkersAICallOptions>
+    kwargs?: Omit<
+      Partial<ChatCloudflareWorkersAICallOptions>,
+      "tool_choice"
+    > & {
+      tool_choice?: ChatCloudflareWorkersAICallOptions["tool_choice"] | boolean;
+    }
   ) {
+    let choice = kwargs?.tool_choice;
+    if (choice === true) {
+      if (tools.length !== 1)
+        throw new Error("tool_choice=true requires exactly one tool.");
+      choice = convertToOpenAITool(tools[0]).function.name;
+    } else if (choice === false) choice = undefined;
     return this.withConfig({
       ...kwargs,
+      tool_choice: choice,
       tools: tools.map((tool) => convertToOpenAITool(tool)),
     });
   }
@@ -489,11 +534,18 @@ export class ChatCloudflareWorkersAI
             .join("");
           if (reasoning) formatted.reasoning_content = reasoning;
         }
-        if (message.tool_calls?.length)
+        if (message.tool_calls?.length) {
           formatted.tool_calls = message.tool_calls.map(
             convertLangChainToolCallToOpenAI
           );
-        else if (message.additional_kwargs.tool_calls)
+          if (getModelBehavior(this.model).embedToolCalls) {
+            const first = message.tool_calls[0];
+            formatted.content = JSON.stringify({
+              name: first.name,
+              parameters: first.args,
+            });
+          }
+        } else if (message.additional_kwargs.tool_calls)
           formatted.tool_calls = message.additional_kwargs.tool_calls;
         if (message.additional_kwargs.reasoning_content)
           formatted.reasoning_content =
@@ -633,9 +685,53 @@ export class ChatCloudflareWorkersAI
       isInteropZodSchema(schema) || isSerializableSchema(schema)
         ? toJsonSchema(schema)
         : schema;
+    const behavior = getModelBehavior(this.model);
+    const schemaOutput =
+      method === "jsonSchema" ||
+      (method === "functionCalling" && behavior.structuredJson);
     let model: Runnable<BaseLanguageModelInput>;
     let parser;
-    if (method === "functionCalling") {
+    if (schemaOutput) {
+      // Workers AI does not expose OpenAI's strict schema enforcement contract.
+      if (config?.strict)
+        throw new Error("strict is not supported by Workers AI schema output.");
+      const bound = this.withConfig({
+        ...(this.maxTokens === undefined &&
+        this.modelKwargs.max_tokens === undefined &&
+        behavior.reasoning
+          ? { max_tokens: 4096 }
+          : {}),
+        response_format: behavior.nativeJsonSchema
+          ? { type: "json_schema", json_schema: jsonSchema }
+          : { type: "json_object" },
+      });
+      model = behavior.nativeJsonSchema
+        ? bound
+        : RunnableLambda.from((input: BaseLanguageModelInput) => {
+            const messages =
+              ChatCloudflareWorkersAI._convertInputToPromptValue(
+                input
+              ).toChatMessages();
+            const instruction = `Return a JSON object matching this JSON Schema:\n${JSON.stringify(jsonSchema)}`;
+            const first = messages[0];
+            if (first?._getType() === "system") {
+              // Preserve non-text system content rather than stringifying blocks.
+              const content =
+                typeof first.content === "string"
+                  ? `${first.content}\n\n${instruction}`
+                  : [
+                      ...first.content,
+                      { type: "text" as const, text: instruction },
+                    ];
+              return [
+                new SystemMessage({ ...first, content }),
+                ...messages.slice(1),
+              ];
+            }
+            return [new SystemMessage(instruction), ...messages];
+          }).pipe(bound);
+      parser = createContentParser(schema);
+    } else if (method === "functionCalling") {
       model = this.bindTools(
         [
           {
@@ -653,24 +749,10 @@ export class ChatCloudflareWorkersAI
         { tool_choice: name }
       );
       parser = createFunctionCallingParser(schema, name);
-    } else if (method === "jsonMode" || method === "jsonSchema") {
-      if (config?.strict && method === "jsonMode")
+    } else if (method === "jsonMode") {
+      if (config?.strict)
         throw new Error("strict is not supported with jsonMode.");
-      model = this.withConfig({
-        response_format:
-          method === "jsonMode"
-            ? { type: "json_object" }
-            : {
-                type: "json_schema",
-                json_schema: {
-                  name,
-                  schema: jsonSchema,
-                  ...(config?.strict === undefined
-                    ? {}
-                    : { strict: config.strict }),
-                },
-              },
-      });
+      model = this.withConfig({ response_format: { type: "json_object" } });
       parser = createContentParser(schema);
     } else throw new Error(`Unsupported structured output method: ${method}`);
     return assembleStructuredOutputPipeline(

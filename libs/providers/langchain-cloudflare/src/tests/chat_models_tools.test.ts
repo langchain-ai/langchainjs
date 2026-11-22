@@ -5,6 +5,7 @@ import {
   AIMessageChunk,
   HumanMessage,
   ToolMessage,
+  SystemMessage,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
@@ -12,8 +13,9 @@ import { z as z4 } from "zod/v4";
 import { ChatCloudflareWorkersAI } from "../chat_models.js";
 
 function fixture(body: unknown) {
-  const run = vi.fn(async () => Response.json(body));
+  const run = vi.fn(async (..._args: unknown[]) => Response.json(body));
   const model = new ChatCloudflareWorkersAI({
+    model: "test-model",
     binding: { run } as unknown as Ai,
     maxRetries: 0,
   });
@@ -224,13 +226,13 @@ test("requests native JSON Schema output", async () => {
   const { model, run } = fixture({
     choices: [{ message: { content: '{"answer":"yes"}' } }],
   });
+  model.model = "@cf/openai/gpt-oss-120b";
   const schema = z.object({ answer: z.string() });
   expect(
     await model
       .withStructuredOutput(schema, {
         method: "jsonSchema",
         name: "answer",
-        strict: true,
       })
       .invoke("Answer")
   ).toEqual({ answer: "yes" });
@@ -240,9 +242,7 @@ test("requests native JSON Schema output", async () => {
       response_format: {
         type: "json_schema",
         json_schema: expect.objectContaining({
-          name: "answer",
-          strict: true,
-          schema: expect.objectContaining({ type: "object" }),
+          type: "object",
         }),
       },
     }),
@@ -558,4 +558,115 @@ test("core event conversion preserves native tools, final usage, and replay", as
     }),
     expect.any(Object)
   );
+});
+
+test.each(["gemma-4", "mistral-7b"])(
+  "%s uses Python's schema-assisted JSON strategy",
+  async (family) => {
+    const { model, run } = fixture({ response: '{"answer":"yes"}' });
+    model.model = family;
+    const messages = [
+      new SystemMessage("Keep the evidence"),
+      new HumanMessage("Answer"),
+    ];
+    expect(
+      await model
+        .withStructuredOutput(z.object({ answer: z.string() }))
+        .invoke(messages)
+    ).toEqual({ answer: "yes" });
+    const payload = run.mock.calls[0][1] as unknown as Record<string, unknown>;
+    expect(payload.tools).toBeUndefined();
+    expect(payload.tool_choice).toBeUndefined();
+    expect(
+      family.startsWith("mistral")
+        ? payload.guided_json
+        : payload.response_format
+    ).toEqual(family.startsWith("mistral") ? {} : { type: "json_object" });
+    expect((payload.messages as { content: string }[])[0].content).toContain(
+      "Keep the evidence\n\nReturn a JSON object"
+    );
+    expect(messages[0].content).toBe("Keep the evidence");
+    expect(payload.max_tokens).toBe(
+      family.startsWith("gemma") ? 4096 : undefined
+    );
+  }
+);
+
+test("schema output keeps caller token budgets and rejects unsupported strictness", async () => {
+  const { model, run } = fixture({ response: '{"answer":"yes"}' });
+  model.model = "gemma-4";
+  model.maxTokens = 123;
+  await model
+    .withStructuredOutput(z.object({ answer: z.string() }))
+    .invoke("Answer", { ...{ max_tokens: 456 }, tags: [] });
+  expect(
+    (run.mock.calls[0][1] as unknown as Record<string, unknown>).max_tokens
+  ).toBe(456);
+  expect(() =>
+    model.withStructuredOutput(z.object({ answer: z.string() }), {
+      strict: true,
+    })
+  ).toThrow("strict");
+});
+
+test("Llama replays the native tool content alongside standard calls", async () => {
+  const { model, run } = fixture({ response: "done" });
+  model.model = "@cf/meta/llama-3.3";
+  await model.invoke([
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        { name: "search", args: { query: "diagram" }, id: "call-1" },
+      ],
+    }),
+  ]);
+  const payload = run.mock.calls[0][1] as unknown as {
+    messages: Record<string, unknown>[];
+  };
+  expect(payload.messages[0]).toMatchObject({
+    content: JSON.stringify({
+      name: "search",
+      parameters: { query: "diagram" },
+    }),
+    tool_calls: [rawCall],
+  });
+});
+
+test("boolean choice requires one tool and schema defaults do not mutate input", () => {
+  const { model } = fixture({ response: "done" });
+  const definition = {
+    type: "function" as const,
+    function: {
+      name: "test",
+      parameters: { type: "object", additionalProperties: true },
+    },
+  };
+  const params = model.invocationParams({
+    tools: [definition],
+    tool_choice: true,
+  });
+  expect(params.tool_choice).toEqual({
+    type: "function",
+    function: { name: "test" },
+  });
+  expect(params.tools).toMatchObject([
+    {
+      function: {
+        parameters: {
+          $schema: "http://json-schema.org/draft-07/schema#",
+          additionalProperties: true,
+        },
+      },
+    },
+  ]);
+  expect(definition.function.parameters).not.toHaveProperty("$schema");
+  expect(
+    model.invocationParams({ tool_choice: false }).tool_choice
+  ).toBeUndefined();
+  expect(() =>
+    model.invocationParams({ tools: [], tool_choice: true })
+  ).toThrow("exactly one");
+  expect(() =>
+    model.invocationParams({ tools: [search, search], tool_choice: true })
+  ).toThrow("exactly one");
 });

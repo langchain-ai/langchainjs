@@ -73,7 +73,6 @@ export default {
                 ? "jsonMode"
                 : "jsonSchema",
           name: "answer",
-          strict: mode !== "/json-mode",
         })
         .invoke('Return a JSON object with answer set to "READY".');
       return Response.json(result);
