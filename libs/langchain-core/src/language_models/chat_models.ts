@@ -554,6 +554,11 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      // A forced `tool_choice` reports `stop` on the chunk that carries the
+      // finish reason, and that chunk holds none of the tool calls or the
+      // refusal either, so remember what the earlier chunks carried.
+      let sawToolCalls = false;
+      let sawRefusal = false;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -569,6 +574,23 @@ export abstract class BaseChatModel<
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
+          if (
+            AIMessageChunk.isInstance(chunk.message) &&
+            (chunk.message.tool_call_chunks?.length ?? 0) > 0
+          ) {
+            sawToolCalls = true;
+          }
+          if (
+            chunk.message.additional_kwargs?.refusal ||
+            (Array.isArray(chunk.message.content) &&
+              chunk.message.content.some((part) => part?.type === "refusal"))
+          ) {
+            sawRefusal = true;
+          }
+          correctFinishFields(chunk.message, {
+            hasToolCalls: sawToolCalls,
+            hasRefusal: sawRefusal,
+          });
           if (outputVersion === "v1") {
             yield castStandardMessageContent(
               chunk.message

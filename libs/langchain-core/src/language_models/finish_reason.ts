@@ -74,16 +74,27 @@ export function toLegacyFinishReason(
 /**
  * Applies the generic corrections to a final message's
  * `normalized_finish_reason`. Does nothing unless the provider set it.
+ *
+ * `observed` lets a streaming caller pass what earlier chunks carried. The
+ * chunk that holds the finish reason usually holds none of the tool calls or
+ * the refusal the correction looks for.
  * @internal
  */
-export function correctFinishFields(message: BaseMessage): void {
+export function correctFinishFields(
+  message: BaseMessage,
+  observed?: { hasToolCalls?: boolean; hasRefusal?: boolean }
+): void {
   if (message.type !== "ai") return;
   const metadata = (message.response_metadata ?? {}) as Record<string, unknown>;
   const { normalizedFinishReason } = readFinishFields(metadata);
   if (normalizedFinishReason === undefined) return;
   const corrected = correctFinishReason(normalizedFinishReason, {
-    hasToolCalls: ((message as AIMessage).tool_calls?.length ?? 0) > 0,
-    hasRefusal: message.contentBlocks.some((block) => block.type === "refusal"),
+    hasToolCalls:
+      observed?.hasToolCalls ??
+      ((message as AIMessage).tool_calls?.length ?? 0) > 0,
+    hasRefusal:
+      observed?.hasRefusal ??
+      message.contentBlocks.some((block) => block.type === "refusal"),
   });
   if (corrected === normalizedFinishReason) return;
   message.response_metadata = {
