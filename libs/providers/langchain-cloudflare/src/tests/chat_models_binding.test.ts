@@ -126,3 +126,26 @@ test("streams binding events", async () => {
   );
   await expect(model.streamEvents("Hi")).toHaveStreamText("Hello");
 });
+
+test("binding errors preserve the raw response like REST errors", async () => {
+  const response = new Response("Unavailable", { status: 503 });
+  const { model } = fixture(() => response);
+  await expect(model.invoke("Hi")).rejects.toMatchObject({ response });
+});
+
+test("REST failures use the same status and response error contract", async () => {
+  const response = new Response("Unauthorized", { status: 401 });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => response)
+  );
+  const model = new ChatCloudflareWorkersAI({
+    cloudflareAccountId: "account",
+    cloudflareApiToken: "token",
+    maxRetries: 0,
+  });
+  await expect(model.invoke("Hi")).rejects.toMatchObject({
+    message: "Cloudflare LLM call failed with status code 401",
+    response,
+  });
+});
