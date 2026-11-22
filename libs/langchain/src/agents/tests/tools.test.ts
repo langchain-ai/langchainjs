@@ -2,12 +2,125 @@ import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 import { tool, ToolRuntime } from "@langchain/core/tools";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { InMemoryStore } from "@langchain/langgraph";
+import {
+  Command,
+  InMemoryStore,
+  MemorySaver,
+  interrupt,
+} from "@langchain/langgraph";
 
 import { createAgent, createMiddleware } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 describe("tools", () => {
+  it.each([
+    [false, false],
+    [true, false],
+    [true, true],
+  ])(
+    "checkpoints compact tool tasks and restores state (afterModel: %s, legacy: %s)",
+    async (withAfterModel, legacy) => {
+      const checkpointer = new MemorySaver();
+      const calls = ["a", "b"].map((id) => ({
+        type: "tool_call" as const,
+        name: "inspect_state",
+        args: {},
+        id,
+      }));
+      const checkState = (state: Record<string, unknown>) => {
+        expect(state).toMatchObject({
+          _private: withAfterModel ? "after-model" : "updated",
+        });
+        expect(state.messages).toHaveLength(2);
+        expect(state).not.toHaveProperty("lg_tool_call");
+        expect(state).not.toHaveProperty("jumpTo");
+      };
+      const seen: string[] = [];
+      const inspectState = tool(
+        (_input, runtime: ToolRuntime<Record<string, unknown>>) => {
+          checkState(runtime.state);
+          expect(runtime.state).toHaveProperty("payload", "x".repeat(1024));
+          interrupt("approve");
+          seen.push(runtime.toolCallId!);
+          return "ok";
+        },
+        {
+          name: "inspect_state",
+          description: "Inspect tool state",
+          schema: z.object({}),
+        }
+      );
+      const middleware = createMiddleware({
+        name: "inspect_state",
+        stateSchema: z.object({ _private: z.string().optional() }),
+        beforeModel: () => ({ _private: "updated" }),
+        afterModel: withAfterModel
+          ? ({ messages }) => ({ messages, _private: "after-model" })
+          : undefined,
+        wrapToolCall: (request, handler) => {
+          checkState(request.state);
+          return handler(request);
+        },
+      });
+      const agent = createAgent({
+        model: new FakeToolCallingModel({ toolCalls: [calls, []] }),
+        tools: [inspectState],
+        stateSchema: z.object({ payload: z.string() }),
+        middleware: [middleware],
+        checkpointer,
+      });
+      const config = { configurable: { thread_id: "compact-tools" } };
+      await agent.graph.invoke(
+        {
+          messages: [new HumanMessage("run both tools")],
+          payload: "x".repeat(1024),
+        },
+        { ...config, interruptBefore: ["tools"] }
+      );
+      const tuple = (await checkpointer.getTuple(config))!;
+      const sends = tuple.checkpoint.channel_values.__pregel_tasks as {
+        args: { lg_tool_call: unknown };
+      }[];
+      expect(sends.map((send) => send.args)).toEqual(
+        calls.map((lg_tool_call) => ({ lg_tool_call }))
+      );
+      if (legacy) {
+        const { messages, payload, _private } = tuple.checkpoint.channel_values;
+        await checkpointer.put(
+          config,
+          {
+            ...tuple.checkpoint,
+            channel_values: {
+              ...tuple.checkpoint.channel_values,
+              __pregel_tasks: sends.map((send) => ({
+                ...send,
+                args: { messages, payload, _private, ...send.args },
+              })),
+            },
+          },
+          tuple.metadata!
+        );
+      }
+      const paused = await agent.invoke(null, config);
+      expect(seen).toEqual([]);
+      expect(paused.__interrupt__).toHaveLength(2);
+      if (!legacy) {
+        const saved = (await checkpointer.getTuple(config))!;
+        expect(saved.checkpoint.channel_values.__pregel_tasks).toEqual(sends);
+      }
+      const result = await agent.invoke(
+        new Command({
+          resume: Object.fromEntries(
+            paused.__interrupt__!.map(({ id }) => [id, true])
+          ),
+        }),
+        config
+      );
+      expect(seen.sort()).toEqual(["a", "b"]);
+      expect(result.messages.filter(ToolMessage.isInstance)).toHaveLength(2);
+    }
+  );
+
   it("can access state and context", async () => {
     const stateSchema = z.object({ bar: z.string().default("baz") });
     const contextSchema = z.object({ foo: z.string().default("bar") });

@@ -5,6 +5,8 @@ import {
   type BaseMessage,
 } from "@langchain/core/messages";
 
+import type { ImageAssets } from "./assets.js";
+
 /**
  * The role label a message is rendered under.
  *
@@ -69,11 +71,15 @@ function isTextBlock(block: unknown): block is { text?: string } {
 }
 
 /**
- * Renders content as text. All-text block lists join with a newline. Any other
- * block is serialized rather than dropped, since an unrecognized block is still
+ * Renders content as text. All-text block lists join with a newline. Image
+ * blocks become asset references when `images` is given. Any other block is
+ * serialized rather than dropped, since an unrecognized block is still
  * context.
  */
-function renderContent(content: BaseMessage["content"]): string {
+function renderContent(
+  content: BaseMessage["content"],
+  images?: ImageAssets
+): string {
   if (typeof content === "string") {
     return content;
   }
@@ -85,7 +91,10 @@ function renderContent(content: BaseMessage["content"]): string {
       if (typeof block === "string") {
         return block;
       }
-      return isTextBlock(block) ? (block.text ?? "") : renderJson(block);
+      if (isTextBlock(block)) {
+        return block.text ?? "";
+      }
+      return images?.reference(block) ?? renderJson(block);
     })
     .join("\n");
 }
@@ -100,12 +109,15 @@ function renderContent(content: BaseMessage["content"]): string {
  * produces a confidently WRONG result, not an error — and a call's id is
  * what links a result back to it, since order does not.
  */
-export function renderMessage(message: BaseMessage): string {
+export function renderMessage(
+  message: BaseMessage,
+  images?: ImageAssets
+): string {
   // First, so an unsupported type raises before any content is touched.
   const role = roleFor(message);
   const parts: string[] = [];
 
-  const content = renderContent(message.content);
+  const content = renderContent(message.content, images);
   if (content.length > 0) {
     parts.push(content);
   }

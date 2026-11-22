@@ -6,6 +6,16 @@ import {
 import pkg from "./package.json" with { type: "json" };
 const define = { __PKG_VERSION__: JSON.stringify(pkg.version) };
 
+const parsedConcurrency = Number.parseInt(
+  // oxlint-disable-next-line node/no-process-env
+  process.env.GOOGLE_TEST_CONCURRENCY ?? "",
+  10
+);
+const maxConcurrency =
+  Number.isFinite(parsedConcurrency) && parsedConcurrency > 0
+    ? parsedConcurrency
+    : 4;
+
 export default defineConfig((env) => {
   const common: ViteUserConfigExport = {
     test: {
@@ -13,6 +23,7 @@ export default defineConfig((env) => {
       hideSkippedTests: true,
       testTimeout: 30_000,
       maxWorkers: "50%",
+      maxConcurrency,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
       setupFiles: [
         "dotenv/config",

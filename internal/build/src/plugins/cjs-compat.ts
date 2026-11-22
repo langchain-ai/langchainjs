@@ -1,8 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import { randomUUID } from "node:crypto";
 import type { Plugin } from "rolldown";
-import { isSafeProjectPath, toPosixPath } from "../utils.ts";
+import { isSafeProjectPath, toPosixPath, writeFileAtomic } from "../utils.ts";
 
 /**
  * Options for configuring the CJS compatibility plugin.
@@ -192,17 +191,10 @@ export function cjsCompatPlugin(param: CjsCompatPluginOptions = {}): Plugin {
             ...(options.files ?? []),
             ...Array.from(pathsToEmit),
           ];
-          const temporaryPath = `${packageJsonPath}.${randomUUID()}.tmp`;
-          try {
-            await fs.writeFile(
-              temporaryPath,
-              `${JSON.stringify(packageJson, null, 2)}\n`,
-              { flag: "wx" }
-            );
-            await fs.rename(temporaryPath, packageJsonPath);
-          } finally {
-            await fs.rm(temporaryPath, { force: true });
-          }
+          await writeFileAtomic(
+            packageJsonPath,
+            `${JSON.stringify(packageJson, null, 2)}\n`
+          );
         }
       },
       order: "post",

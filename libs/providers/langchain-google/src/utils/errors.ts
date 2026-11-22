@@ -1,6 +1,7 @@
 import {
   ns as baseNs,
   LangChainError,
+  ModelRefusalError,
   stampRetryable,
 } from "@langchain/core/errors";
 import type { Gemini } from "../chat_models/types.js";
@@ -193,11 +194,107 @@ export class PromptBlockedError extends ns.brand(
   static fromPromptFeedback(
     promptFeedback: Gemini.PromptFeedback
   ): PromptBlockedError {
-    return new PromptBlockedError({
+    return new this({
       blockReason: promptFeedback.blockReason ?? "UNKNOWN",
       safetyRatings: promptFeedback.safetyRatings,
     });
   }
+}
+
+/**
+ * A {@link PromptBlockedError} for a prompt Gemini refused, such as one blocked
+ * for safety.
+ *
+ * It also matches `ModelRefusalError.isInstance` from `@langchain/core/errors`,
+ * so callers can handle it like a refusal from any other provider.
+ */
+export class PromptRefusedError extends baseNs.brand(
+  PromptBlockedError,
+  "model-refusal"
+) {
+  // The inherited check only looks for the refusal brand, which every
+  // `ModelRefusalError` carries.
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  static isInstance<T extends abstract new (...args: any[]) => any>(
+    this: T,
+    obj: unknown
+  ): obj is InstanceType<T> {
+    return (
+      PromptBlockedError.isInstance(obj) && ModelRefusalError.isInstance(obj)
+    );
+  }
+}
+
+// The Gemini API and Vertex AI spell the unspecified reason differently.
+const UNSPECIFIED_BLOCK_REASONS = new Set<string>([
+  "BLOCK_REASON_UNSPECIFIED",
+  "BLOCKED_REASON_UNSPECIFIED",
+]);
+
+/** Builds the error for a blocked prompt, a refusal unless the reason is unspecified. */
+export function promptBlockedError(
+  promptFeedback: Gemini.GenContent.GenerateContentResponse["promptFeedback"] &
+    object
+): PromptBlockedError {
+  const ErrorClass = UNSPECIFIED_BLOCK_REASONS.has(
+    promptFeedback.blockReason ?? ""
+  )
+    ? PromptBlockedError
+    : PromptRefusedError;
+  return ErrorClass.fromPromptFeedback(promptFeedback);
+}
+
+const DECISION_SAFETY_BLOCK_CODES = new Set<string>([
+  "safety",
+  "prohibited_content",
+  "blocklist",
+  "image_safety",
+  "content_blocked",
+]);
+
+/**
+ * Builds a {@link PromptBlockedError} (or {@link PromptRefusedError}) from a
+ * Gemini Decisions API `prompt_feedback` payload when `block_reason` is set.
+ */
+export function decisionBlockedErrorFromFeedback(promptFeedback: {
+  block_reason?: string;
+  block_reason_message?: string;
+}): PromptBlockedError | undefined {
+  const blockReason = promptFeedback.block_reason;
+  if (!blockReason) {
+    return undefined;
+  }
+  const ErrorClass = UNSPECIFIED_BLOCK_REASONS.has(blockReason.toUpperCase())
+    ? PromptBlockedError
+    : PromptRefusedError;
+  return new ErrorClass({
+    blockReason,
+    message: promptFeedback.block_reason_message,
+  });
+}
+
+/**
+ * Builds a {@link PromptRefusedError} when the Gemini Decisions API returns an
+ * HTTP 400 error body whose `error.code` indicates an input safety block
+ * (`safety`, `prohibited_content`, `blocklist`, `image_safety`, `content_blocked`).
+ */
+export function decisionBlockedErrorFromErrorBody(
+  data: unknown
+): PromptRefusedError | undefined {
+  const errorObj =
+    typeof data === "object" && data !== null && "error" in data
+      ? (data as { error?: { code?: unknown; message?: unknown } }).error
+      : undefined;
+  const code = typeof errorObj?.code === "string" ? errorObj.code : undefined;
+  if (!code || !DECISION_SAFETY_BLOCK_CODES.has(code.toLowerCase())) {
+    return undefined;
+  }
+  const message =
+    typeof errorObj?.message === "string" ? errorObj.message : undefined;
+  return new PromptRefusedError({
+    blockReason: code,
+    message,
+  });
 }
 
 /**

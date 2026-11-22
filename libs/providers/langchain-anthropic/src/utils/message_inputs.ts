@@ -371,21 +371,25 @@ function* _formatContentBlocks(
       }
 
       if (
-        contentPartCopy.type === "tool_use" &&
+        (contentPartCopy.type === "tool_use" ||
+          contentPartCopy.type === "server_tool_use") &&
         typeof contentPartCopy.input === "string"
       ) {
         // First, try to get the input from the corresponding tool_call.
         // This is the most reliable source since tool_calls are properly
         // consolidated from tool_call_chunks during streaming.
+        // `server_tool_use` blocks have no tool_call, so they always take
+        // the fallback below.
         const matchingToolCall = toolCalls?.find(
           (tc) => tc.id === contentPartCopy.id
         );
         if (matchingToolCall) {
           contentPartCopy.input = matchingToolCall.args;
         } else {
-          // Fallback: `tool_use` content part may be followed by `input_json_delta`
-          // content parts which are chunks of a stringified JSON input,
-          // so we need to collect them and merge their inputs.
+          // Fallback: `tool_use` and `server_tool_use` content parts may be
+          // followed by `input_json_delta` content parts which are chunks of
+          // a stringified JSON input, so we need to collect them and merge
+          // their inputs.
           const inputDeltas = content.filter(
             (nestedContentPart) =>
               nestedContentPart.index === contentPartCopy.index &&

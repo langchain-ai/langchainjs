@@ -2,6 +2,7 @@ import { getBuildConfig, cjsCompatPlugin } from "@langchain/build";
 import pkg from "./package.json" with { type: "json" };
 
 export default getBuildConfig({
+  dts: { typecheck: false },
   entry: [
     "./src/index.ts",
     "./src/utils/index.ts",

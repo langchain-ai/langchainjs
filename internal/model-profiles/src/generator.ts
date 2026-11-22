@@ -284,6 +284,19 @@ export async function generateModelProfiles(
     profiles[modelName] = finalProfile;
   }
 
+  // A model that models.dev doesn't list, such as one in limited access, gets
+  // a profile built from its overrides alone.
+  for (const [modelName, modelSpecificOverrides] of Object.entries(
+    modelOverrides
+  )) {
+    if (modelName in profiles) continue;
+    profiles[modelName] = applyOverrides(
+      {},
+      providerOverrides,
+      modelSpecificOverrides
+    );
+  }
+
   const typescriptCode = generateTypeScript(profiles);
 
   // Validate that the output path is within the monorepo (defensive check)

@@ -18,6 +18,91 @@ async function collectEvents(
 }
 
 describe("convertBedrockConverseStream", () => {
+  test("preserves reasoning signatures and keeps text blocks separate", async () => {
+    const events = await collectEvents([
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: { reasoningContent: { text: "Let me check. " } },
+        },
+      },
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: { reasoningContent: { signature: "sig-abc-123" } },
+        },
+      },
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 1,
+          delta: { text: "The answer is 4." },
+        },
+      },
+    ]);
+
+    expect(events.filter((e) => e.event === "content-block-finish")).toEqual([
+      {
+        event: "content-block-finish",
+        index: 0,
+        content: {
+          type: "reasoning",
+          reasoning: "Let me check. ",
+          signature: "sig-abc-123",
+        },
+      },
+      {
+        event: "content-block-finish",
+        index: 1,
+        content: { type: "text", text: "The answer is 4." },
+      },
+    ]);
+    expect(events).toContainEqual({
+      event: "content-block-delta",
+      index: 0,
+      delta: {
+        type: "block-delta",
+        fields: { type: "reasoning", signature: "sig-abc-123" },
+      },
+    });
+    expect(
+      events.filter((e) => e.event === "content-block-start")
+    ).toHaveLength(2);
+  });
+
+  test("accumulates signature-only reasoning deltas", async () => {
+    const events = await collectEvents([
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 2,
+          delta: { reasoningContent: { signature: "sig-" } },
+        },
+      },
+      {
+        contentBlockDelta: {
+          contentBlockIndex: 2,
+          delta: { reasoningContent: { signature: "abc" } },
+        },
+      },
+    ]);
+    expect(events.filter((e) => e.event === "content-block-start")).toEqual([
+      {
+        event: "content-block-start",
+        index: 2,
+        content: { type: "reasoning", reasoning: "" },
+      },
+    ]);
+    expect(events.find((e) => e.event === "content-block-finish")).toEqual({
+      event: "content-block-finish",
+      index: 2,
+      content: { type: "reasoning", reasoning: "", signature: "sig-abc" },
+    });
+    expect(
+      events.filter((e) => e.event === "content-block-delta").at(-1)
+    ).toMatchObject({
+      delta: { fields: { signature: "sig-abc" } },
+    });
+  });
+
   test("text deltas", async () => {
     const events = await collectEvents([
       {
@@ -71,9 +156,23 @@ describe("convertBedrockConverseStream", () => {
     const finish = events.find((e) => e.event === "message-finish");
     expect(finish).toMatchObject({
       event: "message-finish",
-      reason: "length",
+      normalizedFinishReason: "length",
     });
   });
+
+  test.each(["malformed_model_output", "malformed_tool_use"])(
+    "maps %s stop reason to error",
+    async (stopReason) => {
+      const events = await collectEvents([{ messageStop: { stopReason } }]);
+
+      const finish = events.find((e) => e.event === "message-finish");
+      expect(finish).toMatchObject({
+        finishReason: stopReason,
+        normalizedFinishReason: "error",
+      });
+      expect(finish).not.toHaveProperty("reason", expect.anything());
+    }
+  );
 
   test("maps thinking tokens from messageStop into usage", async () => {
     const messageStop = {

@@ -1,5 +1,29 @@
 # @langchain/google-genai
 
+## 2.3.7
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `finish_reason` and `normalized_finish_reason` in `response_metadata` on `invoke` and streamed results, and emit them on `message-finish`. `SAFETY`, `PROHIBITED_CONTENT` and `BLOCKLIST` normalize to `refusal`, `MALFORMED_FUNCTION_CALL` and `MALFORMED_RESPONSE` to `error`, and unmapped values to `other`.
+
+## 2.3.6
+
+No changes in this release.
+
+## 2.3.5
+
+No changes in this release.
+
+## 2.3.4
+
+### Patch Changes
+
+- [#11992](https://github.com/langchain-ai/langchainjs/pull/11992) [`77e3fd1`](https://github.com/langchain-ai/langchainjs/commit/77e3fd1ff891a0dec0b62ae4db10a9951be696e9) Thanks [@thibautlehmann](https://github.com/thibautlehmann)! - fix(google-genai): include `model` in traced invocation params so LangSmith runs name the Gemini model like other providers
+
+## 2.3.3
+
+No changes in this release.
+
 ## 2.3.2
 
 ### Patch Changes

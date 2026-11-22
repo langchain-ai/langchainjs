@@ -8,6 +8,42 @@ function _escapeNodeLabel(nodeLabel: string): string {
 
 const MARKDOWN_SPECIAL_CHARS = ["*", "_", "`"];
 
+const MERMAID_ENTITY_CODES: Record<string, string> = {
+  "#": "#35;",
+  "[": "#91;",
+  "]": "#93;",
+  "(": "#40;",
+  ")": "#41;",
+  "{": "#123;",
+  "}": "#125;",
+  '"': "#quot;",
+  "<": "#60;",
+  ">": "#62;",
+  "|": "#124;",
+};
+
+function _escapeMetadataText(text: string): string {
+  return text.replace(/[#[\](){}"<>|]/g, (char) => MERMAID_ENTITY_CODES[char]);
+}
+
+function _isScalar(value: unknown): value is string | number | boolean {
+  return (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  );
+}
+
+function _formatMetadataValue(value: unknown): string | undefined {
+  if (_isScalar(value)) {
+    return String(value);
+  }
+  if (Array.isArray(value) && value.every(_isScalar)) {
+    return value.join(",");
+  }
+  return undefined;
+}
+
 function _generateMermaidGraphStyles(
   nodeColors: Record<string, string>
 ): string {
@@ -68,10 +104,18 @@ export function drawMermaid(
         : nodeName;
 
       let finalLabel = label;
-      if (Object.keys(node.metadata ?? {}).length) {
-        finalLabel += `<hr/><small><em>${Object.entries(node.metadata ?? {})
-          .map(([k, v]) => `${k} = ${v}`)
-          .join("\n")}</em></small>`;
+      const metadataLines = Object.entries(node.metadata ?? {}).flatMap(
+        ([k, v]) => {
+          const value = _formatMetadataValue(v);
+          return value === undefined
+            ? []
+            : [_escapeMetadataText(`${k} = ${value}`)];
+        }
+      );
+      if (metadataLines.length) {
+        finalLabel += `<hr/><small><em>${metadataLines.join(
+          "\n"
+        )}</em></small>`;
       }
 
       const nodeLabel = (formatDict[key] ?? formatDict[defaultClassLabel])

@@ -29,10 +29,14 @@ import {
 } from "../../utils/metadata.js";
 import { iife } from "../../utils/misc.js";
 import {
-  PromptBlockedError,
   NoCandidatesError,
+  promptBlockedError,
   RequestError,
 } from "../../utils/errors.js";
+import {
+  mapGeminiFinishReason,
+  toFinishReasonMetadata,
+} from "../../utils/finish_reason.js";
 import {
   convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
@@ -167,7 +171,7 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
 
     // Check for prompt feedback errors
     if (data.promptFeedback?.blockReason) {
-      throw PromptBlockedError.fromPromptFeedback(data.promptFeedback);
+      throw promptBlockedError(data.promptFeedback);
     }
 
     // Check if we have candidates
@@ -312,6 +316,10 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                 return;
               }
 
+              if (chunk.promptFeedback?.blockReason) {
+                throw promptBlockedError(chunk.promptFeedback);
+              }
+
               // Extract text delta from the chunk
               const candidate = chunk.candidates?.[0];
               if (!candidate) {
@@ -349,6 +357,12 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
                   tool_calls: toolCalls,
                   response_metadata: {
                     model_provider: "google",
+                    ...toFinishReasonMetadata(
+                      mapGeminiFinishReason(
+                        candidate.finishReason,
+                        toolCalls.length > 0
+                      )
+                    ),
                   },
                   additional_kwargs: {
                     ...(message.additional_kwargs.originalTextContentBlock

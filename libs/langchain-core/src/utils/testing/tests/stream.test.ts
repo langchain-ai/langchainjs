@@ -39,7 +39,9 @@ function textStreamEvents(): ChatModelStreamEvent[] {
     },
     {
       event: "message-finish",
-      reason: "stop",
+      finishReason: "end_turn",
+      normalizedFinishReason: "stop",
+      finishState: "complete",
       usage: { input_tokens: 10, output_tokens: 2, total_tokens: 12 },
       responseMetadata: { model_name: "test-model" },
     },
@@ -62,7 +64,12 @@ describe("stream matchers", () => {
       id: "msg_1",
       text: "Hello world",
       usage: { input_tokens: 10, output_tokens: 2 },
-      responseMetadata: { finish_reason: "stop", model_name: "test-model" },
+      responseMetadata: {
+        finish_reason: "end_turn",
+        normalized_finish_reason: "stop",
+        finish_state: "complete",
+        model_name: "test-model",
+      },
     });
   });
 });

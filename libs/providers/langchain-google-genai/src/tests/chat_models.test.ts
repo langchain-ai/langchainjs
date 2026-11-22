@@ -1234,3 +1234,20 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });
+
+describe("tracing invocation params", () => {
+  test("adds model to the traced params but not to the request params", () => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.5-flash",
+      apiKey: "testing",
+      temperature: 0.2,
+    });
+
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const traced = (model as any)._getInvocationParamsForTracing();
+    expect(traced.model).toBe("gemini-2.5-flash");
+    expect(traced.generationConfig.temperature).toBe(0.2);
+
+    expect(model.invocationParams()).not.toHaveProperty("model");
+  });
+});

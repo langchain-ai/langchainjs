@@ -7,6 +7,7 @@ import {
   BaseMessage,
   HumanMessage,
   ToolMessage,
+  getNotificationMetadata,
 } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
@@ -322,7 +323,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
   });
 
-  it("should return to model without executing approved tools when any tool is rejected", async () => {
+  it("should execute approved tools while returning rejection messages for rejected tools", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
         calculator: {
@@ -386,12 +387,12 @@ describe("humanInTheLoopMiddleware", () => {
       config
     );
 
-    // Verify only the rejected tool call appears in tool messages
+    // Verify the rejected tool call gets an artificial error tool message
     const toolMessages = result.messages.filter((msg: BaseMessage) =>
       ToolMessage.isInstance(msg)
     ) as ToolMessage[];
 
-    expect(toolMessages.length).toBe(1);
+    expect(toolMessages.length).toBe(2);
     expect(toolMessages[0]?.content).toBe("File write not allowed");
     expect(toolMessages[0]?.tool_call_id).toBe("call_2");
     expect(toolMessages[0]?.status).toBe("error");
@@ -403,7 +404,7 @@ describe("humanInTheLoopMiddleware", () => {
       .reverse()
       .find((msg: BaseMessage) => AIMessage.isInstance(msg)) as AIMessage;
 
-    // When there are rejections, all tool calls remain in the AI message
+    // All tool calls remain in the AI message
     expect(aiMessage.tool_calls).toHaveLength(2);
     expect(aiMessage.tool_calls?.[0]).toMatchObject({
       id: "call_1",
@@ -416,8 +417,8 @@ describe("humanInTheLoopMiddleware", () => {
       args: { filename: "approved.txt", content: "approved" },
     });
 
-    // When there are rejections, we go back to the model without executing approved tools, so neither tool should be executed
-    expect(calculatorFn).not.toHaveBeenCalled();
+    // The approved tool executes, the rejected tool does not
+    expect(calculatorFn).toHaveBeenCalledTimes(1);
     expect(writeFileFn).not.toHaveBeenCalled();
 
     // Verify state shows agent is ready to continue (model needs to process rejection)
@@ -1907,9 +1908,14 @@ describe("humanInTheLoopMiddleware", () => {
         config
       );
 
-      // Verify only first write_file was called (second was rejected)
-      expect(calculatorFn).toHaveBeenCalledTimes(0); // Calculators not called because we're going back to model
-      expect(writeFileFn).toHaveBeenCalledTimes(0); // No writes because we're going back to model
+      // Auto-approved calculators and the approved write_file execute;
+      // only the rejected write_file is skipped
+      expect(calculatorFn).toHaveBeenCalledTimes(2);
+      expect(writeFileFn).toHaveBeenCalledTimes(1);
+      expect(writeFileFn).toHaveBeenCalledWith(
+        { filename: "file1.txt", content: "Content 1" },
+        expect.anything()
+      );
 
       // Check state - should have rejected tool message
       const state = await agent.graph.getState(config);
@@ -2938,4 +2944,63 @@ describe('humanInTheLoopMiddleware({ interruptMode: "per_call" })', () => {
       humanInTheLoopMiddleware({ interruptOn: INTERRUPT_ON }).wrapToolCall
     ).toBeUndefined();
   });
+});
+
+describe("humanInTheLoopMiddleware notification metadata", () => {
+  it.each([
+    { mode: "batched", answer: { type: "approve" }, tagged: false },
+    {
+      mode: "batched",
+      answer: { type: "reject", message: "not now" },
+      tagged: true,
+    },
+    {
+      mode: "batched",
+      answer: { type: "respond", message: "Sent it myself." },
+      tagged: true,
+    },
+    { mode: "per_call", answer: { type: "approve" }, tagged: false },
+    {
+      mode: "per_call",
+      answer: edit("send_email", { to: "bob" }),
+      tagged: false,
+    },
+    {
+      mode: "per_call",
+      answer: { type: "reject", message: "not now" },
+      tagged: true,
+    },
+    {
+      mode: "per_call",
+      answer: { type: "respond", message: "Sent it myself." },
+      tagged: true,
+    },
+  ] as const)(
+    "tags $answer.type in $mode mode: $tagged",
+    async ({ mode, answer, tagged }) => {
+      const ran: Ran = [];
+      const agent = perCallAgent(ran, EMAIL, {
+        interruptOn: { send_email: true },
+        mode,
+      });
+      const paused = await agent.invoke(
+        { messages: [new HumanMessage("go")] },
+        CFG
+      );
+      const [intr] = paused.__interrupt__ ?? [];
+
+      const final = await resume(agent, {
+        [intr.id]: mode === "batched" ? { decisions: [answer] } : answer,
+      });
+
+      expect(getNotificationMetadata(toolMessages(final).call_email)).toEqual(
+        tagged
+          ? {
+              source: "hitl_interrupt_decision",
+              data: { decision: answer.type },
+            }
+          : undefined
+      );
+    }
+  );
 });

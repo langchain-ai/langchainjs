@@ -165,6 +165,35 @@ describe("connection ownership", () => {
     await adapter.close();
   });
 
+  test("discovery connects servers concurrently", async () => {
+    const connect = mockConnect();
+    let release = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    connect.mockImplementation(() => held);
+    vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
+      tools: [{ name: "echo", inputSchema: { type: "object" } }],
+    });
+
+    const adapter = new MCPAdapter({
+      servers: { first: connection, second: connection },
+      prefixToolNameWithServerName: true,
+    });
+    const discovery = adapter.listToolsets();
+
+    try {
+      // Serial discovery would never start the second handshake while the
+      // first one is held.
+      await vi.waitFor(() => expect(connect).toHaveBeenCalledTimes(2));
+      release();
+      expect(Object.keys(await discovery)).toEqual(["first", "second"]);
+    } finally {
+      release();
+      await adapter.close();
+    }
+  });
+
   test("a close during discovery cannot resolve as a partial catalog", async () => {
     mockConnect();
 
@@ -200,7 +229,7 @@ describe("connection ownership", () => {
   });
 
   test.each(["resolve", "reject"] as const)(
-    "does not acquire another server when discovery settles after close (%s)",
+    "does not reacquire servers when discovery settles after close (%s)",
     async (outcome) => {
       const connect = mockConnect();
       let startList = () => {};
@@ -241,12 +270,12 @@ describe("connection ownership", () => {
         await adapter.close();
         releaseList();
         await rejected;
-        expect.soft(connect).toHaveBeenCalledTimes(1);
+        expect.soft(connect).toHaveBeenCalledTimes(2);
         expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
           "first_echo",
           "second_echo",
         ]);
-        expect(connect).toHaveBeenCalledTimes(3);
+        expect(connect).toHaveBeenCalledTimes(4);
       } finally {
         releaseList();
         await adapter.close();
@@ -289,7 +318,7 @@ describe("connection ownership", () => {
       await adapter.close();
       releaseHandler();
       await rejected;
-      expect.soft(connect).toHaveBeenCalledTimes(1);
+      expect.soft(connect).toHaveBeenCalledTimes(2);
       expect.soft(onConnectionError).toHaveBeenCalledTimes(1);
       expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
         "first_echo",

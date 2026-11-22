@@ -10,6 +10,7 @@
  */
 
 import { finalizeContentBlock } from "./compat.js";
+import { correctFinishReason, toLegacyFinishReason } from "./finish_reason.js";
 import type { ChatModelStreamEvent, FinishReason } from "./event.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
@@ -21,6 +22,8 @@ export type OpenAICompletionsFinishReason =
   | "tool_calls"
   | "function_call"
   | "content_filter"
+  // OpenAI-compatible servers send other values.
+  | (string & {})
   | null;
 
 export interface OpenAICompletionsUsage {
@@ -52,6 +55,7 @@ export interface OpenAICompletionsDelta {
   content?: string | null;
   reasoning_content?: string;
   reasoning?: string;
+  refusal?: string | null;
   tool_calls?: OpenAICompletionsToolCallDelta[];
   function_call?: unknown;
   audio?: {
@@ -117,7 +121,9 @@ export async function* convertOpenAICompletionsStream(
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let finishReason: string | undefined;
+  let sawRefusal = false;
+  let sawToolCall = false;
   let responseMetadata: Record<string, unknown> | undefined;
   let emittedProviderMetadata = false;
 
@@ -177,7 +183,7 @@ export async function* convertOpenAICompletionsStream(
     }
 
     if (choice.finish_reason != null) {
-      finishReason = mapFinishReason(choice.finish_reason);
+      finishReason = choice.finish_reason;
       responseMetadata = buildResponseMetadata(data, choice);
     }
 
@@ -234,7 +240,10 @@ export async function* convertOpenAICompletionsStream(
       };
     }
 
+    if (delta.refusal) sawRefusal = true;
+
     if (Array.isArray(delta.tool_calls)) {
+      if (delta.tool_calls.length > 0) sawToolCall = true;
       for (const rawToolCall of delta.tool_calls) {
         const toolIndex = rawToolCall.index ?? 0;
         const key: BlockKey = `tool:${toolIndex}`;
@@ -259,26 +268,22 @@ export async function* convertOpenAICompletionsStream(
           };
         }
 
+        // Accumulate the full call for content-block-finish, and emit only
+        // this chunk's args. A late id or name reaches consumers on finish.
         const acc = blockAccumulators.get(index)!;
         if (rawToolCall.id != null) acc.id = rawToolCall.id;
         if (rawToolCall.function?.name != null) {
           acc.name = rawToolCall.function.name;
         }
-        const argDelta = rawToolCall.function?.arguments ?? "";
-        acc.args = (acc.args ?? "") + argDelta;
-        yield {
-          event: "content-block-delta" as const,
-          index,
-          delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
-          },
-        };
+        const argDelta = rawToolCall.function?.arguments;
+        if (argDelta) {
+          acc.args = (acc.args ?? "") + argDelta;
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: { type: "tool-call-delta" as const, args: argDelta },
+          };
+        }
       }
     }
 
@@ -361,9 +366,23 @@ export async function* convertOpenAICompletionsStream(
     };
   }
 
+  // A forced `tool_choice` ends with `stop` even though the model called a tool.
+  const normalizedFinishReason =
+    finishReason != null
+      ? correctFinishReason(mapFinishReason(finishReason), {
+          hasToolCalls: sawToolCall,
+          hasRefusal: sawRefusal,
+        })
+      : undefined;
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...(finishReason != null
+      ? {
+          finishReason,
+          normalizedFinishReason,
+          reason: toLegacyFinishReason(normalizedFinishReason),
+        }
+      : {}),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
   };
@@ -390,20 +409,23 @@ function buildGroqUsageSnapshot(usage: {
   };
 }
 
-function mapFinishReason(reason: OpenAICompletionsFinishReason): FinishReason {
+function mapFinishReason(reason: string): FinishReason {
   switch (reason) {
     case "stop":
       return "stop";
     case "length":
     case "max_tokens":
+    case "model_length":
       return "length";
     case "tool_calls":
     case "function_call":
-      return "tool_use";
+      return "tool_call";
     case "content_filter":
       return "content_filter";
+    case "error":
+      return "error";
     default:
-      return "stop";
+      return "other";
   }
 }
 

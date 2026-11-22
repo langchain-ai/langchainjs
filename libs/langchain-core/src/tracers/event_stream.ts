@@ -180,6 +180,8 @@ export class EventStreamCallbackHandler
 
   private readableStreamClosed = false;
 
+  private writerClosed = false;
+
   name = "event_stream_tracer";
 
   lc_prefer_streaming = true;
@@ -691,9 +693,14 @@ export class EventStreamCallbackHandler
   async finish() {
     const pendingPromises = [...this.tappedPromises.values()];
     // oxlint-disable-next-line no-void
-    void Promise.all(pendingPromises).finally(() => {
-      // oxlint-disable-next-line no-void
-      void this.writer.close();
-    });
+    void Promise.all(pendingPromises).finally(() => this.close());
+  }
+
+  /** Closes the event stream. Safe to call more than once. */
+  close() {
+    if (this.writerClosed) return;
+    this.writerClosed = true;
+    // oxlint-disable-next-line no-void
+    void this.writer.close();
   }
 }

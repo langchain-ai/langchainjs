@@ -5,6 +5,7 @@ import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { MessageContentReasoningBlockRedacted } from "../types.js";
+import { getFinishReasonMetadata } from "./finish_reason.js";
 
 type AnthropicNativeUsage = {
   usage?: { output_tokens_details?: { thinking_tokens?: unknown } };
@@ -40,6 +41,7 @@ export function convertConverseMessageToLangChainMessage(
   ) {
     requestId = responseMetadata.$metadata.requestId as string;
   }
+  const finishMetadata = getFinishReasonMetadata(responseMetadata.stopReason);
   let tokenUsage: UsageMetadata | undefined;
   if (responseMetadata.usage) {
     const cacheReadInputTokens =
@@ -85,6 +87,7 @@ export function convertConverseMessageToLangChainMessage(
       content: message.content[0].text,
       response_metadata: {
         ...responseMetadata,
+        ...finishMetadata,
         model_provider: "bedrock-converse",
       },
       usage_metadata: tokenUsage,
@@ -137,6 +140,7 @@ export function convertConverseMessageToLangChainMessage(
       tool_calls: toolCalls.length ? toolCalls : undefined,
       response_metadata: {
         ...responseMetadata,
+        ...finishMetadata,
         model_provider: "bedrock-converse",
       },
       usage_metadata: tokenUsage,
@@ -152,10 +156,20 @@ export function handleConverseStreamContentBlockDelta(
     throw new Error("No delta found in content block.");
   }
   if (typeof contentBlockDelta.delta.text === "string") {
+    const index = contentBlockDelta.contentBlockIndex;
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
-        content: contentBlockDelta.delta.text,
+        content:
+          index === undefined || index === 0
+            ? contentBlockDelta.delta.text
+            : [
+                {
+                  type: "text",
+                  text: contentBlockDelta.delta.text,
+                  index,
+                },
+              ],
       }),
     });
   } else if (contentBlockDelta.delta.toolUse) {

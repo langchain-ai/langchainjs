@@ -1,15 +1,8 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatGoogleParams } from "./index.js";
-import {
-  applyGeminiGatewayParams,
-  BaseChatGoogle,
-  getPlatformType,
-} from "./base.js";
-import {
-  convertParamsToPlatformType,
-  getGoogleChatModelParams,
-} from "../converters/shared/params.js";
-import { GENERATIVE_AI_AUTH_SCOPES, VERTEX_AI_AUTH_SCOPES } from "../const.js";
+import { applyGeminiGatewayParams, BaseChatGoogle } from "./base.js";
+import { getGoogleChatModelParams } from "../converters/shared/params.js";
+import { getRequiredAuthScopes } from "../utils/connection.js";
 import {
   ensureAuthScopes,
   NodeApiClient,
@@ -42,20 +35,6 @@ class ChatGoogleNode extends BaseChatGoogle {
     }
     const apiClient = params?.apiClient ?? new NodeApiClient(params);
     super({ ...params, apiClient });
-  }
-}
-
-function getRequiredAuthScopes(params: ChatGoogleNodeParams): string[] {
-  const hasApiKey = typeof params.apiKey !== "undefined";
-  const platformType = convertParamsToPlatformType(params);
-  const platform = getPlatformType(platformType, hasApiKey);
-  switch (platform) {
-    case "gai":
-      return GENERATIVE_AI_AUTH_SCOPES;
-    case "gcp":
-      return VERTEX_AI_AUTH_SCOPES;
-    default:
-      return VERTEX_AI_AUTH_SCOPES;
   }
 }
 

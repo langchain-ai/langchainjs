@@ -38,6 +38,7 @@ function rawEvents({ cost }: StreamOverrides = {}) {
       type: "message_delta" as const,
       delta: { stop_reason: "end_turn" as const, stop_sequence: null },
       usage: {
+        input_tokens: 100,
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
       },
@@ -94,7 +95,7 @@ describe("convertAnthropicStream", () => {
   test("leaves the rest of the message-finish event untouched", async () => {
     const events = await convert({ cost: 0.0123 });
 
-    expect(messageFinish(events).reason).toBe("stop");
+    expect(messageFinish(events).normalizedFinishReason).toBe("stop");
     expect(messageFinish(events).metadata).toEqual({
       model_provider: "anthropic",
     });
@@ -115,8 +116,8 @@ describe("convertAnthropicStream", () => {
     // Cost is not token accounting, so it must not leak into the usage snapshots.
     expect(messageFinish(events).usage).toEqual({
       input_tokens: 100,
-      output_tokens: 43,
-      total_tokens: 143,
+      output_tokens: 42,
+      total_tokens: 142,
       input_token_details: { cache_creation: 0, cache_read: 0 },
     });
     for (const event of events.filter((event) => event.usage)) {
@@ -147,6 +148,68 @@ describe("convertAnthropicStream", () => {
     );
 
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
-    expect(message.usage_metadata?.output_tokens).toBe(43);
+    expect(message.usage_metadata?.output_tokens).toBe(42);
+  });
+
+  test("message-finish keeps message_start fields the delta leaves out", async () => {
+    const source = (async function* () {
+      for (const event of rawEvents()) {
+        if (event.type === "message_start") {
+          yield {
+            ...event,
+            message: {
+              ...event.message,
+              usage: { ...event.message.usage, cache_read_input_tokens: 500 },
+            },
+          };
+        } else if (event.type === "message_delta") {
+          yield { ...event, usage: { output_tokens: 42 } };
+        } else {
+          yield event;
+        }
+      }
+    })();
+    const events = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const event of convertAnthropicStream(source as any)) {
+      events.push(event);
+    }
+
+    expect(messageFinish(events).usage).toEqual({
+      input_tokens: 600,
+      output_tokens: 42,
+      total_tokens: 642,
+      input_token_details: { cache_creation: 0, cache_read: 500 },
+    });
+  });
+
+  test.each([
+    ["end_turn", "stop", "complete"],
+    ["tool_use", "tool_call", "complete"],
+    ["max_tokens", "length", "complete"],
+    ["model_context_window_exceeded", "context_exceeded", "complete"],
+    ["refusal", "refusal", "complete"],
+    ["pause_turn", "other", "suspended"],
+    ["brand_new_reason", "other", "complete"],
+  ])("maps %s to %s / %s", async (raw, normalized, state) => {
+    const source = (async function* () {
+      for (const event of rawEvents()) {
+        if (event.type === "message_delta") {
+          yield { ...event, delta: { ...event.delta, stop_reason: raw } };
+        } else {
+          yield event;
+        }
+      }
+    })();
+    const events = [];
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const event of convertAnthropicStream(source as any)) {
+      events.push(event);
+    }
+    expect(messageFinish(events)).toMatchObject({
+      finishReason: raw,
+      normalizedFinishReason: normalized,
+      finishState: state,
+    });
   });
 });

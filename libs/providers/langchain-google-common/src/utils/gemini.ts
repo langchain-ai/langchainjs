@@ -69,6 +69,10 @@ import {
   GoogleAIToolType,
   GeminiSearchToolAttributes,
 } from "../types.js";
+import {
+  mapGeminiFinishReason,
+  toFinishReasonMetadata,
+} from "./finish_reason.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
 import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
@@ -1272,14 +1276,33 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return undefined;
   }
 
+  function responseToGenerationData(
+    response: GoogleLLMResponse
+  ): GenerateContentResponseData | undefined {
+    return Array.isArray(response.data) && response.data[0]
+      ? response.data[0]
+      : response.data &&
+          (response.data as GenerateContentResponseData).candidates
+        ? (response.data as GenerateContentResponseData)
+        : undefined;
+  }
+
+  function responseToFinishReasonMetadata(
+    response: GoogleLLMResponse,
+    hasToolCalls: boolean
+  ) {
+    const finishReason =
+      responseToGenerationData(response)?.candidates?.[0]?.finishReason;
+    return toFinishReasonMetadata(
+      mapGeminiFinishReason(
+        typeof finishReason === "string" ? finishReason : undefined,
+        hasToolCalls
+      )
+    );
+  }
+
   function responseToGenerationInfo(response: GoogleLLMResponse) {
-    const data =
-      Array.isArray(response.data) && response.data[0]
-        ? response.data[0]
-        : response.data &&
-            (response.data as GenerateContentResponseData).candidates
-          ? (response.data as GenerateContentResponseData)
-          : undefined;
+    const data = responseToGenerationData(response);
     if (!data) {
       return {};
     }
@@ -1316,9 +1339,20 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function responseToChatGeneration(
     response: GoogleLLMResponse
   ): ChatGenerationChunk {
+    const message = partToMessageChunk(responseToParts(response)[0]);
+    const finishMetadata = responseToFinishReasonMetadata(
+      response,
+      ((message as AIMessageChunk).tool_call_chunks?.length ?? 0) > 0
+    );
+    if (Object.keys(finishMetadata).length > 0) {
+      message.response_metadata = {
+        ...message.response_metadata,
+        ...finishMetadata,
+      };
+    }
     return new ChatGenerationChunk({
       text: responseToString(response),
-      message: partToMessageChunk(responseToParts(response)[0]),
+      message,
       generationInfo: responseToGenerationInfo(response),
     });
   }
@@ -1546,6 +1580,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       additional_kwargs: kwargs,
       response_metadata: {
         model_provider: "google-vertexai",
+        ...responseToFinishReasonMetadata(
+          response,
+          (combinedToolCalls.tool_calls?.length ?? 0) > 0
+        ),
       },
       usage_metadata,
       tool_calls: combinedToolCalls.tool_calls,

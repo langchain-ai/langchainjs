@@ -19,6 +19,7 @@ export type PartialContentBlock<T extends ContentBlock = ContentBlock> = {
 export const KNOWN_BLOCK_TYPES = [
   "text",
   "reasoning",
+  "refusal",
   ...KNOWN_TOOL_BLOCK_TYPES,
   ...KNOWN_MULTIMODAL_BLOCK_TYPES,
 ];
@@ -112,6 +113,29 @@ export declare namespace ContentBlock {
   }
 
   /**
+   * An explicit refusal reported by the model provider.
+   *
+   * Providers report refusals, such as safety-policy refusals, as successful
+   * responses. This block marks them so callers can tell a refusal apart from
+   * an empty or unparsable answer. Refusals the model writes as ordinary text
+   * are not detected.
+   */
+  export interface Refusal extends ContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "refusal";
+    /**
+     * The refusal message, or an empty string if the provider sent none.
+     */
+    refusal: string;
+    /**
+     * Additional provider-specific data, such as Anthropic's refusal `category`.
+     */
+    extras?: Record<string, unknown>;
+  }
+
+  /**
    * Provider-specific content block.
    *
    * This is used to represent content blocks that are not part of the standard LangChain content model.
@@ -139,6 +163,7 @@ export declare namespace ContentBlock {
   export type Standard =
     | Text
     | Reasoning
+    | Refusal
     | NonStandard
     | Tools.Standard
     | Multimodal.Standard;
