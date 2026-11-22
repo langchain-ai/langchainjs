@@ -19,7 +19,7 @@ import { ChatCloudflareWorkersAI } from "@langchain/cloudflare";
 
 const model = new ChatCloudflareWorkersAI({
   binding: env.AI,
-  model: "@cf/meta/llama-3.1-8b-instruct",
+  model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
 });
 
 const response = await model.invoke("Hello!");
@@ -74,3 +74,26 @@ pnpm lint && pnpm format
 ### Adding new entrypoints
 
 If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.
+
+### Real Workers AI binding test
+
+The opt-in binding integration test runs the chat model inside workerd and calls
+real Workers AI inference. It incurs usage charges and sends only a fixed
+synthetic prompt. It requires Wrangler and an authenticated Cloudflare account
+with Workers AI access.
+
+From this package directory, start the development-only fixture:
+
+```bash
+npx wrangler dev --config tests/binding/wrangler.jsonc --ip 127.0.0.1 --port 8891
+```
+
+In another terminal, run:
+
+```bash
+CLOUDFLARE_WORKERS_AI_BINDING_TEST_URL=http://127.0.0.1:8891 \
+  pnpm exec vitest run --mode int src/tests/chat_models_binding.int.test.ts
+```
+
+Set `CLOUDFLARE_ACCOUNT_ID` when Wrangler needs an explicit account selection.
+The fixture does not need to be deployed.
