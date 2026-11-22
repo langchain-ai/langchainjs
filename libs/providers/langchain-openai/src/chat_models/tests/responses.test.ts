@@ -121,6 +121,69 @@ describe("strict tool-calling configuration", () => {
 
     expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(false);
   });
+
+  it("emits a boolean strict when no strict option is configured", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    const params = model.invocationParams({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "test_func",
+            description: "testing",
+            parameters: { type: "object", properties: {} },
+          },
+        },
+      ],
+    });
+
+    expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(false);
+  });
+
+  it("preserves tool-level strict when no global strict is configured", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    const params = model.invocationParams({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "test_func",
+            description: "testing",
+            parameters: { type: "object", properties: {} },
+            strict: true,
+          },
+        },
+      ],
+    });
+
+    expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(true);
+  });
+
+  it("lets a global strict override win over tool-level strict", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      supportsStrictToolCalling: true,
+    });
+
+    const params = model.invocationParams({
+      strict: false,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "test_func",
+            description: "testing",
+            parameters: { type: "object", properties: {} },
+            strict: true,
+          },
+        },
+      ],
+    });
+
+    expect((params.tools as Array<{ strict?: boolean }>)[0].strict).toBe(false);
+  });
 });
 
 describe("service_tier configuration", () => {
