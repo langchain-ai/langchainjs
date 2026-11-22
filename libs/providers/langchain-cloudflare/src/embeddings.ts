@@ -11,6 +11,16 @@ type AiTextEmbeddingsOutput = {
   data: number[][];
 };
 
+type AiEmbeddingGemmaInput = {
+  input: string[];
+  dimensions?: number;
+  encoding_format: "float";
+};
+
+type AiEmbeddingGemmaOutput = {
+  data: { embedding: number[] }[];
+};
+
 export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /** Binding */
   binding: Ai;
@@ -31,6 +41,12 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   batchSize?: number;
 
   /**
+   * Output dimensions for EmbeddingGemma 2 (128, 256, 512, or 768).
+   * Omit to use the model default. Not sent to other models.
+   */
+  dimensions?: number;
+
+  /**
    * Whether to strip new lines from the input text. This is recommended by
    * OpenAI, but may not be suitable for all use cases.
    */
@@ -48,6 +64,8 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
   ai: Ai;
 
+  dimensions?: number;
+
   constructor(fields: CloudflareWorkersAIEmbeddingsParams) {
     super(fields);
 
@@ -57,6 +75,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = fields.binding;
+    this.dimensions = fields.dimensions;
     this.modelName = fields?.model ?? fields.modelName ?? this.model;
     this.model = this.modelName;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
@@ -91,6 +110,16 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
   private async runEmbedding(texts: string[]) {
     return this.caller.call(async () => {
+      if (this.model === "@cf/google/embeddinggemma-2") {
+        const response = (await this.ai.run(this.model, {
+          input: texts,
+          encoding_format: "float",
+          ...(this.dimensions !== undefined
+            ? { dimensions: this.dimensions }
+            : {}),
+        } as AiEmbeddingGemmaInput)) as AiEmbeddingGemmaOutput;
+        return response.data.map((item) => item.embedding);
+      }
       const response: AiTextEmbeddingsOutput = await this.ai.run(
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         this.model as any,
