@@ -19,6 +19,7 @@ export default {
         "/structured-tool",
         "/vision",
         "/tools-events",
+        "/tools-content-events",
       ].includes(mode)
     ) {
       return new Response("Not found", { status: 404 });
@@ -100,6 +101,24 @@ export default {
       if (mode === "/tools-stream") {
         for await (const chunk of await bound.stream(prompt))
           result = result ? result.concat(chunk) : chunk;
+      } else if (mode === "/tools-content-events") {
+        result = await model.streamEvents(prompt, {
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "lookup",
+                description: "Look up a synthetic shape",
+                parameters: {
+                  type: "object",
+                  properties: { color: { type: "string" } },
+                  required: ["color"],
+                },
+              },
+            },
+          ],
+          tool_choice: "lookup",
+        });
       } else if (mode === "/tools-events") {
         for await (const event of bound.streamEvents(prompt, {
           version: "v2",

@@ -88,6 +88,16 @@ const result = await structured.invoke("Return the answer READY.");
 `tool_choice` accepts `auto`, `none`, `required` (or `any`), and a function name.
 Tool execution remains the application's or agent's responsibility.
 
+Following the `ChatGroq` integration pattern, tool definitions, tool-call
+parsing/replay, structured-output parsing, and event-stream conversion reuse
+`@langchain/core` utilities. The provider-specific layer normalizes native
+Workers AI wire formats and usage totals before those shared functions run.
+Arguments are never schema-coerced: a provider value such as `"null"` remains a
+string, and the tool's normal LangChain validation rejects it when incompatible
+with the schema. Application-specific provider workarounds belong outside this
+integration. Tool arguments continue streaming incrementally, including for
+nullable schemas.
+
 `withStructuredOutput` supports `functionCalling` (default), `jsonMode`, and
 `jsonSchema`. Zod v3/v4 schemas are validated by LangChain; a plain JSON Schema
 uses LangChain's JSON parser. `includeRaw: true` returns the original message

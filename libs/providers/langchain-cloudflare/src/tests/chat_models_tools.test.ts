@@ -453,3 +453,109 @@ test("bound runnable events preserve the final tool call", async () => {
     { name: "search", args: { query: "diagram" } },
   ]);
 });
+
+const nullableLookup = tool(async (args) => JSON.stringify(args), {
+  name: "lookup",
+  description: "Look up optional numeric IDs",
+  schema: z4.object({
+    ids: z4.array(z4.number()).nullable(),
+    query: z4.string(),
+  }),
+});
+
+test("preserves provider arguments and delegates nullable validation to the tool", async () => {
+  const { model } = fixture({
+    tool_calls: [{ name: "lookup", arguments: { ids: "null", query: "null" } }],
+  });
+  const result = await model.bindTools([nullableLookup]).invoke("Lookup");
+  expect(result.tool_calls?.[0]?.args).toEqual({ ids: "null", query: "null" });
+  await expect(nullableLookup.invoke(result.tool_calls![0])).rejects.toThrow();
+});
+
+test("nullable tool arguments remain incremental and are never coerced", async () => {
+  const model = streamFixture([
+    {
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              {
+                index: 0,
+                id: "nullable",
+                function: { name: "lookup", arguments: '{"ids":"nu' },
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              { index: 0, function: { arguments: 'll","query":"null"}' } },
+            ],
+          },
+        },
+      ],
+    },
+  ]);
+  const chunks: AIMessageChunk[] = [];
+  let result: AIMessageChunk | undefined;
+  for await (const chunk of await model
+    .bindTools([nullableLookup])
+    .stream("Lookup")) {
+    chunks.push(chunk);
+    result = result ? result.concat(chunk) : chunk;
+  }
+  expect(chunks[0].tool_call_chunks?.[0]?.args).toBe('{"ids":"nu');
+  expect(result?.tool_calls?.[0]?.args).toEqual({ ids: "null", query: "null" });
+  await expect(nullableLookup.invoke(result!.tool_calls![0])).rejects.toThrow();
+});
+
+test("core event conversion preserves native tools, final usage, and replay", async () => {
+  const model = streamFixture([
+    {
+      response: "Checking",
+      tool_calls: [{ name: "search", arguments: { query: "diagram" } }],
+      usage: { prompt_tokens: 3, completion_tokens: 1, total_tokens: 4 },
+    },
+    { usage: { prompt_tokens: 3, completion_tokens: 2, total_tokens: 5 } },
+  ]);
+  const result = await model.streamEvents("Search");
+  expect(result.tool_calls).toMatchObject([
+    { id: expect.any(String), name: "search", args: { query: "diagram" } },
+  ]);
+  expect(result.usage_metadata).toMatchObject({
+    input_tokens: 3,
+    output_tokens: 2,
+    total_tokens: 5,
+  });
+  const replay = fixture({ response: "Found" });
+  await replay.model.invoke([
+    result,
+    new ToolMessage({
+      content: "Diagram",
+      tool_call_id: result.tool_calls![0].id!,
+    }),
+  ]);
+  expect(replay.run).toHaveBeenCalledWith(
+    replay.model.model,
+    expect.objectContaining({
+      messages: [
+        expect.objectContaining({
+          role: "assistant",
+          content: "Checking",
+          tool_calls: [
+            expect.objectContaining({
+              function: { name: "search", arguments: '{"query":"diagram"}' },
+            }),
+          ],
+        }),
+        expect.objectContaining({ role: "tool", content: "Diagram" }),
+      ],
+    }),
+    expect.any(Object)
+  );
+});

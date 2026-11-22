@@ -19,7 +19,7 @@ describe.skipIf(!origin)("Gemma chat with a real Workers AI binding", () => {
     },
     125_000
   );
-  test.each(["tools", "tools-stream", "tools-events"])(
+  test.each(["tools", "tools-stream", "tools-events", "tools-content-events"])(
     "%s and tool-result replay",
     async (path) => {
       const result = await invoke(`/${path}`);

@@ -32,6 +32,7 @@ import {
 import {
   parseToolCall,
   makeInvalidToolCall,
+  convertLangChainToolCallToOpenAI,
 } from "@langchain/core/output_parsers/openai_tools";
 
 import {
@@ -44,6 +45,12 @@ import {
   type OpenAIToolCall,
   type UsageMetadata,
 } from "@langchain/core/messages";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import {
+  convertOpenAICompletionsStream,
+  type OpenAICompletionsStreamChunk,
+  type OpenAICompletionsUsage,
+} from "@langchain/core/language_models/openai_completions_stream";
 import { type ChatResult, ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -260,7 +267,11 @@ export class ChatCloudflareWorkersAI
   ) {
     options.signal?.throwIfAborted();
     this.validateEnvironment();
-    const data = { ...this.invocationParams(options), messages: this._formatMessages(messages), stream };
+    const data = {
+      ...this.invocationParams(options),
+      messages: this._formatMessages(messages),
+      stream,
+    };
     return this.caller.callWithOptions({ signal: options.signal }, async () => {
       options.signal?.throwIfAborted();
       // Workers and DOM Response/AbortSignal types differ, but expose the same
@@ -291,19 +302,19 @@ export class ChatCloudflareWorkersAI
     });
   }
 
-  async *_streamResponseChunks(
+  /** Normalize only the provider wire format; LangChain handles tool semantics. */
+  private async *_streamCompletionChunks(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
+    options: this["ParsedCallOptions"]
+  ): AsyncGenerator<OpenAICompletionsStreamChunk> {
     const response = await this._request(messages, options, true);
     if (!response.body)
       throw new Error("Empty response from Cloudflare. Please try again.");
     const stream = convertEventStreamToIterableReadableDataStream(
       response.body
     );
-    let usage: UsageMetadata | undefined;
-    const toolIndexes = new Set<number>();
+    let usage: OpenAICompletionsUsage | undefined;
+    const ids = new Map<number, string | undefined>();
     for await (const chunk of stream) {
       options.signal?.throwIfAborted();
       if (chunk === "[DONE]") break;
@@ -312,65 +323,131 @@ export class ChatCloudflareWorkersAI
         throw new Error(
           `Cloudflare stream error: ${JSON.stringify(data.error)}`
         );
-      if (data.usage) usage = usageMetadata(data.usage);
+      if (data.usage) usage = data.usage;
       const choice = data.choices?.[0];
       const delta = choice?.delta;
-      const text =
-        delta?.content ??
-        (typeof data.response === "string" ? data.response : "");
-      const rawTools = delta?.tool_calls ?? data.tool_calls ?? [];
-      if (
-        !text &&
-        rawTools.length === 0 &&
-        !delta?.reasoning_content &&
-        !choice?.finish_reason
-      )
-        continue;
-      const message = new AIMessageChunk({
-        content: text,
-        id: data.id,
-        tool_call_chunks: rawTools.map((tool, index) => {
-          const toolIndex = tool.index ?? index;
-          const first = !toolIndexes.has(toolIndex);
-          toolIndexes.add(toolIndex);
-          const args = tool.function?.arguments ?? tool.arguments;
-          return {
-            index: toolIndex,
-            id: first ? (tool.id ?? crypto.randomUUID()) : undefined,
-            name: tool.function?.name ?? tool.name,
-            args:
+      const tools = delta?.tool_calls ?? data.tool_calls;
+      const tool_calls = tools?.map((call, position) => {
+        const index = call.index ?? position;
+        const previousId = ids.get(index);
+        const id = previousId === undefined ? call.id : undefined;
+        ids.set(index, previousId ?? id);
+        const args = call.function?.arguments ?? call.arguments;
+        return {
+          index,
+          id,
+          type: "function" as const,
+          function: {
+            name: call.function?.name ?? call.name,
+            arguments:
               typeof args === "string"
                 ? args
                 : args === undefined
-                  ? ""
+                  ? undefined
                   : JSON.stringify(args),
-            type: "tool_call_chunk",
-          };
-        }),
-        additional_kwargs: delta?.reasoning_content
-          ? { reasoning_content: delta.reasoning_content }
-          : {},
-        response_metadata: choice?.finish_reason
-          ? { finish_reason: choice.finish_reason }
-          : {},
+          },
+        };
       });
+      yield {
+        id: data.id,
+        model: data.model ?? this.model,
+        choices: [
+          {
+            index: 0,
+            finish_reason: choice?.finish_reason,
+            delta: {
+              ...delta,
+              content:
+                delta?.content ??
+                (typeof data.response === "string" ? data.response : undefined),
+              tool_calls,
+            },
+          },
+        ],
+      };
+    }
+    options.signal?.throwIfAborted();
+    // Legacy native calls have no IDs. Supply them without buffering arguments.
+    for (const [index, id] of ids) {
+      if (id === undefined)
+        yield {
+          choices: [
+            {
+              index: 0,
+              delta: {
+                tool_calls: [
+                  { index, id: crypto.randomUUID(), type: "function" },
+                ],
+              },
+            },
+          ],
+        };
+    }
+    // Native streams report cumulative usage repeatedly. Both consumers receive
+    // only the final aggregate, avoiding additive usage overcounting.
+    if (usage) yield { choices: [], usage };
+  }
+
+  override async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    yield* convertOpenAICompletionsStream(
+      this._streamCompletionChunks(messages, options),
+      {
+        provider: "cloudflare",
+        streamUsage: true,
+      }
+    );
+  }
+
+  // As in ChatGroq, retain the legacy ChatGenerationChunk interface alongside
+  // the shared event converter. Both paths consume the same normalized stream.
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    for await (const data of this._streamCompletionChunks(messages, options)) {
+      const choice = data.choices?.[0];
+      const delta = choice?.delta;
+      const text = delta?.content ?? "";
       const generation = new ChatGenerationChunk({
-        message,
         text,
+        message: new AIMessageChunk({
+          content: text,
+          id: data.id,
+          tool_call_chunks: delta?.tool_calls?.map((call) => ({
+            index: call.index,
+            id: call.id,
+            name: call.function?.name,
+            args: call.function?.arguments ?? "",
+            type: "tool_call_chunk",
+          })),
+          additional_kwargs: delta?.reasoning_content
+            ? { reasoning_content: delta.reasoning_content }
+            : {},
+          usage_metadata: data.usage ? usageMetadata(data.usage) : undefined,
+          response_metadata: choice?.finish_reason
+            ? { finish_reason: choice.finish_reason, model_name: data.model }
+            : {},
+        }),
         generationInfo: choice?.finish_reason
           ? { finish_reason: choice.finish_reason }
           : undefined,
       });
       yield generation;
-      if (text) await runManager?.handleLLMNewToken(text);
+      if (text)
+        await runManager?.handleLLMNewToken(
+          text,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { chunk: generation }
+        );
     }
-    // Native streams can include cumulative usage on every delta. Emit only
-    // the final aggregate so LangChain does not sum it multiple times.
-    if (usage)
-      yield new ChatGenerationChunk({
-        text: "",
-        message: new AIMessageChunk({ content: "", usage_metadata: usage }),
-      });
   }
 
   protected _formatMessages(
@@ -394,12 +471,28 @@ export class ChatCloudflareWorkersAI
       if (ToolMessage.isInstance(message))
         formatted.tool_call_id = message.tool_call_id;
       if (isAIMessage(message)) {
+        // Core stream events produce standard content blocks. The provider
+        // expects tool calls and reasoning outside the text content field.
+        if (
+          message.response_metadata.output_version === "v1" &&
+          Array.isArray(message.content)
+        ) {
+          formatted.content = message.text;
+          const reasoning = message.content
+            .flatMap((block) =>
+              typeof block !== "string" &&
+              block.type === "reasoning" &&
+              typeof block.reasoning === "string"
+                ? [block.reasoning]
+                : []
+            )
+            .join("");
+          if (reasoning) formatted.reasoning_content = reasoning;
+        }
         if (message.tool_calls?.length)
-          formatted.tool_calls = message.tool_calls.map((call) => ({
-            id: call.id,
-            type: "function",
-            function: { name: call.name, arguments: JSON.stringify(call.args) },
-          }));
+          formatted.tool_calls = message.tool_calls.map(
+            convertLangChainToolCallToOpenAI
+          );
         else if (message.additional_kwargs.tool_calls)
           formatted.tool_calls = message.additional_kwargs.tool_calls;
         if (message.additional_kwargs.reasoning_content)
