@@ -26,7 +26,11 @@ const ADAPTIVE_ONLY_MODEL_PREFIXES = [
   "claude-mythos-preview",
 ] as const;
 
-const FABLE_MODEL_PREFIXES = ["claude-fable-5"] as const;
+const FABLE_MODEL_PREFIXES = ["claude-fable-5", "claude-mythos-5-2"] as const;
+
+export function hasAlwaysOnThinking(model?: string): boolean {
+  return modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
+}
 
 function modelStartsWithAnyPrefix(
   model: string | undefined,

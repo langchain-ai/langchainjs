@@ -10,6 +10,12 @@ import { AIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import {
+  correctFinishReason,
+  type FinishFields,
+  readFinishFields,
+  toLegacyFinishReason,
+} from "./finish_reason.js";
 
 const MIME_TYPE_BY_AUDIO_FORMAT: Record<string, string> = {
   wav: "audio/wav",
@@ -154,11 +160,32 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
+  let finishFields: FinishFields = {};
+  let sawToolCalls = false;
+  let sawRefusal = false;
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
 
     const msg = chunk.message;
+    finishFields = {
+      ...finishFields,
+      ...readFinishFields(chunk.generationInfo),
+      ...readFinishFields(msg.response_metadata),
+    };
+    if (
+      AIMessageChunk.isInstance(msg) &&
+      (msg.tool_call_chunks?.length ?? 0) > 0
+    ) {
+      sawToolCalls = true;
+    }
+    if (
+      msg.additional_kwargs?.refusal ||
+      (Array.isArray(msg.content) &&
+        msg.content.some((part) => part?.type === "refusal"))
+    ) {
+      sawRefusal = true;
+    }
 
     // Message start
     let usageHandledInStart = false;
@@ -252,9 +279,10 @@ export async function* convertChunksToEvents(
             args: "",
             index: blockIndex,
           };
+          // Copy, so accumulating args doesn't mutate the start event.
           activeBlocks.set(blockIndex, {
             type: "tool_call_chunk",
-            accumulated: initial,
+            accumulated: { ...initial },
           });
           yield {
             event: "content-block-start" as const,
@@ -263,29 +291,20 @@ export async function* convertChunksToEvents(
           };
         }
 
-        // Accumulate tool call args internally, emit incremental content chunks.
+        // Accumulate the full call for content-block-finish, and emit only
+        // this chunk's args. A late id or name reaches consumers on finish.
         const block = activeBlocks.get(blockIndex)!;
-        const acc = block.accumulated as {
-          args?: string;
-          id?: string;
-          name?: string;
-        };
+        const acc = block.accumulated;
         if (toolChunk.id != null) acc.id = toolChunk.id;
         if (toolChunk.name != null) acc.name = toolChunk.name;
-        acc.args = (acc.args ?? "") + (toolChunk.args ?? "");
-        yield {
-          event: "content-block-delta" as const,
-          index: blockIndex,
-          delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...("id" in acc && acc.id != null ? { id: acc.id } : {}),
-              ...("name" in acc && acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
-          },
-        };
+        if (toolChunk.args) {
+          acc.args = (acc.args ?? "") + toolChunk.args;
+          yield {
+            event: "content-block-delta" as const,
+            index: blockIndex,
+            delta: { type: "tool-call-delta" as const, args: toolChunk.args },
+          };
+        }
       }
     }
 
@@ -414,9 +433,15 @@ export async function* convertChunksToEvents(
     };
   }
 
+  const normalizedFinishReason = correctFinishReason(
+    finishFields.normalizedFinishReason,
+    { hasToolCalls: sawToolCalls, hasRefusal: sawRefusal }
+  );
   yield {
     event: "message-finish" as const,
-    reason: "stop" as const,
+    ...finishFields,
+    ...(normalizedFinishReason ? { normalizedFinishReason } : {}),
+    reason: toLegacyFinishReason(normalizedFinishReason),
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
 }

@@ -1,5 +1,75 @@
 # @langchain/google
 
+## 0.2.17
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `normalized_finish_reason` in `response_metadata` on `invoke` and streamed results for generate content and interactions, and emit it on `message-finish`. `SAFETY`, `PROHIBITED_CONTENT` and `BLOCKLIST` normalize to `refusal`, `MALFORMED_FUNCTION_CALL` and `MALFORMED_RESPONSE` to `error`, and unmapped values to `other`.
+
+## 0.2.16
+
+### Patch Changes
+
+- [#12263](https://github.com/langchain-ai/langchainjs/pull/12263) [`7f1c5e1`](https://github.com/langchain-ai/langchainjs/commit/7f1c5e1ee2fefa331b7fa6f0c8e63cd630a36b28) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Add `gemini-4-neon` model profile and `xhigh` thinking level support.
+
+- [#12243](https://github.com/langchain-ai/langchainjs/pull/12243) [`c93f9bc`](https://github.com/langchain-ai/langchainjs/commit/c93f9bc61611677507760f8e31ca23f8e3463fa1) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds **experimental** support for the Google Gemini Decisions API on AI
+  Studio. (Google Cloud / Vertex support has been added, but final support is
+  pending platform implementation.)
+
+  - Add `GoogleClassifier` and `BaseGoogleClassifier` (implementing `BaseDecisionModel` from `@langchain/core/decisions`) in `@langchain/google` and `@langchain/google/node`
+  - Support `Noul`, `Choice`, and `Score` questions across text, structured JSON, `BaseMessage` conversations, and multimodal `ContentBlock` inputs
+  - Add Decisions API converters for state, questions, responses, and `PromptRefusedError` safety refusals
+
+  Incorporates the most recent changes to the Interactions API as well,
+  including the removal of the Retrieval tools.
+
+## 0.2.15
+
+### Patch Changes
+
+- [#12219](https://github.com/langchain-ai/langchainjs/pull/12219) [`bef937b`](https://github.com/langchain-ai/langchainjs/commit/bef937baa28c114b0702498efedb8b6f83d9382e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - - Add `gemini-4-hydrogen` model profile.
+  - Support the `xhigh` (`XHIGH`) thinking level (clamping to `HIGH` on models
+    that do not support `XHIGH` and passing through future thinking levels on level-based models).
+
+- [#12189](https://github.com/langchain-ai/langchainjs/pull/12189) [`571a1b4`](https://github.com/langchain-ai/langchainjs/commit/571a1b4ff11c014d534af1ccdba3242bb9016747) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): add Gemini 4 Carbon model capability profile
+
+## 0.2.14
+
+### Patch Changes
+
+- [#12122](https://github.com/langchain-ai/langchainjs/pull/12122) [`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): surface model refusals as `ModelRefusalError`
+
+  Blocked prompts throw `PromptRefusedError`, which matches `ModelRefusalError.isInstance`, including when streaming. A streamed safety stop keeps the text already streamed and ends with a refusal block, and refusal blocks are dropped when history is sent back.
+
+## 0.2.13
+
+### Patch Changes
+
+- [`9ec213b`](https://github.com/langchain-ai/langchainjs/commit/9ec213b8aba71c3d2870f478b8a18c647957fb7a) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds **experimental** support for the Google Interactions API on AI Studio and
+  Google Cloud (Vertex).
+
+  - Add `InteractionsApiHandler` (`apiHandler: "interactions"`) supporting `.invoke()`, `.stream()`, and `.streamEvents()` across AI Studio (`gai`) and Vertex AI (`gcp`)
+  - Add Interactions API converters for messages, tools, parameters, and streaming SSE events
+  - Generate Interactions API TypeScript types from the OpenAPI specification (`src/chat_models/api_types/interactions.ts`)
+  - Export `GoogleChatApiHandler`, `GenerateContentApiHandler`, `InteractionsApiHandler`, and Interactions converters
+  - Supports backwards compatibility with the current API.
+  - Parameters for the Integrations API are exposed, but no specific feature changes are included.
+
+- [#12141](https://github.com/langchain-ai/langchainjs/pull/12141) [`4585842`](https://github.com/langchain-ai/langchainjs/commit/4585842d7e7d04ca14dc8976569c7984ad97218d) Thanks [@hntrl](https://github.com/hntrl)! - Only route Google chat models through the LangSmith gateway when no credentials are passed. Explicit `apiKey`, `authOptions`, `credentials`, or `googleAuthOptions` now go straight to Google.
+
+## 0.2.12
+
+### Patch Changes
+
+- [#11968](https://github.com/langchain-ai/langchainjs/pull/11968) [`84eca2b`](https://github.com/langchain-ai/langchainjs/commit/84eca2b11c0900a67775dca258ebec04f8e852a2) Thanks [@afirstenberg](https://github.com/afirstenberg)! - refactoring in preparation for Interactions API
+
+  - Protocol-specific operations are now done through `GoogleChatApiHandler`
+    subclass
+  - Converters for generate_content and shared converters
+  - Types moved into protocol-specific generated file
+  - Includes support Gemini 4 Argon parity (thinking config, model profile,
+    usage-only streaming)
+
 ## 0.2.11
 
 ### Patch Changes

@@ -8,6 +8,7 @@ import type {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertBedrockConverseStream } from "./utils/stream_events.js";
+import { getFinishReasonMetadata } from "./utils/finish_reason.js";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -906,6 +907,7 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        maxAttempts: fields.clientOptions?.maxAttempts ?? 1,
         ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
@@ -1099,9 +1101,18 @@ export class ChatBedrockConverse
         requestMetadata: options.requestMetadata,
         ...params,
       });
-      const response = await this.client.send(command, {
-        abortSignal: options.signal,
-      });
+      const response = await this.caller.callWithOptions(
+        { signal: options.signal, maxRetries: options.maxRetries },
+        async () => {
+          try {
+            return await this.client.send(command, {
+              abortSignal: options.signal,
+            });
+          } catch (error) {
+            throw normalizeBedrockError(error);
+          }
+        }
+      );
       const { output, ...responseMetadata } = response;
       if (!output?.message) {
         throw new Error("No message found in Bedrock response.");
@@ -1160,12 +1171,21 @@ export class ChatBedrockConverse
         const streamIdleTimeout = resolveStreamIdleTimeout(
           options.streamIdleTimeout ?? this.streamIdleTimeout
         );
-        const response = await withRequestIdleTimeout(
-          this.client.send(command, {
-            abortSignal: abortController.signal,
-          }),
-          streamIdleTimeout,
-          abortController
+        const response = await this.caller.callWithOptions(
+          { signal: abortController.signal, maxRetries: options.maxRetries },
+          async () => {
+            try {
+              return await withRequestIdleTimeout(
+                this.client.send(command, {
+                  abortSignal: abortController.signal,
+                }),
+                streamIdleTimeout,
+                abortController
+              );
+            } catch (error) {
+              throw normalizeBedrockError(error);
+            }
+          }
         );
         if (!response.stream) {
           return;
@@ -1236,12 +1256,21 @@ export class ChatBedrockConverse
         const streamIdleTimeout = resolveStreamIdleTimeout(
           options.streamIdleTimeout ?? this.streamIdleTimeout
         );
-        const response = await withRequestIdleTimeout(
-          this.client.send(command, {
-            abortSignal: abortController.signal,
-          }),
-          streamIdleTimeout,
-          abortController
+        const response = await this.caller.callWithOptions(
+          { signal: abortController.signal, maxRetries: options.maxRetries },
+          async () => {
+            try {
+              return await withRequestIdleTimeout(
+                this.client.send(command, {
+                  abortSignal: abortController.signal,
+                }),
+                streamIdleTimeout,
+                abortController
+              );
+            } catch (error) {
+              throw normalizeBedrockError(error);
+            }
+          }
         );
         if (response.stream) {
           let reasoningTokens: number | undefined;
@@ -1298,7 +1327,10 @@ export class ChatBedrockConverse
                 text: "",
                 message: new AIMessageChunk({
                   content: "",
-                  response_metadata: { ...chunk },
+                  response_metadata: {
+                    ...chunk,
+                    ...getFinishReasonMetadata(chunk.messageStop?.stopReason),
+                  },
                 }),
               });
             }

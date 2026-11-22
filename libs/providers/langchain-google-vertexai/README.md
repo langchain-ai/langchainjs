@@ -36,6 +36,26 @@ credentials from the first of the following that apply:
    logged in using `gcloud auth application-default login`, then the
    default credentials.
 
+## LangSmith gateway
+
+To route `ChatVertexAI` through the LangSmith gateway, set
+`LANGSMITH_GATEWAY=true` and `LANGSMITH_GATEWAY_API_KEY`. The gateway key falls
+back to `LANGSMITH_API_KEY`. You can also set `LANGSMITH_GATEWAY` to a custom
+gateway root URL.
+
+```typescript
+import { ChatVertexAI } from "@langchain/google-vertexai";
+
+const model = new ChatVertexAI({ model: "gemini-2.5-flash" });
+const response = await model.invoke("Hello!");
+console.log(response.content);
+```
+
+Gateway requests use the `/vertex` route and do not require Google credentials
+when using Vertex Express. Passing your own credentials (`authOptions` or
+`apiKey`) or an explicit `endpoint` opts out of gateway routing and sends
+requests straight to Vertex AI.
+
 ## Tool Schema Limitations
 
 When using tools with Gemini models through Vertex AI, be aware of the following Zod schema limitations:

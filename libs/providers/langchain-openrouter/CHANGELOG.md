@@ -1,5 +1,69 @@
 # @langchain/openrouter
 
+## 0.4.26
+
+### Patch Changes
+
+- [#12252](https://github.com/langchain-ai/langchainjs/pull/12252) [`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Set `normalized_finish_reason` in `response_metadata` on `invoke` and streamed results (`error` normalizes to `error`); unmapped values normalize to `other`.
+- Updated dependencies [[`bbf8a1a`](https://github.com/langchain-ai/langchainjs/commit/bbf8a1af2c668223fd7ac570f0f5b3a4318e3095)]:
+  - @langchain/openai@1.8.5
+
+## 0.4.25
+
+### Patch Changes
+
+- Updated dependencies [[`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb)]:
+  - @langchain/openai@1.8.4
+
+## 0.4.24
+
+### Patch Changes
+
+- Updated dependencies [[`e92e44d`](https://github.com/langchain-ai/langchainjs/commit/e92e44d738a394a6b7325978858b3c35d7a7c88a)]:
+  - @langchain/openai@1.8.3
+
+## 0.4.23
+
+### Patch Changes
+
+- Updated dependencies [[`a7c960f`](https://github.com/langchain-ai/langchainjs/commit/a7c960fd1a1fa3d32717965311168667980e77a3)]:
+  - @langchain/openai@1.8.2
+
+## 0.4.22
+
+### Patch Changes
+
+- Updated dependencies [[`0c268f5`](https://github.com/langchain-ai/langchainjs/commit/0c268f53cadcddf6884162ed608333224c05868d), [`8103487`](https://github.com/langchain-ai/langchainjs/commit/8103487c55784c5befd84c1bc803546f720f806e)]:
+  - @langchain/openai@1.8.1
+
+## 0.4.21
+
+### Patch Changes
+
+- Updated dependencies [[`b5135cc`](https://github.com/langchain-ai/langchainjs/commit/b5135cc189adbf313f4e92c1527f96a40a546977)]:
+  - @langchain/openai@1.8.0
+
+## 0.4.20
+
+### Patch Changes
+
+- Updated dependencies [[`95b191b`](https://github.com/langchain-ai/langchainjs/commit/95b191b1928ee8f4e20e51aa821f5c5fd4b8b3da)]:
+  - @langchain/openai@1.7.1
+
+## 0.4.19
+
+### Patch Changes
+
+- Updated dependencies [[`2caf64d`](https://github.com/langchain-ai/langchainjs/commit/2caf64da3f02730f3cd2aab0c15de6eab41a01da)]:
+  - @langchain/openai@1.7.0
+
+## 0.4.18
+
+### Patch Changes
+
+- Updated dependencies [[`d71c542`](https://github.com/langchain-ai/langchainjs/commit/d71c542fb1d9cd1ceb310a4759591c024cf0d57d)]:
+  - @langchain/openai@1.6.3
+
 ## 0.4.17
 
 ### Patch Changes

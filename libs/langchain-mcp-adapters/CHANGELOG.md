@@ -1,5 +1,17 @@
 # @langchain/mcp-adapters
 
+## 2.0.3
+
+### Patch Changes
+
+- [#12192](https://github.com/langchain-ai/langchainjs/pull/12192) [`9920d4b`](https://github.com/langchain-ai/langchainjs/commit/9920d4b33dee5bc0cfb33d859246edf8973c86eb) Thanks [@jkennedyvz](https://github.com/jkennedyvz)! - Require Zod 4.6.6 or newer for installed dependencies to exclude versions affected by GHSA-mrhx-c7xc-m3w5. Zod v3 schemas remain supported through the bundled `zod/v3` entry point.
+
+## 2.0.2
+
+### Patch Changes
+
+- [#12101](https://github.com/langchain-ai/langchainjs/pull/12101) [`a947c9c`](https://github.com/langchain-ai/langchainjs/commit/a947c9c3ead4225ff111e30145abe684c3652a43) Thanks [@hntrl](https://github.com/hntrl)! - Connect to and list tools from configured MCP servers concurrently during discovery instead of one server at a time, so `listTools()`/`listToolsets()` take as long as the slowest server rather than the sum of all of them.
+
 ## 2.0.1
 
 ### Patch Changes

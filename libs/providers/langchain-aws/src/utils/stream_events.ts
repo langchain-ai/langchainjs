@@ -6,11 +6,9 @@
 
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type {
-  ChatModelStreamEvent,
-  FinishReason,
-} from "@langchain/core/language_models/event";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { mapStopReason } from "./finish_reason.js";
 import { getReasoningTokensFromAdditionalFields } from "./message_outputs.js";
 
 export interface ConvertBedrockConverseStreamOptions {
@@ -31,7 +29,7 @@ export async function* convertBedrockConverseStream(
   >();
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let rawStopReason: string | undefined;
   let reasoningTokens: number | undefined;
 
   for await (const event of source) {
@@ -88,18 +86,14 @@ export async function* convertBedrockConverseStream(
           event: "content-block-delta" as const,
           index,
           delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
+            type: "tool-call-delta" as const,
+            args: delta.toolUse.input,
           },
         };
       } else if (delta.reasoningContent) {
         const text = delta.reasoningContent.text;
-        if (typeof text === "string") {
+        const signature = delta.reasoningContent.signature;
+        if (typeof text === "string" || typeof signature === "string") {
           if (!blockAccumulators.has(index)) {
             const initial = { type: "reasoning" as const, reasoning: "" };
             blockAccumulators.set(index, { ...initial });
@@ -110,12 +104,24 @@ export async function* convertBedrockConverseStream(
             };
           }
           const acc = blockAccumulators.get(index)!;
-          acc.reasoning = (acc.reasoning ?? "") + text;
-          yield {
-            event: "content-block-delta" as const,
-            index,
-            delta: { type: "reasoning-delta" as const, reasoning: text },
-          };
+          if (typeof text === "string") {
+            acc.reasoning = (acc.reasoning ?? "") + text;
+            yield {
+              event: "content-block-delta" as const,
+              index,
+              delta: { type: "reasoning-delta" as const, reasoning: text },
+            };
+          } else if (typeof signature === "string") {
+            acc.signature = (acc.signature ?? "") + signature;
+            yield {
+              event: "content-block-delta" as const,
+              index,
+              delta: {
+                type: "block-delta" as const,
+                fields: { type: "reasoning", signature: acc.signature },
+              },
+            };
+          }
         }
       }
     } else if (event.metadata?.usage && shouldStreamUsage) {
@@ -142,7 +148,7 @@ export async function* convertBedrockConverseStream(
       };
       yield { event: "usage" as const, usage: usageSnapshot };
     } else if (event.messageStop?.stopReason) {
-      finishReason = mapStopReason(event.messageStop.stopReason);
+      rawStopReason = event.messageStop.stopReason;
       reasoningTokens = getReasoningTokensFromAdditionalFields(
         event.messageStop.additionalModelResponseFields
       );
@@ -173,25 +179,8 @@ export async function* convertBedrockConverseStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...mapStopReason(rawStopReason),
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "bedrock-converse" },
   };
-}
-
-function mapStopReason(stopReason: string): FinishReason {
-  switch (stopReason) {
-    case "end_turn":
-    case "stop_sequence":
-      return "stop";
-    case "tool_use":
-      return "tool_use";
-    case "max_tokens":
-      return "length";
-    case "guardrail_intervened":
-    case "content_filtered":
-      return "content_filter";
-    default:
-      return "stop";
-  }
 }

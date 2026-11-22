@@ -27,19 +27,20 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
   () => {
     test("classifies all three question types from a single invoke", async () => {
       const classifier = new TypeSafeClassifier({
-        questions: QUESTIONS,
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
       });
 
-      const result = await classifier.invoke(
-        "My payments keep failing and I've been waiting for hours. This is infuriating."
-      );
+      const result = await classifier.invoke({
+        state:
+          "My payments keep failing and I've been waiting for hours. This is infuriating.",
+        questions: QUESTIONS,
+      });
 
       // The live API returns the versioned model id, never the alias we sent.
       expect(result.model).toMatch(/^jev-/);
       expect(result.requestId).toBeTruthy();
-      expect(typeof result.usage.inputTokens).toBe("number");
+      expect(typeof result.usage_metadata?.input_tokens).toBe("number");
 
       const department = result.answers.department;
       if (department.type !== "choice") {
@@ -83,13 +84,13 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       // renderings), so an exact pin would encode one particular rendering
       // and break the moment anyone adjusts it. The RELATIONSHIP is the
       // invariant worth defending.
-      const classifier = new TypeSafeClassifier({
-        questions: {
-          over_100: {
-            type: "noul",
-            instructions: "Was the refund issued for more than 100 dollars?",
-          },
+      const questions: Record<string, Question> = {
+        over_100: {
+          type: "noul",
+          instructions: "Was the refund issued for more than 100 dollars?",
         },
+      };
+      const classifier = new TypeSafeClassifier({
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
       });
@@ -109,16 +110,22 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
         new ToolMessage({ content: "Refund issued.", tool_call_id: "call_1" }),
       ];
 
-      const withArgs = await classifier.invoke(conversation);
+      const withArgs = await classifier.invoke({
+        state: conversation,
+        questions,
+      });
       expect(withArgs.answers.over_100.type).toBe("noul");
       const withArgsProb = (withArgs.answers.over_100 as { noul: number }).noul;
 
       // Control: the same conversation with the arguments stripped out.
-      const withoutArgs = await classifier.invoke([
-        "user: I want my money back for the broken laptop stand.",
-        "assistant: [called issue_refund]",
-        "tool: Refund issued.",
-      ]);
+      const withoutArgs = await classifier.invoke({
+        state: [
+          "user: I want my money back for the broken laptop stand.",
+          "assistant: [called issue_refund]",
+          "tool: Refund issued.",
+        ],
+        questions,
+      });
       const withoutArgsProb = (withoutArgs.answers.over_100 as { noul: number })
         .noul;
 
@@ -133,7 +140,6 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       const realFetch = globalThis.fetch;
       const retryCounts: (string | null)[] = [];
       const classifier = new TypeSafeClassifier({
-        questions: QUESTIONS,
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
         maxRetries: 2,
@@ -151,9 +157,10 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
         },
       });
 
-      const result = await classifier.invoke(
-        "My payments keep failing and nobody has replied."
-      );
+      const result = await classifier.invoke({
+        state: "My payments keep failing and nobody has replied.",
+        questions: QUESTIONS,
+      });
 
       expect(result.model).toMatch(/^jev-/);
       // Omitted on the first attempt, present on the retry.
@@ -161,30 +168,31 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
     });
 
     test("accepts structured, non-string instructions", async () => {
-      // `QuestionContent` allows an object or array, which the compact HTTP
+      // `Content` allows an object or array, which the compact HTTP
       // reference does not show. Pinned live so the wider type is not
       // narrowed back to `string` on the assumption it was speculative.
-      const classifier = new TypeSafeClassifier({
-        questions: {
-          angry: {
-            type: "noul",
-            instructions: {
-              goal: "decide whether the customer is angry",
-              signals: ["profanity", "repeated punctuation", "all caps"],
-            },
-          },
-          listed: {
-            type: "noul",
-            instructions: ["is the customer angry?", "weigh the punctuation"],
+      const questions: Record<string, Question> = {
+        angry: {
+          type: "noul",
+          instructions: {
+            goal: "decide whether the customer is angry",
+            signals: ["profanity", "repeated punctuation", "all caps"],
           },
         },
+        listed: {
+          type: "noul",
+          instructions: ["is the customer angry?", "weigh the punctuation"],
+        },
+      };
+      const classifier = new TypeSafeClassifier({
         apiKey: process.env.TYPESAFE_API_KEY,
         baseUrl: process.env.TYPESAFE_BASE_URL,
       });
 
-      const result = await classifier.invoke(
-        "THIS IS THE THIRD TIME you have charged me twice!!!"
-      );
+      const result = await classifier.invoke({
+        state: "THIS IS THE THIRD TIME you have charged me twice!!!",
+        questions,
+      });
 
       expect(result.answers.angry.type).toBe("noul");
       expect(result.answers.listed.type).toBe("noul");

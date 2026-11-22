@@ -72,6 +72,7 @@ export class Graph {
       nodes: Object.values(this.nodes).map((node) => ({
         id: stableNodeIds[node.id],
         ...nodeDataJson(node),
+        ...(node.metadata != null ? { metadata: node.metadata } : {}),
       })),
       edges: this.edges.map((edge) => {
         const item: Record<string, unknown> = {

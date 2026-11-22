@@ -9,9 +9,11 @@ import { finalizeContentBlock } from "@langchain/core/language_models/compat";
 import type {
   ChatModelStreamEvent,
   FinishReason,
+  MessageFinishEvent,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
+import { hasRefusalOutput, normalizeResponseStatus } from "./finish_reason.js";
 
 export interface ConvertOpenAIResponsesStreamOptions {
   streamUsage?: boolean;
@@ -41,7 +43,11 @@ export async function* convertOpenAIResponsesStream(
   let messageStarted = false;
   let messageId: string | undefined;
   let usageSnapshot: UsageMetadata | undefined;
-  let finishReason: FinishReason | undefined;
+  let finish: Pick<
+    MessageFinishEvent,
+    "finishReason" | "normalizedFinishReason" | "reason"
+  > = {};
+  let sawToolCall = false;
   let responseMetadata: Record<string, unknown> | undefined;
   const finalizedBlockIndices = new Set<number>();
 
@@ -174,26 +180,18 @@ export async function* convertOpenAIResponsesStream(
             type: "tool_call_chunk",
             id: event.item.call_id,
             name: event.item.name,
-            args: initialArgs,
+            args: "",
             index: event.output_index,
           } as ContentBlock,
         };
-      }
-      if (initialArgs) {
-        const acc = blockAccumulators.get(index)!;
-        yield {
-          event: "content-block-delta" as const,
-          index,
-          delta: {
-            type: "block-delta" as const,
-            fields: {
-              type: "tool_call_chunk",
-              ...(acc.id != null ? { id: acc.id } : {}),
-              ...(acc.name != null ? { name: acc.name } : {}),
-              args: acc.args,
-            },
-          },
-        };
+        // The initial args go out once, as the call's first slice.
+        if (initialArgs) {
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: { type: "tool-call-delta" as const, args: initialArgs },
+          };
+        }
       }
       continue;
     }
@@ -223,21 +221,15 @@ export async function* convertOpenAIResponsesStream(
           } as ContentBlock,
         };
       }
-      const acc = blockAccumulators.get(index)!;
-      acc.args = (acc.args ?? "") + event.delta;
-      yield {
-        event: "content-block-delta" as const,
-        index,
-        delta: {
-          type: "block-delta" as const,
-          fields: {
-            type: "tool_call_chunk",
-            ...(acc.id != null ? { id: acc.id } : {}),
-            ...(acc.name != null ? { name: acc.name } : {}),
-            args: acc.args,
-          },
-        },
-      };
+      if (event.delta) {
+        const acc = blockAccumulators.get(index)!;
+        acc.args = (acc.args ?? "") + event.delta;
+        yield {
+          event: "content-block-delta" as const,
+          index,
+          delta: { type: "tool-call-delta" as const, args: event.delta },
+        };
+      }
       continue;
     }
 
@@ -247,6 +239,7 @@ export async function* convertOpenAIResponsesStream(
         event.item.type === "custom_tool_call")
     ) {
       yield* ensureMessageStart();
+      sawToolCall = true;
       const key: BlockKey = `tool:${event.output_index}`;
       const args =
         event.item.type === "function_call"
@@ -287,15 +280,22 @@ export async function* convertOpenAIResponsesStream(
     ) {
       yield* ensureMessageStart();
       messageId = event.response.id;
-      finishReason = mapResponseStatusToFinishReason(
-        event.response.status,
-        event.type
+      finish = mapResponseStatus(
+        event.response.status ??
+          (event.type === "response.incomplete" ? "incomplete" : "completed"),
+        event.response.incomplete_details?.reason,
+        sawToolCall,
+        hasRefusalOutput(event.response.output)
       );
       responseMetadata = {
         model_provider: provider,
         id: event.response.id,
         model: event.response.model,
+        model_name: event.response.model,
         status: event.response.status,
+        ...(event.response.incomplete_details
+          ? { incomplete_details: event.response.incomplete_details }
+          : {}),
       };
       if (shouldStreamUsage && event.response.usage) {
         usageSnapshot = convertResponsesUsageToUsageMetadata(
@@ -331,24 +331,37 @@ export async function* convertOpenAIResponsesStream(
 
   yield {
     event: "message-finish" as const,
-    reason: finishReason,
+    ...finish,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
   };
 }
 
-function mapResponseStatusToFinishReason(
-  status: string | undefined,
-  eventType: "response.completed" | "response.incomplete"
-): FinishReason {
-  if (eventType === "response.incomplete") {
-    return "length";
-  }
-  if (status === "completed") {
-    return "stop";
-  }
-  if (status === "incomplete") {
-    return "length";
-  }
-  return "stop";
+function mapResponseStatus(
+  status: string,
+  incompleteReason: string | null | undefined,
+  sawToolCall: boolean,
+  sawRefusal: boolean
+): Pick<
+  MessageFinishEvent,
+  "finishReason" | "normalizedFinishReason" | "reason"
+> {
+  const normalizedFinishReason = normalizeResponseStatus(
+    status,
+    incompleteReason,
+    { hasToolCalls: sawToolCall, hasRefusal: sawRefusal }
+  );
+  return {
+    finishReason: status,
+    normalizedFinishReason,
+    reason: toLegacyReason(normalizedFinishReason),
+  };
+}
+
+// Keeps the deprecated `reason` populated with its old values.
+function toLegacyReason(reason: FinishReason): MessageFinishEvent["reason"] {
+  if (reason === "tool_call") return "tool_use";
+  if (reason === "refusal") return "content_filter";
+  if (reason === "context_exceeded") return "length";
+  return reason === "other" || reason === "error" ? undefined : reason;
 }

@@ -30,6 +30,7 @@ import type {
 } from "ollama";
 import { Runnable } from "@langchain/core/runnables";
 import { convertOllamaStream } from "./utils/stream_events.js";
+import { getFinishReasonMetadata } from "./utils/finish_reason.js";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -793,6 +794,7 @@ export class ChatOllama
     });
 
     let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
+    let sawToolCall = false;
 
     for await (const streamChunk of stream) {
       if (options.signal?.aborted) {
@@ -805,6 +807,7 @@ export class ChatOllama
       usageMetadata.total_tokens =
         usageMetadata.input_tokens + usageMetadata.output_tokens;
       lastMetadata = rest;
+      if (responseMessage.tool_calls?.length) sawToolCall = true;
 
       // when think is enabled, try thinking first
       const token = this.think
@@ -833,6 +836,7 @@ export class ChatOllama
         content: "",
         response_metadata: {
           ...lastMetadata,
+          ...getFinishReasonMetadata(lastMetadata?.done_reason, sawToolCall),
           model_provider: "ollama",
         },
         usage_metadata: usageMetadata,

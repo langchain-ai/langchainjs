@@ -168,7 +168,7 @@ export type AnthropicThinking =
 export interface AnthropicRequest {
   anthropic_version: string;
   messages: AnthropicMessage[];
-  system?: string;
+  system?: string | AnthropicMessageContentText[];
   stream?: boolean;
   max_tokens: number;
   temperature?: number;

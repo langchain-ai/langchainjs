@@ -1521,12 +1521,41 @@ export class CallbackManager
         callbackManager.handlers,
         callbackManager.inheritableHandlers
       );
-      callbackManager.handlers = coalesced.handlers;
-      callbackManager.inheritableHandlers = coalesced.inheritableHandlers;
+      // Merged configs can register one handler more than once, which would
+      // deliver every callback to it that many times. Both lists keep the same
+      // wrapper per handler: copy() tells inheritable handlers by identity.
+      const inheritableHandlers = uniqueHandlers(coalesced.inheritableHandlers);
+      const inheritableBySource = new Map(
+        inheritableHandlers.map((handler) => [handlerSource(handler), handler])
+      );
+      callbackManager.handlers = uniqueHandlers(coalesced.handlers).map(
+        (handler) => inheritableBySource.get(handlerSource(handler)) ?? handler
+      );
+      callbackManager.inheritableHandlers = inheritableHandlers;
     }
 
     return callbackManager;
   }
+}
+
+// Set on a wrapper to the plain object it was made from. Merged configs can
+// wrap one object twice, and configure() keeps one wrapper per object.
+const HANDLER_SOURCE = Symbol("handlerSource");
+
+function handlerSource(handler: BaseCallbackHandler): object {
+  return (handler as { [HANDLER_SOURCE]?: object })[HANDLER_SOURCE] ?? handler;
+}
+
+function uniqueHandlers(
+  handlers: BaseCallbackHandler[]
+): BaseCallbackHandler[] {
+  const seen = new Set<object>();
+  return handlers.filter((handler) => {
+    const source = handlerSource(handler);
+    if (seen.has(source)) return false;
+    seen.add(source);
+    return true;
+  });
 }
 
 export function ensureHandler(
@@ -1536,5 +1565,7 @@ export function ensureHandler(
     return handler;
   }
 
-  return BaseCallbackHandler.fromMethods(handler);
+  const wrapped = BaseCallbackHandler.fromMethods(handler);
+  Object.defineProperty(wrapped, HANDLER_SOURCE, { value: handler });
+  return wrapped;
 }

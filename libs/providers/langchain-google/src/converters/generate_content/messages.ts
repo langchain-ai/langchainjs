@@ -27,6 +27,10 @@ import {
   InvalidInputError,
   ToolCallNotFoundError,
 } from "../../utils/errors.js";
+import {
+  mapGeminiFinishReason,
+  toFinishReasonMetadata,
+} from "../../utils/finish_reason.js";
 
 /**
  * Standard content block converter for Google Gemini API.
@@ -850,6 +854,10 @@ function convertLegacyContentMessageToGeminiContent(
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
     for (const item of message.content) {
+      // Gemini has no input part for refusals.
+      if (typeof item === "object" && item?.type === "refusal") {
+        continue;
+      }
       const part = convertLegacyPartToGeminiPart(item);
       parts.push(part);
     }
@@ -1332,6 +1340,9 @@ export const convertGeminiCandidateToAIMessage: Converter<
   const response_metadata: Record<string, unknown> = {
     model_provider: "google",
     finish_reason: candidate.finishReason,
+    ...toFinishReasonMetadata(
+      mapGeminiFinishReason(candidate.finishReason, toolCalls.length > 0)
+    ),
     safety_ratings: candidate.safetyRatings,
     citation_metadata: candidate.citationMetadata,
     grounding_metadata: candidate.groundingMetadata,

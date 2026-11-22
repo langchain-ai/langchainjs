@@ -19,6 +19,7 @@ export default getBuildConfig({
     "./src/callbacks/promises.ts",
     "./src/chat_history.ts",
     "./src/context.ts",
+    "./src/decisions/index.ts",
     "./src/documents/index.ts",
     "./src/document_loaders/base.ts",
     "./src/errors/index.ts",

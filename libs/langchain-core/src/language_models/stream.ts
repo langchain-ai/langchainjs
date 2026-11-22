@@ -7,7 +7,13 @@
 import { AIMessage } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
-import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import type {
+  ChatModelStreamEvent,
+  ContentBlockDelta,
+  FinishReason,
+  FinishState,
+  MessageFinishEvent,
+} from "./event.js";
 
 type UsageMetadataLike = Partial<UsageMetadata>;
 
@@ -84,6 +90,7 @@ class ReplayBuffer {
  * - `text-delta` → append text
  * - `reasoning-delta` → append reasoning text
  * - `data-delta` → append encoded data to `data`
+ * - `tool-call-delta` → append tool-call args
  * - `block-delta` → shallow merge fields
  *
  * @internal
@@ -120,10 +127,23 @@ function applyDelta(
         ...block,
         data: (block.data ?? "") + delta.data,
       };
+    case "tool-call-delta":
+      if (
+        block.type === "tool_call_chunk" ||
+        block.type === "server_tool_call_chunk"
+      ) {
+        return {
+          ...block,
+          args: (block.args ?? "") + delta.args,
+        };
+      }
+      return block;
     case "block-delta":
       return { ...block, ...delta.fields } as ContentBlock;
     default:
-      throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
+      // The agent protocol adds delta variants over time, so skip ones this
+      // version doesn't know. `content-block-finish` carries the full block.
+      return block;
   }
 }
 
@@ -621,7 +641,11 @@ export class ChatModelStream
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
     let metadata: Record<string, unknown> = {};
-    let finishReason: string | undefined;
+    let finish: {
+      finishReason?: string;
+      normalizedFinishReason?: FinishReason;
+      finishState?: FinishState;
+    } = {};
 
     for await (const event of this._buffer.iterate()) {
       switch (event.event) {
@@ -652,7 +676,7 @@ export class ChatModelStream
           break;
 
         case "message-finish":
-          finishReason = event.reason;
+          finish = readFinish(event);
           if (event.usage) usage = normalizeUsage(event.usage);
           if (event.responseMetadata) {
             metadata = {
@@ -677,9 +701,31 @@ export class ChatModelStream
       usage_metadata: usage,
       response_metadata: {
         ...metadata,
-        ...(finishReason ? { finish_reason: finishReason } : {}),
+        ...(finish.finishReason != null
+          ? { finish_reason: finish.finishReason }
+          : {}),
+        ...(finish.normalizedFinishReason != null
+          ? { normalized_finish_reason: finish.normalizedFinishReason }
+          : {}),
+        ...(finish.finishState != null
+          ? { finish_state: finish.finishState }
+          : {}),
         output_version: "v1" as const,
       },
     });
   }
+}
+
+/** Read finish fields, falling back to the deprecated `reason`. */
+function readFinish(event: MessageFinishEvent): {
+  finishReason?: string;
+  normalizedFinishReason?: FinishReason;
+  finishState?: FinishState;
+} {
+  const legacy = event.reason === "tool_use" ? "tool_call" : event.reason;
+  return {
+    finishReason: event.finishReason,
+    normalizedFinishReason: event.normalizedFinishReason ?? legacy,
+    finishState: event.finishState,
+  };
 }

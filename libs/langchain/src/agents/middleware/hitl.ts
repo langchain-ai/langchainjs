@@ -1,7 +1,12 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
-import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
+import {
+  AIMessage,
+  ToolMessage,
+  ToolCall,
+  addNotificationMetadata,
+} from "@langchain/core/messages";
 import {
   InferInteropZodInput,
   interopParse,
@@ -498,6 +503,26 @@ function resolveInterruptOn(
 }
 
 /**
+ * Build the tool message for a decision that skips the tool. It's marked with
+ * the decision so clients can tell it apart from real tool output.
+ */
+function decisionToolMessage(
+  toolCall: ToolCall,
+  decision: "reject" | "respond",
+  content: string
+): ToolMessage {
+  return addNotificationMetadata(
+    new ToolMessage({
+      content,
+      name: toolCall.name,
+      tool_call_id: toolCall.id!,
+      status: decision === "respond" ? "success" : "error",
+    }),
+    { source: "hitl_interrupt_decision", data: { decision } }
+  );
+}
+
+/**
  * Return `message` with the reviewer-edit notice prepended, stating the call that ran.
  */
 function prependNotice(
@@ -909,12 +934,7 @@ export function humanInTheLoopMiddleware(
         decision.message ??
         `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
 
-      const toolMessage = new ToolMessage({
-        content,
-        name: toolCall.name,
-        tool_call_id: toolCall.id!,
-        status: "error",
-      });
+      const toolMessage = decisionToolMessage(toolCall, "reject", content);
 
       return { revisedToolCall: toolCall, toolMessage };
     }
@@ -928,12 +948,11 @@ export function humanInTheLoopMiddleware(
         );
       }
 
-      const toolMessage = new ToolMessage({
-        content: decision.message,
-        name: toolCall.name,
-        tool_call_id: toolCall.id!,
-        status: "success",
-      });
+      const toolMessage = decisionToolMessage(
+        toolCall,
+        "respond",
+        decision.message
+      );
 
       return { revisedToolCall: toolCall, toolMessage };
     }
@@ -1026,23 +1045,16 @@ export function humanInTheLoopMiddleware(
               return handler(request);
             }
             if (decision.type === "reject") {
-              return new ToolMessage({
-                content:
-                  decision.message ??
-                  `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`,
-                name: toolCall.name,
-                tool_call_id: toolCall.id,
-                status: "error",
-              });
+              return decisionToolMessage(
+                toolCall,
+                "reject",
+                decision.message ??
+                  `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`
+              );
             }
             if (decision.type === "respond") {
               // The reviewer answers in place of the tool, which doesn't run.
-              return new ToolMessage({
-                content: decision.message,
-                name: toolCall.name,
-                tool_call_id: toolCall.id,
-                status: "success",
-              });
+              return decisionToolMessage(toolCall, "respond", decision.message);
             }
             // The schema pinned the tool name, so this is always the same tool.
             const executed = decision.edited_action;
@@ -1178,12 +1190,6 @@ export function humanInTheLoopMiddleware(
 
         const revisedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
         const artificialToolMessages: ToolMessage[] = [];
-        const hasRejectedToolCalls = decisions.some(
-          (decision) => decision.type === "reject"
-        );
-        const hasRespondedToolCalls = decisions.some(
-          (decision) => decision.type === "respond"
-        );
 
         /**
          * Process each decision using helper method
@@ -1199,17 +1205,7 @@ export function humanInTheLoopMiddleware(
             interruptConfig
           );
 
-          if (
-            revisedToolCall &&
-            /**
-             * If any decision is a rejected, we are going back to the model
-             * with only the tool calls that were rejected as we don't know
-             * the results of the approved/updated tool calls at this point.
-             */
-            (!hasRejectedToolCalls ||
-              decision.type === "reject" ||
-              decision.type === "respond")
-          ) {
+          if (revisedToolCall) {
             revisedToolCalls.push(revisedToolCall);
           }
           if (toolMessage) {
@@ -1218,23 +1214,27 @@ export function humanInTheLoopMiddleware(
         }
 
         /**
-         * Update the AI message to only include approved tool calls
+         * Keep every tool call on the AI message: a dropped call would never
+         * receive a ToolMessage, which provider APIs reject.
          */
         if (AIMessage.isInstance(lastMessage)) {
           lastMessage.tool_calls = revisedToolCalls;
         }
 
+        /**
+         * Only go back to the model when nothing is left for the tool node to
+         * execute, i.e. every remaining tool call already has an artificial
+         * ToolMessage (rejected or responded).
+         */
         const hasPendingToolCalls = revisedToolCalls.some(
           (toolCall) =>
             !artificialToolMessages.some(
               (message) => message.tool_call_id === toolCall.id
             )
         );
-        const jumpTo: JumpToTarget | undefined =
-          hasRejectedToolCalls ||
-          (hasRespondedToolCalls && !hasPendingToolCalls)
-            ? "model"
-            : undefined;
+        const jumpTo: JumpToTarget | undefined = hasPendingToolCalls
+          ? undefined
+          : "model";
         return {
           messages: [lastMessage, ...artificialToolMessages],
           jumpTo,

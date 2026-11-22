@@ -46,6 +46,10 @@ import {
 } from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
+import {
+  hasRefusalOutput,
+  normalizeResponseStatus,
+} from "../utils/finish_reason.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
@@ -543,6 +547,18 @@ export const convertResponsesMessageToAIMessage: Converter<
     }
   }
 
+  if (response.status) {
+    response_metadata.finish_reason = response.status;
+    response_metadata.normalized_finish_reason = normalizeResponseStatus(
+      response.status,
+      response.incomplete_details?.reason,
+      {
+        hasToolCalls: tool_calls.length + invalid_tool_calls.length > 0,
+        hasRefusal: hasRefusalOutput(response.output),
+      }
+    );
+  }
+
   return new AIMessage({
     id: response.id,
     content,
@@ -839,14 +855,13 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   } else if (event.type === "response.created") {
     id = event.response.id;
     response_metadata.id = event.response.id;
-    response_metadata.model_name = event.response.model;
-    response_metadata.model = event.response.model;
   } else if (
     event.type === "response.completed" ||
     event.type === "response.incomplete"
   ) {
     id = event.response.id;
     const msg = convertResponsesMessageToAIMessage(event.response);
+    response_metadata.model_name = event.response.model;
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
@@ -869,6 +884,11 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         response_metadata[key] = msg.response_metadata.output;
       } else {
         response_metadata[key] = value;
+      }
+    }
+    for (const key of ["finish_reason", "normalized_finish_reason"]) {
+      if (msg.response_metadata[key] !== undefined) {
+        response_metadata[key] = msg.response_metadata[key];
       }
     }
   } else if (
@@ -1356,6 +1376,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           [withBreakpoint(block, makeTextPart(block.text))],
           phase
         );
+      } else if (block.type === "refusal") {
+        // Only assistant messages accept refusal parts.
+        if (messageRole === "assistant") {
+          pushMessageContent([
+            {
+              type: "refusal",
+              refusal: block.refusal,
+            } as unknown as ResponseInputMessageContentList[number],
+          ]);
+        }
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1669,7 +1699,15 @@ export const convertMessagesToResponsesInput: Converter<
 
         // ai content
         let { content } = lcMsg;
-        if (additional_kwargs?.refusal) {
+        const hasRefusalPart =
+          Array.isArray(content) &&
+          content.some(
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              item.type === "refusal"
+          );
+        if (additional_kwargs?.refusal && !hasRefusalPart) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
           }
@@ -1702,7 +1740,15 @@ export const convertMessagesToResponsesInput: Converter<
                   };
                 }
 
-                if (item.type === "output_text" || item.type === "refusal") {
+                if (item.type === "refusal") {
+                  return {
+                    type: "refusal",
+                    refusal:
+                      typeof item.refusal === "string" ? item.refusal : "",
+                  };
+                }
+
+                if (item.type === "output_text") {
                   return item;
                 }
 

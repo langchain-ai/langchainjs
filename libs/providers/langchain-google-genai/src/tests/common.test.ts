@@ -437,3 +437,61 @@ describe("Missing candidate content", () => {
     ).toBeNull();
   });
 });
+
+describe("finish reason metadata", () => {
+  const textParts = [{ text: "hi" }] as GoogleGenerativeAIPart[];
+  const callParts = [
+    { functionCall: { name: "search", args: { q: "x" } } },
+  ] as GoogleGenerativeAIPart[];
+
+  test.each([
+    ["STOP", textParts, "stop"],
+    ["MAX_TOKENS", textParts, "length"],
+    ["SAFETY", textParts, "refusal"],
+    ["MALFORMED_FUNCTION_CALL", textParts, "error"],
+    ["MALFORMED_RESPONSE", textParts, "error"],
+    ["SOMETHING_NEW", textParts, "other"],
+    ["STOP", callParts, "tool_call"],
+  ])("invoke maps %s", (finishReason, parts, normalized) => {
+    const result = mapGenerateContentResultToChatResult(
+      createMockResponse([
+        {
+          content: { role: "model", parts },
+          finishReason: finishReason as FinishReason,
+          index: 0,
+        },
+      ])
+    );
+    expect(result.generations[0].message.response_metadata).toEqual({
+      finish_reason: finishReason,
+      normalized_finish_reason: normalized,
+    });
+  });
+
+  test("legacy stream sets finish metadata only on the finishing chunk", () => {
+    const first = convertResponseContentToChatGenerationChunk(
+      createMockResponse([
+        { content: { role: "model", parts: textParts }, index: 0 },
+      ]),
+      { index: 0 }
+    );
+    const last = convertResponseContentToChatGenerationChunk(
+      createMockResponse([
+        {
+          content: { role: "model", parts: textParts },
+          finishReason: "MAX_TOKENS" as FinishReason,
+          index: 0,
+        },
+      ]),
+      { index: 1 }
+    );
+    expect(first?.message.response_metadata).toEqual({
+      model_provider: "google-genai",
+    });
+    expect(last?.message.response_metadata).toEqual({
+      model_provider: "google-genai",
+      finish_reason: "MAX_TOKENS",
+      normalized_finish_reason: "length",
+    });
+  });
+});

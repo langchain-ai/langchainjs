@@ -13,6 +13,7 @@ import {
   isCommand,
   Command,
   Send,
+  isGraphDrained,
   isGraphInterrupt,
   type LangGraphRunnableConfig,
   StateDefinitionInit,
@@ -85,6 +86,8 @@ export interface ToolNodeOptions {
    * The wrapper receives the tool call request and a handler function to execute the tool.
    */
   wrapToolCall?: WrapToolCallHook;
+  /** Graph channels to read for tool-call-only Send inputs. */
+  stateKeys?: string[];
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -232,11 +235,12 @@ export class ToolNode<
     isMiddlewareError: boolean
   ): ToolMessage {
     /**
-     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
-     * As such, they are not recoverable by the agent and shouldn't be fed
-     * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+     * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop,
+     * and a drain stops the run to resume it later. Neither is recoverable
+     * by the agent, so neither is fed back: re-throw them even when
+     * `handleToolErrors = true`.
      */
-    if (isGraphInterrupt(error)) {
+    if (isGraphInterrupt(error) || isGraphDrained(error)) {
       throw error;
     }
 
@@ -392,7 +396,7 @@ export class ToolNode<
              */
             config,
             toolCallId: toolCall.id!,
-            state: config.configurable?.__pregel_scratchpad?.currentTaskInput,
+            state,
             signal: mergeAbortSignals(this.signal, config.signal),
           }
         );
@@ -481,7 +485,24 @@ export class ToolNode<
 
     if (isSendInput(state)) {
       const { lg_tool_call: _, jumpTo: __, ...newState } = state;
-      outputs = [await this.runTool(state.lg_tool_call, config, newState)];
+      let toolState = newState;
+      if (Object.keys(newState).length === 0 && this.options?.stateKeys) {
+        const read = config.configurable?.__pregel_read;
+        if (typeof read !== "function") {
+          throw new Error(
+            "ToolNode requires a graph state reader for compact Send inputs."
+          );
+        }
+        toolState = read(this.options.stateKeys, true);
+        if (!isMessagesState(toolState)) {
+          throw new Error("ToolNode could not read messages from graph state.");
+        }
+        const scratchpad = config.configurable?.__pregel_scratchpad;
+        if (scratchpad) {
+          scratchpad.currentTaskInput = { ...toolState, ...state };
+        }
+      }
+      outputs = [await this.runTool(state.lg_tool_call, config, toolState)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {
