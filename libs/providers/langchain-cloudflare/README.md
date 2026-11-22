@@ -92,16 +92,6 @@ support for these modes, strict enforcement, tools plus JSON Schema, and
 streaming depends on the selected Workers AI model. The integration does not
 silently downgrade or retry requests with a different output method.
 
-Some Workers AI tool parsers can return the string `"null"` for a JSON null
-argument. The integration repairs that exact value only when the declared tool
-schema unambiguously permits null and excludes strings. It leaves query text,
-`string | null` fields, unknown tools/properties, malformed JSON, and other
-invalid values unchanged. References and conditional/ambiguous schema traversal
-are left to the existing validator. LangChain still validates the repaired call.
-When a request includes such nullable fields, tool arguments are buffered until
-complete before being emitted; text continues streaming. Requests without these
-fields retain incremental tool argument chunks.
-
 Messages may contain OpenAI-compatible text and `image_url` content blocks for
 vision-capable models. Legacy native `response`/`tool_calls` and newer
 `choices`/`delta` responses are supported. Token totals are available through
