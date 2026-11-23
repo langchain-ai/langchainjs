@@ -532,14 +532,18 @@ describe("ChatBedrockConverse invocationParams", () => {
   });
 
   describe("retries and AsyncCaller integration", () => {
+    const mockedClient = BedrockRuntimeClient as unknown as {
+      mockSend?: (command: unknown, options?: unknown) => Promise<unknown>;
+    };
+
     afterEach(() => {
-      BedrockRuntimeClient.mockSend = undefined;
+      mockedClient.mockSend = undefined;
     });
 
     test("retries transient failure on invoke when maxRetries is configured", async () => {
       let attempts = 0;
       const onFailedAttempt = vi.fn();
-      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+      mockedClient.mockSend = vi.fn(async () => {
         attempts++;
         if (attempts === 1) {
           throw new Error("Temporary network error");
@@ -574,7 +578,7 @@ describe("ChatBedrockConverse invocationParams", () => {
     test("retries transient failure on stream when maxRetries is configured", async () => {
       let attempts = 0;
       const onFailedAttempt = vi.fn();
-      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+      mockedClient.mockSend = vi.fn(async () => {
         attempts++;
         if (attempts === 1) {
           throw new Error("Temporary stream error");
@@ -609,7 +613,7 @@ describe("ChatBedrockConverse invocationParams", () => {
     test("respects call-level maxRetries override", async () => {
       let attempts = 0;
       const onFailedAttempt = vi.fn();
-      BedrockRuntimeClient.mockSend = vi.fn(async () => {
+      mockedClient.mockSend = vi.fn(async () => {
         attempts++;
         throw new Error("Persistent error");
       });
