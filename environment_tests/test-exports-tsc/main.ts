@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { createAgent } from "langchain";
+import { createAgent, createMiddleware } from "langchain";
 
 const model = new ChatOpenAI({
   openAIApiKey: "sk-XXXX",
@@ -19,6 +19,28 @@ export async function invokeAgentWithMessages() {
     model: "openai:gpt-4o-mini",
     tools: [],
     systemPrompt: "You are a helpful assistant.",
+  });
+
+  await agent.invoke({
+    messages: [
+      {
+        role: "human",
+        content: "Please generate a greeting message.",
+      },
+    ],
+  });
+}
+
+// Regression for #11733: middleware without state schema with strictNullChecks: false
+export async function invokeAgentWithMiddlewareNoSchema() {
+  const dummyMiddleware = createMiddleware({
+    name: "dummy",
+  });
+
+  const agent = createAgent({
+    model: "openai:gpt-4o-mini",
+    tools: [],
+    middleware: [dummyMiddleware],
   });
 
   await agent.invoke({
