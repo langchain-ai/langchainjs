@@ -951,9 +951,22 @@ export class ReactAgent<
         return new Send(AGENT_NODE_NAME, { ...state, jumpTo: undefined });
       }
 
-      // check if there are pending tool calls
       const toolMessages = messages.filter(ToolMessage.isInstance);
       const lastAiMessage = messages.filter(AIMessage.isInstance).at(-1);
+
+      // the model node answered a structured output tool call with an error, retry
+      if (
+        ToolMessage.isInstance(lastMessage) &&
+        lastAiMessage?.tool_calls?.some(
+          (toolCall) =>
+            toolCall.id === lastMessage.tool_call_id &&
+            toolCall.name.startsWith("extract-")
+        )
+      ) {
+        return AGENT_NODE_NAME;
+      }
+
+      // check if there are pending tool calls
       const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
