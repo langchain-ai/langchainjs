@@ -105,7 +105,7 @@ export interface PGVectorStoreArgs {
    * Configure how similarity scores are calculated.
    * "distance" returns raw distance values (lower = more similar, default behavior for backward compatibility)
    * "similarity" returns normalized similarity scores (higher = more similar)
-   * @default "distance"
+   * @default "similarity"
    */
   scoreNormalization?: "distance" | "similarity";
 }
@@ -317,7 +317,7 @@ export class PGVectorStore extends VectorStore {
 
   distanceStrategy?: DistanceStrategy = "cosine";
 
-  scoreNormalization: "distance" | "similarity" = "distance";
+  scoreNormalization: "distance" | "similarity" = "similarity";
 
   _vectorstoreType(): string {
     return "pgvector";
@@ -336,7 +336,10 @@ export class PGVectorStore extends VectorStore {
     k: number,
     filter?: this["FilterType"]
   ): Promise<[Document, { distance: number; similarity: number }][]> {
+    const savedNormalization = this.scoreNormalization;
+    this.scoreNormalization = 'distance';
     const results = await this.searchPostgres(query, k, filter, false);
+    this.scoreNormalization = savedNormalization;
     const enhancedResults: [
       Document,
       { distance: number; similarity: number },
@@ -430,7 +433,7 @@ export class PGVectorStore extends VectorStore {
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
     this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
-    this.scoreNormalization = config.scoreNormalization ?? "distance";
+    this.scoreNormalization = config.scoreNormalization ?? "similarity";
 
     const langchainVerbose = getEnvironmentVariable("LANGCHAIN_VERBOSE");
 
