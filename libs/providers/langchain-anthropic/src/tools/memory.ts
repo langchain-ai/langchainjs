@@ -21,7 +21,7 @@ import {
  * import { ChatAnthropic, memory_20250818 } from "@langchain/anthropic";
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929"
+ *   model: "claude-sonnet-5-5"
  * });
  *
  * const memory = memory_20250818({

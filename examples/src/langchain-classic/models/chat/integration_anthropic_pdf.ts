@@ -5,7 +5,7 @@ import * as fs from "fs";
 
 export const run = async (): Promise<MessageContent> => {
   const llm = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-sonnet-5-5",
   });
 
   // PDF needs to be in Base64.

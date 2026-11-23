@@ -19,7 +19,7 @@ import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
  * when the agent has both returnDirect tools and beforeModel middleware.
  */
 
-const MODEL = "claude-sonnet-4-5-20250929";
+const MODEL = "claude-sonnet-5-5";
 
 // Create test tools
 const normalTool = tool(

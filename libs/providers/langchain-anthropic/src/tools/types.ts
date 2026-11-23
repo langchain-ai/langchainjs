@@ -152,7 +152,7 @@ export type TextEditor20250728Command = z.infer<
 >;
 
 /**
- * Computer use tool action types for Claude Opus 4.5.
+ * Computer use tool action types for the `computer_20251124` tool version.
  * Includes zoom action which is not available in earlier versions.
  * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool
  */

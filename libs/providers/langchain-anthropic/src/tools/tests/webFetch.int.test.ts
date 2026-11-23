@@ -11,8 +11,7 @@ import { webFetch_20250910 } from "../webFetch.js";
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   });
 
 describe("Anthropic Web Fetch Tool Integration Tests", () => {

@@ -43,7 +43,7 @@ export interface Bash20250124Options {
  * import { execSync } from "child_process";
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * const bash = tools.bash_20250124({

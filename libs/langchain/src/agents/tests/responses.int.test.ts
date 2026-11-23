@@ -73,7 +73,7 @@ describe("responses Matrix Tests", () => {
 
       // Create LLM instance
       const model = new ChatAnthropic({
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-sonnet-4-6",
         temperature: 0, // Make it deterministic
         clientOptions: {
           fetch: fetchMock,
@@ -149,7 +149,7 @@ describe("structured output handling", () => {
     it("should handle multi-turn structured output calls", async () => {
       // Create LLM instance
       const model = new ChatAnthropic({
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-sonnet-4-6",
         temperature: 0, // Make it deterministic
       });
       const agent = createAgent({
@@ -232,8 +232,7 @@ describe("structured output handling", () => {
 
     it("should support native structured output for newer Anthropic models", async () => {
       const model = new ChatAnthropic({
-        model: "claude-sonnet-4-5-20250929",
-        temperature: 0, // Make it deterministic
+        model: "claude-sonnet-5-5",
       });
       const captialCatalogTool = tool(
         () => {
@@ -261,7 +260,7 @@ describe("structured output handling", () => {
       });
       expect(result.structuredResponse.answer).toBe("Paris");
       expect(result.messages.length).toBe(4);
-      expect(result.messages.at(-1)?.content).toContain('{"answer": "Paris"}');
+      expect(result.messages.at(-1)?.text).toContain('{"answer": "Paris"}');
       expect((result.messages.at(-1) as AIMessage).tool_calls?.length).toBe(0);
     });
 

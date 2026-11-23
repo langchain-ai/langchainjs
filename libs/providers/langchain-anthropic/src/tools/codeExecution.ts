@@ -31,7 +31,7 @@ export interface CodeExecution20250825Options {
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const model = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * // Basic usage - calculations and data analysis

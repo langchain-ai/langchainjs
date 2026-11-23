@@ -11,8 +11,7 @@ import { textEditor_20250728 } from "../textEditor.js";
 
 const createModel = (args: AnthropicInput = {}) =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
     ...args,
   });
 

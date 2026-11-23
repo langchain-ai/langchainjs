@@ -693,8 +693,7 @@ test("Can call and use two tool calls at once", async () => {
     }),
   };
   const largeModel = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   }).bindTools([tool]);
 
   const inputMessage = new HumanMessage(
@@ -754,8 +753,7 @@ test("converting messages doesn't drop tool input", async () => {
     }),
   };
   const largeModel = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   }).bindTools([tool]);
 
   const inputMessage = new HumanMessage(
@@ -913,7 +911,7 @@ test("calling tool with no args should work", async () => {
 // https://docs.claude.com/en/docs/agents-and-tools/tool-use/memory-tool
 test("memory tool", async () => {
   const llm = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-sonnet-5-5",
     clientOptions: {
       defaultHeaders: {
         "anthropic-beta": "context-management-2025-06-27",
@@ -932,7 +930,7 @@ test("memory tool", async () => {
 // https://docs.claude.com/en/docs/build-with-claude/context-editing
 test("context management", async () => {
   const llm = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-sonnet-5-5",
     clientOptions: {
       defaultHeaders: {
         "anthropic-beta": "context-management-2025-06-27",
@@ -1004,7 +1002,7 @@ test("tool extras with defer_loading are merged into tool definitions", async ()
   );
 
   const llm = new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-sonnet-5-5",
   });
 
   // Verify the payload includes extras fields using formatStructuredToolToAnthropic

@@ -7,8 +7,7 @@ import { bash_20250124 } from "../bash.js";
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   });
 
 describe("Anthropic Bash Tool Integration Tests", () => {

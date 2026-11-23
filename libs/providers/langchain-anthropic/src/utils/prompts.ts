@@ -29,7 +29,7 @@ import { _convertMessagesToAnthropicPayload } from "./message_inputs.js";
  * });
  *
  * const anthropicResponse = await anthropicClient.messages.create({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  *   max_tokens: 1024,
  *   stream: false,
  *   system,

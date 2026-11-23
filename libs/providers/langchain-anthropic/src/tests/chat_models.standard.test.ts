@@ -11,7 +11,7 @@ class ChatAnthropicStandardUnitTests extends ChatModelUnitTests<
       Cls: ChatAnthropic,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      constructorArgs: {},
+      constructorArgs: { model: "claude-haiku-4-5" },
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
     // which we call after instantiating the model will work.

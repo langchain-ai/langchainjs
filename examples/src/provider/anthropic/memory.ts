@@ -75,8 +75,7 @@ const memoryTool = tools.memory_20250818({
 });
 
 const model = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
-  temperature: 0,
+  model: "claude-sonnet-5-5",
 });
 
 const agent = createAgent({
@@ -88,4 +87,4 @@ const result = await agent.invoke({
   messages: [{ role: "user", content: "What is the weather in Tokyo?" }],
 });
 
-console.log(result.messages[result.messages.length - 1].content);
+console.log(result.messages[result.messages.length - 1].text);

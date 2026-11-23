@@ -34,7 +34,7 @@ const populationTool = tool(
   }
 );
 
-const llm = await initChatModel(undefined, { temperature: 0 });
+const llm = await initChatModel();
 const llmWithTools = llm.bindTools([weatherTool, populationTool]);
 
 const toolCalls1 = (
@@ -66,7 +66,7 @@ toolCalls1:  [
 
 const toolCalls2 = (
   await llmWithTools.invoke("what's bigger in 2024 LA or NYC", {
-    configurable: { model: "claude-sonnet-4-5-20250929" },
+    configurable: { model: "claude-sonnet-5-5" },
   })
 ).tool_calls;
 console.log("toolCalls2: ", JSON.stringify(toolCalls2, null, 2));

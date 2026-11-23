@@ -64,7 +64,7 @@ export interface MCPToolsetOptions {
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const model = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * // Basic usage - enable all tools from an MCP server

@@ -793,7 +793,7 @@ export interface ContextEditingMiddlewareConfig {
  * import { createAgent } from "langchain";
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-sonnet-4-5",
+ *   model: "anthropic:claude-sonnet-5-5",
  *   tools: [searchTool, calculatorTool],
  *   middleware: [
  *     contextEditingMiddleware(),
@@ -817,7 +817,7 @@ export interface ContextEditingMiddlewareConfig {
  *
  * // Single condition: trigger if tokens >= 50000 AND messages >= 20
  * const agent1 = createAgent({
- *   model: "anthropic:claude-sonnet-4-5",
+ *   model: "anthropic:claude-sonnet-5-5",
  *   tools: [searchTool, calculatorTool],
  *   middleware: [
  *     contextEditingMiddleware({
@@ -836,7 +836,7 @@ export interface ContextEditingMiddlewareConfig {
  *
  * // Multiple conditions: trigger if (tokens >= 50000 AND messages >= 20) OR (tokens >= 30000 AND messages >= 50)
  * const agent2 = createAgent({
- *   model: "anthropic:claude-sonnet-4-5",
+ *   model: "anthropic:claude-sonnet-5-5",
  *   tools: [searchTool, calculatorTool],
  *   middleware: [
  *     contextEditingMiddleware({

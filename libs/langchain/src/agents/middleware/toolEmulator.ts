@@ -24,7 +24,7 @@ export interface ToolEmulatorOptions {
 
   /**
    * Model to use for emulation.
-   * - Can be a model identifier string (e.g., "anthropic:claude-sonnet-4-5-20250929")
+   * - Can be a model identifier string (e.g., "anthropic:claude-sonnet-5-5")
    * - Can be a BaseChatModel instance
    * - Defaults to agent model
    */
@@ -40,7 +40,7 @@ export interface ToolEmulatorOptions {
  *
  * @param options - Configuration options for the middleware
  * @param options.tools - List of tool names or tool instances to emulate. If undefined, all tools are emulated.
- * @param options.model - Model to use for emulation. Defaults to "anthropic:claude-sonnet-4-5-20250929".
+ * @param options.model - Model to use for emulation. Defaults to the agent model.
  *
  * @example Emulate all tools (default behavior)
  * ```ts
@@ -67,7 +67,7 @@ export interface ToolEmulatorOptions {
  * ```ts
  * const middleware = toolEmulatorMiddleware({
  *   tools: ["get_weather"],
- *   model: "anthropic:claude-sonnet-4-5-20250929"
+ *   model: "anthropic:claude-sonnet-5-5"
  * });
  * ```
  *
