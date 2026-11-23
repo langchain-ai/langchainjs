@@ -288,6 +288,9 @@ export class PineconeStore extends VectorStore {
     documents: Document[],
     options?: { ids?: string[]; namespace?: string } | string[]
   ) {
+    if (vectors.length === 0) {
+      return [];
+    }
     const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
