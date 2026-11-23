@@ -45,7 +45,7 @@ This is a **monorepo** managed with [pnpm workspaces](https://pnpm.io/) (v10.14.
 | --------------------------- | -------------------------------- | ------------------------------------ |
 | `@langchain/build`          | `internal/build/`                | Build utilities                      |
 | `@langchain/tsconfig`       | `internal/tsconfig/`             | Shared TypeScript configuration      |
-| `@langchain/standard-tests` | `libs/langchain-standard-tests/` | Standard test suite for integrations |
+| `@langchain/standard-tests` | `internal/standard-tests/`       | Standard test suite for integrations |
 
 ## Development Setup
 
