@@ -1,3 +1,4 @@
+import type { Ai } from "@cloudflare/workers-types";
 import { describe, it, expectTypeOf } from "vitest";
 import { ChatCloudflareWorkersAI } from "../chat_models.js";
 
@@ -29,4 +30,15 @@ describe("ChatCloudflareWorkersAI constructor overloads", () => {
     // @ts-expect-error model shorthand must be a string
     new ChatCloudflareWorkersAI(123);
   });
+});
+
+// A Workers AI binding is accepted by both constructor forms.
+it("accepts a Workers AI binding in both constructor forms", () => {
+  const binding = {} as Ai;
+  expectTypeOf(
+    new ChatCloudflareWorkersAI({ binding })
+  ).toEqualTypeOf<ChatCloudflareWorkersAI>();
+  expectTypeOf(
+    new ChatCloudflareWorkersAI("@cf/meta/llama-3.1-8b-instruct", { binding })
+  ).toEqualTypeOf<ChatCloudflareWorkersAI>();
 });

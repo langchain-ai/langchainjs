@@ -1,3 +1,7 @@
+import type {
+  Ai,
+  AbortSignal as WorkersAbortSignal,
+} from "@cloudflare/workers-types";
 import {
   LangSmithParams,
   SimpleChatModel,
@@ -23,6 +27,12 @@ import { convertEventStreamToIterableReadableDataStream } from "./utils/event_so
  * the BaseLanguageModelCallOptions interface.
  */
 export interface ChatCloudflareWorkersAICallOptions extends BaseLanguageModelCallOptions {}
+
+/** Configuration for a Cloudflare Workers AI chat model. */
+export interface ChatCloudflareWorkersAIInput extends CloudflareWorkersAIInput {
+  /** Workers AI binding. When provided, REST credentials are not required. */
+  binding?: Ai;
+}
 
 /**
  * A class that enables calls to the Cloudflare Workers AI API to access large language
@@ -64,14 +74,21 @@ export class ChatCloudflareWorkersAI
 
   streaming = false;
 
+  binding?: Ai;
+
   constructor(
     model: string,
-    params?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+    params?: Omit<ChatCloudflareWorkersAIInput & BaseChatModelParams, "model">
   );
-  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams);
+  constructor(fields?: ChatCloudflareWorkersAIInput & BaseChatModelParams);
   constructor(
-    modelOrFields?: string | (CloudflareWorkersAIInput & BaseChatModelParams),
-    paramsArg?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+    modelOrFields?:
+      | string
+      | (ChatCloudflareWorkersAIInput & BaseChatModelParams),
+    paramsArg?: Omit<
+      ChatCloudflareWorkersAIInput & BaseChatModelParams,
+      "model"
+    >
   ) {
     const fields =
       typeof modelOrFields === "string"
@@ -80,6 +97,9 @@ export class ChatCloudflareWorkersAI
     super(fields);
     this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
+    this.binding = fields.binding;
+    // A runtime binding cannot be reconstructed from serialized configuration.
+    if (this.binding) this.lc_serializable = false;
     this.model = fields.model ?? this.model;
     this.streaming = fields.streaming ?? this.streaming;
     this.cloudflareAccountId =
@@ -137,6 +157,7 @@ export class ChatCloudflareWorkersAI
    * Method to validate the environment.
    */
   validateEnvironment() {
+    if (this.binding) return;
     if (!this.cloudflareAccountId) {
       throw new Error(
         `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`
@@ -144,7 +165,7 @@ export class ChatCloudflareWorkersAI
     }
     if (!this.cloudflareApiToken) {
       throw new Error(
-        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`
+        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_TOKEN" in your environment variables.`
       );
     }
   }
@@ -154,30 +175,34 @@ export class ChatCloudflareWorkersAI
     options: this["ParsedCallOptions"],
     stream?: boolean
   ) {
+    options.signal?.throwIfAborted();
     this.validateEnvironment();
-    const url = `${this.baseUrl}/${this.model}`;
-    const headers = {
-      Authorization: `Bearer ${this.cloudflareApiToken}`,
-      "Content-Type": "application/json",
-    };
-
-    const formattedMessages = this._formatMessages(messages);
-
-    const data = { messages: formattedMessages, stream };
-    return this.caller.call(async () => {
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(data),
-        signal: options.signal,
-      });
+    const data = { messages: this._formatMessages(messages), stream };
+    return this.caller.callWithOptions({ signal: options.signal }, async () => {
+      options.signal?.throwIfAborted();
+      // Workers and DOM Response/AbortSignal types differ, but expose the same
+      // runtime interfaces used by this transport.
+      const response = this.binding
+        ? ((await this.binding.run(this.model, data, {
+            returnRawResponse: true,
+            signal: options.signal as unknown as WorkersAbortSignal | undefined,
+          })) as unknown as Response)
+        : await fetch(`${this.baseUrl}/${this.model}`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.cloudflareApiToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+            signal: options.signal,
+          });
       if (!response.ok) {
-        const error = new Error(
-          `Cloudflare LLM call failed with status code ${response.status}`
+        throw Object.assign(
+          new Error(
+            `Cloudflare LLM call failed with status code ${response.status}`
+          ),
+          { response }
         );
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).response = response;
-        throw error;
       }
       return response;
     });
@@ -284,7 +309,9 @@ export class ChatCloudflareWorkersAI
 
       const responseData = await response.json();
 
-      return responseData.result.response;
+      return this.binding
+        ? responseData.response
+        : responseData.result.response;
     } else {
       const stream = this._streamResponseChunks(messages, options, runManager);
       let finalResult: ChatGenerationChunk | undefined;

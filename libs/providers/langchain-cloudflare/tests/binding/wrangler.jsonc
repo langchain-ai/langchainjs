@@ -1,0 +1,8 @@
+{
+  "name": "langchain-cloudflare-binding-test",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "ai": { "binding": "AI", "remote": true },
+  "define": { "__PKG_VERSION__": "\"binding-integration-test\"" },
+}
