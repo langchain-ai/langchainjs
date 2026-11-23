@@ -9,6 +9,115 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { _convertMessagesToAnthropicPayload } from "../message_inputs.js";
 import { convertPromptToAnthropic } from "../prompts.js";
 
+describe.each(["human", "tool"] as const)(
+  "data content blocks on %s messages",
+  (messageType) => {
+    const cacheControl = { type: "ephemeral" as const };
+
+    function expectAttachmentOnce(
+      attachment: Record<string, unknown> & { type: string },
+      converted: Record<string, unknown>
+    ) {
+      const before = { type: "text", text: "Before attachment" };
+      const after = { type: "text", text: "After attachment" };
+      const content = [before, attachment, after];
+      const messages =
+        messageType === "human"
+          ? [new HumanMessage({ content })]
+          : [
+              new HumanMessage("Read the attachment"),
+              new AIMessage({
+                content: "",
+                tool_calls: [
+                  { id: "read_1", name: "read_attachment", args: {} },
+                ],
+              }),
+              new ToolMessage({ tool_call_id: "read_1", content }),
+            ];
+      const payload = _convertMessagesToAnthropicPayload(messages);
+      const expected = [before, converted, after];
+      expect(payload.messages.at(-1)).toEqual({
+        role: "user",
+        content:
+          messageType === "human"
+            ? expected
+            : [
+                {
+                  type: "tool_result",
+                  tool_use_id: "read_1",
+                  content: expected,
+                },
+              ],
+      });
+    }
+
+    test.each([
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/gif",
+      "application/pdf",
+    ])("converts a base64 %s attachment exactly once", (mimeType) => {
+      const data = Buffer.from(`Synthetic ${mimeType} content`).toString(
+        "base64"
+      );
+      expectAttachmentOnce(
+        {
+          type: mimeType.startsWith("image/") ? "image" : "file",
+          source_type: "base64",
+          mime_type: mimeType,
+          data,
+          metadata: { cache_control: cacheControl },
+        },
+        {
+          type: mimeType.startsWith("image/") ? "image" : "document",
+          source: { type: "base64", media_type: mimeType, data },
+          cache_control: cacheControl,
+        }
+      );
+    });
+
+    test.each(["image", "file"] as const)(
+      "converts a URL %s attachment exactly once",
+      (type) => {
+        const url = `https://example.com/attachment.${type === "image" ? "png" : "pdf"}`;
+        expectAttachmentOnce(
+          {
+            type,
+            source_type: "url",
+            mime_type: type === "image" ? "image/png" : "application/pdf",
+            url,
+            metadata: { cache_control: cacheControl },
+          },
+          {
+            type: type === "image" ? "image" : "document",
+            source: { type: "url", url },
+            cache_control: cacheControl,
+          }
+        );
+      }
+    );
+
+    test("converts a plain-text file attachment exactly once", () => {
+      const text = "Synthetic document content";
+      expectAttachmentOnce(
+        {
+          type: "file",
+          source_type: "text",
+          mime_type: "text/plain",
+          text,
+          metadata: { cache_control: cacheControl },
+        },
+        {
+          type: "document",
+          source: { type: "text", media_type: "text/plain", data: text },
+          cache_control: cacheControl,
+        }
+      );
+    });
+  }
+);
+
 describe("system messages", () => {
   test("hoists a single leading system message as a plain string", () => {
     const payload = _convertMessagesToAnthropicPayload([
