@@ -467,6 +467,9 @@ export interface AgentMiddleware<
    * Stream transformer factories registered by the middleware.
    * These are merged with `createAgent({ streamTransformers })` when the agent
    * is compiled.
+   *
+   * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+   * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
    */
   streamTransformers?: TStreamTransformers;
 

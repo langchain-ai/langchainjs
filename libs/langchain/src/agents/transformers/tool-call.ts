@@ -107,6 +107,9 @@ function normalizeToolOutput(output: unknown): unknown {
  *
  * Marked `__native: true` — projection keys land directly on the
  * `GraphRunStream` instance as `run.toolCalls`.
+ *
+ * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+ * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
  */
 export function createToolCallTransformer(
   path: Namespace

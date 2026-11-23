@@ -334,6 +334,9 @@ export abstract class BaseChatModel<
    * @param options - Parsed call options.
    * @param runManager - Optional callback manager for the run.
    * @returns An async generator of {@link ChatModelStreamEvent}.
+   *
+   * @deprecated Only content-block streaming calls this, and it is
+   * deprecated. Implement `_streamResponseChunks` for streaming.
    */
   async *_streamChatModelEvents(
     messages: BaseMessage[],
@@ -345,20 +348,12 @@ export abstract class BaseChatModel<
     yield* convertChunksToEvents(chunks, { signal: options.signal });
   }
 
-  /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
-   */
   streamEvents(
     input: BaseLanguageModelInput,
     options: Partial<CallOptions> & { version: "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
-  /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
-   */
   streamEvents(
     input: BaseLanguageModelInput,
     options: Partial<CallOptions> & {
@@ -369,8 +364,7 @@ export abstract class BaseChatModel<
   ): IterableReadableStream<Uint8Array>;
 
   /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
+   * @deprecated Use version "v2" or `.stream()` instead.
    */
   streamEvents(
     input: BaseLanguageModelInput,
@@ -379,8 +373,7 @@ export abstract class BaseChatModel<
   ): IterableReadableStream<StreamEvent>;
 
   /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
+   * @deprecated Use version "v2" or `.stream()` instead.
    */
   streamEvents(
     input: BaseLanguageModelInput,
@@ -391,20 +384,12 @@ export abstract class BaseChatModel<
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<Uint8Array>;
 
-  /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
-   */
   streamEvents(
     input: BaseLanguageModelInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
-  /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
-   */
   streamEvents(
     input: BaseLanguageModelInput,
     options: Partial<CallOptions> & {
@@ -427,8 +412,9 @@ export abstract class BaseChatModel<
    *
    * When `options.version` is `"v1"` or `"v2"`, this delegates to
    * {@link Runnable.streamEvents} for callback-based tracing events instead.
-   * That path is deprecated on chat models; prefer calling `streamEvents()`
-   * without a `version` option.
+   *
+   * @deprecated Use `.stream()` or `streamEvents(input, { version: "v2" })`
+   * instead.
    *
    * @example
    * ```ts
@@ -493,7 +479,7 @@ export abstract class BaseChatModel<
   }
 
   /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} instead. This method will be removed in the next major version.
+   * @deprecated Use `.stream()` or `streamEvents(input, { version: "v2" })` instead. This method will be removed in the next major version.
    */
   streamV2(
     input: BaseLanguageModelInput,
