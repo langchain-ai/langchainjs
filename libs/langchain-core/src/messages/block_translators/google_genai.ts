@@ -45,9 +45,18 @@ function convertToV1FromChatGoogleMessage(
         _isString(block.functionCall.name) &&
         _isObject(block.functionCall.args)
       ) {
+        // Gemini's native functionCall blocks carry their own id field.
+        // Prefer it over the AIMessage-level id so `contentBlocks[i].id`
+        // matches the same id reported by `tool_calls[i].id` and by the
+        // agent loop when matching responses. Falls back to message.id
+        // for backwards compatibility with blocks that don't include id.
+        const functionCallId =
+          typeof block.functionCall.id === "string"
+            ? block.functionCall.id
+            : message.id;
         yield {
           type: "tool_call",
-          id: message.id,
+          id: functionCallId,
           name: block.functionCall.name,
           args: block.functionCall.args,
         };
