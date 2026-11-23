@@ -76,7 +76,13 @@ export class _RootEventFilter {
 }
 
 export const toBase64Url = (str: string): string => {
-  // Use btoa for compatibility, assume ASCII
-  const encoded = btoa(str);
+  // btoa only accepts Latin-1 code units, so encode the string as UTF-8 bytes
+  // first. Node and edge labels are user-provided and may contain any Unicode.
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  const encoded = btoa(binary);
   return encoded.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 };
