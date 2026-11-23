@@ -248,3 +248,23 @@ describe("tool search support", () => {
     expect(tools[1]).toHaveProperty("name", "get_weather");
   });
 });
+
+describe("service_tier invocation param", () => {
+  it("uses the per-call service_tier over the instance value", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "auto",
+    });
+    const params = model.invocationParams({ service_tier: "flex" });
+    expect(params.service_tier).toBe("flex");
+  });
+
+  it("falls back to the instance value when the call option is absent", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "auto",
+    });
+    const params = model.invocationParams({});
+    expect(params.service_tier).toBe("auto");
+  });
+});
