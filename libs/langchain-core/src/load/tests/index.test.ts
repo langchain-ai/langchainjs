@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { load } from "../index.js";
 import { HumanMessage, AIMessage } from "../../messages/index.js";
+import { ChatPromptTemplate } from "../../prompts/chat.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
+import { NumberedListOutputParser } from "../../output_parsers/list.js";
+import { Document } from "../../documents/document.js";
+import { ChatPromptValue } from "../../prompt_values.js";
 
 const SENTINEL_ENV_VAR = "TEST_SECRET_INJECTION_VAR";
 /** Sentinel value that should NEVER appear in serialized output. */
@@ -681,6 +686,130 @@ describe("`load()`", () => {
       expect(deserialized.additional_kwargs.second).not.toBeInstanceOf(
         AIMessage
       );
+    });
+  });
+
+  describe("legacy `langchain` ids", () => {
+    // What Python's langchain_core writes for a message today.
+    const pythonMessage = {
+      lc: 1,
+      type: "constructor",
+      id: ["langchain", "schema", "messages", "HumanMessage"],
+      kwargs: { content: "from python", type: "human" },
+    };
+
+    it("loads a Python-written message without an import map", async () => {
+      const loaded = await load<HumanMessage>(JSON.stringify(pythonMessage));
+      expect(loaded).toBeInstanceOf(HumanMessage);
+      expect(loaded.content).toBe("from python");
+    });
+
+    it("loads a legacy prompt id", async () => {
+      const loaded = await load<ChatPromptTemplate>(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "prompts", "chat", "ChatPromptTemplate"],
+          kwargs: {
+            input_variables: ["name"],
+            messages: [
+              {
+                lc: 1,
+                type: "constructor",
+                id: [
+                  "langchain",
+                  "prompts",
+                  "chat",
+                  "HumanMessagePromptTemplate",
+                ],
+                kwargs: {
+                  prompt: {
+                    lc: 1,
+                    type: "constructor",
+                    id: ["langchain", "prompts", "prompt", "PromptTemplate"],
+                    kwargs: {
+                      input_variables: ["name"],
+                      template: "hi {name}",
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        })
+      );
+      expect(loaded).toBeInstanceOf(ChatPromptTemplate);
+      const value = await loaded.invoke({ name: "ada" });
+      expect(value.toChatMessages()[0].content).toBe("hi ada");
+    });
+
+    it("loads a Python StrOutputParser as StringOutputParser", async () => {
+      const loaded = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "schema", "output_parser", "StrOutputParser"],
+          kwargs: {},
+        })
+      );
+      expect(loaded).toBeInstanceOf(StringOutputParser);
+    });
+
+    it("prefers the caller's import map", async () => {
+      class Custom extends HumanMessage {}
+      const loaded = await load(JSON.stringify(pythonMessage), {
+        importMap: { schema: { HumanMessage: Custom } },
+      });
+      expect(loaded).toBeInstanceOf(Custom);
+    });
+
+    it("loads a Python chat prompt value next to the chat prompt templates", async () => {
+      // Python writes both under langchain/prompts/chat; they live in two modules here.
+      const value = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "prompts", "chat", "ChatPromptValue"],
+          kwargs: { messages: [pythonMessage] },
+        })
+      );
+      expect(value).toBeInstanceOf(ChatPromptValue);
+      expect((value as ChatPromptValue).toChatMessages()[0].content).toBe(
+        "from python"
+      );
+    });
+
+    it("falls back per class when the caller's module lacks it", async () => {
+      const loaded = await load(
+        JSON.stringify({
+          lc: 1,
+          type: "constructor",
+          id: ["langchain", "schema", "document", "Document"],
+          kwargs: { page_content: "x" },
+        }),
+        { importMap: { schema: { HumanMessage } } }
+      );
+      expect(loaded).toBeInstanceOf(Document);
+    });
+
+    it("still rejects an unknown legacy id", async () => {
+      await expect(
+        load(
+          JSON.stringify({
+            lc: 1,
+            type: "constructor",
+            id: ["langchain", "schema", "messages", "NoSuchMessage"],
+            kwargs: {},
+          })
+        )
+      ).rejects.toThrow(/Invalid identifer/);
+    });
+
+    it("does not shadow current ids", async () => {
+      // Serialized under langchain_core/output_parsers/list, a namespace a
+      // legacy alias also names.
+      const loaded = await load(JSON.stringify(new NumberedListOutputParser()));
+      expect(loaded).toBeInstanceOf(NumberedListOutputParser);
     });
   });
 });
