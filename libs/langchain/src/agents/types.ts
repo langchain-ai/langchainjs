@@ -925,6 +925,9 @@ export type CreateAgentParams<
    *   console.log("cost delta:", c);
    * }
    * ```
+   *
+   * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+   * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
    */
   streamTransformers?: ReadonlyArray<() => StreamTransformer<any>>;
 };

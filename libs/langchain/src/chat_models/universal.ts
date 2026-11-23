@@ -636,20 +636,12 @@ export class ConfigurableModel<
     });
   }
 
-  /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
-   */
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
-  /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
-   */
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
@@ -660,8 +652,7 @@ export class ConfigurableModel<
   ): IterableReadableStream<Uint8Array>;
 
   /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
+   * @deprecated Use version "v2" or `.stream()` instead.
    */
   streamEvents(
     input: RunInput,
@@ -670,8 +661,7 @@ export class ConfigurableModel<
   ): IterableReadableStream<StreamEvent>;
 
   /**
-   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
-   * option for content-block streaming instead.
+   * @deprecated Use version "v2" or `.stream()` instead.
    */
   streamEvents(
     input: RunInput,
@@ -682,6 +672,10 @@ export class ConfigurableModel<
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<Uint8Array>;
 
+  /**
+   * @deprecated Use `.stream()` or `streamEvents(input, { version: "v2" })`
+   * instead.
+   */
   streamEvents(
     input: RunInput,
     options?: Partial<CallOptions>
