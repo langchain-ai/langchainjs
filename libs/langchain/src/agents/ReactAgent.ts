@@ -609,6 +609,7 @@ export class ReactAgent<
       if (node.allowed && node.allowed.length > 0) {
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
+          .map((dest) => (dest === AGENT_NODE_NAME ? loopEntryNode : dest))
           .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
         const destinations = Array.from(
           new Set([nextDefault, ...allowedMapped])
@@ -620,7 +621,8 @@ export class ReactAgent<
             clientTools,
             node.allowed,
             nextDefault,
-            hasToolsAvailable
+            hasToolsAvailable,
+            loopEntryNode
           ),
           destinations
         );
@@ -637,10 +639,11 @@ export class ReactAgent<
       if (firstAfterAgent.allowed && firstAfterAgent.allowed.length > 0) {
         const allowedMapped = firstAfterAgent.allowed
           .map((t) => parseJumpToTarget(t))
+          .map((dest) => (dest === AGENT_NODE_NAME ? loopEntryNode : dest))
           .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
 
         /**
-         * For after_agent, only use explicitly allowed destinations (don't add loopEntryNode)
+         * Only include loopEntryNode when a model jump is explicitly allowed.
          * The default destination (when no jump occurs) should be END
          */
         const destinations = Array.from(
@@ -653,7 +656,8 @@ export class ReactAgent<
             clientTools,
             firstAfterAgent.allowed,
             END as string,
-            hasToolsAvailable
+            hasToolsAvailable,
+            loopEntryNode
           ),
           destinations
         );
@@ -1035,18 +1039,20 @@ export class ReactAgent<
   }
 
   /**
-   * Router for afterModel sequence nodes (connecting later middlewares to earlier ones),
+   * Router for afterModel/afterAgent sequence nodes (connecting later middlewares to earlier ones),
    * honoring allowed jump targets and defaulting to the next node.
    * @param toolClasses - Available tool classes for validation
    * @param allowed - List of allowed jump targets
    * @param nextDefault - Default node to route to
    * @param hasToolsAvailable - Whether tools are available (includes dynamic tools via middleware)
+   * @param modelTarget - Model jump target, including beforeModel hooks for afterAgent continuations
    */
   #createAfterModelSequenceRouter(
     toolClasses: (ClientTool | ServerTool)[],
     allowed: string[],
     nextDefault: string,
-    hasToolsAvailable: boolean = toolClasses.length > 0
+    hasToolsAvailable: boolean = toolClasses.length > 0,
+    modelTarget: string = AGENT_NODE_NAME
   ) {
     const allowedSet = new Set(allowed.map((t) => parseJumpToTarget(t)));
     return (state: Record<string, unknown>) => {
@@ -1061,7 +1067,7 @@ export class ReactAgent<
           return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
         }
         if (dest === AGENT_NODE_NAME && allowedSet.has(AGENT_NODE_NAME)) {
-          return new Send(AGENT_NODE_NAME, { ...state, jumpTo: undefined });
+          return new Send(modelTarget, { ...state, jumpTo: undefined });
         }
       }
       return nextDefault;
