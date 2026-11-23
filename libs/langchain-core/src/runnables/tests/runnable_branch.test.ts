@@ -126,3 +126,58 @@ test("RunnableBranch invoke", async () => {
   expect(chunks2.length).toBeGreaterThan(1);
   expect(chunks2.join("")).toContain("GENERAL");
 });
+
+// A matched branch that returns a falsy value has still answered. Keying the default
+// branch on the *output* rather than on "no condition matched" discarded that answer
+// and silently ran the default instead (#11583).
+test.each([
+  ["zero", 0],
+  ["empty string", ""],
+  ["false", false],
+  ["null", null],
+  ["NaN", NaN],
+  ["undefined", undefined],
+])(
+  "RunnableBranch invoke returns a falsy branch output (%s)",
+  async (_name, falsy) => {
+    let defaultRuns = 0;
+    const branch = RunnableBranch.from([
+      [(x: number) => x > 0, () => falsy],
+      () => {
+        defaultRuns += 1;
+        return -1;
+      },
+    ]);
+
+    expect(await branch.invoke(5)).toEqual(falsy);
+    // Not just the wrong value: the default branch was actually executed.
+    expect(defaultRuns).toBe(0);
+
+    // The default still runs when no condition matches.
+    expect(await branch.invoke(-5)).toBe(-1);
+    expect(defaultRuns).toBe(1);
+  }
+);
+
+test("RunnableBranch batch keeps falsy branch outputs", async () => {
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 0 && x < 5, () => 0],
+    [(x: number) => x > 5, () => NaN],
+    () => -1,
+  ]);
+  expect(await branch.batch([1, 10, -1])).toEqual([0, NaN, -1]);
+});
+
+test("RunnableBranch stream already kept falsy branch outputs", async () => {
+  // The streaming path keys its default on `stream === undefined`, so it never had
+  // the bug; pinned here so the two paths cannot drift apart again.
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 0, () => 0],
+    () => -1,
+  ]);
+  const chunks = [];
+  for await (const chunk of await branch.stream(5)) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual([0]);
+});
