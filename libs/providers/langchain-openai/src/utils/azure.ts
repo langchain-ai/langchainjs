@@ -175,13 +175,20 @@ export function getHeadersWithUserAgent(
   isAzure = false,
   version = "1.0.0"
 ): Record<string, string> {
-  const normalizedHeaders = normalizeHeaders(headers);
+  // `normalizeHeaders` lowercases every header name (it builds a `Headers`
+  // instance, which lowercases on construction), so a caller-supplied user
+  // agent is keyed as `user-agent`. Destructure it out of the spread so the
+  // result never carries both `user-agent` and `User-Agent`, which would
+  // otherwise reach the transport as two comma-joined values.
+  const { "user-agent": callerUserAgent, ...normalizedHeaders } =
+    normalizeHeaders(headers);
   const env = getFormattedEnv();
   const library = `langchainjs${isAzure ? "-azure" : ""}-openai`;
+  const libraryUserAgent = `${library}/${version} (${env})`;
   return {
     ...normalizedHeaders,
-    "User-Agent": normalizedHeaders["User-Agent"]
-      ? `${library}/${version} (${env})${normalizedHeaders["User-Agent"]}`
-      : `${library}/${version} (${env})`,
+    "User-Agent": callerUserAgent
+      ? `${libraryUserAgent} ${callerUserAgent}`
+      : libraryUserAgent,
   };
 }
