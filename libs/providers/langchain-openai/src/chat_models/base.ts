@@ -92,6 +92,13 @@ export interface BaseChatOpenAICallOptions
   options?: OpenAICoreRequestOptions;
 
   /**
+   * Whether or not to include token usage data in streamed chunks.
+   * Overrides the value set at initialization time for this call.
+   * @default true
+   */
+  streamUsage?: boolean;
+
+  /**
    * A list of tools that the model may use to generate responses.
    * Each tool can be a function, a built-in tool, or a custom tool definition.
    * If not provided, the model will not use any tools.

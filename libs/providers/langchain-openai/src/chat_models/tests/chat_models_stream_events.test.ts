@@ -730,6 +730,48 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       };
       expect(finish.usage).toBeUndefined();
     });
+
+    test("per-call streamUsage false overrides the instance default", async () => {
+      const model = new MockStreamChatOpenAICompletions(usageChunks());
+      expect(model.streamUsage).toBe(true);
+
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: false,
+      } as BaseChatModelCallOptions)) {
+        events.push(event);
+      }
+
+      // The request must not ask for usage either, or the server sends a chunk
+      // the caller asked not to receive.
+      expect(model.capturedRequest?.stream_options).toBeUndefined();
+      expect(events.filter((e) => e.event === "usage").length).toBe(0);
+      const finish = events.find((e) => e.event === "message-finish") as {
+        usage?: unknown;
+      };
+      expect(finish.usage).toBeUndefined();
+    });
+
+    test("per-call streamUsage true overrides an instance value of false", async () => {
+      const model = new MockStreamChatOpenAICompletions(usageChunks());
+      model.streamUsage = false;
+
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents([], {
+        streamUsage: true,
+      } as BaseChatModelCallOptions)) {
+        events.push(event);
+      }
+
+      expect(model.capturedRequest?.stream_options).toEqual({
+        include_usage: true,
+      });
+      expect(events.filter((e) => e.event === "usage").length).toBe(1);
+      const finish = events.find((e) => e.event === "message-finish") as {
+        usage: { total_tokens: number };
+      };
+      expect(finish.usage.total_tokens).toBe(103);
+    });
   });
 
   describe("provider passthrough", () => {
