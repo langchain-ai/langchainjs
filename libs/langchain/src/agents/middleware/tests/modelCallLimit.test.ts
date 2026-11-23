@@ -225,4 +225,67 @@ describe("ModelCallLimitMiddleware", () => {
       });
     }
   );
+
+  describe("run limit with exitBehavior 'end' — afterAgent resets runModelCallCount", () => {
+    /**
+     * Regression test for a graph topology bug in ReactAgent where
+     * #createBeforeModelRouter routed to bare END instead of exitNode when
+     * jumpTo: 'end' was returned from beforeModel. This bypassed all afterAgent
+     * hooks, leaving runModelCallCount permanently stuck at the limit value in
+     * the LangGraph checkpoint. Every subsequent user turn would hit beforeModel
+     * with count >= limit and immediately terminate with no model call.
+     *
+     * Fix: #createBeforeModelRouter now routes to exitNode (first afterAgent node)
+     * on jumpTo: 'end', matching the behaviour of #createBeforeAgentRouter.
+     * This guarantees afterAgent — and its runModelCallCount reset — always runs.
+     */
+    it("resets runModelCallCount after limit hit so subsequent turns can proceed", async () => {
+      const checkpointer = new MemorySaver();
+      const config = { configurable: { thread_id: "reset-test-123" } };
+
+      // Turn 1: agent makes 2 calls (hits runLimit=2), exitBehavior='end' fires.
+      // Turn 2: without the fix, runModelCallCount=2 is still in checkpoint →
+      //         beforeModel immediately jumps to END with no model call.
+      //         With the fix, afterAgent resets it to 0 → model call succeeds.
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          // Turn 1 — Call 1: tool call
+          toolCallMessage1,
+          // Turn 1 — Call 2: another tool call (hits limit here, run ends via exitBehavior)
+          toolCallMessage2,
+          // Turn 2 — Call 1: final response (only reached if reset worked)
+          responseMessage1,
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools,
+        checkpointer,
+        middleware: [
+          modelCallLimitMiddleware({ runLimit: 2, exitBehavior: "end" }),
+        ],
+      });
+
+      // Turn 1: hits the run limit
+      const turn1 = await agent.invoke(
+        { messages: ["Hello, world!"] },
+        config
+      );
+      expect(turn1.messages.at(-1)?.content).toContain(
+        "Model call limits exceeded"
+      );
+      // runModelCallCount must be 0 after afterAgent fires (not stuck at 2)
+      expect(turn1.runModelCallCount).toBe(0);
+
+      // Turn 2: must succeed — if runModelCallCount was stuck the model would
+      // never be called and the response would be another limit-exceeded message.
+      const turn2 = await agent.invoke(
+        { messages: ["Continue please"] },
+        config
+      );
+      expect(turn2.messages.at(-1)?.content).toBe("baz");
+      expect(turn2.runModelCallCount).toBe(0);
+    });
+  });
 });
