@@ -1,3 +1,6 @@
+import { z } from "zod/v4";
+import type { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { Ai } from "@cloudflare/workers-types";
 import { describe, it, expectTypeOf } from "vitest";
 import { ChatCloudflareWorkersAI } from "../chat_models.js";
 
@@ -29,4 +32,39 @@ describe("ChatCloudflareWorkersAI constructor overloads", () => {
     // @ts-expect-error model shorthand must be a string
     new ChatCloudflareWorkersAI(123);
   });
+});
+
+// A Workers AI binding is accepted by both constructor forms.
+it("accepts a Workers AI binding in both constructor forms", () => {
+  const binding = {} as Ai;
+  expectTypeOf(
+    new ChatCloudflareWorkersAI({ binding })
+  ).toEqualTypeOf<ChatCloudflareWorkersAI>();
+  expectTypeOf(
+    new ChatCloudflareWorkersAI("@cf/meta/llama-3.1-8b-instruct", { binding })
+  ).toEqualTypeOf<ChatCloudflareWorkersAI>();
+});
+
+it("infers structured output and bound tool types", () => {
+  const chat = new ChatCloudflareWorkersAI();
+  const schema = z.object({ answer: z.string() });
+  const result = chat.withStructuredOutput(schema);
+  expectTypeOf(result.invoke).returns.resolves.toEqualTypeOf<{
+    answer: string;
+  }>();
+  const raw = chat.withStructuredOutput(schema, { includeRaw: true });
+  expectTypeOf(raw.invoke).returns.resolves.toEqualTypeOf<{
+    raw: BaseMessage;
+    parsed: { answer: string };
+  }>();
+  const bound = chat.bindTools([
+    {
+      type: "function",
+      function: {
+        name: "lookup",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+  ]);
+  expectTypeOf(bound.invoke).returns.resolves.toEqualTypeOf<AIMessageChunk>();
 });
