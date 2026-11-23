@@ -172,8 +172,7 @@ export class AgentNode<
    */
   async #getResponseFormat(
     model: string | LanguageModelLike,
-    responseFormat: ResponseFormatInput | undefined = this.#options
-      .responseFormat
+    responseFormat: ResponseFormatInput | undefined
   ): Promise<ResponseFormat | undefined> {
     if (!responseFormat) {
       return undefined;
