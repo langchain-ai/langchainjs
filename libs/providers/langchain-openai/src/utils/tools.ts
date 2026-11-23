@@ -232,6 +232,41 @@ export function formatToOpenAIToolChoice(
   }
 }
 
+/**
+ * OpenAI built-in tool types that require the Responses API.
+ * These are specific to OpenAI and not general tool types that other
+ * providers might use.
+ */
+const OPENAI_BUILTIN_TOOL_TYPES = new Set([
+  "code_interpreter",
+  "image_generation",
+  "file_search",
+  "web_search_preview",
+  "computer_use_preview",
+  "mcp",
+]);
+
+/**
+ * Checks if a tool is an OpenAI built-in tool that requires the Responses API.
+ * This is more specific than checking for any non-function tool type,
+ * as other providers may use custom tool types that work with the completions API.
+ */
+export function isOpenAIBuiltInTool(
+  tool: ChatOpenAIToolType
+): tool is ResponsesTool {
+  return (
+    "type" in tool &&
+    typeof tool.type === "string" &&
+    OPENAI_BUILTIN_TOOL_TYPES.has(tool.type)
+  );
+}
+
+/**
+ * @deprecated Use `isOpenAIBuiltInTool` instead. This function is too broad
+ * and catches provider-specific tool types that don't require the Responses API.
+ * Use `isOpenAIBuiltInTool` to check for OpenAI built-in tools that specifically
+ * require the Responses API.
+ */
 export function isBuiltInTool(tool: ChatOpenAIToolType): tool is ResponsesTool {
   return "type" in tool && tool.type !== "function";
 }
