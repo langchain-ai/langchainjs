@@ -42,6 +42,7 @@ import {
   getEndpoint,
   getHeadersWithUserAgent,
 } from "../utils/azure.js";
+import { toolArgumentsTextForTokenCount } from "./tool_arguments_token_count.js";
 import {
   type FunctionDef,
   formatFunctionDefinitions,
@@ -882,25 +883,16 @@ export abstract class BaseChatOpenAI<
           );
         }
         if (openAIMessage.additional_kwargs.function_call?.arguments) {
-          try {
-            count += await this.getNumTokens(
-              // Remove newlines and spaces
-              JSON.stringify(
-                JSON.parse(
-                  openAIMessage.additional_kwargs.function_call?.arguments
-                )
-              )
-            );
-          } catch (error) {
+          const rawArgs = openAIMessage.additional_kwargs.function_call.arguments;
+          const { text, parseFailed } = toolArgumentsTextForTokenCount(rawArgs);
+          if (parseFailed) {
             console.error(
               "Error parsing function arguments",
-              error,
+              "Invalid JSON",
               JSON.stringify(openAIMessage.additional_kwargs.function_call)
             );
-            count += await this.getNumTokens(
-              openAIMessage.additional_kwargs.function_call?.arguments
-            );
           }
+          count += await this.getNumTokens(text);
         }
 
         totalCount += count;
