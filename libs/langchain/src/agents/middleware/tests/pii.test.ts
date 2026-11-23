@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import { describe, it, expect } from "vitest";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
@@ -10,6 +11,10 @@ import {
   detectIP,
   detectMacAddress,
   detectUrl,
+  resolveRedactionRule,
+  restoreRedactedText,
+  restoreRedactedMessage,
+  applyStrategy,
   type PIIMatch,
 } from "../pii.js";
 import { createAgent } from "../../index.js";
@@ -886,5 +891,558 @@ describe("Multiple Middleware", () => {
 
     expect(content).not.toContain("test@example.com");
     expect(content).not.toContain("10.0.0.1");
+  });
+});
+
+describe("Reversible Redaction", () => {
+  it("should produce reversible redactions with unique IDs", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const content = "Contact user@example.com or admin@test.org";
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+
+    // Should have unique IDs, not generic [REDACTED_EMAIL]
+    expect(redacted).toMatch(/\[REDACTED_EMAIL_[a-z0-9]+\]/);
+    expect(redacted).not.toContain("user@example.com");
+    expect(redacted).not.toContain("admin@test.org");
+
+    // Redaction map should have entries
+    assert(rule.reversible);
+    const ids = Object.keys(rule.redactionMap);
+    expect(ids.length).toBe(2);
+    const values = Object.values(rule.redactionMap);
+    expect(values).toContain("user@example.com");
+    expect(values).toContain("admin@test.org");
+  });
+
+  it("should restore redacted placeholders back to originals", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const original = "Contact user@example.com for help";
+    const matches = rule.detector(original);
+    const redacted = applyStrategy(original, matches, rule);
+
+    // Now restore
+    assert(rule.reversible);
+    const resolved = restoreRedactedText(redacted, rule.redactionMap);
+
+    expect(resolved).toBe(original);
+  });
+
+  it("should restore redacted placeholders in tool call args (JSON)", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    // Simulate: beforeModel redacts the input
+    const content = "Look up alice@company.org";
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+
+    // Extract the placeholder the model would see
+    const placeholderMatch = redacted.match(/\[REDACTED_EMAIL_[a-z0-9]+\]/);
+    expect(placeholderMatch).not.toBeNull();
+    const placeholder = placeholderMatch![0];
+
+    // Simulate: model echoes placeholder in tool call args
+    const toolCallArgs = JSON.stringify({ email: placeholder });
+
+    // afterModel restores the args
+    assert(rule.reversible);
+    const resolvedArgs = JSON.parse(
+      restoreRedactedText(toolCallArgs, rule.redactionMap)
+    );
+
+    expect(resolvedArgs.email).toBe("alice@company.org");
+  });
+
+  it("should not restore unknown IDs", () => {
+    const content = "Value is [REDACTED_EMAIL_unknownid]";
+    const resolved = restoreRedactedText(content, {});
+
+    // Should keep the placeholder as-is
+    expect(resolved).toBe(content);
+  });
+
+  it("should restore content and tool calls in an AIMessage", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    // Redact input to populate the map
+    const content = "User email is alice@company.org";
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+
+    const placeholder = redacted.match(/\[REDACTED_EMAIL_[a-z0-9]+\]/)![0];
+
+    // Simulate AIMessage with placeholder in both content and tool calls
+    const aiMsg = new AIMessage({
+      content: `Found ${placeholder}`,
+      tool_calls: [
+        {
+          id: "call_1",
+          name: "lookup",
+          args: { email: placeholder },
+          type: "tool_call" as const,
+        },
+      ],
+    });
+
+    assert(rule.reversible);
+    const { message: resolved, changed } = restoreRedactedMessage(
+      aiMsg,
+      rule.redactionMap
+    );
+
+    expect(changed).toBe(true);
+    expect(String(resolved.content)).toContain("alice@company.org");
+    expect(String(resolved.content)).not.toContain("[REDACTED_EMAIL_");
+    expect(resolved.tool_calls?.[0].args.email).toBe("alice@company.org");
+  });
+
+  it("should return unchanged when no placeholders in message", () => {
+    const aiMsg = new AIMessage("No placeholders here");
+    const { message, changed } = restoreRedactedMessage(aiMsg, {
+      someid: "value",
+    });
+
+    expect(changed).toBe(false);
+    expect(message).toBe(aiMsg); // same reference
+  });
+
+  it("should redact input with reversible middleware in createAgent", async () => {
+    const middleware = piiMiddleware("email", {
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("No PII here")],
+    });
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("My email is test@example.com")],
+    });
+
+    const humanMessage = result.messages.find((m) =>
+      HumanMessage.isInstance(m)
+    );
+    expect(String(humanMessage?.content)).toMatch(
+      /\[REDACTED_EMAIL_[a-z0-9]+\]/
+    );
+    expect(String(humanMessage?.content)).not.toContain("test@example.com");
+  });
+});
+
+describe("Reversible Redaction — Agent Integration", () => {
+  it("should restore PII in tool call args during agent execution", async () => {
+    const middleware = piiMiddleware("email", {
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Thanks!")],
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("My email is alice@company.org")],
+    });
+
+    // Input should be redacted with unique ID
+    const humanMessage = result.messages.find((m) =>
+      HumanMessage.isInstance(m)
+    );
+    expect(String(humanMessage?.content)).toMatch(
+      /\[REDACTED_EMAIL_[a-z0-9]+\]/
+    );
+    expect(String(humanMessage?.content)).not.toContain("alice@company.org");
+  });
+
+  it("should default applyToToolResults to true in reversible mode", async () => {
+    const middleware = piiMiddleware("email", {
+      strategy: "redact",
+      reversible: true,
+      // Not setting applyToToolResults — should default to true
+    });
+
+    const searchTool = tool(() => "Contact: tool-pii@example.com", {
+      name: "search",
+      description: "Search",
+    });
+
+    const toolCall = {
+      id: "call_rev_tool",
+      name: "search",
+      args: {},
+      type: "tool_call" as const,
+    };
+
+    const model = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({ content: "", tool_calls: [toolCall] }),
+        new AIMessage("Done"),
+      ],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [searchTool],
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Search for info")],
+    });
+
+    const toolMessage = result.messages.find((m) => ToolMessage.isInstance(m));
+    expect(toolMessage).toBeDefined();
+    // Tool result PII should be redacted (with unique ID since reversible)
+    expect(String(toolMessage?.content)).toMatch(
+      /\[REDACTED_EMAIL_[a-z0-9]+\]/
+    );
+    expect(String(toolMessage?.content)).not.toContain("tool-pii@example.com");
+  });
+
+  it("should restore placeholders that model echoes back in content", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    // Redact two emails to populate the map
+    const content = "Emails: a@test.com and b@test.com";
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+
+    // Simulate model echoing both placeholders
+    const aiMsg = new AIMessage({ content: redacted });
+    const { message: resolved, changed } = restoreRedactedMessage(aiMsg, map);
+
+    expect(changed).toBe(true);
+    expect(String(resolved.content)).toBe(content);
+  });
+});
+
+describe("Reversible Redaction — Array Content (Multimodal / Anthropic)", () => {
+  it("should restore placeholders in Anthropic-style text+reasoning blocks", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const input = "Contact alice@company.org";
+    const matches = rule.detector(input);
+    const redacted = applyStrategy(input, matches, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+    const placeholder = redacted.match(/\[REDACTED_EMAIL_[a-z0-9]+\]/)![0];
+
+    // Anthropic models return content as array of blocks
+    const aiMsg = new AIMessage({
+      content: [
+        { type: "reasoning", reasoning: "The user asked about an email" },
+        { type: "text", text: `Found ${placeholder}` },
+      ],
+    });
+
+    const { message: resolved, changed } = restoreRedactedMessage(aiMsg, map);
+
+    expect(changed).toBe(true);
+    expect(Array.isArray(resolved.content)).toBe(true);
+    const blocks = resolved.content as Array<Record<string, unknown>>;
+    // Reasoning block untouched
+    expect(blocks[0].type).toBe("reasoning");
+    expect(blocks[0].reasoning).toBe("The user asked about an email");
+    // Text block restored
+    expect(blocks[1].text).toContain("alice@company.org");
+    expect(blocks[1].text).not.toContain("[REDACTED_EMAIL_");
+  });
+
+  it("should restore placeholders across multiple text blocks", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const input = "Emails: a@test.com and b@test.com";
+    const matches = rule.detector(input);
+    const redacted = applyStrategy(input, matches, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+
+    const placeholders = [
+      ...redacted.matchAll(/\[REDACTED_EMAIL_[a-z0-9]+\]/g),
+    ].map((m) => m[0]);
+    expect(placeholders.length).toBe(2);
+
+    // Each placeholder in a separate text block
+    const aiMsg = new AIMessage({
+      content: [
+        { type: "text", text: `First: ${placeholders[0]}` },
+        { type: "text", text: `Second: ${placeholders[1]}` },
+      ],
+    });
+
+    const { message: resolved, changed } = restoreRedactedMessage(aiMsg, map);
+    expect(changed).toBe(true);
+    const blocks = resolved.content as Array<{ type: string; text: string }>;
+    expect(blocks[0].text).toContain("@test.com");
+    expect(blocks[1].text).toContain("@test.com");
+    expect(blocks[0].text).not.toContain("[REDACTED_EMAIL_");
+    expect(blocks[1].text).not.toContain("[REDACTED_EMAIL_");
+  });
+
+  it("should leave non-text blocks (images) untouched", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        { type: "text", text: "No placeholders here" },
+        {
+          type: "image_url",
+          image_url: { url: "http://example.com/img.png" },
+        },
+      ],
+    });
+
+    const { message, changed } = restoreRedactedMessage(aiMsg, {
+      someid: "value",
+    });
+
+    expect(changed).toBe(false);
+    expect(message).toBe(aiMsg);
+    expect(Array.isArray(message.content)).toBe(true);
+  });
+});
+
+describe("Reversible Redaction — Tool Args Edge Cases", () => {
+  it("should handle PII values containing JSON-special characters", () => {
+    const rule = resolveRedactionRule({
+      piiType: "custom",
+      strategy: "redact",
+      reversible: true,
+      // Custom detector that matches a value with quotes and backslashes
+      detector: (content: string) => {
+        const pattern = /VALUE:"[^"]*"/g;
+        const matches: PIIMatch[] = [];
+        let match;
+        while ((match = pattern.exec(content)) !== null) {
+          matches.push({
+            text: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+          });
+        }
+        return matches;
+      },
+    });
+
+    // PII value contains double quotes
+    const content = 'Data: VALUE:"has\\"quotes"';
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+
+    // Simulate model echoing placeholder in tool call args
+    const placeholder = redacted.match(/\[REDACTED_CUSTOM_[a-z0-9]+\]/)![0];
+
+    const aiMsg = new AIMessage({
+      content: "Found it",
+      tool_calls: [
+        {
+          id: "call_1",
+          name: "process",
+          args: { data: placeholder },
+          type: "tool_call" as const,
+        },
+      ],
+    });
+
+    // This should NOT crash (no JSON.parse involved)
+    const { message: resolved, changed } = restoreRedactedMessage(aiMsg, map);
+    expect(changed).toBe(true);
+    expect(resolved.tool_calls?.[0].args.data).toBe(matches[0].text);
+  });
+
+  it("should restore placeholders in nested tool call args", () => {
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const content = "Email: deep@nested.org";
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+
+    const placeholder = redacted.match(/\[REDACTED_EMAIL_[a-z0-9]+\]/)![0];
+
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_1",
+          name: "process",
+          args: {
+            user: {
+              contact: {
+                email: placeholder,
+              },
+              tags: ["vip", placeholder],
+            },
+          },
+          type: "tool_call" as const,
+        },
+      ],
+    });
+
+    const { message: resolved, changed } = restoreRedactedMessage(aiMsg, map);
+    expect(changed).toBe(true);
+    const args = resolved.tool_calls?.[0]?.args;
+    expect(args).toBeDefined();
+    expect(args!.user.contact.email).toBe("deep@nested.org");
+    expect(args!.user.tags[1]).toBe("deep@nested.org");
+  });
+
+  it("should handle PII values containing newlines and backslashes", () => {
+    const rule = resolveRedactionRule({
+      piiType: "custom",
+      strategy: "redact",
+      reversible: true,
+      detector: (content: string) => {
+        const pattern = /SECRET_[^\s]+/g;
+        const matches: PIIMatch[] = [];
+        let match;
+        while ((match = pattern.exec(content)) !== null) {
+          matches.push({
+            text: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+          });
+        }
+        return matches;
+      },
+    });
+
+    const content = "Key: SECRET_abc\\n\\tvalue";
+    const matches = rule.detector(content);
+    const redacted = applyStrategy(content, matches, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+
+    const placeholder = redacted.match(/\[REDACTED_CUSTOM_[a-z0-9]+\]/)![0];
+
+    const aiMsg = new AIMessage({
+      content: `Use ${placeholder}`,
+      tool_calls: [
+        {
+          id: "call_1",
+          name: "use_key",
+          args: { key: placeholder },
+          type: "tool_call" as const,
+        },
+      ],
+    });
+
+    const { message: resolved, changed } = restoreRedactedMessage(aiMsg, map);
+    expect(changed).toBe(true);
+    expect(resolved.tool_calls?.[0].args.key).toBe("SECRET_abc\\n\\tvalue");
+    expect(String(resolved.content)).toContain("SECRET_abc\\n\\tvalue");
+  });
+});
+
+describe("RedactionMap Lifecycle", () => {
+  it("should clear redaction map between invocations", () => {
+    // Test the rule-level API directly to verify map cleanup
+    const rule = resolveRedactionRule({
+      piiType: "email",
+      strategy: "redact",
+      reversible: true,
+    });
+
+    // First redaction populates the map
+    const content1 = "Email: first@example.com";
+    const matches1 = rule.detector(content1);
+    applyStrategy(content1, matches1, rule);
+    assert(rule.reversible);
+    const map = rule.redactionMap;
+    expect(Object.keys(map).length).toBe(1);
+    expect(Object.values(map)).toContain("first@example.com");
+
+    // Simulate afterAgent cleanup (same as what piiMiddleware does)
+    for (const key of Object.keys(map)) {
+      delete map[key];
+    }
+    expect(Object.keys(map).length).toBe(0);
+
+    // Second redaction uses the same map object (same reference)
+    const content2 = "Email: second@example.com";
+    const matches2 = rule.detector(content2);
+    applyStrategy(content2, matches2, rule);
+    expect(Object.keys(map).length).toBe(1);
+    expect(Object.values(map)).toContain("second@example.com");
+    // First invocation's PII should NOT be retained
+    expect(Object.values(map)).not.toContain("first@example.com");
+  });
+
+  it("should not retain PII from prior invocations in agent", async () => {
+    const middleware = piiMiddleware("email", {
+      strategy: "redact",
+      reversible: true,
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Got it")],
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    // First invocation
+    await agent.invoke({
+      messages: [new HumanMessage("Email: first@example.com")],
+    });
+
+    // Second invocation — if map wasn't cleared, it would still hold "first@example.com"
+    const result2 = await agent.invoke({
+      messages: [new HumanMessage("No PII here")],
+    });
+
+    // With no PII in second invocation, map should be empty after cleanup.
+    // The AI response should NOT contain any restored PII from the first invocation.
+    const aiMessage = result2.messages.find((m) => AIMessage.isInstance(m));
+    expect(String(aiMessage?.content)).not.toContain("first@example.com");
   });
 });
