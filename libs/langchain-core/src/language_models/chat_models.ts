@@ -334,9 +334,6 @@ export abstract class BaseChatModel<
    * @param options - Parsed call options.
    * @param runManager - Optional callback manager for the run.
    * @returns An async generator of {@link ChatModelStreamEvent}.
-   *
-   * @deprecated Only content-block streaming calls this, and it is
-   * deprecated. Implement `_streamResponseChunks` for streaming.
    */
   async *_streamChatModelEvents(
     messages: BaseMessage[],
