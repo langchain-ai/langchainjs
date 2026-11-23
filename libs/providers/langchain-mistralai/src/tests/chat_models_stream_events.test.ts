@@ -136,3 +136,54 @@ describe("ChatMistralAI.streamEvents", () => {
     ]);
   });
 });
+
+describe("ChatMistralAI streamUsage call option", () => {
+  function usageChunks() {
+    return [
+      {
+        id: "cmpl-1",
+        model: "mistral-small",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hello" },
+            finishReason: null,
+          },
+        ],
+      },
+      {
+        id: "cmpl-1",
+        model: "mistral-small",
+        choices: [{ index: 0, delta: {}, finishReason: "stop" }],
+        usage: { promptTokens: 4, completionTokens: 2, totalTokens: 6 },
+      },
+    ];
+  }
+
+  async function collectUsage(
+    model: ChatMistralAI,
+    streamUsage: boolean
+  ): Promise<unknown[]> {
+    const usages: unknown[] = [];
+    for await (const chunk of await model.stream("Hello", { streamUsage })) {
+      if (chunk.usage_metadata) usages.push(chunk.usage_metadata);
+    }
+    return usages;
+  }
+
+  test("call option streamUsage: false overrides the instance default", async () => {
+    const model = mockMistral(usageChunks());
+    expect(model.streamUsage).toBe(true);
+
+    expect(await collectUsage(model, false)).toEqual([]);
+  });
+
+  test("call option streamUsage: true overrides an instance streamUsage of false", async () => {
+    const model = mockMistral(usageChunks());
+    model.streamUsage = false;
+
+    expect(await collectUsage(model, true)).toEqual([
+      { input_tokens: 4, output_tokens: 2, total_tokens: 6 },
+    ]);
+  });
+});
