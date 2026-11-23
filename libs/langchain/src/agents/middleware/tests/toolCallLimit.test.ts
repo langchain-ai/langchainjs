@@ -1365,4 +1365,398 @@ describe("toolCallLimitMiddleware", () => {
       expect(calcSuccess.length).toBe(2);
     });
   });
+
+  describe("Proactive Warnings", () => {
+    describe("Initialization", () => {
+      it("should default proactive to false (no wrapModelCall hook)", () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 10,
+        });
+        expect(middleware.wrapModelCall).toBeUndefined();
+      });
+
+      it("should set wrapModelCall hook when proactive is true", () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 10,
+          proactive: true,
+        });
+        expect(middleware.wrapModelCall).toBeDefined();
+        expect(typeof middleware.wrapModelCall).toBe("function");
+      });
+
+      it("should throw error for negative warningThreshold", () => {
+        expect(() =>
+          toolCallLimitMiddleware({
+            threadLimit: 10,
+            warningThreshold: -1,
+          })
+        ).toThrow("warningThreshold must be >= 0");
+      });
+    });
+
+    describe("Unit Tests (direct wrapModelCall invocation)", () => {
+      it("should inject warning when remaining <= threshold", async () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 10,
+          proactive: true,
+          warningThreshold: 5,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 6 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 10 - 6 = 4, which is <= 5, so warning should be injected
+        expect(capturedMessages.length).toBe(2);
+        expect(HumanMessage.isInstance(capturedMessages[1])).toBe(true);
+        expect(capturedMessages[1].content).toContain("4 tool call(s) remaining");
+        expect(capturedMessages[1].content).toContain("Plan your tool usage carefully");
+      });
+
+      it("should not inject warning when remaining > threshold", async () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 10,
+          proactive: true,
+          warningThreshold: 3,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 2 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 10 - 2 = 8, which is > 3, so no warning
+        expect(capturedMessages.length).toBe(1);
+        expect(capturedMessages[0]).toBe(messages[0]);
+      });
+
+      it("should inject warning at exact threshold boundary", async () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 10,
+          proactive: true,
+          warningThreshold: 5,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 5 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 10 - 5 = 5, which is <= 5 (exactly at threshold)
+        expect(capturedMessages.length).toBe(2);
+        expect(capturedMessages[1].content).toContain("5 tool call(s) remaining");
+      });
+
+      it("should inject exhausted message when remaining <= 0", async () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 5,
+          proactive: true,
+          warningThreshold: 3,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 5 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 5 - 5 = 0
+        expect(capturedMessages.length).toBe(2);
+        expect(capturedMessages[1].content).toContain("exhausted your tool call budget");
+        expect(capturedMessages[1].content).toContain("Do NOT call any more tools");
+      });
+
+      it("should use minimum of thread/run remaining", async () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 10,
+          runLimit: 5,
+          proactive: true,
+          warningThreshold: 3,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 2 },
+              runToolCallCount: { __all__: 3 },
+            },
+          } as any,
+          handler as any
+        );
+
+        // thread remaining = 10 - 2 = 8, run remaining = 5 - 3 = 2, min = 2
+        expect(capturedMessages.length).toBe(2);
+        expect(capturedMessages[1].content).toContain("2 tool call(s) remaining");
+      });
+
+      it("should include tool name in tool-specific warnings", async () => {
+        const middleware = toolCallLimitMiddleware({
+          toolName: "search",
+          threadLimit: 5,
+          proactive: true,
+          warningThreshold: 3,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { search: 3 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 5 - 3 = 2, which is <= 3
+        expect(capturedMessages.length).toBe(2);
+        expect(capturedMessages[1].content).toContain("for 'search'");
+        expect(capturedMessages[1].content).toContain("2 tool call(s) remaining");
+      });
+
+      it("should only warn at exhaustion when warningThreshold is 0", async () => {
+        const middleware = toolCallLimitMiddleware({
+          threadLimit: 5,
+          proactive: true,
+          warningThreshold: 0,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+
+        // Test with remaining = 1 (should NOT warn since threshold is 0)
+        let capturedMessages: BaseMessage[] = [];
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 4 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 5 - 4 = 1, which is > 0 threshold
+        expect(capturedMessages.length).toBe(1);
+
+        // Test with remaining = 0 (SHOULD warn)
+        capturedMessages = [];
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { __all__: 5 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        // remaining = 5 - 5 = 0, which is <= 0 threshold
+        expect(capturedMessages.length).toBe(2);
+        expect(capturedMessages[1].content).toContain("exhausted");
+      });
+
+      it("should call custom warningBuilder with correct args", async () => {
+        const customBuilder = vi.fn(
+          (remaining: number, toolName: string | undefined) =>
+            `Custom: ${remaining} left for ${toolName ?? "all"}`
+        );
+
+        const middleware = toolCallLimitMiddleware({
+          toolName: "search",
+          threadLimit: 5,
+          proactive: true,
+          warningThreshold: 3,
+          warningBuilder: customBuilder,
+        });
+
+        const messages: BaseMessage[] = [new HumanMessage("Hello")];
+        let capturedMessages: BaseMessage[] = [];
+
+        const handler = async (request: any) => {
+          capturedMessages = request.messages;
+          return new AIMessage("response");
+        };
+
+        await middleware.wrapModelCall!(
+          {
+            messages,
+            state: {
+              messages,
+              threadToolCallCount: { search: 4 },
+              runToolCallCount: {},
+            },
+          } as any,
+          handler as any
+        );
+
+        expect(customBuilder).toHaveBeenCalledWith(1, "search");
+        expect(capturedMessages.length).toBe(2);
+        expect(capturedMessages[1].content).toBe("Custom: 1 left for search");
+      });
+    });
+
+    describe("Integration (via createAgent)", () => {
+      it("should inject warning that reaches model but does NOT persist in final messages", async () => {
+        const receivedMessages: BaseMessage[][] = [];
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            // First call: model makes a tool call
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                { id: "1", name: "search", args: { query: "test" } },
+              ],
+            }),
+            // Second call: model should see the warning, then responds without tool calls
+            new AIMessage("Final answer"),
+          ],
+        });
+
+        // Override _generate to capture messages
+        const originalGenerate = model._generate.bind(model);
+        model._generate = async function (
+          messages: BaseMessage[],
+          options: any,
+          runManager?: any
+        ) {
+          receivedMessages.push([...messages]);
+          return originalGenerate(messages, options, runManager);
+        };
+
+        const limiter = toolCallLimitMiddleware({
+          runLimit: 2,
+          proactive: true,
+          warningThreshold: 2,
+        });
+
+        const agent = createAgent({
+          model,
+          tools: [searchTool],
+          middleware: [limiter],
+          checkpointer: new MemorySaver(),
+        });
+
+        const result = await agent.invoke(
+          { messages: [new HumanMessage("Question")] },
+          { configurable: { thread_id: "proactive_test" } }
+        );
+
+        // Verify the warning was injected: on the second model call,
+        // after 1 tool call was made, remaining = 2 - 1 = 1,
+        // which is <= warningThreshold (2)
+        expect(receivedMessages.length).toBeGreaterThanOrEqual(2);
+        const secondCallMessages = receivedMessages[1];
+        const warningMsg = secondCallMessages.find(
+          (m) =>
+            HumanMessage.isInstance(m) &&
+            typeof m.content === "string" &&
+            m.content.includes("[System notice:")
+        );
+        expect(warningMsg).toBeDefined();
+
+        // Verify the warning does NOT persist in final result.messages
+        const finalHumanWarnings = result.messages.filter(
+          (m: BaseMessage) =>
+            HumanMessage.isInstance(m) &&
+            typeof m.content === "string" &&
+            m.content.includes("[System notice:")
+        );
+        expect(finalHumanWarnings.length).toBe(0);
+
+        // Verify tool results are present
+        const toolMessages = result.messages.filter((m: BaseMessage) =>
+          ToolMessage.isInstance(m)
+        );
+        expect(toolMessages.length).toBeGreaterThanOrEqual(1);
+      });
+    });
+  });
 });
