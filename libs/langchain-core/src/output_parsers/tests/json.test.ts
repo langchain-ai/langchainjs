@@ -4,7 +4,7 @@ import { RunnableSequence } from "../../runnables/base.js";
 import { RunnablePassthrough } from "../../runnables/passthrough.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { JsonOutputParser } from "../json.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
 
 async function acc(iter: AsyncGenerator<object>): Promise<object[]> {
   const acc = [];
@@ -345,18 +345,77 @@ test("JSONOutputParser traces streamed JSON as just the last chunk", async () =>
   }
   const parser = new JsonOutputParser();
   let tracedOutput;
+  let tracedInput;
   const result = await acc(
     parser.transform(generator(), {
       callbacks: [
         {
-          handleChainEnd(outputs) {
+          handleChainEnd(outputs, _runId, _parentRunId, _tags, kwargs) {
             tracedOutput = outputs;
+            tracedInput = kwargs?.inputs;
           },
         },
       ],
     })
   );
   expect(result.at(-1)).toEqual(tracedOutput);
+  expect(tracedInput).toEqual({ input: STREAMED_TOKENS.join("") });
+});
+
+test("JsonOutputParser traces the complete streamed message input", async () => {
+  const chunks = ['{"answer":"', "hello", '"}'];
+  async function* generator() {
+    for (const content of chunks) {
+      yield new AIMessageChunk({ content, id: "msg-input" });
+    }
+  }
+  let tracedInput;
+  const parser = new JsonOutputParser();
+  const result = await acc(
+    parser.transform(generator(), {
+      callbacks: [
+        {
+          handleChainEnd(_outputs, _runId, _parentRunId, _tags, kwargs) {
+            tracedInput = kwargs?.inputs;
+          },
+        },
+      ],
+    })
+  );
+  expect(result.at(-1)).toEqual({ answer: "hello" });
+  expect(tracedInput).toBeInstanceOf(AIMessageChunk);
+  expect(tracedInput).toMatchObject({
+    content: chunks.join(""),
+    id: "msg-input",
+  });
+});
+
+test("JsonOutputParser traces all consumed input when the stream fails", async () => {
+  const error = new Error("input stream failed");
+  async function* generator() {
+    yield '{"answer":"';
+    yield "hello";
+    throw error;
+  }
+  let tracedInput;
+  let tracedError;
+  const parser = new JsonOutputParser();
+  await expect(
+    acc(
+      parser.transform(generator(), {
+        callbacks: [
+          {
+            handleChainError(err, _runId, _parentRunId, _tags, kwargs) {
+              tracedError = err;
+              tracedInput = kwargs?.inputs;
+            },
+          },
+        ],
+      })
+    )
+  ).rejects.toBe(error);
+  expect(tracedError).toBe(error);
+  expect(tracedInput).toEqual({ input: '{"answer":"hello' });
 });
 
 test("JSONOutputParser parses streamed JSON diff", async () => {
@@ -367,12 +426,14 @@ test("JSONOutputParser parses streamed JSON diff", async () => {
   }
   const parser = new JsonOutputParser({ diff: true });
   let tracedOutput;
+  let tracedInput;
   const result = await acc(
     parser.transform(generator(), {
       callbacks: [
         {
-          handleChainEnd(outputs) {
+          handleChainEnd(outputs, _runId, _parentRunId, _tags, kwargs) {
             tracedOutput = outputs;
+            tracedInput = kwargs?.inputs;
           },
         },
       ],
@@ -382,6 +443,7 @@ test("JSONOutputParser parses streamed JSON diff", async () => {
   expect(tracedOutput).toEqual(
     EXPECTED_STREAMED_JSON_DIFF.map((patch) => patch[0])
   );
+  expect(tracedInput).toEqual({ input: STREAMED_TOKENS.join("") });
 });
 
 test("JsonOutputParser supports a type param", async () => {
