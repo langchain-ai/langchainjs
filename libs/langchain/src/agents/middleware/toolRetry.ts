@@ -303,8 +303,8 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
 
           // Check if we should retry this exception
           if (!shouldRetryException(err)) {
-            // Exception is not retryable, handle failure immediately
-            return handleFailure(toolName, toolCallId, err, attemptsMade);
+            // Exception is not retryable, re-throw immediately (not handled by onFailure)
+            throw error;
           }
 
           // Check if we have more retries left
