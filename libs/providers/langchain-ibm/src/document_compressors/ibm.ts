@@ -17,6 +17,75 @@ export interface WatsonxInputRerank
     inputs?: boolean;
   };
 }
+/**
+ * IBM Watsonx.ai document reranker for improving search relevance.
+ *
+ * Uses cross-encoder models to rerank documents based on their relevance to a query.
+ * This is particularly useful for improving retrieval quality in RAG applications.
+ *
+ * @example Basic reranking with project ID
+ * ```typescript
+ * import { WatsonxRerank } from "@langchain/ibm";
+ * import { Document } from "@langchain/core/documents";
+ *
+ * const reranker = new WatsonxRerank({
+ *   model: "cross-encoder/ms-marco-minilm-l-12-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * const query = "What is machine learning?";
+ * const documents = [
+ *   new Document({ pageContent: "Machine learning is a subset of AI" }),
+ *   new Document({ pageContent: "The weather is nice today" }),
+ *   new Document({ pageContent: "Deep learning uses neural networks" }),
+ * ];
+ *
+ * const rerankedDocs = await reranker.compressDocuments(documents, query);
+ * console.log(rerankedDocs); // Documents sorted by relevance
+ * ```
+ *
+ * @example Limiting results with topN
+ * ```typescript
+ * const reranker = new WatsonxRerank({
+ *   model: "cross-encoder/ms-marco-minilm-l-12-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   returnOptions: {
+ *     topN: 3, // Return only top 3 most relevant documents
+ *   },
+ * });
+ * ```
+ *
+ * @example Using with space ID
+ * ```typescript
+ * const reranker = new WatsonxRerank({
+ *   model: "cross-encoder/ms-marco-minilm-l-12-v2",
+ *   spaceId: "your-space-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Integration with retrieval chain
+ * ```typescript
+ * import { createRetrievalChain } from "langchain/chains/retrieval";
+ * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+ *
+ * const retriever = vectorStore.asRetriever();
+ * const reranker = new WatsonxRerank({
+ *   model: "cross-encoder/ms-marco-minilm-l-12-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * // Use reranker as a document compressor
+ * const compressedRetriever = retriever.pipe(reranker);
+ * ```
+ */
 export class WatsonxRerank
   extends BaseDocumentCompressor
   implements WatsonxInputRerank
