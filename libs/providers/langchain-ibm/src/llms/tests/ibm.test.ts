@@ -9,7 +9,7 @@ import {
 } from "@ibm-cloud/watsonx-ai";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import { WatsonxLLM, WatsonxInputLLM, WatsonxLLMConstructor } from "../ibm.js";
-import { authenticateAndSetInstance } from "../../utils/ibm.js";
+import { initWatsonxOrGatewayInstance } from "../../utils/ibm.js";
 import {
   WatsonxEmbeddings,
   WatsonxEmbeddingsConstructor,
@@ -71,7 +71,7 @@ export const testProperties = (
 describe("LLM unit tests", () => {
   describe("Positive tests with default mode", () => {
     test("Test authentication function", () => {
-      const instance = authenticateAndSetInstance({
+      const instance = initWatsonxOrGatewayInstance({
         version: "2024-05-31",
         serviceUrl,
         ...fakeAuthProp,
