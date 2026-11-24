@@ -15,42 +15,17 @@ export interface ConvertOpenRouterStreamOptions {
   streamUsage?: boolean;
 }
 
-function mapOpenRouterChunkToOpenAI(
-  data: StreamingChunkData
-): OpenAICompletionsStreamChunk {
-  const choice = data.choices?.[0];
-  if (
-    choice?.delta &&
-    typeof choice.delta.reasoning === "string" &&
-    choice.delta.reasoning_content == null
-  ) {
-    return {
-      ...(data as unknown as OpenAICompletionsStreamChunk),
-      choices: [
-        {
-          ...choice,
-          delta: {
-            ...choice.delta,
-            reasoning_content: choice.delta.reasoning,
-          },
-        },
-      ],
-    };
-  }
-  return data as unknown as OpenAICompletionsStreamChunk;
-}
-
 export async function* convertOpenRouterStream(
   source: AsyncIterable<StreamingChunkData>,
   options: ConvertOpenRouterStreamOptions = {}
 ): AsyncGenerator<ChatModelStreamEvent> {
-  async function* mapped() {
-    for await (const chunk of source) {
-      yield mapOpenRouterChunkToOpenAI(chunk);
-    }
-  }
-  yield* convertOpenAICompletionsStream(mapped(), {
-    ...options,
-    provider: "openrouter",
-  });
+  // OpenRouter streams Chat Completions chunks, and the core converter reads
+  // its `delta.reasoning` text directly (`reasoning_content ?? reasoning`).
+  // OpenRouter's types are looser than core's (a null `reasoning`, open-ended
+  // `finish_reason` values, null usage details), and the converter handles
+  // each of those at runtime.
+  yield* convertOpenAICompletionsStream(
+    source as AsyncIterable<OpenAICompletionsStreamChunk>,
+    { ...options, provider: "openrouter" }
+  );
 }
