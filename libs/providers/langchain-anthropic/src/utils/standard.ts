@@ -168,6 +168,66 @@ function _hasAllowedImageMimeType(
   return ALLOWED_IMAGE_MIME_TYPES.has(mimeType);
 }
 
+function _formatWebSearchToolResult(
+  block: ContentBlock.Tools.ServerToolCallResult
+): Anthropic.Beta.BetaWebSearchToolResultBlockParam | undefined {
+  if (typeof block.output !== "object" || block.output === null) {
+    return undefined;
+  }
+  const output = block.output as Record<string, unknown>;
+  const toolUseId = block.toolCallId ?? "";
+
+  if (
+    block.status === "error" &&
+    output.type === "web_search_tool_result_error" &&
+    typeof output.error_code === "string"
+  ) {
+    return {
+      type: "web_search_tool_result",
+      tool_use_id: toolUseId,
+      content: {
+        type: "web_search_tool_result_error",
+        error_code:
+          output.error_code as Anthropic.Beta.BetaWebSearchToolResultErrorCode,
+      },
+    };
+  }
+
+  let content: Anthropic.Beta.BetaWebSearchResultBlockParam[] | undefined;
+  if (Array.isArray(output.results)) {
+    content = output.results
+      .filter(
+        (entry): entry is Record<string, unknown> =>
+          typeof entry === "object" &&
+          entry !== null &&
+          typeof (entry as Record<string, unknown>).url === "string"
+      )
+      .map((entry) => ({
+        type: "web_search_result" as const,
+        title: typeof entry.title === "string" ? entry.title : "",
+        encrypted_content:
+          typeof entry.encrypted_content === "string"
+            ? entry.encrypted_content
+            : "",
+        url: entry.url as string,
+        ...(entry.page_age !== undefined
+          ? { page_age: entry.page_age as string | null }
+          : {}),
+      }));
+  } else if (Array.isArray(output.urls)) {
+    content = output.urls.map((url) => ({
+      type: "web_search_result" as const,
+      title: "",
+      encrypted_content: "",
+      url: String(url),
+    }));
+  }
+
+  return content
+    ? { type: "web_search_tool_result", tool_use_id: toolUseId, content }
+    : undefined;
+}
+
 export function _formatStandardContent(
   message: BaseMessage
 ): Anthropic.Beta.BetaContentBlockParam[] {
@@ -239,18 +299,11 @@ export function _formatStandardContent(
         });
       }
     } else if (block.type === "server_tool_call_result" && isAnthropicMessage) {
-      if (block.name === "web_search" && Array.isArray(block.output.urls)) {
-        const content = block.output.urls.map((url) => ({
-          type: "web_search_result" as const,
-          title: "",
-          encrypted_content: "",
-          url,
-        }));
-        result.push({
-          type: "web_search_tool_result",
-          tool_use_id: block.toolCallId ?? "",
-          content,
-        });
+      if (block.name === "web_search") {
+        const formattedResult = _formatWebSearchToolResult(block);
+        if (formattedResult) {
+          result.push(formattedResult);
+        }
       } else if (block.name === "code_execution") {
         result.push({
           type: "code_execution_tool_result",
