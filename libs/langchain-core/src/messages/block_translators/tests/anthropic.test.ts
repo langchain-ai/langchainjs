@@ -144,6 +144,22 @@ describe("anthropicTranslator", () => {
         status: "success",
         output: {
           urls: ["<page url 1>", "<page url 2>"],
+          results: [
+            {
+              type: "web_search_result",
+              url: "<page url 1>",
+              title: "Page Title 1",
+              page_age: "January 1, 2025",
+              encrypted_content: "<encrypted content 1>",
+            },
+            {
+              type: "web_search_result",
+              url: "<page url 2>",
+              title: "Page Title 2",
+              page_age: "January 2, 2025",
+              encrypted_content: "<encrypted content 2>",
+            },
+          ],
         },
       },
       {
@@ -513,5 +529,36 @@ describe("anthropicTranslator", () => {
     });
     expect(message2.contentBlocks).toEqual(expectedContent);
     expect(message2.content).toEqual(expectedContent);
+  });
+
+  it("should translate web_search_tool_result_error blocks to error server_tool_call_result", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "web_search_tool_result",
+          tool_use_id: "srvtoolu_err123",
+          content: {
+            type: "web_search_tool_result_error",
+            error_code: "unavailable",
+          },
+        },
+      ],
+      response_metadata: {
+        model_provider: "anthropic",
+      },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "server_tool_call_result",
+        name: "web_search",
+        toolCallId: "srvtoolu_err123",
+        status: "error",
+        output: {
+          type: "web_search_tool_result_error",
+          error_code: "unavailable",
+        },
+      },
+    ]);
   });
 });

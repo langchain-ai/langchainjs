@@ -428,26 +428,56 @@ export function convertToV1FromAnthropicMessage(
       // WebSearchToolResultBlock
       else if (
         _isContentBlock(block, "web_search_tool_result") &&
-        _isString(block.tool_use_id) &&
-        _isArray(block.content)
+        _isString(block.tool_use_id)
       ) {
         const { content, tool_use_id } = block;
-        const urls = content.reduce<string[]>((acc, content) => {
-          if (_isContentBlock(content, "web_search_result")) {
-            return [...acc, content.url as string];
+        if (_isArray(content)) {
+          const urls: string[] = [];
+          const results: Array<Record<string, unknown>> = [];
+          for (const item of content) {
+            if (
+              _isContentBlock(item, "web_search_result") &&
+              _isString(item.url)
+            ) {
+              urls.push(item.url);
+              // Keep full web_search_result fields (including encrypted_content)
+              // so multi-turn Anthropic requests can round-trip without losing
+              // verification metadata, while retaining `urls` for compatibility.
+              results.push({
+                type: "web_search_result",
+                url: item.url,
+                ...(_isString(item.title) ? { title: item.title } : {}),
+                ...(item.page_age === null || _isString(item.page_age)
+                  ? { page_age: item.page_age }
+                  : {}),
+                ...(_isString(item.encrypted_content)
+                  ? { encrypted_content: item.encrypted_content }
+                  : {}),
+              });
+            }
           }
-          return acc;
-        }, []);
-        yield {
-          type: "server_tool_call_result",
-          name: "web_search",
-          toolCallId: tool_use_id,
-          status: "success",
-          output: {
-            urls,
-          },
-        };
-        continue;
+          yield {
+            type: "server_tool_call_result",
+            name: "web_search",
+            toolCallId: tool_use_id,
+            status: "success",
+            output: {
+              urls,
+              results,
+            },
+          };
+          continue;
+        }
+        if (_isContentBlock(content, "web_search_tool_result_error")) {
+          yield {
+            type: "server_tool_call_result",
+            name: "web_search",
+            toolCallId: tool_use_id,
+            status: "error",
+            output: content,
+          };
+          continue;
+        }
       }
       // CodeExecutionToolResultBlock
       else if (
