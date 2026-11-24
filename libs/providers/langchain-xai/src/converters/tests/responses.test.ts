@@ -611,7 +611,11 @@ describe("convertStreamEventToChunk", () => {
 
       expect(result).not.toBeNull();
       expect(result?.text).toBe("");
-      expect(result?.message.usage_metadata).toEqual({
+      const message = result?.message;
+      if (!AIMessageChunk.isInstance(message)) {
+        throw new Error("Message is not an AIMessageChunk");
+      }
+      expect(message.usage_metadata).toEqual({
         input_tokens: 20,
         output_tokens: 10,
         total_tokens: 30,
