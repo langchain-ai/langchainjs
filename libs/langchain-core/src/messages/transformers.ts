@@ -544,7 +544,7 @@ export interface TrimMessagesFields {
  *     "This is a 4 token text. The full message is 10 tokens."
  *   ),
  *   new AIMessage({
- *     content: [{ type: "text", text: "This is the FIRST 4 token block." }],
+ *     content: [{ type: "text", text: "This is the SECOND 4 token block." }],
  *     id: "second",
  *   }),
  *   new HumanMessage({
@@ -577,7 +577,7 @@ export interface TrimMessagesFields {
  *     "This is a 4 token text. The full message is 10 tokens."
  *   ),
  *   new AIMessage({
- *     content: [{ type: "text", text: "This is the FIRST 4 token block." }],
+ *     content: [{ type: "text", text: "This is the SECOND 4 token block." }],
  *     id: "second",
  *   }),
  *   new HumanMessage({
@@ -747,15 +747,12 @@ async function _firstMaxTokens(
       }
 
       const numBlock = excluded.content.length;
-      const reversedContent =
-        partialStrategy === "last"
-          ? [...excluded.content].reverse()
-          : excluded.content;
+      let partialMessages: BaseMessage[] | undefined;
       for (let i = 1; i <= numBlock; i += 1) {
         const partialContent =
           partialStrategy === "first"
-            ? reversedContent.slice(0, i)
-            : reversedContent.slice(-i);
+            ? excluded.content.slice(0, i)
+            : excluded.content.slice(-i);
         const fields = Object.fromEntries(
           Object.entries(excluded).filter(
             ([k]) => k !== "type" && !k.startsWith("lc_")
@@ -767,15 +764,16 @@ async function _firstMaxTokens(
         });
         const slicedMessages = [...messagesCopy.slice(0, idx), updatedMessage];
         if ((await tokenCounter(slicedMessages)) <= maxTokens) {
-          messagesCopy = slicedMessages;
-          idx += 1;
-          includedPartial = true;
+          // Keep the largest partial that fits, not one copy per size
+          partialMessages = slicedMessages;
         } else {
           break;
         }
       }
-      if (includedPartial && partialStrategy === "last") {
-        excluded.content = [...reversedContent].reverse();
+      if (partialMessages) {
+        messagesCopy = partialMessages;
+        idx += 1;
+        includedPartial = true;
       }
     }
     if (!includedPartial) {
