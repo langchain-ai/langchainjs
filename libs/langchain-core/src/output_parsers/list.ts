@@ -178,7 +178,7 @@ export class NumberedListOutputParser extends ListOutputParser {
 
 export class MarkdownListOutputParser extends ListOutputParser {
   static lc_name() {
-    return "NumberedListOutputParser";
+    return "MarkdownListOutputParser";
   }
 
   lc_namespace = ["langchain_core", "output_parsers", "list"];
@@ -186,7 +186,7 @@ export class MarkdownListOutputParser extends ListOutputParser {
   lc_serializable = true;
 
   getFormatInstructions(): string {
-    return `Your response should be a numbered list with each item on a new line. For example: \n\n1. foo\n\n2. bar\n\n3. baz`;
+    return `Your response should be a markdown list with each item on a new line and starting with "- " or "* ". For example: \n\n- foo\n\n- bar\n\n- baz`;
   }
 
   re = /^\s*[-*]\s([^\n]+)$/gm;
