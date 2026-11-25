@@ -39,6 +39,96 @@ export type ToJSONSchemaParams = NonNullable<
 const _jsonSchemaCache = new WeakMap<object, JSONSchema>();
 
 /**
+ * Formats that OpenAI-compatible tool/structured-output schemas understand
+ * natively. Zod v4 emits a long `pattern` next to these `format` values;
+ * providers already enforce the format, and LangChain tools still validate
+ * with Zod, so the duplicate regex only inflates prompt tokens.
+ *
+ * @see https://github.com/langchain-ai/langchainjs/issues/12137
+ */
+const FORMATS_WITH_REDUNDANT_ZOD_PATTERN = new Set([
+  "uuid",
+  "date",
+  "date-time",
+  "email",
+]);
+
+/**
+ * Recursively drop Zod's redundant `pattern` when a sibling `format` already
+ * states the same constraint for well-known string formats.
+ *
+ * Leaves custom patterns (no matching format), non-standard formats (cuid,
+ * ulid, …), and `allOf` pattern lists alone.
+ *
+ * Mutates `schema` in place. Only intended for schemas produced from Zod.
+ *
+ * @internal
+ */
+function stripRedundantZodFormatPatterns(schema: unknown): void {
+  if (schema == null || typeof schema !== "object") {
+    return;
+  }
+  if (Array.isArray(schema)) {
+    for (const item of schema) {
+      stripRedundantZodFormatPatterns(item);
+    }
+    return;
+  }
+
+  const node = schema as Record<string, unknown>;
+
+  if (
+    typeof node.format === "string" &&
+    FORMATS_WITH_REDUNDANT_ZOD_PATTERN.has(node.format) &&
+    "pattern" in node
+  ) {
+    delete node.pattern;
+  }
+
+  for (const key of [
+    "properties",
+    "patternProperties",
+    "$defs",
+    "definitions",
+    "dependentSchemas",
+  ] as const) {
+    const map = node[key];
+    if (map != null && typeof map === "object" && !Array.isArray(map)) {
+      for (const value of Object.values(map as Record<string, unknown>)) {
+        stripRedundantZodFormatPatterns(value);
+      }
+    }
+  }
+
+  for (const key of [
+    "items",
+    "additionalProperties",
+    "additionalItems",
+    "not",
+    "if",
+    "then",
+    "else",
+    "contains",
+    "propertyNames",
+    "unevaluatedItems",
+    "unevaluatedProperties",
+  ] as const) {
+    if (key in node) {
+      stripRedundantZodFormatPatterns(node[key]);
+    }
+  }
+
+  for (const key of ["anyOf", "oneOf", "allOf", "prefixItems"] as const) {
+    const list = node[key];
+    if (Array.isArray(list)) {
+      for (const item of list) {
+        stripRedundantZodFormatPatterns(item);
+      }
+    }
+  }
+}
+
+/**
  * Converts a Standard JSON schema, Zod schema or JSON schema to a JSON schema.
  * Results are cached by schema reference when no custom params are passed.
  * @param schema - The schema to convert.
@@ -73,8 +163,10 @@ export function toJsonSchema(
     } else {
       result = toJSONSchema(schema as unknown as $ZodType, params);
     }
+    stripRedundantZodFormatPatterns(result);
   } else if (isZodSchemaV3(schema)) {
     result = zodToJsonSchema(schema as never);
+    stripRedundantZodFormatPatterns(result);
   } else {
     result = schema as JSONSchema;
   }
