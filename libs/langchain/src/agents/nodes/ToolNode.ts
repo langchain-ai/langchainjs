@@ -555,6 +555,7 @@ export class ToolNode<
       | Command
     )[] = [];
     let parentCommand: Command | null = null;
+    const parentUpdates: [string, unknown][] = [];
 
     for (const output of outputs) {
       if (isCommand(output)) {
@@ -563,12 +564,21 @@ export class ToolNode<
           Array.isArray(output.goto) &&
           output.goto.every((send) => isSend(send))
         ) {
+          // Keep updates as entries so multiple tools can write to the same
+          // reducer-backed parent channel without overwriting one another.
+          if (output.update) {
+            parentUpdates.push(
+              ...(Array.isArray(output.update)
+                ? output.update
+                : Object.entries(output.update))
+            );
+          }
           if (parentCommand) {
             (parentCommand.goto as Send[]).push(...(output.goto as Send[]));
           } else {
             parentCommand = new Command({
               graph: Command.PARENT,
-              goto: output.goto,
+              goto: [...output.goto],
             });
           }
         } else {
@@ -582,6 +592,9 @@ export class ToolNode<
     }
 
     if (parentCommand) {
+      if (parentUpdates.length > 0) {
+        parentCommand.update = parentUpdates;
+      }
       combinedOutputs.push(parentCommand);
     }
 
