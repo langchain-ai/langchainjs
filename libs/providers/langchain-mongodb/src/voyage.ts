@@ -277,8 +277,7 @@ export class VoyageEmbeddings
         );
         // Attach status so AsyncCaller's defaultFailedAttemptHandler can
         // skip retries for non-transient HTTP errors (4xx).
-        (err as Error & { status: number }).status =
-          response.status;
+        (err as Error & { status: number }).status = response.status;
         throw err;
       }
 
