@@ -20,6 +20,9 @@ import type {
  *
  * Given `[() => StreamTransformer<{ a: number }>, () => StreamTransformer<{ b: string }>]`,
  * produces `{ a: number } & { b: string }`.
+ *
+ * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+ * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
  */
 export type InferStreamExtensions<
   T extends ReadonlyArray<() => StreamTransformer<any>>,
@@ -58,6 +61,9 @@ type ToolOutputOf<T> =
  *
  * Falls back to `ToolCallStream` (untyped) when the tools tuple is a
  * plain `(ClientTool | ServerTool)[]` without literal name types.
+ *
+ * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+ * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
  */
 export type ToolCallStreamUnion<
   TTools extends readonly (ClientTool | ServerTool)[],
@@ -85,6 +91,9 @@ export type ToolCallStreamUnion<
  * @typeParam TValues - Shape of the subagent's final output state.
  * @typeParam TTools - Tuple of tools the subagent may call, used to type
  *   {@link toolCalls}.
+ *
+ * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+ * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
  */
 export interface SubagentRunStream<
   TValues = Record<string, unknown>,
@@ -131,6 +140,9 @@ export interface SubagentRunStream<
  * @typeParam TExtensions - Shape of `run.extensions` produced by user-supplied
  *   stream transformer factories. Derived via
  *   `InferStreamExtensions<TStreamTransformers>`.
+ *
+ * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+ * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
  */
 export type AgentRunStream<
   TValues = Record<string, unknown>,

@@ -1,5 +1,11 @@
 # langchain
 
+## 1.6.8
+
+### Patch Changes
+
+- [#12290](https://github.com/langchain-ai/langchainjs/pull/12290) [`8650a5b`](https://github.com/langchain-ai/langchainjs/commit/8650a5b08490eb84b3ef396425dc5c954c8882ac) Thanks [@eliornl](https://github.com/eliornl)! - Deprecate content-block `streamEvents()` on chat models and `streamEvents(..., { version: "v3" })` on agents. `streamEvents` with `version: "v2"` on chat models is no longer marked deprecated.
+
 ## 1.6.7
 
 ### Patch Changes

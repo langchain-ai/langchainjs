@@ -1332,11 +1332,10 @@ export class ReactAgent<
    * of Pregel channels, stream modes, or namespace routing.
    *
    * Pass `version: "v3"` to opt into this projection-oriented stream. Omitting
-   * `version` preserves the legacy internal LangGraph event-stream behavior
-   * for compatibility with LangGraph Platform integrations.
+   * `version` returns the `version: "v2"` event stream.
    *
-   * This v3 stream is experimental and its API may change in future releases.
-   * It will become the default in a future major release.
+   * @deprecated Use `stream()` or `streamEvents(input, { version: "v2" })`
+   * instead.
    *
    * @param state - The initial state for the agent execution. Can be:
    *   - An object containing `messages` array and any middleware-specific state properties
@@ -1344,8 +1343,7 @@ export class ReactAgent<
    *
    * @param config - Runtime configuration including:
    * @param config.version - Must be `"v3"` to use the {@link AgentRunStream}
-   *   interface. The default legacy event stream is maintained for internal
-   *   integrations and should not be used for new user-facing agent streaming.
+   *   interface.
    * @param config.context - The context for the agent execution.
    * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
    * @param config.store - The store for the agent execution for persisting state.

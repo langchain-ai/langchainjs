@@ -16,6 +16,88 @@ class TraceableChatOpenAIResponses extends ChatOpenAIResponses {
   }
 }
 
+describe("forced function tool choice", () => {
+  const tools = [
+    {
+      type: "function" as const,
+      function: {
+        name: "lookup",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+  ];
+
+  it.each([
+    ["Responses", { type: "function" as const, name: "lookup" }],
+    [
+      "Chat Completions",
+      { type: "function" as const, function: { name: "lookup" } },
+    ],
+    ["bare tool name", "lookup"],
+  ])("serializes the %s format", (_format, tool_choice) => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    expect(model.invocationParams({ tools, tool_choice }).tool_choice).toEqual({
+      type: "function",
+      name: "lookup",
+    });
+  });
+
+  it("preserves a nested name when the top-level name is not a string", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const tool_choice = {
+      type: "function" as const,
+      name: 123,
+      function: { name: "lookup" },
+    };
+
+    expect(model.invocationParams({ tools, tool_choice }).tool_choice).toEqual({
+      type: "function",
+      name: "lookup",
+    });
+  });
+
+  it.each([
+    ["missing name", { type: "function" }],
+    ["non-string name", { type: "function", name: 123 }],
+    ["null name", { type: "function", name: null }],
+    ["empty name", { type: "function", name: "" }],
+    [
+      "empty native name with a nested name",
+      { type: "function", name: "", function: { name: "lookup" } },
+    ],
+    ["null nested function", { type: "function", function: null }],
+    ["missing nested name", { type: "function", function: {} }],
+    ["empty nested name", { type: "function", function: { name: "" } }],
+  ])("rejects a function choice with %s", (_description, tool_choice) => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    expect(() =>
+      model.invocationParams({
+        tools,
+        tool_choice: tool_choice as unknown as NonNullable<
+          Parameters<ChatOpenAIResponses["invocationParams"]>[0]
+        >["tool_choice"],
+      })
+    ).toThrow("Invalid tool_choice: function name must be a non-empty string.");
+  });
+
+  it("preserves built-in tool choices", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const tool_choice = { type: "web_search_preview" as const };
+
+    expect(model.invocationParams({ tools, tool_choice }).tool_choice).toBe(
+      tool_choice
+    );
+  });
+
+  it("leaves an absent tool choice undefined", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    expect(model.invocationParams({ tools }).tool_choice).toBeUndefined();
+  });
+});
+
 describe("MCP credential tracing", () => {
   it("redacts MCP credentials without changing request params", () => {
     const model = new TraceableChatOpenAIResponses({ model: "gpt-4o" });
@@ -309,5 +391,45 @@ describe("tool search support", () => {
     expect(tools[1]).toHaveProperty("defer_loading", true);
     expect(tools[1]).toHaveProperty("type", "function");
     expect(tools[1]).toHaveProperty("name", "get_weather");
+  });
+});
+
+describe("tool_choice", () => {
+  const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+  const tools = [
+    {
+      type: "function" as const,
+      function: {
+        name: "lookup",
+        description: "testing",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+  ];
+
+  // "none" | "auto" | "required" are valid Responses tool_choice values and
+  // must reach the request unchanged. They were previously dropped, so a
+  // caller forcing a tool call silently got the provider default instead.
+  it.each(["none", "auto", "required"] as const)(
+    "forwards the %s option unchanged",
+    (tool_choice) => {
+      const params = model.invocationParams({ tools, tool_choice });
+      expect(params.tool_choice).toBe(tool_choice);
+    }
+  );
+
+  it("maps 'any' onto the API's 'required'", () => {
+    const params = model.invocationParams({ tools, tool_choice: "any" });
+    expect(params.tool_choice).toBe("required");
+  });
+
+  it("converts a named tool to the Responses function shape", () => {
+    const params = model.invocationParams({ tools, tool_choice: "lookup" });
+    expect(params.tool_choice).toEqual({ type: "function", name: "lookup" });
+  });
+
+  it("omits tool_choice when none is given", () => {
+    const params = model.invocationParams({ tools });
+    expect(params.tool_choice).toBeUndefined();
   });
 });

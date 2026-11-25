@@ -76,6 +76,9 @@ function hasPrefix(ns: Namespace, prefix: Namespace): boolean {
  * @param scope - Namespace prefix this transformer is scoped to. The root agent
  *   uses `[]`; nested handles use their subagent's namespace, so grandchild
  *   subagents are discovered recursively.
+ *
+ * @deprecated Only used by `streamEvents(..., { version: "v3" })`, which is
+ * deprecated. Use `stream()` or `streamEvents(input, { version: "v2" })`.
  */
 export function createSubagentTransformer(
   scope: Namespace = []
