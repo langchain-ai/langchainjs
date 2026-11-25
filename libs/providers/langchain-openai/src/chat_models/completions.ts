@@ -49,6 +49,26 @@ type ChatCompletionsInvocationParams = Omit<
   "messages"
 >;
 
+// Some OpenAI-compatible APIs (e.g. Gemini) leave reasoning tokens out of
+// `completion_tokens` but still count them in `total_tokens`.
+function countUnreportedReasoning(
+  usage: OpenAIClient.Completions.CompletionUsage
+): OpenAIClient.Completions.CompletionUsage {
+  const gap =
+    usage.total_tokens - usage.prompt_tokens - usage.completion_tokens;
+  if (usage.completion_tokens_details?.reasoning_tokens != null || !(gap > 0)) {
+    return usage;
+  }
+  return {
+    ...usage,
+    completion_tokens: usage.completion_tokens + gap,
+    completion_tokens_details: {
+      ...usage.completion_tokens_details,
+      reasoning_tokens: gap,
+    },
+  };
+}
+
 const TOOL_IMAGE_HINT =
   "Chat Completions does not support images in tool messages. " +
   "Use the Responses API (`useResponsesApi: true`) to send images from tool results.";
@@ -286,7 +306,7 @@ export class ChatOpenAICompletions<
         total_tokens: totalTokens,
         prompt_tokens_details: promptTokensDetails,
         completion_tokens_details: completionTokensDetails,
-      } = data?.usage ?? {};
+      } = data?.usage ? countUnreportedReasoning(data.usage) : {};
 
       if (completionTokens) {
         usageMetadata.output_tokens =
@@ -525,6 +545,7 @@ export class ChatOpenAICompletions<
       );
     }
     if (usage) {
+      const normalizedUsage = countUnreportedReasoning(usage);
       const inputTokenDetails = {
         ...(usage.prompt_tokens_details?.audio_tokens !== null && {
           audio: usage.prompt_tokens_details?.audio_tokens,
@@ -537,11 +558,14 @@ export class ChatOpenAICompletions<
         }),
       };
       const outputTokenDetails = {
-        ...(usage.completion_tokens_details?.audio_tokens !== null && {
-          audio: usage.completion_tokens_details?.audio_tokens,
+        ...(normalizedUsage.completion_tokens_details?.audio_tokens !==
+          null && {
+          audio: normalizedUsage.completion_tokens_details?.audio_tokens,
         }),
-        ...(usage.completion_tokens_details?.reasoning_tokens !== null && {
-          reasoning: usage.completion_tokens_details?.reasoning_tokens,
+        ...(normalizedUsage.completion_tokens_details?.reasoning_tokens !==
+          null && {
+          reasoning:
+            normalizedUsage.completion_tokens_details?.reasoning_tokens,
         }),
       };
       const generationChunk = new ChatGenerationChunk({
@@ -552,7 +576,7 @@ export class ChatOpenAICompletions<
           },
           usage_metadata: {
             input_tokens: usage.prompt_tokens,
-            output_tokens: usage.completion_tokens,
+            output_tokens: normalizedUsage.completion_tokens,
             total_tokens: usage.total_tokens,
             ...(Object.keys(inputTokenDetails).length > 0 && {
               input_token_details: inputTokenDetails,

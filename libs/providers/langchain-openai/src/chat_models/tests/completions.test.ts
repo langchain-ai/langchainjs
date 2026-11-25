@@ -251,6 +251,62 @@ describe("ChatOpenAICompletions cache token usage_metadata", () => {
   });
 });
 
+describe("ChatOpenAICompletions unreported reasoning tokens", () => {
+  // Gemini's OpenAI-compatible API leaves thinking out of completion_tokens.
+  const usage = { prompt_tokens: 18, completion_tokens: 5, total_tokens: 454 };
+
+  it("counts the total_tokens gap as reasoning (non-streaming)", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gemini-3.6-flash",
+      apiKey: "test-key",
+    });
+    model.completionWithRetry = vi.fn().mockResolvedValue({
+      id: "chatcmpl-test",
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: "Hello" },
+          finish_reason: "stop",
+          logprobs: null,
+        },
+      ],
+      usage,
+    }) as typeof model.completionWithRetry;
+
+    const result = await model._generate([new HumanMessage("test")], {});
+    const message = result.generations[0].message as AIMessage;
+    expect(message.usage_metadata?.output_tokens).toBe(436);
+    expect(message.usage_metadata?.total_tokens).toBe(454);
+    expect(message.usage_metadata?.output_token_details?.reasoning).toBe(431);
+  });
+
+  it("counts the total_tokens gap as reasoning (streaming)", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gemini-3.6-flash",
+      apiKey: "test-key",
+      streaming: true,
+      streamUsage: true,
+    });
+    const fakeStream = (async function* () {
+      yield { choices: [], usage, model: "gemini-3.6-flash" };
+    })();
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+    const chunks = [];
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("test")],
+      {}
+    )) {
+      chunks.push(chunk);
+    }
+    const message = chunks[chunks.length - 1].message as AIMessageChunk;
+    expect(message.usage_metadata?.output_tokens).toBe(436);
+    expect(message.usage_metadata?.output_token_details?.reasoning).toBe(431);
+  });
+});
+
 describe("ChatOpenAICompletions reasoning_content compatibility", () => {
   it("should preserve reasoning_content on streamed assistant chunks", async () => {
     const model = new ChatOpenAICompletions({
