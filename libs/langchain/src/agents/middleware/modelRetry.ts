@@ -3,6 +3,7 @@
  */
 import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
+import { isGraphBubbleUp } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
@@ -199,6 +200,15 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
         try {
           return await handler(delegated);
         } catch (error) {
+          /**
+           * Graph control-flow exceptions (interrupts, commands) must
+           * propagate: they are not failures to retry or convert to a
+           * failure message.
+           */
+          if (isGraphBubbleUp(error)) {
+            throw error;
+          }
+
           const attemptsMade = attempt + 1; // attempt is 0-indexed
 
           // Ensure error is an Error instance
