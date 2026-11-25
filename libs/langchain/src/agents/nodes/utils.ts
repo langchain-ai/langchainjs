@@ -1,5 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v4";
+import { z as z3 } from "zod/v3";
 import { type BaseMessage } from "@langchain/core/messages";
 import {
   getInteropZodObjectShape,
@@ -11,7 +12,12 @@ import {
   type InteropZodObject,
 } from "@langchain/core/utils/types";
 import type { StateDefinitionInit } from "@langchain/langgraph";
-import { END, StateSchema, ReducedValue } from "@langchain/langgraph";
+import {
+  END,
+  StateSchema,
+  ReducedValue,
+  UntrackedValue,
+} from "@langchain/langgraph";
 
 import type { JumpTo } from "../types.js";
 import type { AnyAgentMiddleware } from "../middleware/types.js";
@@ -47,11 +53,21 @@ export async function initializeMiddlewareStates(
         if (ReducedValue.isInstance(field)) {
           // For ReducedValue, use inputSchema if available, otherwise valueSchema
           zodShape[key] = field.inputSchema || field.valueSchema;
+        } else if (UntrackedValue.isInstance(field) && field.schema) {
+          // For UntrackedValue, expose its plain value schema
+          zodShape[key] = field.schema;
         } else {
           zodShape[key] = field;
         }
       }
-      zodSchema = z.object(zodShape);
+      // Build the object schema with the same Zod major version as the
+      // fields, since a v4 `z.object` rejects v3 field schemas.
+      const anyV4Field = Object.values(zodShape).some((field) =>
+        isZodSchemaV4(field)
+      );
+      zodSchema = anyV4Field
+        ? z.object(zodShape)
+        : (z3.object(zodShape) as unknown as InteropZodObject);
     } else if (isInteropZodObject(middleware.stateSchema)) {
       zodSchema = middleware.stateSchema;
     } else {

@@ -4,6 +4,8 @@ import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
+import { StateSchema, UntrackedValue } from "@langchain/langgraph";
+
 import { createMiddleware } from "../middleware.js";
 
 /**
@@ -160,9 +162,17 @@ export type ToolCallLimitConfig = InferInteropZodInput<
 /**
  * Middleware state schema to track the number of model calls made at the thread and run level.
  */
-const stateSchema = z.object({
+const stateSchema = new StateSchema({
   threadToolCallCount: z.record(z.string(), z.number()).default({}),
-  runToolCallCount: z.record(z.string(), z.number()).default({}),
+  /**
+   * Run-level state must not be checkpointed: it is scoped to a single run.
+   * A persisted count would leak into the next run when the current one ends
+   * without the `afterAgent` reset (run failure, `jumpTo: "end"`), falsely
+   * tripping the limit on subsequent runs of the same thread.
+   */
+  runToolCallCount: new UntrackedValue(
+    z.record(z.string(), z.number()).default({})
+  ),
 });
 
 const DEFAULT_TOOL_COUNT_KEY = "__all__";
