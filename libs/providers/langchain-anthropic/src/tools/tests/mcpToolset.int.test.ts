@@ -7,8 +7,7 @@ import { tools } from "../index.js";
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   });
 
 describe("Anthropic MCP Toolset Integration Tests", () => {

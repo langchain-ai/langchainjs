@@ -2993,3 +2993,40 @@ test.each(["claude-fable-5-2", "claude-mythos-5-2"])(
     expect(bind.mock.calls[0][0]).toMatchObject({ tools: [toolset] });
   }
 );
+
+describe("Opus 5.5 and Sonnet 5.5", () => {
+  test("ChatAnthropic defaults to claude-sonnet-5-5", () => {
+    const llm = new ChatAnthropic({ apiKey: "testing" });
+    expect(llm.model).toBe("claude-sonnet-5-5");
+    const params = llm.invocationParams({});
+    expect(params.model).toBe("claude-sonnet-5-5");
+    expect(params.thinking).toBeUndefined();
+    expect(params.temperature).toBeUndefined();
+  });
+
+  test.each(["claude-opus-5-5", "claude-sonnet-5-5"])(
+    "withStructuredOutput does not force a tool call for %s",
+    (model) => {
+      const llm = new ChatAnthropic({ model, apiKey: "testing" });
+      const bind = vi.spyOn(llm, "withConfig");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      llm.withStructuredOutput(z.object({ answer: z.string() }));
+      expect(bind.mock.calls[0][0]).not.toHaveProperty("tool_choice");
+      warn.mockRestore();
+    }
+  );
+
+  test.each(["claude-opus-5-5", "claude-sonnet-5-5"])(
+    "rejects explicitly disabled thinking for %s",
+    (model) => {
+      const llm = new ChatAnthropic({
+        model,
+        apiKey: "testing",
+        thinking: { type: "disabled" },
+      });
+      expect(() => llm.invocationParams({})).toThrow(
+        `thinking.type="disabled" is not supported for ${model}; omit thinking to use adaptive thinking instead`
+      );
+    }
+  );
+});

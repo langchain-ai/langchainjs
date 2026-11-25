@@ -22,7 +22,7 @@ export type ComputerUseReturnType =
   | Promise<ToolMessage<any>>;
 
 /**
- * Options for the computer use tool (Claude Opus 4.5 only version).
+ * Options for the `computer_20251124` computer use tool version.
  *
  * @template TState - The type of the state schema (when used with `ReactAgent`)
  * @template TContext - The type of the context schema (when used with `ReactAgent`)
@@ -58,8 +58,12 @@ export interface Computer20251124Options<TState = any, TContext = any> {
 }
 
 /**
- * Creates an Anthropic computer use tool for Claude Opus 4.5 that provides
+ * Creates an Anthropic `computer_20251124` computer use tool that provides
  * screenshot capabilities and mouse/keyboard control for autonomous desktop interaction.
+ *
+ * Supported on the Claude API by models such as Claude Opus 4.6, Claude Sonnet 4.6,
+ * and Claude Opus 4.7. Claude Opus 5.5 and Claude Sonnet 5.5 require the
+ * `computer_toolset_20260801` toolset instead.
  *
  * The computer use tool enables Claude to interact with desktop environments through:
  * - **Screenshot capture**: See what's currently displayed on screen
@@ -77,7 +81,7 @@ export interface Computer20251124Options<TState = any, TContext = any> {
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-opus-4-5-20251101",
+ *   model: "claude-opus-4-6",
  *   clientOptions: {
  *     defaultHeaders: {
  *       "anthropic-beta": "computer-use-2025-11-24",
@@ -200,7 +204,7 @@ export interface Computer20250124Options<TState = any, TContext = any> {
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-haiku-4-5",
  *   clientOptions: {
  *     defaultHeaders: {
  *       "anthropic-beta": "computer-use-2025-01-24",

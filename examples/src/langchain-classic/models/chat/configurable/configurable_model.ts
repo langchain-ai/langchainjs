@@ -1,6 +1,6 @@
 import { initChatModel } from "@langchain/classic/chat_models/universal";
 
-const configurableModel = await initChatModel(undefined, { temperature: 0 });
+const configurableModel = await initChatModel();
 
 const gpt4Res = await configurableModel.invoke("what's your name", {
   configurable: { model: "gpt-4o-mini" },
@@ -11,7 +11,7 @@ gpt4Res:  I'm an AI language model created by OpenAI, and I don't have a persona
 */
 
 const claudeRes = await configurableModel.invoke("what's your name", {
-  configurable: { model: "claude-sonnet-4-5-20250929" },
+  configurable: { model: "claude-sonnet-5-5" },
 });
 console.log("claudeRes: ", claudeRes.content);
 /*

@@ -28,7 +28,7 @@ export interface ToolSearchOptions {
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const model = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * const getWeather = tool(
@@ -81,7 +81,7 @@ export function toolSearchRegex_20251119(
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const model = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  *   clientOptions: {
  *     defaultHeaders: { "anthropic-beta": "advanced-tool-use-2025-11-20" },
  *   },

@@ -42,7 +42,7 @@ export interface TextEditor20250728Options {
  * import * as fs from "fs";
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * const textEditor = tools.textEditor_20250728({

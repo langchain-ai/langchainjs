@@ -58,10 +58,10 @@ async function invoke(
 }
 
 // use this for tests involving "extended thinking"
-const extendedThinkingModelName = "claude-sonnet-4-5-20250929";
+const extendedThinkingModelName = "claude-sonnet-4-6";
 
 // use this for tests involving citations
-const citationsModelName = "claude-sonnet-4-5-20250929";
+const citationsModelName = "claude-sonnet-5-5";
 
 // use this for tests involving PDF documents
 const pdfModelName = "claude-haiku-4-5-20251001";
@@ -1560,10 +1560,10 @@ describe("Opus 4.1", () => {
   });
 });
 
-describe("Sonnet 4.5", () => {
+describe("Sonnet 5.5", () => {
   it("works without passing any args", async () => {
     const model = new ChatAnthropic({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-5-5",
     });
     const response = await model.invoke(
       "Please respond to this message simply with: Hello"
@@ -1571,26 +1571,23 @@ describe("Sonnet 4.5", () => {
     expect(response.content.length).toBeGreaterThan(0);
   });
 
-  it("works with streaming and thinking", async () => {
+  it("works with adaptive thinking and effort", async () => {
     const model = new ChatAnthropic({
-      model: "claude-sonnet-4-5-20250929",
-      thinking: {
-        type: "enabled",
-        budget_tokens: 1024,
-      },
+      model: "claude-sonnet-5-5",
+      outputConfig: { effort: "low" },
     });
 
     const response = await model.invoke(
       "Please respond to this message simply with: Hello"
     );
 
-    expect(response.content.length).toBeGreaterThan(0);
+    expect(response.text.length).toBeGreaterThan(0);
   });
 
   // https://github.com/langchain-ai/langchainjs/issues/9258
-  it("works when passing topP arg", async () => {
+  it("works when passing topP arg to a model that accepts sampling params", async () => {
     const model = new ChatAnthropic({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-4-6",
       topP: 0.99,
     });
     const response = await model.invoke(
@@ -1600,10 +1597,10 @@ describe("Sonnet 4.5", () => {
   });
 });
 
-describe("Opus 4.5", () => {
+describe("Opus 5.5", () => {
   it("works without passing any args", async () => {
     const model = new ChatAnthropic({
-      model: "claude-opus-4-5",
+      model: "claude-opus-5-5",
     });
     const response = await model.invoke(
       "Please respond to this message simply with: Hello"
@@ -1670,7 +1667,7 @@ it("won't modify structured output content if outputVersion is set", async () =>
 
 describe("will work with native structured output", () => {
   const schema = z.object({ name: z.string() });
-  test.each(["claude-opus-4-1", "claude-sonnet-4-5-20250929"])(
+  test.each(["claude-opus-4-1", "claude-sonnet-5-5"])(
     "works with %s",
     async (modelName) => {
       const model = new ChatAnthropic({

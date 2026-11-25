@@ -18,7 +18,7 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasStructuredOutput: true,
       supportsParallelToolCalls: true,
       constructorArgs: {
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-sonnet-5-5",
       },
       supportsStandardContentType: {
         text: true,
@@ -34,7 +34,7 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
     const constructorArgsCopy = { ...this.constructorArgs };
     this.constructorArgs = {
       ...this.constructorArgs,
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-5-5",
     };
     await super.testParallelToolCalling();
     this.constructorArgs = constructorArgsCopy;

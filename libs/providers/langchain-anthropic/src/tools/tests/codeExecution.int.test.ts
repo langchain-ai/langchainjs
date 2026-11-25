@@ -6,8 +6,7 @@ import { codeExecution_20250825 } from "../codeExecution.js";
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   });
 
 describe("Anthropic Code Execution Tool Integration Tests", () => {
@@ -41,7 +40,9 @@ describe("Anthropic Code Execution Tool Integration Tests", () => {
     expect(hasServerToolUse).toBe(true);
     expect(hasCodeExecutionResult).toBe(true);
 
-    const [toolUse, toolResult, result] = response.content;
+    const [toolUse, toolResult, result] = contentBlocks.filter(
+      (block) => block.type !== "thinking"
+    );
     expect(toolUse).toEqual(
       expect.objectContaining({
         type: "server_tool_use",

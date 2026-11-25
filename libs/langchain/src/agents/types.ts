@@ -642,7 +642,7 @@ export type CreateAgentParams<
    * @example Using a string (recommended for most cases)
    * ```ts
    * const agent = createAgent({
-   *   model: "anthropic:claude-sonnet-4-5",
+   *   model: "anthropic:claude-sonnet-5-5",
    *   systemPrompt: "You are a helpful assistant.",
    *   // ...
    * });
@@ -652,7 +652,7 @@ export type CreateAgentParams<
    * ```ts
    * const userRole = "premium";
    * const agent = createAgent({
-   *   model: "anthropic:claude-sonnet-4-5",
+   *   model: "anthropic:claude-sonnet-5-5",
    *   systemPrompt: `You are a helpful assistant for ${userRole} users.`,
    *   // ...
    * });
@@ -663,7 +663,7 @@ export type CreateAgentParams<
    * import { SystemMessage } from "@langchain/core/messages";
    *
    * const agent = createAgent({
-   *   model: "anthropic:claude-sonnet-4-5",
+   *   model: "anthropic:claude-sonnet-5-5",
    *   systemPrompt: new SystemMessage({
    *     content: [
    *       {
@@ -686,7 +686,7 @@ export type CreateAgentParams<
    * import { SystemMessage } from "@langchain/core/messages";
    *
    * const agent = createAgent({
-   *   model: "anthropic:claude-sonnet-4-5",
+   *   model: "anthropic:claude-sonnet-5-5",
    *   systemPrompt: new SystemMessage("You are a helpful assistant."),
    *   // ...
    * });

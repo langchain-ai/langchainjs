@@ -63,7 +63,7 @@ const SERVER_TOOL_SEARCH_TOOLS = {
  * import { ChatAnthropic } from "@langchain/anthropic";
  *
  * const agent = createAgent({
- *   model: new ChatAnthropic({ model: "claude-sonnet-4-5" }),
+ *   model: new ChatAnthropic({ model: "claude-sonnet-5-5" }),
  *   tools: [getWeather, ...nicheTools],
  *   middleware: [
  *     // Defer the niche tools behind the provider's tool search; the model
@@ -89,7 +89,7 @@ const SERVER_TOOL_SEARCH_TOOLS = {
  * });
  *
  * const agent = createAgent({
- *   model: new ChatAnthropic({ model: "claude-sonnet-4-5" }),
+ *   model: new ChatAnthropic({ model: "claude-sonnet-5-5" }),
  *   tools: [getWeather, sendEmail],
  *   middleware: [providerToolSearchMiddleware()],
  * });

@@ -11,8 +11,7 @@ import { webSearch_20250305 } from "../webSearch.js";
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
   });
 
 describe("Anthropic Web Search Tool Integration Tests", () => {

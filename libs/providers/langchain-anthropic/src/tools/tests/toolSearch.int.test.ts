@@ -16,8 +16,7 @@ import {
 
 const createModel = (args: AnthropicInput = {}) =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5",
-    temperature: 0,
+    model: "claude-sonnet-5-5",
     ...args,
   });
 
@@ -78,7 +77,7 @@ describe("Anthropic Tool Search Tool Integration Tests", () => {
     ]);
 
     expect(response).toBeInstanceOf(AIMessage);
-    expect(response.content).toContain("I don't have access to a weather tool");
+    expect(response.text).toContain("I don't have access to a weather tool");
   });
 
   describe("Regex variant", () => {

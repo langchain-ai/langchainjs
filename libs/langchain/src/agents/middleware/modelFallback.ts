@@ -16,7 +16,7 @@ import { createMiddleware } from "../middleware.js";
  * // Create middleware with fallback models (not including primary)
  * const fallback = modelFallbackMiddleware(
  *   "openai:gpt-4o-mini",  // First fallback
- *   "anthropic:claude-sonnet-4-5-20250929",  // Second fallback
+ *   "anthropic:claude-sonnet-5-5",  // Second fallback
  * );
  *
  * const agent = createAgent({

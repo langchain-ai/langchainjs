@@ -167,7 +167,7 @@ class MockMemoryFileSystem {
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-sonnet-5-5",
   });
 
 describe("Anthropic Memory Tool Integration Tests", () => {

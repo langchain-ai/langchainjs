@@ -26,10 +26,15 @@ const ADAPTIVE_ONLY_MODEL_PREFIXES = [
   "claude-mythos-preview",
 ] as const;
 
-const FABLE_MODEL_PREFIXES = ["claude-fable-5", "claude-mythos-5-2"] as const;
+const ALWAYS_ON_THINKING_MODEL_PREFIXES = [
+  "claude-fable-5",
+  "claude-mythos-5-2",
+  "claude-opus-5-5",
+  "claude-sonnet-5-5",
+] as const;
 
 export function hasAlwaysOnThinking(model?: string): boolean {
-  return modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
+  return modelStartsWithAnyPrefix(model, ALWAYS_ON_THINKING_MODEL_PREFIXES);
 }
 
 function modelStartsWithAnyPrefix(
@@ -79,10 +84,14 @@ export function validateInvocationParamCompatibility(
     temperature,
   } = fields;
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
-  const fableModel = modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
+  const alwaysOnThinkingModel = hasAlwaysOnThinking(model);
   const modelName = model ?? "this model";
 
-  if (fableModel && thinkingExplicitlySet && thinking.type === "disabled") {
+  if (
+    alwaysOnThinkingModel &&
+    thinkingExplicitlySet &&
+    thinking.type === "disabled"
+  ) {
     throw new Error(
       `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
     );
@@ -129,7 +138,7 @@ export function validateInvocationParamCompatibility(
     }
   }
 
-  if (!fableModel && isThinkingEnabled(thinking)) {
+  if (!alwaysOnThinkingModel && isThinkingEnabled(thinking)) {
     if (topK !== undefined) {
       throw new Error("topK is not supported when thinking is enabled");
     }

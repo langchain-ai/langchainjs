@@ -724,7 +724,6 @@ export async function initChatModel<
  * import { initChatModel } from "langchain/chat_models/universal";
  *
  * const configurableModel = await initChatModel(undefined, {
- *   temperature: 0,
  *   configurableFields: ["model", "apiKey"],
  * });
  *
@@ -736,7 +735,7 @@ export async function initChatModel<
  *
  * const claudeResult = await configurableModel.invoke("what's your name", {
  *   configurable: {
- *     model: "claude-sonnet-4-5-20250929",
+ *     model: "claude-sonnet-5-5",
  *   },
  * });
  * ```
@@ -765,7 +764,7 @@ export async function initChatModel<
  *   "what's your name",
  *   {
  *     configurable: {
- *       foo_model: "claude-sonnet-4-5-20250929",
+ *       foo_model: "claude-sonnet-4-6",
  *       foo_modelProvider: "anthropic",
  *       foo_temperature: 0.6,
  *       foo_apiKey: process.env.ANTHROPIC_API_KEY,
@@ -818,7 +817,6 @@ export async function initChatModel<
  *
  * const configurableModel = await initChatModel("gpt-4", {
  *   configurableFields: ["model", "modelProvider", "apiKey"],
- *   temperature: 0,
  * });
  *
  * const configurableModelWithTools = configurableModel.bindTools([
@@ -839,7 +837,7 @@ export async function initChatModel<
  *   "Which city is hotter today and which is bigger: LA or NY?",
  *   {
  *     configurable: {
- *       model: "claude-sonnet-4-5-20250929",
+ *       model: "claude-sonnet-5-5",
  *       apiKey: process.env.ANTHROPIC_API_KEY,
  *     },
  *   }

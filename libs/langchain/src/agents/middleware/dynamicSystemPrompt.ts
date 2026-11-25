@@ -35,7 +35,7 @@ export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
  * );
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-sonnet-4-5",
+ *   model: "anthropic:claude-sonnet-5-5",
  *   contextSchema,
  *   middleware: [middleware],
  * });

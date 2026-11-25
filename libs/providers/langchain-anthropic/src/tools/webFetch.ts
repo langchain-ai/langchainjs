@@ -55,7 +55,7 @@ export interface WebFetch20250910Options {
  * import { ChatAnthropic, tools } from "@langchain/anthropic";
  *
  * const model = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * // Basic usage - fetch content from a URL

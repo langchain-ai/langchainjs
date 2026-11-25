@@ -207,7 +207,7 @@ const memory = tools.memory_20250818({
 });
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 const llmWithMemory = llm.bindTools([memory]);
@@ -227,7 +227,7 @@ The web search tool (`webSearch_20250305`) gives Claude direct access to real-ti
 import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 // Basic usage
@@ -273,7 +273,7 @@ The web fetch tool (`webFetch_20250910`) allows Claude to retrieve full content 
 import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 // Basic usage - fetch content from a URL
@@ -340,7 +340,7 @@ import { tool } from "langchain";
 import { z } from "zod";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 // Create tools with defer_loading to make them discoverable via search
@@ -406,7 +406,7 @@ import fs from "node:fs";
 import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 const textEditor = tools.textEditor_20250728({
@@ -457,8 +457,10 @@ The computer use tools enable Claude to interact with desktop environments throu
 
 There are two variants:
 
-- **`computer_20251124`** - For Claude Opus 4.5 (includes zoom capability)
+- **`computer_20251124`** - For Claude Opus 4.6, Claude Sonnet 4.6, Claude Opus 4.7, and other models that accept it (includes zoom capability)
 - **`computer_20250124`** - For Claude 4 and Claude 3.7 models
+
+Claude Opus 5.5 and Claude Sonnet 5.5 don't accept either version on the Claude API; they require the `computer_toolset_20260801` toolset instead.
 
 Available actions:
 
@@ -473,7 +475,7 @@ Available actions:
 - `mouse_move` - Move the cursor
 - `hold_key` - Hold a key while performing other actions
 - `wait` - Wait for a specified duration
-- `zoom` - View specific screen regions at full resolution (Claude Opus 4.5 only)
+- `zoom` - View specific screen regions at full resolution (`computer_20251124` only)
 
 ```typescript
 import {
@@ -483,7 +485,7 @@ import {
 } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-haiku-4-5",
 });
 
 const computer = tools.computer_20250124({
@@ -512,7 +514,7 @@ const response = await llmWithComputer.invoke(
 );
 ```
 
-For Claude Opus 4.5 with zoom support:
+For `computer_20251124` with zoom support (for example, with Claude Opus 4.6):
 
 ```typescript
 import { tools } from "@langchain/anthropic";
@@ -523,7 +525,7 @@ const computer = tools.computer_20251124({
   // Enable zoom for detailed screen region inspection
   enableZoom: true,
   execute: async (action) => {
-    // Handle actions including "zoom" for Claude Opus 4.5
+    // Handle actions including "zoom"
     // ...
   },
 });
@@ -544,7 +546,7 @@ When this tool is provided, Claude automatically gains access to:
 import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 // Basic usage - calculations and data analysis
@@ -606,7 +608,7 @@ import { ChatAnthropic, tools } from "@langchain/anthropic";
 import { execSync } from "child_process";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 const bash = tools.bash_20250124({
@@ -657,7 +659,7 @@ Key features:
 import { ChatAnthropic, tools } from "@langchain/anthropic";
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 // Basic usage - enable all tools from an MCP server

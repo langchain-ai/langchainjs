@@ -96,7 +96,7 @@ const getAvailableTimeSlots = tool(
 // ============================================================================
 
 const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
+  model: "claude-sonnet-5-5",
 });
 
 const CALENDAR_AGENT_PROMPT = `

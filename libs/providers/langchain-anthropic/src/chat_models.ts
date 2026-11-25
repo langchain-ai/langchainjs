@@ -534,8 +534,7 @@ import { convertAnthropicStream } from "./utils/stream_events.js";
  * import { ChatAnthropic } from '@langchain/anthropic';
  *
  * const llm = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
- *   temperature: 0,
+ *   model: "claude-sonnet-5-5",
  *   maxTokens: undefined,
  *   maxRetries: 2,
  *   // apiKey: "...",
@@ -564,7 +563,7 @@ import { convertAnthropicStream } from "./utils/stream_events.js";
  *   "content": "Here's the translation to French:\n\nJ'adore la programmation.",
  *   "response_metadata": {
  *     "id": "msg_01QDpd78JUHpRP6bRRNyzbW3",
- *     "model": "claude-sonnet-4-5-20250929",
+ *     "model": "claude-sonnet-5-5",
  *     "stop_reason": "end_turn",
  *     "stop_sequence": null,
  *     "usage": {
@@ -602,7 +601,7 @@ import { convertAnthropicStream } from "./utils/stream_events.js";
  *     "id": "msg_01N8MwoYxiKo9w4chE4gXUs4",
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-sonnet-4-5-20250929"
+ *     "model": "claude-sonnet-5-5"
  *   },
  *   "usage_metadata": {
  *     "input_tokens": 25,
@@ -671,7 +670,7 @@ import { convertAnthropicStream } from "./utils/stream_events.js";
  *     "id": "msg_01SBTb5zSGXfjUc7yQ8EKEEA",
  *     "type": "message",
  *     "role": "assistant",
- *     "model": "claude-sonnet-4-5-20250929",
+ *     "model": "claude-sonnet-5-5",
  *     "stop_reason": "end_turn",
  *     "stop_sequence": null
  *   },
@@ -758,7 +757,7 @@ import { convertAnthropicStream } from "./utils/stream_events.js";
  * import { ChatAnthropic } from "@langchain/anthropic";
  *
  * const model = new ChatAnthropic({
- *   model: "claude-sonnet-4-5-20250929",
+ *   model: "claude-sonnet-5-5",
  * });
  *
  * const tools = [
@@ -996,7 +995,7 @@ import { convertAnthropicStream } from "./utils/stream_events.js";
  * ```txt
  * {
  *   id: 'msg_01STxeQxJmp4sCSpioD6vK3L',
- *   model: 'claude-sonnet-4-5-20250929',
+ *   model: 'claude-sonnet-5-5',
  *   stop_reason: 'end_turn',
  *   stop_sequence: null,
  *   usage: { input_tokens: 25, output_tokens: 19 },
@@ -1047,9 +1046,9 @@ export class ChatAnthropicMessages<
 
   maxTokens: number;
 
-  modelName = "claude-sonnet-4-5-20250929";
+  modelName = "claude-sonnet-5-5";
 
-  model = "claude-sonnet-4-5-20250929";
+  model = "claude-sonnet-5-5";
 
   invocationKwargs?: Kwargs;
 

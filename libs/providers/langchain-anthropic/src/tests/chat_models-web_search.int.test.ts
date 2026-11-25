@@ -3,8 +3,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { ChatAnthropic } from "../chat_models.js";
 
 const model = new ChatAnthropic({
-  model: "claude-sonnet-4-5-20250929",
-  temperature: 0,
+  model: "claude-sonnet-5-5",
 }).bindTools([
   {
     type: "web_search_20250305",

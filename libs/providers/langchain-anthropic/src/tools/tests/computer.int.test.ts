@@ -6,7 +6,7 @@ import { computer_20250124 } from "../computer.js";
 
 const createModel = () =>
   new ChatAnthropic({
-    model: "claude-sonnet-4-5",
+    model: "claude-haiku-4-5",
     temperature: 0,
     clientOptions: {
       defaultHeaders: {
