@@ -157,6 +157,70 @@ describe("llmToolSelectorMiddleware", () => {
     ]);
   });
 
+  it.each([
+    {
+      name: "limits selected tools using runtime maxTools",
+      options: { maxTools: 3 },
+      context: { maxTools: 1 },
+      selection: ["toolA", "toolB", "toolC"],
+      expected: ["toolA"],
+    },
+    {
+      name: "allows runtime maxTools to increase the configured limit",
+      options: { maxTools: 1 },
+      context: { maxTools: 3 },
+      selection: ["toolA", "toolB", "toolC"],
+      expected: ["toolA", "toolB", "toolC"],
+    },
+    {
+      name: "replaces configured alwaysInclude with runtime alwaysInclude",
+      options: { maxTools: 1, alwaysInclude: ["toolE"] },
+      context: { alwaysInclude: ["toolD"] },
+      selection: ["toolA"],
+      expected: ["toolA", "toolD"],
+    },
+    {
+      name: "applies runtime options when there are no configured defaults",
+      options: {},
+      context: { maxTools: 1, alwaysInclude: ["toolE"] },
+      selection: ["toolA", "toolB"],
+      expected: ["toolA", "toolE"],
+    },
+    {
+      name: "allows runtime alwaysInclude to clear the configured list",
+      options: { maxTools: 1, alwaysInclude: ["toolE"] },
+      context: { alwaysInclude: [] },
+      selection: ["toolA"],
+      expected: ["toolA"],
+    },
+    {
+      name: "honors runtime maxTools of zero while retaining alwaysInclude",
+      options: { maxTools: 3 },
+      context: { maxTools: 0, alwaysInclude: ["toolE"] },
+      selection: ["toolA", "toolB"],
+      expected: ["toolE"],
+    },
+  ])("$name", async ({ options, context, selection, expected }) => {
+    (mockModel.invoke as unknown as MockInstance)
+      .mockResolvedValueOnce({ tools: selection })
+      .mockResolvedValue(new AIMessage("Response from model"));
+
+    const agent = createAgent({
+      model: mockModel,
+      tools: allTools,
+      middleware: [llmToolSelectorMiddleware(options)],
+    });
+
+    await agent.invoke(
+      { messages: [new HumanMessage("Test message")] },
+      { context }
+    );
+
+    const boundTools = (mockModel.bindTools as unknown as MockInstance).mock
+      .calls[0][0];
+    expect(boundTools.map((t: { name: string }) => t.name)).toEqual(expected);
+  });
+
   it("should throw error when invalid tools are selected", async () => {
     const middleware = llmToolSelectorMiddleware({
       maxTools: 2,

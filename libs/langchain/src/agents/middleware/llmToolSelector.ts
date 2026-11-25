@@ -27,6 +27,8 @@ interface SelectionRequest {
   lastUserMessage: HumanMessage;
   model: BaseLanguageModel;
   validToolNames: string[];
+  maxTools: number | undefined;
+  alwaysInclude: string[];
 }
 
 /**
@@ -174,7 +176,7 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
           selectionRequest.availableTools,
           selectionRequest.validToolNames,
           request,
-          options
+          selectionRequest
         )
       );
     },
@@ -296,6 +298,8 @@ async function prepareSelectionRequest<
     lastUserMessage,
     model: modelInstance,
     validToolNames,
+    maxTools,
+    alwaysInclude,
   };
 }
 
@@ -317,7 +321,7 @@ function processSelectionResponse<
   availableTools: StructuredToolInterface[],
   validToolNames: string[],
   request: ModelRequest<TState, TContext>,
-  options: LLMToolSelectorConfig
+  options: Pick<SelectionRequest, "maxTools" | "alwaysInclude">
 ): ModelRequest<TState, TContext> {
   const maxTools = options.maxTools;
   const alwaysInclude = options.alwaysInclude ?? [];
