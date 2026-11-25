@@ -428,6 +428,42 @@ export function isRunnableToolLike(tool?: unknown): tool is RunnableToolLike {
 }
 
 /**
+ * Whether a value looks like a JSON Schema that can be used as a tool schema.
+ *
+ * Accepts schemas with a string root `type`, and also composition / reference
+ * roots (`anyOf`, `oneOf`, `allOf`, `$ref`) that have no root `type` — e.g.
+ * the output of `toJsonSchema` for a Zod union.
+ */
+function isToolJsonSchema(schema: unknown): boolean {
+  if (schema == null || typeof schema !== "object") {
+    return false;
+  }
+  const jsonSchema = schema as Record<string, unknown>;
+  if (
+    "type" in jsonSchema &&
+    typeof jsonSchema.type === "string" &&
+    ["null", "boolean", "object", "array", "number", "string"].includes(
+      jsonSchema.type
+    )
+  ) {
+    return true;
+  }
+  if ("anyOf" in jsonSchema && Array.isArray(jsonSchema.anyOf)) {
+    return true;
+  }
+  if ("oneOf" in jsonSchema && Array.isArray(jsonSchema.oneOf)) {
+    return true;
+  }
+  if ("allOf" in jsonSchema && Array.isArray(jsonSchema.allOf)) {
+    return true;
+  }
+  if ("$ref" in jsonSchema && typeof jsonSchema.$ref === "string") {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Confirm whether or not the tool contains the necessary properties to be considered a `StructuredToolParams`.
  *
  * @param {unknown | undefined} tool The object to check if it is a `StructuredToolParams`.
@@ -443,13 +479,7 @@ export function isStructuredToolParams(
     "schema" in tool &&
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (isInteropZodSchema(tool.schema as Record<string, any>) ||
-      (tool.schema != null &&
-        typeof tool.schema === "object" &&
-        "type" in tool.schema &&
-        typeof tool.schema.type === "string" &&
-        ["null", "boolean", "object", "array", "number", "string"].includes(
-          tool.schema.type
-        )))
+      isToolJsonSchema(tool.schema))
   );
 }
 
