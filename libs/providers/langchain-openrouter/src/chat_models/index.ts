@@ -502,7 +502,7 @@ export class ChatOpenRouter extends BaseChatModel<
       }
     }
 
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    const shouldStreamUsage = options.streamUsage ?? this.streamUsage;
     yield* convertOpenRouterStream(readChunks(), {
       streamUsage: shouldStreamUsage,
     });
@@ -572,7 +572,7 @@ export class ChatOpenRouter extends BaseChatModel<
 
         if (
           data.usage &&
-          this.streamUsage &&
+          (options.streamUsage ?? this.streamUsage) &&
           AIMessageChunk.isInstance(chunk)
         ) {
           chunk.usage_metadata = convertUsageMetadata(data.usage);
