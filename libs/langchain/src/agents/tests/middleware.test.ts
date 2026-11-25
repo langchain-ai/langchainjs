@@ -30,6 +30,43 @@ import { MiddlewareError } from "../errors.js";
 import type { JsonSchemaFormat } from "../responses.js";
 
 describe("middleware", () => {
+  describe.each([
+    "beforeAgent",
+    "beforeModel",
+    "afterModel",
+    "afterAgent",
+  ] as const)("%s partial updates", (hook) => {
+    it.each([false, true])(
+      "does not re-emit untouched reducer state (empty update: %s)",
+      async (emptyUpdate) => {
+        const middleware = createMiddleware({
+          name: "PartialUpdate",
+          stateSchema: new StateSchema({
+            events: new ReducedValue(z4.array(z4.string()).default([]), {
+              reducer: (current, next) => current.concat(next),
+            }),
+            other: z4.string().default("initial"),
+          }),
+          [hook]: () => (emptyUpdate ? {} : { other: "updated" }),
+        });
+        const agent = createAgent({
+          model: new FakeToolCallingChatModel({
+            responses: [new AIMessage("Done")],
+          }),
+          middleware: [middleware],
+        });
+
+        const result = await agent.invoke({
+          messages: [new HumanMessage("Hello")],
+          events: ["initial event"],
+        });
+
+        expect(result.events).toEqual(["initial event"]);
+        expect(result.other).toBe(emptyUpdate ? "initial" : "updated");
+      }
+    );
+  });
+
   it("should propagate state schema to middleware hooks and result", async () => {
     /**
      * skip as test requires primitives from `@langchain/core` that aren't released yet
