@@ -982,6 +982,66 @@ describe("humanInTheLoopMiddleware", () => {
     );
   });
 
+  it("should not save an invalid answer, so the interrupt can be answered again", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        write_file: { allowedDecisions: ["approve"] },
+      },
+    });
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "greeting.txt", content: "Hello" },
+          },
+        ],
+        [],
+      ],
+    });
+    const agent = createAgent({
+      model,
+      checkpointer: new MemorySaver(),
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware],
+    });
+    const config = { configurable: { thread_id: "invalid-answer-retry" } };
+    writeFileFn.mockClear();
+
+    await agent.invoke(
+      { messages: [new HumanMessage("Write a file")] },
+      config
+    );
+
+    // Wrong number of decisions, then a decision type the tool doesn't allow.
+    await expect(
+      agent.invoke(new Command({ resume: { decisions: [] } }), config)
+    ).rejects.toThrow("does not match number of hanging tool calls (1)");
+    await expect(
+      agent.invoke(
+        new Command({ resume: { decisions: [{ type: "reject" }] } }),
+        config
+      )
+    ).rejects.toThrow("Unexpected human decision");
+    await expect(
+      agent.invoke(new Command({ resume: "approve" }), config)
+    ).rejects.toThrow(
+      "Invalid HITLResponse: decisions must be a non-empty array"
+    );
+    expect(writeFileFn).not.toHaveBeenCalled();
+
+    // The earlier bad answers weren't saved: a valid one still completes the run.
+    const result = await agent.invoke(
+      new Command({ resume: { decisions: [{ type: "approve" }] } }),
+      config
+    );
+    expect(writeFileFn).toHaveBeenCalledTimes(1);
+    expect(
+      result.messages.filter((m: BaseMessage) => ToolMessage.isInstance(m))
+    ).toHaveLength(1);
+  });
+
   it("should not allow me to approve if I don't have approve in allowedDecisions", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       interruptOn: {
