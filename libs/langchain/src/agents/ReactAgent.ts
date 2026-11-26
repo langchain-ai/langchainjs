@@ -957,6 +957,28 @@ export class ReactAgent<
       const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
+      // A structured-output error is retried with a new model call: the model
+      // node records the parse error as a ToolMessage for the structured call.
+      // Structured calls never execute as tools, so the retry has to continue
+      // at the model instead of dispatching them to the tool node (which may
+      // not even exist).
+      const pendingStructuredCalls = pendingToolCalls?.filter((call) =>
+        call.name.startsWith("extract-")
+      );
+      if (pendingStructuredCalls && pendingStructuredCalls.length > 0) {
+        return AGENT_NODE_NAME;
+      }
+      if (
+        pendingToolCalls &&
+        pendingToolCalls.length === 0 &&
+        ToolMessage.isInstance(lastMessage) &&
+        lastAiMessage?.tool_calls?.some((call) =>
+          call.name.startsWith("extract-")
+        )
+      ) {
+        return AGENT_NODE_NAME;
+      }
+
       if (pendingToolCalls && pendingToolCalls.length > 0) {
         /**
          * v1: route the full message to the ToolNode; it filters already-processed
