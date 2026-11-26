@@ -82,6 +82,19 @@ finished. Connections open as needed. `listTools()` returns executable LangChain
 tools, which you can also invoke directly without a model or use in a custom
 LangGraph workflow.
 
+## Long-running tools
+
+Set `resetTimeoutOnProgress: true` on the adapter or an individual server to
+reset the MCP SDK request timeout when that server sends tool progress. A
+server setting overrides the adapter setting. The option is also available
+to `loadMcpTools()`.
+
+Progress notifications are requested automatically; an `onProgress` callback
+is optional. The default remains `false`. This extends only the SDK request
+timeout, which can be set with `metadata.timeoutMs` when invoking a tool.
+`defaultToolTimeout`, a per-call `timeout`, and abort signals remain absolute
+limits and are not extended by progress.
+
 ## Tools that request user input
 
 MCP tools can ask users to complete a form or visit a URL before continuing.
