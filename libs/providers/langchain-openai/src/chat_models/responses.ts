@@ -283,7 +283,11 @@ export class ChatOpenAIResponses<
         }),
         stream: true,
       },
-      options
+      {
+        signal: options.signal,
+        maxRetries: options.maxRetries,
+        ...options.options,
+      }
     );
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
@@ -329,7 +333,11 @@ export class ChatOpenAIResponses<
         }),
         stream: true,
       },
-      options
+      {
+        signal: options.signal,
+        maxRetries: options.maxRetries,
+        ...options.options,
+      }
     );
 
     try {
