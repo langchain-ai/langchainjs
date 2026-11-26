@@ -136,6 +136,26 @@ function convertHumanGenericMessagesToOllama(
         role: "user",
         content: c.text,
       };
+    } else if (c.type === "image") {
+      if (typeof c.data === "string") {
+        return { role: "user", content: "", images: [c.data] };
+      }
+      if (
+        ArrayBuffer.isView(c.data) &&
+        Object.prototype.toString.call(c.data) === "[object Uint8Array]"
+      ) {
+        // The Ollama SDK encodes binary data, including byte-array subviews.
+        return { role: "user", content: "", images: [c.data as Uint8Array] };
+      }
+      if (typeof c.url === "string") {
+        const data = extractBase64FromDataUrl(c.url);
+        if (data) {
+          return { role: "user", content: "", images: [data] };
+        }
+      }
+      throw new Error(
+        "Ollama only supports images with base64 data or Uint8Array data, including base64 data URLs. HTTP URLs and file IDs are not supported."
+      );
     } else if (c.type === "image_url") {
       if (typeof c.image_url === "string") {
         return {
