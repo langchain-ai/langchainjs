@@ -123,7 +123,10 @@ export async function* convertAnthropicStream(
           ...mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
-          responseMetadata,
+          responseMetadata: {
+            ...responseMetadata,
+            model_provider: "anthropic",
+          },
         };
         break;
       }
