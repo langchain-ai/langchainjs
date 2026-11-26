@@ -239,6 +239,7 @@ export class AgentExecutorIterator
         );
         await this.runManager?.handleChainEnd(output);
         await this.setFinalOutputs(output);
+        return output;
       }
     }
     output = { intermediateSteps: nextStepOutput as AgentStep[] };
