@@ -791,7 +791,11 @@ export class ChatOpenAI<
   override withConfig(
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const newModel = new ChatOpenAI<CallOptions>(this.fields);
+    // Construct through the receiver's class so subclasses keep their
+    // overrides when tools or config are bound (e.g. via `bindTools`).
+    const newModel = new (this.constructor as typeof ChatOpenAI<CallOptions>)(
+      this.fields
+    );
     newModel.defaultOptions = { ...this.defaultOptions, ...config };
     return newModel;
   }
