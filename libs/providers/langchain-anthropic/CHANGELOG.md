@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.6.7
+
+### Patch Changes
+
+- [#12269](https://github.com/langchain-ai/langchainjs/pull/12269) [`e21b7a3`](https://github.com/langchain-ai/langchainjs/commit/e21b7a3ce33b635f700ea7e801c4bcecceb161e3) Thanks [@prassu017](https://github.com/prassu017)! - fix(anthropic): keep streamed refusals as a `refusal` content block on the native stream path
+
 ## 1.6.6
 
 ### Patch Changes

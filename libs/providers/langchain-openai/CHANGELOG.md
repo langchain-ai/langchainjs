@@ -1,5 +1,19 @@
 # @langchain/openai
 
+## 1.8.6
+
+### Patch Changes
+
+- [#12182](https://github.com/langchain-ai/langchainjs/pull/12182) [`12d3930`](https://github.com/langchain-ai/langchainjs/commit/12d39305d21b745abdd28ece9931cc628e6edc15) Thanks [@original4422](https://github.com/original4422)! - Fix Responses-native forced-function tool choices throwing when the function name is provided at the top level.
+
+- [#11333](https://github.com/langchain-ai/langchainjs/pull/11333) [`aa51f22`](https://github.com/langchain-ai/langchainjs/commit/aa51f2288592a27fc604a8af245a4ba97fa8f1c6) Thanks [@FlorianSp2000](https://github.com/FlorianSp2000)! - fix(openai): forward string `tool_choice` values on the Responses API
+
+  `"none"`, `"auto"` and `"required"` were dropped when building a Responses
+  request, so `tool_choice: "required"` did not force a tool call and
+  `tool_choice: "none"` did not prevent one — both silently fell back to the
+  provider default. These are valid `ToolChoiceOptions` values and are now sent
+  unchanged; only the named-function shape still needs converting.
+
 ## 1.8.5
 
 ### Patch Changes
