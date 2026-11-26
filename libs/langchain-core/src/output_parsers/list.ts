@@ -58,6 +58,43 @@ export abstract class ListOutputParser extends BaseTransformOutputParser<
 }
 
 /**
+ * Splits text on commas that are not inside a double-quoted field, keeping
+ * each field's raw text. As in CSV (and Python's parser), a quote only opens
+ * a field when it is the field's first non-space character, so `27" monitor`
+ * is plain text, and `""` inside a quoted field is an escaped quote.
+ */
+function splitCommaFields(text: string): string[] {
+  const fields: string[] = [];
+  let start = 0;
+  let quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    if (quoted) {
+      if (char === '"') {
+        if (text[i + 1] === '"') i += 1;
+        else quoted = false;
+      }
+    } else if (char === '"' && text.slice(start, i).trim() === "") {
+      quoted = true;
+    } else if (char === ",") {
+      fields.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  fields.push(text.slice(start));
+  return fields;
+}
+
+/** A field's value: trimmed, and unquoted when the whole field is quoted. */
+function unquoteField(field: string): string {
+  const value = field.trim();
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    return value.slice(1, -1).replaceAll('""', '"');
+  }
+  return value;
+}
+
+/**
  * Class to parse the output of an LLM call as a comma-separated list.
  * @augments ListOutputParser
  */
@@ -78,12 +115,27 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
    */
   async parse(text: string): Promise<string[]> {
     try {
-      return text
-        .trim()
-        .split(",")
-        .map((s) => s.trim());
+      return splitCommaFields(text.trim()).map(unquoteField);
     } catch {
       throw new OutputParserException(`Could not parse output: ${text}`, text);
+    }
+  }
+
+  async *_transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>
+  ): AsyncGenerator<string[]> {
+    let buffer = "";
+    for await (const input of inputGenerator) {
+      buffer += typeof input === "string" ? input : input.content;
+      // Keep the last field raw: a quoted value may still be streaming
+      const fields = splitCommaFields(buffer);
+      for (const field of fields.slice(0, -1)) {
+        yield [unquoteField(field)];
+      }
+      buffer = fields[fields.length - 1];
+    }
+    for (const value of await this.parse(buffer)) {
+      yield [value];
     }
   }
 
