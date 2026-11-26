@@ -149,6 +149,25 @@ export function calculateRetryDelay(
   return Math.max(delay, retryAfterMs ?? 0);
 }
 
+/**
+ * Tool errors a built-in middleware re-throws on purpose to stop the run.
+ * ToolNode treats these as middleware errors even though the tool threw them.
+ */
+const fatalToolErrors = new WeakSet<object>();
+
+export function rethrowToolErrorAsFatal(error: unknown): never {
+  if (typeof error === "object" && error !== null) {
+    fatalToolErrors.add(error);
+  }
+  throw error;
+}
+
+export function isFatalToolError(error: unknown): boolean {
+  return (
+    typeof error === "object" && error !== null && fatalToolErrors.has(error)
+  );
+}
+
 export function getRetryAfterMs(error: unknown): number | undefined {
   if (typeof error !== "object" || error === null) {
     return undefined;

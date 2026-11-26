@@ -21,6 +21,7 @@ import {
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { mergeAbortSignals } from "./utils.js";
+import { isFatalToolError } from "../middleware/utils.js";
 import { MiddlewareError, ToolInvocationError } from "../errors.js";
 import type {
   WrapToolCallHook,
@@ -341,6 +342,12 @@ export class ToolNode<
     const registeredTool = this.tools.find((t) => t.name === call.name);
 
     /**
+     * Errors thrown by the tool itself, so `#handleError` can tell them apart
+     * from errors raised by `wrapToolCall` middleware.
+     */
+    const toolErrors = new Set<unknown>();
+
+    /**
      * Define the base handler that executes the tool.
      * When wrapToolCall middleware is present, this handler does NOT catch errors
      * so the middleware can handle them.
@@ -415,13 +422,15 @@ export class ToolNode<
          * Handle errors from tool execution (not from wrapToolCall)
          * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
          */
-        if (e instanceof ToolInputParsingException) {
-          throw new ToolInvocationError(e, toolCall);
-        }
+        const error =
+          e instanceof ToolInputParsingException
+            ? new ToolInvocationError(e, toolCall)
+            : e;
+        toolErrors.add(error);
         /**
          * Re-throw to be handled by caller
          */
-        throw e;
+        throw error;
       }
     };
 
@@ -445,9 +454,15 @@ export class ToolNode<
         return await this.wrapToolCall(request, baseHandler);
       } catch (e: unknown) {
         /**
-         * Handle middleware errors
+         * An error the tool threw that only passed through the middleware is
+         * a tool error. Anything else, or a tool error a built-in middleware
+         * re-threw to stop the run, is a middleware error.
          */
-        return this.#handleError(e, call, true);
+        return this.#handleError(
+          e,
+          call,
+          !toolErrors.has(e) || isFatalToolError(e)
+        );
       }
     }
 

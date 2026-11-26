@@ -26,7 +26,6 @@ import {
   toolStrategy,
 } from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
-import { MiddlewareError } from "../errors.js";
 import type { JsonSchemaFormat } from "../responses.js";
 
 describe("middleware", () => {
@@ -834,17 +833,14 @@ describe("middleware", () => {
       });
 
       // Should only show the innermost middleware prefix, not nested prefixes
-      const error = await agent
-        .invoke({
-          messages: [{ role: "user", content: "Hi" }],
-        })
-        .catch((err) => err);
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hi" }],
+      });
 
-      expect(error).toBeInstanceOf(MiddlewareError);
-      expect(error.name).toBe("Error");
-      expect(error.message).toBe("original error");
-      expect(error.cause).toBeInstanceOf(Error);
-      expect(error.cause).not.toBeInstanceOf(MiddlewareError);
+      const toolMessage = result.messages.find(ToolMessage.isInstance);
+      expect(toolMessage?.content).toBe(
+        "Error: original error\n Please fix your mistakes."
+      );
     });
 
     it("should allow middleware to modify tool calls in response", async () => {
