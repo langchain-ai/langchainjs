@@ -8,7 +8,11 @@ import {
   type MockInstance,
 } from "vitest";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  AIMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
 
@@ -417,6 +421,227 @@ describe("llmToolSelectorMiddleware", () => {
     expect(firstCall).toHaveLength(2);
     // Should use the last (most recent) user message
     expect(firstCall[1].content).toContain("Second message");
+  });
+
+  it("respects runtime context maxTools and alwaysInclude overrides", async () => {
+    const middleware = llmToolSelectorMiddleware({
+      maxTools: 4,
+      alwaysInclude: ["toolD"],
+    });
+
+    (mockModel.invoke as unknown as MockInstance)
+      .mockResolvedValueOnce({
+        tools: ["toolA", "toolB", "toolC", "toolD"],
+      })
+      .mockResolvedValue(new AIMessage("Response from model"));
+
+    const agent = createAgent({
+      model: mockModel,
+      tools: allTools,
+      middleware: [middleware],
+    });
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Test message")],
+      },
+      {
+        context: {
+          maxTools: 2,
+          alwaysInclude: ["toolE"],
+        },
+      }
+    );
+
+    const boundTools = (mockModel.bindTools as unknown as MockInstance).mock
+      .calls[0][0];
+    const boundNames = boundTools.map((t: { name: string }) => t.name);
+    // Runtime maxTools (2) caps selected tools to [toolA, toolB],
+    // runtime alwaysInclude (["toolE"]) is included without dropping toolE
+    // or forcing/duplicating static alwaysInclude (["toolD"]).
+    expect(boundNames).toEqual(["toolA", "toolB", "toolE"]);
+  });
+
+  it("allows clearing static alwaysInclude via runtime context empty array", async () => {
+    const middleware = llmToolSelectorMiddleware({
+      maxTools: 2,
+      alwaysInclude: ["toolE"],
+    });
+
+    (mockModel.invoke as unknown as MockInstance)
+      .mockResolvedValueOnce({
+        tools: ["toolA", "toolE"],
+      })
+      .mockResolvedValue(new AIMessage("Response from model"));
+
+    const agent = createAgent({
+      model: mockModel,
+      tools: allTools,
+      middleware: [middleware],
+    });
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Test message")],
+      },
+      {
+        context: {
+          alwaysInclude: [],
+        },
+      }
+    );
+
+    const boundTools = (mockModel.bindTools as unknown as MockInstance).mock
+      .calls[0][0];
+    const boundNames = boundTools.map((t: { name: string }) => t.name);
+    // Static alwaysInclude was cleared, so toolE is selected only once (not duplicated)
+    expect(boundNames).toEqual(["toolA", "toolE"]);
+  });
+
+  it("supports a single selectable tool after alwaysInclude filtering", async () => {
+    const selectorModel = new FakeListChatModel({
+      responses: [JSON.stringify({ tools: ["toolB"] })],
+    });
+    const middleware = llmToolSelectorMiddleware({
+      model: selectorModel,
+      maxTools: 1,
+      alwaysInclude: ["toolA"],
+    });
+
+    (mockModel.invoke as unknown as MockInstance).mockResolvedValue(
+      new AIMessage("Response from model")
+    );
+
+    const agent = createAgent({
+      model: mockModel,
+      tools: [toolA, toolB],
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("Use tool B")],
+    });
+
+    const boundTools = (mockModel.bindTools as unknown as MockInstance).mock
+      .calls[0][0];
+    expect(boundTools.map((t: { name: string }) => t.name)).toEqual([
+      "toolB",
+      "toolA",
+    ]);
+  });
+
+  it("handles undefined runtime.context safely when wrapModelCall is invoked directly", async () => {
+    const middleware = llmToolSelectorMiddleware({
+      maxTools: 1,
+      alwaysInclude: ["toolE"],
+    });
+
+    (mockModel.invoke as unknown as MockInstance).mockResolvedValueOnce({
+      tools: ["toolA", "toolB"],
+    });
+
+    const handler = vi.fn().mockResolvedValue(new AIMessage("Done"));
+    type WrapRequest = Parameters<
+      NonNullable<typeof middleware.wrapModelCall>
+    >[0];
+    await middleware.wrapModelCall?.(
+      {
+        model: mockModel,
+        messages: [new HumanMessage("Test")],
+        tools: allTools,
+        systemPrompt: "",
+        systemMessage: new SystemMessage(""),
+        state: { messages: [] },
+        runtime: {} as WrapRequest["runtime"],
+      },
+      handler
+    );
+
+    const modifiedTools = handler.mock.calls[0][0].tools;
+    expect(modifiedTools.map((t: { name: string }) => t.name)).toEqual([
+      "toolA",
+      "toolE",
+    ]);
+  });
+
+  it("supports configuring options solely through runtime context", async () => {
+    const middleware = llmToolSelectorMiddleware();
+
+    (mockModel.invoke as unknown as MockInstance)
+      .mockResolvedValueOnce({
+        tools: ["toolB", "toolC"],
+      })
+      .mockResolvedValue(new AIMessage("Response from model"));
+
+    const agent = createAgent({
+      model: mockModel,
+      tools: allTools,
+      middleware: [middleware],
+    });
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Test message")],
+      },
+      {
+        context: {
+          maxTools: 1,
+          alwaysInclude: ["toolD"],
+          systemPrompt: "Runtime selector prompt",
+        },
+      }
+    );
+
+    const selectorMessages = (mockModel.invoke as unknown as MockInstance).mock
+      .calls[0][0];
+    expect(selectorMessages[0].content).toContain("Runtime selector prompt");
+    expect(selectorMessages[0].content).toContain(
+      "only the first 1 will be used"
+    );
+
+    const boundTools = (mockModel.bindTools as unknown as MockInstance).mock
+      .calls[0][0];
+    expect(boundTools.map((t: { name: string }) => t.name)).toEqual([
+      "toolB",
+      "toolD",
+    ]);
+  });
+
+  it("preserves provider-specific tool dicts without duplicating named server tools", async () => {
+    const providerTool = {
+      type: "web_search",
+      name: "toolE",
+    };
+    const middleware = llmToolSelectorMiddleware({
+      maxTools: 1,
+    });
+
+    (mockModel.invoke as unknown as MockInstance)
+      .mockResolvedValueOnce({
+        tools: ["toolA", "toolB"],
+      })
+      .mockResolvedValue(new AIMessage("Response from model"));
+
+    const agent = createAgent({
+      model: mockModel,
+      tools: [toolA, toolB, toolC, providerTool],
+      middleware: [middleware],
+    });
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Test message")],
+      },
+      {
+        context: {
+          alwaysInclude: ["toolC"],
+        },
+      }
+    );
+
+    const boundTools = (mockModel.bindTools as unknown as MockInstance).mock
+      .calls[0][0];
+    expect(boundTools).toEqual([toolA, toolC, providerTool]);
   });
 });
 

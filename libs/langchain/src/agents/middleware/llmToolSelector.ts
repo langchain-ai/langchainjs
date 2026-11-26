@@ -19,7 +19,7 @@ const DEFAULT_SYSTEM_PROMPT =
   "Your goal is to select the most relevant tools for answering the user's query.";
 
 /**
- * Prepared inputs for tool selection.
+ * Prepared inputs and resolved configuration for tool selection.
  */
 interface SelectionRequest {
   availableTools: StructuredToolInterface[];
@@ -27,6 +27,45 @@ interface SelectionRequest {
   lastUserMessage: HumanMessage;
   model: BaseLanguageModel;
   validToolNames: string[];
+  maxTools?: number;
+  alwaysInclude: string[];
+}
+
+interface ResolvedSelectionOptions {
+  model?: LLMToolSelectorConfig["model"];
+  maxTools?: number;
+  alwaysInclude: string[];
+  systemPrompt: string;
+}
+
+/**
+ * Merge static middleware options with per-invocation `runtime.context` overrides.
+ */
+function resolveSelectionOptions(
+  options: LLMToolSelectorConfig,
+  runtime?: Runtime<LLMToolSelectorConfig>
+): ResolvedSelectionOptions {
+  const context = runtime?.context;
+  return {
+    model: context?.model ?? options.model,
+    maxTools: context?.maxTools ?? options.maxTools,
+    alwaysInclude: context?.alwaysInclude ?? options.alwaysInclude ?? [],
+    systemPrompt:
+      context?.systemPrompt ?? options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
+  };
+}
+
+/**
+ * Type guard identifying LangChain structured tools (as opposed to provider-specific tool dicts).
+ */
+function isSelectableTool(tool: unknown): tool is StructuredToolInterface {
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "name" in tool &&
+    "description" in tool &&
+    typeof tool.name === "string"
+  );
 }
 
 /**
@@ -40,15 +79,17 @@ function createToolSelectionResponse(tools: StructuredToolInterface[]) {
     throw new Error("Invalid usage: tools must be non-empty");
   }
 
-  // Create a union of literals for each tool name
   const toolLiterals = tools.map((tool) => z.literal(tool.name));
-  const toolEnum = z.union(
-    toolLiterals as [
-      z.ZodLiteral<string>,
-      z.ZodLiteral<string>,
-      ...z.ZodLiteral<string>[],
-    ]
-  );
+  const toolEnum: z.ZodType<string> =
+    toolLiterals.length === 1
+      ? toolLiterals[0]
+      : z.union(
+          toolLiterals as [
+            z.ZodLiteral<string>,
+            z.ZodLiteral<string>,
+            ...z.ZodLiteral<string>[],
+          ]
+        );
 
   return z.object({
     tools: z
@@ -122,7 +163,7 @@ export type LLMToolSelectorConfig = InferInteropZodInput<
  * });
  * ```
  */
-export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
+export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig = {}) {
   return createMiddleware({
     name: "LLMToolSelector",
     contextSchema: LLMToolSelectorOptionsSchema,
@@ -171,10 +212,8 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
       return handler(
         processSelectionResponse(
           response as { tools: string[] },
-          selectionRequest.availableTools,
-          selectionRequest.validToolNames,
-          request,
-          options
+          selectionRequest,
+          request
         )
       );
     },
@@ -187,7 +226,7 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
  * @param request - The model request to process.
  * @param options - Configuration options.
  * @param runtime - Runtime context.
- * @returns SelectionRequest with prepared inputs, or null if no selection is needed.
+ * @returns SelectionRequest with prepared inputs, or undefined if no selection is needed.
  */
 async function prepareSelectionRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
@@ -195,16 +234,10 @@ async function prepareSelectionRequest<
 >(
   request: ModelRequest<TState, TContext>,
   options: LLMToolSelectorConfig,
-  runtime: Runtime<LLMToolSelectorConfig>
+  runtime?: Runtime<LLMToolSelectorConfig>
 ): Promise<SelectionRequest | undefined> {
-  const model = runtime.context.model ?? options.model;
-  const maxTools = runtime.context.maxTools ?? options.maxTools;
-  const alwaysInclude =
-    runtime.context.alwaysInclude ?? options.alwaysInclude ?? [];
-  const systemPrompt =
-    runtime.context.systemPrompt ??
-    options.systemPrompt ??
-    DEFAULT_SYSTEM_PROMPT;
+  const { model, maxTools, alwaysInclude, systemPrompt } =
+    resolveSelectionOptions(options, runtime);
 
   /**
    * If no tools available, return null
@@ -216,13 +249,7 @@ async function prepareSelectionRequest<
   /**
    * Filter to only StructuredToolInterface instances (exclude provider-specific tool dicts)
    */
-  const baseTools = request.tools.filter(
-    (tool): tool is StructuredToolInterface =>
-      typeof tool === "object" &&
-      "name" in tool &&
-      "description" in tool &&
-      typeof tool.name === "string"
-  );
+  const baseTools = request.tools.filter(isSelectableTool);
 
   /**
    * Validate that alwaysInclude tools exist
@@ -296,6 +323,8 @@ async function prepareSelectionRequest<
     lastUserMessage,
     model: modelInstance,
     validToolNames,
+    maxTools,
+    alwaysInclude,
   };
 }
 
@@ -303,10 +332,8 @@ async function prepareSelectionRequest<
  * Process the selection response and return filtered ModelRequest.
  *
  * @param response - The structured output response from the model.
- * @param availableTools - Tools available for selection.
- * @param validToolNames - Valid tool names that can be selected.
+ * @param selectionRequest - Prepared selection inputs and resolved options.
  * @param request - Original model request.
- * @param options - Configuration options.
  * @returns Modified ModelRequest with filtered tools.
  */
 function processSelectionResponse<
@@ -314,13 +341,11 @@ function processSelectionResponse<
   TContext = unknown,
 >(
   response: { tools: string[] },
-  availableTools: StructuredToolInterface[],
-  validToolNames: string[],
-  request: ModelRequest<TState, TContext>,
-  options: LLMToolSelectorConfig
+  selectionRequest: SelectionRequest,
+  request: ModelRequest<TState, TContext>
 ): ModelRequest<TState, TContext> {
-  const maxTools = options.maxTools;
-  const alwaysInclude = options.alwaysInclude ?? [];
+  const { availableTools, validToolNames, maxTools, alwaysInclude } =
+    selectionRequest;
 
   const selectedToolNames: string[] = [];
   const invalidToolSelections: string[] = [];
@@ -356,14 +381,11 @@ function processSelectionResponse<
   );
 
   /**
-   * Append always-included tools
+   * Append always-included tools (using the same structured-tool predicate to stay disjoint from providerTools)
    */
   const alwaysIncludedTools = (request.tools ?? []).filter(
     (tool): tool is StructuredToolInterface =>
-      typeof tool === "object" &&
-      "name" in tool &&
-      typeof tool.name === "string" &&
-      alwaysInclude.includes(tool.name)
+      isSelectableTool(tool) && alwaysInclude.includes(tool.name)
   );
   selectedTools.push(...alwaysIncludedTools);
 
@@ -371,13 +393,7 @@ function processSelectionResponse<
    * Also preserve any provider-specific tool dicts from the original request
    */
   const providerTools = (request.tools ?? []).filter(
-    (tool) =>
-      !(
-        typeof tool === "object" &&
-        "name" in tool &&
-        "description" in tool &&
-        typeof tool.name === "string"
-      )
+    (tool) => !isSelectableTool(tool)
   );
 
   return {
