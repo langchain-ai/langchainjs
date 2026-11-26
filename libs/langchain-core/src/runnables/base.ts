@@ -341,6 +341,12 @@ export abstract class Runnable<
         runId: options.runId,
         timeout: options.timeout,
         signal: options.signal,
+        // LangGraph runtime fields: config, not call options. Without this
+        // they leak into provider call options and model run traces.
+        // @ts-expect-error - Store and context are not declared on RunnableConfig.
+        store: options.store,
+        // @ts-expect-error - Store and context are not declared on RunnableConfig.
+        context: options.context,
       });
     }
     const callOptions = { ...(options as Partial<CallOptions>) };
@@ -354,6 +360,10 @@ export abstract class Runnable<
     delete callOptions.runId;
     delete callOptions.timeout;
     delete callOptions.signal;
+    // @ts-expect-error - Store and context are not declared on CallOptions.
+    delete callOptions.store;
+    // @ts-expect-error - Store and context are not declared on CallOptions.
+    delete callOptions.context;
     return [runnableConfig, callOptions];
   }
 
