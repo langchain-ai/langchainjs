@@ -133,8 +133,10 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     const promptInputKey =
       this.inputKey ?? getPromptInputKey(inputs, this.memoryVariables);
     const messages = await this.chatHistory.getMessages();
+    // `slice(-0)` returns the whole array, so guard against `k === 0`.
+    const recentMessages = this.k > 0 ? messages.slice(-this.k * 2) : [];
     const serializedMessages = getBufferString(
-      messages.slice(-this.k * 2),
+      recentMessages,
       this.humanPrefix,
       this.aiPrefix
     );
@@ -153,9 +155,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
       );
     }
     this.entityCache = [...entities];
-    const buffer = this.returnMessages
-      ? messages.slice(-this.k * 2)
-      : serializedMessages;
+    const buffer = this.returnMessages ? recentMessages : serializedMessages;
 
     return {
       [this.chatHistoryKey]: buffer,
@@ -177,8 +177,9 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     const promptInputKey =
       this.inputKey ?? getPromptInputKey(inputs, this.memoryVariables);
     const messages = await this.chatHistory.getMessages();
+    const recentMessages = this.k > 0 ? messages.slice(-this.k * 2) : [];
     const serializedMessages = getBufferString(
-      messages.slice(-this.k * 2),
+      recentMessages,
       this.humanPrefix,
       this.aiPrefix
     );
