@@ -524,6 +524,32 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolFinish!.content.args).toEqual({ q: "hello" });
     });
 
+    test("finalizes a zero-arg tool call to a tool_call with empty args", async () => {
+      const model = new FakeChunkStreamModel([
+        new AIMessageChunk({
+          content: "",
+          id: "msg_tools",
+          tool_call_chunks: [
+            { id: "call_1", name: "get_time", args: "", index: 0 },
+          ],
+        }),
+      ]);
+      const stream = model.streamEvents("Hello");
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of stream) {
+        events.push(event);
+      }
+
+      const finish = events.find((e) => e.event === "content-block-finish");
+      expect(finish).toBeDefined();
+      expect((finish as { content: ContentBlock }).content).toEqual({
+        type: "tool_call",
+        id: "call_1",
+        name: "get_time",
+        args: {},
+      });
+    });
+
     test("streams tool call args as slices", async () => {
       const model = new FakeChunkStreamModel([
         new AIMessageChunk({
