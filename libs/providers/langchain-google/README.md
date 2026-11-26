@@ -7,8 +7,8 @@ called the Generative AI API or the AI Studio API) or through the Google Cloud P
 [Vertex AI](https://cloud.google.com/vertex-ai) service. It does not rely
 on the "genai" library from Google, but rather uses direct REST calls.
 
-This package will be replacing the [ChatGoogleGenerativeAI](google_generative_ai)
-and [ChatVertex](google_vertex_ai) libraries.
+This package will be replacing the [ChatGoogleGenerativeAI](https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-google-genai)
+and [ChatVertex](https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-google-vertexai) libraries.
 
 ## Installation
 
