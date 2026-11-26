@@ -91,3 +91,18 @@ test("Can parse streams", async () => {
   }
   expect(finalResult).toStrictEqual(expectedResult);
 });
+
+test("Can parse streams of backtick wrapped XML", async () => {
+  const parser = new XMLOutputParser();
+  const streamingLlm = new FakeStreamingLLM({
+    sleep: 0,
+    responses: [BACKTICK_WRAPPED_XML],
+  }).pipe(parser);
+
+  const result = await streamingLlm.stream(BACKTICK_WRAPPED_XML);
+  let finalResult = {};
+  for await (const chunk of result) {
+    finalResult = chunk;
+  }
+  expect(finalResult).toStrictEqual(expectedResult);
+});
