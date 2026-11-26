@@ -159,6 +159,8 @@ async function onAttemptFailure({
 
   const finalDelay = Math.min(delayTime, remainingTime);
 
+  options.signal?.throwIfAborted();
+
   if (finalDelay > 0) {
     await new Promise((resolve, reject) => {
       const onAbort = () => {
@@ -249,6 +251,7 @@ export default async function pRetry(input, options = {}) {
 
       return result;
     } catch (error) {
+      options.signal?.throwIfAborted();
       if (
         await onAttemptFailure({
           error,
