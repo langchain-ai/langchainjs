@@ -16,6 +16,11 @@ export interface TavilyExtractInput {
   format?: "markdown" | "text";
   includeFavicon?: boolean;
   includeUsage?: boolean;
+
+  /** Chunks per source (1–5); requires query. */
+  chunksPerSource?: number;
+  /** API processing timeout in seconds (1–60). */
+  timeout?: number;
   query?: string;
 }
 
@@ -66,6 +71,11 @@ export type TavilyExtractAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeUsage?: boolean;
+
+  /** Chunks per source (1–5); requires query. */
+  chunksPerSource?: number;
+  /** API processing timeout in seconds (1–60). */
+  timeout?: number;
 
   /**
    * User intent query for reranking extracted content chunks.
@@ -120,6 +130,19 @@ function generateSuggestions(params: Record<string, unknown>): string[] {
 }
 
 const inputSchema = z.object({
+  chunksPerSource: z
+    .number()
+    .int()
+    .min(1)
+    .max(5)
+    .optional()
+    .describe("Chunks per source (1–5); requires query."),
+  timeout: z
+    .number()
+    .min(1)
+    .max(60)
+    .optional()
+    .describe("API processing timeout in seconds (1–60)."),
   urls: z.array(z.string()).describe("List of URLs to extract"),
   extractDepth: z
     .enum(["basic", "advanced"])
@@ -181,6 +204,11 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
 
   includeUsage?: boolean;
 
+  /** Chunks per source (1–5); requires query. */
+  chunksPerSource?: number;
+  /** API processing timeout in seconds (1–60). */
+  timeout?: number;
+
   query?: string;
 
   private apiWrapper: TavilyExtractAPIWrapper;
@@ -215,6 +243,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     this.format = params.format;
     this.includeFavicon = params.includeFavicon;
     this.includeUsage = params.includeUsage;
+    this.chunksPerSource = params.chunksPerSource;
+    this.timeout = params.timeout;
     this.query = params.query;
   }
 
@@ -236,6 +266,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
         format: this.format,
         includeFavicon: this.includeFavicon,
         includeUsage: this.includeUsage,
+        chunksPerSource: this.chunksPerSource ?? input.chunksPerSource,
+        timeout: this.timeout ?? input.timeout,
         query: effectiveQuery,
       });
 

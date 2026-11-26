@@ -99,6 +99,9 @@ export type TavilyMapAPIRetrieverFields = ToolParams & {
    */
   includeUsage?: boolean;
 
+  /** API processing timeout in seconds (10–150). */
+  timeout?: number;
+
   /**
    * The name of the tool.
    *
@@ -159,6 +162,12 @@ function generateSuggestions(params: Record<string, unknown>): string[] {
 }
 
 const inputSchema = z.object({
+  timeout: z
+    .number()
+    .min(10)
+    .max(150)
+    .optional()
+    .describe("API processing timeout in seconds (10–150)."),
   url: z.string().describe("URL to map"),
   instructions: z
     .string()
@@ -266,6 +275,9 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
 
   includeUsage?: boolean;
 
+  /** API processing timeout in seconds (10–150). */
+  timeout?: number;
+
   private apiWrapper: TavilyMapAPIWrapper;
 
   constructor(params: TavilyMapAPIRetrieverFields = {}) {
@@ -304,6 +316,7 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
     this.allowExternal = params.allowExternal;
     this.categories = params.categories;
     this.includeUsage = params.includeUsage;
+    this.timeout = params.timeout;
   }
 
   async _call(
@@ -355,6 +368,7 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
         allowExternal: effectiveAllowExternal,
         categories: effectiveCategories,
         includeUsage: this.includeUsage,
+        timeout: this.timeout ?? input.timeout,
       });
 
       if (
