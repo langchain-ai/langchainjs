@@ -20,46 +20,38 @@ export type RunType = string;
 /** Explicit terminal status a tracer sends besides success and error. */
 export type RunEndStatus = "cancelled" | "interrupted";
 
-// Control-flow errors from LangGraph's `GraphBubbleUp` family. Matched by name
-// to avoid a dependency on LangGraph. `GraphDrained` is left out on purpose:
-// shutdown drains stay errors.
-const INTERRUPT_ERROR_NAMES = new Set([
-  "GraphInterrupt",
-  "NodeInterrupt",
-  "ParentCommand",
-  "GraphDelegate",
-]);
+const RUN_STATUS_PROPERTY = "ls_run_status";
 const EXPECTED_CANCELLATION_NAME = "ExpectedCancellation";
 const MAX_CAUSE_DEPTH = 5;
 
 /**
  * The explicit status a run should be traced with for this error, if any.
  *
- * A deliberate cancel (an `ExpectedCancellation`, usually as the abort
- * reason) gives `"cancelled"`, and a LangGraph interrupt gives
- * `"interrupted"`. Anything else, including an unmarked `AbortError` or a
- * timeout, gives `undefined` and stays an error.
+ * An error that carries an explicit `ls_run_status` of `"cancelled"` or
+ * `"interrupted"` (LangGraph sets it on its interrupt errors) gives that
+ * status, and so does a deliberate cancel (an `ExpectedCancellation`, usually
+ * as the abort reason), which gives `"cancelled"`. Any other value, an
+ * unmarked `AbortError`, a timeout or a plain error gives `undefined` and
+ * stays an error. Interrupt classes such as `GraphInterrupt` are never classified by name.
  *
  * The `cause` chain is searched on purpose: provider SDKs wrap the abort
- * reason, and a wrapped deliberate cancel or interrupt is still one. This
- * mirrors the Python tracer, which treats the whole `GraphBubbleUp` family
- * (so `ParentCommand` and `GraphDelegate` too) as `interrupted`.
+ * reason, and a wrapped deliberate cancel or interrupt is still one.
  */
 export function getRunEndStatusFromError(
   error: unknown
 ): RunEndStatus | undefined {
-  // A tracer must never throw from its error path, so a hostile `name` or
-  // `cause` getter just means "no explicit status".
+  // A tracer must never throw from its error path, so a hostile getter just means "no explicit status".
   try {
     let current = error;
     for (let i = 0; i < MAX_CAUSE_DEPTH; i += 1) {
       if (typeof current !== "object" || current === null) return undefined;
-      const { name, cause } = current as { name?: unknown; cause?: unknown };
-      if (typeof name === "string") {
-        if (INTERRUPT_ERROR_NAMES.has(name)) return "interrupted";
-        if (name === EXPECTED_CANCELLATION_NAME) return "cancelled";
+      const record = current as Record<string, unknown>;
+      const explicit = record[RUN_STATUS_PROPERTY];
+      if (explicit === "cancelled" || explicit === "interrupted") {
+        return explicit;
       }
-      current = cause;
+      if (record.name === EXPECTED_CANCELLATION_NAME) return "cancelled";
+      current = record.cause;
     }
   } catch {
     // fall through to no status

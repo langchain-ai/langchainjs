@@ -16,6 +16,11 @@ const serialized: Serialized = {
 
 class GraphInterrupt extends Error {
   name = "GraphInterrupt";
+  ls_run_status = "interrupted";
+}
+
+class UnmarkedGraphInterrupt extends Error {
+  name = "GraphInterrupt";
 }
 
 /** Runs a lambda that blocks until aborted with `reason`; returns the root run. */
@@ -39,14 +44,32 @@ describe("getRunEndStatusFromError", () => {
     );
   });
 
-  test.each([
-    "GraphInterrupt",
-    "NodeInterrupt",
-    "ParentCommand",
-    "GraphDelegate",
-  ])("%s is interrupted", (name) => {
-    const error = Object.assign(new Error("x"), { name });
-    expect(getRunEndStatusFromError(error)).toBe("interrupted");
+  test.each(["interrupted", "cancelled"] as const)(
+    "an error with ls_run_status=%s gets that status",
+    (status) => {
+      const error = Object.assign(new Error("x"), { ls_run_status: status });
+      expect(getRunEndStatusFromError(error)).toBe(status);
+    }
+  );
+
+  test("ignores any other ls_run_status value", () => {
+    for (const value of ["error", "success", "pending", 1, null, {}]) {
+      const error = Object.assign(new Error("x"), { ls_run_status: value });
+      expect(getRunEndStatusFromError(error)).toBeUndefined();
+    }
+  });
+
+  test("never classifies by class name", () => {
+    for (const name of [
+      "GraphInterrupt",
+      "NodeInterrupt",
+      "ParentCommand",
+      "GraphDelegate",
+      "GraphBubbleUp",
+    ]) {
+      const error = Object.assign(new Error("x"), { name });
+      expect(getRunEndStatusFromError(error)).toBeUndefined();
+    }
   });
 
   test("plain errors, unmarked aborts, timeouts and drains stay errors", () => {
@@ -88,9 +111,15 @@ describe("tracer run status", () => {
     expect(run.error).toBeDefined();
   });
 
-  test("GraphInterrupt is interrupted", async () => {
+  test("an error tagged ls_run_status=interrupted is interrupted", async () => {
     const run = await runAbortedWith(new GraphInterrupt("paused"));
     expect(run.status).toBe("interrupted");
+  });
+
+  test("a class merely named GraphInterrupt stays an error", async () => {
+    const run = await runAbortedWith(new UnmarkedGraphInterrupt("paused"));
+    expect(run.status).toBeUndefined();
+    expect(run.error).toBeDefined();
   });
 
   test("plain abort stays an error", async () => {
