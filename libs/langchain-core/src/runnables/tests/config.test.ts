@@ -270,3 +270,32 @@ describe("runtime context propagation", () => {
     expect(await readContext.invoke({})).toBeUndefined();
   });
 });
+
+describe("_separateRunnableConfigFromCallOptions", () => {
+  it("treats LangGraph runtime fields as config, not call options", () => {
+    const runnable = new (class extends RunnableLambda<unknown, unknown> {
+      expose(options?: Record<string, unknown>) {
+        return this._separateRunnableConfigFromCallOptions(
+          options as Record<string, never>
+        );
+      }
+    })(async () => null);
+
+    const context = { userId: "alice" };
+    const store = { some: "store" };
+    const [runnableConfig, callOptions] = runnable.expose({
+      context,
+      store,
+      tags: ["t"],
+      model: "gpt-4o-mini",
+    }) as [Record<string, unknown>, Record<string, unknown>];
+
+    expect(callOptions.context).toBeUndefined();
+    expect(callOptions.store).toBeUndefined();
+    expect(callOptions.tags).toBeUndefined();
+    expect(callOptions.model).toBe("gpt-4o-mini");
+    expect(runnableConfig.context).toBe(context);
+    expect(runnableConfig.store).toBe(store);
+    expect(runnableConfig.tags).toEqual(["t"]);
+  });
+});
