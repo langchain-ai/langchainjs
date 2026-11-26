@@ -170,6 +170,28 @@ test("Router runnables", async () => {
   expect(result2).toEqual(["I am a math genius!", "I am an English genius!"]);
 });
 
+test("RunnableWithFallbacks.batch supports returnExceptions", async () => {
+  const failing = RunnableLambda.from(() => {
+    throw new Error("primary model down");
+  });
+  const fallback = RunnableLambda.from(
+    (x: string) => `fallback result for ${x}`
+  );
+
+  const withFallbacks = failing.withFallbacks([fallback]);
+
+  const result = await withFallbacks.batch(
+    ["input-1", "input-2"],
+    undefined,
+    { returnExceptions: true }
+  );
+
+  expect(result).toEqual([
+    "fallback result for input-1",
+    "fallback result for input-2",
+  ]);
+});
+
 test("RunnableLambda that returns a runnable should invoke the runnable", async () => {
   const runnable = new RunnableLambda({
     func: () =>
