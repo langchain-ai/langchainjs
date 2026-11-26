@@ -1,8 +1,7 @@
-import { OpenAI as OpenAIClient, type ClientOptions } from "openai";
+import type { OpenAI as OpenAIClient, ClientOptions } from "openai";
 import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import { wrapOpenAIClientError } from "../utils/client.js";
+import { createDecisionsClient } from "./client.js";
 import { toDecisionInput } from "./input.js";
 import { convertResponsesUsageToUsageMetadata } from "../converters/responses.js";
 import {
@@ -12,6 +11,8 @@ import {
   type DecisionResult,
   type Questions,
 } from "./types.js";
+
+export { OpenAIClassifier, type OpenAIClassifierFields } from "./classifier.js";
 
 export type {
   Answer,
@@ -95,20 +96,7 @@ export class OpenAIDecisions extends Runnable<DecisionRequest, DecisionResult> {
     if (!fields.model?.trim())
       throw new Error("An OpenAI Decisions model is required.");
     this.model = fields.model;
-    const gateway = resolveLangSmithGatewayConfig({
-      baseURL:
-        fields.configuration?.baseURL ??
-        (getEnvironmentVariable("OPENAI_API_BASE") ||
-          getEnvironmentVariable("OPENAI_BASE_URL") ||
-          undefined),
-      providerPath: "openai/v1",
-    });
-    this.client = new OpenAIClient({
-      ...fields.configuration,
-      baseURL: gateway.baseURL,
-      apiKey:
-        apiKey ?? gateway.apiKey ?? getEnvironmentVariable("OPENAI_API_KEY"),
-    });
+    this.client = createDecisionsClient(apiKey, fields.configuration);
   }
 
   async invoke<const Q extends Questions>(
