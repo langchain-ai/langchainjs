@@ -19,6 +19,8 @@ const MOCK_RESPONSE = {
   ],
 };
 
+const EXPECTED_INTEGRATION_HEADER = `langchainjs/${__PKG_VERSION__}`;
+
 function mockFetchOnce(response: unknown, ok = true, status = 200) {
   const fetchMock = vi.fn().mockResolvedValue({
     ok,
@@ -167,6 +169,7 @@ describe("PerplexitySearchResults", () => {
       expect(init.headers).toEqual({
         Authorization: "Bearer test-key",
         "Content-Type": "application/json",
+        "X-Pplx-Integration": EXPECTED_INTEGRATION_HEADER,
       });
       expect(JSON.parse(init.body)).toEqual({
         query: "test query",
