@@ -66,6 +66,21 @@ test("Constructor supports string model shorthand", () => {
   expect(shorthand.temperature).toBe(explicit.temperature);
 });
 
+test("convertMessagesToMistralMessages keeps assistant content alongside tool calls", () => {
+  const converted = convertMessagesToMistralMessages([
+    new HumanMessage("What is 2 + 2?"),
+    new AIMessage({
+      content: "I will calculate this.",
+      tool_calls: [{ id: "123456789", name: "calculate", args: {} }],
+    }),
+    new ToolMessage({ content: "4", tool_call_id: "123456789" }),
+  ]) as { role: string; content?: string; toolCalls?: unknown[] }[];
+
+  expect(converted[1].role).toBe("assistant");
+  expect(converted[1].content).toBe("I will calculate this.");
+  expect(converted[1].toolCalls).toHaveLength(1);
+});
+
 /**
  * Test to make sure that the logic in convertMessagesToMistralMessages that makes sure
  * tool calls are only included if there is a corresponding ToolMessage works as expected
