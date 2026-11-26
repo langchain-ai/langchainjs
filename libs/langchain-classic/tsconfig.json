@@ -5,7 +5,7 @@
     "outDir": "dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "src/**/tests/**", "src/**/*.test.ts"],
   "references": [
     { "path": "../langchain-core" },
     { "path": "../langchain-textsplitters" },
