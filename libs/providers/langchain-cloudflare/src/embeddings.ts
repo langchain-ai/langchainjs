@@ -59,6 +59,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
     this.ai = fields.binding;
     this.modelName = fields?.model ?? fields.modelName ?? this.model;
     this.model = this.modelName;
+    this.batchSize = fields.batchSize ?? this.batchSize;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 
