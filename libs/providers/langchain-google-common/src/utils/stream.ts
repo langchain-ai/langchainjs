@@ -312,14 +312,18 @@ export class ComplexJsonStream extends JsonStream {
 export class ReadableAbstractStream implements AbstractStream {
   private baseStream: AbstractStream;
 
+  private error: unknown;
+
   decoder: TextDecoder;
 
   constructor(baseStream: AbstractStream, body: ReadableStream | null) {
     this.baseStream = baseStream;
     this.decoder = new TextDecoder("utf-8");
     if (body) {
-      // oxlint-disable-next-line no-void
-      void this.run(body);
+      this.run(body).catch((error) => {
+        this.error = error;
+        this.closeBuffer();
+      });
     } else {
       console.error("Unexpected empty body while streaming");
     }
@@ -334,8 +338,12 @@ export class ReadableAbstractStream implements AbstractStream {
   }
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  nextChunk(): Promise<any> {
-    return this.baseStream.nextChunk();
+  async nextChunk(): Promise<any> {
+    const chunk = await this.baseStream.nextChunk();
+    if (this.error !== undefined && this.streamDone) {
+      throw this.error;
+    }
+    return chunk;
   }
 
   get streamDone(): boolean {
