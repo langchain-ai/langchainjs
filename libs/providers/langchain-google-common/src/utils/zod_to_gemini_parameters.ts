@@ -61,7 +61,7 @@ export function removeAdditionalProperties(
       delete newObj.additionalProperties;
     }
 
-    // Check for union types (anyOf, oneOf) which Gemini doesn't support
+    // Gemini supports anyOf, but nullable unions can use nullable: true.
     if ("anyOf" in newObj || "oneOf" in newObj) {
       const unionTypes = newObj.anyOf || newObj.oneOf;
 
@@ -82,18 +82,14 @@ export function removeAdditionalProperties(
             }
           }
           newObj.nullable = true;
-        } else {
-          // Not a simple nullable union - reject it
-          throw new Error(
-            "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
-              "Consider using a flat object structure with optional fields instead."
-          );
         }
-      } else {
-        // Not a simple nullable union - reject it
+      }
+
+      // Unlike anyOf, non-nullable oneOf is not supported by Gemini's Schema API.
+      if ("oneOf" in newObj) {
         throw new Error(
-          "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
-            "Consider using a flat object structure with optional fields instead."
+          "zod_to_gemini_parameters: Gemini cannot handle oneOf schemas. " +
+            "Consider using anyOf or a flat object structure with optional fields instead."
         );
       }
     }
