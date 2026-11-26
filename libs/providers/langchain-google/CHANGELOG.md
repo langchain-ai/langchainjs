@@ -1,5 +1,13 @@
 # @langchain/google
 
+## 0.2.18
+
+### Patch Changes
+
+- [#11687](https://github.com/langchain-ai/langchainjs/pull/11687) [`37c7092`](https://github.com/langchain-ai/langchainjs/commit/37c70928dabc04df8a5fcb5694374d511ea8eaad) Thanks [@byhow](https://github.com/byhow)! - Ship declaration maps (`.d.ts.map`, `.d.cts.map`) like the other providers. The
+  package's tsconfig now matches its siblings; JavaScript and type declarations
+  are unchanged.
+
 ## 0.2.17
 
 ### Patch Changes
