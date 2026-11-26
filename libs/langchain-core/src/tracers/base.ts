@@ -17,6 +17,48 @@ import { getRuntimeEnvironment } from "../utils/env.js";
 
 export type RunType = string;
 
+/** Explicit terminal status a tracer sends besides success and error. */
+export type RunEndStatus = "cancelled" | "interrupted";
+
+const RUN_STATUS_PROPERTY = "ls_run_status";
+const EXPECTED_CANCELLATION_NAME = "ExpectedCancellation";
+const MAX_CAUSE_DEPTH = 5;
+
+/**
+ * The explicit status a run should be traced with for this error, if any.
+ *
+ * An error that carries an explicit `ls_run_status` of `"cancelled"` or
+ * `"interrupted"` (LangGraph sets it on its interrupt errors) gives that
+ * status, and so does a deliberate cancel (an `ExpectedCancellation`, usually
+ * as the abort reason), which gives `"cancelled"`. Any other value, an
+ * unmarked `AbortError`, a timeout or a plain error gives `undefined` and
+ * stays an error. Interrupt classes such as `GraphInterrupt` are never classified by name.
+ *
+ * The `cause` chain is searched on purpose: provider SDKs wrap the abort
+ * reason, and a wrapped deliberate cancel or interrupt is still one.
+ */
+export function getRunEndStatusFromError(
+  error: unknown
+): RunEndStatus | undefined {
+  // A tracer must never throw from its error path, so a hostile getter just means "no explicit status".
+  try {
+    let current = error;
+    for (let i = 0; i < MAX_CAUSE_DEPTH; i += 1) {
+      if (typeof current !== "object" || current === null) return undefined;
+      const record = current as Record<string, unknown>;
+      const explicit = record[RUN_STATUS_PROPERTY];
+      if (explicit === "cancelled" || explicit === "interrupted") {
+        return explicit;
+      }
+      if (record.name === EXPECTED_CANCELLATION_NAME) return "cancelled";
+      current = record.cause;
+    }
+  } catch {
+    // fall through to no status
+  }
+  return undefined;
+}
+
 // TODO: Remove this type and just use the base LangSmith Run type.
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -34,6 +76,11 @@ export interface Run extends BaseRun {
   }>;
   trace_id?: string;
   dotted_order?: string;
+  /**
+   * Explicit terminal status sent alongside `error` for deliberate cancels and
+   * interrupts. Needs a `langsmith` client that forwards it; older ones ignore it.
+   */
+  status?: RunEndStatus;
   /** @internal */
   _serialized_start_time?: string;
 }
@@ -123,6 +170,20 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
 
     return `${error}`;
+  }
+
+  /**
+   * Records the error and its explicit status together, so the status never
+   * outlives the error text it was derived from.
+   */
+  protected setRunError(run: Run, error: unknown) {
+    run.error = this.stringifyError(error);
+    const status = getRunEndStatusFromError(error);
+    if (status !== undefined) {
+      run.status = status;
+    } else {
+      delete run.status;
+    }
   }
 
   protected abstract persistRun(run: Run): Promise<void>;
@@ -389,7 +450,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -505,7 +566,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -611,7 +672,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No tool run to end");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -739,7 +800,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No retriever run to end");
     }
     run.end_time = Date.now();
-    run.error = this.stringifyError(error);
+    this.setRunError(run, error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
