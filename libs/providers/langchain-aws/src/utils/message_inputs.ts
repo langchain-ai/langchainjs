@@ -900,13 +900,6 @@ export function concatenateLangchainReasoningBlocks(
 
     // non-redacted block
     if ("reasoningText" in block && typeof block.reasoningText === "object") {
-      if ("redactedContent" in concatenatedBlock) {
-        // new type of block, so end the previous one
-        concatenatedBlocks.push(
-          concatenatedBlock as MessageContentReasoningBlock
-        );
-        concatenatedBlock = {};
-      }
       const { text, signature } = block.reasoningText as Partial<
         MessageContentReasoningBlockReasoningText["reasoningText"]
       >;
@@ -940,30 +933,13 @@ export function concatenateLangchainReasoningBlocks(
     }
 
     if ("redactedContent" in block) {
-      if ("reasoningText" in concatenatedBlock) {
-        // New type of block, so end the previous one. We should't really hit
-        // this, as we'll have created a new block upon encountering the
-        // signature above, but better safe than sorry.
+      if (Object.keys(concatenatedBlock).length > 0) {
         concatenatedBlocks.push(
           concatenatedBlock as MessageContentReasoningBlock
         );
         concatenatedBlock = {};
       }
-      const { redactedContent } = block;
-      const prevRedactedContent =
-        "redactedContent" in concatenatedBlock
-          ? concatenatedBlock.redactedContent
-          : undefined;
-      const redactedBytes = prevRedactedContent
-        ? Buffer.concat([
-            Buffer.from(prevRedactedContent, "base64"),
-            Buffer.from(redactedContent, "base64"),
-          ])
-        : Buffer.from(redactedContent, "base64");
-      concatenatedBlock = {
-        type: "reasoning_content",
-        redactedContent: redactedBytes.toString("base64"),
-      };
+      concatenatedBlocks.push(block);
     }
   }
   if (Object.keys(concatenatedBlock).length > 0) {
