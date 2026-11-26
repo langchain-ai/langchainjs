@@ -164,7 +164,9 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
       number,
       { doc: DocumentInterface; score: number }
     > = {};
-    for (const doc of this.memoryStream.slice(-this.k)) {
+    // `slice(-0)` returns the whole array, so guard against `k === 0`.
+    const recentDocs = this.k > 0 ? this.memoryStream.slice(-this.k) : [];
+    for (const doc of recentDocs) {
       const bufferIdx = doc.metadata[BUFFER_IDX];
       if (bufferIdx === undefined) {
         throw new Error(
@@ -228,13 +230,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
       .sort((a, b) => b.score - a.score);
 
     const results: DocumentInterface[] = [];
-    for (const { doc } of recordedDocs) {
+    for (const { doc } of recordedDocs.slice(0, this.k)) {
       const bufferedDoc = this.memoryStream[doc.metadata[BUFFER_IDX]];
       bufferedDoc.metadata[LAST_ACCESSED_AT_KEY] = now;
       results.push(bufferedDoc);
-      if (results.length > this.k) {
-        break;
-      }
     }
     return results;
   }
