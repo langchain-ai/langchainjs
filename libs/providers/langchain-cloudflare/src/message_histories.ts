@@ -184,10 +184,9 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
   async clear(): Promise<void> {
     await this.ensureTable();
 
-    const query = `DELETE FROM ? WHERE session_id = ? `;
-    await this.database
-      .prepare(query)
-      .bind(this.tableName, this.sessionId)
-      .all();
+    // A table name cannot be a bound parameter, so it goes into the SQL text
+    // the same way as in the other queries here.
+    const query = `DELETE FROM ${this.tableName} WHERE session_id = ?`;
+    await this.database.prepare(query).bind(this.sessionId).all();
   }
 }
