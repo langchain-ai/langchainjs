@@ -245,3 +245,106 @@ test("JSONOutputKeyToolsParser can handle streaming input", async () => {
   );
   expect(result).toEqual({ testKey: "testval" });
 });
+
+describe("JsonOutputKeyToolsParser returnId", () => {
+  const message = new AIMessage({
+    content: "",
+    tool_calls: [
+      { id: "call_1", name: "calc", args: { a: 1 }, type: "tool_call" },
+      { id: "call_2", name: "calc", args: { a: 2 }, type: "tool_call" },
+    ],
+  });
+
+  test("defaults to returning only args", async () => {
+    const parser = new JsonOutputKeyToolsParser({ keyName: "calc" });
+    expect(parser.returnId).toBe(false);
+    expect(await parser.invoke(message)).toEqual([{ a: 1 }, { a: 2 }]);
+  });
+
+  test("returnId: false returns only args", async () => {
+    const parser = new JsonOutputKeyToolsParser({
+      keyName: "calc",
+      returnId: false,
+      returnSingle: true,
+    });
+    expect(await parser.invoke(message)).toEqual({ a: 1 });
+  });
+
+  test("returnId: true returns the tool call id", async () => {
+    const parser = new JsonOutputKeyToolsParser({
+      keyName: "calc",
+      returnId: true,
+    });
+    expect(parser.returnId).toBe(true);
+    expect(await parser.invoke(message)).toEqual([
+      { type: "calc", args: { a: 1 }, id: "call_1" },
+      { type: "calc", args: { a: 2 }, id: "call_2" },
+    ]);
+  });
+
+  test("returnId: true with returnSingle returns the first tool call", async () => {
+    const parser = new JsonOutputKeyToolsParser({
+      keyName: "calc",
+      returnId: true,
+      returnSingle: true,
+    });
+    expect(await parser.invoke(message)).toEqual({
+      type: "calc",
+      args: { a: 1 },
+      id: "call_1",
+    });
+  });
+
+  test("returnId: true reads ids from additional_kwargs tool calls", async () => {
+    const parser = new JsonOutputKeyToolsParser({
+      keyName: "calc",
+      returnId: true,
+      returnSingle: true,
+    });
+    const legacy = new AIMessage({
+      content: "",
+      additional_kwargs: {
+        tool_calls: [
+          {
+            id: "call_9",
+            type: "function",
+            function: { name: "calc", arguments: JSON.stringify({ a: 9 }) },
+          },
+        ],
+      },
+    });
+    expect(await parser.invoke(legacy)).toEqual({
+      type: "calc",
+      args: { a: 9 },
+      id: "call_9",
+    });
+  });
+
+  const schemaTests = (schema: InteropZodType) => async () => {
+    const parser = new JsonOutputKeyToolsParser({
+      keyName: "calc",
+      returnId: true,
+      zodSchema: schema,
+    });
+    expect(await parser.invoke(message)).toEqual([
+      { type: "calc", args: { a: "1" }, id: "call_1" },
+      { type: "calc", args: { a: "2" }, id: "call_2" },
+    ]);
+    const bad = new AIMessage({
+      content: "",
+      tool_calls: [
+        { id: "call_3", name: "calc", args: { b: 1 }, type: "tool_call" },
+      ],
+    });
+    await expect(parser.invoke(bad)).rejects.toThrow(OutputParserException);
+  };
+
+  test(
+    "returnId: true validates args against a zod v3 schema",
+    schemaTests(z.object({ a: z.number().transform(String) }))
+  );
+  test(
+    "returnId: true validates args against a zod v4 schema",
+    schemaTests(z4.object({ a: z4.number().transform(String) }))
+  );
+});
