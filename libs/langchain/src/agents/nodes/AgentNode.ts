@@ -3,12 +3,14 @@ import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseMessage,
   AIMessage,
+  RemoveMessage,
   ToolMessage,
   SystemMessage,
 } from "@langchain/core/messages";
 import {
   Command,
   isCommand,
+  REMOVE_ALL_MESSAGES,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -34,6 +36,7 @@ import {
   validateLLMHasNoBoundTools,
   hasToolCalls,
   isClientTool,
+  patchInvalidToolCalls,
 } from "../utils.js";
 import { isConfigurableModel } from "../model.js";
 import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
@@ -255,8 +258,20 @@ export class AgentNode<
       return [new Command({ update: { messages: [] } })];
     }
 
+    /**
+     * Answer any invalid tool calls left unanswered in the history before
+     * the model sees it, mirroring Python `_patch_invalid_tool_calls`.
+     * The patched history is what the model is called with, and the new
+     * error ToolMessages are persisted below so a resumed or replayed
+     * thread does not hit the same invalid history again. Patching only
+     * the model input would leave the checkpoint broken.
+     */
+    const patchedMessages = patchInvalidToolCalls(state.messages);
+    const repairedMessages =
+      patchedMessages === state.messages ? undefined : patchedMessages;
+
     const { response, lastAiMessage, collectedCommands } =
-      await this.#invokeModel(state, config);
+      await this.#invokeModel(state, config, { messages: patchedMessages });
 
     /**
      * structuredResponse — return as a plain state update dict (not a Command)
@@ -274,7 +289,13 @@ export class AgentNode<
         messages: BaseMessage[];
       };
       return {
-        messages: [...state.messages, ...messages],
+        messages: repairedMessages
+          ? [
+              new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),
+              ...repairedMessages,
+              ...messages,
+            ]
+          : [...state.messages, ...messages],
         structuredResponse,
       };
     }
@@ -314,6 +335,24 @@ export class AgentNode<
     }
     commands.push(...collectedCommands);
 
+    /**
+     * Persist the repaired history before the new messages, so the error
+     * ToolMessages are in the checkpoint even when the model response is
+     * only a Command and there is no new AIMessage to carry them.
+     */
+    if (repairedMessages) {
+      commands.unshift(
+        new Command({
+          update: {
+            messages: [
+              new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),
+              ...repairedMessages,
+            ],
+          },
+        })
+      );
+    }
+
     return commands;
   }
 
@@ -346,6 +385,7 @@ export class AgentNode<
     config: RunnableConfig,
     options: {
       lastMessage?: string;
+      messages?: BaseMessage[];
     } = {}
   ): Promise<{
     response: InternalModelResponse<StructuredResponseFormat>;
@@ -545,7 +585,7 @@ export class AgentNode<
                     state
                   )
                 : {}),
-              messages: state.messages,
+              messages: options.messages ?? state.messages,
             } as InternalAgentState<StructuredResponseFormat>,
             runtime,
           };
@@ -758,7 +798,7 @@ export class AgentNode<
       responseFormat: this.#options.responseFormat,
       systemPrompt: currentSystemMessage?.text,
       systemMessage: currentSystemMessage,
-      messages: state.messages,
+      messages: options.messages ?? state.messages,
       tools: this.#options.toolClasses,
       state,
       runtime: Object.freeze({

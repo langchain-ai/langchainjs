@@ -6,6 +6,7 @@ import {
   SystemMessage,
   MessageContent,
   ToolMessage,
+  type InvalidToolCall,
 } from "@langchain/core/messages";
 import { isCommand, StateSchema } from "@langchain/langgraph";
 import {
@@ -377,6 +378,88 @@ export function hasToolCalls(message?: BaseMessage): boolean {
     message.tool_calls &&
     message.tool_calls.length > 0
   );
+}
+
+/**
+ * Build the error {@link ToolMessage} for one invalid tool call, or
+ * `undefined` when the call cannot be answered because it has no id.
+ * A call without an id cannot be matched to a result by any provider, so
+ * there is nothing useful to record for it.
+ */
+function invalidToolCallMessage(
+  call: InvalidToolCall
+): ToolMessage | undefined {
+  if (!call.id) {
+    return undefined;
+  }
+  const name = call.name || "unknown";
+  return new ToolMessage({
+    content: `Tool call ${name} with id ${call.id} could not be executed - arguments were malformed or truncated.`,
+    name,
+    tool_call_id: call.id,
+    status: "error",
+  });
+}
+
+/**
+ * Answer every unanswered invalid tool call in a message history with an
+ * error {@link ToolMessage}, mirroring Python `_patch_invalid_tool_calls`.
+ *
+ * Each error message is inserted directly after the {@link AIMessage} that
+ * carried the invalid call, so the history stays in its original order.
+ * A call is skipped when a {@link ToolMessage} already answers its id,
+ * anywhere in the history, and when the same id appears in two different
+ * messages only the first occurrence gets an answer. Calls without an id
+ * are skipped because they cannot be matched to a result.
+ *
+ * Returns the input array unchanged when nothing needs patching, so callers
+ * can tell by reference whether the history changed.
+ */
+export function patchInvalidToolCalls(messages: BaseMessage[]): BaseMessage[] {
+  const answeredIds = new Set(
+    messages
+      .filter((message) => ToolMessage.isInstance(message))
+      .map((message) => (message as ToolMessage).tool_call_id)
+  );
+  let patched: BaseMessage[] | undefined;
+  for (let i = 0; i < messages.length; i += 1) {
+    const message = messages[i];
+    if (!AIMessage.isInstance(message) && !AIMessageChunk.isInstance(message)) {
+      if (patched) {
+        patched.push(message);
+      }
+      continue;
+    }
+    const invalidCalls = (message as AIMessage).invalid_tool_calls ?? [];
+    if (invalidCalls.length === 0) {
+      if (patched) {
+        patched.push(message);
+      }
+      continue;
+    }
+    const answers: ToolMessage[] = [];
+    for (const call of invalidCalls) {
+      if (call.id && answeredIds.has(call.id)) {
+        continue;
+      }
+      const answer = invalidToolCallMessage(call);
+      if (answer) {
+        answers.push(answer);
+        answeredIds.add(answer.tool_call_id);
+      }
+    }
+    if (answers.length === 0) {
+      if (patched) {
+        patched.push(message);
+      }
+      continue;
+    }
+    if (!patched) {
+      patched = messages.slice(0, i);
+    }
+    patched.push(message, ...answers);
+  }
+  return patched ?? messages;
 }
 
 /**
