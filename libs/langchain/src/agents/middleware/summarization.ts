@@ -64,6 +64,11 @@ Messages to summarize:
 const DEFAULT_SUMMARY_PREFIX = "Here is a summary of the conversation to date:";
 const DEFAULT_MESSAGES_TO_KEEP = 20;
 const DEFAULT_TRIM_TOKEN_LIMIT = 4000;
+/**
+ * Total attempts (initial call plus retries) for a summary model call.
+ * Matches `Runnable.withRetry`'s default and the Python implementation.
+ */
+const SUMMARY_MAX_ATTEMPTS = 3;
 const DEFAULT_FALLBACK_MESSAGE_COUNT = 15;
 const SEARCH_RANGE_FOR_TOOL_PAIRS = 5;
 
@@ -237,6 +242,10 @@ export function getProfileLimits(input: BaseLanguageModel): number | undefined {
  * This middleware monitors message token counts and automatically summarizes older
  * messages when a threshold is reached, preserving recent messages and maintaining
  * context continuity by ensuring AI/Tool message pairs remain together.
+ *
+ * Transient summary-generation errors (rate limits, timeouts) are retried, up to
+ * 3 attempts in total. If the summary model still fails, the error is thrown and
+ * the conversation history is left untouched.
  *
  * @param options Configuration options for the summarization middleware
  * @returns A middleware instance
@@ -902,6 +911,8 @@ function cutoffSeparatesToolPair(
  * @param trimTokensToSummarize - Optional token limit for trimming messages.
  * @param runtime - The runtime environment, used to inherit config so that
  *   LangGraph's handlers can properly track and tag the summarization model call.
+ * @throws If the summarization model call still fails once retries are
+ *   exhausted. The error is not swallowed, so no messages are removed.
  */
 async function createSummary(
   messagesToSummarize: BaseMessage[],
@@ -937,47 +948,50 @@ async function createSummary(
    */
   const formattedMessages = getBufferString(trimmedMessages);
 
-  try {
-    const formattedPrompt = summaryPrompt.replace(
-      "{messages}",
-      formattedMessages
-    );
+  const formattedPrompt = summaryPrompt.replace(
+    "{messages}",
+    formattedMessages
+  );
+  /**
+   * Merge parent runnable config with summarization metadata so LangGraph's
+   * stream handlers (and other callback-based consumers) can properly track
+   * and tag the summarization model call.
+   */
+  const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
+  const config = mergeConfigs(baseConfig, {
+    metadata: { lc_source: "summarization" },
+    tags: [INTERNAL_CALL_TAG],
+  });
+  /**
+   * Retry transient failures (rate limits, timeouts) a bounded number of times.
+   * If the call still fails the error propagates, so the caller never replaces
+   * the conversation history with a fabricated summary.
+   */
+  const response = await model
+    .withRetry({ stopAfterAttempt: SUMMARY_MAX_ATTEMPTS })
+    .invoke(formattedPrompt, config);
+  const content = response.content;
+  /**
+   * Handle both string content and MessageContent array
+   */
+  if (typeof content === "string") {
+    return content.trim();
+  } else if (Array.isArray(content)) {
     /**
-     * Merge parent runnable config with summarization metadata so LangGraph's
-     * stream handlers (and other callback-based consumers) can properly track
-     * and tag the summarization model call.
+     * Extract text from MessageContent array
      */
-    const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
-    const config = mergeConfigs(baseConfig, {
-      metadata: { lc_source: "summarization" },
-      tags: [INTERNAL_CALL_TAG],
-    });
-    const response = await model.invoke(formattedPrompt, config);
-    const content = response.content;
-    /**
-     * Handle both string content and MessageContent array
-     */
-    if (typeof content === "string") {
-      return content.trim();
-    } else if (Array.isArray(content)) {
-      /**
-       * Extract text from MessageContent array
-       */
-      const textContent = content
-        .map((item) => {
-          if (typeof item === "string") return item;
-          if (typeof item === "object" && item !== null && "text" in item) {
-            return (item as { text: string }).text;
-          }
-          return "";
-        })
-        .join("");
-      return textContent.trim();
-    }
-    return "Error generating summary: Invalid response format";
-  } catch (e) {
-    return `Error generating summary: ${e}`;
+    const textContent = content
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (typeof item === "object" && item !== null && "text" in item) {
+          return (item as { text: string }).text;
+        }
+        return "";
+      })
+      .join("");
+    return textContent.trim();
   }
+  throw new Error("Summarization model returned an invalid response format");
 }
 
 /**
