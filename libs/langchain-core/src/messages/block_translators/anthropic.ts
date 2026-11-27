@@ -2,6 +2,7 @@ import type { StandardContentBlockTranslator } from "./index.js";
 import type { ContentBlock } from "../content/index.js";
 import type { AIMessageChunk, AIMessage } from "../ai.js";
 import type { BaseMessage, BaseMessageChunk } from "../base.js";
+import type { ToolCallChunk } from "../tool.js";
 import {
   _isArray,
   _isContentBlock,
@@ -289,6 +290,9 @@ export function convertToV1FromAnthropicMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
   let hasRefusal = false;
+  // A concatenated chunk holds both the `tool_use` frame and the
+  // `input_json_delta` frames that follow it, which describe one call.
+  const toolCallIndexes = new Set<unknown>();
   function* iterateContent(): Iterable<ContentBlock.Standard> {
     const content =
       typeof message.content === "string"
@@ -350,6 +354,21 @@ export function convertToV1FromAnthropicMessage(
         _isString(block.name) &&
         _isString(block.id)
       ) {
+        // A streamed tool call arrives as a `tool_use` frame with an empty
+        // `input`, then as `input_json_delta` frames. The arguments are on the
+        // tool call chunk, so a chunk translates to a chunk as well.
+        const streamedChunk = toolCallChunkFor(message, block.index);
+        if (streamedChunk) {
+          toolCallIndexes.add(block.index);
+          yield {
+            type: "tool_call_chunk",
+            id: streamedChunk.id,
+            name: streamedChunk.name,
+            args: streamedChunk.args,
+            index: streamedChunk.index,
+          };
+          continue;
+        }
         yield {
           type: "tool_call",
           id: block.id,
@@ -360,6 +379,10 @@ export function convertToV1FromAnthropicMessage(
       }
       // message chunks can have input_json_delta contents
       else if (_isContentBlock(block, "input_json_delta")) {
+        if (toolCallIndexes.has(block.index)) {
+          // Already emitted as the tool call chunk of its `tool_use` frame.
+          continue;
+        }
         if (_isAIMessageChunk(message) && message.tool_call_chunks?.length) {
           const tool_call_chunk = message.tool_call_chunks[0];
           yield {
@@ -544,6 +567,28 @@ function refusalFromStopDetails(details: unknown): ContentBlock.Refusal {
     refusal: _isString(explanation) ? explanation : "",
     ...(_isString(category) ? { extras: { category } } : {}),
   };
+}
+
+/**
+ * The tool call chunk a streamed `tool_use` frame belongs to, if the message is
+ * a chunk. Anthropic sends the frame before the arguments exist, so its `input`
+ * is empty and the arguments only live on the tool call chunk.
+ */
+function toolCallChunkFor(
+  message: AIMessage,
+  index: unknown
+): ToolCallChunk | undefined {
+  if (!_isAIMessageChunk(message) || !message.tool_call_chunks?.length) {
+    return undefined;
+  }
+  const chunks = message.tool_call_chunks;
+  if (typeof index === "number") {
+    const matched = chunks.find((candidate) => candidate.index === index);
+    if (matched) {
+      return matched;
+    }
+  }
+  return chunks[0];
 }
 
 export const ChatAnthropicTranslator: StandardContentBlockTranslator = {
