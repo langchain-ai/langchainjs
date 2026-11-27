@@ -216,9 +216,10 @@ export function getMessages(
           onId?.((message.id = value));
           break;
         case "retry": {
-          const retry = parseInt(value, 10);
-          if (!Number.isNaN(retry)) {
-            // per spec, ignore non-integers
+          // Per the WHATWG spec, a retry field whose value is not made up
+          // entirely of ASCII digits must be ignored.
+          if (/^[0-9]+$/.test(value)) {
+            const retry = parseInt(value, 10);
             onRetry?.((message.retry = retry));
           }
           break;
