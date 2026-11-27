@@ -715,10 +715,17 @@ export abstract class Runnable<
       config.callbacks = copiedCallbacks;
     }
     const runnableStreamPromise = this.stream(input, config);
+    const abortController = new AbortController();
+    const abortPromise = new Promise<void>((resolve) => {
+      abortController.signal.addEventListener("abort", () => resolve(), {
+        once: true,
+      });
+    });
     async function consumeRunnableStream() {
       try {
         const runnableStream = await runnableStreamPromise;
         for await (const chunk of runnableStream) {
+          if (abortController.signal.aborted) break;
           const patch = new RunLogPatch({
             ops: [
               {
@@ -728,18 +735,38 @@ export abstract class Runnable<
               },
             ],
           });
-          await logStreamCallbackHandler.writer.write(patch);
+          const writePromise = logStreamCallbackHandler.writer.write(patch);
+          // A blocked write outlives the race below once aborted; never let
+          // its rejection go unobserved.
+          writePromise.catch(() => {});
+          // The writer applies backpressure, so once the consumer stops
+          // reading, `write` never settles. Stop waiting on abort.
+          await Promise.race([writePromise, abortPromise]);
+          if (abortController.signal.aborted) break;
         }
       } finally {
-        await logStreamCallbackHandler.writer.close();
+        if (abortController.signal.aborted) {
+          // Discard any queued or blocked writes so the consume promise can
+          // settle; `close()` would wait on them forever.
+          await logStreamCallbackHandler.writer
+            .abort(abortController.signal.reason)
+            .catch(() => {});
+        } else {
+          await logStreamCallbackHandler.writer.close();
+        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
+    // The consumer may stop reading without returning this generator, so the
+    // `finally` below never awaits the run. Observe it so a late failure
+    // can't surface as an unhandled rejection.
+    runnableStreamConsumePromise.catch(() => {});
     try {
       for await (const log of logStreamCallbackHandler) {
         yield log;
       }
     } finally {
+      abortController.abort();
       await runnableStreamConsumePromise;
     }
   }
