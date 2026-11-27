@@ -7,7 +7,7 @@ import {
 } from "../../prompts/index.js";
 import { Document } from "../../documents/document.js";
 import { RunLog } from "../../tracers/log_stream.js";
-import { RunnableSequence, RunnableMap } from "../base.js";
+import { RunnableLambda, RunnableSequence, RunnableMap } from "../base.js";
 import {
   FakeLLM,
   FakeChatModel,
@@ -90,4 +90,46 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
   expect(
     (finalState as RunLog).state.logs.CUSTOM_NAME.final_output.output
   ).toEqual(JSON.stringify(retrieverOutputDocs));
+});
+
+const slowGenerator = RunnableLambda.from(async function* () {
+  for (let i = 0; i < 10; i += 1) {
+    yield `chunk-${i}`;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+});
+
+test("Runnable streamLog returns when the consumer breaks early", async () => {
+  const start = Date.now();
+  let count = 0;
+  for await (const patch of slowGenerator.streamLog("hello")) {
+    expect(patch).toBeDefined();
+    count += 1;
+    if (count >= 1) break;
+  }
+  expect(count).toBe(1);
+  expect(Date.now() - start).toBeLessThan(1000);
+});
+
+test("Runnable streamEvents v1 returns when the consumer breaks early", async () => {
+  const start = Date.now();
+  for await (const event of slowGenerator.streamEvents("hello", {
+    version: "v1",
+  })) {
+    expect(event).toBeDefined();
+    break;
+  }
+  expect(Date.now() - start).toBeLessThan(1000);
+});
+
+test("Runnable streamLog still streams every chunk to completion", async () => {
+  const seen: string[] = [];
+  for await (const patch of slowGenerator.streamLog("hello")) {
+    for (const op of patch.ops) {
+      if (op.path === "/streamed_output/-") {
+        seen.push(op.value as string);
+      }
+    }
+  }
+  expect(seen).toHaveLength(10);
 });
