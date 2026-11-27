@@ -418,6 +418,8 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * | "none"	  | The model must not predict function calls. This behavior is equivalent to a model request without any associated function declarations.                 |
    * | string   | The string value must be one of the function names. This will force the model to predict the specified function call.                                   |
    *
+   * `"required"` is accepted as an OpenAI-style alias of `"any"`.
+   *
    * The tool configuration's "any" mode ("forced function calling") is supported for Gemini 1.5 Pro models only.
    */
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any

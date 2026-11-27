@@ -16,6 +16,7 @@ import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import { getGeminiAPI } from "../utils/gemini.js";
 import { getAnthropicAPI } from "../utils/anthropic.js";
+import { copyAIModelParams } from "../utils/common.js";
 import {
   AnthropicRequest,
   AnthropicStreamContentBlockDeltaEvent,
@@ -988,6 +989,7 @@ describe("gemini tool config formatting", () => {
     ["auto", "AUTO"],
     ["any", "ANY"],
     ["none", "NONE"],
+    ["required", "ANY"],
   ] as const)("serializes %s mode as %s", async (toolChoice, expectedMode) => {
     const api = getGeminiAPI();
     const request = (await api.formatData([new HumanMessage("Use tools.")], {
@@ -995,6 +997,22 @@ describe("gemini tool config formatting", () => {
     })) as GeminiRequest;
 
     expect(request.toolConfig?.functionCallingConfig?.mode).toBe(expectedMode);
+  });
+
+  test("does not read the OpenAI-style required tool choice as a function name", async () => {
+    const api = getGeminiAPI();
+    const request = (await api.formatData([new HumanMessage("Use tools.")], {
+      tool_choice: "required",
+    })) as GeminiRequest;
+
+    expect(request.toolConfig?.functionCallingConfig).toEqual({ mode: "ANY" });
+  });
+
+  test("normalizes the required tool choice to any in the model params", () => {
+    const params = copyAIModelParams(undefined, { tool_choice: "required" });
+
+    expect(params.tool_choice).toBe("any");
+    expect(params.allowed_function_names).toBeUndefined();
   });
 
   test("serializes a forced function name as ANY", async () => {

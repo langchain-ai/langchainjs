@@ -128,9 +128,14 @@ function createToolConfig(
     any: FunctionCallingMode.ANY,
     auto: FunctionCallingMode.AUTO,
     none: FunctionCallingMode.NONE,
+    // OpenAI-style "required" forces some function call, i.e. Gemini's ANY.
+    required: FunctionCallingMode.ANY,
   };
 
-  if (toolChoice && ["any", "auto", "none"].includes(toolChoice as string)) {
+  if (
+    toolChoice &&
+    ["any", "auto", "none", "required"].includes(toolChoice as string)
+  ) {
     return {
       functionCallingConfig: {
         mode: modeMap[toolChoice as keyof typeof modeMap] ?? "MODE_UNSPECIFIED",
