@@ -457,18 +457,25 @@ export class GenerateContentApiHandler extends GoogleChatApiHandler<
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
 
-    const response = await this.params.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options?.signal,
-      })
-    );
+    const response = await this.params.caller.callWithOptions(
+      { signal: options?.signal, maxRetries: options?.maxRetries },
+      async () => {
+        const nextResponse = await this.params.apiClient.fetch(
+          new Request(url, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+            signal: options?.signal,
+          })
+        );
 
-    if (!response.ok) {
-      throw await RequestError.fromResponse(response);
-    }
+        if (!nextResponse.ok) {
+          throw await RequestError.fromResponse(nextResponse);
+        }
+
+        return nextResponse;
+      }
+    );
 
     if (!response.body) {
       return;
