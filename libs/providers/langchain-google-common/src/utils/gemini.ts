@@ -2032,6 +2032,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
             return "AUTO";
           case "any":
             return "ANY";
+          case "required":
+            // OpenAI-style "required" means "call some function", not a
+            // function named "required".
+            return "ANY";
           case "none":
             return "NONE";
           default:

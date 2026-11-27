@@ -56,6 +56,15 @@ function processToolChoice(
       allowed_function_names: allowedFunctionNames,
     };
   }
+  if (toolChoice === "required") {
+    // OpenAI-style "required" forces some function call without naming one,
+    // which is Gemini's "any". Reading it as a function name would send
+    // allowedFunctionNames: ["required"] instead.
+    return {
+      tool_choice: "any",
+      allowed_function_names: allowedFunctionNames,
+    };
+  }
   if (typeof toolChoice === "string") {
     // String representing the function name.
     // Return any to force the model to predict the specified function call.
