@@ -98,7 +98,7 @@ export interface ConvertOpenAICompletionsStreamOptions {
   ) => OpenAICompletionsStreamChunk;
 }
 
-type BlockKey = "text" | "reasoning" | "audio" | `tool:${number}`;
+type BlockKey = "text" | "reasoning" | "audio" | "refusal" | `tool:${number}`;
 
 /**
  * Convert an async iterable of OpenAI Chat Completions-shaped stream chunks into
@@ -240,7 +240,31 @@ export async function* convertOpenAICompletionsStream(
       };
     }
 
-    if (delta.refusal) sawRefusal = true;
+    if (delta.refusal) {
+      sawRefusal = true;
+      const key: BlockKey = "refusal";
+      const { index, isNew } = getOrCreateBlockIndex(key, {
+        type: "refusal" as const,
+        refusal: "",
+      });
+      if (isNew) {
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: { type: "refusal", refusal: "" } as ContentBlock,
+        };
+      }
+      const acc = blockAccumulators.get(index)!;
+      acc.refusal = (acc.refusal ?? "") + delta.refusal;
+      yield {
+        event: "content-block-delta" as const,
+        index,
+        delta: {
+          type: "block-delta" as const,
+          fields: { type: "refusal", refusal: acc.refusal },
+        },
+      };
+    }
 
     if (Array.isArray(delta.tool_calls)) {
       if (delta.tool_calls.length > 0) sawToolCall = true;

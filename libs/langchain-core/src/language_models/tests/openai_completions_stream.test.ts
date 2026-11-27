@@ -299,6 +299,54 @@ describe("convertOpenAICompletionsStream", () => {
     });
   });
 
+  test("streamed refusal deltas aggregate into a refusal content block", async () => {
+    const chunk = (
+      delta: object,
+      finish_reason: string | null
+    ): OpenAICompletionsStreamChunk => ({
+      id: "chatcmpl-1",
+      model: "gpt-4o",
+      choices: [{ index: 0, delta, finish_reason }],
+    });
+    const message = await new ChatModelStream(
+      convertOpenAICompletionsStream(
+        asAsyncIterable([
+          chunk({ role: "assistant", content: null, refusal: "" }, null),
+          chunk({ refusal: "I can't " }, null),
+          chunk({ refusal: "help with that." }, null),
+          chunk({}, "stop"),
+        ])
+      )
+    );
+    expect(message.contentBlocks).toEqual([
+      { type: "refusal", refusal: "I can't help with that." },
+    ]);
+  });
+
+  test("a normal text stream produces no refusal block", async () => {
+    const chunk = (
+      delta: object,
+      finish_reason: string | null
+    ): OpenAICompletionsStreamChunk => ({
+      id: "chatcmpl-1",
+      model: "gpt-4o",
+      choices: [{ index: 0, delta, finish_reason }],
+    });
+    const message = await new ChatModelStream(
+      convertOpenAICompletionsStream(
+        asAsyncIterable([
+          chunk({ role: "assistant", content: "" }, null),
+          chunk({ content: "Hello" }, null),
+          chunk({ content: " there" }, null),
+          chunk({}, "stop"),
+        ])
+      )
+    );
+    expect(
+      message.contentBlocks.some((block) => block.type === "refusal")
+    ).toBe(false);
+  });
+
   test("forced tool call with stop normalizes to tool_call", async () => {
     const events = await collectEvents([
       {

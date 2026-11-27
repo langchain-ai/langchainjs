@@ -424,6 +424,13 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   if (delta.reasoning_content !== undefined) {
     additional_kwargs.reasoning_content = delta.reasoning_content;
   }
+  // Streamed refusals arrive as `delta.refusal` string deltas; carrying them
+  // in additional_kwargs lets chunk concat accumulate the full refusal, which
+  // the block translator then surfaces as a `refusal` content block (matching
+  // the non-streaming path, which reads `message.refusal`).
+  if (delta.refusal) {
+    additional_kwargs.refusal = delta.refusal;
+  }
 
   if (delta.audio) {
     additional_kwargs.audio = {
