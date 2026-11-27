@@ -446,3 +446,36 @@ describe("ChatOpenAICompletions tool image errors", () => {
     expect(error.message).not.toContain("does not support images");
   });
 });
+
+describe("ChatOpenAICompletions streamed refusal", () => {
+  it("raises ModelRefusalError from withStructuredOutput when streaming", async () => {
+    const { ModelRefusalError } = await import("@langchain/core/errors");
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o",
+      apiKey: "test-key",
+      streaming: true,
+    });
+
+    const chunk = (delta: object, finish_reason: string | null) => ({
+      id: "chatcmpl-1",
+      object: "chat.completion.chunk" as const,
+      created: 0,
+      model: "gpt-4o-2024-08-06",
+      choices: [{ index: 0, delta, finish_reason, logprobs: null }],
+    });
+    model.completionWithRetry = (async () =>
+      (async function* () {
+        yield chunk({ role: "assistant", content: null, refusal: "" }, null);
+        yield chunk({ refusal: "I can't " }, null);
+        yield chunk({ refusal: "help with that." }, null);
+        yield chunk({}, "stop");
+      })()) as never;
+
+    const structured = model.withStructuredOutput(
+      z.object({ answer: z.string() })
+    );
+    await expect(
+      structured.stream([new HumanMessage("answer something unsafe")])
+    ).rejects.toThrow(ModelRefusalError);
+  });
+});
