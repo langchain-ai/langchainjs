@@ -709,10 +709,23 @@ export abstract class BaseChatOpenAI<
   protected _combineCallOptions(
     additionalOptions?: this["ParsedCallOptions"]
   ): this["ParsedCallOptions"] {
-    return {
+    const options = {
       ...this.defaultOptions,
       ...(additionalOptions ?? {}),
     };
+    const defaultSignal = this.defaultOptions?.signal;
+    const callSignal = additionalOptions?.signal;
+    if (
+      defaultSignal !== undefined &&
+      callSignal !== undefined &&
+      defaultSignal !== callSignal
+    ) {
+      if ("any" in AbortSignal) {
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        options.signal = (AbortSignal as any).any([defaultSignal, callSignal]);
+      }
+    }
+    return options;
   }
 
   /** @internal */
