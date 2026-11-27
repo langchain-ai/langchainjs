@@ -113,6 +113,35 @@ const parseParsedResult = (input: ParsedResult): XMLResult => {
   }
 };
 
+/**
+ * Return the XML body of a fenced block. Streamed text arrives one character at
+ * a time, so the opening fence may still be missing its newline and the closing
+ * fence may be absent entirely: the body then runs to the end of the text.
+ */
+function fencedXML(text: string): string {
+  // A lone backtick or two is the opening fence still arriving, not content.
+  if (/^`{1,2}$/.test(text)) {
+    return "";
+  }
+  const open = text.indexOf("```");
+  if (open < 0) {
+    return text;
+  }
+  const afterOpen = text.slice(open + 3);
+  const newline = afterOpen.indexOf("\n");
+  if (newline < 0) {
+    const close = afterOpen.indexOf("```");
+    const inner = close < 0 ? afterOpen : afterOpen.slice(0, close);
+    // Either the info string ("xml", "xm") is still streaming in, or this is a
+    // single-line fence whose body starts with the first tag.
+    return inner.trimStart().startsWith("<") ? inner : "";
+  }
+  const body = afterOpen.slice(newline + 1);
+  const close = body.indexOf("```");
+  // A trailing backtick or two is the closing fence still arriving.
+  return close < 0 ? body.replace(/`{1,2}$/, "") : body.slice(0, close);
+}
+
 export function parseXMLMarkdown(s: string): XMLResult {
   const cleanedString = strip(s);
   const parser = sax.parser(true);
@@ -166,10 +195,7 @@ export function parseXMLMarkdown(s: string): XMLResult {
     }
   };
 
-  // Try to find XML string within triple backticks.
-  const match = /```(xml)?(.*)```/s.exec(cleanedString);
-  const xmlString = match ? match[2] : cleanedString;
-  parser.write(xmlString).close();
+  parser.write(fencedXML(cleanedString)).close();
 
   // Remove the XML declaration if present
   if (parsedResult && parsedResult.name === "?xml") {

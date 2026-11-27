@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
-import { FakeStreamingLLM } from "../../utils/testing/index.js";
-import { XMLOutputParser } from "../xml.js";
+import { FakeListChatModel, FakeStreamingLLM } from "../../utils/testing/index.js";
+import { XMLOutputParser, parseXMLMarkdown } from "../xml.js";
 
 const XML_EXAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 <userProfile>
@@ -90,4 +90,26 @@ test("Can parse streams", async () => {
     finalResult = chunk;
   }
   expect(finalResult).toStrictEqual(expectedResult);
+});
+
+test("Can parse streams for a backtick wrapped XML block", async () => {
+  // Streamed text arrives one character at a time: the opening fence has no
+  // newline yet and the closing fence is missing until the very last chunk.
+  const parser = new XMLOutputParser();
+  const fenced = "```xml\n<movies>\n<movie>Up</movie>\n</movies>\n```";
+  const chain = new FakeListChatModel({ responses: [fenced] }).pipe(parser);
+
+  let finalResult = {};
+  for await (const chunk of await chain.stream("hi")) finalResult = chunk;
+  expect(finalResult).toStrictEqual({ movies: [{ movie: "Up" }] });
+});
+
+test("Parses every prefix of a backtick wrapped block without throwing", () => {
+  const fenced = "```xml\n<movies>\n<movie>Up</movie>\n</movies>\n```";
+  for (let end = 0; end <= fenced.length; end += 1) {
+    expect(() => parseXMLMarkdown(fenced.slice(0, end))).not.toThrow();
+  }
+  expect(parseXMLMarkdown(fenced)).toStrictEqual({
+    movies: [{ movie: "Up" }],
+  });
 });
