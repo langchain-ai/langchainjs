@@ -191,8 +191,13 @@ export function getMessages(
     }
 
     if (line.length === 0) {
-      // empty line denotes end of message. Trigger the callback and start a new message:
-      onMessage?.(message);
+      // An empty line ends a message. A block that carried no field at all, a
+      // keep-alive comment being the one every server sends, dispatches nothing:
+      // it says what the flush above already says, that an empty message is not
+      // a message.
+      if (!isEmpty(message)) {
+        onMessage?.(message);
+      }
       message = newMessage();
     } else if (fieldLength > 0) {
       // exclude comments and lines with no values
