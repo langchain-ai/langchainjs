@@ -428,12 +428,18 @@ export class ChatOpenAIResponses<
             extra[k] = v;
           }
         }
+        // `strict` is not declared on core's `FunctionDefinition`, but
+        // OpenAI-shaped tools may carry it.
+        const toolStrict =
+          "strict" in tool.function && typeof tool.function.strict === "boolean"
+            ? tool.function.strict
+            : undefined;
         reducedTools.push({
           type: "function",
           name: tool.function.name,
           parameters: tool.function.parameters,
           description: tool.function.description,
-          strict: fields?.strict ?? null,
+          strict: fields?.strict ?? toolStrict ?? false,
           ...extra,
         });
       } else if (isOpenAICustomTool(tool)) {
