@@ -331,6 +331,40 @@ describe("convertOpenAICompletionsStream", () => {
     });
   });
 
+  test("usage event maps cache_write_tokens to cache_creation", async () => {
+    const events = await collectEvents([
+      {
+        id: "gen-1",
+        model: "anthropic/claude-sonnet-4",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hi" },
+            finish_reason: "stop",
+          },
+        ],
+      },
+      {
+        id: "gen-1",
+        choices: [],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 10,
+          total_tokens: 110,
+          prompt_tokens_details: { cached_tokens: 20, cache_write_tokens: 30 },
+        },
+      },
+    ]);
+    expect(events.find((e) => e.event === "usage")).toMatchObject({
+      usage: {
+        input_tokens: 100,
+        output_tokens: 10,
+        total_tokens: 110,
+        input_token_details: { cache_read: 20, cache_creation: 30 },
+      },
+    });
+  });
+
   test.each([
     ["model_length", "length", "length"],
     ["error", "error", undefined],
