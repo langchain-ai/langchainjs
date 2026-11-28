@@ -157,6 +157,194 @@ describe("Character text splitter", () => {
   });
 });
 
+describe("Non-overlapping document line locations", () => {
+  test.each([
+    {
+      name: "repeated multiline chunks",
+      text: "x\nx\nx\nx",
+      options: { chunkSize: 3 },
+      contents: ["x\nx", "x\nx"],
+      lines: [
+        { from: 1, to: 2 },
+        { from: 3, to: 4 },
+      ],
+    },
+    {
+      name: "repeated words",
+      text: "same\nsame\nsame\nsame",
+      options: { chunkSize: 9 },
+      contents: ["same\nsame", "same\nsame"],
+      lines: [
+        { from: 1, to: 2 },
+        { from: 3, to: 4 },
+      ],
+    },
+    {
+      name: "Unicode character offsets",
+      text: "😀\n😀\n😀\n😀",
+      options: { chunkSize: 5 },
+      contents: ["😀\n😀", "😀\n😀"],
+      lines: [
+        { from: 1, to: 2 },
+        { from: 3, to: 4 },
+      ],
+    },
+    {
+      name: "CRLF separators",
+      text: "same\r\nsame\r\nsame\r\nsame",
+      options: { chunkSize: 10, separator: "\r\n" },
+      contents: ["same\r\nsame", "same\r\nsame"],
+      lines: [
+        { from: 1, to: 2 },
+        { from: 3, to: 4 },
+      ],
+    },
+    {
+      name: "kept separators",
+      text: "same\nsame\nsame\nsame",
+      options: { chunkSize: 9, keepSeparator: true },
+      contents: ["same\nsame", "same", "same"],
+      lines: [
+        { from: 1, to: 2 },
+        { from: 3, to: 3 },
+        { from: 4, to: 4 },
+      ],
+    },
+    {
+      name: "trimmed blank lines",
+      text: "\n\nsame\nsame\n\nsame\nsame\n\n",
+      options: { chunkSize: 9 },
+      contents: ["same\nsame", "same\nsame"],
+      lines: [
+        { from: 3, to: 4 },
+        { from: 6, to: 7 },
+      ],
+    },
+    {
+      name: "distinct chunks",
+      text: "a\nb\nc\nd",
+      options: { chunkSize: 3 },
+      contents: ["a\nb", "c\nd"],
+      lines: [
+        { from: 1, to: 2 },
+        { from: 3, to: 4 },
+      ],
+    },
+    {
+      name: "repeated single-line chunks",
+      text: "xxx\nxxx",
+      options: { chunkSize: 3 },
+      contents: ["xxx", "xxx"],
+      lines: [
+        { from: 1, to: 1 },
+        { from: 2, to: 2 },
+      ],
+    },
+  ])("$name", async ({ text, options, contents, lines }) => {
+    const splitter = new CharacterTextSplitter({
+      separator: "\n",
+      chunkOverlap: 0,
+      ...options,
+    });
+    const docs = await splitter.createDocuments([text]);
+    expect(docs.map((doc) => doc.pageContent)).toEqual(contents);
+    expect(docs.map((doc) => doc.metadata.loc.lines)).toEqual(lines);
+  });
+
+  test("recursive character chunks use their source occurrence", async () => {
+    const splitter = new RecursiveCharacterTextSplitter({
+      separators: ["\n"],
+      chunkSize: 9,
+      chunkOverlap: 0,
+    });
+    const docs = await splitter.createDocuments(["same\nsame\nsame\nsame"]);
+    expect(docs.map((doc) => doc.pageContent)).toEqual([
+      "same\nsame",
+      "same",
+      "same",
+    ]);
+    expect(docs.map((doc) => doc.metadata.loc.lines)).toEqual([
+      { from: 1, to: 2 },
+      { from: 3, to: 3 },
+      { from: 4, to: 4 },
+    ]);
+  });
+
+  test("keeps intentional overlap", async () => {
+    const splitter = new CharacterTextSplitter({
+      separator: "\n",
+      chunkSize: 3,
+      chunkOverlap: 1,
+    });
+    const docs = await splitter.createDocuments(["x\nx\nx\nx"]);
+    expect(docs.map((doc) => doc.pageContent)).toEqual([
+      "x\nx",
+      "x\nx",
+      "x\nx",
+    ]);
+    expect(docs.map((doc) => doc.metadata.loc.lines)).toEqual([
+      { from: 1, to: 2 },
+      { from: 2, to: 3 },
+      { from: 3, to: 4 },
+    ]);
+  });
+
+  test("resets locations per document and preserves headers and metadata", async () => {
+    const splitter = new CharacterTextSplitter({
+      separator: "\n",
+      chunkSize: 3,
+      chunkOverlap: 0,
+    });
+    const metadata = { source: "first", loc: { pageNumber: 7 } };
+    const docs = await splitter.createDocuments(
+      ["x\nx\nx\nx", "x\nx"],
+      [metadata, { source: "second" }],
+      { chunkHeader: "Source\n", appendChunkOverlapHeader: true }
+    );
+    expect(docs.map((doc) => doc.pageContent)).toEqual([
+      "Source\nx\nx",
+      "Source\n(cont'd) x\nx",
+      "Source\nx\nx",
+    ]);
+    expect(docs.map((doc) => doc.metadata)).toEqual([
+      { source: "first", loc: { pageNumber: 7, lines: { from: 1, to: 2 } } },
+      { source: "first", loc: { pageNumber: 7, lines: { from: 3, to: 4 } } },
+      { source: "second", loc: { lines: { from: 1, to: 2 } } },
+    ]);
+    expect(metadata).toEqual({ source: "first", loc: { pageNumber: 7 } });
+  });
+
+  test.each(["constructor", "reassigned", "async"])(
+    "preserves custom zero-cost overlap (%s)",
+    async (mode) => {
+      const lengthFunction = (text: string) => (text === "x" ? 0 : text.length);
+      const splitter = new CharacterTextSplitter({
+        separator: "\n",
+        chunkSize: 3,
+        chunkOverlap: 0,
+        ...(mode === "constructor" ? { lengthFunction } : {}),
+      });
+      if (mode === "reassigned") splitter.lengthFunction = lengthFunction;
+      if (mode === "async") {
+        splitter.lengthFunction = async (text) => lengthFunction(text);
+      }
+      const docs = await splitter.createDocuments(["a\nx\nb\nx\nb\nx\nc"]);
+      expect(docs.map((doc) => doc.pageContent)).toEqual([
+        "a\nx",
+        "x\nb\nx",
+        "x\nb\nx",
+        "x\nc",
+      ]);
+      expect(docs.map((doc) => doc.metadata.loc.lines)).toEqual([
+        { from: 1, to: 2 },
+        { from: 2, to: 4 },
+        { from: 4, to: 6 },
+        { from: 6, to: 7 },
+      ]);
+    }
+  );
+});
+
 describe("RecursiveCharacter text splitter", () => {
   test("One unique chunk", async () => {
     const splitter = new RecursiveCharacterTextSplitter({
