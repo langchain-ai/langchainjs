@@ -33,6 +33,7 @@ export interface OpenAICompletionsUsage {
   prompt_tokens_details?: {
     audio_tokens?: number;
     cached_tokens?: number;
+    cache_write_tokens?: number;
   };
   completion_tokens_details?: {
     audio_tokens?: number;
@@ -436,6 +437,11 @@ function buildUsageSnapshot(usage: OpenAICompletionsUsage): UsageMetadata {
     }),
     ...(usage.prompt_tokens_details?.cached_tokens != null && {
       cache_read: usage.prompt_tokens_details.cached_tokens,
+    }),
+    // OpenAI-compatible gateways (OpenRouter, LiteLLM, ...) report Anthropic
+    // cache writes under `cache_write_tokens`.
+    ...(usage.prompt_tokens_details?.cache_write_tokens != null && {
+      cache_creation: usage.prompt_tokens_details.cache_write_tokens,
     }),
   };
   const outputTokenDetails = {
