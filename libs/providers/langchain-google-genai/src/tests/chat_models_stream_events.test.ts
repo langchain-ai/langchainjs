@@ -119,6 +119,125 @@ describe("ChatGoogleGenerativeAI.streamEvents", () => {
     ]);
   });
 
+  test("tool_call chunks carry an id (provided by the model or generated)", async () => {
+    // Regression: previously the streaming path dropped `part.functionCall.id`
+    // so the emitted `tool_call` content block had no `id`, which broke
+    // downstream `ToolMessage.tool_call_id` matching in agent loops.
+    const model = new ChatGoogleGenerativeAI({
+      apiKey: "fake-key",
+      model: "gemini-2.0-flash",
+    });
+    vi.spyOn(getTestClient(model), "generateContentStream").mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    functionCall: {
+                      name: "echo",
+                      args: { message: "hi" },
+                      // No `id` field — simulates typical Gemini responses
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+      })(),
+    });
+
+    const events: unknown[] = [];
+    for await (const event of model.streamEvents("Hello")) {
+      events.push(event);
+    }
+
+    const blockStart = events.find(
+      (e) =>
+        typeof e === "object" &&
+        e !== null &&
+        (e as { event?: string }).event === "content-block-start"
+    ) as
+      | {
+          event: "content-block-start";
+          index: number;
+          content?: { type?: string; id?: string; name?: string };
+        }
+      | undefined;
+    expect(blockStart).toBeDefined();
+    expect(blockStart?.content?.type).toBe("tool_call_chunk");
+    expect(blockStart?.content?.name).toBe("echo");
+    expect(typeof blockStart?.content?.id).toBe("string");
+    expect((blockStart?.content?.id ?? "").length).toBeGreaterThan(0);
+
+    const blockFinish = events.find(
+      (e) =>
+        typeof e === "object" &&
+        e !== null &&
+        (e as { event?: string }).event === "content-block-finish"
+    ) as
+      | {
+          event: "content-block-finish";
+          content?: { type?: string; id?: string; name?: string; args?: unknown };
+        }
+      | undefined;
+    expect(blockFinish?.content?.type).toBe("tool_call");
+    expect(blockFinish?.content?.id).toBe(blockStart?.content?.id);
+    expect(blockFinish?.content?.name).toBe("echo");
+    expect(blockFinish?.content?.args).toEqual({ message: "hi" });
+  });
+
+  test("tool_call chunks preserve a model-provided id when present", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      apiKey: "fake-key",
+      model: "gemini-2.0-flash",
+    });
+    vi.spyOn(getTestClient(model), "generateContentStream").mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    functionCall: {
+                      name: "echo",
+                      args: { message: "hi" },
+                      id: "google-provided-id-123",
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+      })(),
+    });
+
+    const events: unknown[] = [];
+    for await (const event of model.streamEvents("Hello")) {
+      events.push(event);
+    }
+
+    const blockStart = events.find(
+      (e) =>
+        typeof e === "object" &&
+        e !== null &&
+        (e as { event?: string }).event === "content-block-start"
+    ) as { content?: { id?: string } } | undefined;
+    expect(blockStart?.content?.id).toBe("google-provided-id-123");
+
+    const blockFinish = events.find(
+      (e) =>
+        typeof e === "object" &&
+        e !== null &&
+        (e as { event?: string }).event === "content-block-finish"
+    ) as { content?: { id?: string } } | undefined;
+    expect(blockFinish?.content?.id).toBe("google-provided-id-123");
+  });
+
   test("streams usage", async () => {
     await expect(
       mockGoogleGenAI(geminiUsageStream()).streamEvents("Hello")
