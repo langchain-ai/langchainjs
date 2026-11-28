@@ -5,7 +5,7 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../index.js";
-import type { BaseChatOpenAIFields } from "../base.js";
+import { mergeCallOptions, type BaseChatOpenAIFields } from "../base.js";
 import { ChatOpenAICompletions } from "../completions.js";
 import { ChatOpenAIResponses } from "../responses.js";
 import { _convertOpenAIResponsesUsageToLangChainUsage } from "../../utils/output.js";
@@ -2282,5 +2282,81 @@ describe("profile.midConversationTools", () => {
     });
     expect(model.profile.midConversationTools).toBe(false);
     expect(PROFILES["gpt-5.5"].midConversationTools).toBe(true);
+  });
+});
+
+describe("bound and call signals", () => {
+  // The request ends only when its own signal aborts.
+  const hangingFetch = (_url: any, init?: any) =>
+    new Promise<never>((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(init.signal.reason));
+    });
+
+  const makeModel = () =>
+    new ChatOpenAI({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+      maxRetries: 0,
+      configuration: { fetch: hangingFetch },
+    });
+
+  it("aborts when the bound signal aborts and a call signal is passed", async () => {
+    const bound = new AbortController();
+    const model = makeModel().withConfig({ signal: bound.signal });
+    const pending = model.invoke("Hello", {
+      signal: new AbortController().signal,
+    });
+    bound.abort(new Error("bound"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("aborts when the call signal aborts and a signal is bound", async () => {
+    const call = new AbortController();
+    const model = makeModel().withConfig({
+      signal: new AbortController().signal,
+    });
+    const pending = model.invoke("Hello", { signal: call.signal });
+    call.abort(new Error("call"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("keeps both signals when withConfig binds a second signal", async () => {
+    const first = new AbortController();
+    const model = makeModel()
+      .withConfig({ signal: first.signal })
+      .withConfig({ signal: new AbortController().signal });
+    const pending = model.invoke("Hello");
+    first.abort(new Error("first"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("keeps the bound signal when the call passes signal: undefined", async () => {
+    const bound = new AbortController();
+    const model = makeModel().withConfig({ signal: bound.signal });
+    const pending = model.invoke("Hello", { signal: undefined });
+    bound.abort(new Error("bound"));
+    await expect(pending).rejects.toThrow();
+  });
+
+  it("uses the shorter of the bound and call timeouts", async () => {
+    const model = makeModel().withConfig({ timeout: 50 });
+    await expect(model.invoke("Hello", { timeout: 60_000 })).rejects.toThrow();
+  });
+});
+
+describe("mergeCallOptions", () => {
+  it("keeps the shorter timeout and ignores undefined overrides", () => {
+    expect(mergeCallOptions({ timeout: 1000 }, { timeout: 60_000 })).toEqual({
+      timeout: 1000,
+    });
+    expect(mergeCallOptions({ timeout: 60_000 }, { timeout: 1000 })).toEqual({
+      timeout: 1000,
+    });
+    expect(mergeCallOptions({ timeout: 1000 }, { timeout: undefined })).toEqual(
+      {
+        timeout: 1000,
+      }
+    );
+    expect(mergeCallOptions({}, { timeout: 1000 })).toEqual({ timeout: 1000 });
   });
 });

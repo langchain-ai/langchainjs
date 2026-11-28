@@ -270,6 +270,38 @@ export function getChatOpenAIModelParams<TParams extends BaseChatOpenAIFields>(
   return modelOrParams;
 }
 
+/**
+ * Spreads `overrides` over `base`, but merges `signal` and `timeout` the way
+ * `mergeConfigs` in `@langchain/core` does for other runnables: both abort
+ * signals are kept, the shorter timeout wins, and an `undefined` override
+ * does not clear the value on `base`.
+ * @internal
+ */
+export function mergeCallOptions<
+  T extends { signal?: AbortSignal; timeout?: number },
+>(base: T, overrides?: Partial<T>): T {
+  const merged = { ...base, ...(overrides ?? {}) } as T;
+  const baseSignal = base?.signal;
+  const overrideSignal = overrides?.signal;
+  if (overrideSignal === undefined) {
+    if (baseSignal !== undefined) merged.signal = baseSignal;
+  } else if (
+    baseSignal !== undefined &&
+    baseSignal !== overrideSignal &&
+    "any" in AbortSignal
+  ) {
+    merged.signal = AbortSignal.any([baseSignal, overrideSignal]);
+  }
+  const baseTimeout = base?.timeout;
+  const overrideTimeout = overrides?.timeout;
+  if (overrideTimeout === undefined) {
+    if (baseTimeout !== undefined) merged.timeout = baseTimeout;
+  } else if (baseTimeout !== undefined) {
+    merged.timeout = Math.min(baseTimeout, overrideTimeout);
+  }
+  return merged;
+}
+
 /** @internal */
 export abstract class BaseChatOpenAI<
   CallOptions extends BaseChatOpenAICallOptions,
@@ -709,10 +741,10 @@ export abstract class BaseChatOpenAI<
   protected _combineCallOptions(
     additionalOptions?: this["ParsedCallOptions"]
   ): this["ParsedCallOptions"] {
-    return {
-      ...this.defaultOptions,
-      ...(additionalOptions ?? {}),
-    };
+    return mergeCallOptions<this["ParsedCallOptions"]>(
+      this.defaultOptions,
+      additionalOptions
+    );
   }
 
   /** @internal */
